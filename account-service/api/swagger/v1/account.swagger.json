@@ -1,0 +1,660 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "account.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/account/changepassword": {
+      "put": {
+        "operationId": "ChangePassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/accounts": {
+      "get": {
+        "summary": "GetUsers list all the users present",
+        "operationId": "GetUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          }
+        },
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "post": {
+        "operationId": "CreateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Account"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Account"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/accounts/{account.user_id}": {
+      "put": {
+        "operationId": "UpdateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccountResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account.user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccount"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "patch": {
+        "operationId": "UpdateAccount2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccountResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account.user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccount"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/accounts/{user_id}": {
+      "get": {
+        "operationId": "GetAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAccountResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "description": "TODO : remove this we can now get userid from token\nThis is being ignored now.Will be removed in future",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/direct_groups": {
+      "get": {
+        "summary": "ListUserGroups list all the groups which belongs to user.",
+        "operationId": "ListUserGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListGroupsResponse"
+            }
+          }
+        },
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups": {
+      "get": {
+        "summary": "ListGroups list all the groups owned by user.",
+        "operationId": "ListGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListGroupsResponse"
+            }
+          }
+        },
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "post": {
+        "summary": "Group Creates a group.",
+        "operationId": "CreateGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Group"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Group"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups/{group_id}": {
+      "delete": {
+        "operationId": "DeleteGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteGroupResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "put": {
+        "operationId": "UpdateGroup",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Group"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateGroupRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups/{group_id}/groups": {
+      "get": {
+        "operationId": "ListChildGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListGroupsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups/{group_id}/users": {
+      "get": {
+        "summary": "GetGroupUsers list all the users present in the group",
+        "operationId": "GetGroupUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups/{group_id}/users/add": {
+      "put": {
+        "summary": "AddGroupUser adds user to the group",
+        "operationId": "AddGroupUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AddGroupUsersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/admin/groups/{group_id}/users/delete": {
+      "put": {
+        "summary": "DeleteGroupUser deletes users from the group",
+        "operationId": "DeleteGroupUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DeleteGroupUsersRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufFieldMask": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The set of field mask paths."
+        }
+      },
+      "description": "paths: \"f.a\"\n    paths: \"f.b.d\"\n\nHere `f` represents a field in some root message, `a` and `b`\nfields in the message found in `f`, and `d` a field found in the\nmessage in `f.b`.\n\nField masks are used to specify a subset of fields that should be\nreturned by a get operation or modified by an update operation.\nField masks also have a custom JSON encoding (see below).\n\n# Field Masks in Projections\n\nWhen used in the context of a projection, a response message or\nsub-message is filtered by the API to only contain those fields as\nspecified in the mask. For example, if the mask in the previous\nexample is applied to a response message as follows:\n\n    f {\n      a : 22\n      b {\n        d : 1\n        x : 2\n      }\n      y : 13\n    }\n    z: 8\n\nThe result will not contain specific values for fields x,y and z\n(their value will be set to the default, and omitted in proto text\noutput):\n\n\n    f {\n      a : 22\n      b {\n        d : 1\n      }\n    }\n\nA repeated field is not allowed except at the last position of a\npaths string.\n\nIf a FieldMask object is not present in a get operation, the\noperation applies to all fields (as if a FieldMask of all fields\nhad been specified).\n\nNote that a field mask does not necessarily apply to the\ntop-level response message. In case of a REST get operation, the\nfield mask applies directly to the response, but in case of a REST\nlist operation, the mask instead applies to each individual message\nin the returned resource list. In case of a REST custom method,\nother definitions may be used. Where the mask applies will be\nclearly documented together with its declaration in the API.  In\nany case, the effect on the returned resource/resources is required\nbehavior for APIs.\n\n# Field Masks in Update Operations\n\nA field mask in update operations specifies which fields of the\ntargeted resource are going to be updated. The API is required\nto only change the values of the fields as specified in the mask\nand leave the others untouched. If a resource is passed in to\ndescribe the updated values, the API ignores the values of all\nfields not covered by the mask.\n\nIf a repeated field is specified for an update operation, the existing\nrepeated values in the target resource will be overwritten by the new values.\nNote that a repeated field is only allowed in the last position of a `paths`\nstring.\n\nIf a sub-message is specified in the last position of the field mask for an\nupdate operation, then the existing sub-message in the target resource is\noverwritten. Given the target message:\n\n    f {\n      b {\n        d : 1\n        x : 2\n      }\n      c : 1\n    }\n\nAnd an update message:\n\n    f {\n      b {\n        d : 10\n      }\n    }\n\nthen if the field mask is:\n\n paths: \"f.b\"\n\nthen the result will be:\n\n    f {\n      b {\n        d : 10\n      }\n      c : 1\n    }\n\nHowever, if the update mask was:\n\n paths: \"f.b.d\"\n\nthen the result would be:\n\n    f {\n      b {\n        d : 10\n        x : 2\n      }\n      c : 1\n    }\n\nIn order to reset a field's value to the default, the field must\nbe in the mask and set to the default value in the provided resource.\nHence, in order to reset all fields of a resource, provide a default\ninstance of the resource and set all fields in the mask, or do\nnot provide a mask as described below.\n\nIf a field mask is not present on update, the operation applies to\nall fields (as if a field mask of all fields has been specified).\nNote that in the presence of schema evolution, this may mean that\nfields the client does not know and has therefore not filled into\nthe request will be reset to their default. If this is unwanted\nbehavior, a specific service may require a client to always specify\na field mask, producing an error if not.\n\nAs with get operations, the location of the resource which\ndescribes the updated values in the request message depends on the\noperation kind. In any case, the effect of the field mask is\nrequired to be honored by the API.\n\n## Considerations for HTTP REST\n\nThe HTTP kind of an update operation which uses a field mask must\nbe set to PATCH instead of PUT in order to satisfy HTTP semantics\n(PUT must only be used for full updates).\n\n# JSON Encoding of Field Masks\n\nIn JSON, a field mask is encoded as a single string where paths are\nseparated by a comma. Fields name in each path are converted\nto/from lower-camel naming conventions.\n\nAs an example, consider the following message declarations:\n\n    message Profile {\n      User user = 1;\n      Photo photo = 2;\n    }\n    message User {\n      string display_name = 1;\n      string address = 2;\n    }\n\nIn proto a field mask for `Profile` may look as such:\n\n    mask {\n      paths: \"user.display_name\"\n      paths: \"photo\"\n    }\n\nIn JSON, the same mask is represented as below:\n\n    {\n      mask: \"user.displayName,photo\"\n    }\n\n# Field Masks and Oneof Fields\n\nField masks treat fields in oneofs just as regular fields. Consider the\nfollowing message:\n\n    message SampleMessage {\n      oneof test_oneof {\n        string name = 4;\n        SubMessage sub_message = 9;\n      }\n    }\n\nThe field mask can be:\n\n    mask {\n      paths: \"name\"\n    }\n\nOr:\n\n    mask {\n      paths: \"sub_message\"\n    }\n\nNote that oneof type names (\"test_oneof\" in this case) cannot be used in\npaths.\n\n## Field Mask Verification\n\nThe implementation of any API method which has a FieldMask type field in the\nrequest should verify the included field paths, and return an\n`INVALID_ARGUMENT` error if any path is duplicated or unmappable.",
+      "title": "`FieldMask` represents a set of symbolic field paths, for example:"
+    },
+    "v1Account": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        },
+        "last_name": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/v1ROLE"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "int64"
+          }
+        }
+      }
+    },
+    "v1AddGroupUsersRequest": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "user_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1ChangePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "old": {
+          "type": "string"
+        },
+        "new": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ChangePasswordResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1DeleteGroupResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1DeleteGroupUsersRequest": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "user_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1GetAccountResponse": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/v1ROLE"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Group": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string",
+          "title": "Required for creation"
+        },
+        "fully_qualified_name": {
+          "type": "string",
+          "description": "fully_qualified_name is unique identifier of group apart from ID."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Required for creation \nscopes must be subset of the scopes of parent."
+        },
+        "parent_id": {
+          "type": "string",
+          "format": "int64",
+          "description": "Required for creation\nParent group is one of the groups owned by user who is creating the group."
+        },
+        "num_of_child_groups": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Not required for creation\nnum_of_child_groups represents number of direct child groups"
+        },
+        "num_of_users": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Not required for creation\nnum_of_users represents number of users who belongs to group"
+        }
+      },
+      "description": "Group is a collection of scopes and functionalities."
+    },
+    "v1ListGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "numOfRecords": {
+          "type": "integer",
+          "format": "int32",
+          "description": "numOfRecords is used for pagination when we are listing all groups."
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Group"
+          }
+        }
+      }
+    },
+    "v1ListUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1User"
+          }
+        }
+      }
+    },
+    "v1ROLE": {
+      "type": "string",
+      "enum": [
+        "UNDEFINED",
+        "ADMIN",
+        "USER",
+        "SUPER_ADMIN"
+      ],
+      "default": "UNDEFINED"
+    },
+    "v1UpdateAccount": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateAccountResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1UpdateGroup": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateGroupRequest": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "group": {
+          "$ref": "#/definitions/v1UpdateGroup"
+        }
+      }
+    },
+    "v1User": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        },
+        "last_name": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/v1ROLE"
+        }
+      }
+    }
+  }
+}

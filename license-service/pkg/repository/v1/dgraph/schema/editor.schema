@@ -1,0 +1,2 @@
+editor.name: string @index(exact,trigram) .
+editor.product: uid @reverse .

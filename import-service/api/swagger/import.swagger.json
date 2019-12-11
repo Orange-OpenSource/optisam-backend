@@ -1,0 +1,41 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "import service",
+      "version": "version not set"
+    },
+    "schemes": [
+        "http",
+        "https"
+      ],
+    "paths": {
+        "/api/v1/import": {
+           "post": {
+              "summary": "Uploads a file.",
+              "consumes": [
+                 "multipart/form-data"
+              ],
+              "parameters": [
+                {
+                   "in": "formData",
+                   "name": "upfile1",
+                   "type": "file",
+                   "required": true
+                },
+                {
+                   "in": "formData",
+                   "name": "upfile2",
+                   "type": "file",
+                   "required": false
+                },
+                {
+                   "in": "formData",
+                   "name": "upfile3",
+                   "type": "file",
+                   "required": false
+                }
+             ]
+           }
+        }
+     }
+}

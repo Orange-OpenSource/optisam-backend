@@ -1,0 +1,13 @@
+acqRights.entity:                        string @index(exact) .
+acqRights.SKU:                           string @index(trigram) .
+acqRights.swidtag:                       string @index(trigram) .
+acqRights.productName:                   string @index(trigram) .
+acqRights.editor:                        string @index(trigram) .
+acqRights.metric:                        string @index(trigram) .
+acqRights.numOfAcqLicences:              int .
+acqRights.numOfLicencesUnderMaintenance: int .
+acqRights.averageUnitPrice:              float .
+acqRights.averageMaintenantUnitPrice:    float .
+acqRights.totalPurchaseCost:             float .
+acqRights.totalMaintenanceCost:          float .
+acqRights.totalCost:                     float .

@@ -1,0 +1,13 @@
+FROM dockerproxy-iva.si.francetelecom.fr/alpine:latest
+
+LABEL name="OPTISAM" \
+    description="Optisam Account Service" \
+    authors="Dharmjit Singh, Vijay Kumar" \
+    maintainer="Dharmjit Singh <dharmjit.singh@orange.com>" \
+    url="https://gitlab.forge.orange-labs.fr/optisam/optisam-backend.git"
+
+WORKDIR /opt/application/
+COPY ${CI_PROJECT_DIR}/account_service/bin/ /opt/application/
+COPY account-service/cmd/server/cert.pem/ /opt/application/
+EXPOSE 8080
+ENTRYPOINT ./server

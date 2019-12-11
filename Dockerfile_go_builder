@@ -1,0 +1,15 @@
+FROM golang:1.11.5-alpine as buildenv
+
+LABEL name="OPISAM" \
+    description="Optisam License Service" \
+    authors="Vijay Kumar" \
+    maintainer="Dharmjit Singh <dharmjit.singh@orange.com>" \
+    url="https://gitlab.forge.orange-labs.fr/optisam/optisam-backend.git"
+
+
+WORKDIR /src
+
+RUN apk add --no-cache ca-certificates git
+
+COPY ./go.mod ./go.sum ./
+RUN GO111MODULE=on go mod download

@@ -1,0 +1,259 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "validate/validate.proto";
+
+service AccountService {
+  rpc CreateAccount(Account)returns(Account){
+    option (google.api.http) = {
+      post:"/api/v1/accounts"
+      body:"*"
+    };
+  }
+
+  rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse) {
+    option (google.api.http) = {
+      put : "/api/v1/accounts/{account.user_id}"
+      body : "account"
+      additional_bindings{
+        patch : "/api/v1/accounts/{account.user_id}"
+        body : "account"
+      }
+    };
+  }
+
+  rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/accounts/{user_id}"
+    };
+  }
+
+  rpc ChangePassword(ChangePasswordRequest)returns (ChangePasswordResponse){
+    option (google.api.http) = {
+      put:"/api/v1/account/changepassword"
+      body: "*"
+    };
+  }
+
+  // ListGroups list all the groups owned by user.
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/admin/groups"
+    };
+  }
+
+   // ListUserGroups list all the groups which belongs to user.
+   rpc ListUserGroups(ListGroupsRequest) returns (ListGroupsResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/admin/direct_groups"
+    };
+  }
+
+   // Group Creates a group.
+   rpc CreateGroup(Group) returns (Group) {
+    option (google.api.http) = {
+      post:"/api/v1/admin/groups"
+      body:"*"
+    };
+  }
+
+  rpc UpdateGroup(UpdateGroupRequest) returns (Group) {
+    option (google.api.http) = {
+      put:"/api/v1/admin/groups/{group_id}"
+      body:"*"
+    };
+  }
+
+  rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse) {
+    option (google.api.http) = {
+      delete:"/api/v1/admin/groups/{group_id}"
+    };
+  }
+
+
+  rpc ListChildGroups(ListChildGroupsRequest)returns (ListGroupsResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/admin/groups/{group_id}/groups"
+    };
+  }
+
+  //GetUsers list all the users present  
+  rpc GetUsers(GetUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/accounts"
+    };
+  }
+
+  //GetGroupUsers list all the users present in the group
+  rpc GetGroupUsers(GetGroupUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/admin/groups/{group_id}/users"
+    };
+  }
+
+  //AddGroupUser adds user to the group
+  rpc AddGroupUser(AddGroupUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      put:"/api/v1/admin/groups/{group_id}/users/add"
+      body:"*"
+    };
+  }
+
+  //DeleteGroupUser deletes users from the group
+  rpc DeleteGroupUser(DeleteGroupUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      put:"/api/v1/admin/groups/{group_id}/users/delete"
+      body:"*"
+    };
+  }
+}
+
+
+message ChangePasswordRequest {
+  string old = 1;
+  string new = 2;
+}
+
+message ChangePasswordResponse {
+   bool success  = 1;
+}
+
+message DeleteGroupRequest {
+  int64 group_id = 1;
+}
+
+message DeleteGroupResponse {
+  bool success = 1;
+}
+
+message UpdateGroupRequest {
+  int64 group_id = 1;
+  UpdateGroup group = 2;
+}
+
+message UpdateGroup {
+  string name  = 1 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"]; 
+}
+
+
+
+message GroupQueryParams {
+  string name = 1;
+}
+
+message ListChildGroupsRequest {
+  int64 group_id = 1;
+}
+
+// ListGroupsRequest does not have any parameters yet but may have in future
+// when pagination, searching and sorting support is required.
+message ListGroupsRequest {
+}
+
+message ListGroupsResponse {
+  // numOfRecords is used for pagination when we are listing all groups.
+  int32 numOfRecords = 1;
+  repeated Group groups = 2;
+}
+
+// Group is a collection of scopes and functionalities.
+message Group {
+    int64 ID = 1;
+    // Required for creation
+    string name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"]; 
+    // fully_qualified_name is unique identifier of group apart from ID.
+    string fully_qualified_name = 3; 
+     // Required for creation 
+     // scopes must be subset of the scopes of parent.
+    repeated string scopes = 4;
+     // Required for creation
+     // Parent group is one of the groups owned by user who is creating the group.
+    int64 parent_id = 5;  
+
+    // Not required for creation
+    // num_of_child_groups represents number of direct child groups
+    int32 num_of_child_groups = 6;
+
+    // Not required for creation
+    // num_of_users represents number of users who belongs to group
+    int32 num_of_users = 7;
+}
+
+enum ROLE {
+  UNDEFINED = 0;
+  ADMIN = 1;
+  USER = 2;
+  SUPER_ADMIN = 3;
+}
+
+message Account {
+  string user_id = 1 [(validate.rules).string.email = true];
+  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string locale = 4 [(validate.rules).string = {in: ["en", "fr"]}];
+  ROLE role = 5   [(validate.rules).enum = {in: [1,2]}];;
+  repeated int64 groups = 6;
+}
+
+message UpdateAccountRequest {
+  UpdateAccount account = 1;
+  google.protobuf.FieldMask update_mask = 2;
+}
+
+message UpdateAccount {
+  string user_id = 1 [(validate.rules).string.email = true];
+  string locale = 2 [(validate.rules).string = {in: ["en", "fr"]}];
+}
+
+message UpdateAccountResponse {
+  bool success = 1;
+}
+
+
+message GetAccountRequest {
+  // TODO : remove this we can now get userid from token
+  // This is being ignored now.Will be removed in future
+ string user_id = 1;
+}
+
+message GetAccountResponse {
+  string user_id = 1[(validate.rules).string.email = true];
+  ROLE role = 2;
+  string locale = 3;
+}
+
+message GetUsersRequest{
+
+}
+
+message GetGroupUsersRequest{
+  int64 group_id = 1;
+}
+
+message User {
+  string user_id = 1 [(validate.rules).string.email = true];
+  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string locale = 4;
+  ROLE role = 5 ;
+}
+
+message ListUsersResponse{
+    repeated User users = 1;
+}
+
+message AddGroupUsersRequest{
+  int64 group_id = 1;
+  repeated string user_id = 2 [(validate.rules).repeated.items.string.email = true];
+}
+
+message DeleteGroupUsersRequest{
+  int64 group_id = 1;
+  repeated string user_id = 2 [(validate.rules).repeated.items.string.email = true];
+}

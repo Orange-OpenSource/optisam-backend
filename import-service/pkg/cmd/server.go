@@ -1,0 +1,188 @@
+// Copyright (C) 2019 Orange
+// 
+// This software is distributed under the terms and conditions of the 'Apache License 2.0'
+// license which can be found in the file 'License.txt' in this package distribution 
+// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
+//
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/InVisionApp/go-health"
+	"github.com/InVisionApp/go-health/checkers"
+
+	"net/http"
+	"net/url"
+	"optisam-backend/common/optisam/buildinfo"
+	"optisam-backend/common/optisam/healthcheck"
+	"optisam-backend/common/optisam/jaeger"
+	"optisam-backend/common/optisam/pki"
+	"optisam-backend/common/optisam/prometheus"
+	"optisam-backend/import-service/pkg/config"
+
+	"optisam-backend/common/optisam/logger"
+	"optisam-backend/import-service/pkg/protocol/rest"
+
+	"time"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
+	"go.opencensus.io/plugin/ocgrpc"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
+)
+
+// nolint: gochecknoglobals
+var (
+	version    string
+	commitHash string
+	buildDate  string
+)
+
+// nolint: gochecknoinits
+func init() {
+	pflag.Bool("version", false, "Show version information")
+}
+
+// RunServer runs gRPC server and HTTP gateway
+func RunServer() error {
+	config.Configure(viper.GetViper(), pflag.CommandLine)
+
+	pflag.Parse()
+	if os.Getenv("ENV") == "prod" {
+		viper.SetConfigName("config-prod")
+	} else if os.Getenv("ENV") == "pprod" {
+		viper.SetConfigName("config-pprod")
+	} else if os.Getenv("ENV") == "int" {
+		viper.SetConfigName("config-int")
+	} else if os.Getenv("ENV") == "dev" {
+		viper.SetConfigName("config-dev")
+	} else {
+		viper.SetConfigName("config-local")
+	}
+
+	viper.AddConfigPath("/opt/config/")
+	viper.AddConfigPath(".")
+	viper.SetConfigType("toml")
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Error reading config file, %s", err)
+	}
+
+	var cfg *config.Config
+	err := viper.Unmarshal(&cfg)
+	if err != nil {
+		log.Fatalf("failed to unmarshal configuration: %v", err)
+	}
+
+	fmt.Printf("%+v", cfg)
+
+	buildInfo := buildinfo.New(version, commitHash, buildDate)
+	// Instumentation Handler
+	instrumentationRouter := http.NewServeMux()
+	instrumentationRouter.Handle("/version", buildinfo.Handler(buildInfo))
+
+	// configure health checker
+	healthChecker := healthcheck.New()
+	instrumentationRouter.Handle("/healthz", healthcheck.Handler(healthChecker))
+	if err := logger.Init(1, ""); err != nil {
+		return fmt.Errorf("failed to initialize logger: %v", err)
+	}
+	// initialize logger
+	if err := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
+		return fmt.Errorf("failed to initialize logger: %v", err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		logger.Log.Error(err.Error())
+		os.Exit(3)
+	}
+
+	ctx := context.Background()
+
+	// Register http health check
+	{
+		// TODO change the port
+		check, err := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
+		if err != nil {
+			return fmt.Errorf("failed to create health checker: %v", err.Error())
+		}
+		err = healthChecker.AddCheck(&health.Config{
+			Name:     "Http Server",
+			Checker:  check,
+			Interval: time.Duration(3) * time.Second,
+			Fatal:    true,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to add health checker: %v", err.Error())
+		}
+	}
+
+	// Configure Prometheus
+	if cfg.Instrumentation.Prometheus.Enabled {
+		logger.Log.Info("prometheus exporter enabled")
+
+		exporter, err := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
+		if err != nil {
+			logger.Log.Fatal("Prometheus Exporter Error")
+		}
+		view.RegisterExporter(exporter)
+		instrumentationRouter.Handle("/metrics", exporter)
+	}
+
+	// Trace everything in development environment or when debugging is enabled
+	if cfg.Environment == "development" || cfg.Environment == "INTEGRATION" || cfg.Debug {
+		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	}
+
+	// Configure Jaeger
+	if cfg.Instrumentation.Jaeger.Enabled {
+		logger.Log.Info("jaeger exporter enabled")
+
+		exporter, err := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
+		if err != nil {
+			logger.Log.Fatal("Jaeger Exporter Error")
+		}
+		trace.RegisterExporter(exporter)
+	}
+
+	// Register stat views
+	if err := view.Register(
+		// HTTP
+		ochttp.ServerRequestCountView,
+		ochttp.ServerRequestBytesView,
+		ochttp.ServerResponseBytesView,
+		ochttp.ServerLatencyView,
+		ochttp.ServerRequestCountByMethod,
+		ochttp.ServerResponseCountByStatusCode,
+
+		// GRPC
+		ocgrpc.ServerReceivedBytesPerRPCView,
+		ocgrpc.ServerSentBytesPerRPCView,
+		ocgrpc.ServerLatencyView,
+		ocgrpc.ServerCompletedRPCsView,
+	); err != nil {
+		logger.Log.Error("Failed to register server stats view")
+	}
+
+	// Run Instumentation Server
+	instrumentationServer := &http.Server{
+		Addr:    cfg.Instrumentation.Addr,
+		Handler: instrumentationRouter,
+	}
+	go func() {
+		_ = instrumentationServer.ListenAndServe()
+	}()
+
+	// get the verify key to validate jwt
+	verifyKey, err := pki.GetVerifyKey(cfg.PKI)
+	if err != nil {
+		logger.Log.Fatal("Failed to get verify key")
+	}
+
+	return rest.RunServer(ctx, verifyKey, cfg.HTTPPort, cfg.UploadDir)
+}

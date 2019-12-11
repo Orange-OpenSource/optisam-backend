@@ -1,0 +1,40 @@
+# Binaries for programs and plugins
+**/server
+!**/server/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+gomock_*
+badger
+mapping_badger
+study
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+*.testCoverage
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Test Data files
+**/*.zip
+
+# Deployment files
+**/.gitlab-ci.yml
+**/.golangci.yml
+**/*-service.yml
+**/sonar-project.properties
+
+# Configuraiton files
+**/config-*.toml
+**/cert.pem
+**/key.pem

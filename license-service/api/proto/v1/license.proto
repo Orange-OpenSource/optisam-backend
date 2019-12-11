@@ -1,0 +1,757 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+service LicenseService {
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products"
+    };
+  }
+
+  rpc ListProductsForApplication(ListProductsForApplicationRequest) returns (ListProductsForApplicationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/applications/{application_id}/products"
+    };
+  }
+
+  rpc GetProduct(ProductRequest) returns (ProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/{swid_tag}"
+    };
+  }
+
+  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest) returns (ListAcquiredRightsForProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/{swid_tag}/acquiredrights"
+    };
+  }
+
+  rpc ListApplicationsForProduct(ListApplicationsForProductRequest) returns (ListApplicationsForProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/{swid_tag}/applications"
+    };
+  }
+
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/applications"
+    };
+  }
+
+  rpc ListInstancesForApplicationsProduct(ListInstancesForApplicationProductRequest) returns (ListInstancesForApplicationProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/{swid_tag}/applications/{application_id}/instances"
+    };
+  }
+
+  rpc ListEquipmentsMetadata(ListEquipmentMetadataRequest)returns (ListEquipmentMetadataResponse){
+    option (google.api.http) = {
+      get : "/api/v1/equipments/metadata"
+    };
+  }
+
+   rpc GetEquipmentMetadata(EquipmentMetadataRequest)returns (EquipmentMetadata){
+    option (google.api.http) = {
+      get : "/api/v1/equipments/metadata/{ID}"
+    };
+  }
+
+
+  rpc EquipmentsTypes(EquipmentTypesRequest)returns (EquipmentTypesResponse){
+    option (google.api.http) = {
+      get : "/api/v1/equipments/types"
+    };
+  }
+
+  rpc CreateEquipmentType(EquipmentType)returns (EquipmentType){
+    option (google.api.http) = {
+      post : "/api/v1/equipments/types"
+      body: "*"
+    };
+  }
+
+  // UpdateEquipmentType provides support for updating equipment
+  // only addition of new attribyte is supported. 
+  // 1. Attributes added 
+  rpc UpdateEquipmentType(UpdateEquipmentTypeRequest)returns (EquipmentType){
+    option (google.api.http) = {
+      put : "/api/v1/equipments/types/{id}"
+      body: "*"
+       additional_bindings{
+        patch :  "/api/v1/equipments/types/{id}"
+        body : "*"
+      }
+    };
+  }
+
+  rpc ListAcquiredRights(ListAcquiredRightsRequest) returns (ListAcquiredRightsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/acquiredrights"
+    };
+  }
+
+  rpc ListEquipments(ListEquipmentsRequest) returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}"
+    };
+  }
+
+  rpc GetEquipment(GetEquipmentRequest) returns (GetEquipmentResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}"
+    };
+  }
+
+  rpc ListEquipmentParents(ListEquipmentParentsRequest) returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}/parents"
+    };
+  }
+
+  rpc ListEquipmentChildren(ListEquipmentChildrenRequest) returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}/childs/{children_type_id}"
+    };
+  }
+
+  rpc ListEquipmentProducts(ListEquipmentProductsRequest) returns (ListEquipmentProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}/products"
+    };
+  }
+
+   // ListMetrices
+   rpc ListMetrices(ListMetricRequest) returns (ListMetricResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metric"
+    };
+  }
+
+  // ListMetricType
+  rpc ListMetricType(ListMetricTypeRequest) returns (ListMetricTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metric/types"
+    };
+  }
+
+  // CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
+  rpc CreateMetricOracleProcessorStandard(CreateMetricOPS)returns (CreateMetricOPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ops"
+      body : "*"
+    };
+  }
+
+  // CreateMetricSAGProcessorStandard will create an sag.processor.standard metric
+  rpc CreateMetricSAGProcessorStandard(CreateMetricSPS)returns (CreateMetricSPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/sps"
+      body : "*"
+    };
+  }
+
+   // CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric
+   rpc CreateMetricIBMPvuStandard(CreateMetricIPS)returns (CreateMetricIPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ips"
+      body : "*"
+    };
+  }
+
+  rpc ListEquipmentsForProduct(ListEquipmentsForProductRequest) returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/{swid_tag}/equipments/{eq_type_id}"
+    };
+  }
+
+  rpc CreateProductAggregation(ProductAggregation) returns (ProductAggregation) {
+    option (google.api.http) = {
+      post : "/api/v1/products/aggregations"
+      body : "*"
+    };
+  }
+
+  rpc ListProductAggregation(ListProductAggregationRequest) returns (ListProductAggregationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations"
+    };
+  }
+
+  rpc DeleteProductAggregation(DeleteProductAggregationRequest) returns (ListProductAggregationResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/products/aggregations/{ID}"
+    };
+  }
+
+  rpc ListEditors(ListEditorsRequest)returns(ListEditorsResponse){
+    option (google.api.http) = {
+      get : "/api/v1/editors"
+    };
+  }
+}
+
+message ListEditorsRequest {}
+
+message ListEditorsResponse {
+  repeated Editor editors = 1;
+}
+
+message Editor {
+  string ID = 1;
+  string Name = 2;
+}
+
+
+message DeleteProductAggregationRequest {
+  string ID = 1;
+}
+
+message ListProductAggregationResponse {
+  repeated ProductAggregation aggregations = 1;
+}
+
+message ListProductAggregationRequest {
+  // May be required in future
+}
+
+message ProductAggregation {
+  string ID = 1;
+  string name = 2;
+  string editor = 3;
+  string product = 4;
+  string metric  = 5;
+  repeated string products = 6;
+}
+
+message CreateMetricIPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string core_factor_attr_id = 4;  
+  string base_eq_type_id = 5;
+}
+
+message CreateMetricSPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string core_factor_attr_id = 4;  
+  string base_eq_type_id = 5;
+}
+
+message ListEquipmentsForProductRequest {
+  string swid_tag = 1;
+  string eq_type_id = 2;
+  int32 page_num = 3 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 4 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  string sort_by = 5 ;
+  SortOrder sort_order = 6 ;
+  string search_params = 7 ;
+}
+
+message ListMetricRequest {}
+
+message ListMetricResponse {
+  repeated Metric metrices = 1;
+}
+
+message Metric {
+  string type = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ListMetricTypeRequest {}
+
+message ListMetricTypeResponse {
+  repeated MetricType types = 1;
+}
+
+message MetricType {
+  enum Type {
+    Unknown = 0;
+    Oracle_Processor  = 1;
+    Oracle_NUP = 2;
+    SAG_Processor = 3;
+    IBM_PVU = 4;
+  }
+  string name = 1;
+  string description = 2;
+  string href = 3;
+  Type type_id = 4;
+}
+
+message ListAcquiredRightsForProductRequest {
+  string swid_tag = 1;
+}
+
+message ListAcquiredRightsForProductResponse {
+      repeated ProductAcquiredRights acq_rights = 1;
+}
+
+message CreateMetricOPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;
+  string start_eq_type_id = 6;
+  string base_eq_type_id = 7;
+  string aggerateLevel_eq_type_id = 8;
+  string end_eq_type_id = 9;
+}
+
+message ListEquipmentProductsResponse {
+  int32 totalRecords = 1;
+  repeated EquipmentProduct products = 2;
+}
+
+message EquipmentProduct {
+  string swidTag = 1;
+  string name = 2;
+  string editor = 3;
+  string version = 4;
+}
+
+message ListEquipmentProductsRequest {
+  string type_id = 1;
+  string equip_id = 2;
+  int32 page_num = 4 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 5 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  enum SortBy {
+    SWID_TAG = 0;
+    NAME = 1;
+    EDITOR = 2;
+    VERSION = 3;
+  }
+  SortBy sort_by = 6 ;
+  SortOrder sort_order = 7 ;
+  EquipmentProductSearchParams search_params = 8;
+}
+
+message EquipmentProductSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter name = 2;
+  StringFilter editor = 3;
+}
+
+message ListEquipmentChildrenRequest {
+  string type_id = 1;
+  string equip_id = 2;
+  string children_type_id = 3;
+  int32 page_num = 4 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 5 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  string sort_by = 6 ;
+  SortOrder sort_order = 7 ;
+  string search_params = 8 ; // "attr1=val1,attr2=val2,attr3=val3,..."
+}
+
+message ListEquipmentParentsRequest {
+  string type_id = 1;
+  string equip_id = 2;
+}
+
+message GetEquipmentParentsResponse {
+  string equipments = 1;
+}
+
+message GetEquipmentRequest {
+  string type_id = 1;
+  string equip_id = 2;
+}
+
+message GetEquipmentResponse {
+   string equipment = 1;
+}
+
+message ListEquipmentsRequest {
+  string type_id = 1;
+  int32 page_num = 2 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 3 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  string sort_by = 4 ;
+  SortOrder sort_order = 5 ;
+  string search_params = 6 ; // TODO: decide parsing formats
+}
+
+
+
+message ListEquipmentsResponse {
+  int32 totalRecords = 1;
+  bytes equipments = 2;
+}
+
+message UpdateEquipmentTypeRequest {
+  string id = 1; 
+  // Only send parent id if equipment type does not have a parent.
+  string parent_id = 2;
+  repeated Attribute attributes = 3;
+}
+
+message EquipmentMetadataRequest {
+  enum Attributes {
+    All = 0 ; // TODO : ALL caps
+    Mapped = 1 ;
+    Unmapped = 2 ;
+  }
+  string ID = 1;
+  Attributes attributes = 2 [(validate.rules).enum.defined_only = true];
+}
+
+
+
+message Product {
+  string swidTag = 1;
+  string name = 2;
+  string version = 3;
+  string category = 4;
+  string editor = 5;
+  string metric = 6;
+  int32 numCptLicences = 7;
+  int32 numAcqLicences = 8;
+  double totalCost = 9;
+  int32 deltaNumber = 10;
+  double deltaCost = 11;
+  int32 numOfApplications = 12;
+  int32 numofEquipments = 13;
+}
+
+message ProductForApplication {
+  string swidTag = 1;
+  string name = 2;
+  string Editor = 3;
+  string Edition = 4;
+  string Version = 5;
+  double totalCost = 6;
+  int32 numOfInstances = 7;
+  int32 numofEquipments = 8;
+}
+
+message Application {
+  string applicationId = 1;
+  string name = 2;
+  string application_owner = 3;
+  int32 numOfInstances = 4;
+  int32 numofProducts = 5;
+  double totalCost = 6;
+}
+
+message ListProductsResponse { 
+  int32 totalRecords=1;
+  repeated Product products = 2; 
+}
+
+message ListProductsForApplicationResponse { 
+  int32 totalRecords=1;
+  repeated ProductForApplication products = 2;
+}
+
+message ListApplicationsResponse { 
+  int32 totalRecords=1;
+  repeated Application applications = 2; 
+}
+
+
+message ListProductsRequest {
+  int32 page_num = 1 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 2 [(validate.rules).int32 = {gte:10},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  string sort_by =3 [(validate.rules).string = {in: ["name", "swidtag","version","category","editor","metric","numCptLicences","numAcqLicences","totalCost","deltaNumber","deltaCost","numOfApplications","numofEquipments"]}];
+  string sort_order = 4 [(validate.rules).string = {in: ["asc", "desc"]}];
+  ProductSearchParams search_params = 5 ;
+}
+
+message ProductSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter name = 2;
+  StringFilter editor = 3;
+  StringFilter edition = 4;
+  AggregationFilter agFilter = 5;
+ /* map<string,string> search_map = 5 [(validate.rules).map.keys.string = {in: ["name", "swidtag","version","category","editor","metric","numCptLicences","numAcqLicences","totalCost","deltaNumber","deltaCost","numOfApplications","numofEquipments"]}];*/
+}
+
+message AggregationFilter {
+  // Not For metric means aggregation for a product should not exist for a given metric
+  string NotForMetric = 1;
+}
+
+message ListApplicationsForProductRequest {
+  string swid_tag = 1 ;
+  int32 page_num = 2 [(validate.rules).int32 = {gte:1, lt: 1000},(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number",minimum:1,maximum:1000}];
+  int32 page_size = 3 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {minimum: 10, maximum: 100, description: "Items per page"}];
+  string sort_by =4 [(validate.rules).string = {in: ["name","application_owner","numOfInstances","numofEquipments"]}];
+  string sort_order = 5 [(validate.rules).string = {in: ["asc", "desc"]}];
+  ApplicationSearchParams search_params = 6 ;
+}
+
+message ListApplicationsForProductResponse {
+  int32 totalRecords = 1;
+  repeated ApplicationForProduct applications = 2;
+}
+
+message ApplicationForProduct {
+  string application_id=1;
+  string name = 2;
+  string app_owner = 3;
+  int32 numOfInstances = 4;
+  int32 numofEquipments = 5;
+}
+
+
+
+message ListInstancesForApplicationProductRequest {
+  enum SortBy {
+    NAME = 0;
+    ENV = 1;
+    NUM_PRODUCTS =2;
+    NUM_EQUIPMENTS =3; 
+  }
+  string swid_tag = 1 ;
+  string application_id = 2;
+  int32 page_num = 3 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number",minimum:1,maximum:1000}];
+  int32 page_size = 4[(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  SortBy sort_by = 5 [(validate.rules).enum.defined_only = true];
+  SortOrder sort_order = 6 ; // [(validate.rules).enum.defined_only = true];
+  //InstancesForApplicationProductSearchParams search_params = 7;
+}
+
+//message InstancesForApplicationProductSearchParams {
+  //StringFilter name = 1;
+ /* map<string,string> search_map = 5 [(validate.rules).map.keys.string = {in: ["name", "swidtag","version","category","editor","metric","numCptLicences","numAcqLicences","totalCost","deltaNumber","deltaCost","numOfApplications","numofEquipments"]}];*/
+//}
+
+message ListInstancesForApplicationProductResponse {
+  int32 totalRecords = 1;
+  repeated InstancesForApplicationProduct instances = 2;
+}
+
+message InstancesForApplicationProduct {
+  string id = 1 ;
+  string name = 2;
+  string environment  = 3;
+  int32 numofEquipments = 4;
+  int32 numofProducts = 5 ;
+}
+
+
+message ListProductsForApplicationRequest {
+  string application_id = 1; 
+}
+
+
+message ListApplicationsRequest {
+  int32 page_num = 1 [(validate.rules).int32 = {gte:1, lt: 1000},(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number",minimum:1,maximum:1000}];
+  int32 page_size = 2 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {minimum: 10, maximum: 100, description: "Items per page"}];
+  string sort_by =3 [(validate.rules).string = {in: ["applicationId","name","application_owner","numOfInstances","numofProducts","totalCost"]}];
+  string sort_order = 4 [(validate.rules).string = {in: ["asc", "desc"]}];
+  ApplicationSearchParams search_params = 5 ;
+}
+
+message ApplicationSearchParams {
+  StringFilter name = 1;
+  StringFilter application_owner = 2;
+}
+
+
+message ProductRequest {
+  string swid_tag = 1;
+}
+
+message ApplicationRequest {
+  string application_id = 1;
+}
+
+message ProductResponse {
+  ProductInfo productInfo = 1;
+  ProductOptions productOptions = 2;
+}
+
+message ApplicationResponse {
+  string name = 1;
+  string version = 2;
+  string edition = 3;
+  string editor = 4;
+  string metric = 5;
+  int32 numOfInstances = 6;
+}
+
+
+message ProductInfo {
+  string swidTag = 1;
+  string editor = 2;
+  string edition = 3;
+  string release = 4;
+  string metric = 5;
+  int32 numOfApplications = 6;
+  int32 numofEquipments = 7;
+}
+
+message ProductOptions {
+  int32 numOfOptions = 1;
+  repeated OptionInfo optioninfo = 2;  
+}
+
+message OptionInfo {
+  string swidTag = 1;
+  string Name = 2;
+  string edition = 3;
+  string editor = 4;
+  string version = 5;
+  string metric = 6;
+}
+
+message ProductAcquiredRights {
+  string SKU = 1;
+  string swidTag = 2;
+  string metric = 3;
+  int32 numCptLicences = 4;
+  int32 numAcqLicences = 5;
+  double totalCost = 6;
+  int32 deltaNumber = 7;
+  double deltaCost = 8;
+}
+
+message ListEquipmentMetadataRequest {
+  enum Type {
+    UN_MAPPED = 0;
+    MAPPED = 1;
+    ALL = 2;
+  }
+  Type type = 1 [(validate.rules).enum.defined_only = true];
+}
+
+message ListEquipmentMetadataResponse {
+  repeated EquipmentMetadata metadata = 1;
+}
+
+message EquipmentMetadata {
+  string ID = 1;
+  string name = 2;
+  repeated string attributes = 3;
+}
+
+
+message EquipmentTypesRequest {}
+
+message EquipmentTypesResponse {
+  repeated EquipmentType equipment_types = 1;
+}
+
+message EquipmentType {
+  string ID  = 1;
+  string type = 2 [(validate.rules).string.pattern = "^[-_A-Za-z0-9]+$"];
+  string parent_id = 3;
+  string parent_type = 4;
+  string metadata_id = 5;
+  string metadata_source = 6;
+  repeated Attribute attributes = 7;
+}
+
+message Attribute {
+  string ID  = 1;
+  string name = 2 [(validate.rules).string.pattern = "^[-_A-Za-z0-9]+$"];
+  DataTypes data_type = 3 [(validate.rules).enum = {in: [1,2,3]}];
+  bool primary_key = 4  ;
+  bool displayed = 5;
+  bool searchable = 6;
+  bool parent_identifier = 7;
+  string mapped_to = 8;
+}
+
+
+message ListAcquiredRightsRequest {
+  int32 page_num = 1 [(validate.rules).int32 = {gte:1, lt: 1000},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Page number", minimum:1,maximum:1000}];
+  int32 page_size = 2 [(validate.rules).int32 = {gte:10, lt: 100},
+  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {description: "Items per page",minimum:10,maximum:100}];
+  enum SortBy {
+    ENTITY = 0;
+    SKU    = 1;
+    SWID_TAG = 2;
+    PRODUCT_NAME = 3;
+    EDITOR = 4;
+    METRIC = 5;
+    ACQUIRED_LICENSES_NUMBER  = 6;
+    LICENSES_UNDER_MAINTENANCE_NUMBER = 7;
+    AVG_LICENSE_UNIT_PRICE = 8;
+    AVG_MAINTENANCE_UNIT_PRICE = 9;
+    TOTAL_PURCHASE_COST = 10;
+    TOTAL_MAINTENANCE_COST = 11;
+    TOTAL_COST = 12;
+  }
+  SortBy sort_by =3 [(validate.rules).enum.defined_only = true];
+  SortOrder sort_order = 4 ; //[(validate.rules).enum.defined_only = true];
+  AcquiredRightsSearchParams search_params = 5 ;
+}
+
+message AcquiredRightsSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter SKU = 2;
+  StringFilter editor = 3;
+  StringFilter productName = 4;
+  StringFilter metric = 5;
+}
+
+message ListAcquiredRightsResponse {
+  int32 totalRecords = 1;
+  repeated AcquiredRights acquired_rights = 2;
+}
+
+
+message AcquiredRights {
+  string entity = 1;
+  string SKU    = 2;
+  string swid_tag = 3;
+  string product_name = 4;
+  string editor = 5;
+  string metric = 6;
+  int64 acquired_licenses_number = 7; // this is int64 swagger gen is not correct
+  int64 licenses_under_maintenance_number = 8; // this is int64 swagger gen is not correct
+  float avg_licenes_unit_price = 9;
+  float avg_maintenance_unit_price = 10;
+  float total_purchase_cost = 11;
+  float total_maintenance_cost = 12;
+  float total_cost = 13;
+}
+
+message StringFilter {
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+}
+
+enum SortOrder {
+  option allow_alias = true;
+  ASC = 0;
+  asc = 0;
+  DESC = 1;
+  desc = 1;
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT    = 2;
+  FLOAT  = 3;
+}
