@@ -36,5 +36,4 @@ study
 
 # Configuraiton files
 **/config-*.toml
-**/cert.pem
-**/key.pem
+!**/config-local.toml

@@ -5,6 +5,6 @@ WORKDIR /usr/local/bin
 ADD server .
 ADD key.pem .
 ADD cert.pem .
-ADD config-dev.toml .
+ADD config-local.toml .
 
 CMD [ "./server" ]

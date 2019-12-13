@@ -1,7 +1,12 @@
 OpTISAM
 ======
 
-__OPTISAM__ (Optimized tool for inventive software asset management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services
+__OPTISAM__ (Optimized tool for inventive software asset management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services namely:
+
+- auth-service
+- account-service
+- license-service
+- import-service
 
 ## Quick start
 ### Download
@@ -10,13 +15,52 @@ __OPTISAM__ (Optimized tool for inventive software asset management) is a tool f
 $ git clone https://github.com/Orange-OpenSource/optisam-backend.git
 ```
 
-### Build / Run
+### Build
 
-go build
+* Go to the main file of the service
+```
+$ cd ${service-name}-service/cmd/server;
+```
+* Generate binary for each service [Binary file will get generated in bin folder]
+```
+$ go install -v
+```
+##### - Change configuration file
+<em>Update values of config files **${service}/cmd/server/config-dev.toml**</em>
+
+### Package
+
+* Building docker images for all services
+
+```
+docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile_${service-name} .
+docker push optisam/${service-name}-service:latest
+```
+
+* Building docker images for postgres DB
+
+```
+cd account-service\pkg\repository\v1\postgres\scripts
+docker build --pull -t optisam/postgres:latest -f Dockerfile .
+docker push optisam/postgres:latest
+```
+
+### Run
+
+##### - Run using Docker-Compose
+
+you can create and start all the services from your configuration (docker-compose.yml) using single command -
+
+```
+docker-compose -f docker-compose.yml pull
+docker-compose -f docker-compose.yml up
+```
 
 [comment]: <> ### Install and Usage
 [comment]: <> ## Contribute
-[comment]: <> ## Versions _{or "Changelog", optional}_
+[comment]: <>  Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+[comment]: <> ## Versions 
+
 
 ## License
 

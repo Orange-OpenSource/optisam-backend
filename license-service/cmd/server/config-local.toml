@@ -1,0 +1,37 @@
+environment = "DEVELOPMENT"
+debug = false
+grpcport = "8090"
+httpport = "8080"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = false
+namespace = "licenseservice"
+
+[instrumentation.jaeger]
+enabled = false
+serviceName = "license-service"
+collectorEndpoint = ""
+agentEndpoint = ""
+# username = ""
+# password = ""
+
+[dgraph]
+hosts = [
+    "127.0.0.1:9080"
+]
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[pki]
+publickeypath = "cert.pem"

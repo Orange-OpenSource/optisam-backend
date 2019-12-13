@@ -14,8 +14,6 @@ VALUES
 
  CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
- --select control_extension('create','pgcrypto');
-
 CREATE TABLE IF NOT EXISTS users (
   username VARCHAR PRIMARY KEY,
   first_name VARCHAR,
@@ -50,7 +48,7 @@ CREATE INDEX IF NOT EXISTS fully_qualified_name_gist_idx ON groups USING gist(fu
 DELETE FROM groups ;
 
 INSERT INTO groups(name, fully_qualified_name, created_by, scopes)
-VALUES ('ROOT', 'ROOT', 'admin@test.com', ARRAY [ 'Orange', 'Guinea Conakry', 'Group', 'France', 'Ivory Coast' ]);
+VALUES ('ROOT', 'ROOT', 'admin@test.com', ARRAY [ 'GroupA', 'GroupB', 'GroupC', 'GroupD', 'GroupE' ]);
 
 CREATE TABLE IF NOT EXISTS group_ownership (
     group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE, 

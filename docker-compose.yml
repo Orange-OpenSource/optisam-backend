@@ -1,8 +1,8 @@
 version: "3.2"
-# docker commit optisam-backend_db_1 optisam/auth-service-postgres
+
 services:
   db:
-    image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/postgres
+    image: optisam/postgres
     restart: always
     ports:
       - "5432:5432"
@@ -11,21 +11,21 @@ services:
       - POSTGRES_USER=optisam
       - POSTGRES_PASSWORD=optisam
   optisam-auth-service:
-    image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/auth-service
+    image: optisam/auth-service
     restart: always
     ports:
       - "9093:9093"
     depends_on:
       - db 
-  # optisam-account-service:
-  #   image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/account-service
-  #   restart: always
-  #   ports:
-  #     - "9091:9091"
-  #   depends_on:
-  #     - db 
+  optisam-account-service:
+    image: optisam/account-service
+    restart: always
+    ports:
+      - "9091:9091"
+    depends_on:
+      - db 
   optisam-license-service:
-    image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/license-service 
+    image: optisam/license-service 
     restart: always
     ports:
       - "8092:8091"
