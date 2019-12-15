@@ -1,7 +1,7 @@
 OpTISAM
 ======
 
-__OPTISAM__ (Optimized tool for inventive software asset management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services namely:
+__OPTISAM__ (Optimized tool for inventive Software Asset Management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services namely:
 
 - auth-service
 - account-service
@@ -18,9 +18,9 @@ $ git clone https://github.com/Orange-OpenSource/optisam-backend.git
 ### Build
 
 ##### - Change configuration file
-<em>Update values of config files **${service}/cmd/server/config-local.toml**</em>
+<em>Update values of config files **${service}/cmd/server/config-local.toml** as per your requirement</em>
 
-* Building docker images for all services
+* Building docker images for all micro-services
 
 ```
 cd ${service-name}/cmd/server
@@ -28,7 +28,7 @@ docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile .
 docker push optisam/${service-name}-service:latest
 ```
 
-* Building docker images for postgres DB
+* Building docker image for postgres database having required schema for optisam
 
 ```
 cd account-service\pkg\repository\v1\postgres\scripts
@@ -47,11 +47,10 @@ docker-compose -f docker-compose.yml pull
 docker-compose -f docker-compose.yml up
 ```
 
-[comment]: <> ### Install and Usage
-[comment]: <> ## Contribute
-[comment]: <>  Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
-[comment]: <> ## Versions 
-
+<!-- ### Install and Usage
+## Contribute
+Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+## Versions  -->
 
 ## License
 
