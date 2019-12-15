@@ -37,3 +37,6 @@ study
 # Configuraiton files
 **/config-*.toml
 !**/config-local.toml
+
+# Docker files
+Dockerfile_*

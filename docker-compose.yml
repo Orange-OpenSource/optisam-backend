@@ -14,25 +14,25 @@ services:
     image: optisam/auth-service
     restart: always
     ports:
-      - "9093:9093"
+      - "9091:9091"
     depends_on:
       - db 
   optisam-account-service:
     image: optisam/account-service
     restart: always
     ports:
-      - "9091:9091"
+      - "9093:9093"
     depends_on:
       - db 
   optisam-license-service:
     image: optisam/license-service 
     restart: always
     ports:
-      - "8092:8091"
+      - "8091:8091"
     depends_on:
-      - server 
+      - alpha 
   zero:
-    image: dgraph/dgraph:latest
+    image: optisam/dgraph:latest
     volumes:
       - type: volume
         source: dgraph
@@ -44,8 +44,8 @@ services:
       - 6080:6080
     restart: on-failure
     command: dgraph zero --my=zero:5080  
-  server:
-    image: dgraph/dgraph:latest
+  alpha:
+    image: optisam/dgraph:latest
     volumes:
       - type: volume
         source: dgraph
@@ -58,7 +58,7 @@ services:
     restart: on-failure
     command: dgraph alpha --my=server:7080 --lru_mb=2048 --zero=zero:5080
   ratel:
-    image: dgraph/dgraph:latest
+    image: optisam/dgraph:latest
     volumes:
       - type: volume
         source: dgraph

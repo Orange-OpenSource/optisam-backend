@@ -1,7 +1,7 @@
 environment = "DEVELOPMENT"
 debug = false
 grpcport = "8090"
-httpport = "8080"
+httpport = "8091"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -24,7 +24,7 @@ agentEndpoint = ""
 
 [dgraph]
 hosts = [
-    "127.0.0.1:9080"
+    "localhost:9080"
 ]
 
 [app.params]
