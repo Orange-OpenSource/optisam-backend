@@ -17,23 +17,14 @@ $ git clone https://github.com/Orange-OpenSource/optisam-backend.git
 
 ### Build
 
-* Go to the main file of the service
-```
-$ cd ${service-name}-service/cmd/server;
-```
-* Generate binary for each service [Binary file will get generated in bin folder]
-```
-$ go install -v
-```
 ##### - Change configuration file
-<em>Update values of config files **${service}/cmd/server/config-dev.toml**</em>
-
-### Package
+<em>Update values of config files **${service}/cmd/server/config-local.toml**</em>
 
 * Building docker images for all services
 
 ```
-docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile_${service-name} .
+cd ${service-name}/cmd/server
+docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile .
 docker push optisam/${service-name}-service:latest
 ```
 
@@ -49,7 +40,7 @@ docker push optisam/postgres:latest
 
 ##### - Run using Docker-Compose
 
-you can create and start all the services from your configuration (docker-compose.yml) using single command -
+you can create and start all the services from your configuration (docker-compose.yml) -
 
 ```
 docker-compose -f docker-compose.yml pull
