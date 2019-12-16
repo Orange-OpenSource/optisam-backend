@@ -30,35 +30,10 @@ services:
     ports:
       - "8091:8091"
     depends_on:
-      - alpha 
-  zero:
+      - dgraph 
+  dgraph:
     image: optisam/dgraph:latest
-    volumes:
-      - type: volume
-        source: dgraph
-        target: /dgraph
-        volume:
-          nocopy: true
-    ports:
-      - 5080:5080
-      - 6080:6080
     restart: on-failure
-    command: dgraph zero --my=zero:5080  
-  alpha:
-    image: optisam/dgraph:latest
-    volumes:
-      - type: volume
-        source: dgraph
-        target: /dgraph
-        volume:
-          nocopy: true
-    ports:
-      - 8080:8080
-      - 9080:9080
-    restart: on-failure
-    command: dgraph alpha --my=server:7080 --lru_mb=2048 --zero=zero:5080
-  ratel:
-    image: optisam/dgraph:latest
     volumes:
       - type: volume
         source: dgraph
@@ -67,7 +42,8 @@ services:
           nocopy: true
     ports:
       - 8000:8000
-    command: dgraph-ratel
-  
+      - 8080:8080
+      - 9080:9080
+
 volumes:
   dgraph:
