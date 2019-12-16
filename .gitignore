@@ -28,6 +28,15 @@ study
 # Test Data files
 **/*.zip
 
+# Docker files
+Dockerfile_*
+Dockerfile_account
+Dockerfile_auth
+Dockerfile_import
+Dockerfile_license
+Dockerfile_go_builder
+Dockerfile_data_process
+
 # Deployment files
 **/.gitlab-ci.yml
 **/.golangci.yml
@@ -37,6 +46,3 @@ study
 # Configuraiton files
 **/config-*.toml
 !**/config-local.toml
-
-# Docker files
-Dockerfile_*

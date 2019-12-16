@@ -23,11 +23,11 @@ agentEndpoint = ""
 # password = ""
 
 [database]
-host = "127.0.0.1"
+host = "db"
 port = 5432
 user = "optisam"
 pass = "optisam"
 name = "optisam"
 
 [dgraph]
-host = "127.0.0.1:9080"
+host = "dgraph:9080"
