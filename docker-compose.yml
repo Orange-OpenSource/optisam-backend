@@ -14,23 +14,30 @@ services:
     image: optisam/auth-service
     restart: always
     ports:
-      - "9091:9091"
+      - "8090:8091"
     depends_on:
       - db 
   optisam-account-service:
     image: optisam/account-service
     restart: always
     ports:
-      - "9093:9093"
+      - "8090:8092"
     depends_on:
       - db 
   optisam-license-service:
     image: optisam/license-service 
     restart: always
     ports:
-      - "8091:8091"
+      - "8090:8093"
     depends_on:
       - dgraph 
+  optisam-import-service:
+    image: optisam/import-service 
+    restart: always
+    ports:
+      - "8090:8094"
+    depends_on:
+      - db 
   dgraph:
     image: optisam/dgraph:latest
     restart: on-failure

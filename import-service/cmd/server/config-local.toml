@@ -1,6 +1,7 @@
 environment = "DEVELOPMENT"
 debug = false
-grpcport = "8091"
+# Same directory will be consumed by upload service
+uploaddir = "/opt/application/uploaded"
 httpport = "8090"
 
 [log]
@@ -12,26 +13,14 @@ addr = ":8081"
 
 [instrumentation.prometheus]
 enabled = false
-namespace = "licenseservice"
 
 [instrumentation.jaeger]
 enabled = false
-serviceName = "license-service"
 collectorEndpoint = ""
 agentEndpoint = ""
 # username = ""
 # password = ""
 
-[dgraph]
-hosts = [
-    "dgraph:9080"
-]
-
-[app.params]
-pageSize = 20
-pageNum = 1
-sortOrder = "asc"
-sortBy = "name"
 
 [pki]
 publickeypath = "cert.pem"

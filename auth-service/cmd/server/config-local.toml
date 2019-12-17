@@ -1,7 +1,7 @@
 environment = "DEVELOPMENT"
 debug = false
-grpcport = 9090
-httpport = 9091
+grpcport = "8091"
+httpport = "8090"
 jwtprivatekey = "key.pem"
 
 [log]
