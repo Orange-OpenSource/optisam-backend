@@ -1,6 +1,6 @@
 environment = "DEVELOPMENT"
 debug = false
-grpcport = "8091"
+grpcport = "9090"
 httpport = "8090"
 
 [log]
