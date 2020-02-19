@@ -46,6 +46,12 @@ you can create and start all the services from your configuration (docker-compos
 docker-compose -f docker-compose.yml pull
 docker-compose -f docker-compose.yml up
 ```
+##### - Play with factory super admin user
+
+1) Once docker-compose is up and running, open optisam dashboard at http://localhost:8090
+2) login with below superadmin credentials
+    * username - admin@test.com
+    * password - admin
 
 <!-- ### Install and Usage
 ## Contribute

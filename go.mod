@@ -60,3 +60,5 @@ require (
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/oauth2.v3 v3.9.5
 )
+
+go 1.13
