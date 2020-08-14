@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package equipments
 
 import (
@@ -54,11 +54,10 @@ func init() {
 func loadEquipemnts() error {
 	config := loader.NewDefaultConfig()
 	config.LoadEquipments = true
-	config.BadgerDir = CmdEquipments.Conf.GetString("badger_dir")
 	config.Alpha = CmdEquipments.Conf.GetStringSlice("alpha")
-	config.Zero = CmdEquipments.Conf.GetString("zero")
 	config.ScopeSkeleten = CmdEquipments.Conf.GetString("skeleton_scope")
 	config.BatchSize = CmdEquipments.Conf.GetInt("batch_size")
+	config.GenerateRDF = CmdEquipments.Conf.GetBool("gen_rdf")
 	fls, err := getAllFilesWithPrefix(config.ScopeSkeleten, "equipment_")
 	if err != nil {
 		return err

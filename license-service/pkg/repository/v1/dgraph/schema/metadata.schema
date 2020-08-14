@@ -1,15 +1,16 @@
-type: string @index(exact) .
+type_name: string @index(exact) @upsert .
+updated  : string .
+created  : string .
 scopes: [string] @index(exact) .
 
-metadata.type: string @index(exact) .
-metadata.source: string @index(exact) .
+metadata.type      : string @index(exact) .
+metadata.source    : string @index(exact) .
 metadata.attributes:  [string] .
 
-
-attribute.name: string @index(exact) .
-attribute.searchable: bool .
-attribute.identifier: bool .
-attribute.displayed: bool .
+attribute.name            : string @index(exact) .
+attribute.searchable      : bool .
+attribute.identifier      : bool .
+attribute.displayed       : bool .
 attribute.parentIdentifier: bool .
-attibute.mapped_to: string .
-attibute.schema_name: string .
+attibute.mapped_to        : string .
+attibute.schema_name      : string .

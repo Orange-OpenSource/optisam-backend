@@ -5,9 +5,9 @@ option go_package = "v1";
 package v1;
 
 import "google/api/annotations.proto";
-import "protoc-gen-swagger/options/annotations.proto";
 import "google/protobuf/field_mask.proto";
 import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 
 service AccountService {
   rpc CreateAccount(Account)returns(Account){
@@ -25,6 +25,12 @@ service AccountService {
         patch : "/api/v1/accounts/{account.user_id}"
         body : "account"
       }
+    };
+  }
+
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
+    option (google.api.http) = {
+      delete:"/api/v1/accounts/{user_id}"
     };
   }
 
@@ -112,6 +118,47 @@ service AccountService {
       body:"*"
     };
   }
+
+
+  //CreateScope creates a new scope and add it into root group
+  rpc CreateScope(CreateScopeRequest) returns (CreateScopeResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/scopes"
+      body: "*"
+    };
+  }
+
+  //ListScopes returns list of available scopes in system
+  rpc ListScopes(ListScopesRequest) returns (ListScopesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/scopes"
+    };
+  }
+}
+
+message ListScopesRequest {
+  
+}
+
+message ListScopesResponse {
+    repeated Scope scopes = 1;
+}
+
+message Scope {
+  string scope_code = 1;
+  string scope_name = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_on = 4;
+  repeated string group_names = 5;
+}
+
+message CreateScopeRequest {
+  string scope_code = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string scope_name = 2  [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+}
+
+message CreateScopeResponse {
+  
 }
 
 
@@ -208,13 +255,24 @@ message UpdateAccountRequest {
 
 message UpdateAccount {
   string user_id = 1 [(validate.rules).string.email = true];
-  string locale = 2 [(validate.rules).string = {in: ["en", "fr"]}];
+  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string locale = 4 [(validate.rules).string = {in: ["en", "fr"]}];
+  ROLE role = 5;
+  string profile_pic = 6;
 }
 
 message UpdateAccountResponse {
   bool success = 1;
 }
 
+message DeleteAccountRequest {
+  string user_id = 1 [(validate.rules).string.email = true];
+}
+
+message DeleteAccountResponse {
+  bool success = 1;
+}
 
 message GetAccountRequest {
   // TODO : remove this we can now get userid from token
@@ -224,12 +282,16 @@ message GetAccountRequest {
 
 message GetAccountResponse {
   string user_id = 1[(validate.rules).string.email = true];
-  ROLE role = 2;
-  string locale = 3;
+  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  ROLE role = 4;
+  string locale = 5;
+  string profile_pic =6;
+  bool first_login = 7;
 }
 
 message GetUsersRequest{
-
+  UserQueryParams user_filter = 1;
 }
 
 message GetGroupUsersRequest{
@@ -241,7 +303,8 @@ message User {
   string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
   string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
   string locale = 4;
-  ROLE role = 5 ;
+  repeated string groups = 5;
+  ROLE role = 6;
 }
 
 message ListUsersResponse{
@@ -257,3 +320,7 @@ message DeleteGroupUsersRequest{
   int64 group_id = 1;
   repeated string user_id = 2 [(validate.rules).repeated.items.string.email = true];
 }
+message UserQueryParams{
+  bool all_users = 1;
+}
+

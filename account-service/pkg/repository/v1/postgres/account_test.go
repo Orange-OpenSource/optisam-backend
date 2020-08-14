@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
@@ -25,6 +25,16 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 		userID string
 		req    *v1.UpdateAccount
 	}
+	profile_pic := []byte{
+		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+		0x10, 0x00, 0x00, 0x00, 0x0f, 0x04, 0x03, 0x00, 0x00, 0x00, 0x1f, 0x5d, 0x52, 0x1c, 0x00, 0x00, 0x00, 0x0f, 0x50,
+		0x4c, 0x54, 0x45, 0x7a, 0xdf, 0xfd, 0xfd, 0xff, 0xfc, 0x39, 0x4d, 0x52, 0x19, 0x16, 0x15, 0xc3, 0x8d, 0x76, 0xc7,
+		0x36, 0x2c, 0xf5, 0x00, 0x00, 0x00, 0x40, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x95, 0xc9, 0xd1, 0x0d, 0xc0, 0x20,
+		0x0c, 0x03, 0xd1, 0x23, 0x5d, 0xa0, 0x49, 0x17, 0x20, 0x4c, 0xc0, 0x10, 0xec, 0x3f, 0x53, 0x8d, 0xc2, 0x02, 0x9c,
+		0xfc, 0xf1, 0x24, 0xe3, 0x31, 0x54, 0x3a, 0xd1, 0x51, 0x96, 0x74, 0x1c, 0xcd, 0x18, 0xed, 0x9b, 0x9a, 0x11, 0x85,
+		0x24, 0xea, 0xda, 0xe0, 0x99, 0x14, 0xd6, 0x3a, 0x68, 0x6f, 0x41, 0xdd, 0xe2, 0x07, 0xdb, 0xb5, 0x05, 0xca, 0xdb,
+		0xb2, 0x9a, 0xdd, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+	}
 	tests := []struct {
 		name    string
 		r       *AccountRepository
@@ -39,14 +49,23 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "user8@test.com",
 				req: &v1.UpdateAccount{
-					Locale: "fr",
+					FirstName:  "userF8",
+					LastName:   "userL8",
+					Locale:     "fr",
+					ProfilePic: profile_pic,
 				},
 			},
 			setup: func() (func() error, error) {
 				usernames := []string{"user8@test.com", "user7@test.com"}
+				firstnames := []string{"first8", "first7"}
+				lastnames := []string{"last8", "last7"}
+				roles := []string{"Admin", "User"}
 				passwords := []string{"supersecret8", "supersecret7"}
 				locales := []string{"en", "fr"}
-				if err := createUsers(db, usernames, passwords, locales); err != nil {
+				if err := createUsersWithProfilePic(db, usernames, firstnames, lastnames, roles, passwords, locales, [][]byte{
+					[]byte("profile_pic1"),
+					[]byte("profile_pic2"),
+				}); err != nil {
 					return nil, err
 				}
 				return func() error {
@@ -58,9 +77,16 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 				if err != nil {
 					return err
 				}
+				if ai.FirstName != "userF8" {
+					return fmt.Errorf("unexpected firstname - expected: userF8, got: %v", ai.FirstName)
+				}
+				if ai.LastName != "userL8" {
+					return fmt.Errorf("unexpected lastname - expected: userL8, got: %v", ai.LastName)
+				}
 				if ai.Locale != "fr" {
 					return fmt.Errorf("unexpected locale - expected: fr, got: %v", ai.Locale)
 				}
+				assert.Equalf(t, ai.ProfilePic, profile_pic, "ProfilePic should be same")
 				return nil
 			},
 		},
@@ -75,9 +101,12 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 			},
 			setup: func() (func() error, error) {
 				usernames := []string{"user8@test.com", "user7@test.com"}
+				firstnames := []string{"first8", "first7"}
+				lastnames := []string{"last8", "last7"}
+				roles := []string{"Admin", "User"}
 				passwords := []string{"supersecret8", "supersecret7"}
 				locales := []string{"en", "fr"}
-				if err := createUsers(db, usernames, passwords, locales); err != nil {
+				if err := createUsers(db, usernames, firstnames, lastnames, roles, passwords, locales); err != nil {
 					return nil, err
 				}
 				return func() error {
@@ -108,13 +137,265 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 	}
 }
 
-func createUsers(db *sql.DB, usernames, passwords, locales []string) error {
-	query := "INSERT INTO users(username,first_name,last_name,role,password,locale) VALUES "
+func TestAccountRepository_UpdateUserAccount(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID string
+		req    *v1.UpdateUserAccount
+	}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, error)
+		verify  func(a *AccountRepository) error
+		wantErr bool
+	}{
+		{name: "success",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:    context.Background(),
+				userID: "user8@test.com",
+				req: &v1.UpdateUserAccount{
+					Role: v1.RoleAdmin,
+				},
+			},
+			setup: func() (func() error, error) {
+				usernames := []string{"user8@test.com", "user7@test.com"}
+				firstnames := []string{"first8", "first7"}
+				lastnames := []string{"last8", "last7"}
+				roles := []string{"User", "User"}
+				passwords := []string{"supersecret8", "supersecret7"}
+				locales := []string{"en", "fr"}
+				if err := createUsers(db, usernames, firstnames, lastnames, roles, passwords, locales); err != nil {
+					return nil, err
+				}
+				return func() error {
+					return deleteAllUsers(db, usernames)
+				}, nil
+			},
+			verify: func(a *AccountRepository) error {
+				ai, err := a.AccountInfo(context.Background(), "user8@test.com")
+				if err != nil {
+					return err
+				}
+				if ai.Role != v1.RoleAdmin {
+					return fmt.Errorf("unexpected Role - expected: Admin, got: %v", ai.Role)
+				}
+				return nil
+			},
+		},
+		{name: "failure user does not exist",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:    context.Background(),
+				userID: "user9@test.com",
+				req: &v1.UpdateUserAccount{
+					Role: v1.RoleAdmin,
+				},
+			},
+			setup: func() (func() error, error) {
+				usernames := []string{"user8@test.com", "user7@test.com"}
+				firstnames := []string{"first8", "first7"}
+				lastnames := []string{"last8", "last7"}
+				roles := []string{"User", "User"}
+				passwords := []string{"supersecret8", "supersecret7"}
+				locales := []string{"en", "fr"}
+				if err := createUsers(db, usernames, firstnames, lastnames, roles, passwords, locales); err != nil {
+					return nil, err
+				}
+				return func() error {
+					return deleteAllUsers(db, usernames)
+				}, nil
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
+				return
+			}
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			if err := tt.r.UpdateUserAccount(tt.args.ctx, tt.args.userID, tt.args.req); (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.UpdateUserAccount() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				assert.Empty(t, tt.verify(tt.r))
+			}
+		})
+	}
+}
+
+func TestAccountRepository_ChangeUserFirstLogin(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID string
+	}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, error)
+		verify  func(a *AccountRepository) error
+		wantErr bool
+	}{
+		{name: "success",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:    context.Background(),
+				userID: "user8@test.com",
+			},
+			setup: func() (func() error, error) {
+				usernames := []string{"user8@test.com", "user7@test.com"}
+				firstnames := []string{"first8", "first7"}
+				lastnames := []string{"last8", "last7"}
+				roles := []string{"User", "User"}
+				passwords := []string{"supersecret8", "supersecret7"}
+				locales := []string{"en", "fr"}
+				if err := createUsers(db, usernames, firstnames, lastnames, roles, passwords, locales); err != nil {
+					return nil, err
+				}
+				return func() error {
+					return deleteAllUsers(db, usernames)
+				}, nil
+			},
+			verify: func(a *AccountRepository) error {
+				ai, err := a.AccountInfo(context.Background(), "user8@test.com")
+				if err != nil {
+					return err
+				}
+				if ai.FirstLogin != false {
+					return fmt.Errorf("unexpected FirstLogin - expected: false, got: %v", ai.Role)
+				}
+				return nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
+				return
+			}
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			if err := tt.r.ChangeUserFirstLogin(tt.args.ctx, tt.args.userID); (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.ChangeUserFirstLogin() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				assert.Empty(t, tt.verify(tt.r))
+			}
+		})
+	}
+}
+
+func TestAccountRepository_AccountInfo(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID string
+	}
+	profile_pic1 := []byte{
+		0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00,
+		0x10, 0x00, 0x00, 0x00, 0x0f, 0x04, 0x03, 0x00, 0x00, 0x00, 0x1f, 0x5d, 0x52, 0x1c, 0x00, 0x00, 0x00, 0x0f, 0x50,
+		0x4c, 0x54, 0x45, 0x7a, 0xdf, 0xfd, 0xfd, 0xff, 0xfc, 0x39, 0x4d, 0x52, 0x19, 0x16, 0x15, 0xc3, 0x8d, 0x76, 0xc7,
+		0x36, 0x2c, 0xf5, 0x00, 0x00, 0x00, 0x40, 0x49, 0x44, 0x41, 0x54, 0x08, 0xd7, 0x95, 0xc9, 0xd1, 0x0d, 0xc0, 0x20,
+		0x0c, 0x03, 0xd1, 0x23, 0x5d, 0xa0, 0x49, 0x17, 0x20, 0x4c, 0xc0, 0x10, 0xec, 0x3f, 0x53, 0x8d, 0xc2, 0x02, 0x9c,
+		0xfc, 0xf1, 0x24, 0xe3, 0x31, 0x54, 0x3a, 0xd1, 0x51, 0x96, 0x74, 0x1c, 0xcd, 0x18, 0xed, 0x9b, 0x9a, 0x11, 0x85,
+		0x24, 0xea, 0xda, 0xe0, 0x99, 0x14, 0xd6, 0x3a, 0x68, 0x6f, 0x41, 0xdd, 0xe2, 0x07, 0xdb, 0xb5, 0x05, 0xca, 0xdb,
+		0xb2, 0x9a, 0xdd, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+	}
+	profile_pic2 := []byte{}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, error)
+		want    *v1.AccountInfo
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:    context.Background(),
+				userID: "user1@test.com",
+			},
+			setup: func() (func() error, error) {
+				usernames := []string{"user1@test.com", "user2@test.com"}
+				firstnames := []string{"first1", "first2"}
+				lastnames := []string{"last1", "last2"}
+				roles := []string{"Admin", "User"}
+				passwords := []string{"supersecret1", "supersecret2"}
+				locales := []string{"en", "fr"}
+				profile_pics := [][]byte{profile_pic1, profile_pic2}
+				if err := createUsersWithProfilePic(db, usernames, firstnames, lastnames, roles, passwords, locales, profile_pics); err != nil {
+					return nil, err
+				}
+				return func() error {
+					return deleteAllUsers(db, usernames)
+				}, nil
+			},
+			want: &v1.AccountInfo{
+				UserId:     "user1@test.com",
+				FirstName:  "first1",
+				LastName:   "last1",
+				Locale:     "en",
+				Role:       v1.RoleAdmin,
+				ProfilePic: profile_pic1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
+				return
+			}
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			got, err := tt.r.AccountInfo(tt.args.ctx, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.AccountInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				compareUser(t, "AccountInfo", tt.want, got)
+			}
+		})
+	}
+}
+func createUsers(db *sql.DB, usernames, firstnames, lastnames, roles, passwords, locales []string) error {
+	query := "INSERT INTO users(username,first_name,last_name,role,password,locale,first_login) VALUES "
 	args := []interface{}{}
 	for i := range usernames {
 		// TODO" change this
-		query += fmt.Sprintf("($%v,'fn','ln','Admin',$%v,$%v)", 3*i+1, 3*i+2, 3*i+3)
-		args = append(args, usernames[i], passwords[i], locales[i])
+		query += fmt.Sprintf("($%v,$%v,$%v,$%v,$%v,$%v,TRUE)", 6*i+1, 6*i+2, 6*i+3, 6*i+4, 6*i+5, 6*i+6)
+		args = append(args, usernames[i], firstnames[i], lastnames[i], roles[i], passwords[i], locales[i])
+		if i != len(usernames)-1 {
+			query += ","
+		}
+	}
+	_, err := db.Exec(query, args...)
+	return err
+}
+func createUsersWithProfilePic(db *sql.DB, usernames, firstnames, lastnames, roles, passwords, locales []string, profile_pics [][]byte) error {
+	query := "INSERT INTO users(username,first_name,last_name,role,password,locale,first_login,profile_pic) VALUES "
+	args := []interface{}{}
+	for i := range usernames {
+		// TODO" change this
+		query += fmt.Sprintf("($%v,$%v,$%v,$%v,$%v,$%v,TRUE,$%v)", 7*i+1, 7*i+2, 7*i+3, 7*i+4, 7*i+5, 7*i+6, 7*i+7)
+		args = append(args, usernames[i], firstnames[i], lastnames[i], roles[i], passwords[i], locales[i], profile_pics[i])
 		if i != len(usernames)-1 {
 			query += ","
 		}
@@ -135,7 +416,6 @@ func deleteAllUsers(db *sql.DB, users []string) error {
 	}
 
 	query += ")"
-
 	result, err := db.Exec(query, params...)
 	if err != nil {
 		return err
@@ -210,11 +490,13 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 			},
 			setup: func() (func() error, *v1.AccountInfo, error) {
 				acc := &v1.AccountInfo{
-					UserId:    "u1",
-					FirstName: "FIRST",
-					LastName:  "LAST",
-					Locale:    "en",
-					Role:      v1.RoleUser,
+					UserId:     "u1",
+					FirstName:  "FIRST",
+					LastName:   "LAST",
+					Password:   "password",
+					Locale:     "en",
+					Role:       v1.RoleUser,
+					FirstLogin: true,
 				}
 				return func() error {
 					return deleteAllUsers(db, []string{"u1"})
@@ -234,8 +516,12 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 				if ai.LastName != "LAST" {
 					return fmt.Errorf("unexpected lastname - expected: LAST, got: %v", ai.LastName)
 				}
+
 				if ai.Role != v1.RoleUser {
 					return fmt.Errorf("unexpected role - expected: user, got: %v", ai.Role)
+				}
+				if ai.FirstLogin != true {
+					return fmt.Errorf("unexpected firstlogin - expected: true, got: %v", ai.FirstLogin)
 				}
 				return nil
 			},
@@ -299,6 +585,9 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 				if ai.Role != v1.RoleAdmin {
 					return fmt.Errorf("unexpected role - expected: admin, got: %v", ai.Role)
 				}
+				if ai.FirstLogin != true {
+					return fmt.Errorf("unexpected firstlogin - expected: true, got: %v", ai.FirstLogin)
+				}
 				if tl != 5 {
 					return fmt.Errorf("unexpected records - expected: 5 , got: %v", tl)
 				}
@@ -318,6 +607,7 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 					return
 				}
 			}()
+			acc.Password = "password"
 			if err := tt.r.CreateAccount(tt.args.ctx, acc); (err != nil) != tt.wantErr {
 				t.Errorf("AccountRepository.CreateAccount() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -413,7 +703,8 @@ func TestAccountRepository_UserExistsByID(t *testing.T) {
 
 func TestAccountRepository_UsersAll(t *testing.T) {
 	type args struct {
-		ctx context.Context
+		ctx    context.Context
+		userID string
 	}
 
 	tests := []struct {
@@ -426,7 +717,8 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 		{name: "success",
 			r: NewAccountRepository(db),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				userID: "admin@test.com",
 			},
 			setup: func() (func() error, []*v1.AccountInfo, error) {
 				grps := []*v1.Group{
@@ -473,9 +765,156 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					FirstName: "abc",
 					LastName:  "xyz",
 					Locale:    "fr",
+					Password:  "password",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
-						grps[1].ID, grps[3].ID,
+						grps[1].ID,
+					},
+					GroupName: []string{"A"},
+				}
+				if err := repo.CreateAccount(context.Background(), acc1); err != nil {
+					return nil, nil, err
+				}
+				acc2 := &v1.AccountInfo{
+					UserId:    "u2",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Password:  "password",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[1].ID,
+					},
+					GroupName: []string{"A"},
+				}
+				if err := repo.CreateAccount(context.Background(), acc2); err != nil {
+					return nil, nil, err
+				}
+				acc3 := &v1.AccountInfo{
+					UserId:    "u3",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Password:  "password",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[4].ID,
+					},
+					GroupName: []string{"D"},
+				}
+				if err := repo.CreateAccount(context.Background(), acc3); err != nil {
+					return nil, nil, err
+				}
+				return func() error {
+						err := deleteAllUsers(db, []string{"u1", "u2", "u3"})
+						if err != nil {
+							return err
+						}
+						gp := make([]int64, len(grps))
+						for i := range grps {
+							gp[i] = grps[i].ID
+						}
+						return deleteGroups(db, gp)
+					}, []*v1.AccountInfo{
+						acc1,
+						acc2,
+						acc3,
+					}, nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, users, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
+				return
+			}
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			got, err := tt.r.UsersAll(tt.args.ctx, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.UsersAll() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, u := range users {
+				u.Password = ""
+			}
+
+			compareUsersAll(t, "UsersAll", users, got)
+
+		})
+	}
+}
+
+func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
+	type args struct {
+		ctx    context.Context
+		userID string
+		params *v1.UserQueryParams
+	}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, []*v1.AccountInfo, error)
+		want    []*v1.AccountInfo
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:    context.Background(),
+				userID: "u1",
+				params: &v1.UserQueryParams{},
+			},
+			setup: func() (func() error, []*v1.AccountInfo, error) {
+				grps := []*v1.Group{
+					&v1.Group{
+						Name:               "SUPERROOT",
+						FullyQualifiedName: "SUPERROOT",
+					},
+					&v1.Group{
+						Name:               "A",
+						FullyQualifiedName: "SUPERROOT.A",
+					},
+					&v1.Group{
+						Name:               "B",
+						FullyQualifiedName: "SUPERROOT.A.B",
+					},
+					&v1.Group{
+						Name:               "C",
+						FullyQualifiedName: "SUPERROOT.A.B.C",
+					},
+					&v1.Group{
+						Name:               "D",
+						FullyQualifiedName: "SUPERROOT.A.B.D",
+					},
+				}
+				repo := NewAccountRepository(db)
+				rootID := int64(0)
+				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
+				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
+					return nil, nil, err
+				}
+				grps[0].ID = rootID
+				hir := []int{-1, 0, 1, 2, 2}
+				err := createGroupsHierarchyNew(grps, "admin@test.com", hir)
+				if err != nil {
+					return nil, nil, err
+				}
+				acc1 := &v1.AccountInfo{
+					UserId:    "u1",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Password:  "password",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[1].ID,
 					},
 				}
 				if err := repo.CreateAccount(context.Background(), acc1); err != nil {
@@ -485,6 +924,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					UserId:    "u2",
 					FirstName: "abc",
 					LastName:  "xyz",
+					Password:  "password",
 					Locale:    "fr",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
@@ -498,6 +938,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					UserId:    "u3",
 					FirstName: "abc",
 					LastName:  "xyz",
+					Password:  "password",
 					Locale:    "fr",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
@@ -518,17 +959,6 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 						}
 						return deleteGroups(db, gp)
 					}, []*v1.AccountInfo{
-						&v1.AccountInfo{
-							UserId:    "admin@test.com",
-							FirstName: "super",
-							LastName:  "admin",
-							Locale:    "en",
-							Role:      v1.RoleSuperAdmin,
-							Group: []int64{
-								1,
-							},
-						},
-						acc1,
 						acc2,
 						acc3,
 					}, nil
@@ -546,13 +976,16 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					return
 				}
 			}()
-			got, err := tt.r.UsersAll(tt.args.ctx)
+			got, err := tt.r.UsersWithUserSearchParams(tt.args.ctx, tt.args.userID, tt.args.params)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("AccountRepository.UsersAll() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("AccountRepository.UsersWithUserSearchParams() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, users) {
-				compareUsersAll(t, "UsersAll", got, users)
+			if !tt.wantErr {
+				for _, u := range users {
+					u.Password = ""
+				}
+				compareUsersAll(t, "UsersWithUserSearchParams", users, got)
 			}
 		})
 	}
@@ -618,6 +1051,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					UserId:    "u1",
 					FirstName: "abc",
 					LastName:  "xyz",
+					Password:  "password",
 					Locale:    "fr",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
@@ -631,6 +1065,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					UserId:    "u2",
 					FirstName: "abc",
 					LastName:  "xyz",
+					Password:  "password",
 					Locale:    "fr",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
@@ -644,6 +1079,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					UserId:    "u3",
 					FirstName: "abc",
 					LastName:  "xyz",
+					Password:  "password",
 					Locale:    "fr",
 					Role:      v1.RoleAdmin,
 					Group: []int64{
@@ -672,7 +1108,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cleanup, users, groupId, err := tt.setup()
+			cleanup, users, groupID, err := tt.setup()
 			if !assert.Empty(t, err, "no error is expected in setup") {
 				return
 			}
@@ -681,13 +1117,13 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					return
 				}
 			}()
-			got, err := tt.r.GroupUsers(tt.args.ctx, groupId)
+			got, err := tt.r.GroupUsers(tt.args.ctx, groupID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AccountRepository.GroupUsers() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, users) {
-				compareUsersAll(t, "UsersAll", got, users)
+				compareUsersAll(t, "GroupUsers", users, got)
 			}
 		})
 	}
@@ -762,8 +1198,9 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, //add u1 in B group
 					},
@@ -806,8 +1243,9 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, //add u1 in B group
 					},
@@ -850,8 +1288,9 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, //add u1 in B group
 					},
@@ -925,6 +1364,7 @@ func TestAccountRepository_ChangePassword(t *testing.T) {
 					UserId:    "m@m.com",
 					FirstName: "fn",
 					LastName:  "ln",
+					Password:  "password",
 					Role:      v1.RoleAdmin,
 					Locale:    "en",
 				}); err != nil {
@@ -952,19 +1392,162 @@ func TestAccountRepository_ChangePassword(t *testing.T) {
 				t.Errorf("AccountRepository.ChangePassword() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			correct, err := tt.r.CheckPassword(tt.args.ctx, tt.args.userID, tt.args.password)
-			if !assert.Empty(t, err, "error is not expected from CheckPassword") {
+
+			ai, err := tt.r.AccountInfo(tt.args.ctx, tt.args.userID)
+			if !assert.Empty(t, err, "error is not expected in setup") {
 				return
 			}
-			if !assert.Equal(t, true, correct, "password did not match") {
+
+			assert.Equalf(t, tt.args.password, ai.Password, "expected password to be changed")
+			// correct, err := tt.r.CheckPassword(tt.args.ctx, tt.args.userID, tt.args.password)
+			// if !assert.Empty(t, err, "error is not expected from CheckPassword") {
+			// 	return
+			// }
+			// if !assert.Equal(t, true, correct, "password did not match") {
+			// 	return
+			// }
+			// correct, err = tt.r.CheckPassword(tt.args.ctx, tt.args.userID, randomString(10))
+			// if !assert.Empty(t, err, "error is not expected from CheckPassword") {
+			// 	return
+			// }
+			// if !assert.Equal(t, false, correct, "password did not match") {
+			// 	return
+			// }
+		})
+	}
+}
+
+func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
+	type args struct {
+		ctx         context.Context
+		adminUserID string
+		userID      string
+	}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, error)
+		want    bool
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx:         context.Background(),
+				adminUserID: "admin1@test.com",
+				userID:      "user1@test.com",
+			},
+			setup: func() (func() error, error) {
+				grps := []*v1.Group{
+					&v1.Group{
+						Name:               "SUPERROOT",
+						FullyQualifiedName: "SUPERROOT",
+					},
+					&v1.Group{
+						Name:               "A",
+						FullyQualifiedName: "SUPERROOT.A",
+					},
+					&v1.Group{
+						Name:               "B",
+						FullyQualifiedName: "SUPERROOT.A.B",
+					},
+					&v1.Group{
+						Name:               "C",
+						FullyQualifiedName: "SUPERROOT.A.C",
+					},
+					&v1.Group{
+						Name:               "D",
+						FullyQualifiedName: "SUPERROOT.A.B.D",
+					},
+				}
+				repo := NewAccountRepository(db)
+				rootID := int64(0)
+				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
+				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
+					return nil, err
+				}
+				grps[0].ID = rootID
+				hir := []int{-1, 0, 1, 1, 2}
+				err := createGroupsHierarchyNew(grps, "admin@test.com", hir)
+				if err != nil {
+					return nil, err
+				}
+				acc1 := &v1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[1].ID,
+					},
+				}
+				if err := repo.CreateAccount(context.Background(), acc1); err != nil {
+					return nil, err
+				}
+				acc2 := &v1.AccountInfo{
+					UserId:    "admin2@test.com",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Password:  "password",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[2].ID, grps[3].ID,
+					},
+				}
+				if err := repo.CreateAccount(context.Background(), acc2); err != nil {
+					return nil, err
+				}
+				acc3 := &v1.AccountInfo{
+					UserId:    "user1@test.com",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Password:  "password",
+					Locale:    "fr",
+					Role:      v1.RoleAdmin,
+					Group: []int64{
+						grps[4].ID,
+					},
+				}
+				if err := repo.CreateAccount(context.Background(), acc3); err != nil {
+					return nil, err
+				}
+				return func() error {
+					err := deleteAllUsers(db, []string{"admin1@test.com", "admin2@test.com", "user1@test.com"})
+					if err != nil {
+						return err
+					}
+
+					gp := make([]int64, len(grps))
+					for i := range grps {
+						gp[i] = grps[i].ID
+					}
+					return deleteGroups(db, gp)
+				}, nil
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
 				return
 			}
-			correct, err = tt.r.CheckPassword(tt.args.ctx, tt.args.userID, randomString(10))
-			if !assert.Empty(t, err, "error is not expected from CheckPassword") {
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			got, err := tt.r.UserBelongsToAdminGroup(tt.args.ctx, tt.args.adminUserID, tt.args.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.UserBelongsToAdminGroup() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !assert.Equal(t, false, correct, "password did not match") {
-				return
+			if got != tt.want {
+				t.Errorf("AccountRepository.UserBelongsToAdminGroup() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1004,6 +1587,16 @@ func compareUser(t *testing.T, name string, exp *v1.AccountInfo, act *v1.Account
 	assert.Equalf(t, exp.LastName, act.LastName, "%s.LastName should be same", name)
 	assert.Equalf(t, exp.Locale, act.Locale, "%s.Locale should be same", name)
 	assert.Equalf(t, exp.Role, act.Role, "%s.Role should be same", name)
+	assert.Equalf(t, exp.ProfilePic, act.ProfilePic, "%s.ProfilePic should be same", name)
+	if exp.Password != "" {
+		assert.Equalf(t, exp.Password, act.Password, "%s.Password should be same", name)
+	}
+	if exp.ContFailedLogin != int16(0) {
+		assert.Equalf(t, exp.ContFailedLogin, act.ContFailedLogin, "%s.ContFailedLogin should be same", name)
+	}
+	if exp.ProfilePic != nil {
+		assert.Equalf(t, exp.ProfilePic, act.ProfilePic, "%s.ProfilePic should be same", name)
+	}
 }
 
 func randomString(n int) string {

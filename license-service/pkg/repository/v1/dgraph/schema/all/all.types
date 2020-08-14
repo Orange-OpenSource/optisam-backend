@@ -1,0 +1,225 @@
+type AcquiredRights {
+    type_name
+    scopes
+    updated
+    created
+    acqRights.entity                       
+    acqRights.SKU                         
+    acqRights.swidtag                     
+    acqRights.productName                 
+    acqRights.editor                       
+    acqRights.metric                     
+    acqRights.numOfAcqLicences             
+    acqRights.numOfLicencesUnderMaintenance
+    acqRights.averageUnitPrice           
+    acqRights.averageMaintenantUnitPrice  
+    acqRights.totalPurchaseCost         
+    acqRights.totalMaintenanceCost        
+    acqRights.totalCost
+    <~product.acqRights>                  
+}
+
+type Application {
+    type_name
+    scopes
+    updated
+    created
+    application.id       
+    application.name     
+    application.version  
+    application.owner    
+    application.instance 
+    application.product                    
+}
+
+type Editor {
+    type_name
+    scopes
+    updated
+    created
+    editor.name   
+    editor.product                    
+}
+
+type MetadataEquipment {
+    type_name
+    scopes
+    updated
+    created
+    metadata.equipment.type     
+    metadata.equipment.attribute
+    metadata.equipment.parent   
+    metadata.equipment.source   
+}
+
+type Equipment {
+    type_name
+    scopes
+    updated
+    created
+    equipment.type  
+    equipment.id    
+    equipment.parent
+    equipment.users
+    <~equipment.parent> 
+    <~instance.equipment>
+    <~product.equipment> 
+}
+
+type Instance {
+    type_name
+    scopes
+    updated
+    created
+    instance.id         
+    instance.environment
+    instance.product    
+    instance.equipment 
+    <~application.instance>  
+}
+
+type Metadata {
+    type_name
+    scopes
+    updated
+    created
+    metadata.type      
+    metadata.source    
+    metadata.attributes
+}
+
+type Attribute {
+    type_name
+    scopes
+    updated
+    created
+    attribute.name            
+    attribute.searchable      
+    attribute.identifier      
+    attribute.displayed       
+    attribute.parentIdentifier
+    attibute.mapped_to        
+    attibute.schema_name      
+}
+
+type MetricINM {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.instancenumber.coefficient
+}
+
+type MetricACS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.acs.equipment_type      
+    metric.acs.attr_name           
+    metric.acs.attr_value                            
+}
+
+type MetricIPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.ips.base            
+    metric.ips.attr_core_factor
+    metric.ips.attr_num_cores                    
+}
+
+type MetricOracleOPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.ops.bottom          
+    metric.ops.base            
+    metric.ops.aggregate       
+    metric.ops.top             
+    metric.ops.attr_core_factor
+    metric.ops.attr_num_cores  
+    metric.ops.attr_num_cpu                     
+}
+
+type MetricOracleNUP {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.oracle_nup.bottom          
+    metric.oracle_nup.base            
+    metric.oracle_nup.aggregate       
+    metric.oracle_nup.top             
+    metric.oracle_nup.attr_core_factor
+    metric.oracle_nup.attr_num_cores  
+    metric.oracle_nup.attr_num_cpu    
+    metric.oracle_nup.num_users                        
+}
+
+type MetricSPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.sps.base            
+    metric.sps.attr_core_factor
+    metric.sps.attr_num_cores                     
+}
+
+type ProductAggregation {
+    type_name
+    scopes
+    updated
+    created
+    product_aggregation.id
+    product_aggregation.name        
+    product_aggregation.editor      
+    product_aggregation.product_name
+    product_aggregation.metric      
+    product_aggregation.products                  
+}
+
+type Product {
+    type_name
+    scopes
+    updated
+    created
+    product.name     
+    product.version  
+    product.category 
+    product.editor   
+    product.swidtag  
+    product.child    
+    product.equipment
+    product.acqRights
+    product.users
+    <~application.product>
+    <~instance.product>
+    <~editor.product>                         
+}
+
+type User {
+    type_name
+    scopes
+    updated
+    created
+    users.count
+    users.id
+    <~equipment.users>
+    <~product.users>               
+}

@@ -1,0 +1,43 @@
+environment = "development"
+debug = false
+grpcport = 9090
+httpport = 9091
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation.prometheus]
+enabled = false
+
+[instrumentation.jaeger]
+enabled = false
+serviceName = "report-service"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
+# username = ""
+# password = ""
+
+[database]
+host = "localhost"
+port = 5432
+user = "optisam"
+pass = "optisam"
+name = "optisam"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+license = "localhost:8090"
+
+[dgraph]
+hosts = [
+    "10.171.44.163:9081"
+]
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"

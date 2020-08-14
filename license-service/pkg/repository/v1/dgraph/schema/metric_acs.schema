@@ -1,0 +1,3 @@
+metric.acs.equipment_type       : string .
+metric.acs.attr_name            : string .
+metric.acs.attr_value           : string .

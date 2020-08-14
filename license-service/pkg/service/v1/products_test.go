@@ -3,12 +3,11 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"optisam-backend/common/optisam/ctxmanage"
@@ -16,7 +15,6 @@ import (
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
 	"optisam-backend/license-service/pkg/repository/v1/mock"
-	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -33,707 +31,117 @@ func (p *productQueryMatcher) Matches(x interface{}) bool {
 	if !ok {
 		return ok
 	}
-
-	// TODO write code to compare p.q and expQ here
 	return compareQueryProducts(p, expQ)
 }
 func compareQueryProducts(p *productQueryMatcher, exp *repo.QueryProducts) bool {
 	if exp == nil {
 		return false
 	}
-	assert.Equalf(p.t, p.q.PageSize, exp.PageSize, "Pagesize are not same")
-	assert.Equalf(p.t, p.q.Offset, exp.Offset, "Offset are not same")
-	assert.Equalf(p.t, p.q.SortBy, exp.SortBy, "SortBy are not same")
-	assert.Equalf(p.t, p.q.SortOrder, exp.SortOrder, "SortOrder are not same")
-	assert.Equalf(p.t, p.q.Filter.Filters, exp.Filter.Filters, "Filter are not same")
-	assert.Equalf(p.t, p.q.AcqFilter.Filters, exp.AcqFilter.Filters, "AcqFilter are not same")
-	assert.Equalf(p.t, p.q.AggFilter.Filters, exp.AggFilter.Filters, "AggFilter are not same")
+	if !assert.Equalf(p.t, p.q.PageSize, exp.PageSize, "Pagesize are not same") {
+		return false
+	}
+	if !assert.Equalf(p.t, p.q.Offset, exp.Offset, "Offset are not same") {
+		return false
+	}
+	if !assert.Equalf(p.t, p.q.SortBy, exp.SortBy, "SortBy are not same") {
+		return false
+	}
+	if !assert.Equalf(p.t, p.q.SortOrder, exp.SortOrder, "SortOrder are not same") {
+		return false
+	}
+	if !compareQueryFilters(p.t, "productQueryMatcher", p.q.Filter.Filters, exp.Filter.Filters) {
+		return false
+	}
+	if !compareQueryFilters(p.t, "productQueryMatcher", p.q.AcqFilter.Filters, exp.AcqFilter.Filters) {
+		return false
+	}
+	if !compareQueryFilters(p.t, "productQueryMatcher", p.q.AggFilter.Filters, exp.AggFilter.Filters) {
+		return false
+	}
 	return true
 }
+
+func compareQueryFilters(t *testing.T, name string, expFilter []repo.Queryable, actFilter []repo.Queryable) bool {
+	for i := range expFilter {
+		if !compareQueryFilter(t, fmt.Sprintf("%s[%d]", name, i), expFilter[i], actFilter[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func compareQueryFilter(t *testing.T, name string, expFilter repo.Queryable, actFilter repo.Queryable) bool {
+	if !assert.Equalf(t, expFilter.Key(), actFilter.Key(), "%s.Filter key is not same", name) {
+		return false
+	}
+	if !assert.Equalf(t, expFilter.Value(), actFilter.Value(), "%s.Filter value is not same", name) {
+		return false
+	}
+	if !compareQueryFilterValues(t, name, expFilter.Values(), actFilter.Values()) {
+		return false
+	}
+	// if !assert.Equalf(t, expFilter.Values(), actFilter.Values(), "%s.Filter values is not same", name) {
+	//     return false
+	// }
+	if !assert.Equalf(t, expFilter.Priority(), actFilter.Priority(), "%s.Filter priority is not same", name) {
+		return false
+	}
+	if !assert.Equalf(t, expFilter.Type(), actFilter.Type(), "%s.Filter type is not same", name) {
+		return false
+	}
+	return true
+}
+func compareQueryFilterValues(t *testing.T, name string, exp []interface{}, act []interface{}) bool {
+	if exp == nil && act == nil {
+		return true
+	}
+	for i := range exp {
+		if !assert.Equalf(t, exp[i], act[i], "%s.Filter values is not same", name) {
+			return false
+		}
+	}
+	return true
+}
+
 func (p *productQueryMatcher) String() string {
 	return "productQueryMatcher"
 }
 
-func Test_licenseServiceServer_ListProducts(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
-		UserID: "admin@superuser.com",
-		Role:   "Admin",
-		Socpes: []string{"A", "B"},
-	})
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockLicense := mock.NewMockLicense(mockCtrl)
-
-	s := NewLicenseServiceServer(mockLicense).(*licenseServiceServer)
-
-	type args struct {
-		ctx context.Context
-		req *v1.ListProductsRequest
-	}
-	tests := []struct {
-		name    string
-		s       *licenseServiceServer
-		args    args
-		mock    func()
-		want    *v1.ListProductsResponse
-		wantErr bool
-	}{
-		{name: "SUCCESS",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListProductsRequest{
-					PageNum:   1,
-					PageSize:  10,
-					SortBy:    "name",
-					SortOrder: "asc",
-					SearchParams: &v1.ProductSearchParams{
-						Name: &v1.StringFilter{
-							Filteringkey: "afra",
-						},
-						SwidTag: &v1.StringFilter{
-							Filteringkey: "MICR001",
-						},
-						Editor: &v1.StringFilter{
-							Filteringkey: "oracle",
-						},
-						AgFilter: &v1.AggregationFilter{
-							NotForMetric: "oracle type 1",
-						},
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetProducts(ctx, &productQueryMatcher{
-					q: &repo.QueryProducts{
-						PageSize:  10,
-						Offset:    int32(0),
-						SortBy:    "name",
-						SortOrder: "orderasc",
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "swidtag",
-									FilterValue: "MICR001",
-								},
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "afra",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "oracle",
-								},
-							},
-						},
-						AcqFilter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "metric",
-									FilterValue: "oracle type 1",
-								},
-							},
-						},
-						AggFilter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "Name",
-									FilterValue: "oracle type 1",
-								},
-							},
-						},
-					},
-					t: t,
-				}, []string{"A", "B"}).Return(&repo.ProductInfo{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 10,
-						},
-					},
-					Products: []repo.ProductData{
-						repo.ProductData{
-							Name:              "ProductName",
-							Version:           "1",
-							Category:          "database",
-							Editor:            "oracle",
-							Swidtag:           "MICR001",
-							NumOfEquipments:   2,
-							NumOfApplications: 3,
-						},
-					},
-				}, nil).Times(1)
-			},
-			want: &v1.ListProductsResponse{
-				TotalRecords: 10,
-				Products: []*v1.Product{
-					&v1.Product{
-						Name:              "ProductName",
-						Version:           "1",
-						Category:          "database",
-						Editor:            "oracle",
-						SwidTag:           "MICR001",
-						NumofEquipments:   2,
-						NumOfApplications: 3,
-					},
-				},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mock()
-			got, err := tt.s.ListProducts(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("licenseServiceServer.ListProducts() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr {
-				compareProductResponse(t, "ListProducts", got, tt.want)
-			}
-		})
-	}
+type queryMatcherApplicationsForProduct struct {
+	q *repo.QueryApplicationsForProduct
+	t *testing.T
 }
 
-func Test_licenseServiceServer_ListApplicationsForProduct(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
-		UserID: "admin@superuser.com",
-		Role:   "Admin",
-		Socpes: []string{"A", "B"},
-	})
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockLicense := mock.NewMockLicense(mockCtrl)
-
-	s := NewLicenseServiceServer(mockLicense).(*licenseServiceServer)
-
-	type args struct {
-		ctx context.Context
-		req *v1.ListApplicationsForProductRequest
+func (p *queryMatcherApplicationsForProduct) Matches(x interface{}) bool {
+	expQ, ok := x.(*repo.QueryApplicationsForProduct)
+	if !ok {
+		return ok
 	}
-	tests := []struct {
-		name    string
-		s       *licenseServiceServer
-		args    args
-		want    *v1.ListApplicationsForProductResponse
-		mock    func()
-		wantErr bool
-	}{
-		{name: "SUCCESS - sortby:name , sortorder:asc",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListApplicationsForProductRequest{
-					SwidTag:   "MICR001",
-					PageNum:   1,
-					PageSize:  10,
-					SortBy:    "name",
-					SortOrder: "asc",
-					SearchParams: &v1.ApplicationSearchParams{
-						Name: &v1.StringFilter{
-							Filteringkey: "afra",
-						},
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplicationsForProduct(ctx, &repo.QueryApplicationsForProduct{
-					SwidTag:   "MICR001",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    "name",
-					SortOrder: repo.SortASC,
-					Filter: &repo.AggregateFilter{
-						Filters: []repo.Queryable{
-							&repo.Filter{
-								FilterKey:   "name",
-								FilterValue: "afra",
-							},
-						},
-					},
-				}, []string{"A", "B"}).Return(&repo.ApplicationsForProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 2,
-						},
-					},
-					Applications: []repo.ApplicationsForProductData{
-						repo.ApplicationsForProductData{
-							ApplicationID:   "1",
-							Name:            "Aversea",
-							Owner:           "Yumber",
-							NumOfEquipments: 4,
-							NumOfInstances:  3,
-						},
-						repo.ApplicationsForProductData{
-							ApplicationID:   "2",
-							Name:            "Avellete",
-							Owner:           "Pional",
-							NumOfEquipments: 6,
-							NumOfInstances:  5,
-						},
-					},
-				}, nil).Times(1)
-			},
-			want: &v1.ListApplicationsForProductResponse{
-				TotalRecords: 2,
-				Applications: []*v1.ApplicationForProduct{
-					&v1.ApplicationForProduct{
-						ApplicationId:   "1",
-						Name:            "Aversea",
-						AppOwner:        "Yumber",
-						NumOfInstances:  3,
-						NumofEquipments: 4,
-					},
-					&v1.ApplicationForProduct{
-						ApplicationId:   "2",
-						Name:            "Avellete",
-						AppOwner:        "Pional",
-						NumOfInstances:  5,
-						NumofEquipments: 6,
-					},
-				},
-			},
-			wantErr: false,
-		},
-
-		{name: "SUCCESS - sortby:name , sortorder:desc",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListApplicationsForProductRequest{
-					SwidTag:   "MICR001",
-					PageNum:   1,
-					PageSize:  10,
-					SortBy:    "name",
-					SortOrder: "desc",
-					SearchParams: &v1.ApplicationSearchParams{
-						Name: &v1.StringFilter{
-							Filteringkey: "afra",
-						},
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplicationsForProduct(ctx, &repo.QueryApplicationsForProduct{
-					SwidTag:   "MICR001",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    "name",
-					SortOrder: repo.SortDESC,
-					Filter: &repo.AggregateFilter{
-						Filters: []repo.Queryable{
-							&repo.Filter{
-								FilterKey:   "name",
-								FilterValue: "afra",
-							},
-						},
-					},
-				}, []string{"A", "B"}).Return(&repo.ApplicationsForProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 2,
-						},
-					},
-					Applications: []repo.ApplicationsForProductData{
-						repo.ApplicationsForProductData{
-							ApplicationID:   "1",
-							Name:            "Aversea",
-							Owner:           "Yumber",
-							NumOfEquipments: 4,
-							NumOfInstances:  3,
-						},
-						repo.ApplicationsForProductData{
-							ApplicationID:   "2",
-							Name:            "Avellete",
-							Owner:           "Pional",
-							NumOfEquipments: 6,
-							NumOfInstances:  5,
-						},
-					},
-				}, nil).Times(1)
-			},
-			want: &v1.ListApplicationsForProductResponse{
-				TotalRecords: 2,
-				Applications: []*v1.ApplicationForProduct{
-					&v1.ApplicationForProduct{
-						ApplicationId:   "1",
-						Name:            "Aversea",
-						AppOwner:        "Yumber",
-						NumOfInstances:  3,
-						NumofEquipments: 4,
-					},
-					&v1.ApplicationForProduct{
-						ApplicationId:   "2",
-						Name:            "Avellete",
-						AppOwner:        "Pional",
-						NumOfInstances:  5,
-						NumofEquipments: 6,
-					},
-				},
-			},
-			wantErr: false,
-		},
-
-		{name: "FAILURE",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListApplicationsForProductRequest{
-					SwidTag:   "MICR002",
-					PageNum:   1,
-					PageSize:  10,
-					SortBy:    "name",
-					SortOrder: "asc",
-				},
-			},
-			want: &v1.ListApplicationsForProductResponse{
-				TotalRecords: 2,
-				Applications: []*v1.ApplicationForProduct{
-					&v1.ApplicationForProduct{
-						ApplicationId:   "1",
-						Name:            "Aversea",
-						AppOwner:        "Yumber",
-						NumOfInstances:  3,
-						NumofEquipments: 4,
-					},
-					&v1.ApplicationForProduct{
-						ApplicationId:   "2",
-						Name:            "Avellete",
-						AppOwner:        "Pional",
-						NumOfInstances:  5,
-						NumofEquipments: 6,
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplicationsForProduct(ctx, &repo.QueryApplicationsForProduct{
-					SwidTag:   "MICR002",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    "name",
-					SortOrder: repo.SortASC}, []string{"A", "B"}).Return(&repo.ApplicationsForProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 2,
-						},
-					},
-					Applications: []repo.ApplicationsForProductData{
-						repo.ApplicationsForProductData{
-							ApplicationID:   "1",
-							Name:            "Aversea",
-							Owner:           "Yumber",
-							NumOfEquipments: 4,
-							NumOfInstances:  3,
-						},
-						repo.ApplicationsForProductData{
-							ApplicationID:   "2",
-							Name:            "Avellete",
-							Owner:           "Pional",
-							NumOfEquipments: 6,
-							NumOfInstances:  5,
-						},
-					},
-				}, fmt.Errorf("Test error")).Times(1)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - can not retrieve claims",
-			s: s,
-			args: args{
-				ctx: context.Background(),
-				req: &v1.ListApplicationsForProductRequest{
-					SwidTag:   "MICR002",
-					PageNum:   1,
-					PageSize:  10,
-					SortBy:    "name",
-					SortOrder: "asc",
-				},
-			},
-			mock:    func() {},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mock()
-			got, err := tt.s.ListApplicationsForProduct(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("licenseServiceServer.ListApplicationsForProduct() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !tt.wantErr {
-				compareApplicationsForProductResponse(t, "ApplicationsForProduct", got, tt.want)
-			}
-		})
-	}
+	return compareQueryApplicationForProduct(p, expQ)
 }
-
-func Test_licenseServiceServer_ListInstancesForApplicationsProduct(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
-		UserID: "admin@superuser.com",
-		Role:   "Admin",
-		Socpes: []string{"A", "B"},
-	})
-
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockLicense := mock.NewMockLicense(mockCtrl)
-
-	s := NewLicenseServiceServer(mockLicense).(*licenseServiceServer)
-
-	type args struct {
-		ctx context.Context
-		req *v1.ListInstancesForApplicationProductRequest
+func compareQueryApplicationForProduct(p *queryMatcherApplicationsForProduct, exp *repo.QueryApplicationsForProduct) bool {
+	if exp == nil {
+		return false
 	}
-	tests := []struct {
-		name    string
-		s       *licenseServiceServer
-		args    args
-		want    *v1.ListInstancesForApplicationProductResponse
-		mock    func()
-		wantErr bool
-	}{
-		{name: "SUCCESS - sortby: env, sortorder:asc",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_ASC,
-				},
-			},
-			want: &v1.ListInstancesForApplicationProductResponse{
-				TotalRecords: 1,
-				Instances: []*v1.InstancesForApplicationProduct{
-					&v1.InstancesForApplicationProduct{
-						Id:              "2",
-						Name:            "ORACLE",
-						Environment:     "Production",
-						NumofEquipments: 3,
-						NumofProducts:   3,
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplication(ctx, "4", []string{"A", "B"}).Return(&repo.ApplicationDetails{
-					Name: "Oracle",
-				}, nil).Times(1)
-				mockLicense.EXPECT().GetInstancesForApplicationsProduct(ctx, &repo.QueryInstancesForApplicationProduct{
-					SwidTag:   "ORAC249",
-					AppID:     "4",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    1,
-					SortOrder: repo.SortASC}, []string{"A", "B"}).Return(&repo.InstancesForApplicationProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 1,
-						},
-					},
-					Instances: []repo.InstancesForApplicationProductData{
-						repo.InstancesForApplicationProductData{
-							ID:              "2",
-							Name:            "ORACLE",
-							Environment:     "Production",
-							NumOfEquipments: 3,
-							NumOfProducts:   3,
-						},
-					},
-				}, nil).Times(1)
-			},
-			wantErr: false,
-		},
-		{name: "SUCCESS - instance name is empty",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_ASC,
-				},
-			},
-			want: &v1.ListInstancesForApplicationProductResponse{
-				TotalRecords: 1,
-				Instances: []*v1.InstancesForApplicationProduct{
-					&v1.InstancesForApplicationProduct{
-						Id:              "2",
-						Name:            "Oracle",
-						Environment:     "Production",
-						NumofEquipments: 3,
-						NumofProducts:   3,
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplication(ctx, "4", []string{"A", "B"}).Return(&repo.ApplicationDetails{
-					Name: "Oracle",
-				}, nil).Times(1)
-				mockLicense.EXPECT().GetInstancesForApplicationsProduct(ctx, &repo.QueryInstancesForApplicationProduct{
-					SwidTag:   "ORAC249",
-					AppID:     "4",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    1,
-					SortOrder: repo.SortASC}, []string{"A", "B"}).Return(&repo.InstancesForApplicationProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 1,
-						},
-					},
-					Instances: []repo.InstancesForApplicationProductData{
-						repo.InstancesForApplicationProductData{
-							ID:              "2",
-							Name:            "",
-							Environment:     "Production",
-							NumOfEquipments: 3,
-							NumOfProducts:   3,
-						},
-					},
-				}, nil).Times(1)
-			},
-			wantErr: false,
-		},
-
-		{name: "SUCCESS - sortby:env , sortorder:desc",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_DESC,
-				},
-			},
-			want: &v1.ListInstancesForApplicationProductResponse{
-				TotalRecords: 1,
-				Instances: []*v1.InstancesForApplicationProduct{
-					&v1.InstancesForApplicationProduct{
-						Id:              "2",
-						Name:            "ORACLE",
-						Environment:     "Production",
-						NumofEquipments: 3,
-						NumofProducts:   3,
-					},
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplication(ctx, "4", []string{"A", "B"}).Return(&repo.ApplicationDetails{
-					Name: "Oracle",
-				}, nil).Times(1)
-				mockLicense.EXPECT().GetInstancesForApplicationsProduct(ctx, &repo.QueryInstancesForApplicationProduct{
-					SwidTag:   "ORAC249",
-					AppID:     "4",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    1,
-					SortOrder: repo.SortDESC}, []string{"A", "B"}).Return(&repo.InstancesForApplicationProduct{
-					NumOfRecords: []repo.TotalRecords{
-						repo.TotalRecords{
-							TotalCnt: 1,
-						},
-					},
-					Instances: []repo.InstancesForApplicationProductData{
-						repo.InstancesForApplicationProductData{
-							ID:              "2",
-							Environment:     "Production",
-							NumOfEquipments: 3,
-							NumOfProducts:   3,
-						},
-					},
-				}, nil).Times(1)
-			},
-			wantErr: false,
-		},
-		{name: "FAILURE - can not retrieve claims",
-			args: args{
-				ctx: context.Background(),
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_ASC,
-				},
-			},
-			mock:    func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE - cannot get application",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_ASC,
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplication(ctx, "4", []string{"A", "B"}).Return(nil, errors.New("cannot get application")).Times(1)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE",
-			s: s,
-			args: args{
-				ctx: ctx,
-				req: &v1.ListInstancesForApplicationProductRequest{
-					SwidTag:       "ORAC249",
-					ApplicationId: "4",
-					PageNum:       1,
-					PageSize:      10,
-					SortBy:        v1.ListInstancesForApplicationProductRequest_ENV,
-					SortOrder:     v1.SortOrder_ASC,
-				},
-			},
-			mock: func() {
-				mockLicense.EXPECT().GetApplication(ctx, "4", []string{"A", "B"}).Return(&repo.ApplicationDetails{
-					Name: "Oracle",
-				}, nil).Times(1)
-				mockLicense.EXPECT().GetInstancesForApplicationsProduct(ctx, &repo.QueryInstancesForApplicationProduct{
-					SwidTag:   "ORAC249",
-					AppID:     "4",
-					PageSize:  10,
-					Offset:    0,
-					SortBy:    1,
-					SortOrder: repo.SortASC}, []string{"A", "B"}).Return(nil, fmt.Errorf("Test error")).Times(1)
-			},
-			wantErr: true,
-		},
+	if !assert.Equalf(p.t, p.q.PageSize, exp.PageSize, "Pagesize are not same") {
+		return false
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mock()
-			got, err := tt.s.ListInstancesForApplicationsProduct(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("licenseServiceServer.ListInstancesForApplicationsProduct() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !tt.wantErr {
-				compareInstancesForApplicationsProductResponse(t, "InstancesForApplicationsProduct", got, tt.want)
-			}
-		})
+	if !assert.Equalf(p.t, p.q.Offset, exp.Offset, "Offset are not same") {
+		return false
 	}
+	if !assert.Equalf(p.t, p.q.SortBy, exp.SortBy, "SortBy are not same") {
+		return false
+	}
+	if !assert.Equalf(p.t, p.q.SortOrder, exp.SortOrder, "SortOrder are not same") {
+		return false
+	}
+	if !compareQueryFilters(p.t, "queryMatcherApplicationsForProduct", p.q.Filter.Filters, exp.Filter.Filters) {
+		return false
+	}
+	return true
+}
+func (p *queryMatcherApplicationsForProduct) String() string {
+	return "queryMatcherApplicationsForProduct"
 }
 
 func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
@@ -4132,6 +3540,683 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
+		{name: "SUCCESS - computeLicenseACS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+					&repo.MetricACS{
+						Name:          "attribute.counter.standard",
+						EqType:        "server",
+						AttributeName: "corefactor",
+						Value:         "2",
+					},
+					&repo.MetricACS{
+						Name:          "ACS1",
+						EqType:        "server",
+						AttributeName: "cpu",
+						Value:         "2",
+					},
+				}, nil)
+
+				mat := &repo.MetricACSComputed{
+					Name:      "attribute.counter.standard",
+					BaseType:  base,
+					Attribute: corefactor,
+					Value:     "2",
+				}
+				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A", "B"}).Times(1).Return(uint64(10), nil)
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumCptLicences: 10,
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+						DeltaNumber:    10,
+						DeltaCost:      200,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - computeLicenseACS failed - cannot fetch acs metrics",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Internal"))
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - computeLicenseACS failed - cannot find metric name acs",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+					&repo.MetricACS{
+						Name:          "acs",
+						EqType:        "server",
+						AttributeName: "corefactor",
+						Value:         "2",
+					},
+				}, nil)
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - computeLicenseACS failed - cannot find equipment type",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+					&repo.MetricACS{
+						Name:          "attribute.counter.standard",
+						EqType:        "cluster",
+						AttributeName: "corefactor",
+						Value:         "2",
+					},
+				}, nil)
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - computeLicenseACS failed - attribute doesnt exits",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+					&repo.MetricACS{
+						Name:          "attribute.counter.standard",
+						EqType:        "server",
+						AttributeName: "servermodel",
+						Value:         "2",
+					},
+				}, nil)
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - computeLicenseACS failed - cannot compute licenses for metric OPS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "ORAC001",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+					&repo.ProductAcquiredRight{
+						SKU:          "ORAC001ACS",
+						Metric:       "attribute.counter.standard",
+						AcqLicenses:  20,
+						TotalCost:    9270,
+						AvgUnitPrice: 20,
+					},
+				}, nil)
+
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+					Products: []repo.ProductAdditionalData{
+						repo.ProductAdditionalData{
+							NumofEquipments: 56,
+						},
+					},
+				}, nil)
+
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+					&repo.Metric{
+						Name: "oracle.processor.standard",
+						Type: "oracle.processor.standard",
+					},
+					&repo.Metric{
+						Name: "oracle.nup.standard",
+						Type: "oracle.nup.standard",
+					},
+					&repo.Metric{
+						Name: "sag.processor.standard",
+						Type: "sag.processor.standard",
+					},
+					&repo.Metric{
+						Name: "ibm.pvu.standard",
+						Type: "ibm.pvu.standard",
+					},
+					&repo.Metric{
+						Name: "attribute.counter.standard",
+						Type: "attribute.counter.standard",
+					},
+				}, nil)
+
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					Name: "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					Type:       "server",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+					&repo.MetricACS{
+						Name:          "attribute.counter.standard",
+						EqType:        "server",
+						AttributeName: "corefactor",
+						Value:         "2",
+					},
+				}, nil)
+				mat := &repo.MetricACSComputed{
+					Name:      "attribute.counter.standard",
+					BaseType:  base,
+					Attribute: corefactor,
+					Value:     "2",
+				}
+				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A", "B"}).Times(1).Return(uint64(0), errors.New("Internal"))
+			},
+			want: &v1.ListAcquiredRightsForProductResponse{
+				AcqRights: []*v1.ProductAcquiredRights{
+					&v1.ProductAcquiredRights{
+						SKU:            "ORAC001ACS",
+						SwidTag:        "ORAC001",
+						Metric:         "attribute.counter.standard",
+						NumAcqLicences: 20,
+						TotalCost:      9270,
+					},
+				},
+			},
+		},
 		{name: "SUCCESS - default",
 			args: args{
 				ctx: ctx,
@@ -4241,323 +4326,6 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 	}
 }
 
-func Test_licenseServiceServer_ListEquipmentsForProduct(t *testing.T) {
-
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
-		UserID: "admin@superuser.com",
-		Role:   "Admin",
-		Socpes: []string{"A", "B"},
-	})
-
-	var mockCtrl *gomock.Controller
-	var rep repo.License
-
-	//s := NewLicenseServiceServer(mockLicense).(*licenseServiceServer)
-
-	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
-			Type: "typ1",
-			ID:   "1",
-			Attributes: []*repo.Attribute{
-				&repo.Attribute{
-					ID:           "1",
-					Name:         "attr1",
-					Type:         repo.DataTypeString,
-					IsDisplayed:  true,
-					IsSearchable: true,
-				},
-				&repo.Attribute{
-					ID:           "2",
-					Name:         "attr2",
-					Type:         repo.DataTypeString,
-					IsDisplayed:  true,
-					IsSearchable: true,
-				},
-			},
-		},
-		&repo.EquipmentType{
-			Type: "typ2",
-			ID:   "2",
-			Attributes: []*repo.Attribute{
-				&repo.Attribute{
-					ID:          "1",
-					Name:        "attr1",
-					Type:        repo.DataTypeString,
-					IsDisplayed: true,
-				},
-				&repo.Attribute{
-					ID:          "2",
-					Name:        "attr2",
-					Type:        repo.DataTypeString,
-					IsDisplayed: true,
-				},
-			},
-		},
-	}
-	// TODO
-	// queryParams := &repo.QueryEquipments{
-	// 	PageSize:  10,
-	// 	Offset:    90,
-	// 	SortBy:    "attr1",
-	// 	SortOrder: repo.SortDESC,
-	// 	Filter: &repo.AggregateFilter{
-	// 		Filters: []repo.Queryable{
-	// 			&repo.Filter{
-	// 				FilterKey:   "attr1",
-	// 				FilterValue: "a11",
-	// 			},
-	// 			&repo.Filter{
-	// 				FilterKey:   "attr2",
-	// 				FilterValue: "a22",
-	// 			},
-	// 		},
-	// 	},
-	// }
-	type args struct {
-		ctx context.Context
-		req *v1.ListEquipmentsForProductRequest
-	}
-	tests := []struct {
-		name    string
-		s       *licenseServiceServer
-		args    args
-		want    *v1.ListEquipmentsResponse
-		wantErr bool
-		setup   func()
-	}{
-		{name: "SUCCESS",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
-				mockLicense.EXPECT().ProductEquipments(ctx, "P1", eqTypes[0], gomock.Any(), []string{"A", "B"}).Times(1).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil)
-
-			},
-			want: &v1.ListEquipmentsResponse{
-				TotalRecords: 2,
-				Equipments:   json.RawMessage(`[{ID:"1"}]`),
-			},
-		},
-		{name: "FAILURE - can not retrieve claims",
-			args: args{
-				ctx: context.Background(),
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "3",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup:   func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot fetch equipment types",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
-
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot fetch equipment type with given Id",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "3",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot find sort by attribute",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr3",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot sort by attribute",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						Type: "typ1",
-						ID:   "1",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								ID:           "1",
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsDisplayed:  false,
-								IsSearchable: true,
-							},
-							&repo.Attribute{
-								ID:           "2",
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsDisplayed:  false,
-								IsSearchable: true,
-							},
-						},
-					},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot parse equipment query param",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr1",
-					SearchParams: "attr3=att3",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE- cannot fetch product equipments",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListEquipmentsForProductRequest{
-					EqTypeId:     "1",
-					SortBy:       "attr1",
-					SearchParams: "attr1=a11,attr2=a22",
-					SwidTag:      "P1",
-					PageNum:      10,
-					PageSize:     10,
-					SortOrder:    v1.SortOrder_DESC,
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
-				mockLicense.EXPECT().ProductEquipments(ctx, "P1", eqTypes[0], gomock.Any(), []string{"A", "B"}).Times(1).Return(int32(2), nil, errors.New("test error"))
-
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
-			s := NewLicenseServiceServer(rep)
-			got, err := s.ListEquipmentsForProduct(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("licenseServiceServer.ListEquipmentsForProduct() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("licenseServiceServer.ListEquipmentsForProduct() = %v, want %v", got, tt.want)
-			}
-			if tt.setup == nil {
-				defer mockCtrl.Finish()
-			}
-		})
-	}
-}
-
-func compareProductResponse(t *testing.T, name string, exp *v1.ListProductsResponse, act *v1.ListProductsResponse) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-	assert.Equalf(t, exp.TotalRecords, act.TotalRecords, "%s.Records are not same", name)
-	compareProductsAll(t, name+".Products", exp.Products, act.Products)
-}
-
-func compareProductsAll(t *testing.T, name string, exp []*v1.Product, act []*v1.Product) {
-	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {
-		return
-	}
-
-	for i := range exp {
-		compareProducts(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
-	}
-}
-
 func compareProducts(t *testing.T, name string, exp *v1.Product, act *v1.Product) {
 	if exp == nil && act == nil {
 		return
@@ -4573,78 +4341,6 @@ func compareProducts(t *testing.T, name string, exp *v1.Product, act *v1.Product
 	assert.Equalf(t, exp.Editor, act.Editor, "%s.Editor are not same", name)
 	assert.Equalf(t, exp.NumOfApplications, act.NumOfApplications, "%s.NumOfApplications are not same", name)
 	assert.Equalf(t, exp.NumofEquipments, act.NumofEquipments, "%s.NumofEquipments are not same", name)
-}
-
-func compareApplicationsForProductResponse(t *testing.T, name string, exp *v1.ListApplicationsForProductResponse, act *v1.ListApplicationsForProductResponse) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-	assert.Equalf(t, exp.TotalRecords, act.TotalRecords, "%s.Records are not same", name)
-
-	compareApplicationsForProductAll(t, name+".Applications", exp.Applications, act.Applications)
-}
-
-func compareApplicationsForProductAll(t *testing.T, name string, exp []*v1.ApplicationForProduct, act []*v1.ApplicationForProduct) {
-	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {
-		return
-	}
-
-	for i := range exp {
-		compareApplicationForProduct(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
-	}
-}
-
-func compareApplicationForProduct(t *testing.T, name string, exp *v1.ApplicationForProduct, act *v1.ApplicationForProduct) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-
-	assert.Equalf(t, exp.ApplicationId, act.ApplicationId, "%s.ApplicationId are not same", name)
-	assert.Equalf(t, exp.Name, act.Name, "%s.Name are not same", name)
-	assert.Equalf(t, exp.AppOwner, act.AppOwner, "%s.AppOwner are not same", name)
-	assert.Equalf(t, exp.NumofEquipments, act.NumofEquipments, "%s.NumofEquipments are not same", name)
-	assert.Equalf(t, exp.NumOfInstances, act.NumOfInstances, "%s.NumOfInstances are not same", name)
-}
-
-func compareInstancesForApplicationsProductResponse(t *testing.T, name string, exp *v1.ListInstancesForApplicationProductResponse, act *v1.ListInstancesForApplicationProductResponse) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-	assert.Equalf(t, exp.TotalRecords, act.TotalRecords, "%s.Records are not same", name)
-	compareInstancesForApplicationsProductAll(t, name+".Instances", exp.Instances, act.Instances)
-}
-
-func compareInstancesForApplicationsProductAll(t *testing.T, name string, exp []*v1.InstancesForApplicationProduct, act []*v1.InstancesForApplicationProduct) {
-	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {
-		return
-	}
-
-	for i := range exp {
-		compareInstanceForApplicationsProduct(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
-	}
-}
-
-func compareInstanceForApplicationsProduct(t *testing.T, name string, exp *v1.InstancesForApplicationProduct, act *v1.InstancesForApplicationProduct) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-
-	assert.Equalf(t, exp.Id, act.Id, "%s.Id are not same", name)
-	assert.Equalf(t, exp.Environment, act.Environment, "%s.Environment are not same", name)
-	assert.Equalf(t, exp.NumofEquipments, act.NumofEquipments, "%s.NumOfEquipments are not same", name)
-	assert.Equalf(t, exp.NumofProducts, act.NumofProducts, "%s.NumOfProducts are not same", name)
 }
 
 func compareProductAcquiredRights(t *testing.T, name string, exp *v1.ListAcquiredRightsForProductResponse, act *v1.ListAcquiredRightsForProductResponse) {

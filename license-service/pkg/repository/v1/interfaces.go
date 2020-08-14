@@ -3,26 +3,26 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
 	"context"
-	"encoding/json"
 )
 
 //go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/license-service/pkg/repository/v1 License
 
 //License interface
 type License interface {
-	GetProducts(ctx context.Context, params *QueryProducts, scopes []string) (*ProductInfo, error)
 	GetProductInformation(ctx context.Context, swidtag string, scopes []string) (*ProductAdditionalInfo, error)
+
+	ProductAggregationDetails(ctx context.Context, name string, params *QueryProductAggregations, scopes []string) (*ProductAggregation, error)
 
 	// CreateProductAggregation creates aggregations of a product
 	CreateProductAggregation(ctx context.Context, pa *ProductAggregation, scopes []string) (*ProductAggregation, error)
 
-	// List aggrations of product
-	ListProductAggregations(ctx context.Context, scopes []string) ([]*ProductAggregation, error)
+	// Update Product aggregation updates the product aggregation
+	UpdateProductAggregation(ctx context.Context, ID string, upa *UpdateProductAggregationRequest, scopes []string) error
 
 	// ProductAggregationsByName returns true and product aggregation details if object or node with that name exists
 	ProductAggregationsByName(ctx context.Context, name string, scopes []string) (*ProductAggregation, error)
@@ -33,23 +33,11 @@ type License interface {
 	// ProductIDForSwidtag returns true and unique id assignerd by database if object or node with that id exists
 	ProductIDForSwidtag(ctx context.Context, id string, params *QueryProducts, scopes []string) (string, error)
 
-	GetApplications(ctx context.Context, params *QueryApplications, scopes []string) (*ApplicationInfo, error)
-
-	// GetApplication gives the details of a perticular application with given id
-	GetApplication(ctx context.Context, appID string, scopes []string) (*ApplicationDetails, error)
-	GetProductsForApplication(ctx context.Context, id string, scopes []string) (*ProductsForApplication, error)
-	GetApplicationsForProduct(ctx context.Context, params *QueryApplicationsForProduct, scopes []string) (*ApplicationsForProduct, error)
-	GetInstancesForApplicationsProduct(ctx context.Context, params *QueryInstancesForApplicationProduct, scopes []string) (*InstancesForApplicationProduct, error)
 	// ProductAcquiredRights fets list of acquired rights for the product along with ID of the product
 	ProductAcquiredRights(ctx context.Context, swidTag string, scopes []string) (string, []*ProductAcquiredRight, error)
 
-	// ProductEquipments list all the equipments for a product for given equipment type
-	ProductEquipments(ctx context.Context, swidTag string, eqType *EquipmentType, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
 	// MetadataAllWithType gets metadata for given metadata type
 	MetadataAllWithType(ctx context.Context, typ MetadataType, scopes []string) ([]*Metadata, error)
-
-	// MetadataWithID gets metadata for given id
-	MetadataWithID(ctx context.Context, id string, scopes []string) (*Metadata, error)
 
 	// CreateEquipmentType stores equipmentdata and creates schema with required primary key
 	// and indexes.
@@ -58,44 +46,23 @@ type License interface {
 	// EquipmentTypes fetches all equipment types from database
 	EquipmentTypes(ctx context.Context, scopes []string) ([]*EquipmentType, error)
 
-	// AcquiredRights gets acquried rights based on query params.
-	AcquiredRights(ctx context.Context, params *QueryAcquiredRights, scopes []string) (int32, []*AcquiredRights, error)
-
-	EquipmentWithID(ctx context.Context, id string, scopes []string) (*EquipmentType, error)
-
-	UpdateEquipmentType(ctx context.Context, id string, typ string, req *UpdateEquipmentRequest, scopes []string) (retType []*Attribute, retErr error)
-	Equipments(ctx context.Context, eqType *EquipmentType, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
-
-	// Equipment gets equipmet for given type and id if exists,if not exist then ErrNotFound
-	Equipment(ctx context.Context, eqType *EquipmentType, id string, scopes []string) (json.RawMessage, error)
-
-	// EquipmentParents return parent of the given equipment
-	EquipmentParents(ctx context.Context, eqType, parentEqType *EquipmentType, id string, scopes []string) (int32, json.RawMessage, error)
-
-	// EquipmentChildren return children of the given equipment id for child type
-	EquipmentChildren(ctx context.Context, eqType, childEqType *EquipmentType, id string, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
-
-	// EquipmentProducts return all the prioducts associted with given equipment
-	EquipmentProducts(ctx context.Context, eqType *EquipmentType, id string, params *QueryEquipmentProduct, scopes []string) (int32, []*EquipmentProduct, error)
-
-	// ListMetricTypeInfo gives a list of supported metric types
-	ListMetricTypeInfo(ctx context.Context, scopes []string) ([]*MetricTypeInfo, error)
-
 	// ListMetrices gives a list of supported metric types
 	ListMetrices(ctx context.Context, scopes []string) ([]*Metric, error)
 
-	// CreateMetricOPS creates an oracle.processor.standard metric
-	CreateMetricOPS(ctx context.Context, mat *MetricOPS, scopes []string) (*MetricOPS, error)
-
 	// ListMetricOPS returns all metrices of type oracle.processor.standard
 	ListMetricOPS(ctx context.Context, scopes []string) ([]*MetricOPS, error)
+
+	ListMetricNUP(ctx context.Context, scopes []string) ([]*MetricNUPOracle, error)
 
 	// MetricOPSComputedLicenses returns the computed licenses
 	// for oracle.processor.standard metric
 	MetricOPSComputedLicenses(ctx context.Context, id string, mat *MetricOPSComputed, scopes []string) (uint64, error)
 
-	// CreateMetricSPS creates an sag.processor.standard metric
-	CreateMetricSPS(ctx context.Context, mat *MetricSPS, scopes []string) (*MetricSPS, error)
+	MetricOPSComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricOPSComputed, scopes []string) (uint64, error)
+
+	MetricNUPComputedLicenses(ctx context.Context, id string, mat *MetricNUPComputed, scopes []string) (uint64, error)
+
+	MetricNUPComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricNUPComputed, scopes []string) (uint64, error)
 
 	// ListMetricSPS returns all metrices of type sag.processor.standard
 	ListMetricSPS(ctx context.Context, scopes []string) ([]*MetricSPS, error)
@@ -105,17 +72,54 @@ type License interface {
 	// for sag.processor.standard metric
 	MetricSPSComputedLicenses(ctx context.Context, id string, mat *MetricSPSComputed, scopes []string) (uint64, uint64, error)
 
-	// CreateMetricIPS creates an sag.processor.standard metric
-	CreateMetricIPS(ctx context.Context, mat *MetricIPS, scopes []string) (*MetricIPS, error)
+	MetricSPSComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricSPSComputed, scopes []string) (uint64, uint64, error)
 
-	// ListMetricIPS returns all metrices of type sag.processor.standard
+	// ListMetricIPS returns all metrices of type ibm.pvu.standard
 	ListMetricIPS(ctx context.Context, scopes []string) ([]*MetricIPS, error)
 
-	// MetricIPSComputedLicenses returns the computed licenses
-	// for ibm.pvu.standard metric
+	// MetricIPSComputedLicenses returns the computed licenses for ibm.pvu.standard metric
 	MetricIPSComputedLicenses(ctx context.Context, id string, mat *MetricIPSComputed, scopes []string) (uint64, error)
 
-	ListEditors(ctx context.Context, params *EditorQueryParams, scopes []string) ([]*Editor, error)
+	MetricIPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricIPSComputed, scopes []string) (uint64, error)
+
+	// MetricACSComputedLicenses returns the computed licenses for attribute.counter.standard metric
+	MetricACSComputedLicenses(ctx context.Context, id string, mat *MetricACSComputed, scopes []string) (uint64, error)
+
+	// MetricINMComputedLicenses returns the computed licenses for instance.number.standard metric
+	MetricINMComputedLicenses(ctx context.Context, id string, mat *MetricINMComputed, scopes []string) (uint64, error)
+
+	// MetricACSComputedLicensesAgg returns the computed licenses for product aggregation for attribute.counter.standard metric
+	MetricACSComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricACSComputed, scopes []string) (uint64, error)
+
+	// ListMetricACS returns all metrices of type attribute.counter.standard
+	ListMetricACS(ctx context.Context, scopes []string) ([]*MetricACS, error)
+
+	// ListMetricINM returns all metrices of type instance.number.standard
+	ListMetricINM(ctx context.Context, scopes []string) ([]*MetricINM, error)
+
+	// ParentHirearchy gives equipment along with parent hirearchy
+	ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes []string) (*Equipment, error)
+
+	// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle processor.standard
+	ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricOPSComputed, scopes []string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle.nup.standard
+	ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricNUPComputed, scopes []string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricIPSStandard gives products for oracle.nup.standard
+	ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricIPSComputed, scopes []string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricSAGStandard gives products for oracle.nup.standard
+	ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricSPSComputed, scopes []string) ([]*ProductData, error)
+
+	// ComputedLicensesForEquipmentForMetricOracleProcessorStandard gives licenses for product
+	ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, metric *MetricOPSComputed, scopes []string) (int64, error)
+
+	// ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll return ceiled and unceiled if equipment is at aggregation level or below aggregation level
+	ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx context.Context, equipID, equipType string, mat *MetricOPSComputed, scopes []string) (int64, float64, error)
+
+	//UsersForEquipmentForMetricOracleNUP gives users details for equipment for oracle nup
+	UsersForEquipmentForMetricOracleNUP(ctx context.Context, equipID, equipType, productID string, hirearchyLevel uint8, metric *MetricNUPComputed, scopes []string) ([]*User, error)
 }
 
 // Queryable interface provide methods for something that can be queried
@@ -125,7 +129,12 @@ type Queryable interface {
 	// Value for key tha we need tio search
 	Value() interface{}
 
+	// Values for key tha we need tio search
+	Values() []interface{}
+
 	Priority() int32
+
+	Type() Filtertype
 }
 
 // SortOrder - type defined for sorting parameters i.e ascending/descending

@@ -1,0 +1,24 @@
+type MetadataEquipment {
+    type_name
+    scopes
+    updated
+    created
+    metadata.equipment.type     
+    metadata.equipment.attribute
+    metadata.equipment.parent   
+    metadata.equipment.source   
+}
+
+type Equipment {
+    type_name
+    scopes
+    updated
+    created
+    equipment.type  
+    equipment.id    
+    equipment.parent
+    equipment.users
+    <~equipment.parent> 
+    <~instance.equipment>
+    <~product.equipment> 
+}

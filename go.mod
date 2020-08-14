@@ -1,64 +1,83 @@
 module optisam-backend
 
 require (
+	cloud.google.com/go v0.52.0 // indirect
+	contrib.go.opencensus.io/exporter/jaeger v0.2.0
+	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/integrations/ocsql v0.1.3
+	github.com/DATA-DOG/go-sqlmock v1.4.1 // indirect
 	github.com/InVisionApp/go-health v2.1.0+incompatible
 	github.com/InVisionApp/go-logger v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Microsoft/go-winio v0.4.12 // indirect
-	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
-	github.com/dgraph-io/badger v1.6.0
-	github.com/dgraph-io/dgo v0.0.0-20190201214300-d5a1729ba705
-	github.com/dgraph-io/dgraph v1.0.13
+	github.com/dgraph-io/badger v1.6.0 // indirect
+	github.com/dgraph-io/dgo v1.0.0
+	github.com/dgraph-io/dgo/v2 v2.2.0
+	github.com/dgraph-io/dgraph v1.2.2 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
-	github.com/gogo/protobuf v1.2.0 // indirect
-	github.com/golang/mock v1.2.0
-	github.com/golang/protobuf v1.3.1
-	github.com/google/uuid v1.1.1 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
-	github.com/grpc-ecosystem/grpc-gateway v1.8.2
-	github.com/hashicorp/golang-lru v0.5.1 // indirect
-	github.com/huandu/xstrings v1.2.0 // indirect
-	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
-	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/docker/go-units v0.4.0 // indirect
+	github.com/envoyproxy/protoc-gen-validate v0.1.0
+	github.com/go-playground/assert/v2 v2.0.1 // indirect
+	github.com/go-playground/validator/v10 v10.2.0
+	github.com/go-sql-driver/mysql v1.5.0 // indirect
+	github.com/gobuffalo/packr/v2 v2.8.0
+	github.com/gogo/protobuf v1.3.1
+	github.com/golang/mock v1.4.4
+	github.com/golang/protobuf v1.4.2
+	github.com/gorilla/mux v1.7.3
+	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
+	github.com/grpc-ecosystem/grpc-gateway v1.14.3
+	github.com/huandu/xstrings v1.3.1 // indirect
+	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/klauspost/compress v1.4.1 // indirect
+	github.com/klauspost/cpuid v1.2.0 // indirect
+	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lib/pq v1.2.0
-	github.com/lyft/protoc-gen-validate v0.0.13
+	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mithrandie/csvq-driver v1.2.1
+	github.com/open-policy-agent/opa v0.19.2
 	github.com/opencensus-integrations/ocsql v0.1.3
+	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/pkg/profile v1.2.1 // indirect
-	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
-	github.com/prometheus/procfs v0.0.0-20190306233201-d0f344d83b0c // indirect
+	github.com/pkg/profile v1.5.0 // indirect
+	github.com/prometheus/client_golang v1.1.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.7.0 // indirect
+	github.com/prometheus/procfs v0.0.5 // indirect
 	github.com/rs/cors v1.6.0
-	github.com/sirupsen/logrus v1.3.0 // indirect
-	github.com/spf13/afero v1.2.1 // indirect
-	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.3.0
-	github.com/vijay1811/pq v1.2.2
-	github.com/wagoodman/dive v0.8.1 // indirect
-	go.opencensus.io v0.19.1
-	go.uber.org/atomic v1.3.2 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.9.1
-	golang.org/x/arch v0.0.0-20190927153633-4e8777c89be4 // indirect
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
-	golang.org/x/oauth2 v0.0.0-20190130055435-99b60b757ec1 // indirect
-	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 // indirect
-	golang.org/x/tools/gopls v0.1.7 // indirect
-	google.golang.org/api v0.1.0 // indirect
-	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19
-	google.golang.org/grpc v1.19.0
+	github.com/rubenv/sql-migrate v0.0.0-20200212082348-64f95ea68aa3
+	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
+	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/cobra v0.0.6
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.6.1
+	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect
+	github.com/stretchr/testify v1.6.1
+	github.com/uber/jaeger-client-go v2.22.1+incompatible // indirect
+	go.opencensus.io v0.22.2
+	go.uber.org/zap v1.10.0
+	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
+	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
+	golang.org/x/sys v0.0.0-20200327173247-9dae0f8f5775 // indirect
+	golang.org/x/tools/gopls v0.4.3 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+	google.golang.org/grpc v1.27.0
+	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/oauth2.v3 v3.9.5
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
+	rsc.io/quote/v3 v3.1.0 // indirect
 )
 
 go 1.13

@@ -1,6 +1,6 @@
-application.id: string @index(exact) .
-application.name: string @index(trigram) .
-application.version: string . 
-application.owner: string @index(trigram) .
-application.instance:  uid @count @reverse .
-application.product:  uid @count @reverse .
+application.id       : string @index(exact) @upsert .
+application.name     : string @index(trigram) .
+application.version  : string . 
+application.owner    : string @index(trigram) .
+application.instance : [uid] @count @reverse .
+application.product  : [uid] @count @reverse .

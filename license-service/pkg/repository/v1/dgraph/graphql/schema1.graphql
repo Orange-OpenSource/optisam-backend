@@ -1,0 +1,9 @@
+type Product {
+    swidtag: String! @id @dgraph(pred: "product.swidtag")
+    equipments: [Equipment] @dgraph(pred: "product.equipment")
+}
+
+type Equipment {
+     id: String! @id  @dgraph(pred: "equipment.id")
+     products: [Product] @dgraph(pred: "~product.equipment")
+}

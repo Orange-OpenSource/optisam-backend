@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
@@ -13,6 +13,7 @@ import (
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repv1 "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/mock"
+	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/token/claims"
 	"reflect"
@@ -20,17 +21,17 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"google.golang.org/genproto/protobuf/field_mask"
 )
 
 func Test_accountServiceServer_UpdateAccount(t *testing.T) {
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+
 	type args struct {
 		ctx context.Context
 		req *v1.UpdateAccountRequest
 	}
 
-	var mockCtrl *gomock.Controller
-	var rep repv1.Account
 	tests := []struct {
 		name    string
 		args    args
@@ -39,15 +40,19 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		setup   func()
 		wantErr bool
 	}{
-		{name: "success",
+		{name: "SUCCESS - personal information",
 			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
 				req: &v1.UpdateAccountRequest{
 					Account: &v1.UpdateAccount{
-						UserId: "user1",
-						Locale: "en",
-					},
-					UpdateMask: &field_mask.FieldMask{
-						Paths: []string{"Locale"},
+						UserId:     "admin@test.com",
+						FirstName:  "admin1",
+						LastName:   "admin",
+						Locale:     "en",
+						ProfilePic: "profilepic1",
 					},
 				},
 			},
@@ -55,26 +60,43 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(nil, "user1").Times(1).Return(&repv1.AccountInfo{
-					Locale: "fr",
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:     "admin@test.com",
+					FirstName:  "admin2",
+					LastName:   "user",
+					Locale:     "fr",
+					ProfilePic: []byte("profilepic"),
 				}, nil)
-				mockRepo.EXPECT().UpdateAccount(nil, "user1", &repv1.UpdateAccount{
-					Locale: "en",
+				mockRepo.EXPECT().UpdateAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", &repv1.UpdateAccount{
+					FirstName:  "admin1",
+					LastName:   "admin",
+					Locale:     "en",
+					ProfilePic: []byte("profilepic1"),
 				}).Times(1).Return(nil)
 			},
 			want: &v1.UpdateAccountResponse{
 				Success: true,
 			},
 		},
-		{name: "success no update",
+		{name: "SUCCESS - role superadmin",
 			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
 				req: &v1.UpdateAccountRequest{
 					Account: &v1.UpdateAccount{
-						UserId: "user1",
-						Locale: "fr",
-					},
-					UpdateMask: &field_mask.FieldMask{
-						Paths: []string{"Locale"},
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_ADMIN,
 					},
 				},
 			},
@@ -82,23 +104,37 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(nil, "user1").Times(1).Return(&repv1.AccountInfo{
-					Locale: "fr",
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
 				}, nil)
+				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com", &repv1.UpdateUserAccount{
+					Role: repv1.RoleAdmin,
+				}).Times(1).Return(nil)
 			},
 			want: &v1.UpdateAccountResponse{
 				Success: true,
 			},
 		},
-		{name: "failure reading account info",
+		{name: "SUCCESS - role admin",
 			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
 				req: &v1.UpdateAccountRequest{
 					Account: &v1.UpdateAccount{
-						UserId: "user1",
-						Locale: "en",
-					},
-					UpdateMask: &field_mask.FieldMask{
-						Paths: []string{"Locale"},
+						UserId: "admin1@test.com",
+						Role:   v1.ROLE_ADMIN,
 					},
 				},
 			},
@@ -106,22 +142,88 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(nil, "user1").Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin3@test.com",
+					FirstName: "admin3",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", "admin1@test.com").Times(1).Return(true, nil)
+				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin3@test.com", &repv1.UpdateUserAccount{
+					Role: repv1.RoleAdmin,
+				}).Times(1).Return(nil)
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - UpdateAccount - cannot find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId: "admin1@test.com",
+						Role:   v1.ROLE_ADMIN,
+					},
+				},
+			},
+			setup: func() {},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - user does not exist",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com").Times(1).Return(nil, repv1.ErrNoData)
 			},
 			want: &v1.UpdateAccountResponse{
 				Success: false,
 			},
 			wantErr: true,
 		},
-		{name: "failure updating account",
+		{name: "FAILURE - UpdateAccount - failed to get Account info",
 			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
 				req: &v1.UpdateAccountRequest{
 					Account: &v1.UpdateAccount{
-						UserId: "user1",
-						Locale: "en",
-					},
-					UpdateMask: &field_mask.FieldMask{
-						Paths: []string{"Locale"},
+						UserId:    "admin@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
 					},
 				},
 			},
@@ -129,12 +231,314 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(nil, "user1").Times(1).Return(&repv1.AccountInfo{
-					Locale: "fr",
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com").Times(1).Return(nil, errors.New("Internal"))
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - personal information|failed to update account",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:     "admin@test.com",
+					FirstName:  "admin1",
+					LastName:   "user",
+					Locale:     "fr",
+					ProfilePic: []byte("profilepic"),
 				}, nil)
-				mockRepo.EXPECT().UpdateAccount(nil, "user1", &repv1.UpdateAccount{
-					Locale: "en",
-				}).Times(1).Return(errors.New("test error"))
+				mockRepo.EXPECT().UpdateAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", &repv1.UpdateAccount{
+					FirstName:  "admin1",
+					LastName:   "admin",
+					Locale:     "en",
+					ProfilePic: []byte("profilepic"),
+				}).Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - user does not have the access to update other users",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "User",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_ADMIN,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "User",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
+				}, nil)
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - failed to validate update account request|undefined role",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_UNDEFINED,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
+				}, nil)
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - failed to validate update account request|can not update role of superadmin",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_ADMIN,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleSuperAdmin,
+				}, nil)
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - failed to validate update account request|can not update role to superadmin",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_SUPER_ADMIN,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleAdmin,
+				}, nil)
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - failed to update account",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "admin",
+						Locale:    "en",
+						Role:      v1.ROLE_USER,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin1@test.com",
+					FirstName: "admin",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleAdmin,
+				}, nil)
+				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com", &repv1.UpdateUserAccount{
+					Role: repv1.RoleUser,
+				}).Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - failed to check if user belongs to the admin groups",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId: "admin1@test.com",
+						Role:   v1.ROLE_ADMIN,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin3@test.com",
+					FirstName: "admin3",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", "admin1@test.com").Times(1).Return(false, errors.New("Internal"))
+			},
+			want: &v1.UpdateAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpdateAccount - user does not belong to admin's group",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.UpdateAccountRequest{
+					Account: &v1.UpdateAccount{
+						UserId: "admin1@test.com",
+						Role:   v1.ROLE_ADMIN,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:    "admin3@test.com",
+					FirstName: "admin3",
+					LastName:  "user",
+					Locale:    "fr",
+					Role:      repv1.RoleUser,
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", "admin1@test.com").Times(1).Return(false, nil)
 			},
 			want: &v1.UpdateAccountResponse{
 				Success: false,
@@ -157,21 +561,332 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 			if !assert.Equal(t, tt.want, got) {
 				return
 			}
-			mockCtrl.Finish()
 		})
 	}
 }
 
+func Test_accountServiceServer_DeleteAccount(t *testing.T) {
+	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@test.com",
+		Role:   "Admin",
+	})
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+	type args struct {
+		ctx context.Context
+		req *v1.DeleteAccountRequest
+	}
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.DeleteAccountResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS - role superadmin",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleAdmin,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), db.InsertUserAuditParams{
+					Username:        "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleAdmin.RoleToRoleString(),
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+					Operation:       db.AuditStatusDELETED,
+					UpdatedBy:       "admin@test.com",
+				}).Times(1).Return(nil)
+				mockRepo.EXPECT().DeleteUser(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(nil)
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: true,
+			},
+		},
+		{name: "SUCCESS - role admin",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctx, "admin@test.com", "admin1@test.com").Times(1).Return(true, nil)
+				mockRepo.EXPECT().InsertUserAudit(ctx, db.InsertUserAuditParams{
+					Username:        "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser.RoleToRoleString(),
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+					Operation:       db.AuditStatusDELETED,
+					UpdatedBy:       "admin@test.com",
+				}).Times(1).Return(nil)
+				mockRepo.EXPECT().DeleteUser(ctx, "admin1@test.com").Times(1).Return(nil)
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - DeleteAccount - cannot find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount - AccountInfo - user does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(nil, repv1.ErrNoData)
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount - AccountInfo - failed to get Account info",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(nil, errors.New("Internal"))
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount - UserBelongsToAdminGroup - failed to check if user belongs to the admin groups",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctx, "admin@test.com", "admin1@test.com").Times(1).Return(false, errors.New("Internal"))
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount - UserBelongsToAdminGroup - user does not belong to admin's group",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().UserBelongsToAdminGroup(ctx, "admin@test.com", "admin1@test.com").Times(1).Return(false, nil)
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount -  InsertUserAudit - DBError",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), db.InsertUserAuditParams{
+					Username:        "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser.RoleToRoleString(),
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+					Operation:       db.AuditStatusDELETED,
+					UpdatedBy:       "admin@test.com",
+				}).Times(1).Return(errors.New("DBError"))
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAccount - DeleteAccount - DBError",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}),
+				req: &v1.DeleteAccountRequest{
+					UserId: "admin1@test.com",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
+					UserId:          "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser,
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+				}, nil)
+				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), db.InsertUserAuditParams{
+					Username:        "admin1@test.com",
+					FirstName:       "admin1",
+					LastName:        "test",
+					Role:            repv1.RoleUser.RoleToRoleString(),
+					Locale:          "en",
+					ContFailedLogin: int16(3),
+					Operation:       db.AuditStatusDELETED,
+					UpdatedBy:       "admin@test.com",
+				}).Times(1).Return(nil)
+				mockRepo.EXPECT().DeleteUser(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "SuperAdmin",
+				}), "admin1@test.com").Times(1).Return(errors.New("DBError"))
+			},
+			want: &v1.DeleteAccountResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &accountServiceServer{
+				accountRepo: rep,
+			}
+			got, err := tt.s.DeleteAccount(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.DeleteAccount() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("accountServiceServer.DeleteAccount() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 func Test_accountServiceServer_GetAccount(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		req *v1.GetAccountRequest
 	}
-
 	ctx := context.Background()
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
-
+	profilePic := "base64encoded"
 	tests := []struct {
 		name    string
 		s       *accountServiceServer
@@ -180,14 +895,11 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 		want    *v1.GetAccountResponse
 		wantErr bool
 	}{
-		{name: "success",
+		{name: "SUCCESS",
 			args: args{
 				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}),
-				req: &v1.GetAccountRequest{
-					UserId: "user1",
-				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -196,25 +908,30 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}), "admin@superuser.com").Times(1).Return(&repv1.AccountInfo{
-					UserId: "admin@superuser.com",
-					Role:   repv1.Role(1),
-					Locale: "fr",
+					UserId:     "admin@superuser.com",
+					FirstName:  "first",
+					LastName:   "last",
+					Role:       repv1.Role(1),
+					Locale:     "fr",
+					ProfilePic: []byte(profilePic),
+					FirstLogin: true,
 				}, nil)
 			},
 			want: &v1.GetAccountResponse{
-				UserId: "admin@superuser.com",
-				Role:   v1.ROLE(1),
-				Locale: "fr",
+				UserId:     "admin@superuser.com",
+				FirstName:  "first",
+				LastName:   "last",
+				Role:       v1.ROLE(1),
+				Locale:     "fr",
+				ProfilePic: profilePic,
+				FirstLogin: true,
 			},
 		},
-		{name: "failure",
+		{name: "FAILURE - GetAccount - failed to get Account info",
 			args: args{
 				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}),
-				req: &v1.GetAccountRequest{
-					UserId: "user1",
-				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -229,9 +946,6 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 		{name: "failure - can not retrieve claims",
 			args: args{
 				ctx: ctx,
-				req: &v1.GetAccountRequest{
-					UserId: "user1",
-				},
 			},
 			setup:   func() {},
 			wantErr: true,
@@ -297,6 +1011,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
@@ -345,6 +1060,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 						UserId:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
+						Password:  defaultPassHash,
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 						Group:     []int64{2},
@@ -513,6 +1229,48 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "failure - CreateAccount - GetRootGroup - cannot get root group",
+			args: args{
+				ctx: ctx,
+				req: &v1.Account{
+					UserId:    "user@test.com",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Locale:    "en",
+					Role:      v1.ROLE_ADMIN,
+					Groups:    []int64{6, 3, 4},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(nil, errors.New("Internal")).Times(1)
+			},
+			wantErr: true,
+		},
+		{name: "failure - no user allowed to create in root group",
+			args: args{
+				ctx: ctx,
+				req: &v1.Account{
+					UserId:    "user@test.com",
+					FirstName: "abc",
+					LastName:  "xyz",
+					Locale:    "en",
+					Role:      v1.ROLE_ADMIN,
+					Groups:    []int64{6, 3, 1, 4},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
+			},
+			wantErr: true,
+		},
 		{name: "failure - highestAscendants - cannot create account",
 			args: args{
 				ctx: ctx,
@@ -530,6 +1288,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, errors.New("")),
 				)
@@ -553,6 +1312,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
@@ -599,6 +1359,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
@@ -652,6 +1413,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserExistsByID(ctx, "user@test.com").Return(false, nil)
+				mockRepo.EXPECT().GetRootGroup(ctx).Return(&repv1.Group{ID: 1}, nil).Times(1)
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
@@ -700,6 +1462,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 						UserId:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
+						Password:  defaultPassHash,
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 						Group:     []int64{2},
@@ -726,7 +1489,10 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 }
 
 func Test_accountServiceServer_GetUsers(t *testing.T) {
-	ctx := context.Background()
+	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@test.com",
+		Role:   "SuperAdmin",
+	})
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
 
@@ -742,21 +1508,20 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 		want    *v1.ListUsersResponse
 		wantErr bool
 	}{
-		{name: "SUCCESS",
+		{name: "SUCCESS - get all users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
-					UserID: "admin@superuser.com",
-					Role:   "SuperAdmin",
-				}),
+				ctx: ctx,
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: true,
+					},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UsersAll(ctxmanage.AddClaims(ctx, &claims.Claims{
-					UserID: "admin@superuser.com",
-					Role:   "SuperAdmin",
-				})).Return([]*repv1.AccountInfo{
+				mockRepo.EXPECT().UsersAll(ctx, "admin@test.com").Return([]*repv1.AccountInfo{
 					&repv1.AccountInfo{
 						UserId:    "u1",
 						FirstName: "first",
@@ -806,38 +1571,193 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 				},
 			},
 		},
-		{name: "FAILURE - GetUsers - can not retrieve claims",
+		{name: "SUCCESS - get list of users role superadmin",
 			args: args{
 				ctx: ctx,
-			},
-			setup:   func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE - GetUsers - user doesnot have access to fetch all users",
-			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
-					UserID: "admin@superuser.com",
-					Role:   "User",
-				}),
-			},
-			setup:   func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE - GetUsers - failed to get users",
-			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
-					UserID: "admin@superuser.com",
-					Role:   "SuperAdmin",
-				}),
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: false,
+					},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UsersAll(ctxmanage.AddClaims(ctx, &claims.Claims{
-					UserID: "admin@superuser.com",
-					Role:   "SuperAdmin",
-				})).Return(nil, errors.New("")).Times(1)
+				mockRepo.EXPECT().UsersAll(ctx, "admin@test.com").Return([]*repv1.AccountInfo{
+					&repv1.AccountInfo{
+						UserId:    "u1",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "en",
+						Role:      repv1.RoleAdmin,
+					},
+					&repv1.AccountInfo{
+						UserId:    "u2",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "fr",
+						Role:      repv1.RoleAdmin,
+					},
+					&repv1.AccountInfo{
+						UserId:    "u3",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "en",
+						Role:      repv1.RoleUser,
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.ListUsersResponse{
+				Users: []*v1.User{
+					&v1.User{
+						UserId:    "u1",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "en",
+						Role:      v1.ROLE_ADMIN,
+					},
+					&v1.User{
+						UserId:    "u2",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "fr",
+						Role:      v1.ROLE_ADMIN,
+					},
+					&v1.User{
+						UserId:    "u3",
+						FirstName: "first",
+						LastName:  "last",
+						Locale:    "en",
+						Role:      v1.ROLE_USER,
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - get list of users",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: false,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UsersWithUserSearchParams(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", &repv1.UserQueryParams{}).Return([]*repv1.AccountInfo{
+					&repv1.AccountInfo{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "user",
+						Locale:    "en",
+						GroupName: []string{"A"},
+						Role:      repv1.RoleAdmin,
+					},
+					&repv1.AccountInfo{
+						UserId:    "admin2@test.com",
+						FirstName: "admin2",
+						LastName:  "user",
+						Locale:    "en",
+						GroupName: []string{"A", "B"},
+						Role:      repv1.RoleAdmin,
+					},
+					&repv1.AccountInfo{
+						UserId:    "admin3@test.com",
+						FirstName: "admin3",
+						LastName:  "user",
+						Locale:    "en",
+						GroupName: []string{"B", "C"},
+						Role:      repv1.RoleUser,
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.ListUsersResponse{
+				Users: []*v1.User{
+					&v1.User{
+						UserId:    "admin1@test.com",
+						FirstName: "admin1",
+						LastName:  "user",
+						Locale:    "en",
+						Groups:    []string{"A"},
+						Role:      v1.ROLE_ADMIN,
+					},
+					&v1.User{
+						UserId:    "admin2@test.com",
+						FirstName: "admin2",
+						LastName:  "user",
+						Locale:    "en",
+						Groups:    []string{"A", "B"},
+						Role:      v1.ROLE_ADMIN,
+					},
+					&v1.User{
+						UserId:    "admin3@test.com",
+						FirstName: "admin3",
+						LastName:  "user",
+						Locale:    "en",
+						Groups:    []string{"B", "C"},
+						Role:      v1.ROLE_USER,
+					},
+				},
+			},
+		},
+		{name: "FAILURE - GetUsers - can not retrieve claims",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: true,
+					},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - GetUsers - failed to get  all users",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: true,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UsersAll(ctx, "admin@test.com").Return(nil, errors.New("Internal")).Times(1)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - GetUsers - failed to get list of users",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}),
+				req: &v1.GetUsersRequest{
+					UserFilter: &v1.UserQueryParams{
+						AllUsers: false,
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UsersWithUserSearchParams(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@test.com",
+					Role:   "Admin",
+				}), "admin@test.com", &repv1.UserQueryParams{}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -1084,33 +2004,6 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 			}
 		})
 	}
-}
-
-func compareUsers(t *testing.T, name string, exp *v1.ListUsersResponse, act *v1.ListUsersResponse) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-	for i := range exp.Users {
-		compareUser(t, fmt.Sprintf("%s[%d]", name, i), exp.Users[i], act.Users[i])
-	}
-}
-
-func compareUser(t *testing.T, name string, exp *v1.User, act *v1.User) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "attribute is expected to be nil")
-	}
-
-	assert.Equalf(t, exp.UserId, act.UserId, "%s.UserId are not same", name)
-	assert.Equalf(t, exp.FirstName, act.FirstName, "%s.FirstName are not same", name)
-	assert.Equalf(t, exp.LastName, act.LastName, "%s.LastName are not same", name)
-	assert.Equalf(t, exp.Locale, act.Locale, "%s.Locale are not same", name)
-	assert.Equalf(t, exp.Role, act.Role, "%s.Role are not same", name)
 }
 
 func Test_accountServiceServer_AddGroupUser(t *testing.T) {
@@ -2024,6 +2917,7 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 		ctx context.Context
 		req *v1.ChangePasswordRequest
 	}
+	abcHash := "$2a$11$m.t5BLK.8wmiPuQzesnaoeyk3EMisi9Q/MmyEbEcaMArNmvtxdi.6"
 	tests := []struct {
 		name    string
 		s       *accountServiceServer
@@ -2032,7 +2926,7 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 		want    *v1.ChangePasswordResponse
 		wantErr bool
 	}{
-		{name: "SUCCESS",
+		{name: "SUCCESS - first login true",
 			args: args{
 				ctx: ctx,
 				req: &v1.ChangePasswordRequest{
@@ -2044,8 +2938,34 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
-				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", "Xyz@123").Return(nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					FirstLogin: true,
+					Password:   abcHash,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", gomock.Any()).Return(nil).Times(1)
+				mockRepo.EXPECT().ChangeUserFirstLogin(ctx, "admin@superuser.com").Times(1).Return(nil)
+			},
+			want: &v1.ChangePasswordResponse{
+				Success: true,
+			},
+		},
+		{name: "SUCCESS - first login false",
+			args: args{
+				ctx: ctx,
+				req: &v1.ChangePasswordRequest{
+					Old: "abc",
+					New: "Xyz@123",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					FirstLogin: false,
+					Password:   abcHash,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", gomock.Any()).Return(nil).Times(1)
 			},
 			want: &v1.ChangePasswordResponse{
 				Success: true,
@@ -2062,7 +2982,7 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 			setup:   func() {},
 			wantErr: true,
 		},
-		{name: "FAILURE - ChangePassword - failed to check password",
+		{name: "FAILURE - ChangePassword - failed to get user info",
 			args: args{
 				ctx: ctx,
 				req: &v1.ChangePasswordRequest{
@@ -2074,15 +2994,15 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(false, errors.New("failed to check password")).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(nil, errors.New("test.error")).Times(1)
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - ChangePassword - password does not exists in database",
+		{name: "FAILURE - check password  - fails does not exists in database",
 			args: args{
 				ctx: ctx,
 				req: &v1.ChangePasswordRequest{
-					Old: "abc",
+					Old: "cde",
 					New: "Xyz@123",
 				},
 			},
@@ -2090,7 +3010,9 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(false, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -2106,7 +3028,9 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -2122,7 +3046,9 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -2138,7 +3064,9 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -2154,7 +3082,9 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -2170,10 +3100,31 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
 			},
 			wantErr: true,
 		},
+		// {name: "FAILURE - generate hash - failed to generate hash of password",
+		// 	args: args{
+		// 		ctx: ctx,
+		// 		req: &v1.ChangePasswordRequest{
+		// 			Old: "abc",
+		// 			New: "Xyz@123",
+		// 		},
+		// 	},
+		// 	setup: func() {
+		// 		mockCtrl = gomock.NewController(t)
+		// 		mockRepo := mock.NewMockAccount(mockCtrl)
+		// 		rep = mockRepo
+		// 		mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+		// 			Password: abcHash,
+		// 		}, nil).Times(1)
+		// 		mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", "Xyz@123").Return(errors.New("failed to change password")).Times(1)
+		// 	},
+		// 	wantErr: true,
+		// },
 		{name: "FAILURE - ChangePassword - failed to change password",
 			args: args{
 				ctx: ctx,
@@ -2186,8 +3137,31 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().CheckPassword(ctx, "admin@superuser.com", "abc").Return(true, nil).Times(1)
-				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", "Xyz@123").Return(errors.New("failed to change password")).Times(1)
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					Password: abcHash,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", gomock.Any()).Return(errors.New("failed to change password")).Times(1)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - ChangePassword - failed to change first login status",
+			args: args{
+				ctx: ctx,
+				req: &v1.ChangePasswordRequest{
+					Old: "abc",
+					New: "Xyz@123",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(ctx, "admin@superuser.com").Return(&repv1.AccountInfo{
+					FirstLogin: true,
+					Password:   abcHash,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ChangePassword(ctx, "admin@superuser.com", gomock.Any()).Return(nil).Times(1)
+				mockRepo.EXPECT().ChangeUserFirstLogin(ctx, "admin@superuser.com").Times(1).Return(errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -2208,4 +3182,32 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 			}
 		})
 	}
+}
+
+func compareUsers(t *testing.T, name string, exp *v1.ListUsersResponse, act *v1.ListUsersResponse) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "attribute is expected to be nil")
+	}
+	for i := range exp.Users {
+		compareUser(t, fmt.Sprintf("%s[%d]", name, i), exp.Users[i], act.Users[i])
+	}
+}
+
+func compareUser(t *testing.T, name string, exp *v1.User, act *v1.User) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "attribute is expected to be nil")
+	}
+
+	assert.Equalf(t, exp.UserId, act.UserId, "%s.UserId are not same", name)
+	assert.Equalf(t, exp.FirstName, act.FirstName, "%s.FirstName are not same", name)
+	assert.Equalf(t, exp.LastName, act.LastName, "%s.LastName are not same", name)
+	assert.Equalf(t, exp.Locale, act.Locale, "%s.Locale are not same", name)
+	assert.Equalf(t, exp.Groups, act.Groups, "%s.Groups are not same", name)
+	assert.Equalf(t, exp.Role, act.Role, "%s.Role are not same", name)
 }

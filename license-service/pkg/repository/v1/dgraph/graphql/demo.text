@@ -1,0 +1,110 @@
+Step 1. Create this schema in dgraph
+
+product.name     : string @index(trigram,exact) .
+product.swidtag  : string @index(trigram,exact) @upsert .
+product.equipment: [uid] @count @reverse .
+
+
+equipment.type  : string @index(exact) .
+equipment.id    : string @index(exact,trigram) @upsert .
+
+type Product {
+    product.name     
+    product.swidtag    
+    product.equipment                    
+}
+
+
+type Equipment {
+    equipment.type  
+    equipment.id    
+    <~product.equipment> 
+}
+
+Step 2:
+curl -X POST localhost:8080/admin/schema -d '@schema1.graphql'
+
+Step 4:
+1. Mutation
+
+mutation {
+  addProduct(input: [
+    { swidtag: "st1",equipments:[{id:"e1"},{id:"e2"}]},
+  ]) {
+    product {
+      swidtag
+      equipments {
+          id
+      }
+    }
+  }
+}
+
+mutation {
+  updateProduct(input: 
+   {
+   filter: { swidtag: { eq: "st1" }}
+   set: {equipments:[{id:"e3"},{id:"e4"}]}    
+   }) {
+    product {
+      swidtag
+      equipments {
+          id
+      }
+    }
+  }
+}
+
+mutation {
+   addProduct(input: [
+    { switag: "st1"},
+  ]){
+      product{
+          swidtag
+      }
+  }
+  
+  updateProduct(input: 
+   {
+   filter: { swidtag: { eq: "st1" }}
+   set: {equipments:[{id:"e1"},{id:"e2"}]}
+       
+   }) {
+    product {
+      swidtag
+      equipments {
+          id
+      }
+    }
+  }
+}
+
+
+Step4:
+2. Query
+{
+  node(func: eq(equipment.id,"e1")) {
+    equipment.id
+    eqipment.type
+   ~product.equipment{
+    uid
+    product.swidtag
+   }
+  }
+}
+
+3. Mutation
+
+mutation {
+  addProduct(input: [
+    {swid_tag: "st1",equipments:[{equipment_ID:"e1"},{equipment_ID:"e2"}]},
+    {swid_tag: "st2",equipments:[{equipment_ID:"e3"},{equipment_ID:"e4"}]},
+  ]) {
+    product {
+      swid_tag
+      equipments {
+          equipment_ID
+      }
+    }
+  }
+}

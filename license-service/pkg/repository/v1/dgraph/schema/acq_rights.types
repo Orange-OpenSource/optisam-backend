@@ -1,0 +1,20 @@
+type AcquiredRights {
+    type_name
+    scopes
+    updated
+    created
+    acqRights.entity                       
+    acqRights.SKU                         
+    acqRights.swidtag                     
+    acqRights.productName                 
+    acqRights.editor                       
+    acqRights.metric                     
+    acqRights.numOfAcqLicences             
+    acqRights.numOfLicencesUnderMaintenance
+    acqRights.averageUnitPrice           
+    acqRights.averageMaintenantUnitPrice  
+    acqRights.totalPurchaseCost         
+    acqRights.totalMaintenanceCost        
+    acqRights.totalCost
+    <~product.acqRights>                  
+}

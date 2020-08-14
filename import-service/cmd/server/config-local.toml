@@ -1,26 +1,49 @@
-environment = "DEVELOPMENT"
+environment = "development"
 debug = false
-# Same directory will be consumed by upload service
-uploaddir = "/opt/application/uploaded"
-httpport = "8090"
+httpport = "9092"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
 loglevel = -1
 
 [instrumentation]
-addr = ":8081"
+addr = ":8092"
 
 [instrumentation.prometheus]
 enabled = false
+namespace = "importservice"
 
 [instrumentation.jaeger]
 enabled = false
-collectorEndpoint = ""
-agentEndpoint = ""
+serviceName = "import-service"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
+[database]
+host = "localhost"
+port = 5432
+user = "postgres"
+pass = "postgres"
+name = "postgres"
 
-[pki]
+[grpcservers]
+apiKey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+dps = "localhost:10000"
+
+[upload]
+uploadDir = "/home/dj"
+DatafileAllowedRegex = ['''^products\.csv$''','''^products_equipments\.csv$''','''^applications_products\.csv$''',
+               '''^products_acquiredRights\.csv$''',
+               '''^applications\.csv$''','''^applications_instances\.csv$''','''^instances_equipments\.csv$''','''^instances_products\.csv$'''
+                ,'''^equipment_[a-zA-Z]*\.csv$''']
+MetaDatafileAllowedRegex = ['''^metadata_[a-zA-Z]*\.csv$''']
+
+[iam]
 publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"

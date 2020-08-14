@@ -3,13 +3,13 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
 	"database/sql"
 	//Postgres pq driver
-	_ "github.com/vijay1811/pq"
+	_ "github.com/lib/pq"
 	"github.com/opencensus-integrations/ocsql"
 	"github.com/pkg/errors"
 )
@@ -25,6 +25,7 @@ func NewConnection(config Config) (*sql.DB, error) {
 	}
 
 	db, err := sql.Open(driverName, config.DSN())
-
+	db.SetConnMaxLifetime(0)
+	db.SetMaxIdleConns(0)
 	return db, errors.WithStack(err)
 }

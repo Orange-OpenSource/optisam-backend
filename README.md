@@ -3,10 +3,20 @@ OpTISAM
 
 __OPTISAM__ (Optimized tool for inventive Software Asset Management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services namely:
 
-- auth-service
+
 - account-service
-- license-service
+- acqrights-service
+- application-service
+- auth-service
+- dps-service
+- equipment-service
+- hardware-config-service
 - import-service
+- license-service
+- metric-service
+- product-service
+- report-service
+- simulation-service
 
 ## Quick start
 ### Download

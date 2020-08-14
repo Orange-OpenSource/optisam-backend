@@ -1,0 +1,9 @@
+metadata.equipment.type: string @index(exact) .
+metadata.equipment.attribute: uid .
+metadata.equipment.parent: uid @reverse .
+metadata.equipment.source: uid @reverse .
+
+equipment.type: string @index(exact) .
+equipment.id: string @index(exact,trigram) .
+equipment.parent: uid @reverse .
+equipment.users:  uid @reverse .

@@ -1,0 +1,50 @@
+openapi: 3.0.0
+info:
+  title: auth-service
+  version: version not set
+
+paths:
+  /api/v1/token:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                grant_type:          # <!--- form field name
+                  type: string
+                username:    # <!--- form field name
+                  type: string
+                password:    # <!--- form field name
+                  type: string
+              required:
+                - grant_type
+                - username
+                - password
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                 access_token:
+                   type: string
+                 expires_in:
+                   type: number
+                 refresh_token:
+                   type: string
+                 token_type:
+                   type: string
+          description: OK
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                 access_token:
+                   type: string

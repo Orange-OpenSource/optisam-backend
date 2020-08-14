@@ -1,0 +1,18 @@
+type Product {
+    type_name
+    scopes
+    updated
+    created
+    product.name     
+    product.version  
+    product.category 
+    product.editor   
+    product.swidtag  
+    product.child    
+    product.equipment
+    product.acqRights
+    product.users
+    <~application.product>
+    <~instance.product>
+    <~editor.product>                         
+}

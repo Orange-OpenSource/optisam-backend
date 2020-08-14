@@ -1,0 +1,8 @@
+type Editor {
+    type_name
+    scopes
+    updated
+    created
+    editor.name   
+    editor.product                    
+}

@@ -3,8 +3,15 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
+
+import (
+	"strconv"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
 // MetadataType of metadata
 type MetadataType uint8
@@ -42,4 +49,70 @@ type Attribute struct {
 	IsSearchable       bool
 	IsParentIdentifier bool
 	MappedTo           string
+	IsSimulated        bool
+	IntVal             int
+	StringVal          string
+	FloatVal           float32
+	IntValOld          int
+	StringValOld       string
+	FloatValOld        float32
+}
+
+func (a *Attribute) Val() interface{} {
+	switch a.Type {
+	case DataTypeInt:
+		return a.IntVal
+	case DataTypeFloat:
+		return a.FloatVal
+	case DataTypeString:
+		return a.StringVal
+	default:
+		return a.StringVal
+	}
+}
+
+func (a *Attribute) ValFloat() float64 {
+	if !a.IsSimulated {
+		return a.ValFloatOld()
+	}
+	switch a.Type {
+	case DataTypeInt:
+		return float64(a.IntVal)
+	case DataTypeFloat:
+		return float64(a.FloatVal)
+	default:
+		return 0
+	}
+}
+
+func (a *Attribute) ValFloatOld() float64 {
+	switch a.Type {
+	case DataTypeInt:
+		return float64(a.IntValOld)
+	case DataTypeFloat:
+		return float64(a.FloatValOld)
+	default:
+		return 0
+	}
+}
+
+func (a *Attribute) ValidateAttrValFromString(val string) error {
+	switch a.Type {
+	case DataTypeInt:
+		_, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return status.Error(codes.InvalidArgument, "invalid value type - type should be int")
+		}
+		return nil
+	case DataTypeFloat:
+		_, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return status.Error(codes.InvalidArgument, "invalid value type - type should be float")
+		}
+		return nil
+	case DataTypeString:
+		return nil
+	default:
+		return status.Error(codes.InvalidArgument, "invalid value type")
+	}
 }

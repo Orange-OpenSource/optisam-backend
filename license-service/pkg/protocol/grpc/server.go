@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package grpc
 
 import (
@@ -17,19 +17,19 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/open-policy-agent/opa/rego"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 )
 
 // RunServer runs gRPC service to publish Auth service
-func RunServer(ctx context.Context, v1API v1.LicenseServiceServer, port string, verifyKey *rsa.PublicKey) error {
+func RunServer(ctx context.Context, v1API v1.LicenseServiceServer, port string, verifyKey *rsa.PublicKey, p *rego.PreparedEvalQuery, apiKey string) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
 	}
-
 	// gRPC server statup options
-	opts := mw.Chanined(logger.Log, verifyKey)
+	opts := mw.Chained(logger.Log, verifyKey, p, apiKey)
 	opts = append(opts, grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	// add middleware
 	// opts = grpc_middleware.AddLogging(logger.Log, opts)

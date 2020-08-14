@@ -1,0 +1,5 @@
+product_aggregation.name: string @index(trigram,exact) .
+product_aggregation.editor: string @index(trigram,exact) .
+product_aggregation.product_name: string @index(trigram,exact) .
+product_aggregation.metric: uid @reverse .
+product_aggregation.products: uid @count @reverse .

@@ -1,0 +1,11 @@
+type MetricIPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.ips.base            
+    metric.ips.attr_core_factor
+    metric.ips.attr_num_cores                    
+}

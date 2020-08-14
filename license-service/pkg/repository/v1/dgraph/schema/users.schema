@@ -1,1 +1,2 @@
+users.id : string @index(trigram,exact) @upsert .
 users.count: int .

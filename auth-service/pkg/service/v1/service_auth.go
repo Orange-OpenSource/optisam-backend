@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
@@ -17,6 +17,7 @@ import (
 	"optisam-backend/common/optisam/token/claims"
 
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthServiceServer is implementation of v1.AuthServiceServer proto interface
@@ -46,12 +47,8 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *v1.LoginRequest) (*v
 	}
 
 	// Check if password is correct or not
-	correct, err := s.rep.CheckPassword(ctx, req.Username, req.Password)
-	if err != nil {
-		return nil, err
-	}
 
-	if !correct {
+	if err := bcrypt.CompareHashAndPassword([]byte(ui.Password), []byte(req.Password)); err != nil {
 		// Now increase failed login counts
 		if err := s.rep.IncreaseFailedLoginCount(ctx, req.Username); err != nil {
 			return nil, fmt.Errorf("service/v1 login failed to increase unsuccessful login count: %v", err)

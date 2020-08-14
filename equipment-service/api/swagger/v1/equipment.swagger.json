@@ -1,0 +1,1107 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "equipment.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/equipments": {
+      "post": {
+        "operationId": "UpsertEquipment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/metadata": {
+      "get": {
+        "operationId": "ListEquipmentsMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentMetadataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UN_MAPPED",
+              "MAPPED",
+              "ALL"
+            ],
+            "default": "UN_MAPPED"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      },
+      "post": {
+        "operationId": "UpsertMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertMetadataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertMetadataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/metadata/{ID}": {
+      "get": {
+        "operationId": "GetEquipmentMetadata",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentMetadata"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "attributes",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "All",
+              "Mapped",
+              "Unmapped"
+            ],
+            "default": "All"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/types": {
+      "get": {
+        "operationId": "EquipmentsTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentTypesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "EquipmentService"
+        ]
+      },
+      "post": {
+        "operationId": "CreateEquipmentType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentType"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentType"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/types/{id}": {
+      "put": {
+        "summary": "UpdateEquipmentType provides support for updating equipment\nonly addition of new attribyte is supported.\n1. Attributes added",
+        "operationId": "UpdateEquipmentType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentType"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateEquipmentTypeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateEquipmentType provides support for updating equipment\nonly addition of new attribyte is supported.\n1. Attributes added",
+        "operationId": "UpdateEquipmentType2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentType"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateEquipmentTypeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/{type_id}": {
+      "get": {
+        "operationId": "ListEquipments",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ASC",
+              "asc",
+              "DESC",
+              "desc"
+            ],
+            "default": "ASC"
+          },
+          {
+            "name": "search_params",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.application_id.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.application_id.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.application_id.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "REGEX",
+              "EQ"
+            ],
+            "default": "REGEX"
+          },
+          {
+            "name": "filter.application_id.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "filter.product_id.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.product_id.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.product_id.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "REGEX",
+              "EQ"
+            ],
+            "default": "REGEX"
+          },
+          {
+            "name": "filter.product_id.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "filter.instance_id.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "filter.instance_id.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter.instance_id.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "REGEX",
+              "EQ"
+            ],
+            "default": "REGEX"
+          },
+          {
+            "name": "filter.instance_id.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/{type_id}/{equip_id}": {
+      "get": {
+        "operationId": "GetEquipment",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetEquipmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "equip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/{type_id}/{equip_id}/childs/{children_type_id}": {
+      "get": {
+        "operationId": "ListEquipmentChildren",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "equip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "children_type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ASC",
+              "asc",
+              "DESC",
+              "desc"
+            ],
+            "default": "ASC"
+          },
+          {
+            "name": "search_params",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipments/{type_id}/{equip_id}/parents": {
+      "get": {
+        "operationId": "ListEquipmentParents",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "equip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/products/aggregations/{name}/equipments/{eq_type_id}": {
+      "get": {
+        "operationId": "ListEquipmentsForProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eq_type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ASC",
+              "asc",
+              "DESC",
+              "desc"
+            ],
+            "default": "ASC"
+          },
+          {
+            "name": "search_params",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/products/{swid_tag}/equipments/{eq_type_id}": {
+      "get": {
+        "operationId": "ListEquipmentsForProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListEquipmentsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "swid_tag",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "eq_type_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ASC",
+              "asc",
+              "DESC",
+              "desc"
+            ],
+            "default": "ASC"
+          },
+          {
+            "name": "search_params",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "EquipmentMetadataRequestAttributes": {
+      "type": "string",
+      "enum": [
+        "All",
+        "Mapped",
+        "Unmapped"
+      ],
+      "default": "All"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Attribute": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data_type": {
+          "$ref": "#/definitions/v1DataTypes"
+        },
+        "primary_key": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "displayed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "searchable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "parent_identifier": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "mapped_to": {
+          "type": "string"
+        },
+        "simulated": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "int_val": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "float_val": {
+          "type": "number",
+          "format": "float"
+        },
+        "string_val": {
+          "type": "string"
+        },
+        "int_val_old": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "float_val_old": {
+          "type": "number",
+          "format": "float"
+        },
+        "string_val_old": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DataTypes": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "STRING",
+        "INT",
+        "FLOAT"
+      ],
+      "default": "UNKNOWN"
+    },
+    "v1EquipFilter": {
+      "type": "object",
+      "properties": {
+        "application_id": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "product_id": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "instance_id": {
+          "$ref": "#/definitions/v1StringFilter"
+        }
+      }
+    },
+    "v1EquipmentMetadata": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1EquipmentType": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string"
+        },
+        "parent_type": {
+          "type": "string"
+        },
+        "metadata_id": {
+          "type": "string"
+        },
+        "metadata_source": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Attribute"
+          }
+        }
+      }
+    },
+    "v1EquipmentTypesResponse": {
+      "type": "object",
+      "properties": {
+        "equipment_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EquipmentType"
+          }
+        }
+      }
+    },
+    "v1GetEquipmentResponse": {
+      "type": "object",
+      "properties": {
+        "equipment": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListEquipmentMetadataRequestType": {
+      "type": "string",
+      "enum": [
+        "UN_MAPPED",
+        "MAPPED",
+        "ALL"
+      ],
+      "default": "UN_MAPPED"
+    },
+    "v1ListEquipmentMetadataResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EquipmentMetadata"
+          }
+        }
+      }
+    },
+    "v1ListEquipmentsResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "equipments": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1SortOrder": {
+      "type": "string",
+      "enum": [
+        "ASC",
+        "asc",
+        "DESC",
+        "desc"
+      ],
+      "default": "ASC"
+    },
+    "v1StringFilter": {
+      "type": "object",
+      "properties": {
+        "filteringOrder": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "filteringkey": {
+          "type": "string"
+        },
+        "filter_type": {
+          "$ref": "#/definitions/v1StringFilterType"
+        },
+        "filteringkey_multiple": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1StringFilterType": {
+      "type": "string",
+      "enum": [
+        "REGEX",
+        "EQ"
+      ],
+      "default": "REGEX"
+    },
+    "v1UpdateEquipmentTypeRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "string",
+          "description": "Only send parent id if equipment type does not have a parent."
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Attribute"
+          }
+        }
+      }
+    },
+    "v1UpsertEquipmentRequest": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "eq_type": {
+          "type": "string"
+        },
+        "eq_data": {
+          "type": "object"
+        }
+      }
+    },
+    "v1UpsertEquipmentResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1UpsertMetadataRequest": {
+      "type": "object",
+      "properties": {
+        "metadata_type": {
+          "type": "string"
+        },
+        "metadata_source": {
+          "type": "string"
+        },
+        "metadata_attributes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1UpsertMetadataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    }
+  }
+}

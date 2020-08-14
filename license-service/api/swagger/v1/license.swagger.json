@@ -15,373 +15,38 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/acquiredrights": {
-      "get": {
-        "operationId": "ListAcquiredRights",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListAcquiredRightsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ENTITY",
-              "SKU",
-              "SWID_TAG",
-              "PRODUCT_NAME",
-              "EDITOR",
-              "METRIC",
-              "ACQUIRED_LICENSES_NUMBER",
-              "LICENSES_UNDER_MAINTENANCE_NUMBER",
-              "AVG_LICENSE_UNIT_PRICE",
-              "AVG_MAINTENANCE_UNIT_PRICE",
-              "TOTAL_PURCHASE_COST",
-              "TOTAL_MAINTENANCE_COST",
-              "TOTAL_COST"
-            ],
-            "default": "ENTITY"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          },
-          {
-            "name": "search_params.swidTag.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.swidTag.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.SKU.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.SKU.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.editor.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.editor.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.productName.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.productName.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.metric.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.metric.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/applications": {
-      "get": {
-        "operationId": "ListApplications",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListApplicationsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.name.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.name.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.application_owner.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.application_owner.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/applications/{application_id}/products": {
-      "get": {
-        "operationId": "ListProductsForApplication",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListProductsForApplicationResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/editors": {
-      "get": {
-        "operationId": "ListEditors",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEditorsResponse"
-            }
-          }
-        },
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/metadata": {
-      "get": {
-        "operationId": "ListEquipmentsMetadata",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentMetadataResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "UN_MAPPED",
-              "MAPPED",
-              "ALL"
-            ],
-            "default": "UN_MAPPED"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/metadata/{ID}": {
-      "get": {
-        "operationId": "GetEquipmentMetadata",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1EquipmentMetadata"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "attributes",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "All",
-              "Mapped",
-              "Unmapped"
-            ],
-            "default": "All"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/types": {
-      "get": {
-        "operationId": "EquipmentsTypes",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1EquipmentTypesResponse"
-            }
-          }
-        },
-        "tags": [
-          "LicenseService"
-        ]
-      },
+    "/api/v1/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}": {
       "post": {
-        "operationId": "CreateEquipmentType",
+        "operationId": "LicensesForEquipAndMetric",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1EquipmentType"
+              "$ref": "#/definitions/v1LicensesForEquipAndMetricResponse"
             }
           }
         },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
+            "name": "equip_type",
+            "in": "path",
             "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1EquipmentType"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/types/{id}": {
-      "put": {
-        "summary": "UpdateEquipmentType provides support for updating equipment\nonly addition of new attribyte is supported. \n1. Attributes added",
-        "operationId": "UpdateEquipmentType",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1EquipmentType"
-            }
-          }
-        },
-        "parameters": [
+            "type": "string"
+          },
           {
-            "name": "id",
+            "name": "equip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "metric_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "metric_name",
             "in": "path",
             "required": true,
             "type": "string"
@@ -391,38 +56,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpdateEquipmentTypeRequest"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      },
-      "patch": {
-        "summary": "UpdateEquipmentType provides support for updating equipment\nonly addition of new attribyte is supported. \n1. Attributes added",
-        "operationId": "UpdateEquipmentType2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1EquipmentType"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpdateEquipmentTypeRequest"
+              "$ref": "#/definitions/v1LicensesForEquipAndMetricRequest"
             }
           }
         ],
@@ -431,323 +65,10 @@
         ]
       }
     },
-    "/api/v1/equipments/{type_id}": {
+    "/api/v1/equipments/types/{type}/metric": {
       "get": {
-        "operationId": "ListEquipments",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          },
-          {
-            "name": "search_params",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/{type_id}/{equip_id}": {
-      "get": {
-        "operationId": "GetEquipment",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetEquipmentResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "equip_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/{type_id}/{equip_id}/childs/{children_type_id}": {
-      "get": {
-        "operationId": "ListEquipmentChildren",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "equip_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "children_type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          },
-          {
-            "name": "search_params",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/{type_id}/{equip_id}/parents": {
-      "get": {
-        "operationId": "ListEquipmentParents",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "equip_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/equipments/{type_id}/{equip_id}/products": {
-      "get": {
-        "operationId": "ListEquipmentProducts",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentProductsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "equip_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "SWID_TAG",
-              "NAME",
-              "EDITOR",
-              "VERSION"
-            ],
-            "default": "SWID_TAG"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          },
-          {
-            "name": "search_params.swidTag.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.swidTag.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.name.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.name.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.editor.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.editor.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/metric": {
-      "get": {
-        "summary": "ListMetrices",
-        "operationId": "ListMetrices",
+        "summary": "TODO: Should be in metric services",
+        "operationId": "MetricesForEqType",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -756,123 +77,9 @@
             }
           }
         },
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/metric/ips": {
-      "post": {
-        "summary": "CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric",
-        "operationId": "CreateMetricIBMPvuStandard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricIPS"
-            }
-          }
-        },
         "parameters": [
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricIPS"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/metric/ops": {
-      "post": {
-        "summary": "CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric",
-        "operationId": "CreateMetricOracleProcessorStandard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricOPS"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricOPS"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/metric/sps": {
-      "post": {
-        "summary": "CreateMetricSAGProcessorStandard will create an sag.processor.standard metric",
-        "operationId": "CreateMetricSAGProcessorStandard",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricSPS"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1CreateMetricSPS"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/metric/types": {
-      "get": {
-        "summary": "ListMetricType",
-        "operationId": "ListMetricType",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListMetricTypeResponse"
-            }
-          }
-        },
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/product/{swid_tag}": {
-      "get": {
-        "operationId": "GetProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ProductResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "swid_tag",
+            "name": "type",
             "in": "path",
             "required": true,
             "type": "string"
@@ -907,104 +114,37 @@
         ]
       }
     },
-    "/api/v1/products": {
-      "get": {
-        "operationId": "ListProducts",
+    "/api/v1/product/{swid_tag}/metric/{metric_name}": {
+      "post": {
+        "operationId": "ProductLicensesForMetric",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListProductsResponse"
+              "$ref": "#/definitions/v1ProductLicensesForMetricResponse"
             }
           }
         },
         "parameters": [
           {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
+            "name": "swid_tag",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
+            "name": "metric_name",
+            "in": "path",
+            "required": true,
             "type": "string"
           },
           {
-            "name": "search_params.swidTag.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.swidTag.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.name.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.name.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.editor.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.editor.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.edition.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.edition.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.agFilter.NotForMetric",
-            "description": "Not For metric means aggregation for a product should not exist for a given metric.",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ProductLicensesForMetricRequest"
+            }
           }
         ],
         "tags": [
@@ -1013,20 +153,6 @@
       }
     },
     "/api/v1/products/aggregations": {
-      "get": {
-        "operationId": "ListProductAggregation",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListProductAggregationResponse"
-            }
-          }
-        },
-        "tags": [
-          "LicenseService"
-        ]
-      },
       "post": {
         "operationId": "CreateProductAggregation",
         "responses": {
@@ -1045,6 +171,30 @@
             "schema": {
               "$ref": "#/definitions/v1ProductAggregation"
             }
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/products/aggregations/productview/{ID}/acquiredrights": {
+      "get": {
+        "operationId": "ListAcqRightsForProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsForProductAggregationResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1076,220 +226,32 @@
         ]
       }
     },
-    "/api/v1/products/{swid_tag}/applications": {
-      "get": {
-        "operationId": "ListApplicationsForProduct",
+    "/api/v1/products/aggregations/{name}": {
+      "put": {
+        "summary": "update product aggregation",
+        "operationId": "UpdateProductAggregation",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListApplicationsForProductResponse"
+              "$ref": "#/definitions/v1ProductAggregation"
             }
           }
         },
         "parameters": [
           {
-            "name": "swid_tag",
+            "name": "name",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.name.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.name.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.application_owner.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.application_owner.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/products/{swid_tag}/applications/{application_id}/instances": {
-      "get": {
-        "operationId": "ListInstancesForApplicationsProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
+            "name": "body",
+            "in": "body",
+            "required": true,
             "schema": {
-              "$ref": "#/definitions/v1ListInstancesForApplicationProductResponse"
+              "$ref": "#/definitions/v1UpdateProductAggregationRequest"
             }
-          }
-        },
-        "parameters": [
-          {
-            "name": "swid_tag",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "NAME",
-              "ENV",
-              "NUM_PRODUCTS",
-              "NUM_EQUIPMENTS"
-            ],
-            "default": "NAME"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/products/{swid_tag}/equipments/{eq_type_id}": {
-      "get": {
-        "operationId": "ListEquipmentsForProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "swid_tag",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "eq_type_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "ASC",
-              "asc",
-              "DESC",
-              "desc"
-            ],
-            "default": "ASC"
-          },
-          {
-            "name": "search_params",
-            "in": "query",
-            "required": false,
-            "type": "string"
           }
         ],
         "tags": [
@@ -1299,154 +261,6 @@
     }
   },
   "definitions": {
-    "EquipmentMetadataRequestAttributes": {
-      "type": "string",
-      "enum": [
-        "All",
-        "Mapped",
-        "Unmapped"
-      ],
-      "default": "All"
-    },
-    "v1AcquiredRights": {
-      "type": "object",
-      "properties": {
-        "entity": {
-          "type": "string"
-        },
-        "SKU": {
-          "type": "string"
-        },
-        "swid_tag": {
-          "type": "string"
-        },
-        "product_name": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "metric": {
-          "type": "string"
-        },
-        "acquired_licenses_number": {
-          "type": "string",
-          "format": "int64"
-        },
-        "licenses_under_maintenance_number": {
-          "type": "string",
-          "format": "int64"
-        },
-        "avg_licenes_unit_price": {
-          "type": "number",
-          "format": "float"
-        },
-        "avg_maintenance_unit_price": {
-          "type": "number",
-          "format": "float"
-        },
-        "total_purchase_cost": {
-          "type": "number",
-          "format": "float"
-        },
-        "total_maintenance_cost": {
-          "type": "number",
-          "format": "float"
-        },
-        "total_cost": {
-          "type": "number",
-          "format": "float"
-        }
-      }
-    },
-    "v1AcquiredRightsSearchParams": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "SKU": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "editor": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "productName": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "metric": {
-          "$ref": "#/definitions/v1StringFilter"
-        }
-      }
-    },
-    "v1AggregationFilter": {
-      "type": "object",
-      "properties": {
-        "NotForMetric": {
-          "type": "string",
-          "title": "Not For metric means aggregation for a product should not exist for a given metric"
-        }
-      }
-    },
-    "v1Application": {
-      "type": "object",
-      "properties": {
-        "applicationId": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "application_owner": {
-          "type": "string"
-        },
-        "numOfInstances": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofProducts": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "totalCost": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "v1ApplicationForProduct": {
-      "type": "object",
-      "properties": {
-        "application_id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "app_owner": {
-          "type": "string"
-        },
-        "numOfInstances": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofEquipments": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "v1ApplicationSearchParams": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "application_owner": {
-          "$ref": "#/definitions/v1StringFilter"
-        }
-      }
-    },
     "v1Attribute": {
       "type": "object",
       "properties": {
@@ -1477,80 +291,31 @@
         },
         "mapped_to": {
           "type": "string"
-        }
-      }
-    },
-    "v1CreateMetricIPS": {
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string",
-          "title": "ID is not required for creation"
         },
-        "Name": {
+        "simulated": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "int_val": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "float_val": {
+          "type": "number",
+          "format": "float"
+        },
+        "string_val": {
           "type": "string"
         },
-        "num_core_attr_id": {
-          "type": "string"
+        "int_val_old": {
+          "type": "integer",
+          "format": "int32"
         },
-        "core_factor_attr_id": {
-          "type": "string"
+        "float_val_old": {
+          "type": "number",
+          "format": "float"
         },
-        "base_eq_type_id": {
-          "type": "string"
-        }
-      }
-    },
-    "v1CreateMetricOPS": {
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string",
-          "title": "ID is not required for creation"
-        },
-        "Name": {
-          "type": "string"
-        },
-        "num_core_attr_id": {
-          "type": "string"
-        },
-        "numCPU_attr_id": {
-          "type": "string"
-        },
-        "core_factor_attr_id": {
-          "type": "string"
-        },
-        "start_eq_type_id": {
-          "type": "string"
-        },
-        "base_eq_type_id": {
-          "type": "string"
-        },
-        "aggerateLevel_eq_type_id": {
-          "type": "string"
-        },
-        "end_eq_type_id": {
-          "type": "string"
-        }
-      }
-    },
-    "v1CreateMetricSPS": {
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string",
-          "title": "ID is not required for creation"
-        },
-        "Name": {
-          "type": "string"
-        },
-        "num_core_attr_id": {
-          "type": "string"
-        },
-        "core_factor_attr_id": {
-          "type": "string"
-        },
-        "base_eq_type_id": {
+        "string_val_old": {
           "type": "string"
         }
       }
@@ -1565,84 +330,19 @@
       ],
       "default": "UNKNOWN"
     },
-    "v1Editor": {
+    "v1LicensesForEquipAndMetricRequest": {
       "type": "object",
       "properties": {
-        "ID": {
+        "equip_type": {
           "type": "string"
         },
-        "Name": {
-          "type": "string"
-        }
-      }
-    },
-    "v1EquipmentMetadata": {
-      "type": "object",
-      "properties": {
-        "ID": {
+        "equip_id": {
           "type": "string"
         },
-        "name": {
+        "metric_type": {
           "type": "string"
         },
-        "attributes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "v1EquipmentProduct": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        }
-      }
-    },
-    "v1EquipmentProductSearchParams": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "name": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "editor": {
-          "$ref": "#/definitions/v1StringFilter"
-        }
-      }
-    },
-    "v1EquipmentType": {
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "parent_id": {
-          "type": "string"
-        },
-        "parent_type": {
-          "type": "string"
-        },
-        "metadata_id": {
-          "type": "string"
-        },
-        "metadata_source": {
+        "metric_name": {
           "type": "string"
         },
         "attributes": {
@@ -1650,51 +350,27 @@
           "items": {
             "$ref": "#/definitions/v1Attribute"
           }
-        }
-      }
-    },
-    "v1EquipmentTypesResponse": {
-      "type": "object",
-      "properties": {
-        "equipment_types": {
+        },
+        "scopes": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1EquipmentType"
+            "type": "string"
           }
         }
       }
     },
-    "v1GetEquipmentResponse": {
+    "v1LicensesForEquipAndMetricResponse": {
       "type": "object",
       "properties": {
-        "equipment": {
-          "type": "string"
+        "licenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductLicenseForEquipAndMetric"
+          }
         }
       }
     },
-    "v1InstancesForApplicationProduct": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "environment": {
-          "type": "string"
-        },
-        "numofEquipments": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofProducts": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "v1ListAcquiredRightsForProductResponse": {
+    "v1ListAcqRightsForProductAggregationResponse": {
       "type": "object",
       "properties": {
         "acq_rights": {
@@ -1705,160 +381,13 @@
         }
       }
     },
-    "v1ListAcquiredRightsRequestSortBy": {
-      "type": "string",
-      "enum": [
-        "ENTITY",
-        "SKU",
-        "SWID_TAG",
-        "PRODUCT_NAME",
-        "EDITOR",
-        "METRIC",
-        "ACQUIRED_LICENSES_NUMBER",
-        "LICENSES_UNDER_MAINTENANCE_NUMBER",
-        "AVG_LICENSE_UNIT_PRICE",
-        "AVG_MAINTENANCE_UNIT_PRICE",
-        "TOTAL_PURCHASE_COST",
-        "TOTAL_MAINTENANCE_COST",
-        "TOTAL_COST"
-      ],
-      "default": "ENTITY"
-    },
-    "v1ListAcquiredRightsResponse": {
+    "v1ListAcquiredRightsForProductResponse": {
       "type": "object",
       "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "acquired_rights": {
+        "acq_rights": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1AcquiredRights"
-          }
-        }
-      }
-    },
-    "v1ListApplicationsForProductResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "applications": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1ApplicationForProduct"
-          }
-        }
-      }
-    },
-    "v1ListApplicationsResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "applications": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Application"
-          }
-        }
-      }
-    },
-    "v1ListEditorsResponse": {
-      "type": "object",
-      "properties": {
-        "editors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Editor"
-          }
-        }
-      }
-    },
-    "v1ListEquipmentMetadataRequestType": {
-      "type": "string",
-      "enum": [
-        "UN_MAPPED",
-        "MAPPED",
-        "ALL"
-      ],
-      "default": "UN_MAPPED"
-    },
-    "v1ListEquipmentMetadataResponse": {
-      "type": "object",
-      "properties": {
-        "metadata": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1EquipmentMetadata"
-          }
-        }
-      }
-    },
-    "v1ListEquipmentProductsRequestSortBy": {
-      "type": "string",
-      "enum": [
-        "SWID_TAG",
-        "NAME",
-        "EDITOR",
-        "VERSION"
-      ],
-      "default": "SWID_TAG"
-    },
-    "v1ListEquipmentProductsResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "products": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1EquipmentProduct"
-          }
-        }
-      }
-    },
-    "v1ListEquipmentsResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "equipments": {
-          "type": "string",
-          "format": "byte"
-        }
-      }
-    },
-    "v1ListInstancesForApplicationProductRequestSortBy": {
-      "type": "string",
-      "enum": [
-        "NAME",
-        "ENV",
-        "NUM_PRODUCTS",
-        "NUM_EQUIPMENTS"
-      ],
-      "default": "NAME"
-    },
-    "v1ListInstancesForApplicationProductResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "instances": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1InstancesForApplicationProduct"
+            "$ref": "#/definitions/v1ProductAcquiredRights"
           }
         }
       }
@@ -1874,17 +403,6 @@
         }
       }
     },
-    "v1ListMetricTypeResponse": {
-      "type": "object",
-      "properties": {
-        "types": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1MetricType"
-          }
-        }
-      }
-    },
     "v1ListProductAggregationResponse": {
       "type": "object",
       "properties": {
@@ -1892,36 +410,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ProductAggregation"
-          }
-        }
-      }
-    },
-    "v1ListProductsForApplicationResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "products": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1ProductForApplication"
-          }
-        }
-      }
-    },
-    "v1ListProductsResponse": {
-      "type": "object",
-      "properties": {
-        "totalRecords": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "products": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Product"
           }
         }
       }
@@ -1936,57 +424,6 @@
           "type": "string"
         },
         "description": {
-          "type": "string"
-        }
-      }
-    },
-    "v1MetricType": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "href": {
-          "type": "string"
-        },
-        "type_id": {
-          "$ref": "#/definitions/v1MetricTypeType"
-        }
-      }
-    },
-    "v1MetricTypeType": {
-      "type": "string",
-      "enum": [
-        "Unknown",
-        "Oracle_Processor",
-        "Oracle_NUP",
-        "SAG_Processor",
-        "IBM_PVU"
-      ],
-      "default": "Unknown"
-    },
-    "v1OptionInfo": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "type": "string"
-        },
-        "Name": {
-          "type": "string"
-        },
-        "edition": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "metric": {
           "type": "string"
         }
       }
@@ -2073,6 +510,10 @@
         "deltaCost": {
           "type": "number",
           "format": "double"
+        },
+        "avgUnitPrice": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -2088,8 +529,11 @@
         "editor": {
           "type": "string"
         },
-        "product": {
-          "type": "string"
+        "product_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "metric": {
           "type": "string"
@@ -2099,152 +543,103 @@
           "items": {
             "type": "string"
           }
+        },
+        "products_full": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Product"
+          }
         }
       }
     },
-    "v1ProductForApplication": {
+    "v1ProductLicenseForEquipAndMetric": {
       "type": "object",
       "properties": {
-        "swidTag": {
+        "metric_name": {
           "type": "string"
         },
-        "name": {
+        "old_licences": {
+          "type": "string",
+          "format": "int64"
+        },
+        "new_licenses": {
+          "type": "string",
+          "format": "int64"
+        },
+        "delta": {
+          "type": "string",
+          "format": "int64"
+        },
+        "product": {
+          "$ref": "#/definitions/v1Product"
+        }
+      }
+    },
+    "v1ProductLicensesForMetricRequest": {
+      "type": "object",
+      "properties": {
+        "swid_tag": {
           "type": "string"
         },
-        "Editor": {
+        "metric_name": {
           "type": "string"
         },
-        "Edition": {
-          "type": "string"
+        "unit_cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1ProductLicensesForMetricResponse": {
+      "type": "object",
+      "properties": {
+        "numCptLicences": {
+          "type": "string",
+          "format": "uint64"
         },
-        "Version": {
-          "type": "string"
-        },
-        "totalCost": {
+        "total_cost": {
           "type": "number",
           "format": "double"
         },
-        "numOfInstances": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofEquipments": {
-          "type": "integer",
-          "format": "int32"
+        "metric_name": {
+          "type": "string"
         }
       }
     },
-    "v1ProductInfo": {
+    "v1UpdateAggregation": {
       "type": "object",
       "properties": {
-        "swidTag": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "edition": {
-          "type": "string"
-        },
-        "release": {
-          "type": "string"
-        },
-        "metric": {
-          "type": "string"
-        },
-        "numOfApplications": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofEquipments": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "v1ProductOptions": {
-      "type": "object",
-      "properties": {
-        "numOfOptions": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "optioninfo": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1OptionInfo"
-          }
-        }
-      }
-    },
-    "v1ProductResponse": {
-      "type": "object",
-      "properties": {
-        "productInfo": {
-          "$ref": "#/definitions/v1ProductInfo"
-        },
-        "productOptions": {
-          "$ref": "#/definitions/v1ProductOptions"
-        }
-      }
-    },
-    "v1ProductSearchParams": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
         "name": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "editor": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "edition": {
-          "$ref": "#/definitions/v1StringFilter"
-        },
-        "agFilter": {
-          "$ref": "#/definitions/v1AggregationFilter"
-        }
-      }
-    },
-    "v1SortOrder": {
-      "type": "string",
-      "enum": [
-        "ASC",
-        "asc",
-        "DESC",
-        "desc"
-      ],
-      "default": "ASC"
-    },
-    "v1StringFilter": {
-      "type": "object",
-      "properties": {
-        "filteringOrder": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "filteringkey": {
-          "type": "string"
-        }
-      }
-    },
-    "v1UpdateEquipmentTypeRequest": {
-      "type": "object",
-      "properties": {
-        "id": {
           "type": "string"
         },
-        "parent_id": {
-          "type": "string",
-          "description": "Only send parent id if equipment type does not have a parent."
-        },
-        "attributes": {
+        "added_products": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1Attribute"
+            "type": "string"
           }
+        },
+        "removed_products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "product_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1UpdateProductAggregationRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "aggregation": {
+          "$ref": "#/definitions/v1UpdateAggregation"
         }
       }
     }

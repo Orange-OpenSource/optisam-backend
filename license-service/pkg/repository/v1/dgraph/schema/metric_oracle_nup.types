@@ -1,0 +1,16 @@
+type MetricOracleNUP {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.oracle_nup.bottom          
+    metric.oracle_nup.base            
+    metric.oracle_nup.aggregate       
+    metric.oracle_nup.top             
+    metric.oracle_nup.attr_core_factor
+    metric.oracle_nup.attr_num_cores  
+    metric.oracle_nup.attr_num_cpu    
+    metric.oracle_nup.num_users                        
+}

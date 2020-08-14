@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -14,7 +14,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -40,13 +40,13 @@ func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricO
 	nquads := []*api.NQuad{
 		&api.NQuad{
 			Subject:     blankID,
-			Predicate:   "type",
+			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
 		&api.NQuad{
 			Subject:     blankID,
 			Predicate:   "metric.type",
-			ObjectValue: stringObjectValue("oracle.processor.standard"),
+			ObjectValue: stringObjectValue(v1.MetricOPSOracleProcessorStandard.String()),
 		},
 		&api.NQuad{
 			Subject:     blankID,
@@ -88,6 +88,11 @@ func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricO
 			Predicate: "metric.ops.attr_num_cpu",
 			ObjectId:  mat.NumCPUAttrID,
 		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "dgraph.type",
+			ObjectValue: stringObjectValue("MetricOPS"),
+		},
 	}
 
 	mu := &api.Mutation{
@@ -126,26 +131,17 @@ func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricO
 
 // ListMetricOPS implements Licence ListMetricOPS function
 func (l *LicenseRepository) ListMetricOPS(ctx context.Context, scopes []string) ([]*v1.MetricOPS, error) {
-	q := `{
-		Data(func: eq(metric.type,oracle.processor.standard)){
-		 uid
-		 expand(_all_){
-		  uid
-		} 
-		}
-	  }`
-	resp, err := l.dg.NewTxn().Query(ctx, q)
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOPSOracleProcessorStandard, scopes)
 	if err != nil {
-		logger.Log.Error("dgraph/ListMetricOPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type oracle.processor.standard")
+		logger.Log.Error("dgraph/ListMetricOPS - listMetricWithMetricType", zap.Error(err))
+		return nil, err
 	}
 	type Resp struct {
 		Data []*metric
 	}
 	var data Resp
-	if err := json.Unmarshal(resp.Json, &data); err != nil {
-		fmt.Println(string(resp.Json))
-		logger.Log.Error("dgraph/ListMetricOPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
+	if err := json.Unmarshal(respJson, &data); err != nil {
+		logger.Log.Error("dgraph/ListMetricOPS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}
 	if len(data.Data) == 0 {

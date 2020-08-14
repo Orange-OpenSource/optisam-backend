@@ -1,0 +1,15 @@
+type MetricOracleOPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.ops.bottom          
+    metric.ops.base            
+    metric.ops.aggregate       
+    metric.ops.top             
+    metric.ops.attr_core_factor
+    metric.ops.attr_num_cores  
+    metric.ops.attr_num_cpu                     
+}

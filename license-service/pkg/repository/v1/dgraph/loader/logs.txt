@@ -1,0 +1,161 @@
+{"level":"warn","ts":1575880211.3133383,"msg":"time format for logger is not provided - use zap default"}
+loading config config-local.toml
+loading destination dir from data_a
+connecting alpha to localhost:9080
+connecting zero on localhost:5080
+loading state from state.json
+&{BadgerDir:mapping_badger StateConfig:state.json Zero:localhost:5080 Alpha:[localhost:9080] DropSchema:false CreateSchema:false LoadMetadata:false LoadDefaultEquipmentTypes:false LoadEquipments:false LoadStaticData:true MasterDir:data_a ScopeSkeleten: Scopes:[data_OF] ProductFiles:[prod.csv productsnew.csv products_equipments.csv] AppFiles:[applications.csv applications_products.csv] InstFiles:[applications_instances.csv instances_products.csv instances_equipments.csv] AcqRightsFiles:[products_acquiredRights.csv] EquipmentFiles:[] MetadataFiles:0xc0001257c0 SchemaFiles:[] UsersFiles:[products_equipments_users.csv] Repository:<nil> BatchSize:100000 IgnoreNew:false GenerateRDF:true}
+{"level":"info","ts":1575880211.3383477,"msg":"loader started"}
+100000
+badger 2019/12/09 14:00:11 INFO: All 0 tables opened in 0s
+badger 2019/12/09 14:00:11 INFO: Replaying file id: 0 at offset: 0
+badger 2019/12/09 14:00:11 INFO: Replay took: 998.3µs
+{"level":"error","ts":1575880211.355339,"msg":"state file not found all data will be processod","state_file":"state.json","error":"open state.json: The system cannot find the file specified."}
+data_a [data_OF]
+data_OF
+handleAborted
+data_a [data_OF]
+data_OF
+data_a [data_OF]
+data_OF
+{"level":"info","ts":1575880211.3563397,"msg":"set file loader staticproducts_acquiredRights.csv"}
+data_a [data_OF]
+data_OF
+{"level":"info","ts":1575880211.3603418,"msg":"set file loader staticapplications.csv"}
+[v1]
+{"level":"info","ts":1575880211.361338,"msg":"set file loader staticapplications_products.csv"}
+data_a [data_OF]
+data_OF
+{"level":"info","ts":1575880211.3633425,"msg":"set file loader staticapplications_instances.csv"}
+[v1]
+{"level":"info","ts":1575880211.3643456,"msg":"set file loader staticprod.csv"}
+{"level":"info","ts":1575880211.3653445,"msg":"started loading staticproducts_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3653445,"msg":"set file loader staticproducts_equipments_users.csv"}
+{"level":"info","ts":1575880211.366338,"msg":"set file loader staticinstances_products.csv"}
+{"level":"info","ts":1575880211.366338,"msg":"set file loader staticinstances_equipments.csv"}
+[v1]
+{"level":"info","ts":1575880211.367338,"msg":"started loading staticproducts_acquiredRights.csv"}
+{"level":"info","ts":1575880211.367338,"msg":"set file loader staticproductsnew.csv"}
+{"level":"info","ts":1575880211.367338,"msg":"started loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+[v1]
+{"level":"info","ts":1575880211.3683462,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880211.3683462,"msg":"started loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3693378,"msg":"set file loader staticproducts_equipments.csv"}
+{"level":"info","ts":1575880211.3703396,"msg":"started loading staticproducts_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3713403,"msg":"started loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880211.3713403,"msg":"started loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3763404,"msg":"end loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3793418,"msg":"end loading staticproducts_acquiredRights.csv"}
+[v1]
+{"level":"info","ts":1575880211.380344,"msg":"end loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3823414,"msg":"end loading data_a\\data_OF\\v1\\products_acquiredRights.csv"}
+{"level":"info","ts":1575880211.383355,"msg":"started loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.388343,"msg":"started loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.388343,"msg":"end loading staticproducts_acquiredRights.csv"}
+{"level":"info","ts":1575880211.388343,"msg":"end loading staticproducts_acquiredRights.csv"}
+{"level":"info","ts":1575880211.3893392,"msg":"started loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.3893392,"msg":"started loading data_a\\data_OF\\v1\\applications_products.csv"}
+{"level":"info","ts":1575880211.3943424,"msg":"started loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.396341,"msg":"started loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.396341,"msg":"started loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.3973691,"msg":"started loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.4503427,"msg":"end loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.4573405,"msg":"end loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.4673467,"msg":"started loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.4713507,"msg":"started loading data_a\\data_OF\\v1\\applications_products.csv"}
+{"level":"info","ts":1575880211.5043514,"msg":"end loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.5053434,"msg":"end loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.5053434,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880211.5063422,"msg":"started loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880211.5483496,"msg":"end loading data_a\\data_OF\\v1\\applications.csv"}
+{"level":"info","ts":1575880211.5503454,"msg":"end loading staticapplications_products.csv"}
+{"level":"info","ts":1575880211.5553513,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880211.5573497,"msg":"started loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880216.2434914,"msg":"end loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880216.2434914,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880216.2434914,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880216.2444937,"msg":"started loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880216.5234983,"msg":"end loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880216.525502,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880216.5265017,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880216.528504,"msg":"started loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880216.646536,"msg":"end loading data_a\\data_OF\\v1\\applications_instances.csv"}
+{"level":"info","ts":1575880216.6475139,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880216.6495073,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880216.6525056,"msg":"started loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880216.6885066,"msg":"end loading data_a\\data_OF\\v1\\applications_products.csv"}
+{"level":"info","ts":1575880216.6945071,"msg":"end loading staticapplications_products.csv"}
+{"level":"info","ts":1575880216.7045074,"msg":"started loading staticproducts_equipments_users.csv"}
+{"level":"info","ts":1575880216.708508,"msg":"started loading data_a\\data_OF\\v1\\products_equipments_users.csv"}
+{"level":"info","ts":1575880216.71051,"msg":"end loading data_a\\data_OF\\v1\\products_equipments_users.csv"}
+{"level":"info","ts":1575880216.7135117,"msg":"end loading staticproducts_equipments_users.csv"}
+{"level":"info","ts":1575880216.7165213,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880216.7165213,"msg":"started loading data_a\\data_OF\\v1\\instances_equipments.csv"}
+{"level":"info","ts":1575880216.7915232,"msg":"end loading data_a\\data_OF\\v1\\applications_products.csv"}
+{"level":"info","ts":1575880216.7965178,"msg":"end loading staticapplications_products.csv"}
+{"level":"info","ts":1575880216.7985127,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880216.803552,"msg":"started loading data_a\\data_OF\\v1\\instances_equipments.csv"}
+{"level":"info","ts":1575880217.1485212,"msg":"end loading data_a\\data_OF\\v1\\instances_equipments.csv"}
+{"level":"info","ts":1575880217.1495333,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880217.1495333,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.1495333,"msg":"started loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880217.202538,"msg":"end loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880217.2055235,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.2055235,"msg":"started loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880217.206532,"msg":"started loading data_a\\data_OF\\v1\\instances_products.csv"}
+{"level":"info","ts":1575880217.2085352,"msg":"end loading data_a\\data_OF\\v1\\instances_products.csv"}
+{"level":"info","ts":1575880217.2095256,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880217.2095256,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.2095256,"msg":"started loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"error","ts":1575880217.2105205,"msg":"error opening file","filename:":"data_a\\data_OF\\v1\\productsnew.csv","reason":"open data_a\\data_OF\\v1\\productsnew.csv: The system cannot find the file specified."}
+{"level":"info","ts":1575880217.2115228,"msg":"end loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"info","ts":1575880217.2115228,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.2215252,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.2225242,"msg":"started loading data_a\\data_OF\\v1\\products_equipments.csv"}
+{"level":"info","ts":1575880217.263525,"msg":"end loading data_a\\data_OF\\v1\\instances_equipments.csv"}
+{"level":"info","ts":1575880217.2685323,"msg":"end loading staticinstances_equipments.csv"}
+{"level":"info","ts":1575880217.270527,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.270527,"msg":"started loading data_a\\data_OF\\v1\\products_equipments.csv"}
+{"level":"info","ts":1575880217.3875313,"msg":"end loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880217.3945303,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.4365697,"msg":"end loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880217.4385364,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.9025447,"msg":"end loading data_a\\data_OF\\v1\\prod.csv"}
+{"level":"info","ts":1575880217.9035454,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.9035454,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880217.904547,"msg":"started loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"error","ts":1575880217.9055457,"msg":"error opening file","filename:":"data_a\\data_OF\\v1\\productsnew.csv","reason":"open data_a\\data_OF\\v1\\productsnew.csv: The system cannot find the file specified."}
+{"level":"info","ts":1575880217.9055457,"msg":"end loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"info","ts":1575880217.9065444,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880231.8637376,"msg":"end loading data_a\\data_OF\\v1\\products_equipments.csv"}
+{"level":"info","ts":1575880231.8647475,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880231.8897407,"msg":"end loading data_a\\data_OF\\v1\\products_equipments.csv"}
+{"level":"info","ts":1575880231.8897407,"msg":"end loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880231.8897407,"msg":"started loading staticproducts_equipments.csv"}
+{"level":"info","ts":1575880231.8907392,"msg":"started loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"error","ts":1575880231.8917565,"msg":"error opening file","filename:":"data_a\\data_OF\\v1\\productsnew.csv","reason":"open data_a\\data_OF\\v1\\productsnew.csv: The system cannot find the file specified."}
+{"level":"info","ts":1575880231.8917565,"msg":"end loading data_a\\data_OF\\v1\\productsnew.csv"}
+{"level":"info","ts":1575880231.89274,"msg":"end loading staticproducts_equipments.csv"}
+file processing done
+handleAborted - revcevied done
+handleAborted - all infiniteRetry done
+badger 2019/12/09 14:00:31 INFO: Got compaction priority: {level:0 score:1.73 dropPrefix:[]}
+Error: data_OF:productsnew.csv:open data_a\data_OF\v1\productsnew.csv: The system cannot find the file specified.
+Usage:
+  dataloader staticdata [flags]
+
+Flags:
+  -d, --data_dir string   directory where static data files are present (default "datadir")
+  -h, --help              help for staticdata
+
+Global Flags:
+  -a, --alpha strings         dataloader schema --alpha localhost:9080 --alpha localhost:9081 (default [localhost:9080])
+  -b, --badger_dir string     dataloader staticdata --alpha localhost:5080 -sc state.json -b badger (default "badger")
+      --batch_size int32      dataloader staticdata --batch_size 1000 (default 1000)
+      --config string         Configuration file. Takes precedence over default values, but is overridden to values set with environment variables
+and flags.
+  -g, --gen_rdf               dataloader --gen_rdf true --alpha localhost:5080 -sc state.json -b badger
+  -c, --state_config string   dataloader staticdata --alpha localhost:5080 -sc state.json (default "state.json")
+  -z, --zero string           dataloader metadata --zero localhost:5080 (default "localhost:5080")
+
+{"level":"error","ts":1575880231.9647484,"msg":"command failed","error":"data_OF:productsnew.csv:open data_a\\data_OF\\v1\\productsnew.csv: The system cannot find the file specified."}

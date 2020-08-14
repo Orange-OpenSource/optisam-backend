@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
@@ -14,7 +14,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"strings"
 
-	"github.com/vijay1811/pq"
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
@@ -99,6 +99,8 @@ const (
 
 	deleteGroup = `DELETE FROM groups
 	WHERE id=$1`
+
+	selectRootGroup = selectGroup + `WHERE parent_id IS NULL`
 )
 
 // UserOwnedGroups implements Account UserOwnedGroups function
@@ -124,7 +126,6 @@ func (r *AccountRepository) UserOwnedGroups(ctx context.Context, userID string, 
 
 // CreateGroup implements Account CreateGroup function
 func (r *AccountRepository) CreateGroup(ctx context.Context, userID string, group *v1.Group) (*v1.Group, error) {
-
 	var id int64
 	if err := r.db.QueryRowContext(ctx, createGroup, group.Name, group.FullyQualifiedName,
 		pq.Array(group.Scopes), group.ParentID, userID).Scan(&id); err != nil {
@@ -328,6 +329,17 @@ func (r *AccountRepository) IsGroupRoot(ctx context.Context, groupID int64) (boo
 		return false, err
 	}
 	return parentID == nil, nil
+}
+
+// GetRootGroup implements Account GetRootGroup function
+func (r *AccountRepository) GetRootGroup(ctx context.Context) (*v1.Group, error) {
+	grp := &v1.Group{}
+	parentID := sql.NullInt64{}
+	if err := r.db.QueryRowContext(ctx, selectRootGroup).Scan(&grp.ID, &grp.Name, &grp.FullyQualifiedName, &parentID, pq.Array(&grp.Scopes), &grp.NumberOfUsers, &grp.NumberOfGroups); err != nil {
+		return nil, err
+	}
+	grp.ParentID = parentID.Int64
+	return grp, nil
 }
 
 func queryDeleteUsersIntoGroupOwnership(groupID int64, users []string) ([]interface{}, string) {

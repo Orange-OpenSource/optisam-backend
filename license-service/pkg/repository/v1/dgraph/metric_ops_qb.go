@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -23,7 +23,6 @@ const (
 			$CurrentTypeIDs_c as uid
 		}  
 	}`
-
 	qParentEquipment = `var (func: uid($id)){
 		equipment.parent @filter(eq(equipment.type,$CurrentType)){
 			$CurrentTypeIDs as uid
@@ -85,7 +84,7 @@ const (
 	qLevelAggregationCeil = `l_$CurrentType as sum(val($CurrentType_t_ceil))`
 
 	qJustBaseCalculation = `
-	var(func: uid($BaseTypeIDs))$Filter{
+	var(func: uid($id$))$Filter{
 		cpu_$BaseType as equipment.$BaseType.$AttrNumCPU
 		cores_$BaseType as equipment.$BaseType.$AttrNumCores
 		coreFactor_$BaseType as equipment.$BaseType.$AttrCoreFactor
@@ -109,7 +108,7 @@ func replacer(q string, params map[string]string) string {
 	return q
 }
 
-func queryBuilder(ops *v1.MetricOPSComputed, id string) string {
+func queryBuilder(ops *v1.MetricOPSComputed, id ...string) string {
 	//q := ""
 	index := -1
 	aggregateIndex := -1
@@ -125,9 +124,9 @@ func queryBuilder(ops *v1.MetricOPSComputed, id string) string {
 	return "{\n\t" + replacer(strings.Join([]string{
 		getToBase(ops.EqTypeTree[:index+1]),
 		getToTop(ops.EqTypeTree[index:], index > 0),
-		caluclateFromTop(ops.EqTypeTree[index:], ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index),
+		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
-	}, "\n\t"), map[string]string{"$id": id}) + "\n}"
+	}, "\n\t"), map[string]string{"$id": strings.Join(id, ",")}) + "\n}"
 }
 
 func getToBase(eqTypes []*v1.EquipmentType) string {
@@ -140,8 +139,12 @@ func getToBase(eqTypes []*v1.EquipmentType) string {
 			queries = append(queries, replacer(qDirectEquipments, vars))
 			continue
 		}
+		ids := []string{eqTypes[i-1].Type + "IDs"}
+		if i > 1 {
+			ids = append(ids, eqTypes[i-1].Type+"IDs_c")
+		}
 		vars := map[string]string{
-			"$id":          eqTypes[i-1].Type + "IDs",
+			"$id":          strings.Join(ids, ","),
 			"$CurrentType": eqTypes[i].Type,
 		}
 		queries = append(queries, replacer(qEquipmentFromChild, vars))
@@ -187,9 +190,10 @@ func getUIDFilter(currentType string, uids ...string) string {
 	return `@filter( NOT uid(` + strings.Join(newUids, ",") + `))`
 }
 
-func caluclateFromTop(eqTypes []*v1.EquipmentType, cf, cpu, cores *v1.Attribute, agIdx int) string {
+func caluclateFromTop(eqTypesAll []*v1.EquipmentType, cf, cpu, cores *v1.Attribute, agIdx, baseIdx int) string {
 	queries := []string{}
 	filterIDs := []string{}
+	eqTypes := eqTypesAll[baseIdx:]
 	for i := len(eqTypes) - 1; i >= 0; i-- {
 		vars := map[string]string{
 			"$CurrentType": eqTypes[i].Type,
@@ -211,6 +215,12 @@ func caluclateFromTop(eqTypes []*v1.EquipmentType, cf, cpu, cores *v1.Attribute,
 
 		if i == 0 {
 			q := replacer(qJustBaseCalculation, map[string]string{
+				"$id$": func() string {
+					if baseIdx > 0 {
+						return strings.Join([]string{eqTypes[i].Type + "IDs", eqTypes[i].Type + "IDs_c"}, ",")
+					}
+					return eqTypes[i].Type + "IDs"
+				}(),
 				"$BaseType":       eqTypes[i].Type,
 				"$Filter":         getUIDFilter(eqTypes[i].Type, filterIDs...),
 				"$AttrNumCPU":     cpu.Name,

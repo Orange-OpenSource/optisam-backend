@@ -1,10 +1,11 @@
 metric.type: string @index(exact) .
-metric.name: string @index(exact) .
+metric.name: string @index(exact,trigram) .
 
-metric.ops.bottom           : uid @count @reverse .
-metric.ops.base             : uid @count @reverse .
-metric.ops.aggregate        : uid @count @reverse .
-metric.ops.top              : uid @count @reverse .
-metric.ops.attr_core_factor : uid @count @reverse .
-metric.ops.attr_num_cores   : uid @count @reverse .
-metric.ops.attr_num_cpu     : uid @count @reverse .
+metric.ops.bottom           : [uid] @count @reverse .
+metric.ops.base             : [uid] @count @reverse .
+metric.ops.aggregate        : [uid] @count @reverse .
+metric.ops.top              : [uid] @count @reverse .
+metric.ops.attr_core_factor : [uid] @count @reverse .
+metric.ops.attr_num_cores   : [uid] @count @reverse .
+metric.ops.attr_num_cpu     : [uid] @count @reverse .
+

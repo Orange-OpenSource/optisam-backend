@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import "context"
@@ -31,6 +31,6 @@ type Repository interface {
 	// UserOwnedGroupsDirect return the groups directly owned by user
 	UserOwnedGroupsDirect(ctx context.Context, userID string) ([]*Group, error)
 
-	// CheckPassword check for users password in database
-	CheckPassword(ctx context.Context, userID, password string) (bool, error)
+	// // CheckPassword check for users password in database
+	// CheckPassword(ctx context.Context, userID, password string) (bool, error)
 }

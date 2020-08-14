@@ -1,0 +1,1087 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "acqrights.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/acqrights": {
+      "get": {
+        "operationId": "ListAcqRights",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "ENTITY",
+              "SKU",
+              "SWID_TAG",
+              "PRODUCT_NAME",
+              "EDITOR",
+              "METRIC",
+              "ACQUIRED_LICENSES_NUMBER",
+              "LICENSES_UNDER_MAINTENANCE_NUMBER",
+              "AVG_LICENSE_UNIT_PRICE",
+              "AVG_MAINTENANCE_UNIT_PRICE",
+              "TOTAL_PURCHASE_COST",
+              "TOTAL_MAINTENANCE_COST",
+              "TOTAL_COST"
+            ],
+            "default": "ENTITY"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.swidTag.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.swidTag.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.swidTag.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.swidTag.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.SKU.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.SKU.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.SKU.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.SKU.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.productName.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.productName.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.productName.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.productName.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.metric.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.metric.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.metric.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.metric.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      },
+      "post": {
+        "operationId": "UpsertAcqRights",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertAcqRightsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertAcqRightsRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/acqrights/aggregations": {
+      "get": {
+        "operationId": "ListAcqRightsAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsAggregationResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "NAME",
+              "EDITOR",
+              "TOTAL_COST",
+              "METRIC"
+            ],
+            "default": "NAME"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.swidTag.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.swidTag.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.swidTag.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.swidTag.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.SKU.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.SKU.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.SKU.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.SKU.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_params.metric.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.metric.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.metric.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "search_params.metric.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/acqrights/aggregations/{aggregation_id}/records": {
+      "get": {
+        "operationId": "ListAcqRightsAggregationRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsAggregationRecordsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "aggregation_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/aggregations": {
+      "get": {
+        "operationId": "ListProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListProductAggregationResponse"
+            }
+          }
+        },
+        "tags": [
+          "AcqRightsService"
+        ]
+      },
+      "post": {
+        "operationId": "CreateProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductAggregationMessage"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ProductAggregationMessage"
+            }
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/aggregations/editors": {
+      "get": {
+        "operationId": "ListAcqRightsEditors",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsEditorsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/aggregations/metrics": {
+      "get": {
+        "operationId": "ListAcqRightsMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsMetricsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/aggregations/products": {
+      "get": {
+        "operationId": "ListAcqRightsProducts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsProductsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    },
+    "/api/v1/aggregations/{ID}": {
+      "delete": {
+        "operationId": "DeleteProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteProductAggregationResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      },
+      "put": {
+        "summary": "update product aggregation",
+        "operationId": "UpdateProductAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductAggregationMessage"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ProductAggregationMessage"
+            }
+          }
+        ],
+        "tags": [
+          "AcqRightsService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ListAcqRightsProductsResponseAcqRightsProducts": {
+      "type": "object",
+      "properties": {
+        "swidtag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1AcqRights": {
+      "type": "object",
+      "properties": {
+        "entity": {
+          "type": "string"
+        },
+        "SKU": {
+          "type": "string"
+        },
+        "swid_tag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "metric": {
+          "type": "string"
+        },
+        "acquired_licenses_number": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "licenses_under_maintenance_number": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "avg_licenes_unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "avg_maintenance_unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_purchase_cost": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_maintenance_cost": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "v1AcqRightsAggregation": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "swidtags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skus": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "metric": {
+          "type": "string"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "v1AcqRightsSearchParams": {
+      "type": "object",
+      "properties": {
+        "swidTag": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "SKU": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "editor": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "productName": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "metric": {
+          "$ref": "#/definitions/v1StringFilter"
+        }
+      }
+    },
+    "v1DeleteProductAggregationResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1ListAcqRightsAggregationRecordsResponse": {
+      "type": "object",
+      "properties": {
+        "acquired_rights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AcqRights"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsAggregationRequestSortBy": {
+      "type": "string",
+      "enum": [
+        "NAME",
+        "EDITOR",
+        "TOTAL_COST",
+        "METRIC"
+      ],
+      "default": "NAME"
+    },
+    "v1ListAcqRightsAggregationResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "aggregations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AcqRightsAggregation"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsAggregationSearchParams": {
+      "type": "object",
+      "properties": {
+        "swidTag": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "editor": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "SKU": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "metric": {
+          "$ref": "#/definitions/v1StringFilter"
+        }
+      }
+    },
+    "v1ListAcqRightsEditorsResponse": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsProductsResponse": {
+      "type": "object",
+      "properties": {
+        "acqrights_products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListAcqRightsProductsResponseAcqRightsProducts"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsRequestSortBy": {
+      "type": "string",
+      "enum": [
+        "ENTITY",
+        "SKU",
+        "SWID_TAG",
+        "PRODUCT_NAME",
+        "EDITOR",
+        "METRIC",
+        "ACQUIRED_LICENSES_NUMBER",
+        "LICENSES_UNDER_MAINTENANCE_NUMBER",
+        "AVG_LICENSE_UNIT_PRICE",
+        "AVG_MAINTENANCE_UNIT_PRICE",
+        "TOTAL_PURCHASE_COST",
+        "TOTAL_MAINTENANCE_COST",
+        "TOTAL_COST"
+      ],
+      "default": "ENTITY"
+    },
+    "v1ListAcqRightsResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "acquired_rights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AcqRights"
+          }
+        }
+      }
+    },
+    "v1ListProductAggregationResponse": {
+      "type": "object",
+      "properties": {
+        "aggregations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductAggregation"
+          }
+        }
+      }
+    },
+    "v1ProductAggregation": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "product_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "metric": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1ProductAggregationMessage": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
+        "metric": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1SortOrder": {
+      "type": "string",
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "default": "asc"
+    },
+    "v1StringFilter": {
+      "type": "object",
+      "properties": {
+        "filteringOrder": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "filteringkey": {
+          "type": "string"
+        },
+        "filter_type": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "filteringkey_multiple": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1UpsertAcqRightsRequest": {
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "swidtag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "product_editor": {
+          "type": "string"
+        },
+        "metric_type": {
+          "type": "string"
+        },
+        "num_licenses_acquired": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "num_licences_maintainance": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "avg_unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "avg_maintenance_unit_price": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_purchase_cost": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_maintenance_cost": {
+          "type": "number",
+          "format": "float"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "float"
+        },
+        "entity": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpsertAcqRightsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    }
+  }
+}

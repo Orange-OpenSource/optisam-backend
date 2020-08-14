@@ -1,0 +1,484 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "simulation.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/config": {
+      "get": {
+        "operationId": "ListConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListConfigResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "equipment_type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    },
+    "/api/v1/config/{config_id}": {
+      "delete": {
+        "operationId": "DeleteConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteConfigResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    },
+    "/api/v1/config/{config_id}/{metadata_id}": {
+      "get": {
+        "operationId": "GetConfigData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetConfigDataResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "config_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "metadata_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    },
+    "/api/v1/simulation/hardware": {
+      "post": {
+        "operationId": "SimulationByHardware",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByHardwareResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByHardwareRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    },
+    "/api/v1/simulation/metric": {
+      "post": {
+        "operationId": "SimulationByMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByMetricResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "v1Attribute": {
+      "type": "object",
+      "properties": {
+        "attribute_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "attribute_name": {
+          "type": "string"
+        },
+        "config_filename": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ConfigValue": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1Configuration": {
+      "type": "object",
+      "properties": {
+        "config_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "config_name": {
+          "type": "string"
+        },
+        "equipment_type": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "config_attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Attribute"
+          }
+        }
+      }
+    },
+    "v1CreateConfigResponse": {
+      "type": "object"
+    },
+    "v1Data": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/v1Metadata"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ConfigValue"
+          }
+        }
+      }
+    },
+    "v1DataTypes": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "STRING",
+        "INT",
+        "FLOAT"
+      ],
+      "default": "UNKNOWN"
+    },
+    "v1DeleteConfigResponse": {
+      "type": "object"
+    },
+    "v1EquipAttribute": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data_type": {
+          "$ref": "#/definitions/v1DataTypes"
+        },
+        "primary_key": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "displayed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "searchable": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "parent_identifier": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "mapped_to": {
+          "type": "string"
+        },
+        "simulated": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "int_val": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "float_val": {
+          "type": "number",
+          "format": "float"
+        },
+        "string_val": {
+          "type": "string"
+        },
+        "int_val_old": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "float_val_old": {
+          "type": "number",
+          "format": "float"
+        },
+        "string_val_old": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetConfigDataResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1ListConfigResponse": {
+      "type": "object",
+      "properties": {
+        "configurations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Configuration"
+          }
+        }
+      }
+    },
+    "v1Metadata": {
+      "type": "object",
+      "properties": {
+        "attribute_name": {
+          "type": "string"
+        },
+        "config_filename": {
+          "type": "string"
+        }
+      }
+    },
+    "v1MetricSimDetails": {
+      "type": "object",
+      "properties": {
+        "metric_name": {
+          "type": "string"
+        },
+        "unit_cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1MetricSimulationResult": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "num_cpt_licences": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "metric_name": {
+          "type": "string"
+        },
+        "sim_failure_reason": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimMetricDetails": {
+      "type": "object",
+      "properties": {
+        "metric_type": {
+          "type": "string"
+        },
+        "metric_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimulatedProductLicense": {
+      "type": "object",
+      "properties": {
+        "old_licences": {
+          "type": "string",
+          "format": "int64"
+        },
+        "new_licenses": {
+          "type": "string",
+          "format": "int64"
+        },
+        "delta": {
+          "type": "string",
+          "format": "int64"
+        },
+        "swid_tag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimulatedProductsLicenses": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "licenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SimulatedProductLicense"
+          }
+        },
+        "sim_failure_reason": {
+          "type": "string"
+        },
+        "metric_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimulationByHardwareRequest": {
+      "type": "object",
+      "properties": {
+        "equip_type": {
+          "type": "string"
+        },
+        "equip_id": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EquipAttribute"
+          }
+        },
+        "metric_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SimMetricDetails"
+          }
+        }
+      }
+    },
+    "v1SimulationByHardwareResponse": {
+      "type": "object",
+      "properties": {
+        "simulation_result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SimulatedProductsLicenses"
+          }
+        }
+      }
+    },
+    "v1SimulationByMetricRequest": {
+      "type": "object",
+      "properties": {
+        "swid_tag": {
+          "type": "string"
+        },
+        "metric_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1MetricSimDetails"
+          }
+        }
+      }
+    },
+    "v1SimulationByMetricResponse": {
+      "type": "object",
+      "properties": {
+        "metric_sim_result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1MetricSimulationResult"
+          }
+        }
+      }
+    },
+    "v1UpdateConfigResponse": {
+      "type": "object"
+    }
+  }
+}

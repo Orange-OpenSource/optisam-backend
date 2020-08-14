@@ -1,0 +1,12 @@
+type ProductAggregation {
+    type_name
+    scopes
+    updated
+    created
+    product_aggregation.id
+    product_aggregation.name        
+    product_aggregation.editor      
+    product_aggregation.product_name
+    product_aggregation.metric      
+    product_aggregation.products                  
+}

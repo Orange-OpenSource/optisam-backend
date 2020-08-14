@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package cmd
 
 import (
@@ -53,6 +53,7 @@ func initCmds() {
 	cmdRoot.PersistentFlags().StringP("zero", "z", "localhost:5080", "dataloader metadata --zero localhost:5080")
 	cmdRoot.PersistentFlags().StringP("state_config", "c", "state.json", "dataloader staticdata --alpha localhost:5080 -sc state.json")
 	cmdRoot.PersistentFlags().StringP("badger_dir", "b", "badger", "dataloader staticdata --alpha localhost:5080 -sc state.json -b badger")
+	cmdRoot.PersistentFlags().BoolP("gen_rdf", "g", false, "dataloader --gen_rdf true --alpha localhost:5080 -sc state.json -b badger")
 	cmdRoot.PersistentFlags().String("config", "",
 		"Configuration file. Takes precedence over default values, but is "+
 			"overridden to values set with environment variables and flags.")

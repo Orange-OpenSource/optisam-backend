@@ -1,2 +1,2 @@
-editor.name: string @index(exact,trigram) .
-editor.product: uid @reverse .
+editor.name: string @index(exact,trigram) @upsert .
+editor.product: [uid] @reverse .

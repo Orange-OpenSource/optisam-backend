@@ -1,0 +1,9 @@
+product.name: string @index(trigram,exact) .
+product.version: string .
+product.category: string .
+product.editor: string @index(trigram) .
+product.swidtag: string @index(trigram,exact) .
+product.child: uid @count @reverse .
+product.equipment: uid @count @reverse .
+product.acqRights: uid @count @reverse .
+product.users:  uid @reverse .

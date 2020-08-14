@@ -1,0 +1,3 @@
+product.name: string @index(trigram) .
+product.version: int .
+application.id: string @index(exact) .

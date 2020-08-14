@@ -1,33 +1,26 @@
-environment = "DEVELOPMENT"
+environment = "development"
 debug = false
-grpcport = "9090"
-httpport = "8090"
+grpcport = 9092
+httpport = 9093
 jwtprivatekey = "key.pem"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
 loglevel = -1
 
-[instrumentation]
-addr = ":8081"
-
 [instrumentation.prometheus]
 enabled = false
-namespace = "authservice"
 
 [instrumentation.jaeger]
-enabled = false
-collectorEndpoint = ""
-agentEndpoint = ""
+enabled = true
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [database]
-host = "db"
+host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
 name = "optisam"
-
-[dgraph]
-host = "dgraph:9080"

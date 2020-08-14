@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package loader
 
 import (
@@ -14,8 +14,9 @@ import (
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"path/filepath"
+	"time"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -34,7 +35,7 @@ var (
 		Type:       Server,
 		SourceName: "equipment_server.csv",
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:               "HostName",
 				Type:               v1.DataTypeString,
 				IsIdentifier:       true,
@@ -43,7 +44,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_hostname",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerCode",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -51,7 +52,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_code",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerManufacturer",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -59,7 +60,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_manufacturer",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerModel",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -67,21 +68,13 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_model",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerSerialNumber",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
 				IsSearchable:       true,
 				IsParentIdentifier: false,
 				MappedTo:           "server_serialNumber",
-			},
-			&v1.Attribute{
-				Name:               "ServerHostname1",
-				Type:               v1.DataTypeString,
-				IsDisplayed:        false,
-				IsSearchable:       false,
-				IsParentIdentifier: false,
-				MappedTo:           "server_hostname1",
 			},
 			&v1.Attribute{
 				Name:               "ServerDateInstallation",
@@ -361,7 +354,7 @@ func LoadDefaultEquipmentTypes(repo v1.License) error {
 		if err := LoadEquipmentsType(eqType, repo); err != nil {
 			return err
 		}
-
+		time.Sleep(100 * time.Millisecond)
 		log.Println(eqType.ID)
 	}
 	return nil
@@ -375,7 +368,7 @@ func LoadEquipmentsType(eqType *v1.EquipmentType, repo v1.License) error {
 	return nil
 }
 
-func loadEquipmentMetadata(ch chan<- *api.Mutation, doneChan <-chan struct{}, filename string) {
+func loadEquipmentMetadata(ch chan<- *api.Request, doneChan <-chan struct{}, filename string) {
 	log.Println("started metadata loading " + filename)
 	defer log.Println("end metadata loading " + filename)
 	f, err := readFile(filename)
@@ -411,7 +404,7 @@ func loadEquipmentMetadata(ch chan<- *api.Mutation, doneChan <-chan struct{}, fi
 	nqs := []*api.NQuad{
 		&api.NQuad{
 			Subject:     uid,
-			Predicate:   "type",
+			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metadata"),
 		},
 		&api.NQuad{
@@ -429,9 +422,13 @@ func loadEquipmentMetadata(ch chan<- *api.Mutation, doneChan <-chan struct{}, fi
 	select {
 	case <-doneChan:
 		return
-	case ch <- &api.Mutation{
-		CommitNow: true,
-		Set:       nqs,
+	case ch <- &api.Request{
+		Mutations: []*api.Mutation{
+			&api.Mutation{
+				CommitNow: true,
+				Set:       nqs,
+			},
+		},
 	}:
 	}
 }

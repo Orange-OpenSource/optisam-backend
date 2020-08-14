@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package cmd
 
 import (
@@ -20,7 +20,6 @@ import (
 	"optisam-backend/common/optisam/buildinfo"
 	"optisam-backend/common/optisam/healthcheck"
 	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/pki"
 	"optisam-backend/common/optisam/prometheus"
 	"optisam-backend/import-service/pkg/config"
 
@@ -79,8 +78,6 @@ func RunServer() error {
 		log.Fatalf("failed to unmarshal configuration: %v", err)
 	}
 
-	fmt.Printf("%+v", cfg)
-
 	buildInfo := buildinfo.New(version, commitHash, buildDate)
 	// Instumentation Handler
 	instrumentationRouter := http.NewServeMux()
@@ -89,11 +86,10 @@ func RunServer() error {
 	// configure health checker
 	healthChecker := healthcheck.New()
 	instrumentationRouter.Handle("/healthz", healthcheck.Handler(healthChecker))
-	if err := logger.Init(1, ""); err != nil {
-		return fmt.Errorf("failed to initialize logger: %v", err)
-	}
+
 	// initialize logger
-	if err := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
+	err = logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat)
+	if err != nil {
 		return fmt.Errorf("failed to initialize logger: %v", err)
 	}
 
@@ -178,11 +174,5 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	// get the verify key to validate jwt
-	verifyKey, err := pki.GetVerifyKey(cfg.PKI)
-	if err != nil {
-		logger.Log.Fatal("Failed to get verify key")
-	}
-
-	return rest.RunServer(ctx, verifyKey, cfg.HTTPPort, cfg.UploadDir)
+	return rest.RunServer(ctx, cfg)
 }

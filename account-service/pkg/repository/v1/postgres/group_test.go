@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
@@ -48,13 +48,13 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 							FullyQualifiedName: "ROOT",
 							ParentID:           0,
 							NumberOfUsers:      1,
-							Scopes: []string{
-								"Orange",
-								"Guinea Conakry",
-								"Group",
-								"France",
-								"Ivory Coast",
-							},
+							// Scopes: []string{
+							// 	"Orange",
+							// 	"Guinea Conakry",
+							// 	"Group",
+							// 	"France",
+							// 	"Ivory Coast",
+							// },
 						},
 					}, func() error {
 						return nil
@@ -75,12 +75,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					FullyQualifiedName: "ROOT.G1",
 					ParentID:           1,
 					NumberOfGroups:     1,
-					Scopes: []string{
-						"Orange",
-						"Guinea Conakry",
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err := repo.CreateGroup(context.Background(), "admin@test.com", g1)
@@ -98,11 +92,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					FullyQualifiedName: "ROOT.G2",
 					ParentID:           1,
 					NumberOfGroups:     1,
-					Scopes: []string{
-						"Guinea Conakry",
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g2)
@@ -120,10 +109,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					Name:               "G3",
 					FullyQualifiedName: "ROOT.G1.G3",
 					ParentID:           g1.ID,
-					Scopes: []string{
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g3)
@@ -142,10 +127,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					Name:               "G3",
 					FullyQualifiedName: "ROOT.G2.G4",
 					ParentID:           g2.ID,
-					Scopes: []string{
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g4)
@@ -170,13 +151,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 							ParentID:           0,
 							NumberOfUsers:      1,
 							NumberOfGroups:     2,
-							Scopes: []string{
-								"Orange",
-								"Guinea Conakry",
-								"Group",
-								"France",
-								"Ivory Coast",
-							},
 						},
 						g1, g2, g3, g4,
 					}, func() error {
@@ -199,12 +173,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					ParentID:           1,
 					NumberOfGroups:     1,
 					NumberOfUsers:      0,
-					Scopes: []string{
-						"Orange",
-						"Guinea Conakry",
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err := repo.CreateGroup(context.Background(), "admin@test.com", g1)
@@ -222,11 +190,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					FullyQualifiedName: "ROOT.G2",
 					ParentID:           1,
 					NumberOfGroups:     1,
-					Scopes: []string{
-						"Guinea Conakry",
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g2)
@@ -245,10 +208,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					FullyQualifiedName: "ROOT.G1.G3",
 					ParentID:           g1.ID,
 					NumberOfUsers:      1,
-					Scopes: []string{
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g3)
@@ -268,10 +227,6 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 					FullyQualifiedName: "ROOT.G2.G4",
 					ParentID:           g2.ID,
 					NumberOfUsers:      1,
-					Scopes: []string{
-						"Group",
-						"France",
-					},
 				}
 
 				grp, err = repo.CreateGroup(context.Background(), "admin@test.com", g4)
@@ -356,6 +311,7 @@ func TestAccountRepository_DeleteGroup(t *testing.T) {
 					UserId:    "admintest",
 					FirstName: "FIRST",
 					LastName:  "LAST",
+					Password:  "password",
 					Locale:    "en",
 					Role:      v1.RoleAdmin,
 				}
@@ -379,6 +335,7 @@ func TestAccountRepository_DeleteGroup(t *testing.T) {
 					UserId:    "usertest",
 					FirstName: "FIRST",
 					LastName:  "LAST",
+					Password:  "password",
 					Locale:    "en",
 					Role:      v1.RoleUser,
 					Group: []int64{
@@ -519,8 +476,9 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, grps[3].ID,
 					},
@@ -529,8 +487,9 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u2",
-					Role:   v1.RoleAdmin,
+					UserId:   "u2",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -539,8 +498,9 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u3",
-					Role:   v1.RoleAdmin,
+					UserId:   "u3",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -549,8 +509,9 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u4",
-					Role:   v1.RoleAdmin,
+					UserId:   "u4",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[3].ID,
 					},
@@ -559,8 +520,9 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u5",
-					Role:   v1.RoleAdmin,
+					UserId:   "u5",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[5].ID,
 					},
@@ -706,8 +668,9 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, grps[3].ID,
 					},
@@ -716,8 +679,9 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u2",
-					Role:   v1.RoleAdmin,
+					UserId:   "u2",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -726,8 +690,9 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u3",
-					Role:   v1.RoleAdmin,
+					UserId:   "u3",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -736,8 +701,9 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u4",
-					Role:   v1.RoleAdmin,
+					UserId:   "u4",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[3].ID,
 					},
@@ -746,8 +712,9 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u5",
-					Role:   v1.RoleAdmin,
+					UserId:   "u5",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[5].ID,
 					},
@@ -866,8 +833,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc := &v1.AccountInfo{
-					UserId: "u1",
-					Role:   v1.RoleAdmin,
+					UserId:   "u1",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, grps[3].ID,
 					},
@@ -876,8 +844,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u2",
-					Role:   v1.RoleAdmin,
+					UserId:   "u2",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -886,8 +855,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u3",
-					Role:   v1.RoleAdmin,
+					UserId:   "u3",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[1].ID,
 					},
@@ -896,8 +866,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u4",
-					Role:   v1.RoleAdmin,
+					UserId:   "u4",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[3].ID,
 					},
@@ -906,8 +877,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u5",
-					Role:   v1.RoleAdmin,
+					UserId:   "u5",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[5].ID,
 					},
@@ -916,8 +888,9 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId: "u6",
-					Role:   v1.RoleAdmin,
+					UserId:   "u6",
+					Role:     v1.RoleAdmin,
+					Password: "password",
 					Group: []int64{
 						grps[2].ID, grps[3].ID,
 					},
@@ -1106,6 +1079,7 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 						UserId:    "u1",
 						FirstName: "F1",
 						LastName:  "L1",
+						Password:  "password",
 						Locale:    "en",
 						Role:      v1.RoleAdmin,
 						Group:     []int64{grps[1].ID, grps[4].ID, grps[6].ID},
@@ -1114,6 +1088,7 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 						UserId:    "u2",
 						FirstName: "F2",
 						LastName:  "L2",
+						Password:  "password",
 						Locale:    "en",
 						Role:      v1.RoleAdmin,
 						Group:     []int64{grps[4].ID, grps[6].ID},
@@ -1122,6 +1097,7 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 						UserId:    "u3",
 						FirstName: "F3",
 						LastName:  "L3",
+						Password:  "password",
 						Locale:    "en",
 						Role:      v1.RoleAdmin,
 						Group:     []int64{grps[0].ID},
@@ -1211,6 +1187,7 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 			UserId:    "u1",
 			FirstName: "F1",
 			LastName:  "L1",
+			Password:  "password",
 			Locale:    "en",
 			Role:      v1.RoleAdmin,
 		},
@@ -1218,6 +1195,7 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 			UserId:    "u2",
 			FirstName: "F2",
 			LastName:  "L2",
+			Password:  "password",
 			Locale:    "en",
 			Role:      v1.RoleAdmin,
 		},
@@ -1225,6 +1203,7 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 			UserId:    "u3",
 			FirstName: "F3",
 			LastName:  "L3",
+			Password:  "password",
 			Locale:    "en",
 			Role:      v1.RoleAdmin,
 		},
@@ -1480,6 +1459,86 @@ func TestAccountRepository_IsGroupRoot(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("AccountRepository.IsGroupRoot() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAccountRepository_GetRootGroup(t *testing.T) {
+	type args struct {
+		ctx context.Context
+	}
+	grps := []*v1.Group{
+		&v1.Group{
+			Name:               "A",
+			FullyQualifiedName: "ROOT.A",
+		},
+		&v1.Group{
+			Name:               "B",
+			FullyQualifiedName: "ROOT.B",
+		},
+	}
+	tests := []struct {
+		name    string
+		r       *AccountRepository
+		args    args
+		setup   func() (func() error, error)
+		want    *v1.Group
+		wantErr bool
+	}{
+		{name: "success",
+			r: NewAccountRepository(db),
+			args: args{
+				ctx: context.Background(),
+			},
+			setup: func() (func() error, error) {
+				repo := NewAccountRepository(db)
+				grpID := int64(0)
+				rootQuery := `INSERT INTO groups(name,fully_qualified_name,parent_id) VALUES ('A','ROOT.A',1) returning id`
+				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&grpID); err != nil {
+					return nil, err
+				}
+				grps[0].ID = grpID
+				hir := []int{-1, 0}
+				err := createGroupsHierarchyNew(grps, "admin@test.com", hir)
+				if err != nil {
+					return nil, err
+				}
+				return func() error {
+					groupIDs := make([]int64, len(grps))
+					for i := range grps {
+						groupIDs[i] = grps[i].ID
+					}
+					return deleteGroups(db, groupIDs)
+				}, nil
+			},
+			want: &v1.Group{
+				ID:                 1,
+				Name:               "ROOT",
+				FullyQualifiedName: "ROOT",
+				NumberOfGroups:     1,
+				NumberOfUsers:      1,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected in setup") {
+				return
+			}
+			defer func() {
+				if !assert.Empty(t, cleanup(), "no error is expected from cleanup") {
+					return
+				}
+			}()
+			got, err := tt.r.GetRootGroup(tt.args.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.GetRootGroup() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				compareGroup(t, "GetRootGroup", tt.want, got)
 			}
 		})
 	}

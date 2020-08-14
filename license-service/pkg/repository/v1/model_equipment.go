@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import "errors"
@@ -93,6 +93,14 @@ type EquipmentProduct struct {
 	Version string
 }
 
+// Equipment has generic infor mation about equipment an ancestors
+type Equipment struct {
+	ID      string
+	EquipID string
+	Type    string
+	Parent  *Equipment
+}
+
 // PrimaryKeyAttribute returns primary key attribute of equipment type
 func (e *EquipmentType) PrimaryKeyAttribute() (*Attribute, error) {
 	for _, attr := range e.Attributes {
@@ -115,11 +123,13 @@ func (e *EquipmentType) ParentKeyAttribute() (*Attribute, error) {
 
 // QueryEquipments has parameters for query
 type QueryEquipments struct {
-	PageSize  int32
-	Offset    int32
-	SortBy    string
-	SortOrder SortOrder
-	Filter    *AggregateFilter
+	PageSize          int32
+	Offset            int32
+	SortBy            string
+	SortOrder         SortOrder
+	Filter            *AggregateFilter
+	ProductFilter     *AggregateFilter
+	ApplicationFilter *AggregateFilter
 }
 
 // UpdateEquipmentRequest ...

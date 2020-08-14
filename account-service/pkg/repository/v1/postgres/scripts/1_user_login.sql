@@ -1,3 +1,15 @@
+
+-- DO NOT USE THIS 
+
+-- docker run --name optisam -p 5432:5432 -e POSTGRES_DB=optisam -e  POSTGRES_USER=optisam -e POSTGRES_PASSWORD=optisam postgres
+-- docker cp 1_user_login.sql optisam:/
+-- docker exec -it optisam psql -d optisam -U optisam -w -f 1_user_login.sql
+-- drop table group_ownership;
+-- drop table groups;
+-- drop table users;
+-- drop table roles;
+
+
 CREATE TABLE IF NOT EXISTS roles (
   user_role VARCHAR PRIMARY KEY   
 );
@@ -12,7 +24,7 @@ VALUES
 
  CREATE EXTENSION IF NOT EXISTS ltree;
 
- CREATE EXTENSION IF NOT EXISTS pgcrypto;
+ --select control_extension('create','pgcrypto');
 
 CREATE TABLE IF NOT EXISTS users (
   username VARCHAR PRIMARY KEY,
@@ -23,14 +35,18 @@ CREATE TABLE IF NOT EXISTS users (
   locale VARCHAR,
   cont_failed_login SMALLINT NOT NULL DEFAULT 0,
   created_on TIMESTAMP DEFAULT NOW() ,
-  last_login  TIMESTAMP
+  last_login  TIMESTAMP,
+  first_login BOOLEAN DEFAULT FALSE
 );
 
 DELETE FROM users ;
 
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS profile_pic BYTEA;
+
 INSERT INTO users(username,first_name,last_name,password,locale,role)
 VALUES 
-('admin@test.com','super','admin',crypt('admin', gen_salt('md5')),'en','SuperAdmin');
+('admin@test.com','super','admin','$2a$11$su8WpIWDzAoOhrvsm2U83OXW8JDs36BJNGVhJgnUIOyZW6DolRJSK','en','SuperAdmin');
 
 -- select control_extension('create','ltree');
 
@@ -47,8 +63,13 @@ CREATE INDEX IF NOT EXISTS fully_qualified_name_gist_idx ON groups USING gist(fu
 
 DELETE FROM groups ;
 
-INSERT INTO groups(name, fully_qualified_name, created_by, scopes)
-VALUES ('ROOT', 'ROOT', 'admin@test.com', ARRAY [ 'GroupA', 'GroupB', 'GroupC', 'GroupD', 'GroupE' ]);
+-- INSERT INTO groups(name, fully_qualified_name, created_by, scopes)
+-- VALUES ('ROOT', 'ROOT', 'admin@test.com', ARRAY [ 'Orange', 'Guinea Conakry', 'Group', 'France', 'Ivory Coast' ]);
+
+
+INSERT INTO groups(name, fully_qualified_name, created_by)
+VALUES ('ROOT', 'ROOT', 'admin@test.com');
+
 
 CREATE TABLE IF NOT EXISTS group_ownership (
     group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE, 
@@ -60,6 +81,13 @@ CREATE TABLE IF NOT EXISTS group_ownership (
 DELETE FROM group_ownership;
 
 INSERT INTO group_ownership(group_id,user_id) VALUES(1,'admin@test.com');
+
+CREATE TABLE IF NOT EXISTS scopes (
+  scope_code VARCHAR PRIMARY KEY NOT NULL,
+  scope_name VARCHAR NOT NULL,
+  created_on TIMESTAMP DEFAULT NOW(),
+  created_by VARCHAR REFERENCES users (username)
+);
 
 CREATE OR REPLACE FUNCTION correct_group_hierarchy()
   RETURNS trigger AS

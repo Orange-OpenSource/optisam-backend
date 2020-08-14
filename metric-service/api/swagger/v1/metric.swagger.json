@@ -1,0 +1,563 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "metric.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/metric": {
+      "get": {
+        "summary": "ListMetrices",
+        "operationId": "ListMetrices",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/acs": {
+      "post": {
+        "summary": "CreateMetricAttrCounterStandard will create an IBM.pvu.standard metric",
+        "operationId": "CreateMetricAttrCounterStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricACS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricACS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/config": {
+      "get": {
+        "summary": "GetMetricConfiguration will get configuration of a metric",
+        "operationId": "GetMetricConfiguration",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMetricConfigurationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "metric_info.type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric_info.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "metric_info.description",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/inm": {
+      "post": {
+        "summary": "CreateMetricInstanceNumberStandard will create an instance.number.standard metric",
+        "operationId": "CreateMetricInstanceNumberStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateINM"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateINM"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/ips": {
+      "post": {
+        "summary": "CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric",
+        "operationId": "CreateMetricIBMPvuStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricIPS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricIPS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/ops": {
+      "post": {
+        "summary": "CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric",
+        "operationId": "CreateMetricOracleProcessorStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricOPS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricOPS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/oracle_nup": {
+      "post": {
+        "summary": "CreateMetricOracleNUPStandard will create an oracle.nup.standard metric",
+        "operationId": "CreateMetricOracleNUPStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricNUP"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricNUP"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/sps": {
+      "post": {
+        "summary": "CreateMetricSAGProcessorStandard will create an sag.processor.standard metric",
+        "operationId": "CreateMetricSAGProcessorStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricSPS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricSPS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/types": {
+      "get": {
+        "summary": "ListMetricType",
+        "operationId": "ListMetricType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMetricTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "MetricService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CreateINM": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Coefficient": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "v1CreateMetricACS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "name": {
+          "type": "string"
+        },
+        "eq_type": {
+          "type": "string"
+        },
+        "attribute_name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateMetricIPS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "num_core_attr_id": {
+          "type": "string"
+        },
+        "core_factor_attr_id": {
+          "type": "string"
+        },
+        "base_eq_type_id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateMetricNUP": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "num_core_attr_id": {
+          "type": "string"
+        },
+        "numCPU_attr_id": {
+          "type": "string"
+        },
+        "core_factor_attr_id": {
+          "type": "string"
+        },
+        "start_eq_type_id": {
+          "type": "string"
+        },
+        "base_eq_type_id": {
+          "type": "string"
+        },
+        "aggerateLevel_eq_type_id": {
+          "type": "string"
+        },
+        "end_eq_type_id": {
+          "type": "string"
+        },
+        "number_of_users": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1CreateMetricOPS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "num_core_attr_id": {
+          "type": "string"
+        },
+        "numCPU_attr_id": {
+          "type": "string"
+        },
+        "core_factor_attr_id": {
+          "type": "string"
+        },
+        "start_eq_type_id": {
+          "type": "string"
+        },
+        "base_eq_type_id": {
+          "type": "string"
+        },
+        "aggerateLevel_eq_type_id": {
+          "type": "string"
+        },
+        "end_eq_type_id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CreateMetricSPS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "num_core_attr_id": {
+          "type": "string"
+        },
+        "core_factor_attr_id": {
+          "type": "string"
+        },
+        "base_eq_type_id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1GetMetricConfigurationResponse": {
+      "type": "object",
+      "properties": {
+        "metric_config": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListMetricResponse": {
+      "type": "object",
+      "properties": {
+        "metrices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Metric"
+          }
+        }
+      }
+    },
+    "v1ListMetricTypeResponse": {
+      "type": "object",
+      "properties": {
+        "types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1MetricType"
+          }
+        }
+      }
+    },
+    "v1Metric": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "v1MetricType": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "type_id": {
+          "$ref": "#/definitions/v1MetricTypeType"
+        }
+      }
+    },
+    "v1MetricTypeType": {
+      "type": "string",
+      "enum": [
+        "Unknown",
+        "Oracle_Processor",
+        "Oracle_NUP",
+        "SAG_Processor",
+        "IBM_PVU",
+        "Attr_Counter",
+        "Instance_Number"
+      ],
+      "default": "Unknown"
+    }
+  }
+}

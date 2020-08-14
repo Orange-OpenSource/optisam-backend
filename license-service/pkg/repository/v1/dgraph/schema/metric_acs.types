@@ -1,0 +1,11 @@
+type MetricACS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.acs.equipment_type      
+    metric.acs.attr_name           
+    metric.acs.attr_value                            
+}

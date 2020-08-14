@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -20,36 +20,6 @@ const (
 	insPredNumOfProd insPred = "val(numOfProducts)"
 	insPredNumOfEqp  insPred = "val(numOfEquipments)"
 )
-
-func keyToPredForInstance(key int32) (insPred, error) {
-	switch key {
-	case 0:
-		return insPredName, nil
-	case 1:
-		return insPredEnv, nil
-	case 2:
-		return insPredNumOfProd, nil
-	case 3:
-		return insPredNumOfEqp, nil
-	default:
-		return "", fmt.Errorf("keyToPredForProduct - cannot find dgraph predicate for key: %d", key)
-	}
-}
-
-func keyToPredForGetInstancesForApplicationsProduct(key int32) (insPred, error) {
-	switch key {
-	case 0:
-		return insPredName, nil
-	case 1:
-		return insPredEnv, nil
-	case 2:
-		return insPredNumOfProd, nil
-	case 3:
-		return insPredNumOfEqp, nil
-	default:
-		return "", fmt.Errorf("keyToPredForProduct - cannot find dgraph predicate for key: %d", key)
-	}
-}
 
 // TODO: as this is in dgraph we need to change it ot sortOrder
 type dgraphSortOrder string

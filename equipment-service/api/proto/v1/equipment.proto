@@ -1,0 +1,320 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+service EquipmentService {
+
+  rpc UpsertMetadata(UpsertMetadataRequest) returns (UpsertMetadataResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/equipments/metadata"
+      body : "*"
+    };
+  }
+
+  rpc UpsertEquipment(UpsertEquipmentRequest)
+      returns (UpsertEquipmentResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/equipments"
+      body : "*"
+    };
+  }
+  
+  rpc ListEquipmentsMetadata(ListEquipmentMetadataRequest)
+      returns (ListEquipmentMetadataResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/metadata"
+    };
+  }
+
+  rpc GetEquipmentMetadata(EquipmentMetadataRequest)
+      returns (EquipmentMetadata) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/metadata/{ID}"
+    };
+  }
+
+  rpc EquipmentsTypes(EquipmentTypesRequest) returns (EquipmentTypesResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/types"
+    };
+  }
+
+  rpc CreateEquipmentType(EquipmentType) returns (EquipmentType) {
+    option (google.api.http) = {
+      post : "/api/v1/equipments/types"
+      body : "*"
+    };
+  }
+
+  // UpdateEquipmentType provides support for updating equipment
+  // only addition of new attribyte is supported.
+  // 1. Attributes added
+  rpc UpdateEquipmentType(UpdateEquipmentTypeRequest) returns (EquipmentType) {
+    option (google.api.http) = {
+      put : "/api/v1/equipments/types/{id}"
+      body : "*"
+      additional_bindings {patch : "/api/v1/equipments/types/{id}" body : "*"}
+    };
+  }
+
+  rpc ListEquipments(ListEquipmentsRequest) returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}"
+    };
+  }
+
+  rpc GetEquipment(GetEquipmentRequest) returns (GetEquipmentResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}"
+    };
+  }
+
+  rpc ListEquipmentParents(ListEquipmentParentsRequest)
+      returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}/parents"
+    };
+  }
+
+  rpc ListEquipmentChildren(ListEquipmentChildrenRequest)
+      returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipments/{type_id}/{equip_id}/childs/{children_type_id}"
+    };
+  }
+
+  rpc ListEquipmentsForProductAggregation(
+      ListEquipmentsForProductAggregationRequest)
+      returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations/{name}/equipments/{eq_type_id}"
+    };
+  }
+
+  rpc ListEquipmentsForProduct(ListEquipmentsForProductRequest)
+      returns (ListEquipmentsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/{swid_tag}/equipments/{eq_type_id}"
+    };
+  }
+}
+
+message UpsertMetadataRequest {
+  string metadata_type = 1;
+  string metadata_source = 2;
+  repeated string metadata_attributes = 3;
+}
+
+message UpsertMetadataResponse { bool success = 1; }
+
+message UpsertEquipmentRequest {
+  string scope =1;
+  string eq_type = 2;
+  google.protobuf.Struct eq_data = 3;
+}
+
+message UpsertEquipmentResponse {bool success = 1;}
+message ListEquipmentsForProductAggregationRequest {
+  string name = 1;
+  string eq_type_id = 2;
+  int32 page_num = 3 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 4 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  string sort_by = 5;
+  SortOrder sort_order = 6;
+  string search_params = 7;
+}
+
+message ListEquipmentsForProductRequest {
+  string swid_tag = 1;
+  string eq_type_id = 2;
+  int32 page_num = 3 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 4 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  string sort_by = 5;
+  SortOrder sort_order = 6;
+  string search_params = 7;
+}
+
+message ListEquipmentChildrenRequest {
+  string type_id = 1;
+  string equip_id = 2;
+  string children_type_id = 3;
+  int32 page_num = 4 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 5 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  string sort_by = 6;
+  SortOrder sort_order = 7;
+  string search_params = 8; // "attr1=val1,attr2=val2,attr3=val3,..."
+}
+
+message ListEquipmentParentsRequest {
+  string type_id = 1;
+  string equip_id = 2;
+}
+
+message GetEquipmentParentsResponse { string equipments = 1; }
+
+message GetEquipmentRequest {
+  string type_id = 1;
+  string equip_id = 2;
+}
+
+message GetEquipmentResponse { string equipment = 1; }
+
+message ListEquipmentsRequest {
+  string type_id = 1;
+  int32 page_num = 2 [
+    (validate.rules).int32 = {gte : 1},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 3 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  string sort_by = 4;
+  SortOrder sort_order = 5;
+  string search_params = 6; // TODO: decide parsing formats
+  EquipFilter filter = 7;
+}
+
+message EquipFilter {
+  StringFilter application_id = 1;
+  StringFilter product_id = 2;
+  StringFilter instance_id = 3;
+}
+
+message ListEquipmentsResponse {
+  int32 totalRecords = 1;
+  bytes equipments = 2;
+}
+
+message UpdateEquipmentTypeRequest {
+  string id = 1;
+  // Only send parent id if equipment type does not have a parent.
+  string parent_id = 2;
+  repeated Attribute attributes = 3;
+}
+
+message EquipmentMetadataRequest {
+  enum Attributes {
+    All = 0; // TODO : ALL caps
+    Mapped = 1;
+    Unmapped = 2;
+  }
+  string ID = 1;
+  Attributes attributes = 2 [ (validate.rules).enum.defined_only = true ];
+}
+
+message ListEquipmentMetadataRequest {
+  enum Type {
+    UN_MAPPED = 0;
+    MAPPED = 1;
+    ALL = 2;
+  }
+  Type type = 1 [ (validate.rules).enum.defined_only = true ];
+}
+
+message ListEquipmentMetadataResponse {
+  repeated EquipmentMetadata metadata = 1;
+}
+
+message EquipmentMetadata {
+  string ID = 1;
+  string name = 2;
+  repeated string attributes = 3;
+}
+
+message EquipmentTypesRequest {}
+
+message EquipmentTypesResponse { repeated EquipmentType equipment_types = 1; }
+
+message EquipmentType {
+  string ID = 1;
+  string type = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  string parent_id = 3;
+  string parent_type = 4;
+  string metadata_id = 5;
+  string metadata_source = 6;
+  repeated Attribute attributes = 7;
+}
+
+message Attribute {
+  string ID = 1;
+  string name = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  DataTypes data_type = 3 [ (validate.rules).enum = {in : [ 1, 2, 3 ]} ];
+  bool primary_key = 4;
+  bool displayed = 5;
+  bool searchable = 6;
+  bool parent_identifier = 7;
+  string mapped_to = 8;
+  bool simulated = 9;
+
+  oneof val {
+    int32 int_val = 10;
+    float float_val = 11;
+    string string_val = 12;
+  }
+
+  oneof old_val {
+    int32 int_val_old = 13;
+    float float_val_old = 14;
+    string string_val_old = 15;
+  }
+}
+
+message StringFilter {
+  enum Type {
+    REGEX = 0;
+    EQ = 1;
+  }
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  Type filter_type = 3;
+  repeated string filteringkey_multiple = 4;
+}
+
+enum SortOrder {
+  option allow_alias = true;
+  ASC = 0;
+  asc = 0;
+  DESC = 1;
+  desc = 1;
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT = 2;
+  FLOAT = 3;
+}

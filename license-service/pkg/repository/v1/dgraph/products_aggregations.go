@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -15,7 +15,7 @@ import (
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -25,28 +25,33 @@ func (r *LicenseRepository) CreateProductAggregation(ctx context.Context, pa *v1
 	nquads := []*api.NQuad{
 		&api.NQuad{
 			Subject:     blankID,
-			Predicate:   "type",
+			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("product_aggregation"),
 		},
 		&api.NQuad{
 			Subject:     blankID,
-			Predicate:   "product_aggreagtion.editor",
+			Predicate:   "product_aggregation.editor",
 			ObjectValue: stringObjectValue(pa.Editor),
 		},
 		&api.NQuad{
 			Subject:     blankID,
-			Predicate:   "product_aggreagtion.product_name",
+			Predicate:   "product_aggregation.product_name",
 			ObjectValue: stringObjectValue(pa.Product),
 		},
 		&api.NQuad{
 			Subject:     blankID,
-			Predicate:   "product_aggreagtion.name",
+			Predicate:   "product_aggregation.name",
 			ObjectValue: stringObjectValue(pa.Name),
 		},
 		&api.NQuad{
 			Subject:   blankID,
-			Predicate: "product_aggreagtion.metric",
+			Predicate: "product_aggregation.metric",
 			ObjectId:  pa.Metric,
+		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "dgraph.type",
+			ObjectValue: stringObjectValue("ProductAggregation"),
 		},
 	}
 
@@ -87,19 +92,77 @@ func (r *LicenseRepository) CreateProductAggregation(ctx context.Context, pa *v1
 	return pa, nil
 }
 
+//UpdateProductAggregation implements License UpdateProductAggregation function
+func (r *LicenseRepository) UpdateProductAggregation(ctx context.Context, ID string, upa *v1.UpdateProductAggregationRequest, scopes []string) (retErr error) {
+	var addNquads []*api.NQuad
+	var removeNquads []*api.NQuad
+
+	if len(upa.AddedProducts) != 0 {
+		addNquads = append(addNquads, productsNquad(upa.AddedProducts, ID)...)
+	}
+	//As we need to change name here that is why we are adding one more nquad to the slice.
+	if upa.Name != "" {
+		addNquads = append(addNquads, &api.NQuad{
+			Subject:     ID,
+			Predicate:   "product_aggregation.name",
+			ObjectValue: stringObjectValue(upa.Name),
+		})
+	}
+
+	if upa.Product != "" {
+		addNquads = append(addNquads, &api.NQuad{
+			Subject:     ID,
+			Predicate:   "product_aggregation.product_name",
+			ObjectValue: stringObjectValue(upa.Product),
+		})
+	}
+	if len(upa.RemovedProducts) != 0 {
+		removeNquads = append(removeNquads, productsNquad(upa.RemovedProducts, ID)...)
+	}
+	mu := &api.Mutation{
+		Set: addNquads,
+		Del: removeNquads,
+	}
+	txn := r.dg.NewTxn()
+
+	defer func() {
+		if retErr != nil {
+			if err := txn.Discard(ctx); err != nil {
+				logger.Log.Error("dgraph/UpdateProductAggregation - failed to discard txn", zap.String("reason", err.Error()))
+				retErr = fmt.Errorf("dgraph/UpdateProductAggregation - cannot discard txn")
+			}
+			return
+		}
+		if err := txn.Commit(ctx); err != nil {
+			logger.Log.Error("dgraph/UpdateProductAggregation - failed to commit txn", zap.String("reason", err.Error()))
+			retErr = fmt.Errorf("dgraph/UpdateProductAggregation - cannot commit txn")
+		}
+	}()
+
+	_, err := txn.Mutate(ctx, mu)
+	if err != nil {
+		logger.Log.Error("dgraph/UpdateProductAggregation - failed to update aggregation", zap.String("reason", err.Error()))
+		return errors.New("cannot update aggregation")
+	}
+
+	return nil
+}
+
 // ListProductAggregations implements Licence ListProductAggregations function
 func (r *LicenseRepository) ListProductAggregations(ctx context.Context, scopes []string) ([]*v1.ProductAggregation, error) {
 	q := `   {
-		Aggregations(func:eq(type,"product_aggregation"))` + agregateFilters(scopeFilters(scopes)) + ` {
+		Aggregations(func:eq(type_name,"product_aggregation"))` + agregateFilters(scopeFilters(scopes)) + ` {
 		  ID:uid
-		  Name: product_aggreagtion.name
-		  Editor: product_aggreagtion.editor
-		  Product:product_aggreagtion.product_name
-		  Metric:product_aggreagtion.metric{
+		  Name: product_aggregation.name
+		  Editor: product_aggregation.editor
+		  Product:product_aggregation.product_name
+		  Metric:product_aggregation.metric{
 			  MID: uid
+			  Name: metric.name
 		  }
-		  Products:product_aggreagtion.products{
+		  Products:product_aggregation.products{
 			  PID: product.swidtag
+			  ProductName: product.name
 		  }
 	  }
    }
@@ -119,10 +182,12 @@ func (r *LicenseRepository) ListProductAggregations(ctx context.Context, scopes 
 			Editor  string
 			Product string
 			Metric  []struct {
-				MID string
+				MID  string
+				Name string
 			}
 			Products []struct {
-				PID string
+				PID         string
+				ProductName string
 			}
 		}
 	}
@@ -143,10 +208,16 @@ func (r *LicenseRepository) ListProductAggregations(ctx context.Context, scopes 
 
 		if len(aggs[i].Metric) > 0 {
 			prodAgg[i].Metric = aggs[i].Metric[0].MID
+			prodAgg[i].MetricName = aggs[i].Metric[0].Name
 		}
 		prodAgg[i].Products = make([]string, len(aggs[i].Products))
+		prodAgg[i].ProductsFull = make([]*v1.ProductData, len(aggs[i].Products))
 		for j := range aggs[i].Products {
 			prodAgg[i].Products[j] = aggs[i].Products[j].PID
+			prodAgg[i].ProductsFull[j] = &v1.ProductData{
+				Swidtag: aggList.Aggregations[i].Products[j].PID,
+				Name:    aggList.Aggregations[i].Products[j].ProductName,
+			}
 		}
 
 	}
@@ -162,16 +233,18 @@ func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name 
 	variables["$name"] = name
 
 	q := `  query ProductAggByName($name:string) {
-		Aggregations(func:eq(product_aggreagtion.name,$name))` + agregateFilters(scopeFilters(scopes)) + ` {
+		Aggregations(func:eq(product_aggregation.name,$name))` + agregateFilters(scopeFilters(scopes)) + ` {
 		  ID:uid
-		  Name: product_aggreagtion.name
-		  Editor: product_aggreagtion.editor
-		  Product:product_aggreagtion.product_name
-		  Metric:product_aggreagtion.metric{
+		  Name: product_aggregation.name
+		  Editor: product_aggregation.editor
+		  Product:product_aggregation.product_name
+		  Metric:product_aggregation.metric{
 			  MID:uid
+			  Name:metric.name
 		  }
-		  Products:product_aggreagtion.products{
-			  PID:uid
+		  Products:product_aggregation.products{
+			  PID:product.swidtag
+			  ProductName:product.name
 		  }
 	  }
    }
@@ -192,10 +265,12 @@ func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name 
 			Editor  string
 			Product string
 			Metric  []struct {
-				MID string
+				MID  string
+				Name string
 			}
 			Products []struct {
-				PID string
+				PID         string
+				ProductName string
 			}
 		}
 	}
@@ -217,10 +292,16 @@ func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name 
 
 	if len(aggList.Aggregations[0].Metric) > 0 {
 		prodAgg.Metric = aggList.Aggregations[0].Metric[0].MID
+		prodAgg.MetricName = aggList.Aggregations[0].Metric[0].Name
 	}
 	prodAgg.Products = make([]string, len(aggList.Aggregations[0].Products))
+	prodAgg.ProductsFull = make([]*v1.ProductData, len(aggList.Aggregations[0].Products))
 	for j := range aggList.Aggregations[0].Products {
 		prodAgg.Products[j] = aggList.Aggregations[0].Products[j].PID
+		prodAgg.ProductsFull[j] = &v1.ProductData{
+			Swidtag: aggList.Aggregations[0].Products[j].PID,
+			Name:    aggList.Aggregations[0].Products[j].ProductName,
+		}
 	}
 
 	return prodAgg, nil
@@ -229,7 +310,7 @@ func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name 
 // DeleteProductAggregation implements Licence DeleteProductAggregation function
 func (r *LicenseRepository) DeleteProductAggregation(ctx context.Context, id string, scopes []string) (retPa []*v1.ProductAggregation, retErr error) {
 
-	if err := deleteProductAgg(r, ctx, id); err != nil {
+	if err := deleteProductAgg(ctx, r, id); err != nil {
 		return nil, err
 	}
 	prodAgg, err := r.ListProductAggregations(ctx, scopes)
@@ -239,8 +320,7 @@ func (r *LicenseRepository) DeleteProductAggregation(ctx context.Context, id str
 	return prodAgg, nil
 }
 
-func deleteProductAgg(r *LicenseRepository, ctx context.Context, id string) (retErr error) {
-
+func deleteProductAgg(ctx context.Context, r *LicenseRepository, id string) (retErr error) {
 	d := map[string]string{"uid": id}
 	pb, err := json.Marshal(d)
 	if err != nil {
@@ -290,8 +370,8 @@ func aggQueryFromFilterWithID(uid, id string, filter *v1.AggregateFilter) string
 		return ""
 	}
 	return id + ` as var(func:uid(` + uid + `))@cascade{
-		~product_aggreagtion.products {
-			product_aggreagtion.metric` + aggFilter(filter) + `
+		~product_aggregation.products {
+			product_aggregation.metric` + aggFilter(filter) + `
 		}
 	  }`
 }
@@ -303,6 +383,9 @@ func (r *LicenseRepository) ProductIDForSwidtag(ctx context.Context, id string, 
 	variables["$id"] = id
 	uids := []string{}
 	aggQuery := ""
+	if params == nil {
+		params = &v1.QueryProducts{}
+	}
 	if params.AggFilter != nil && len(params.AcqFilter.Filters) != 0 {
 		uids = append(uids, "IID_AGG")
 		aggQuery = aggQueryFromFilterWithID("IID", "IID_AGG", params.AggFilter)
@@ -360,7 +443,7 @@ func productNquad(pID, uid string) []*api.NQuad {
 	return []*api.NQuad{
 		&api.NQuad{
 			Subject:   uid,
-			Predicate: "product_aggreagtion.products",
+			Predicate: "product_aggregation.products",
 			ObjectId:  pID,
 		},
 	}

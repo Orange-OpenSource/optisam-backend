@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package schema
 
 import (
@@ -43,6 +43,7 @@ func init() {
 	}
 	CmdSchema.Cmd.Flags().StringP("schema_dir", "s", "schema", "directory where schema files are present")
 }
+
 func loadSchema() error {
 	config := loader.NewDefaultConfig()
 	config.CreateSchema = true
@@ -51,8 +52,13 @@ func loadSchema() error {
 	if err != nil {
 		return err
 	}
+	typeFiles, err := getAllFilesWithSuffixFullPath(CmdSchema.Conf.GetString("schema_dir"), ".types")
+	if err != nil {
+		return err
+	}
 	fmt.Println(files)
 	config.SchemaFiles = files
+	config.TypeFiles = typeFiles
 	return loader.Load(config)
 }
 

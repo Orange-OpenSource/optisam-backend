@@ -1,0 +1,10 @@
+type User {
+    type_name
+    scopes
+    updated
+    created
+    users.count
+    users.id
+    <~equipment.users>
+    <~product.users>               
+}

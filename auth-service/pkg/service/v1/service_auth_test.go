@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
@@ -19,12 +19,18 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func Test_authServiceServer_Login(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		req *v1.LoginRequest
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte("secret"), 11)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	var mockCtrl *gomock.Controller
@@ -55,9 +61,9 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 0,
 					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","secret").Return(true,nil).Times(1)
 				mockDB.EXPECT().ResetLoginCount(nil, "user1@test.com").Return(nil).Times(1)
 			},
 		},
@@ -117,6 +123,7 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 3,
 					}, nil).Times(1)
 				// mockDB.EXPECT().ResetLoginCount(ctx,"user1@test.com").
@@ -140,33 +147,13 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 3,
 					}, nil).Times(1)
 				// mockDB.EXPECT().ResetLoginCount(ctx,"user1@test.com").
 				// Return(nil).Times(1)
 			},
 			wantErr: true,
-		},
-		{name: "failure - Login - failed to check password",
-			s: &AuthServiceServer{},
-			args: args{
-				req: &v1.LoginRequest{
-					Username: "user1@test.com",
-					Password: "secret",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockDB := mock.NewMockRepository(mockCtrl)
-				rep = mockDB
-				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
-					Return(&repv1.UserInfo{
-						UserID:       "user1@test.com",
-						FailedLogins: 0,
-					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","secret").Return(false,errors.New("failed to check password")).Times(1)
-			},
-			wantErr:true,
 		},
 		{name: "failure - Login - wrong password",
 			s: &AuthServiceServer{},
@@ -183,9 +170,9 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 0,
 					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","abc").Return(false,nil).Times(1)
 				mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(nil).Times(1)
 			},
 			wantErr: true,
@@ -206,9 +193,9 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 0,
 					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","wrong password").Return(false,nil).Times(1)
 				mockDB.EXPECT().IncreaseFailedLoginCount(ctx, "user1@test.com").
 					Return(errors.New("test error")).Times(1)
 			},
@@ -229,9 +216,9 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 2,
 					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","abc").Return(false,nil).Times(1)
 				mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(nil).Times(1)
 			},
 			wantErr: true,
@@ -252,9 +239,9 @@ func Test_authServiceServer_Login(t *testing.T) {
 				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
 					Return(&repv1.UserInfo{
 						UserID:       "user1@test.com",
+						Password:     string(hash),
 						FailedLogins: 0,
 					}, nil).Times(1)
-				mockDB.EXPECT().CheckPassword(nil,"user1@test.com","secret").Return(true,nil).Times(1)
 				mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").
 					Return(errors.New("test error")).Times(1)
 			},

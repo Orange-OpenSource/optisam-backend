@@ -1,0 +1,11 @@
+type Instance {
+    type_name
+    scopes
+    updated
+    created
+    instance.id         
+    instance.environment
+    instance.product    
+    instance.equipment 
+    <~application.instance>  
+}

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+service DpsService {
+  rpc NotifyUpload(NotifyUploadRequest) returns (NotifyUploadResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/uploads/notify"
+      body : "*"
+    };
+  }
+  rpc ListUploadData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/uploads/data"
+    };
+  }
+  rpc ListUploadMetaData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/uploads/metadata"
+    };
+  }
+}
+message NotifyUploadRequest {
+  string scope = 1;
+  string type = 2 [(validate.rules).string = {in : [ "data", "metadata" ]}];
+  int32 upload_id = 3;
+  string uploaded_by = 4;
+  repeated string files = 5 [ (validate.rules).repeated .min_items = 1 ];
+}
+
+message NotifyUploadResponse { bool success = 1; }
+
+message ListUploadRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  enum SortBy {
+    upload_id = 0;
+    scope = 1;
+    file_name = 2;
+    status = 3;
+    uploaded_by = 4;
+    uploaded_on = 5;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  enum SortOrder {
+    asc = 0;
+    desc = 1;
+  }
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+}
+
+message ListUploadResponse {
+  int32 totalRecords = 1;
+  repeated Upload uploads = 2;
+}
+
+message Upload {
+  int32 upload_id = 1;
+  string scope = 2;
+  string file_name = 3;
+  string status = 4;
+  string uploaded_by = 5;
+  google.protobuf.Timestamp uploaded_on = 6;
+  int32 total_records = 7;
+  int32 success_records = 8;
+  int32 failed_records = 9;
+  int32 invalid_records = 10;
+}

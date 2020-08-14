@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -15,7 +15,7 @@ import (
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -57,8 +57,8 @@ type eqTypeDataSource struct {
 type equipmentType struct {
 	ID         string
 	Type       string
-	DataSource []*eqTypeDataSource
-	Parent     []*eqTypeParent
+	DataSource *eqTypeDataSource
+	Parent     *eqTypeParent
 	Attributes []*v1.Attribute
 }
 
@@ -77,14 +77,14 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 		Attributes: eq.Attributes,
 	}
 
-	if len(eq.DataSource) != 0 {
-		eqType.SourceID = eq.DataSource[0].ID
-		eqType.SourceName = eq.DataSource[0].Source
+	if eq.DataSource != nil {
+		eqType.SourceID = eq.DataSource.ID
+		eqType.SourceName = eq.DataSource.Source
 	}
 
-	if len(eq.Parent) != 0 {
-		eqType.ParentID = eq.Parent[0].ID
-		eqType.ParentType = eq.Parent[0].TypeName
+	if eq.Parent != nil {
+		eqType.ParentID = eq.Parent.ID
+		eqType.ParentType = eq.Parent.TypeName
 	}
 
 	return eqType
@@ -137,7 +137,7 @@ func (lr *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1
 	}); err != nil {
 		fields := []zap.Field{
 			zap.String("reason", err.Error()),
-			zap.String("EquipmentType", eqType.Type),
+			zap.String("Schema", schema),
 		}
 		fields = append(fields, attributesZapFields("EquipmentType.Attributes", eqType.Attributes)...)
 		logger.Log.Error("dgraph/CreateEquipmentType - Alter ", fields...)
@@ -241,113 +241,22 @@ func assignIDsEquipmentAttributes(ids map[string]string, typ string, attrb []*v1
 	}
 }
 
-// metadata.equipment.type string @index(exact) .
-// metadata.equipment.attribute uid .
-
-// EquipmentWithID implements Licence EquipmentWithID function  TODO :EquipmentTypeByID
-func (lr *LicenseRepository) EquipmentWithID(ctx context.Context, id string, scopes []string) (*v1.EquipmentType, error) {
-	q := `{
-		Equipment(func: uid(` + id + `)) {
-			` + eqTypeFields + `
-		}
-	  }`
-
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
-	if err != nil {
-		logger.Log.Error("dgraph/EquipmentWitID - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("dgraph/EquipmentWithID - cannot complete query")
-	}
-
-	type equipment struct {
-		Equipment []*equipmentType
-	}
-
-	data := equipment{}
-
-	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
-		logger.Log.Error("dgraph/EquipmentWithId - ", zap.String("reason", err.Error()))
-		return nil, fmt.Errorf("dgraph/EquipmentWithID - cannot unmarshal Json object")
-	}
-	if len(data.Equipment) == 0 {
-		return nil, v1.ErrNoData
-	}
-	return convertEquipType(data.Equipment[0]), nil
-}
-
-// UpdateEquipmentType implements Licence UpdateEquipmentType function
-func (lr *LicenseRepository) UpdateEquipmentType(ctx context.Context, id string, typ string, req *v1.UpdateEquipmentRequest, scopes []string) (retType []*v1.Attribute, retErr error) {
-	nquads := nquadsForAllAttributes(id, req.Attr)
-	if req.ParentID != "" {
-		nquads = append(nquads, &api.NQuad{
-			Subject:   id,
-			Predicate: "metadata.equipment.parent",
-			ObjectId:  req.ParentID,
-		})
-	}
-	mu := &api.Mutation{
-		Set: nquads,
-	}
-	txn := lr.dg.NewTxn()
-
-	defer func() {
-		if retErr != nil {
-			if err := txn.Discard(ctx); err != nil {
-				logger.Log.Error("dgraph/UpdateEquipmentType - failed to discard txn", zap.String("reason", err.Error()))
-				retErr = fmt.Errorf("dgraph/UpdateEquipmentType - cannot discard txn")
-			}
-			return
-		}
-		if err := txn.Commit(ctx); err != nil {
-			logger.Log.Error("dgraph/UpdateEquipmentType - failed to commit txn", zap.String("reason", err.Error()))
-			retErr = fmt.Errorf("dgraph/UpdateEquipmentType - cannot commit txn")
-		}
-	}()
-
-	assigned, err := txn.Mutate(ctx, mu)
-	if err != nil {
-		fields := []zap.Field{
-			zap.String("reason", err.Error()),
-			zap.String("EquipmentType", typ),
-			zap.String("ID", id),
-			zap.String("ParentID", req.ParentID),
-		}
-		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.Attr)...)
-		logger.Log.Error("dgraph/UpdateEquipmentType -Mutate ", fields...)
-		return nil, fmt.Errorf("dgraph/UpdateEquipmentType - cannot create equipment type :%s", typ)
-	}
-
-	assignIDsEquipmentAttributes(assigned.Uids, typ, req.Attr)
-	schema := schemaForEquipmentType(typ, req.Attr)
-	if schema == "" {
-		return req.Attr, nil
-	}
-	if err := lr.dg.Alter(context.Background(), &api.Operation{
-		Schema: schema,
-	}); err != nil {
-		fields := []zap.Field{
-			zap.String("reason", err.Error()),
-			zap.String("EquipmentType", typ),
-			zap.String("ID", id),
-			zap.String("ParentID", req.ParentID),
-		}
-		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.Attr)...)
-		logger.Log.Error("dgraph/UpdateEquipmentType - Alter ", fields...)
-		return nil, fmt.Errorf("dgraph/UpdateEquipmentType - cannot create schema for equipment type type :%s", typ)
-	}
-
-	return req.Attr, nil
-
-}
-
 func nquadsForEquipment(eqType *v1.EquipmentType) []*api.NQuad {
 	equipID := blankID(eqType.Type)
 	var nquads []*api.NQuad
 	// assign predicate for equipment type
-	nquads = append(nquads, &api.NQuad{
-		Subject:     equipID,
-		Predicate:   "metadata.equipment.type",
-		ObjectValue: stringObjectValue(eqType.Type),
-	})
+	nquads = append(nquads,
+		&api.NQuad{
+			Subject:     equipID,
+			Predicate:   "metadata.equipment.type",
+			ObjectValue: stringObjectValue(eqType.Type),
+		},
+		&api.NQuad{
+			Subject:     equipID,
+			Predicate:   "dgraph.type",
+			ObjectValue: stringObjectValue("MetadataEquipment"),
+		},
+	)
 
 	if eqType.ParentID != "" {
 		nquads = append(nquads, &api.NQuad{
@@ -487,24 +396,35 @@ func attributesZapFields(name string, attrs []*v1.Attribute) []zap.Field {
 
 func schemaForEquipmentType(typ string, attrb []*v1.Attribute) string {
 	//typ := eqType.Type
+	equipType := "type Equipment" + typ + " { \n"
+	equipTypeFields := []string{
+		"type_name",
+		"scopes",
+		"updated",
+		"created",
+		"equipment.users",
+	}
 	typeName := "equipment." + typ
 	schema := ""
 	for _, attr := range attrb {
 		if attr.IsIdentifier {
+			equipTypeFields = append(equipTypeFields, "equipment.id")
 			// we always map identifier to equipment.id predicate
 			// so we can skip this here as schema for that is already
 			// created
 			continue
 		}
 		if attr.IsParentIdentifier {
+			equipTypeFields = append(equipTypeFields, "equipment.parent")
 			// we always map identifier to equipment.id predicate
 			// so we can skip this here as schema for that is already
 			// created
 			continue
 		}
+		equipTypeFields = append(equipTypeFields, typeName+"."+replaceSpaces(attr.Name))
 		schema += schemaForAttribute(typeName, attr) + "\n"
 	}
-	return schema
+	return schema + "\n\n" + equipType + strings.Join(equipTypeFields, "\n") + "\n }\n"
 }
 
 // some of the special characters are not allowed in
@@ -513,6 +433,7 @@ func replaceSpaces(mappedTo string) string {
 }
 
 func schemaForAttribute(name string, attr *v1.Attribute) string {
+
 	// TODO Change this to attr.schema_name
 	name += "." + replaceSpaces(attr.Name) + ":"
 	switch attr.Type {

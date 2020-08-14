@@ -24,13 +24,13 @@
                 },
                 {
                    "in": "formData",
-                   "name": "upfile2",
+                   "name": "attribute1",
                    "type": "file",
                    "required": false
                 },
                 {
                    "in": "formData",
-                   "name": "upfile3",
+                   "name": "attribute2",
                    "type": "file",
                    "required": false
                 }

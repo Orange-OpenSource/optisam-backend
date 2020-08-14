@@ -1,0 +1,12 @@
+type Application {
+    type_name
+    scopes
+    updated
+    created
+    application.id       
+    application.name     
+    application.version  
+    application.owner    
+    application.instance 
+    application.product                    
+}

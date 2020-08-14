@@ -1,0 +1,9 @@
+type MetricINM {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.instancenumber.coefficient                                 
+}

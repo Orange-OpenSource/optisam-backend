@@ -3,18 +3,16 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
-	"github.com/dgraph-io/dgo/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -26,98 +24,20 @@ type metricIPS struct {
 	AtrrCoreFactor []*id  `json:"metric.ips.attr_core_factor"`
 }
 
-// CreateMetricIPS implements Licence CreateMetricIPS function
-func (l *LicenseRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIPS, scopes []string) (retMat *v1.MetricIPS, retErr error) {
-	blankID := blankID(mat.Name)
-	nquads := []*api.NQuad{
-		&api.NQuad{
-			Subject:     blankID,
-			Predicate:   "type",
-			ObjectValue: stringObjectValue("metric"),
-		},
-		&api.NQuad{
-			Subject:     blankID,
-			Predicate:   "metric.type",
-			ObjectValue: stringObjectValue("ibm.pvu.standard"),
-		},
-		&api.NQuad{
-			Subject:     blankID,
-			Predicate:   "metric.name",
-			ObjectValue: stringObjectValue(mat.Name),
-		},
-		&api.NQuad{
-			Subject:   blankID,
-			Predicate: "metric.ips.base",
-			ObjectId:  mat.BaseEqTypeID,
-		},
-		&api.NQuad{
-			Subject:   blankID,
-			Predicate: "metric.ips.attr_core_factor",
-			ObjectId:  mat.CoreFactorAttrID,
-		},
-		&api.NQuad{
-			Subject:   blankID,
-			Predicate: "metric.ips.attr_num_cores",
-			ObjectId:  mat.NumCoreAttrID,
-		},
-	}
-
-	mu := &api.Mutation{
-		Set: nquads,
-		//	CommitNow: true,
-	}
-	txn := l.dg.NewTxn()
-
-	defer func() {
-		if retErr != nil {
-			if err := txn.Discard(ctx); err != nil {
-				logger.Log.Error("dgraph/CreateMetricSPS - failed to discard txn", zap.String("reason", err.Error()))
-				retErr = fmt.Errorf("dgraph/CreateMetricSPS - cannot discard txn")
-			}
-			return
-		}
-		if err := txn.Commit(ctx); err != nil {
-			logger.Log.Error("dgraph/CreateMetricSPS - failed to commit txn", zap.String("reason", err.Error()))
-			retErr = fmt.Errorf("dgraph/CreateMetricSPS - cannot commit txn")
-		}
-	}()
-
-	assigned, err := txn.Mutate(ctx, mu)
-	if err != nil {
-		logger.Log.Error("dgraph/CreateMetricSPS - failed to create matrix", zap.String("reason", err.Error()), zap.Any("matrix", mat))
-		return nil, errors.New("cannot create matrix")
-	}
-	id, ok := assigned.Uids[mat.Name]
-	if !ok {
-		logger.Log.Error("dgraph/CreateMetricOPS - failed to create matrix", zap.String("reason", "cannot find id in assigned Uids map"), zap.Any("matrix", mat))
-		return nil, errors.New("cannot create matrix")
-	}
-	mat.ID = id
-	return mat, nil
-}
-
 // ListMetricIPS implements Licence ListMetricIPS function
 func (l *LicenseRepository) ListMetricIPS(ctx context.Context, scopes []string) ([]*v1.MetricIPS, error) {
-	q := `{
-		Data(func: eq(metric.type,ibm.pvu.standard)){
-		 uid
-		 expand(_all_){
-		  uid
-		} 
-		}
-	  }`
-	resp, err := l.dg.NewTxn().Query(ctx, q)
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricIPSIbmPvuStandard, scopes)
 	if err != nil {
-		logger.Log.Error("dgraph/ListMetricIPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type ips.processor.standard")
+		logger.Log.Error("dgraph/ListMetricIPS - listMetricWithMetricType", zap.Error(err))
+		return nil, err
 	}
 	type Resp struct {
 		Data []*metricIPS
 	}
 	var data Resp
-	if err := json.Unmarshal(resp.Json, &data); err != nil {
+	if err := json.Unmarshal(respJson, &data); err != nil {
 		//fmt.Println(string(resp.Json))
-		logger.Log.Error("dgraph/ListMetricIPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		logger.Log.Error("dgraph/ListMetricIPS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}
 	if len(data.Data) == 0 {

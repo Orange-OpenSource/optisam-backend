@@ -1,0 +1,63 @@
+debug = false
+grpcport = "10000"
+httpport = "10001"
+fileslocation = "testdata"
+archivelocation = "history"
+maxfileworker = 1
+maxapiworker = 10
+batchsize = 40
+
+[workerqueue]
+Qsize = 1000
+retries = 1
+basedelay = 1000
+
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+
+[grpcservers.Address]
+product = "localhost:12090"
+application = "localhost:11090"
+# acqright = "localhost:13090"
+# equipment = "localhost:14090"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = false
+namespace = "dpsservice"
+
+[instrumentation.jaeger]
+enabled = false
+serviceName = "dps-service"
+collectorEndpoint = "http://jaeger-collector.dev-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[postgres]
+host = "localhost"
+port = 5432
+user = "postgres"
+pass = "postgres"
+name = "postgres"
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"

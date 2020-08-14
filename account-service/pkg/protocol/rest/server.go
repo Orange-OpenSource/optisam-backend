@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package rest
 
 import (
@@ -38,8 +38,8 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 	srv := &http.Server{
 		Addr: ":" + httpPort,
 		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
-			rest_middleware.ValidateAuth(verifyKey,
-				rest_middleware.AddLogger(logger.Log, mux)))},
+			// rest_middleware.ValidateAuth(verifyKey,
+			rest_middleware.AddLogger(logger.Log, mux))},
 	}
 
 	// graceful shutdown

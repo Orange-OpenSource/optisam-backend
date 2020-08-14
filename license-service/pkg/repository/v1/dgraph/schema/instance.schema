@@ -1,4 +1,4 @@
-instance.id: string @index(exact) .
+instance.id         : string @index(exact) @upsert .
 instance.environment: string @index(exact) .
-instance.product:  uid @count @reverse .
-instance.equipment: uid @count @reverse .
+instance.product    : [uid] @count @reverse .
+instance.equipment  : [uid] @count @reverse .

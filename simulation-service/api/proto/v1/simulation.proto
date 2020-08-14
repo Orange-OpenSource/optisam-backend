@@ -1,0 +1,225 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package optisam.simulation.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
+
+
+service SimulationService {
+
+  rpc DeleteConfig (DeleteConfigRequest) returns (DeleteConfigResponse){
+    option (google.api.http) = {
+      delete : "/api/v1/config/{config_id}"
+    };
+  }
+
+  rpc UpdateConfig (UpdateConfigRequest) returns (UpdateConfigResponse) {
+
+  }
+
+  rpc CreateConfig (CreateConfigRequest ) returns (CreateConfigResponse) {
+    
+  }
+
+  rpc ListConfig (ListConfigRequest) returns (ListConfigResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/config"
+    };
+  }
+
+  rpc GetConfigData (GetConfigDataRequest) returns (GetConfigDataResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/config/{config_id}/{metadata_id}"
+    };
+  }
+
+  rpc SimulationByMetric (SimulationByMetricRequest) returns (SimulationByMetricResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/simulation/metric"
+      body :"*"
+    };
+  } 
+
+  rpc SimulationByHardware (SimulationByHardwareRequest) returns (SimulationByHardwareResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/simulation/hardware"
+      body : "*"
+    };
+  }
+}
+
+message SimulationByHardwareRequest {
+  string equip_type = 1;
+  string equip_id  = 2;
+  repeated EquipAttribute attributes = 3;
+  repeated SimMetricDetails metric_details = 4;
+
+}
+message SimulationByHardwareResponse {
+    repeated SimulatedProductsLicenses simulation_result = 1;
+}
+
+message SimulatedProductsLicenses{
+  bool success = 1;
+  repeated SimulatedProductLicense licenses = 2;
+  string sim_failure_reason = 3;
+  string metric_name = 4;
+}
+
+message SimulatedProductLicense {
+int64  old_licences = 2;
+int64  new_licenses = 3;
+int64  delta = 4;
+string swid_tag = 5;
+string product_name = 6;
+string editor = 7;
+}
+
+
+message SimMetricDetails {
+  string metric_type = 1;
+  string metric_name = 2;
+}
+
+message EquipAttribute {
+  string ID  = 1;
+  string name = 2 [(validate.rules).string.pattern = "^[-_A-Za-z0-9]+$"];
+  DataTypes data_type = 3 [(validate.rules).enum = {in: [1,2,3]}];
+  bool primary_key = 4  ;
+  bool displayed = 5;
+  bool searchable = 6;
+  bool parent_identifier = 7;
+  string mapped_to = 8;
+  bool simulated = 9;
+  
+  oneof val {
+    int32 int_val = 10;
+    float float_val= 11;
+    string string_val = 12;
+  }
+
+  oneof old_val {
+    int32 int_val_old = 13;
+    float float_val_old = 14;
+    string string_val_old = 15;
+  }
+
+  
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT    = 2;
+  FLOAT  = 3;
+}
+
+
+
+
+
+message SimulationByMetricRequest {
+  string swid_tag = 1;
+  repeated MetricSimDetails metric_details = 2;
+}
+
+message MetricSimDetails {
+  string metric_name = 1;
+  double unit_cost = 2;
+}
+
+message SimulationByMetricResponse {
+  repeated MetricSimulationResult metric_sim_result = 1;
+}
+
+
+message MetricSimulationResult{
+    bool success = 1;
+    uint64 num_cpt_licences =2;
+    double total_cost =3;
+    string metric_name = 4;
+    string sim_failure_reason = 5;
+}
+
+
+message GetConfigDataRequest {
+  int32 config_id = 1;
+  int32 metadata_id = 2;
+}
+
+message GetConfigDataResponse {
+  bytes data = 1; // json array : [{main_attribute: value1,other_attribute: value2 },{main_attribute: value3,other_attribute: value4}]
+}
+
+message ListConfigRequest {
+   string equipment_type = 1;
+}
+
+message ListConfigResponse {
+  repeated Configuration configurations = 1;
+}
+
+message Configuration {
+   int32 config_id = 1;
+   string config_name = 2;
+   string equipment_type = 3;
+   string created_by = 4;
+   google.protobuf.Timestamp created_on = 5;
+   repeated Attribute config_attributes = 6;
+}
+
+message Attribute {
+  int32 attribute_id = 1;
+  string attribute_name = 2;
+  string config_filename = 3;
+}
+
+
+message DeleteConfigRequest {
+  int32 config_id = 1;
+}
+
+message DeleteConfigResponse {
+  
+}
+
+message Data {
+  Metadata metadata = 1;
+  repeated ConfigValue values = 2;
+}
+
+message CreateConfigRequest {
+  string config_name = 1;
+  string equipment_type = 2;
+  repeated Data data = 3;
+}
+
+message ConfigValue {
+  string key = 1;
+  bytes value = 2;
+}
+
+message CreateConfigResponse {
+  
+}
+
+
+message Metadata {
+  string attribute_name = 1;
+  string config_filename = 2;
+  
+}
+
+message UpdateConfigRequest {
+  int32 config_id = 1;
+  repeated int32 deleted_metadata_ids = 2;
+  repeated Data data = 3;
+}
+
+message UpdateConfigResponse {
+  
+}

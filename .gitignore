@@ -10,6 +10,7 @@ gomock_*
 badger
 mapping_badger
 study
+test
 
 # Test binary, built with `go test -c`
 *.test
@@ -29,13 +30,7 @@ study
 **/*.zip
 
 # Docker files
-Dockerfile_*
-Dockerfile_account
-Dockerfile_auth
-Dockerfile_import
-Dockerfile_license
-Dockerfile_go_builder
-Dockerfile_data_process
+Dockerfile
 
 # Deployment files
 **/.gitlab-ci.yml

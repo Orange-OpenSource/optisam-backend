@@ -1,0 +1,23 @@
+type Metadata {
+    type_name
+    scopes
+    updated
+    created
+    metadata.type      
+    metadata.source    
+    metadata.attributes
+}
+
+type Attribute {
+    type_name
+    scopes
+    updated
+    created
+    attribute.name            
+    attribute.searchable      
+    attribute.identifier      
+    attribute.displayed       
+    attribute.parentIdentifier
+    attibute.mapped_to        
+    attibute.schema_name      
+}

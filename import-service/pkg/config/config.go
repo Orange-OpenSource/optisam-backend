@@ -3,13 +3,15 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package config
 
 import (
+	"optisam-backend/common/optisam/grpc"
+	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pki"
+	"optisam-backend/common/optisam/postgres"
 
 	"os"
 	"time"
@@ -35,8 +37,10 @@ type Config struct {
 	// HTTPPort is TCP port to listen by HTTP/REST gateway
 	HTTPPort string
 
-	// Directory where all the data will be uploaded
-	UploadDir string `toml:"upload_dir"`
+	Upload UploadConfig
+
+	// Database connection information
+	Database postgres.Config
 
 	// Log configuration
 	Log logger.Config
@@ -44,8 +48,17 @@ type Config struct {
 	// Instrumentation configuration
 	Instrumentation InstrumentationConfig
 
-	// PKI configuration
-	PKI pki.Config
+	//GRPC Server Configuration
+	GRPCServers grpc.Config
+
+	//IAM Configuration
+	IAM iam.Config
+}
+
+type UploadConfig struct {
+	UploadDir                string `toml:"upload_dir"`
+	DataFileAllowedRegex     []string
+	MetaDatafileAllowedRegex []string
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -66,14 +79,6 @@ type InstrumentationConfig struct {
 	}
 }
 
-// AppParameters  TODO: ask Dhramjit
-type AppParameters struct {
-	PageSize  int
-	PageNum   int
-	SortBy    string
-	SortOrder string
-}
-
 // Validate validates the configuration.
 func (c Config) Validate() error {
 	if c.Environment == "" {
@@ -84,9 +89,10 @@ func (c Config) Validate() error {
 		return err
 	}
 
-	if err := c.PKI.Validate(); err != nil {
+	if err := c.IAM.Validate(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -152,6 +158,4 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 
 	// App Params Configuration
 
-	// PKI configuraiton
-	v.SetDefault("pki.publickeypath", ".")
 }

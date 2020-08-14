@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package optisam.reports.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+service ReportService {
+
+  rpc ListReportType(ListReportTypeRequest) returns (ListReportTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/reports/types"
+    };
+  }
+
+  rpc SubmitReport(SubmitReportRequest) returns (SubmitReportResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/reports"
+      body : "*"
+    };
+  }
+
+  rpc ListReport(ListReportRequest) returns (ListReportResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/reports"
+    };
+  }
+
+  rpc DownloadReport(DownloadReportRequest) returns (DownloadReportResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/reports/{reportID}"
+    };
+  }
+}
+
+message ListReportTypeRequest {}
+message ListReportTypeResponse {
+ repeated ReportType report_type = 1;
+}
+
+message ReportType {
+  int32 report_type_id = 1;
+  string report_type_name = 2;
+}
+message SubmitReportRequest {
+  string scope = 1;
+  int32 report_type_id = 2;
+  oneof report_metadata {
+    AcqRightsReport acqrights_report = 3;
+    ProductEquipmentsReport product_equipments_report = 4;
+  }
+}
+
+message AcqRightsReport {
+  string editor = 1;
+  repeated string swidtag = 2;
+}
+message ProductEquipmentsReport{
+  string editor = 1;
+  repeated string swidtag = 2;
+  string equip_type = 3;
+}
+message SubmitReportResponse { bool success = 1; }
+
+message ListReportRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+
+  string sort_by = 3 [ (validate.rules).string = {
+    in : [
+      "report_id",
+      "report_type",
+      "report_status",
+      "created_by",
+      "created_on"
+    ]
+  } ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+}
+message ListReportResponse {
+  int32 totalRecords = 1;
+  repeated Report reports = 2;
+}
+
+message Report {
+  int32 report_id = 1;
+  string report_type = 2;
+  string report_status = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_on = 5;
+}
+message DownloadReportRequest { int32 reportID = 1; }
+message DownloadReportResponse { bytes report_data = 1; }
+
+enum SortOrder {
+  asc = 0;
+  desc = 1;
+}

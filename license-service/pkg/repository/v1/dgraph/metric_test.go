@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -13,7 +13,7 @@ import (
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"testing"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,7 +42,7 @@ func TestLicenseRepository_ListMetrices(t *testing.T) {
 					Set: []*api.NQuad{
 						&api.NQuad{
 							Subject:     blankID("met1"),
-							Predicate:   "type",
+							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metric"),
 						},
 						&api.NQuad{
@@ -57,7 +57,7 @@ func TestLicenseRepository_ListMetrices(t *testing.T) {
 						},
 						&api.NQuad{
 							Subject:     blankID("met2"),
-							Predicate:   "type",
+							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metric"),
 						},
 						&api.NQuad{

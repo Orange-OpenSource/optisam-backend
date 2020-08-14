@@ -1,30 +1,28 @@
-environment = "DEVELOPMENT"
+environment = "development"
 debug = false
-grpcport = "9090"
-httpport = "8090"
+grpcport = "19090"
+httpport = "19000"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
 loglevel = -1
 
 [instrumentation]
-addr = ":8081"
+addr = ":8092"
 
 [instrumentation.prometheus]
 enabled = false
-namespace = "licenseservice"
 
 [instrumentation.jaeger]
 enabled = false
-serviceName = "license-service"
-collectorEndpoint = ""
-agentEndpoint = ""
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [dgraph]
 hosts = [
-    "dgraph:9080"
+    "localhost:9080"
 ]
 
 [app.params]
@@ -33,5 +31,7 @@ pageNum = 1
 sortOrder = "asc"
 sortBy = "name"
 
-[pki]
+[iam]
 publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"

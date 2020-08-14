@@ -1,0 +1,228 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+service MetricService {
+   // ListMetrices
+   rpc ListMetrices(ListMetricRequest) returns (ListMetricResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metric"
+    };
+  }
+
+  // ListMetricType
+  rpc ListMetricType(ListMetricTypeRequest) returns (ListMetricTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metric/types"
+    };
+  }
+
+  // CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
+  rpc CreateMetricOracleProcessorStandard(CreateMetricOPS)returns (CreateMetricOPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ops"
+      body : "*"
+    };
+  }
+
+  // CreateMetricOracleNUPStandard will create an oracle.nup.standard metric
+  rpc CreateMetricOracleNUPStandard(CreateMetricNUP)returns (CreateMetricNUP){
+    option (google.api.http) = {
+      post : "/api/v1/metric/oracle_nup"
+      body : "*"
+    };
+  }
+
+
+  // CreateMetricSAGProcessorStandard will create an sag.processor.standard metric
+  rpc CreateMetricSAGProcessorStandard(CreateMetricSPS)returns (CreateMetricSPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/sps"
+      body : "*"
+    };
+  }
+
+   // CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric
+   rpc CreateMetricIBMPvuStandard(CreateMetricIPS)returns (CreateMetricIPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ips"
+      body : "*"
+    };
+  }
+
+  // CreateMetricAttrCounterStandard will create an IBM.pvu.standard metric
+  rpc CreateMetricAttrCounterStandard(CreateMetricACS)returns (CreateMetricACS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/acs"
+      body : "*"
+    };
+  }
+
+  // CreateMetricInstanceNumberStandard will create an instance.number.standard metric
+  rpc CreateMetricInstanceNumberStandard(CreateINM)returns (CreateINM){
+    option (google.api.http) = {
+      post : "/api/v1/metric/inm"
+      body : "*"
+    };
+  }
+
+  //GetMetricConfiguration will get configuration of a metric
+  rpc GetMetricConfiguration(GetMetricConfigurationRequest)returns (GetMetricConfigurationResponse){
+    option (google.api.http) = {
+      get : "/api/v1/metric/config"
+    };
+  }
+}
+
+message GetMetricConfigurationRequest{
+  Metric metric_info = 1;
+}
+
+message GetMetricConfigurationResponse{
+  string metric_config = 1;
+}
+
+
+message CreateINM {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string.min_len = 1];
+  float Coefficient = 3 [(validate.rules).float = {not_in: [0.0]}];
+}
+
+message CreateMetricIPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string core_factor_attr_id = 4;  
+  string base_eq_type_id = 5;
+}
+
+message CreateMetricSPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string core_factor_attr_id = 4;  
+  string base_eq_type_id = 5;
+}
+
+message CreateMetricACS {
+  // ID is not required for creation
+  string ID = 1;
+  string name = 2;
+  string eq_type = 3;
+  string attribute_name = 4;
+  string value = 5;   
+}
+
+
+message ListMetricRequest {}
+
+message ListMetricResponse {
+  repeated Metric metrices = 1;
+}
+
+message Metric {
+  string type = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ListMetricTypeRequest {}
+
+message ListMetricTypeResponse {
+  repeated MetricType types = 1;
+}
+
+message MetricType {
+  enum Type {
+    Unknown = 0;
+    Oracle_Processor  = 1;
+    Oracle_NUP = 2;
+    SAG_Processor = 3;
+    IBM_PVU = 4;
+    Attr_Counter = 5;
+    Instance_Number = 6;
+  }
+  string name = 1;
+  string description = 2;
+  string href = 3;
+  Type type_id = 4;
+}
+
+message CreateMetricOPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;
+  string start_eq_type_id = 6;
+  string base_eq_type_id = 7;
+  string aggerateLevel_eq_type_id = 8;
+  string end_eq_type_id = 9;
+}
+
+message CreateMetricNUP {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2;
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;
+  string start_eq_type_id = 6;
+  string base_eq_type_id = 7;
+  string aggerateLevel_eq_type_id = 8;
+  string end_eq_type_id = 9;
+  uint32  number_of_users = 10 [(validate.rules).uint32.gt  = 0];
+}
+
+
+message ScopeFilter{
+  repeated string scopes =1;
+}
+
+message AggregationFilter {
+  // Not For metric means aggregation for a product should not exist for a given metric
+  string NotForMetric = 1;
+}
+
+message StringFilter {
+  enum Type{
+    REGEX=0;
+    EQ=1;
+  }
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  Type filter_type = 3;
+  repeated string filteringkey_multiple=4;
+}
+
+enum SortOrder {
+  option allow_alias = true;
+  ASC = 0;
+  asc = 0;
+  DESC = 1;
+  desc = 1;
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT    = 2;
+  FLOAT  = 3;
+}
+
+
+
+  
+
+  

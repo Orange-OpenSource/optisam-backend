@@ -1,0 +1,285 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package optisam.applications.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  security_definitions : {
+    security : {
+      key : "bearer"
+      value : {
+        type : TYPE_API_KEY
+        in : IN_HEADER
+        name : "Authorization"
+        description :
+            "Authentication token, prefixed by Bearer: Bearer <token>"
+      }
+    }
+  }
+  security : {security_requirement : {key : "bearer"}}
+};
+
+service ApplicationService {
+  rpc UpsertApplication(UpsertApplicationRequest)
+      returns (UpsertApplicationResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/applications"
+      body : "*"
+    };
+  }
+  rpc DeleteApplication(DeleteApplicationRequest)
+      returns (DeleteApplicationResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/applications/{application_id}"
+    };
+  }
+  rpc UpsertInstance(UpsertInstanceRequest) returns (UpsertInstanceResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/applications/{application_id}/instances"
+      body : "*"
+    };
+  }
+
+  rpc DeleteInstance(DeleteInstanceRequest) returns (DeleteInstanceResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/applications/{application_id}/instances/{instance_id}"
+    };
+  }
+  // rpc ListProductsForApplication(ListProductsForApplicationRequest)
+  //     returns (ListProductsForApplicationResponse) {
+  //   option (google.api.http) = {
+  //     get : "/api/v1/applications/{application_id}/products"
+  //   };
+  // }
+
+  rpc ListApplications(ListApplicationsRequest)
+      returns (ListApplicationsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/applications"
+    };
+  }
+
+  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/instances"
+    };
+  }
+}
+
+message UpsertApplicationRequest {
+  string application_id = 1;
+  string name = 2;
+  string version = 3;
+  string owner = 4;
+  string scope = 5;
+}
+
+message UpsertApplicationResponse { bool success = 1; }
+
+message DeleteApplicationRequest { string application_id = 1; }
+
+message DeleteApplicationResponse { bool success = 1; }
+
+message UpsertInstanceRequest {
+  string application_id = 1;
+  string instance_id = 2;
+  string instance_name = 3;
+  product products = 4;
+  equipment equipments = 5;
+  string scope = 6;
+  message product {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string product_id = 2;
+
+    // message product_add {
+    //   string operation = 1 [ (validate.rules).string.const = "add" ];
+    //   repeated string product_id = 2;
+    // }
+    // message product_delete {
+    //   string operation = 1 [ (validate.rules).string.const = "delete" ];
+    //   repeated string product_id = 2;
+    // }
+  }
+
+  message equipment {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string equipment_id = 2;
+
+    // message equipment_add {
+    //   string operation = 1 [ (validate.rules).string.const = "add" ];
+    //   repeated string equipment_id = 2;
+    // }
+    // message equipment_delete {
+    //   string operation = 1 [ (validate.rules).string.const = "delete" ];
+    //   repeated string equipment_id = 2;
+    // }
+  }
+}
+
+message UpsertInstanceResponse { bool success = 1; }
+
+message DeleteInstanceRequest {
+  string application_id = 1;
+  string instance_id = 2;
+}
+
+message DeleteInstanceResponse { bool success = 1; }
+
+// message ProductForApplication {
+//   string swidTag = 1;
+//   string name = 2;
+//   string Editor = 3;
+//   string Edition = 4;
+//   string Version = 5;
+//   double totalCost = 6;
+//   int32 numOfInstances = 7;
+//   int32 numofEquipments = 8;
+// }
+
+// message ListProductsForApplicationResponse {
+//   int32 totalRecords = 1;
+//   repeated ProductForApplication products = 2;
+// }
+
+// message ListProductsForApplicationRequest { string application_id = 1; }
+
+// message ListApplicationsForProductAggregationRequest {
+//   string name = 1;
+//   int32 page_num = 2 [
+//     (validate.rules).int32 = {gte : 1, lt : 1000},
+//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+//         {description : "Page number", minimum : 1, maximum : 1000}
+//   ];
+//   int32 page_size = 3 [
+//     (validate.rules).int32 = {gte : 10, lt : 100},
+//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+//         {minimum : 10, maximum : 100, description : "Items per page"}
+//   ];
+//   string sort_by = 4 [ (validate.rules).string = {
+//     in : [
+//       "application_id",
+//       "application_name",
+//       "application_version",
+//       "application_owner",
+//       "num_of_instances",
+//       "num_of_products",
+//       "num_of_equipments",
+//       "cost"
+//     ]
+//   } ];
+//   string sort_order = 5 [ (validate.rules).string = {in : [ "asc", "desc" ]}
+//   ]; ApplicationSearchParams search_params = 6;
+// }
+
+message ListApplicationsRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {minimum : 10, maximum : 100, description : "Items per page"}
+  ];
+  enum SortBy {
+    name = 0;
+    owner = 1;
+    num_of_instances = 2;
+    num_of_products = 3;
+    num_of_equipments = 4;
+    total_cost = 5;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  ApplicationSearchParams search_params = 5;
+}
+
+message ListApplicationsResponse {
+  int32 totalRecords = 1;
+  repeated Application applications = 2;
+}
+
+message Application {
+  string application_id = 1;
+  string name = 2;
+  string owner = 3;
+  int32 num_of_instances = 4;
+  int32 num_of_products = 5;
+  double total_cost = 6;
+}
+
+message ApplicationSearchParams {
+  StringFilter name = 1;
+  StringFilter owner = 2;
+  StringFilter product_id = 3;
+}
+
+message ApplicationRequest { string application_id = 1; }
+
+message ApplicationResponse {
+  string name = 1;
+  string version = 2;
+  string edition = 3;
+  string editor = 4;
+  string metric = 5;
+  int32 num_of_instances = 6;
+}
+
+message ListInstancesRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {minimum : 10, maximum : 100, description : "Items per page"}
+  ];
+  enum SortBy {
+    instance_id = 0;
+    instance_environment = 1;
+    num_of_products = 2;
+    num_of_equipments = 3;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  InstanceSearchParams search_params = 5;
+}
+
+message InstanceSearchParams {
+  StringFilter application_id = 1;
+  StringFilter product_id = 2;
+}
+
+message ListInstancesResponse {
+  int32 totalRecords = 1;
+  repeated Instance instances = 2;
+}
+
+message Instance {
+  string id = 1;
+  string environment = 2;
+  int32 num_of_equipments = 3;
+  int32 num_of_products = 4;
+}
+
+message StringFilter {
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  bool filter_type = 3;
+  repeated string filteringkey_multiple = 4;
+}
+
+enum SortOrder {
+  asc = 0;
+  desc = 1;
+}

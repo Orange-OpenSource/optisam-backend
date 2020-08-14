@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package loader
 
 import (
@@ -15,10 +15,9 @@ import (
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
@@ -27,8 +26,7 @@ type equipLoader struct {
 }
 
 // LoadEquipments ...
-func loadEquipments(ml *MasterLoader, ch chan<- *api.Mutation, masterDir string, scopes []string, files []string, eqTypes []*v1.EquipmentType, doneChan <-chan struct{}) {
-	wg := new(sync.WaitGroup)
+func loadEquipments(ml *MasterLoader, ch chan<- *api.Request, masterDir string, scopes []string, files []string, eqTypes []*v1.EquipmentType, doneChan <-chan struct{}) {
 	log.Println(files, len(eqTypes))
 	for _, scope := range scopes {
 		scopeLoader := ml.GetLoader(filepath.Base(scope))
@@ -37,8 +35,6 @@ func loadEquipments(ml *MasterLoader, ch chan<- *api.Mutation, masterDir string,
 				if et.SourceName == filepath.Base(file) {
 					fileLoader := scopeLoader.GetLoader(masterDir, filepath.Base(file))
 					func(fl *FileLoader, f, s string, eqType *v1.EquipmentType) {
-						log.Printf("start equip loading %s: %s \n", eqType.Type, f)
-						defer log.Printf("end equip loading %s: %s \n", eqType.Type, f)
 						load := func(version string) (time.Time, error) {
 							return loadEquipmentFile(fl, ch, masterDir, s, version, f, eqType, doneChan)
 						}
@@ -48,16 +44,12 @@ func loadEquipments(ml *MasterLoader, ch chan<- *api.Mutation, masterDir string,
 				}
 			}
 		}
-		wg.Add(1)
-		go func(sl *ScopeLoader) {
-			sl.Load(masterDir)
-			wg.Done()
-		}(scopeLoader)
 	}
-	wg.Wait()
 }
 
-func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version string, filename string, eqType *v1.EquipmentType, doneChan <-chan struct{}) (time.Time, error) {
+func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, version string, filename string, eqType *v1.EquipmentType, doneChan <-chan struct{}) (retUpdatedOn time.Time, retErr error) {
+	log.Printf("start equip loading %s: %s \n", eqType.Type, filename)
+	defer log.Printf("end equip loading %s: %s \n", eqType.Type, filename)
 	updatedOn := l.UpdatedOn()
 	filename = filepath.Join(masterDir, scope, version, filename)
 	f, err := readFile(filename)
@@ -75,6 +67,8 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 		logger.Log.Error("error reading header ", zap.String("filename:", filename), zap.String("reason", err.Error()))
 		return updatedOn, err
 	}
+
+	log.Println(columns)
 
 	// find primary key index
 	attr, err := eqType.PrimaryKeyAttribute()
@@ -101,6 +95,9 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 	}
 
 	for idx := range columns {
+		if idx == index {
+			continue
+		}
 		_, ok := attrMap[idx]
 		if !ok {
 			logger.Log.Info("no mapping is found for csv coloumn", zap.String("csv_coloumn", columns[index]), zap.String("filename:", filename), zap.String("col", attr.MappedTo))
@@ -108,15 +105,25 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 	}
 
 	mu := &api.Mutation{
-		CommitNow: true,
-		Set:       make([]*api.NQuad, 0, 8000),
+		//CommitNow: true,
+		Set: make([]*api.NQuad, 0, 8000),
 	}
 
 	fc := floatConverter{}
 	ic := intConverter{}
 	updatedIdx := findColoumnIdx(updatedColumnName, columns)
 	createdIdx := findColoumnIdx(createdColumnName, columns)
+	maxUpdated := time.Time{}
+	defer func() {
+		if maxUpdated.After(updatedOn) {
+			updatedOn = maxUpdated
+			retUpdatedOn = maxUpdated
+		}
+	}()
+	rowNum := 0
+	upserts := make(map[string]string)
 	for {
+		rowNum++
 		row, err := r.Read()
 		if err != nil && err != io.EOF {
 			logger.Log.Error("error reading file", zap.String("filename:", filename), zap.String("reason", err.Error()))
@@ -131,7 +138,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 		}
 		row[index] = strings.TrimSpace(row[index])
 		if row[index] == "" {
-			logger.Log.Error("primary key is empty skipping row", zap.String("filename:", filename), zap.String("xidClm", columns[index]))
+			logger.Log.Error("primary key is empty skipping row", zap.Int("row", rowNum), zap.String("filename:", filename), zap.String("xidClm", columns[index]))
 			continue
 		}
 
@@ -141,14 +148,17 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 			logger.Log.Error("error while checking state", zap.Error(err), zap.String("file", filename))
 		}
 
-		if l.CurrentState() != LoaderStateCreated && !t.After(updatedOn) {
+		if err == nil && l.CurrentState() != LoaderStateCreated && !t.After(updatedOn) {
 			continue
 		}
 
-		updatedOn = t
+		if t.After(maxUpdated) {
+			maxUpdated = t
+		}
 
 		//	uid := uidForXid(row[index])
-		uid, nqs := uidForXIDForType(row[index], "equipment", "equipment.id", row[index])
+		uid, nqs, upsert := uidForXIDForType(row[index], "equipment", "equipment.id", row[index], dgraphTypeEquipment, dgraphType("Equipment"+eqType.Type))
+		upserts[uid] = upsert
 		mu.Set = append(mu.Set, nqs...)
 		mu.Set = append(mu.Set, scopeNquad(scope, uid)...)
 		mu.Set = append(mu.Set,
@@ -164,7 +174,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 			},
 			// &api.NQuad{
 			// 	Subject:     uid,
-			// 	Predicate:   "type",
+			// 	Predicate:   "type_name",
 			// 	ObjectValue: stringObjectValue("equipment"),
 			// },
 		)
@@ -177,14 +187,17 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 
 			attr, ok := attrMap[idx]
 			if !ok {
+				//log.Println(columns[idx])
 				continue // this is not mapped
 			}
+
 			if attr.IsIdentifier {
 				continue // we already handled this case
 			}
 
 			if attr.IsParentIdentifier {
-				parentUID, nqs := uidForXIDForType(row[idx], "equipment", "equipment.id", row[idx])
+				parentUID, nqs, parentUpsert := uidForXIDForType(row[idx], "equipment", "equipment.id", row[idx], dgraphTypeEquipment, dgraphType("Equipment"+eqType.ParentType))
+				upserts[parentUID] = parentUpsert
 				mu.Set = append(mu.Set, nqs...)
 				mu.Set = append(mu.Set,
 					// &api.NQuad{
@@ -194,7 +207,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 					// },
 					// &api.NQuad{
 					// 	Subject:     parentUID,
-					// 	Predicate:   "type",
+					// 	Predicate:   "type_name",
 					// 	ObjectValue: stringObjectValue("equipment"),
 					// },
 					&api.NQuad{
@@ -205,7 +218,6 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 				)
 				continue
 			}
-
 			switch attr.Type {
 			case v1.DataTypeString:
 				mu.Set = append(mu.Set,
@@ -270,10 +282,14 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 		select {
 		case <-doneChan:
 			return updatedOn, errors.New("loader stopped all records not processed")
-		case ch <- mu:
+		case ch <- &api.Request{
+			Query:     upsertQueries(upserts),
+			Mutations: []*api.Mutation{mu},
+		}:
 		}
+		upserts = make(map[string]string)
 		mu = &api.Mutation{
-			CommitNow: true,
+			//CommitNow: true,
 		}
 
 	}
@@ -286,7 +302,10 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, vers
 			return updatedOn, errors.New("file processing is not complete after eof")
 		}
 		return updatedOn, nil
-	case ch <- mu:
+	case ch <- &api.Request{
+		Query:     upsertQueries(upserts),
+		Mutations: []*api.Mutation{mu},
+	}:
 	}
 	return updatedOn, nil
 }
@@ -298,4 +317,14 @@ func findColoumnIdx(column string, columns []string) int {
 		}
 	}
 	return -1
+}
+
+func upsertQueries(upserts map[string]string) string {
+	querySlice := make([]string, 0, len(upserts)+2)
+	querySlice = append(querySlice, "query {")
+	for _, v := range upserts {
+		querySlice = append(querySlice, v)
+	}
+	querySlice = append(querySlice, "}")
+	return strings.Join(querySlice, "\n")
 }

@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package v1
 
 import (
@@ -46,20 +46,20 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			want: &v1.ProductAggregation{
-				ID:       "ProID1",
-				Name:     "ProName",
-				Metric:   "m1ID",
-				Editor:   "e1",
-				Product:  "pro1",
-				Products: []string{"P1ID", "P2ID"},
+				ID:           "ProID1",
+				Name:         "ProName",
+				Metric:       "m1",
+				Editor:       "e1",
+				ProductNames: []string{"pro1"},
+				Products:     []string{"P1", "P2"},
 			},
 			mock: func() {
 				mockCtrl = gomock.NewController(t)
@@ -77,45 +77,47 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 					},
 				}, nil).Times(1)
 				gomock.InOrder(
-					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &repo.QueryProducts{
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "pro1",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "e1",
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
 								},
 							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
 						},
-						AcqFilter: productAcqRightFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
-						AggFilter: productAggregateFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
+						t: t,
 					}, []string{"P1", "P2", "P3"}).Return("P1ID", nil).Times(1),
-					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &repo.QueryProducts{
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "pro1",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "e1",
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
 								},
 							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
 						},
-						AcqFilter: productAcqRightFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
-						AggFilter: productAggregateFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
+						t: t,
 					}, []string{"P1", "P2", "P3"}).Return("P2ID", nil).Times(1),
 				)
 				mockLicense.EXPECT().CreateProductAggregation(ctx, &repo.ProductAggregation{
@@ -139,11 +141,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock:    func() {},
@@ -153,11 +155,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -172,11 +174,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -193,11 +195,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -213,11 +215,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -242,11 +244,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -265,25 +267,26 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 					},
 				}, nil).Times(1)
 				gomock.InOrder(
-					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &repo.QueryProducts{
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "pro1",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "e1",
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
 								},
 							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
 						},
-						AcqFilter: productAcqRightFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
-						AggFilter: productAggregateFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
+						t: t,
 					}, []string{"P1", "P2", "P3"}).Return("", errors.New("Internal")).Times(1),
 				)
 			},
@@ -293,11 +296,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock: func() {
@@ -316,45 +319,47 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 					},
 				}, nil).Times(1)
 				gomock.InOrder(
-					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &repo.QueryProducts{
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "pro1",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "e1",
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
 								},
 							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
 						},
-						AcqFilter: productAcqRightFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
-						AggFilter: productAggregateFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
+						t: t,
 					}, []string{"P1", "P2", "P3"}).Return("P1ID", nil).Times(1),
-					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &repo.QueryProducts{
-						Filter: &repo.AggregateFilter{
-							Filters: []repo.Queryable{
-								&repo.Filter{
-									FilterKey:   "name",
-									FilterValue: "pro1",
-								},
-								&repo.Filter{
-									FilterKey:   "editor",
-									FilterValue: "e1",
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
 								},
 							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
 						},
-						AcqFilter: productAcqRightFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
-						AggFilter: productAggregateFilter(&v1.AggregationFilter{
-							NotForMetric: "m1",
-						}),
+						t: t,
 					}, []string{"P1", "P2", "P3"}).Return("P2ID", nil).Times(1),
 				)
 				mockLicense.EXPECT().CreateProductAggregation(ctx, &repo.ProductAggregation{
@@ -375,11 +380,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 					Socpes: []string{"P1", "P2", "P3"},
 				}),
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock:    func() {},
@@ -393,11 +398,11 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 					Socpes: []string{"P1", "P2", "P3"},
 				}),
 				req: &v1.ProductAggregation{
-					Name:     "ProName",
-					Metric:   "m1",
-					Editor:   "e1",
-					Product:  "pro1",
-					Products: []string{"P1", "P2"},
+					Name:         "ProName",
+					Metric:       "m1",
+					Editor:       "e1",
+					ProductNames: []string{"pro1"},
+					Products:     []string{"P1", "P2"},
 				},
 			},
 			mock:    func() {},
@@ -420,7 +425,7 @@ func Test_licenseServiceServer_CreateProductAggregation(t *testing.T) {
 	}
 }
 
-func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
+func Test_licenseServiceServer_DeleteProductAggregation(t *testing.T) {
 	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
@@ -432,37 +437,32 @@ func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
 
 	type args struct {
 		ctx context.Context
-		req *v1.ListProductAggregationRequest
+		req *v1.DeleteProductAggregationRequest
 	}
 	tests := []struct {
 		name    string
 		s       *licenseServiceServer
 		args    args
-		want    *v1.ListProductAggregationResponse
 		mock    func()
+		want    *v1.ListProductAggregationResponse
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
+				req: &v1.DeleteProductAggregationRequest{
+					ID: "ProID1",
+				},
 			},
 			want: &v1.ListProductAggregationResponse{
 				Aggregations: []*v1.ProductAggregation{
 					&v1.ProductAggregation{
-						ID:       "ProID1",
-						Name:     "ProName",
-						Metric:   "m1",
-						Editor:   "e1",
-						Product:  "pro1",
-						Products: []string{"P1ID", "P2ID"},
-					},
-					&v1.ProductAggregation{
-						ID:       "ProID2",
-						Name:     "ProName2",
-						Metric:   "m2",
-						Editor:   "e2",
-						Product:  "pro2",
-						Products: []string{"P1ID", "P3ID"},
+						ID:           "ProID2",
+						Name:         "ProName2",
+						Metric:       "m2ID",
+						Editor:       "e2",
+						ProductNames: []string{"pro1"},
+						Products:     []string{"P1ID", "P3ID"},
 					},
 				},
 			},
@@ -470,15 +470,7 @@ func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ListProductAggregations(ctx, []string{"P1", "P2", "P3"}).Return([]*repo.ProductAggregation{
-					&repo.ProductAggregation{
-						ID:       "ProID1",
-						Name:     "ProName",
-						Metric:   "m1ID",
-						Editor:   "e1",
-						Product:  "pro1",
-						Products: []string{"P1ID", "P2ID"},
-					},
+				mockLicense.EXPECT().DeleteProductAggregation(ctx, "ProID1", []string{"P1", "P2", "P3"}).Return([]*repo.ProductAggregation{
 					&repo.ProductAggregation{
 						ID:       "ProID2",
 						Name:     "ProName2",
@@ -486,20 +478,6 @@ func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
 						Editor:   "e2",
 						Product:  "pro2",
 						Products: []string{"P1ID", "P3ID"},
-					},
-				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"P1", "P2", "P3"}).Return([]*repo.Metric{
-					&repo.Metric{
-						ID:   "m1ID",
-						Name: "m1",
-					},
-					&repo.Metric{
-						ID:   "m2ID",
-						Name: "m2",
-					},
-					&repo.Metric{
-						ID:   "m2ID",
-						Name: "m3",
 					},
 				}, nil).Times(1)
 			},
@@ -508,49 +486,55 @@ func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
 		{name: "FAILURE-cannot find claims in context",
 			args: args{
 				ctx: context.Background(),
+				req: &v1.DeleteProductAggregationRequest{
+					ID: "ProID1",
+				},
 			},
 			mock:    func() {},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch product aggregations",
+		{
+			name: "FAILURE-user doesnot have access to delete product aggregation",
 			args: args{
-				ctx: ctx,
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@superuser.com",
+					Role:   "User",
+					Socpes: []string{"Scope1", "Scope2", "Scope3"},
+				}),
+				req: &v1.DeleteProductAggregationRequest{
+					ID: "ProID1",
+				},
 			},
-			mock: func() {
-				mockCtrl = gomock.NewController(t)
-				mockLicense := mock.NewMockLicense(mockCtrl)
-				rep = mockLicense
-				mockLicense.EXPECT().ListProductAggregations(ctx, []string{"P1", "P2", "P3"}).Return(nil, errors.New("Internal")).Times(1)
-			},
+			mock:    func() {},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch metrices",
+		{
+			name: "FAILURE-unknown role",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@superuser.com",
+					Role:   "abc",
+					Socpes: []string{"Scope1", "Scope2", "Scope3"},
+				}),
+				req: &v1.DeleteProductAggregationRequest{
+					ID: "ProID1",
+				},
+			},
+			mock:    func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot delete product aggregation",
 			args: args{
 				ctx: ctx,
+				req: &v1.DeleteProductAggregationRequest{
+					ID: "ProID1",
+				},
 			},
 			mock: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ListProductAggregations(ctx, []string{"P1", "P2", "P3"}).Return([]*repo.ProductAggregation{
-					&repo.ProductAggregation{
-						ID:       "ProID1",
-						Name:     "ProName",
-						Metric:   "m1ID",
-						Editor:   "e1",
-						Product:  "pro1",
-						Products: []string{"P1ID", "P2ID"},
-					},
-					&repo.ProductAggregation{
-						ID:       "ProID2",
-						Name:     "ProName2",
-						Metric:   "m2ID",
-						Editor:   "e2",
-						Product:  "pro2",
-						Products: []string{"P1ID", "P3ID"},
-					},
-				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"P1", "P2", "P3"}).Return(nil, errors.New("Internal")).Times(1)
+				mockLicense.EXPECT().DeleteProductAggregation(ctx, "ProID1", []string{"P1", "P2", "P3"}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -559,114 +543,815 @@ func Test_licenseServiceServer_ListProductAggregation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock()
 			s := NewLicenseServiceServer(rep)
-			got, err := s.ListProductAggregation(tt.args.ctx, tt.args.req)
+			got, err := s.DeleteProductAggregation(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("licenseServiceServer.ListProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("licenseServiceServer.DeleteProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr {
-				compareProductAggregationAll(t, "ListProductAggregation", got, tt.want)
+				compareProductAggregationAll(t, "DeleteProductAggregation", got, tt.want)
 			}
 		})
 	}
 }
 
-// func Test_licenseServiceServer_DeleteProductAggregation(t *testing.T) {
-// 	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
-// 		UserID: "admin@superuser.com",
-// 		Role:   "SuperAdmin",
-// 		Socpes: []string{"P1", "P2", "P3"},
-// 	})
+func Test_licenseServiceServer_UpdateProductAggregation(t *testing.T) {
+	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
 
-// 	var mockCtrl *gomock.Controller
-// 	var rep repo.License
+	var mockCtrl *gomock.Controller
+	var rep repo.License
 
-// 	type args struct {
-// 		ctx context.Context
-// 		req *v1.DeleteProductAggregationRequest
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		s       *licenseServiceServer
-// 		args    args
-// 		mock    func()
-// 		want    *v1.ListProductAggregationResponse
-// 		wantErr bool
-// 	}{
-// 		{name: "SUCCESS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.DeleteProductAggregationRequest{
-// 					ID: "ProID1",
-// 				},
-// 			},
-// 			want: &v1.ListProductAggregationResponse{
-// 				Aggregations: []*v1.ProductAggregation{
-// 					&v1.ProductAggregation{
-// 						ID:       "ProID2",
-// 						Name:     "ProName2",
-// 						Metric:   "m2ID",
-// 						Editor:   "e2",
-// 						Product:  "pro2",
-// 						Products: []string{"P1ID", "P3ID"},
-// 					},
-// 				},
-// 			},
-// 			mock: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().DeleteProductAggregation(ctx, "ProID1", []string{"P1", "P2", "P3"}).Return([]*repo.ProductAggregation{
-// 					&repo.ProductAggregation{
-// 						ID:       "ProID2",
-// 						Name:     "ProName2",
-// 						Metric:   "m2ID",
-// 						Editor:   "e2",
-// 						Product:  "pro2",
-// 						Products: []string{"P1ID", "P3ID"},
-// 					},
-// 				}, nil).Times(1)
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "FAILURE-cannot find claims in context",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				req: &v1.DeleteProductAggregationRequest{
-// 					ID: "ProID1",
-// 				},
-// 			},
-// 			mock:    func() {},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - cannot delete product aggregation",
-// 			args: args{
-// 				ctx: ctx,
-// 			},
-// 			mock: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().DeleteProductAggregation(ctx, "ProID1", []string{"P1", "P2", "P3"}).Return(nil, errors.New("Internal")).Times(1)
-// 			},
-// 			wantErr: true,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			tt.mock()
-// 			s := NewLicenseServiceServer(rep)
-// 			got, err := s.DeleteProductAggregation(tt.args.ctx, tt.args.req)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("licenseServiceServer.DeleteProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
-// 				return
-// 			}
-// 			if !tt.wantErr {
-// 				compareProductAggregationAll(t, "DeleteProductAggregation", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+	type args struct {
+		ctx context.Context
+		req *v1.UpdateProductAggregationRequest
+	}
+	tests := []struct {
+		name    string
+		setup   func()
+		args    args
+		want    *v1.ProductAggregation
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProIDC1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1", "pro2"},
+					},
+				},
+			},
+			want: &v1.ProductAggregation{
+				ID:           "PA1",
+				Name:         "ProIDC1",
+				Metric:       "m1",
+				Editor:       "e1",
+				ProductNames: []string{"pro1", "pro2"},
+				Products:     []string{"P1", "P2", "P5"},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProIDC1", []string{"Scope1", "Scope2", "Scope3"}).Return(
+						nil, repo.ErrNodeNotFound).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1", "pro2"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1", "pro2"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P3ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P4ID", nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					Name:            "ProIDC1",
+					AddedProducts:   []string{"P1ID", "P2ID"},
+					RemovedProducts: []string{"P3ID", "P4ID"},
+					Product:         "pro1,pro2",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil).Times(1)
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProIDC1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+					ID:         "PA1",
+					Name:       "ProIDC1",
+					MetricName: "m1",
+					Editor:     "e1",
+					Product:    "pro1,pro2",
+					Products:   []string{"P1", "P2", "P5"},
+				}, nil).Times(1)
+			},
+		},
+		{name: "SUCCESS - With same product Aggregation Name",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			want: &v1.ProductAggregation{
+				ID:           "PA1",
+				Name:         "ProID1",
+				Metric:       "m1",
+				Editor:       "e1",
+				ProductNames: []string{"pro1"},
+				Products:     []string{"P1", "P2", "P5"},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P3ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P4ID", nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					Name:            "",
+					AddedProducts:   []string{"P1ID", "P2ID"},
+					RemovedProducts: []string{"P3ID", "P4ID"},
+					Product:         "pro1",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil).Times(1)
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+					ID:         "PA1",
+					Name:       "ProID1",
+					MetricName: "m1",
+					Editor:     "e1",
+					Product:    "pro1",
+					Products:   []string{"P1", "P2", "P5"},
+				}, nil).Times(1)
+			},
+		},
+		{name: "SUCCESS - With same product Aggregation Name, empty removed and added products and no change in product names",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{},
+						RemovedProducts: []string{},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			want: &v1.ProductAggregation{
+				ID:           "PA1",
+				Name:         "ProID1",
+				Metric:       "m1",
+				Editor:       "e1",
+				ProductNames: []string{"pro1"},
+				Products:     []string{"P3", "P4", "P5"},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					Name:            "",
+					AddedProducts:   []string{},
+					RemovedProducts: []string{},
+					Product:         "pro1",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil).Times(1)
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+					ID:         "PA1",
+					Name:       "ProID1",
+					MetricName: "m1",
+					Editor:     "e1",
+					Product:    "pro1",
+					Products:   []string{"P3", "P4", "P5"},
+				}, nil).Times(1)
+			},
+		},
+		{
+			name: "FAILURE-user doesnot have access to update product aggregation",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@superuser.com",
+					Role:   "User",
+					Socpes: []string{"Scope1", "Scope2", "Scope3"},
+				}),
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+					},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE- can not find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE-cannot get product aggregation",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Internal")).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE-product aggregation node does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(nil, repo.ErrNodeNotFound).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE-cannot get product id for swid tag for added products",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("", errors.New("Internal")).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("", errors.New("Internal")).Times(1),
+				)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE-cannot get product id for swid tag for removed products",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("", errors.New("Internal")).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("", errors.New("Internal")).Times(1),
+				)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE- cannot update product aggregation",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P3ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P4ID", nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					AddedProducts:   []string{"P1ID", "P2ID"},
+					RemovedProducts: []string{"P3ID", "P4ID"},
+					Product:         "pro1",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(errors.New("Internal")).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE- cannot get product aggregation",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+						ID:         "PA1",
+						Name:       "ProID1",
+						MetricName: "m1",
+						Editor:     "e1",
+						Product:    "pro1",
+						Products:   []string{"P3", "P4", "P5"},
+					}, nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P3ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P4ID", nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					AddedProducts:   []string{"P1ID", "P2ID"},
+					RemovedProducts: []string{"P3ID", "P4ID"},
+					Product:         "pro1",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil).Times(1)
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Internal")).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE- product aggregation node does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+					ID:         "PA1",
+					Name:       "ProID1",
+					MetricName: "m1",
+					Editor:     "e1",
+					Product:    "pro1",
+					Products:   []string{"P3", "P4", "P5"},
+				}, nil).Times(1)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P1", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P1ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P2", &productQueryMatcher{
+						q: &repo.QueryProducts{
+							Filter: &repo.AggregateFilter{
+								Filters: []repo.Queryable{
+									&repo.Filter{
+										FilterMatchingType:  repo.EqFilter,
+										FilterKey:           "name",
+										FilterValueMultiple: stringToInterface([]string{"pro1"}),
+									},
+									&repo.Filter{
+										FilterMatchingType: repo.EqFilter,
+										FilterKey:          "editor",
+										FilterValue:        "e1",
+									},
+								},
+							},
+							AcqFilter: productAcqRightFilter("m1"),
+							AggFilter: productAggregateFilter("m1"),
+						},
+						t: t,
+					}, []string{"Scope1", "Scope2", "Scope3"}).Return("P2ID", nil).Times(1),
+				)
+				gomock.InOrder(
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P3", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P3ID", nil).Times(1),
+					mockLicense.EXPECT().ProductIDForSwidtag(ctx, "P4", nil, []string{"Scope1", "Scope2", "Scope3"}).Return("P4ID", nil).Times(1),
+				)
+				mockLicense.EXPECT().UpdateProductAggregation(ctx, "PA1", &repo.UpdateProductAggregationRequest{
+					AddedProducts:   []string{"P1ID", "P2ID"},
+					RemovedProducts: []string{"P3ID", "P4ID"},
+					Product:         "pro1",
+				}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil).Times(1)
+
+				mockLicense.EXPECT().ProductAggregationsByName(ctx, "ProID1", []string{"Scope1", "Scope2", "Scope3"}).Return(nil, repo.ErrNodeNotFound).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE-unknown role",
+			args: args{
+				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@superuser.com",
+					Role:   "abc",
+					Socpes: []string{"Scope1", "Scope2", "Scope3"},
+				}),
+				req: &v1.UpdateProductAggregationRequest{
+					Name: "ProID1",
+					Aggregation: &v1.UpdateAggregation{
+						Name:            "ProID1",
+						AddedProducts:   []string{"P1", "P2"},
+						RemovedProducts: []string{"P3", "P4"},
+						ProductNames:    []string{"pro1"},
+					},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewLicenseServiceServer(rep)
+			got, err := s.UpdateProductAggregation(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("licenseServiceServer.UpdateProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			compareProductAggregation(t, "ProductAggregation", tt.want, got)
+		})
+	}
+}
 
 func compareProductAggregationAll(t *testing.T, name string, exp *v1.ListProductAggregationResponse, act *v1.ListProductAggregationResponse) {
 	for i := 0; i < len(exp.Aggregations)-1; i++ {
@@ -689,7 +1374,7 @@ func compareProductAggregation(t *testing.T, name string, exp *v1.ProductAggrega
 	assert.Equalf(t, exp.Name, act.Name, "%s.Name are not same", name)
 	assert.Equalf(t, exp.Metric, act.Metric, "%s.Metric are not same", name)
 	assert.Equalf(t, exp.Editor, act.Editor, "%s.Editor are not same", name)
-	assert.Equalf(t, exp.Product, act.Product, "%s.Product are not same", name)
+	assert.Equalf(t, exp.ProductNames, act.ProductNames, "%s.Products are not same", name)
 	for i := 0; i < len(exp.Products)-1; i++ {
 		assert.Equalf(t, exp.Products[i], act.Products[i], "%s.Products are not same", name)
 	}

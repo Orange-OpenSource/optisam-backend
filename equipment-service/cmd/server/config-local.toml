@@ -1,0 +1,38 @@
+environment = "development"
+debug = false
+grpcport = "14090"
+httpport = "14091"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8092"
+
+[instrumentation.prometheus]
+enabled = false
+
+[instrumentation.jaeger]
+enabled = false
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
+# username = ""
+# password = ""
+
+[dgraph]
+hosts = [
+    "localhost:9080"
+]
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"
+

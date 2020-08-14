@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
@@ -11,8 +11,10 @@ import (
 	"database/sql"
 	"fmt"
 	v1 "optisam-backend/account-service/pkg/repository/v1"
+	repo "optisam-backend/account-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/common/optisam/logger"
 
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
@@ -25,21 +27,95 @@ const (
 )
 
 const (
-	updateAccountQuery = "UPDATE users SET locale = $1 WHERE username = $2"
-	selectAccountInfo  = selectAccount + `
+	updateAccountQuery = "UPDATE users SET first_name = $1, last_name = $2, locale = $3, profile_pic = $4 WHERE username = $5"
+
+	updateUserAccountQuery = "UPDATE users SET role = $1  WHERE username = $2"
+
+	selectAccountInfo = `
+	SELECT
+	username,
+	password,
+	first_name,
+	last_name,
+	locale,
+	role,
+	profile_pic,
+	cont_failed_login,
+	created_on,
+	first_login
+	FROM users
 	WHERE username = $1`
 
-	createAccountQuery = " INSERT INTO users (username,password,first_name,last_name,role,locale) VALUES($1,crypt($2,gen_salt('md5')),$3,$4,$5,$6)"
+	changeUserFirstLoginQuery = "UPDATE users SET first_login = FALSE  WHERE username = $1"
+
+	createAccountQuery = " INSERT INTO users (username,password,first_name,last_name,role,locale,first_login) VALUES($1,$2,$3,$4,$5,$6,TRUE)"
 
 	selectAccount = `
 	SELECT
 	username,
+	password,
 	first_name,
 	last_name,
 	locale,
 	role
 	FROM users
 	`
+	selectAccountWithGroupInfo = `
+	SELECT
+	username,
+	first_name,
+	last_name,
+	locale,
+	-- all the groups owned by users
+	ARRAY(
+		SELECT 
+		name
+		from groups 
+		WHERE groups.id IN(
+            		SELECT group_id
+            		FROM group_ownership 
+            		WHERE group_ownership.user_id=username
+        	)
+	) as groups,
+	role
+	FROM users
+	WHERE username<> $1;
+	`
+	selectAccountWithQueryParams = `
+	SELECT 
+	DISTINCT ON(username) username,
+	first_name,
+	last_name,
+	locale,
+	-- all the groups owned by users
+	ARRAY(
+		SELECT 
+		name
+		from groups 
+		WHERE groups.id IN(
+            		SELECT group_id
+            		FROM group_ownership 
+            		WHERE group_ownership.user_id=username
+        	)
+	) as groups,
+	role 
+	from users 
+	INNER JOIN group_ownership ON users.username  = group_ownership.user_id
+	-- child groups of the groups owned by the user
+	WHERE group_ownership.group_id IN( 
+			SELECT id
+			FROM groups 
+			WHERE fully_qualified_name <@ (
+				SELECT ARRAY(
+					SELECT fully_qualified_name 
+					FROM groups
+					INNER JOIN group_ownership ON groups.id  = group_ownership.group_id
+					WHERE group_ownership.user_id = $1
+				)
+			)
+	) AND username <> $1;
+	`
+
 	selectAccountForGroup = selectAccount + `
 	INNER JOIN group_ownership ON users.username  = group_ownership.user_id
 	WHERE group_ownership.group_id = $1
@@ -60,40 +136,61 @@ const (
 	WHERE group_ownership.user_id = $1
 	)) AND id=$2
 	`
-	checkPasswordQuery = `
-	SELECT 
-	COUNT(*)
+	// checkPasswordQuery = `
+	// SELECT
+	// COUNT(*)
+	// FROM users
+	// WHERE username= $1
+	// AND password = crypt($2,password)
+	// `
+	changePasswordQuery = "UPDATE users SET password = $2 where username =$1"
+
+	userBelongsToAdminGroup = `
+	SELECT
+	count(*) as total_records
 	FROM users
-	WHERE username= $1
-	AND password = crypt($2,password)
+	INNER JOIN group_ownership ON users.username  = group_ownership.user_id
+	WHERE group_ownership.group_id IN( 
+		SELECT id
+		FROM groups 
+		WHERE fully_qualified_name <@ (
+			SELECT ARRAY(
+				SELECT fully_qualified_name 
+				FROM groups
+				INNER JOIN group_ownership ON groups.id  = group_ownership.group_id
+				WHERE group_ownership.user_id = $1
+			)
+		)
+	) AND username = $2;
 	`
-	changePasswordQuery = "UPDATE users SET password = crypt($2,gen_salt('md5')) where username =$1"
 )
 
 //AccountRepository for Dgraph
 type AccountRepository struct {
+	*repo.Queries
 	db *sql.DB
 }
 
 //NewAccountRepository creates new Repository
 func NewAccountRepository(db *sql.DB) *AccountRepository {
 	return &AccountRepository{
-		db: db,
+		Queries: repo.New(db),
+		db:      db,
 	}
 }
 
-//UpdateAccount is the generic implementation for any update/path of an account
+//UpdateAccount allows user to update their personal information
 func (r *AccountRepository) UpdateAccount(ctx context.Context, userID string, req *v1.UpdateAccount) error {
-	result, err := r.db.ExecContext(ctx, updateAccountQuery, req.Locale, userID)
+	result, err := r.db.ExecContext(ctx, updateAccountQuery, req.FirstName, req.LastName, req.Locale, req.ProfilePic, userID)
 	if err != nil {
+		logger.Log.Error("repo/postgres - UpdateAccount - failed to execute query", zap.String("reason", err.Error()))
 		return err
 	}
-
 	n, err := result.RowsAffected()
 	if err != nil {
+		logger.Log.Error("repo/postgres - UpdateAccount - failed to get number of rows affected", zap.String("reason", err.Error()))
 		return err
 	}
-
 	if n != 1 {
 		return fmt.Errorf("repo/postgres - UpdateAccount - expected one row to be affected,actual affected rows: %v", n)
 	}
@@ -101,12 +198,39 @@ func (r *AccountRepository) UpdateAccount(ctx context.Context, userID string, re
 	return nil
 }
 
+//UpdateUserAccount allows admin to update the role of user
+func (r *AccountRepository) UpdateUserAccount(ctx context.Context, userID string, req *v1.UpdateUserAccount) error {
+	roleUser, err := dbRoleToPostGresRole(req.Role)
+	if err != nil {
+		logger.Log.Error("repo/postgres - UpdateUserAccount - dbRoleToPostGresRole", zap.String("reason", err.Error()))
+		return err
+	}
+	result, err := r.db.ExecContext(ctx, updateUserAccountQuery, roleUser, userID)
+	if err != nil {
+		logger.Log.Error("repo/postgres - UpdateUserAccount - failed to execute query", zap.String("reason", err.Error()))
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		logger.Log.Error("repo/postgres - UpdateUserAccount - failed to get number of rows affected", zap.String("reason", err.Error()))
+		return err
+	}
+	if n != 1 {
+		return fmt.Errorf("repo/postgres - UpdateUserAccount - expected one row to be affected,actual affected rows: %v", n)
+	}
+	return nil
+}
+
 // AccountInfo implements v1.Account's AccountInfo function.
 func (r *AccountRepository) AccountInfo(ctx context.Context, userID string) (*v1.AccountInfo, error) {
 	ai := &v1.AccountInfo{}
 	var roleUser role
-	if err := r.db.QueryRowContext(ctx, selectAccountInfo, userID).
-		Scan(&ai.UserId, &ai.FirstName, &ai.LastName, &ai.Locale, &roleUser); err != nil {
+	err := r.db.QueryRowContext(ctx, selectAccountInfo, userID).
+		Scan(&ai.UserId, &ai.Password, &ai.FirstName, &ai.LastName, &ai.Locale, &roleUser, &ai.ProfilePic, &ai.ContFailedLogin, &ai.CreatedOn, &ai.FirstLogin)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, v1.ErrNoData
+		}
 		return nil, err
 	}
 	roleUserDb, err := postgresRoleToDbRole(roleUser)
@@ -115,6 +239,25 @@ func (r *AccountRepository) AccountInfo(ctx context.Context, userID string) (*v1
 	}
 	ai.Role = roleUserDb
 	return ai, nil
+}
+
+//ChangeUserFirstLogin implements Account ChangeUserFirstLogin function
+func (r *AccountRepository) ChangeUserFirstLogin(ctx context.Context, userID string) error {
+	result, err := r.db.ExecContext(ctx, changeUserFirstLoginQuery, userID)
+	if err != nil {
+		logger.Log.Error("repo/postgres - ChangeUserFirstLogin - failed to execute query", zap.String("reason", err.Error()))
+		return err
+	}
+	n, err := result.RowsAffected()
+	if err != nil {
+		logger.Log.Error("repo/postgres - ChangeUserFirstLogin - failed to get number of rows affected", zap.String("reason", err.Error()))
+		return err
+	}
+	if n != 1 {
+		return fmt.Errorf("repo/postgres - ChangeUserFirstLogin - expected one row to be affected,actual affected rows: %v", n)
+	}
+
+	return nil
 }
 
 // CreateAccount implements Account CreateAccount function
@@ -140,7 +283,7 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, acc *v1.AccountIn
 	if err != nil {
 		return err
 	}
-	result, err := txn.ExecContext(ctx, createAccountQuery, acc.UserId, "password", acc.FirstName, acc.LastName, roleUser, acc.Locale)
+	result, err := txn.ExecContext(ctx, createAccountQuery, acc.UserId, acc.Password, acc.FirstName, acc.LastName, roleUser, acc.Locale)
 	if err != nil {
 		return err
 	}
@@ -184,13 +327,30 @@ func (r *AccountRepository) UserExistsByID(ctx context.Context, userID string) (
 }
 
 //UsersAll implements Account UsersAll function
-func (r *AccountRepository) UsersAll(ctx context.Context) ([]*v1.AccountInfo, error) {
-	rows, err := r.db.QueryContext(ctx, selectAccount)
+func (r *AccountRepository) UsersAll(ctx context.Context, userID string) ([]*v1.AccountInfo, error) {
+	rows, err := r.db.QueryContext(ctx, selectAccountWithGroupInfo, userID)
 	if err != nil {
+		logger.Log.Error("repo/postgres - UsersAll - failed to execute query", zap.String("reason", err.Error()))
 		return nil, err
 	}
-	users, err := scanUserRows(rows)
+	users, err := scanUserRowsWithGroupInfo(rows)
 	if err != nil {
+		logger.Log.Error("repo/postgres - UsersAll - failed to scan rows", zap.String("reason", err.Error()))
+		return nil, err
+	}
+	return users, nil
+}
+
+//UsersWithUserSearchParams implements Account UsersAll function
+func (r *AccountRepository) UsersWithUserSearchParams(ctx context.Context, userID string, params *v1.UserQueryParams) ([]*v1.AccountInfo, error) {
+	rows, err := r.db.QueryContext(ctx, selectAccountWithQueryParams, userID)
+	if err != nil {
+		logger.Log.Error("repo/postgres - UsersWithUserSearchParams - failed to execute query", zap.String("reason", err.Error()))
+		return nil, err
+	}
+	users, err := scanUserRowsWithGroupInfo(rows)
+	if err != nil {
+		logger.Log.Error("repo/postgres - UsersWithUserSearchParams - failed to scan rows", zap.String("reason", err.Error()))
 		return nil, err
 	}
 	return users, nil
@@ -219,16 +379,16 @@ func (r *AccountRepository) GroupUsers(ctx context.Context, groupID int64) ([]*v
 	return users, nil
 }
 
-// CheckPassword check the password for user
-func (r *AccountRepository) CheckPassword(ctx context.Context, userID, password string) (bool, error) {
-	record := 0
-	err := r.db.QueryRowContext(ctx, checkPasswordQuery, userID, password).Scan(&record)
-	if err != nil {
-		logger.Log.Error(" CheckPassword - failed to check password", zap.String("reason", err.Error()))
-		return false, err
-	}
-	return record != 0, nil
-}
+// // CheckPassword check the password for user
+// func (r *AccountRepository) CheckPassword(ctx context.Context, userID, password string) (bool, error) {
+// 	record := 0
+// 	err := r.db.QueryRowContext(ctx, checkPasswordQuery, userID, password).Scan(&record)
+// 	if err != nil {
+// 		logger.Log.Error(" CheckPassword - failed to check password", zap.String("reason", err.Error()))
+// 		return false, err
+// 	}
+// 	return record != 0, nil
+// }
 
 // ChangePassword ..
 func (r *AccountRepository) ChangePassword(ctx context.Context, userID, password string) error {
@@ -245,6 +405,16 @@ func (r *AccountRepository) ChangePassword(ctx context.Context, userID, password
 		return fmt.Errorf("repo/postgres - ChangePassword - expected one row to be affected,actual affected rows: %v", n)
 	}
 	return nil
+}
+
+//UserBelongsToAdminGroup returns true if user belongs to the admin groups
+func (r *AccountRepository) UserBelongsToAdminGroup(ctx context.Context, adminUserID, userID string) (bool, error) {
+	totalRecords := 0
+	err := r.db.QueryRowContext(ctx, userBelongsToAdminGroup, adminUserID, userID).Scan(&totalRecords)
+	if err != nil {
+		return false, err
+	}
+	return totalRecords != 0, nil
 }
 
 func dbRoleToPostGresRole(roleDb v1.Role) (role, error) {
@@ -278,8 +448,27 @@ func scanUserRows(rows *sql.Rows) ([]*v1.AccountInfo, error) {
 	for rows.Next() {
 		user := &v1.AccountInfo{}
 		var userRole role
-		if err := rows.Scan(&user.UserId, &user.FirstName, &user.LastName,
+		if err := rows.Scan(&user.UserId, &user.Password, &user.FirstName, &user.LastName,
 			&user.Locale, &userRole); err != nil {
+			return nil, err
+		}
+		roleDb, err := postgresRoleToDbRole(userRole)
+		if err != nil {
+			return nil, err
+		}
+		user.Role = roleDb
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+func scanUserRowsWithGroupInfo(rows *sql.Rows) ([]*v1.AccountInfo, error) {
+	var users []*v1.AccountInfo
+	for rows.Next() {
+		user := &v1.AccountInfo{}
+		var userRole role
+		if err := rows.Scan(&user.UserId, &user.FirstName, &user.LastName,
+			&user.Locale, pq.Array(&user.GroupName), &userRole); err != nil {
 			return nil, err
 		}
 		roleDb, err := postgresRoleToDbRole(userRole)

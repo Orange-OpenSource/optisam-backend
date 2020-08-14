@@ -1,0 +1,11 @@
+type MetricSPS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.sps.base            
+    metric.sps.attr_core_factor
+    metric.sps.attr_num_cores                     
+}

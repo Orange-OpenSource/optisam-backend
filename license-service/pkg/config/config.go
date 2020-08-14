@@ -3,14 +3,14 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package config
 
 import (
 	"optisam-backend/common/optisam/dgraph"
+	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pki"
 
 	"os"
 	"time"
@@ -51,8 +51,8 @@ type Config struct {
 
 	AppParams AppParameters
 
-	// PKI configuration
-	PKI pki.Config
+	//IAM Configuration
+	IAM iam.Config
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -91,6 +91,10 @@ func (c Config) Validate() error {
 	}
 
 	if err := c.Dgraph.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.IAM.Validate(); err != nil {
 		return err
 	}
 

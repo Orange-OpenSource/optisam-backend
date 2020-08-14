@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package config
 
 import (
@@ -110,9 +110,9 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	v.SetConfigType("toml")
 	v.AddConfigPath("./")
 	// v.AddConfigPath(fmt.Sprintf("$%s_CONFIG_DIR/", strings.ToUpper(EnvPrefix)))
-	p.Init("auth-service", pflag.ExitOnError)
+	p.Init("account-service", pflag.ExitOnError)
 	pflag.Usage = func() {
-		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", "auth-service")
+		_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", "account-service")
 		pflag.PrintDefaults()
 	}
 	_ = v.BindPFlags(p)
@@ -122,7 +122,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// v.AutomaticEnv()
 
 	// Application constants
-	v.Set("serviceName", "auth-service")
+	v.Set("serviceName", "account-service")
 
 	// Global configuration
 	v.SetDefault("environment", "production")

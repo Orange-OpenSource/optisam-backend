@@ -1,0 +1,8 @@
+metric.oracle_nup.bottom           : [uid] @count @reverse .
+metric.oracle_nup.base             : [uid] @count @reverse .
+metric.oracle_nup.aggregate        : [uid] @count @reverse .
+metric.oracle_nup.top              : [uid] @count @reverse .
+metric.oracle_nup.attr_core_factor : [uid] @count @reverse .
+metric.oracle_nup.attr_num_cores   : [uid] @count @reverse .
+metric.oracle_nup.attr_num_cpu     : [uid] @count @reverse .
+metric.oracle_nup.num_users        : int .

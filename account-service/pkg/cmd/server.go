@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package cmd
 
 import (
@@ -35,7 +35,7 @@ import (
 	"contrib.go.opencensus.io/integrations/ocsql"
 
 	//postgres library
-	_ "github.com/vijay1811/pq"
+	_ "github.com/lib/pq"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
@@ -230,5 +230,5 @@ func RunServer() error {
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()
-	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey)
+	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey, v1.AdminRightsRequired)
 }

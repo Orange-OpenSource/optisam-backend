@@ -1,0 +1,64 @@
+kind: "Template"
+apiVersion: "v1"
+metadata:
+  name: "deploy-template"
+  annotations:
+    description: "Template for deployment"
+objects:
+  - kind: Job
+    apiVersion: batch/v1
+    metadata:
+      name: optisam-dataloader-job
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          name: job
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: optisam-dataloader-job
+              image: ${DOCKER_REGISTRY}/optisam/dataloader-service:${TAG}
+              imagePullPolicy: Always
+              command: ["/bin/sh","-c"]
+              args: ["pwd; ls; cp -r schema /optisam_dir/schema; cp -r skeletonscope /optisam_dir/skeletonscope;
+                ./dataloader schema --config=/opt/config/config-${ENV}.toml; 
+                ./dataloader metadata --config=/opt/config/config-${ENV}.toml;
+                if [ ${ENV} = 'dev' ]; 
+                then
+                  ./dataloader equipmentstypes --config=/opt/config/config-${ENV}.toml;
+                fi;
+                 "]
+              env:
+                - name: "ENV"
+                  value: ${ENV}
+              volumeMounts:
+                - name: optisam-data
+                  mountPath: /optisam_dir
+                - name: config-volume
+                  mountPath: /opt/config
+              resources:
+                requests:
+                  cpu: "400m"
+                  memory: "600Mi"
+                limits:
+                  cpu: "400m"
+                  memory: "600Mi"
+          volumes:
+            - name: optisam-data
+              persistentVolumeClaim:
+                claimName: optisam-storage
+            - name: config-volume
+              configMap:
+                name: config-dataloader-${ENV}
+parameters:
+  - name: TAG
+    description: Tag for Docker image
+    required: true
+    value: latest
+  - name: ENV
+    description: Env for deployment
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    required: true

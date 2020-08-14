@@ -1,0 +1,6 @@
+Entity;SKU;SWIDTag;Product name;Editor;Metric;Acquired licenses number;Licenses under maintenance number;AVG Unit Price;AVG Maintenant Unit Price;Total purchase cost;Total maintenance cost;Total cost;updated;created
+;ORAC001PROC;ORAC001;Oracle Client;oracle;oracle.processor.standard;1016;1008;2042;1429,4;2074672;1440835,2;3515507,2;2019-08-27T09:58:56.0260078Z;2019-08-27T09:58:56.0260078Z
+;ORAC002PROC;ORAC002;Oracle XML Development Kit;oracle;oracle.processor.standard;181;181;1759;1231,3;318379;222865,3;541244,3;2019-08-27T09:58:56.0260078Z;2019-08-27T09:58:56.0260078Z
+;ORAC003PROC;ORAC003;Oracle Instant Client;oracle;oracle.processor.standard;967;954;1426;998,2;1378942;952282,8;2331224,8;2019-08-27T09:58:56.0260078Z;2019-08-27T09:58:56.0260078Z
+;SENT001PROC;SENT001;Sentry - KM oracle;oracle;oracle.processor.standard;75;70;2556;1789,2;191700;125244;316944;2019-08-27T09:58:56.0260078Z;2019-08-27T09:58:56.0260078Z
+;ORAC004PROC;ORAC004;ORACLE SGBD Enterprise;oracle;oracle.processor.standard;749;746;1254;877,8;939246;654838,8;1594084,8;2019-08-27T09:58:56.0260078Z;2019-08-27T09:58:56.0260078Z

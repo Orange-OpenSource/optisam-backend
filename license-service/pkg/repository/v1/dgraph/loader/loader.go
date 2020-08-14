@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package loader
 
 import (
@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"optisam-backend/common/optisam/dgraph"
 	"os"
 	"os/signal"
@@ -20,18 +21,16 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 
-	"github.com/dgraph-io/badger"
-	"github.com/dgraph-io/dgo"
-	"github.com/dgraph-io/dgo/protos/api"
-	"github.com/dgraph-io/dgraph/xidmap"
+	"github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 )
 
 func init() {
@@ -42,11 +41,10 @@ var batchSize int
 
 // Config ...
 type Config struct {
-	BadgerDir string
 	// State dir containing json
 	StateConfig string
-	Zero        string
-	Alpha       []string
+
+	Alpha []string
 
 	// OPERATIONS
 	// Drop Schema and all the data with it
@@ -64,20 +62,26 @@ type Config struct {
 	LoadStaticData bool
 
 	// Scope with csv files just with headers
-	MasterDir      string
-	ScopeSkeleten  string
-	Scopes         []string
-	ProductFiles   []string
-	AppFiles       []string
-	InstFiles      []string
-	AcqRightsFiles []string
-	EquipmentFiles []string
-	MetadataFiles  *MetadataFiles
-	SchemaFiles    []string
-	UsersFiles     []string
-	Repository     v1.License
-	BatchSize      int
-	IgnoreNew      bool
+	MasterDir             string
+	ScopeSkeleten         string
+	Scopes                []string
+	ProductFiles          []string
+	AppFiles              []string
+	AppProdFiles          []string
+	InstFiles             []string
+	InstProdFiles         []string
+	InstEquipFiles        []string
+	AcqRightsFiles        []string
+	EquipmentFiles        []string
+	ProductEquipmentFiles []string
+	MetadataFiles         *MetadataFiles
+	SchemaFiles           []string
+	TypeFiles             []string
+	UsersFiles            []string
+	Repository            v1.License
+	BatchSize             int
+	IgnoreNew             bool
+	GenerateRDF           bool
 }
 
 // MetadataFiles ...
@@ -88,9 +92,7 @@ type MetadataFiles struct {
 // NewDefaultConfig ...
 func NewDefaultConfig() *Config {
 	return &Config{
-		BadgerDir: "badger",
-		Zero:      "localhost:5080",
-		Alpha:     []string{"localhost:9080"}, //":9084",
+		Alpha: []string{"localhost:9080"}, //":9084",
 
 		MetadataFiles: new(MetadataFiles),
 		BatchSize:     1000,
@@ -152,7 +154,7 @@ type schemaNode struct {
 }
 
 type loader struct {
-	load   func(ml *MasterLoader, dg *dgo.Dgraph, masterDir string, scopes, files []string, ch chan<- *api.Mutation, doneChan <-chan struct{})
+	load   func(ml *MasterLoader, dg *dgo.Dgraph, masterDir string, scopes, files []string, ch chan<- *api.Request, doneChan <-chan struct{})
 	files  []string
 	scopes []string
 	errors []error
@@ -178,8 +180,23 @@ func NewLoader(config *Config) *AggregateLoader {
 			scopes: config.Scopes,
 		},
 		{
+			load:   loadApplicationProducts,
+			files:  config.AppProdFiles,
+			scopes: config.Scopes,
+		},
+		{
 			load:   loadInstances,
 			files:  config.InstFiles,
+			scopes: config.Scopes,
+		},
+		{
+			load:   loadInstanceProducts,
+			files:  config.InstProdFiles,
+			scopes: config.Scopes,
+		},
+		{
+			load:   loadInstanceEquipments,
+			files:  config.InstEquipFiles,
 			scopes: config.Scopes,
 		},
 		{
@@ -188,10 +205,15 @@ func NewLoader(config *Config) *AggregateLoader {
 			scopes: config.Scopes,
 		},
 		{
-			load:   loadUsers,
-			files:  config.UsersFiles,
+			load:   loadProductEquipments,
+			files:  config.ProductEquipmentFiles,
 			scopes: config.Scopes,
 		},
+		// {
+		// 	load:   loadUsers,
+		// 	files:  config.UsersFiles,
+		// 	scopes: config.Scopes,
+		// },
 	}
 	return &AggregateLoader{
 		loaders: loaders,
@@ -200,15 +222,18 @@ func NewLoader(config *Config) *AggregateLoader {
 }
 
 var ignoreNew bool
+var dgCl *dgo.Dgraph
 
 // Load .. loads data
 func (al *AggregateLoader) Load() (retErr error) {
 	log.Println("loader started")
 	config := al.config
 	ignoreNew = config.IgnoreNew
+	genRDF = config.GenerateRDF
 	dg, err := dgraph.NewDgraphConnection(&dgraph.Config{
 		Hosts: config.Alpha,
 	})
+	dgCl = dg
 	if err != nil {
 		return err
 	}
@@ -224,7 +249,7 @@ func (al *AggregateLoader) Load() (retErr error) {
 
 	// creates schema whatever is present in database
 	if config.CreateSchema {
-		if err := createSchema(dg, config.SchemaFiles); err != nil {
+		if err := createSchema(dg, config.SchemaFiles, config.TypeFiles); err != nil {
 			return err
 		}
 	}
@@ -236,7 +261,7 @@ func (al *AggregateLoader) Load() (retErr error) {
 	batchSize = config.BatchSize
 	fmt.Println(batchSize)
 	wg := new(sync.WaitGroup)
-	ch := make(chan *api.Mutation)
+	ch := make(chan *api.Request)
 	doneChan := make(chan struct{})
 	// Load metadata from equipments files
 	if config.LoadMetadata {
@@ -252,29 +277,6 @@ func (al *AggregateLoader) Load() (retErr error) {
 	ml := &MasterLoader{}
 
 	if config.LoadStaticData || config.LoadEquipments {
-		opts := badger.DefaultOptions(config.BadgerDir)
-		opts.Truncate = true
-		db, err := badger.Open(opts)
-		if err != nil {
-			return err
-		}
-
-		defer db.Close()
-
-		zero, err := grpc.Dial(config.Zero, grpc.WithInsecure())
-		if err != nil {
-			return err
-		}
-
-		defer zero.Close()
-
-		xidMap = xidmap.New(db, zero, xidmap.Options{
-			NumShards: 32,
-			LRUSize:   4096,
-		})
-
-		defer xidMap.EvictAll()
-
 		file := config.StateConfig
 
 		m, err := newMasterLoaderFromFile(file)
@@ -301,10 +303,12 @@ func (al *AggregateLoader) Load() (retErr error) {
 		if err != nil {
 			return err
 		}
+		log.Println(config.EquipmentFiles)
+		loadEquipments(ml, ch, config.MasterDir, config.Scopes, config.EquipmentFiles, eqTypes, doneChan)
+
 		wg.Add(1)
 		go func() {
-			log.Println(config.EquipmentFiles)
-			loadEquipments(ml, ch, config.MasterDir, config.Scopes, config.EquipmentFiles, eqTypes, doneChan)
+			ml.Load(config.MasterDir)
 			wg.Done()
 		}()
 	}
@@ -312,16 +316,20 @@ func (al *AggregateLoader) Load() (retErr error) {
 	// Load static data like products equipments that
 	// Like Products,application,acquired rights,instances
 	if config.LoadStaticData {
-		for _, ldr := range al.loaders {
-			wg.Add(1)
-			go func(l loader) {
+
+		func() {
+			for _, l := range al.loaders {
 				l.load(ml, dg, config.MasterDir, l.scopes, l.files, ch, doneChan)
+			}
+			wg.Add(1)
+			go func() {
+				ml.Load(config.MasterDir)
 				wg.Done()
-			}(ldr)
-		}
+			}()
+		}()
 	}
 
-	muRetryChan := make(chan *api.Mutation)
+	muRetryChan := make(chan *api.Request)
 	ac := new(AbortCounter)
 
 	filesProcessedChan := make(chan struct{})
@@ -347,36 +355,88 @@ func (al *AggregateLoader) Load() (retErr error) {
 		select {
 		case sig := <-sigChan:
 			log.Println(sig.String())
+			close(doneChan)
+			wg1.Done()
 		case <-filesProcessedChan:
+			for {
+				if ac.Count() == 0 {
+					close(doneChan)
+					wg1.Done()
+					break
+				}
+				time.Sleep(2 * time.Second)
+			}
 		}
 		// Close done chan
-		close(doneChan)
-		wg1.Done()
+
 		// Close done chan
 	}()
-	mutations := 0
-	nquads := 0
+	mutations := uint32(0)
+	//	abortedMutations := uint32(0)
+	nquads := uint64(0)
 	t := time.Now()
 
 	for i := 0; i < 1; i++ {
+		var file *os.File
+		if genRDF {
+			f, err := os.Create("data.rdf")
+			if err != nil {
+				panic(err)
+			}
+			defer f.Close()
+			file = f
+		}
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
 			for {
-				var mu *api.Mutation
+				var mu *api.Request
 				select {
 				case mu = <-ch:
+					if config.GenerateRDF {
+						data := make([]string, len(mu.Mutations[0].Set))
+						for i, nq := range mu.Mutations[0].Set {
+							if nq.ObjectId != "" {
+								data[i] = fmt.Sprintf("<%s> <%s> <%s> %s .", nq.Subject, nq.Predicate, nq.ObjectId, facetsRDF(nq.Facets))
+								continue
+							}
+
+							switch t := nq.ObjectValue.Val.(type) {
+							case *api.Value_StrVal:
+								data[i] = fmt.Sprintf("<%s> <%s> \"%s\"^^<xs:string> %s .", nq.Subject, nq.Predicate, t.StrVal, facetsRDF(nq.Facets))
+							case *api.Value_DoubleVal:
+								data[i] = fmt.Sprintf("<%s> <%s> \"%f\"^^<xs:float> %s .", nq.Subject, nq.Predicate, t.DoubleVal, facetsRDF(nq.Facets))
+							case *api.Value_IntVal:
+								data[i] = fmt.Sprintf("<%s> <%s> \"%d\"^^<xs:int> %s .", nq.Subject, nq.Predicate, t.IntVal, facetsRDF(nq.Facets))
+							case *api.Value_DefaultVal:
+								data[i] = fmt.Sprintf("<%s> <%s> \"%s\"^^<xs:string> %s .", nq.Subject, nq.Predicate, t.DefaultVal, facetsRDF(nq.Facets))
+							default:
+								log.Printf(" nq.ObjectValue.Val unsupported type: %T\n", t)
+							}
+							//	data[i] = fmt.Sprintf("%s <%s> %v .", nq.Subject, nq.Predicate, nq.ObjectValue.)
+						}
+						file.Write([]byte(strings.Join(data, "\n") + "\n"))
+						continue
+					}
 				case <-filesProcessedChan:
 					return
 				}
-				if _, err := dg.NewTxn().Mutate(context.Background(), mu); err != nil {
+				mu.CommitNow = true
+				_, err := dg.NewTxn().Do(context.Background(), mu)
+				if err != nil {
 					// TODO : do not return here directly make an error and return
+					ac.IncCount()
 					muRetryChan <- mu
 					log.Println(err)
+					continue
 				}
-				mutations++
-				nquads += len(mu.Set)
-				fmt.Printf("time elapsed[%v], completed mutations: %v, edges_total:%v,edges this mutation: %v \n", time.Now().Sub(t), mutations, nquads, len(mu.Set))
+				//fmt.Printf("%+v\n", resp)
+				// atomic.Add
+				atomic.AddUint32(&mutations, 1)
+				atomic.AddUint64(&nquads, uint64(len(mu.Mutations[0].Set)))
+				//mutations++
+				//	nquads += len(mu.Set)
+				fmt.Printf("time elapsed[%v],completed mutations: %v,aborted: %v edges_total:%v,edges this mutation: %v \n", time.Now().Sub(t), mutations, ac.Count(), nquads, len(mu.Mutations[0].Set))
 				// log.Println(ass.GetUids())
 			}
 		}()
@@ -388,21 +448,19 @@ func (al *AggregateLoader) Load() (retErr error) {
 	return ml.Error()
 }
 
-var xidMap *xidmap.XidMap
-
 // Load function load all the data in
 func Load(config *Config) error {
 	return NewLoader(config).Load()
 }
 
-func handleAborted(in <-chan *api.Mutation, out chan<- *api.Mutation, doneChan chan struct{}, ac *AbortCounter) {
+func handleAborted(in <-chan *api.Request, out chan<- *api.Request, doneChan chan struct{}, ac *AbortCounter) {
 	fmt.Println("handleAborted")
 	wg := new(sync.WaitGroup)
 	for {
 		select {
 		case abortedMutation := <-in:
 			wg.Add(1)
-			go func(mu *api.Mutation) {
+			go func(mu *api.Request) {
 				infiniteRetry(mu, out, doneChan, ac)
 				wg.Done()
 			}(abortedMutation)
@@ -415,11 +473,25 @@ func handleAborted(in <-chan *api.Mutation, out chan<- *api.Mutation, doneChan c
 	}
 }
 
-func infiniteRetry(mu *api.Mutation, out chan<- *api.Mutation, doneChan <-chan struct{}, ac *AbortCounter) {
-	select {
-	case <-doneChan:
-		ac.IncCount()
-	case out <- mu:
+func infiniteRetry(mu *api.Request, out chan<- *api.Request, doneChan <-chan struct{}, ac *AbortCounter) {
+	count := 2
+retryLoop:
+	for {
+		select {
+		case <-doneChan:
+		default:
+			d := time.Duration(rand.Intn(count+9) + count)
+			time.Sleep(d * time.Second)
+			if _, err := dgCl.NewTxn().Do(context.Background(), mu); err != nil {
+				// TODO : do not return here directly make an error and return
+				log.Println("infiniteRetry", d, err)
+				count++
+				continue
+			}
+			ac.DecCount()
+			break retryLoop
+
+		}
 	}
 }
 
@@ -431,7 +503,7 @@ func readFile(filename string) (*os.File, error) {
 	return f, nil
 }
 
-func loadFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version string, filename, xidColumn string, doneChan <-chan struct{}, nquadsGen func(cols []string, scope string, row []string, xidIDX int) ([]*api.NQuad, string)) (time.Time, error) {
+func loadFile(l Loader, ch chan<- *api.Request, masterDir, scope, version string, filename, xidColumn string, doneChan <-chan struct{}, nquadFunc staticNquadFunc) (retUpdatedOn time.Time, retErr error) {
 	updatedOn := l.UpdatedOn()
 	filename = filepath.Join(masterDir, scope, version, filename)
 	log.Println("started loading " + filename)
@@ -464,14 +536,16 @@ func loadFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version strin
 		return updatedOn, err
 	}
 	mu := &api.Mutation{
-		CommitNow: true,
+		//CommitNow: true,
 	}
 	maxUpdated := time.Time{}
 	defer func() {
 		if maxUpdated.After(updatedOn) {
 			updatedOn = maxUpdated
+			retUpdatedOn = maxUpdated
 		}
 	}()
+	upsertsMap := make(map[string]string)
 	for {
 		row, err := r.Read()
 		if err == io.EOF {
@@ -493,15 +567,23 @@ func loadFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version strin
 			logger.Log.Error("error while checking state", zap.Error(err), zap.String("file", filename))
 		}
 
-		if l.CurrentState() != LoaderStateCreated && !t.After(updatedOn) {
+		if err == nil && l.CurrentState() != LoaderStateCreated && !t.After(updatedOn) {
 			continue
 		}
 
-		maxUpdated = t
+		if t.After(maxUpdated) {
+			maxUpdated = t
+		}
 
 		//shouldProceed := isRowCreated
-		nqs, uid := nquadsGen(columns, scope, row, index)
-		mu.Set = append(mu.Set, append(nqs, scopeNquad(scope, uid)...)...)
+		nqs, uids, upserts, uid, scopeNquadsNeeded := nquadFunc(columns, scope, row, index)
+		for i := range uids {
+			upsertsMap[uids[i]] = upserts[i]
+		}
+		mu.Set = append(mu.Set, nqs...)
+		if scopeNquadsNeeded {
+			mu.Set = append(mu.Set, scopeNquad(scope, uid)...)
+		}
 		if err == io.EOF {
 			break
 		}
@@ -512,12 +594,16 @@ func loadFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version strin
 		select {
 		case <-doneChan:
 			return updatedOn, errors.New("file processing is not complete")
-		case ch <- mu:
+		case ch <- &api.Request{
+			Query:     upsertQueries(upsertsMap),
+			Mutations: []*api.Mutation{mu},
+		}:
 		}
 
 		mu = &api.Mutation{
-			CommitNow: true,
+			//	CommitNow: true,
 		}
+		upsertsMap = make(map[string]string)
 
 	}
 
@@ -530,7 +616,10 @@ func loadFile(l Loader, ch chan<- *api.Mutation, masterDir, scope, version strin
 			return updatedOn, errors.New("file processing is not complete after eof")
 		}
 		return updatedOn, nil
-	case ch <- mu:
+	case ch <- &api.Request{
+		Query:     upsertQueries(upsertsMap),
+		Mutations: []*api.Mutation{mu},
+	}:
 	}
 
 	return updatedOn, nil
@@ -562,27 +651,92 @@ func scopeNquad(scope, uid string) []*api.NQuad {
 	}
 }
 
-func uidForXid(xid string) (string, bool) {
-	uid, isNew := xidMap.AssignUid(xid)
-	return fmt.Sprintf("%#x", uint64(uid)), isNew
+type syncMap struct {
+	strMap map[string]struct{}
+	//	scopeMap map[string]map[string]struct{}
+	mu sync.Mutex
 }
 
-func uidForXIDForType(xid, objType, pkPredName, pkPredVal string) (string, []*api.NQuad) {
-	uid, isNew := uidForXid(xid)
-	if !ignoreNew {
-		if !isNew {
-			return uid, nil
-		}
+func (sm *syncMap) Add(key string) bool {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+	_, ok := sm.strMap[key]
+	if !ok {
+		sm.strMap[key] = struct{}{}
+		return false
 	}
-	return uid, []*api.NQuad{
-		&api.NQuad{
+	// _, ok = sm.scopeMap[scope]
+	// if !ok {
+	// 	sm.scopeMap[scope] = make(map[string]struct{})
+	// 	sm.scopeMap[scope][key] = struct{}{}
+	// }
+	return true
+}
+
+var sm *syncMap
+
+func init() {
+	sm = &syncMap{
+		strMap: make(map[string]struct{}),
+	}
+}
+
+var genRDF bool
+
+func uidForXIDForType(xid, objType, pkPredName, pkPredVal string, types ...dgraphType) (string, []*api.NQuad, string) {
+
+	//xid = regexp.QuoteMeta(xid)
+	var uid string
+	if genRDF {
+		switch pkPredName {
+		case "application":
+			xid = strings.TrimPrefix(xid, "app_")
+		case "instance":
+			xid = strings.TrimPrefix(xid, "inst_")
+		}
+		xid = strings.Replace(xid, " ", "_", -1)
+		xid = strings.Replace(xid, "{", "_", -1)
+		xid = strings.Replace(xid, "}", "_", -1)
+		xid = strings.Replace(xid, "*", "Y_Y", -1)
+		xid = strings.Replace(xid, "-", "X_X", -1)
+		xid = strings.Replace(xid, "?", "Z_Z", -1)
+		uid = "_:" + xid
+		if sm.Add(xid) {
+			//	log.Println("skipping nquads for xid:", xid)
+			return uid, nil, ""
+		}
+	} else {
+		// id, isNew := uidForXid(xid)
+		// uid = id
+		// if !ignoreNew {
+		// 	if !isNew {
+		// 		return uid, nil
+		// 	}
+		// }
+		uid = `uid(` + xid + `)`
+	}
+	upsert := xid + ` as var(func: eq(` + pkPredName + `, "` + pkPredVal + `"))`
+
+	nqs := []*api.NQuad{
+		{
 			Subject:     uid,
-			Predicate:   "type",
+			Predicate:   "type_name",
 			ObjectValue: stringObjectValue(objType),
-		}, &api.NQuad{
+		},
+		{
 			Subject:     uid,
 			Predicate:   pkPredName,
 			ObjectValue: stringObjectValue(pkPredVal),
 		},
 	}
+
+	for _, t := range types {
+		nqs = append(nqs, &api.NQuad{
+			Subject:     uid,
+			Predicate:   "dgraph.type",
+			ObjectValue: stringObjectValue(t.String()),
+		})
+	}
+
+	return uid, nqs, upsert
 }

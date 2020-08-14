@@ -1,0 +1,304 @@
+syntax = "proto3";
+
+option go_package = "v1";
+
+package optisam.products.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+service ProductService {
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products"
+    };
+  }
+
+  rpc GetProductDetail(ProductRequest) returns (ProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/{swid_tag}"
+    };
+  }
+
+  rpc GetProductOptions(ProductRequest) returns (ProductOptionsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/{swid_tag}/options"
+    };
+  }
+
+  rpc ListProductAggregationView(ListProductAggregationViewRequest)
+      returns (ListProductAggregationViewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations"
+    };
+  }
+
+  rpc ListProductAggregationProductView(
+      ListProductAggregationProductViewRequest)
+      returns (ListProductAggregationProductViewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations/{ID}/products"
+    };
+  }
+
+  rpc ProductAggregationProductViewDetails(
+      ProductAggregationProductViewDetailsRequest)
+      returns (ProductAggregationProductViewDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations/productview/{ID}/details"
+    };
+  }
+
+  rpc ProductAggregationProductViewOptions(
+      ProductAggregationProductViewOptionsRequest)
+      returns (ProductAggregationProductViewOptionsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/products/aggregations/productview/{ID}/options"
+    };
+  }
+
+  rpc ListEditors(ListEditorsRequest) returns (ListEditorsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/editors"
+    };
+  }
+
+    rpc ListEditorProducts(ListEditorProductsRequest) returns (ListEditorProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/editors/products"
+    };
+  }
+
+  rpc UpsertProduct(UpsertProductRequest) returns (UpsertProductResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/products"
+      body : "*"
+    };
+  }
+
+  rpc UpsertProductAggregation(UpsertAggregationRequest) returns (UpsertAggregationResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/products/aggregation"
+      body : "*"
+    };
+  }
+}
+
+message ProductAggregationProductViewOptionsRequest { int32 ID = 1; }
+
+message ProductAggregationProductViewOptionsResponse {
+  int32 numOfOptions = 1;
+  repeated OptionInfo optioninfo = 2;
+}
+
+message ProductAggregationProductViewDetailsRequest { int32 ID = 1; }
+
+message ProductAggregationProductViewDetailsResponse {
+  int32 ID = 1;
+  string name = 2;
+  string editor = 3;
+  string product_name = 4;
+  int32 num_applications = 5;
+  int32 num_equipments = 6;
+  repeated string products = 7;
+  repeated string editions = 8;
+}
+
+message ListProductAggregationViewRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  enum SortBy {
+    aggregation_name = 0;
+    product_editor = 1;
+    num_of_applications = 2;
+    num_of_equipments = 3;
+    cost = 4;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  ProductAggregationProductViewSearchParams search_params = 5;
+}
+
+message ProductAggregationProductViewSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter name = 2;
+  StringFilter editor = 3;
+  StringFilter product_name = 4;
+  /* map<string,string> search_map = 5 [(validate.rules).map.keys.string = {in:
+   * ["name",
+   * "swidtag","version","category","editor","metric","numCptLicences","numAcqLicences","totalCost","deltaNumber","deltaCost","numOfApplications","numofEquipments"]}];*/
+}
+
+message ListProductAggregationViewResponse {
+  int32 totalRecords = 1;
+  repeated ProductAggregation aggregations = 2;
+}
+
+message ProductAggregation {
+  int32 ID = 1;
+  string name = 2;
+  string editor = 3;
+  int32 num_applications = 4;
+  int32 num_equipments = 5;
+  int32 total_cost = 6;
+  repeated string swidtags = 7;
+}
+
+message ListProductAggregationProductViewRequest { int32 ID = 1; }
+
+message ListProductAggregationProductViewResponse {
+  repeated Product products = 1;
+}
+message ListEditorsRequest { repeated string scopes = 1;}
+
+message ListEditorsResponse { repeated string editors = 1; }
+
+message ListEditorProductsRequest { 
+  string editor = 1;
+  repeated string scopes = 2;
+}
+
+message ListEditorProductsResponse { repeated Product products = 1; }
+
+message Editor { string Name = 1; }
+
+message Product {
+  string swidTag = 1;
+  string name = 2;
+  string version = 3;
+  string category = 4;
+  string edition = 5;
+  string editor = 6;
+  double totalCost = 7;
+  int32 numOfApplications = 8;
+  int32 numofEquipments = 9;
+}
+
+message ListProductsResponse {
+  int32 totalRecords = 1;
+  repeated Product products = 2;
+}
+
+message ListProductsRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  string sort_by = 3 [ (validate.rules).string = {
+    in : [
+      "name",
+      "swidtag",
+      "version",
+      "edition",
+      "editor",
+      "totalCost",
+      "numOfApplications",
+      "numofEquipments"
+    ]
+  } ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  ProductSearchParams search_params = 5;
+}
+
+message ProductSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter name = 2;
+  StringFilter editor = 3;
+  StringFilter application_id = 4;
+  StringFilter equipment_id = 5;
+}
+
+message ProductRequest { string swid_tag = 1; }
+
+message ProductResponse {
+  string swidTag = 1;
+  string editor = 2;
+  string edition = 3;
+  string release = 4;
+}
+
+message ProductOptionsResponse {
+  int32 numOfOptions = 1;
+  repeated OptionInfo optioninfo = 2;
+}
+
+message OptionInfo {
+  string swidTag = 1;
+  string Name = 2;
+  string edition = 3;
+  string editor = 4;
+  string version = 5;
+}
+
+message StringFilter {
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  bool filter_type = 3;
+  repeated string filteringkey_multiple = 4;
+}
+
+enum SortOrder {
+  asc = 0;
+  desc = 1;
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT = 2;
+  FLOAT = 3;
+}
+
+message UpsertProductRequest {
+  string swidTag = 1;
+  string name = 2;
+  string category = 3;
+  string edition = 4;
+  string editor = 5;
+  string version = 6;
+  string optionOf = 7;
+  string scope = 8 [ (validate.rules).string = {min_len : 1, max_len : 10} ];
+  application applications = 9;
+  equipment equipments = 10;
+  message application {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string application_id = 2;
+  }
+  message equipment {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated equipmentuser equipmentusers = 2;
+    message equipmentuser {
+      string equipment_id = 1;
+      int32 num_user = 2;
+    }
+  }
+}
+
+message UpsertProductResponse { bool success = 1; }
+
+message UpsertAggregationRequest{
+  int32 aggregationId = 1;
+  string aggregationName = 2;
+  string actionType  = 3;
+  repeated string swidtags = 4;
+
+}
+
+message UpsertAggregationResponse{ bool success =1;}

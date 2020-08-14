@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package dgraph
 
 import (
@@ -13,210 +13,9 @@ import (
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"testing"
 
-	"github.com/dgraph-io/dgo/protos/api"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestLicenseRepository_CreateMetricOPS(t *testing.T) {
-	type args struct {
-		ctx    context.Context
-		scopes []string
-	}
-	tests := []struct {
-		name    string
-		l       *LicenseRepository
-		args    args
-		setup   func() (*v1.MetricOPS, func() error, error)
-		wantErr bool
-	}{
-		{name: "sucess",
-			l: NewLicenseRepository(dgClient),
-			args: args{
-				ctx: context.Background(),
-			},
-			setup: func() (retMat *v1.MetricOPS, cleanup func() error, retErr error) {
-				bottomID := "bottom"
-				baseID := "base"
-				aggregateID := "aggregate"
-				topID := "top"
-				coreFactorAttrID := "coreFactor"
-				numOfCoresAttrID := "cores"
-				numOfCPUsAttrID := "cpu"
-				mu := &api.Mutation{
-					CommitNow: true,
-					Set: []*api.NQuad{
-						&api.NQuad{
-							Subject:     blankID(bottomID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(baseID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(aggregateID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(topID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(coreFactorAttrID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(numOfCoresAttrID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-						&api.NQuad{
-							Subject:     blankID(numOfCPUsAttrID),
-							Predicate:   "type",
-							ObjectValue: stringObjectValue("metadata"),
-						},
-					},
-				}
-				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				bottomID, ok := assigned.Uids[bottomID]
-				if !ok {
-					return nil, nil, fmt.Errorf("bottomID is not found in assigned map: %+v", assigned.Uids)
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(bottomID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				baseID, ok = assigned.Uids[baseID]
-				if !ok {
-					return nil, nil, errors.New("baseID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(baseID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				aggregateID, ok = assigned.Uids[aggregateID]
-				if !ok {
-					return nil, nil, errors.New("aggregateID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(aggregateID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				topID, ok = assigned.Uids[topID]
-				if !ok {
-					return nil, nil, errors.New("topID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(topID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				coreFactorAttrID, ok = assigned.Uids[coreFactorAttrID]
-				if !ok {
-					return nil, nil, errors.New("coreFactorAttrID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(coreFactorAttrID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				numOfCPUsAttrID, ok = assigned.Uids[numOfCPUsAttrID]
-				if !ok {
-					return nil, nil, errors.New("numOfCPUsAttrID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(numOfCPUsAttrID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				numOfCoresAttrID, ok = assigned.Uids[numOfCoresAttrID]
-				if !ok {
-					return nil, nil, errors.New("numOfCoresAttrID is not found in assigned map")
-				}
-
-				defer func() {
-					if retErr != nil {
-						if err := deleteNode(numOfCoresAttrID); err != nil {
-							t.Log(err)
-						}
-					}
-				}()
-
-				return &v1.MetricOPS{
-						Name:                  "oracle.processor.standard",
-						StartEqTypeID:         bottomID,
-						BaseEqTypeID:          baseID,
-						AggerateLevelEqTypeID: aggregateID,
-						EndEqTypeID:           bottomID,
-						CoreFactorAttrID:      coreFactorAttrID,
-						NumCoreAttrID:         numOfCoresAttrID,
-						NumCPUAttrID:          numOfCPUsAttrID,
-					}, func() error {
-						return deleteNodes(bottomID, baseID, aggregateID, bottomID, coreFactorAttrID, numOfCoresAttrID, numOfCPUsAttrID)
-					}, nil
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mat, cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "not expecting error from setup") {
-				return
-			}
-			defer func() {
-				assert.Empty(t, cleanup(), "not expecting error in setup")
-			}()
-			gotRetMat, err := tt.l.CreateMetricOPS(tt.args.ctx, mat, tt.args.scopes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.CreateMetricOPS() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !tt.wantErr {
-				defer func() {
-					assert.Empty(t, deleteNode(gotRetMat.ID), "error not expected in deleting metric type")
-				}()
-				compareMetricOPS(t, "MetricOPS", mat, gotRetMat)
-			}
-		})
-	}
-}
 
 func compareMetricOPS(t *testing.T, name string, exp, act *v1.MetricOPS) {
 	if exp == nil && act == nil {
@@ -341,37 +140,37 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 		Set: []*api.NQuad{
 			&api.NQuad{
 				Subject:     blankID(bottomID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(baseID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(aggregateID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(topID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(coreFactorAttrID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(numOfCoresAttrID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 			&api.NQuad{
 				Subject:     blankID(numOfCPUsAttrID),
-				Predicate:   "type",
+				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
 		},

@@ -3,7 +3,7 @@
 // This software is distributed under the terms and conditions of the 'Apache License 2.0'
 // license which can be found in the file 'License.txt' in this package distribution 
 // or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-//
+
 package postgres
 
 import (
@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/vijay1811/pq"
+	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -103,13 +103,6 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 				return []*v1.Group{
 						&v1.Group{
 							ID: 1,
-							Scopes: []string{
-								"Orange",
-								"Guinea Conakry",
-								"Group",
-								"France",
-								"Ivory Coast",
-							},
 						},
 					}, func() error {
 						return nil
