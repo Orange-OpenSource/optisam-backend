@@ -1,6 +1,6 @@
 debug = false
-grpcport = "10000"
-httpport = "10001"
+grpcport = "5085"
+httpport = "6085"
 fileslocation = "testdata"
 archivelocation = "history"
 maxfileworker = 1

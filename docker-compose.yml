@@ -10,39 +10,126 @@ services:
       - POSTGRES_DB=optisam
       - POSTGRES_USER=optisam
       - POSTGRES_PASSWORD=optisam
-  optisam-auth-service:
-    image: optisam/auth-service
-    restart: always
-    ports:
-      - "8091:8090"
-    depends_on:
-      - db 
+
   optisam-account-service:
     image: optisam/account-service
     restart: always
     ports:
-      - "8092:8090"
+      - "6081:6081"
+      - "5081:5081"
     depends_on:
       - db 
+
+  optisam-acqrights-service:
+    image: optisam/account-service
+    restart: always
+    ports:
+      - "6082:6082"
+      - "5082:5082"
+    depends_on:
+      - db 
+
+  optisam-application-service:
+    image: optisam/application-service
+    restart: always
+    ports:
+      - "6083:6083"
+      - "5083:5083"
+    depends_on:
+      - db 
+
+  optisam-auth-service:
+    image: optisam/auth-service
+    restart: always
+    ports:
+      - "6084:6084"
+      - "5084:5084"
+    depends_on:
+      - db 
+
+  optisam-dps-service:
+    image: optisam/dps-service
+    restart: always
+    ports:
+      - "6085:6085"
+      - "5085:5085"
+    depends_on:
+      - db
+      - optisam-application-service
+      - optisam-product-service
+      - optisam-acqrights-service
+      - optisam-equipment-service
+
+  optisam-equipment-service:
+    image: optisam/equipment-service
+    restart: always
+    ports:
+      - "6086:6086"
+      - "5086:5086"
+    depends_on:
+      - dgraph
+
+  optisam-import-service:
+    image: optisam/import-service
+    restart: always
+    ports:
+      - "6087:6087"
+    depends_on:
+      - optisam-dps-service 
+
   optisam-license-service:
     image: optisam/license-service 
     restart: always
     ports:
-      - "8093:8090"
+      - "6088:6088"
+      - "5088:5088"
     depends_on:
       - dgraph 
-  optisam-import-service:
-    image: optisam/import-service 
+
+  optisam-metric-service:
+    image: optisam/metric-service 
     restart: always
     ports:
-      - "8094:8090"
+      - "6089:6089"
+      - "5089:5089"
+    depends_on:
+      - dgraph 
+
+  optisam-product-service:
+    image: optisam/product-service 
+    restart: always
+    ports:
+      - "6091:6091"
+      - "5091:5091"
+    depends_on:
+      - db 
+
+  optisam-report-service:
+    image: optisam/report-service 
+    restart: always
+    ports:
+      - "6092:6092"
+      - "5092:5092"
+    depends_on:
+      - dgraph
+      - db 
+
+  optisam-simulation-service:
+    image: optisam/simulation-service 
+    restart: always
+    ports:
+      - "6093:6093"
+      - "5093:5093"
     depends_on:
       - db
+      - optisam-license-service
+
   optisam-ui-service:
     image: optisam/ui-service
     restart: always
     ports:
       - "8090:8080"
+
   dgraph:
     image: optisam/dgraph:latest
     restart: on-failure

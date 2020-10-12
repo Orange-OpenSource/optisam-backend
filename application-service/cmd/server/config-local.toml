@@ -1,7 +1,7 @@
 environment = "development"
 debug = false
-grpcport = "11090"
-httpport = "11091"
+grpcport = "5083"
+httpport = "6083"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -15,8 +15,8 @@ enabled = false
 
 [instrumentation.jaeger]
 enabled = false
-collectorEndpoint = "http://192.168.99.100:14268/api/traces"
-agentEndpoint = "192.168.99.100:6831"
+collectorEndpoint = "http://localhost:14268/api/traces"
+agentEndpoint = "localhost:6831"
 # username = ""
 # password = ""
 
