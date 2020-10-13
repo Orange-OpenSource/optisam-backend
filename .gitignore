@@ -31,6 +31,7 @@ test
 
 # Docker files
 Dockerfile
+Dockerfile*
 
 # Deployment files
 **/.gitlab-ci.yml
@@ -41,3 +42,6 @@ Dockerfile
 # Configuraiton files
 **/config-*.toml
 !**/config-local.toml
+
+# sql DB scripts
+1_optisam_db.sql

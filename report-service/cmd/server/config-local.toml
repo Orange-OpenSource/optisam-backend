@@ -23,18 +23,18 @@ host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "optisam"
+name = "report"
 
 [grpcservers]
 apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "localhost:8090"
+license = "localhost:5088"
 
 [dgraph]
 hosts = [
-    "10.171.44.163:9081"
+    "localhost:9080"
 ]
 
 [iam]

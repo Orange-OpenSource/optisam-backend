@@ -2,17 +2,17 @@ version: "3.2"
 
 services:
   db:
-    image: optisam/postgres
+    image: optisam/postgres:latest
     restart: always
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_DB=optisam
-      - POSTGRES_USER=optisam
-      - POSTGRES_PASSWORD=optisam
+    # environment:
+    #   - POSTGRES_DB=optisam
+    #   - POSTGRES_USER=optisam
+    #   - POSTGRES_PASSWORD=optisam
 
   optisam-account-service:
-    image: optisam/account-service
+    image: optisam/account-service:latest
     restart: always
     ports:
       - "6081:6081"
@@ -21,7 +21,7 @@ services:
       - db 
 
   optisam-acqrights-service:
-    image: optisam/account-service
+    image: optisam/account-service:latest
     restart: always
     ports:
       - "6082:6082"
@@ -30,7 +30,7 @@ services:
       - db 
 
   optisam-application-service:
-    image: optisam/application-service
+    image: optisam/application-service:latest
     restart: always
     ports:
       - "6083:6083"
@@ -39,7 +39,7 @@ services:
       - db 
 
   optisam-auth-service:
-    image: optisam/auth-service
+    image: optisam/auth-service:latest
     restart: always
     ports:
       - "6084:6084"
@@ -48,7 +48,7 @@ services:
       - db 
 
   optisam-dps-service:
-    image: optisam/dps-service
+    image: optisam/dps-service:latest
     restart: always
     ports:
       - "6085:6085"
@@ -61,7 +61,7 @@ services:
       - optisam-equipment-service
 
   optisam-equipment-service:
-    image: optisam/equipment-service
+    image: optisam/equipment-service:latest
     restart: always
     ports:
       - "6086:6086"
@@ -70,7 +70,7 @@ services:
       - dgraph
 
   optisam-import-service:
-    image: optisam/import-service
+    image: optisam/import-service:latest
     restart: always
     ports:
       - "6087:6087"
@@ -78,7 +78,7 @@ services:
       - optisam-dps-service 
 
   optisam-license-service:
-    image: optisam/license-service 
+    image: optisam/license-service:latest
     restart: always
     ports:
       - "6088:6088"
@@ -87,7 +87,7 @@ services:
       - dgraph 
 
   optisam-metric-service:
-    image: optisam/metric-service 
+    image: optisam/metric-service:latest
     restart: always
     ports:
       - "6089:6089"
@@ -96,7 +96,7 @@ services:
       - dgraph 
 
   optisam-product-service:
-    image: optisam/product-service 
+    image: optisam/product-service:latest
     restart: always
     ports:
       - "6091:6091"
@@ -105,7 +105,7 @@ services:
       - db 
 
   optisam-report-service:
-    image: optisam/report-service 
+    image: optisam/report-service:latest
     restart: always
     ports:
       - "6092:6092"
@@ -114,18 +114,18 @@ services:
       - dgraph
       - db 
 
-  optisam-simulation-service:
-    image: optisam/simulation-service 
-    restart: always
-    ports:
-      - "6093:6093"
-      - "5093:5093"
-    depends_on:
-      - db
-      - optisam-license-service
+  # optisam-simulation-service:
+  #   image: optisam/simulation-service:latest
+  #   restart: always
+  #   ports:
+  #     - "6093:6093"
+  #     - "5093:5093"
+  #   depends_on:
+  #     - db
+  #     - optisam-license-service
 
   optisam-ui-service:
-    image: optisam/ui-service
+    image: optisam/ui-service:latest
     restart: always
     ports:
       - "8090:8080"

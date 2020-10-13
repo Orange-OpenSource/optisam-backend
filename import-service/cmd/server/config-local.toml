@@ -24,19 +24,19 @@ agentEndpoint = "localhost:6831"
 [database]
 host = "localhost"
 port = 5432
-user = "postgres"
-pass = "postgres"
-name = "postgres"
+user = "optisam"
+pass = "optisam"
+name = "dps"
 
 [grpcservers]
 apiKey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-dps = "localhost:10000"
+dps = "localhost:5085"
 
 [upload]
-uploadDir = "/home/dj"
+uploadDir = "optisam_data"
 DatafileAllowedRegex = ['''^products\.csv$''','''^products_equipments\.csv$''','''^applications_products\.csv$''',
                '''^products_acquiredRights\.csv$''',
                '''^applications\.csv$''','''^applications_instances\.csv$''','''^instances_equipments\.csv$''','''^instances_products\.csv$'''

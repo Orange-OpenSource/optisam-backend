@@ -28,9 +28,9 @@ hosts = [
 [database]
 host = "localhost"
 port = 5432
-user = "postgres"
-pass = "postgres"
-name = "postgres"
+user = "optisam"
+pass = "optisam"
+name = "product"
 
 [app.params]
 pageSize = 20

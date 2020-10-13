@@ -22,14 +22,14 @@ host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "optisam"
+name = "simulation"
 
 [grpcservers]
 apikey = "12345678"
 timeout = 10
 
 [grpcservers.address]
-license = "localhost:8090"
+license = "localhost:5088"
 
 
 [iam]

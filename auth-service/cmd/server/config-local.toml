@@ -23,4 +23,4 @@ host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "optisam"
+name = "account"

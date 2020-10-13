@@ -32,4 +32,7 @@ sortOrder = "asc"
 sortBy = "name"
 
 [pki]
+[iam]
 publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"
