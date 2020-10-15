@@ -132,16 +132,7 @@ services:
   dgraph:
     image: optisam/dgraph:latest
     restart: on-failure
-    volumes:
-      - type: volume
-        source: dgraph
-        target: /dgraph
-        volume:
-          nocopy: true
     ports:
       - 8000:8000
       - 8080:8080
       - 9080:9080
-
-volumes:
-  dgraph:
