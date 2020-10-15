@@ -38,14 +38,6 @@ docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile .
 docker push optisam/${service-name}-service:latest
 ```
 
-* Building docker image for postgres database having required schema for optisam
-
-```
-cd account-service\pkg\repository\v1\postgres\scripts
-docker build --pull -t optisam/postgres:latest -f Dockerfile .
-docker push optisam/postgres:latest
-```
-
 ### Run
 
 ##### - Run using Docker-Compose
@@ -58,7 +50,7 @@ docker-compose -f docker-compose.yml up
 ```
 ##### - Play with factory super admin user
 
-1) Once docker-compose is up and running, open optisam dashboard at http://localhost:8090
+1) Once docker-compose is up and running, open optisam dashboard at http://localhost:4200
 2) login with below superadmin credentials
     * username - admin@test.com
     * password - admin
