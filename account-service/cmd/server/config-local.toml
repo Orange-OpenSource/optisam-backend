@@ -19,7 +19,7 @@ agentEndpoint = "localhost:6831"
 # password = ""
 
 [database]
-host = "localhost"
+host = "postgres"
 port = 5432
 user = "optisam"
 pass = "optisam"

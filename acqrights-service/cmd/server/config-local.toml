@@ -24,11 +24,11 @@ agentEndpoint = "localhost:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+    "dgraph:9080"
 ]
 
 [database]
-host = "localhost"
+host = "postgres"
 port = 5432
 user = "optisam"
 pass = "optisam"
@@ -39,7 +39,7 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-product = "localhost:5091"
+product = "optisam-product-service:5091"
 
 [app.params]
 pageSize = 20

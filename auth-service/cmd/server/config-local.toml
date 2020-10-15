@@ -12,14 +12,14 @@ loglevel = -1
 enabled = false
 
 [instrumentation.jaeger]
-enabled = true
+enabled = false
 collectorEndpoint = "http://localhost:14268/api/traces"
 agentEndpoint = "localhost:6831"
 # username = ""
 # password = ""
 
 [database]
-host = "localhost"
+host = "postgres"
 port = 5432
 user = "optisam"
 pass = "optisam"

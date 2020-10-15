@@ -5,6 +5,6 @@ schema_dir = "../schema"
 batch_size = 1000
 zero = "localhost:5080"
 alpha = [
-    "localhost:9080"
+    "dgraph:9080"
    # "localhost:9081"
 ]

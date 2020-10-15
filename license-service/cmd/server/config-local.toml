@@ -22,7 +22,7 @@ agentEndpoint = "localhost:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+    "dgraph:9080"
 ]
 
 [app.params]

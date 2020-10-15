@@ -22,7 +22,7 @@ agentEndpoint = "localhost:6831"
 # password = ""
 
 [database]
-host = "localhost"
+host = "postgres"
 port = 5432
 user = "optisam"
 pass = "optisam"
@@ -33,7 +33,7 @@ apiKey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-dps = "localhost:5085"
+dps = "optisam-dps-service:5085"
 
 [upload]
 uploadDir = "optisam_data"

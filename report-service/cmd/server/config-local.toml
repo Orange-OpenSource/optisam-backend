@@ -19,7 +19,7 @@ agentEndpoint = "localhost:6831"
 # password = ""
 
 [database]
-host = "localhost"
+host = "postgres"
 port = 5432
 user = "optisam"
 pass = "optisam"
@@ -30,11 +30,11 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "localhost:5088"
+license = "optisam-license-service:5088"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+    "dgraph:9080"
 ]
 
 [iam]

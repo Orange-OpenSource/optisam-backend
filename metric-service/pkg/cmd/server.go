@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cmd
 
 import (
@@ -15,9 +9,9 @@ import (
 	"optisam-backend/common/optisam/buildinfo"
 	"optisam-backend/common/optisam/dgraph"
 	"optisam-backend/common/optisam/healthcheck"
+	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pki"
 	"optisam-backend/common/optisam/prometheus"
 	"optisam-backend/metric-service/pkg/config"
 	"optisam-backend/metric-service/pkg/protocol/grpc"
@@ -29,6 +23,7 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
+	"go.uber.org/zap"
 
 	//postgres library
 	"github.com/spf13/pflag"
@@ -192,9 +187,15 @@ func RunServer() error {
 	v1API := v1.NewMetricServiceServer(rep)
 
 	// get the verify key to validate jwt
-	verifyKey, err := pki.GetVerifyKey(cfg.PKI)
+	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
 		logger.Log.Fatal("Failed to get verify key")
+	}
+
+	// get Authorization Policy
+	authZPolicies, err := iam.NewOPA(ctx, cfg.IAM.RegoPath)
+	if err != nil {
+		logger.Log.Fatal("Failed to Load RBAC policies", zap.Error(err))
 	}
 
 	// run HTTP gateway
@@ -202,5 +203,5 @@ func RunServer() error {
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()
-	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey)
+	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey, authZPolicies, cfg.IAM.APIKey)
 }
