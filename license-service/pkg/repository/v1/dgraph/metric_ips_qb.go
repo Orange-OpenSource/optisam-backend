@@ -11,11 +11,11 @@ import (
 	"strings"
 )
 
-func buildQueryIPS(metric *v1.MetricIPSComputed, id ...string) string {
+func buildQueryIPS(metric *v1.MetricIPSComputed, scopes []string, id ...string) string {
 	q := `
 {
 	var(func:uid($ID)){
-		product.equipment @filter(eq(equipment.type,$BaseType)) {
+		product.equipment @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])) {
 		   cn as equipment.$BaseType.$NumCores
 		   cf as equipment.$BaseType.$CoreFactor
 		   comp as  math (cn*cf)
@@ -31,5 +31,6 @@ func buildQueryIPS(metric *v1.MetricIPSComputed, id ...string) string {
 		"$BaseType":   metric.BaseType.Type,
 		"$NumCores":   metric.NumCoresAttr.Name,
 		"$CoreFactor": metric.CoreFactorAttr.Name,
+		"$Scopes":     strings.Join(scopes, ","),
 	})
 }

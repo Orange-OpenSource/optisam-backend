@@ -9,8 +9,8 @@ package v1
 import (
 	"context"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -22,7 +22,7 @@ import (
 )
 
 func (s *licenseServiceServer) CreateProductAggregation(ctx context.Context, req *v1.ProductAggregation) (*v1.ProductAggregation, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
@@ -40,7 +40,7 @@ func (s *licenseServiceServer) CreateProductAggregation(ctx context.Context, req
 		var metricID string
 		var productIDs []string
 
-		metrics, err := s.licenseRepo.ListMetrices(ctx, userClaims.Socpes)
+		metrics, err := s.licenseRepo.ListMetrices(ctx, userClaims.Socpes...)
 		if err != nil {
 			logger.Log.Error("service/v1 - CreateProductAggregation - ListMetrices", zap.Error(err))
 			return nil, status.Error(codes.Internal, "cannot fetch metrics")
@@ -76,7 +76,7 @@ func (s *licenseServiceServer) CreateProductAggregation(ctx context.Context, req
 		}
 		for _, proSwid := range req.Products {
 
-			proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, proSwid, params, userClaims.Socpes)
+			proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, proSwid, params, userClaims.Socpes...)
 			if err != nil {
 				logger.Log.Error("service/v1 - CreateProductAggregation - ProductIDForSwidtag", zap.Error(err))
 				return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
@@ -103,134 +103,6 @@ func (s *licenseServiceServer) CreateProductAggregation(ctx context.Context, req
 	}
 }
 
-func (s *licenseServiceServer) UpdateProductAggregation(ctx context.Context, req *v1.UpdateProductAggregationRequest) (*v1.ProductAggregation, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unknown, "cannot find claims in context")
-	}
-	switch userClaims.Role {
-	case claims.RoleUser:
-		return nil, status.Error(codes.PermissionDenied, "user doesnot have access to update product aggregation")
-	case claims.RoleAdmin, claims.RoleSuperAdmin:
-		proAgg, err := s.licenseRepo.ProductAggregationsByName(ctx, req.Name, userClaims.Socpes)
-		if err != nil && err != repo.ErrNodeNotFound {
-			logger.Log.Error("service/v1 - UpdateProductAggregation - ProductAggregationsByName", zap.Error(err))
-			return nil, status.Error(codes.Internal, "internal error please try later")
-		} else if err != nil && err == repo.ErrNodeNotFound {
-			return nil, status.Error(codes.NotFound, "product aggregation node does not exist")
-		}
-
-		var addedProductIDs []string
-		var removedProductIDs []string
-
-		productNames := strings.Join(req.Aggregation.ProductNames, ",")
-
-		if len(req.Aggregation.AddedProducts) == 0 && len(req.Aggregation.RemovedProducts) == 0 && req.Aggregation.Name == req.Name && productNames == proAgg.Product {
-			return convertRepoToSrvProAgg(proAgg), nil
-		}
-
-		if req.Aggregation.Name != "" && req.Aggregation.Name != proAgg.Name {
-			_, err := s.licenseRepo.ProductAggregationsByName(ctx, req.Aggregation.Name, userClaims.Socpes)
-			if err != nil {
-				if err != repo.ErrNodeNotFound {
-					logger.Log.Error("service/v1 - UpdateProductAggregation - ProductAggregationsByName check aggregation for name update", zap.Error(err))
-					return nil, status.Error(codes.Internal, "internal error please try later")
-				}
-			} else {
-				return nil, status.Errorf(codes.InvalidArgument, "product aggregation with name: %s already exists", req.Aggregation.Name)
-			}
-		}
-
-		params := &repo.QueryProducts{
-			Filter: &repo.AggregateFilter{
-				Filters: []repo.Queryable{
-					&repo.Filter{
-						FilterMatchingType:  repo.EqFilter,
-						FilterKey:           "name",
-						FilterValueMultiple: stringToInterface(req.Aggregation.ProductNames),
-					},
-					&repo.Filter{
-						FilterMatchingType: repo.EqFilter,
-						FilterKey:          "editor",
-						FilterValue:        proAgg.Editor,
-					},
-				},
-			},
-			AcqFilter: productAcqRightFilter(proAgg.MetricName),
-			AggFilter: productAggregateFilter(proAgg.MetricName),
-		}
-
-		if len(req.Aggregation.AddedProducts) != 0 {
-			addedProductIDs, err = getProductIDsForSwidTags(ctx, s, req.Aggregation.AddedProducts, userClaims, params)
-			if err != nil {
-				logger.Log.Error("service/v1 - UpdateProductAggregation - ProductIDForSwidtag", zap.Error(err))
-				return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
-			}
-
-		}
-
-		if len(req.Aggregation.RemovedProducts) != 0 {
-			removedProductIDs, err = getProductIDsForSwidTags(ctx, s, req.Aggregation.RemovedProducts, userClaims, nil)
-			if err != nil {
-				logger.Log.Error("service/v1 - UpdateProductAggregation - ProductIDForSwidtag", zap.Error(err))
-				return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
-			}
-		}
-
-		repoUpdateProAgg := &repo.UpdateProductAggregationRequest{
-			Name:            req.Aggregation.Name,
-			AddedProducts:   addedProductIDs,
-			RemovedProducts: removedProductIDs,
-			Product:         strings.Join(req.Aggregation.ProductNames, ","),
-		}
-
-		if repoUpdateProAgg.Name == req.Name {
-			repoUpdateProAgg.Name = ""
-		}
-
-		err = s.licenseRepo.UpdateProductAggregation(ctx, proAgg.ID, repoUpdateProAgg, userClaims.Socpes)
-		if err != nil {
-			logger.Log.Error("service/v1 - UpdateProductAggregation - UpdateProductAggregation", zap.Error(err))
-			return nil, status.Error(codes.Internal, "cannot update product aggregation")
-		}
-		repoProAgg, err := s.licenseRepo.ProductAggregationsByName(ctx, req.Aggregation.Name, userClaims.Socpes)
-		if err != nil && err != repo.ErrNodeNotFound {
-			logger.Log.Error("service/v1 - UpdateProductAggregation - ProductAggregationsByName", zap.Error(err))
-			return nil, status.Error(codes.Internal, "cannot get product aggregation")
-		} else if err != nil && err == repo.ErrNodeNotFound {
-			return nil, status.Error(codes.NotFound, "product aggregation node does not exist")
-		}
-		return convertRepoToSrvProAgg(repoProAgg), nil
-	default:
-		logger.Log.Error("service/v1 - ProductAggregation - UpdateProductAggregation")
-		return nil, status.Error(codes.PermissionDenied, "unknown role")
-	}
-
-}
-
-func (s *licenseServiceServer) DeleteProductAggregation(ctx context.Context, req *v1.DeleteProductAggregationRequest) (*v1.ListProductAggregationResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unknown, "cannot find claims in context")
-	}
-	switch userClaims.Role {
-	case claims.RoleUser:
-		return nil, status.Error(codes.PermissionDenied, "user doesnot have access to delete product aggregation")
-	case claims.RoleAdmin, claims.RoleSuperAdmin:
-		repoProAggs, err := s.licenseRepo.DeleteProductAggregation(ctx, req.ID, userClaims.Socpes)
-		if err != nil {
-			logger.Log.Error("service/v1 - DeleteProductAggregation - DeleteProductAggregation", zap.Error(err))
-			return nil, status.Error(codes.Internal, "cannot delete product aggregation")
-		}
-		return &v1.ListProductAggregationResponse{
-			Aggregations: convertRepoToSrvProAggAll(repoProAggs),
-		}, nil
-	default:
-		logger.Log.Error("service/v1 - ProductAggregation - DeleteProductAggregation")
-		return nil, status.Error(codes.PermissionDenied, "unknown role")
-	}
-}
-
 func convertRepoToSrvProAggAll(proAggs []*repo.ProductAggregation) []*v1.ProductAggregation {
 	srvProAggs := make([]*v1.ProductAggregation, len(proAggs))
 	for i := range proAggs {
@@ -249,19 +121,6 @@ func convertRepoToSrvProAgg(proAgg *repo.ProductAggregation) *v1.ProductAggregat
 		Products:     proAgg.Products,
 		ProductsFull: convertRepoToSrvProductAll(proAgg.ProductsFull),
 	}
-}
-
-func getProductIDsForSwidTags(ctx context.Context, s *licenseServiceServer, products []string, userClaims *claims.Claims, filters *repo.QueryProducts) ([]string, error) {
-	var productIDs []string
-	for _, proSwid := range products {
-
-		proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, proSwid, filters, userClaims.Socpes)
-		if err != nil {
-			return nil, err
-		}
-		productIDs = append(productIDs, proID)
-	}
-	return productIDs, nil
 }
 
 func productAggregateFilter(notForMetric string) *repo.AggregateFilter {

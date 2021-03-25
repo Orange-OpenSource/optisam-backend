@@ -18,6 +18,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -85,15 +86,18 @@ func TestMain(m *testing.M) {
 	var dockers []*docker.DockerInfo
 	logger.Init(-1, "")
 	var err error
-
+	if err = os.RemoveAll(badgerDir); err != nil {
+		log.Println("Failed tp remove old badger dir...., err : ", err)
+	}
 	defer cleanup(dockers)
 	if cfg.Environment == "local" || cfg.Environment == "" {
-		// dockers, err = docker.Start(cfg.Dockers)
-		// if err != nil {
-		// 	log.Println("Failed to start containers, err: ", err)
-		// 	return
-		// }
-		// time.Sleep(cfg.INITWAITTIME * time.Second)
+		dockers, err = docker.Start(cfg.Dockers)
+		if err != nil {
+			log.Println("Failed to start containers, err: ", err)
+			return
+		}
+		// dockers = docker
+		time.Sleep(cfg.INITWAITTIME * time.Second)
 	}
 	conn, err := dgraph.NewDgraphConnection(cfg.Dgraph)
 	if err != nil {
@@ -110,13 +114,13 @@ func TestMain(m *testing.M) {
 
 	log.Println("LOADED ...")
 	code := m.Run()
-	cleanup(dockers)
 	os.Exit(code)
 
 }
 
 func loadDgraphData(badgerDir string) error {
 	if err := dgClient.Alter(context.Background(), &api.Operation{DropAll: true}); err != nil {
+		logger.Log.Error("Can not alter dg", zap.String("reason", err.Error()))
 		return err
 	}
 	config := loader.NewDefaultConfig()
@@ -125,36 +129,10 @@ func loadDgraphData(badgerDir string) error {
 	config.LoadMetadata = true
 	config.LoadStaticData = true
 	config.SchemaFiles = []string{
-		"schema/application.schema",
-		"schema/products.schema",
-		"schema/instance.schema",
-		"schema/equipment.schema",
-		"schema/metadata.schema",
-		"schema/acq_rights.schema",
-		"schema/metric_ops.schema",
-		"schema/metric_ips.schema",
-		"schema/metric_sps.schema",
-		"schema/metric_oracle_nup.schema",
-		"schema/metric_acs.schema",
-		"schema/editor.schema",
-		"schema/products_aggregations.schema",
-		"schema/users.schema",
+		"schema/all/all.schema",
 	}
 	config.TypeFiles = []string{
-		"schema/application.types",
-		"schema/products.types",
-		"schema/instance.types",
-		"schema/equipment.types",
-		"schema/metadata.types",
-		"schema/acq_rights.types",
-		"schema/metric_ops.types",
-		"schema/metric_ips.types",
-		"schema/metric_sps.types",
-		"schema/metric_oracle_nup.types",
-		"schema/metric_acs.types",
-		"schema/editor.types",
-		"schema/products_aggregations.types",
-		"schema/users.types",
+		"schema/all/all.types",
 	}
 	config.ScopeSkeleten = "skeletonscope"
 	config.MasterDir = "testdata"
@@ -195,6 +173,7 @@ func loadDgraphData(badgerDir string) error {
 	config.UsersFiles = []string{
 		"products_equipments_users.csv",
 	}
+	log.Printf("ddddd %+v", config)
 	return loader.Load(config)
 }
 

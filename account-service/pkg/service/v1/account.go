@@ -12,8 +12,8 @@ import (
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repo "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"unicode"
 
 	"go.uber.org/zap"
@@ -35,7 +35,7 @@ func NewAccountServiceServer(accountRepo repo.Account) v1.AccountServiceServer {
 }
 
 func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.UpdateAccountRequest) (*v1.UpdateAccountResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.UpdateAccountResponse{
 			Success: false,
@@ -120,7 +120,7 @@ func init() {
 // 3) Account can and cannot be associated with a group
 // 4) If User is associated with a group
 func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.DeleteAccountRequest) (*v1.DeleteAccountResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.DeleteAccountResponse{Success: false}, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -131,7 +131,7 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 			logger.Log.Error("service/v1 - DeleteAccount - AccountInfo", zap.Error(err))
 			return &v1.DeleteAccountResponse{
 				Success: false,
-			}, status.Error(codes.Internal, "user does not exist")
+			}, status.Error(codes.NotFound, "user does not exist")
 		}
 		logger.Log.Error("service/v1 - DeleteAccount - AccountInfo", zap.Error(err))
 		return &v1.DeleteAccountResponse{
@@ -178,7 +178,7 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 }
 
 func (s *accountServiceServer) GetAccount(ctx context.Context, req *v1.GetAccountRequest) (*v1.GetAccountResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -199,7 +199,7 @@ func (s *accountServiceServer) GetAccount(ctx context.Context, req *v1.GetAccoun
 }
 
 func (s *accountServiceServer) CreateAccount(ctx context.Context, req *v1.Account) (*v1.Account, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -214,7 +214,7 @@ func (s *accountServiceServer) CreateAccount(ctx context.Context, req *v1.Accoun
 		return nil, status.Error(codes.Internal, "cannot find user by ID")
 	}
 	if userExists {
-		return nil, status.Error(codes.InvalidArgument, "username already exists")
+		return nil, status.Error(codes.AlreadyExists, "username already exists")
 	}
 
 	if req.FirstName == "" {
@@ -278,7 +278,7 @@ func init() {
 
 // GetUsers list all the users present
 func (s *accountServiceServer) GetUsers(ctx context.Context, req *v1.GetUsersRequest) (*v1.ListUsersResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -304,7 +304,7 @@ func (s *accountServiceServer) GetUsers(ctx context.Context, req *v1.GetUsersReq
 
 // GetGroupUsers list all the users present in the group
 func (s *accountServiceServer) GetGroupUsers(ctx context.Context, req *v1.GetGroupUsersRequest) (*v1.ListUsersResponse, error) {
-	claims, ok := ctxmanage.RetrieveClaims(ctx)
+	claims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -335,7 +335,7 @@ func (s *accountServiceServer) GetGroupUsers(ctx context.Context, req *v1.GetGro
 
 // AddGroupUser adds user to the group
 func (s *accountServiceServer) AddGroupUser(ctx context.Context, req *v1.AddGroupUsersRequest) (*v1.ListUsersResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -385,7 +385,7 @@ func (s *accountServiceServer) AddGroupUser(ctx context.Context, req *v1.AddGrou
 
 // DeleteGroupUser deletes users from the group
 func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.DeleteGroupUsersRequest) (*v1.ListUsersResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -458,7 +458,7 @@ func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.Dele
 
 //ChangePassword changes user's current password
 func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -469,7 +469,7 @@ func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.Chang
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(req.Old)); err != nil {
-		return nil, status.Error(codes.Unauthenticated, "password is a mismatch")
+		return nil, status.Error(codes.InvalidArgument, "Old password is wrong")
 
 	}
 	if req.Old == req.New {

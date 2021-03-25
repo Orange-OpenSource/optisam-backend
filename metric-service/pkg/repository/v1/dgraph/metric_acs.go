@@ -27,7 +27,7 @@ type metricACS struct {
 	Value    string `json:"metric.acs.attr_value"`
 }
 
-func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricACS, attribute *v1.Attribute, scopes []string) (retmet *v1.MetricACS, retErr error) {
+func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricACS, attribute *v1.Attribute, scope string) (retmet *v1.MetricACS, retErr error) {
 	blankID := blankID(met.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -65,7 +65,13 @@ func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricAC
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricACS"),
 		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
+		},
 	}
+
 	if attribute.Type == v1.DataTypeString {
 		schemaAttribute := schemaForAttribute(met.EqType, attribute)
 		newSchemaAttr := mutateIndexForAttributeSchema(attribute, "equipment."+schemaAttribute)
@@ -78,6 +84,7 @@ func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricAC
 	}
 	mu := &api.Mutation{
 		Set: nquads,
+		//	SetNquads: []byte,
 		//	CommitNow: true,
 	}
 	txn := l.dg.NewTxn()
@@ -109,7 +116,7 @@ func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricAC
 }
 
 // ListMetricACS implements Licence ListMetricIPS function
-func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes []string) ([]*v1.MetricACS, error) {
+func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes string) ([]*v1.MetricACS, error) {
 	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricAttrCounterStandard, scopes)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricACS - listMetricWithMetricType", zap.Error(err))
@@ -131,7 +138,7 @@ func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes []string) (
 }
 
 // GetMetricConfigACS implements Metric GetMetricConfigACS function
-func (l *MetricRepository) GetMetricConfigACS(ctx context.Context, metName string, scopes []string) (*v1.MetricACS, error) {
+func (l *MetricRepository) GetMetricConfigACS(ctx context.Context, metName string, scopes string) (*v1.MetricACS, error) {
 	q := `{
 		Data(func: eq(metric.name,` + metName + `)){
 			Name: metric.name

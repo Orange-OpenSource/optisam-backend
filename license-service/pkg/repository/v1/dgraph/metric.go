@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -29,7 +30,7 @@ const (
 )
 
 // ListMetrices implements Licence ListMetrices function
-func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes []string) ([]*v1.Metric, error) {
+func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes ...string) ([]*v1.Metric, error) {
 
 	q := `   {
              Metrics(func:eq(type_name,"metric")){
@@ -58,9 +59,9 @@ func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes []string) (
 	return metricList.Metrics, nil
 }
 
-func (l *LicenseRepository) listMetricWithMetricType(ctx context.Context, metType v1.MetricType, scopes []string) (json.RawMessage, error) {
+func (l *LicenseRepository) listMetricWithMetricType(ctx context.Context, metType v1.MetricType, scopes ...string) (json.RawMessage, error) {
 	q := `{
-		Data(func: eq(metric.type,` + metType.String() + `)){
+		Data(func: eq(metric.type,` + metType.String() + `)) @filter(eq(scopes,[` + strings.Join(scopes, ",") + `])) {
 		 uid
 		 expand(_all_){
 		  uid

@@ -120,7 +120,9 @@ func (m *ListScopesResponse) Validate() error {
 	for idx, item := range m.GetScopes() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListScopesResponseValidationError{
 					field:  fmt.Sprintf("Scopes[%v]", idx),
@@ -204,7 +206,9 @@ func (m *Scope) Validate() error {
 
 	// no validation rules for CreatedBy
 
-	if v, ok := interface{}(m.GetCreatedOn()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetCreatedOn()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ScopeValidationError{
 				field:  "CreatedOn",
@@ -711,7 +715,9 @@ func (m *UpdateGroupRequest) Validate() error {
 
 	// no validation rules for GroupId
 
-	if v, ok := interface{}(m.GetGroup()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetGroup()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateGroupRequestValidationError{
 				field:  "Group",
@@ -1070,7 +1076,9 @@ func (m *ListGroupsResponse) Validate() error {
 	for idx, item := range m.GetGroups() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListGroupsResponseValidationError{
 					field:  fmt.Sprintf("Groups[%v]", idx),
@@ -1396,20 +1404,12 @@ func (m *UpdateAccountRequest) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetAccount()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetAccount()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateAccountRequestValidationError{
 				field:  "Account",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if v, ok := interface{}(m.GetUpdateMask()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpdateAccountRequestValidationError{
-				field:  "UpdateMask",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -2123,7 +2123,9 @@ func (m *GetUsersRequest) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetUserFilter()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetUserFilter()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return GetUsersRequestValidationError{
 				field:  "UserFilter",
@@ -2414,7 +2416,9 @@ func (m *ListUsersResponse) Validate() error {
 	for idx, item := range m.GetUsers() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListUsersResponseValidationError{
 					field:  fmt.Sprintf("Users[%v]", idx),

@@ -21,7 +21,7 @@ func TestMetricRepository_CreateMetricACS(t *testing.T) {
 		ctx       context.Context
 		met       *v1.MetricACS
 		attribute *v1.Attribute
-		scopes    []string
+		scopes    string
 	}
 	tests := []struct {
 		name            string
@@ -47,7 +47,7 @@ func TestMetricRepository_CreateMetricACS(t *testing.T) {
 					Type:         v1.DataTypeString,
 					IsSearchable: true,
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			wantRetmet: &v1.MetricACS{
 				Name:          "attribute.counter.standard",
@@ -93,7 +93,7 @@ func TestMetricRepository_CreateMetricACS(t *testing.T) {
 func TestMetricRepository_ListMetricACS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -107,7 +107,7 @@ func TestMetricRepository_ListMetricACS(t *testing.T) {
 			l: NewMetricRepository(dgClient),
 			args: args{
 				ctx:    context.Background(),
-				scopes: []string{"scope1"},
+				scopes: "scope1",
 			},
 			setup: func(l *MetricRepository) (retMat []*v1.MetricACS, cleanup func() error, retErr error) {
 				retMat = []*v1.MetricACS{}
@@ -120,7 +120,7 @@ func TestMetricRepository_ListMetricACS(t *testing.T) {
 					Name:         "corefactor",
 					Type:         v1.DataTypeFloat,
 					IsSearchable: true,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return nil, nil, errors.New("error while creating metric 1")
 				}
@@ -133,7 +133,7 @@ func TestMetricRepository_ListMetricACS(t *testing.T) {
 					Name:         "cpu",
 					Type:         v1.DataTypeInt,
 					IsSearchable: true,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return nil, nil, errors.New("error while creating metric 1")
 				}
@@ -171,7 +171,7 @@ func TestMetricRepository_GetMetricConfigACS(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		metName string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
@@ -197,7 +197,7 @@ func TestMetricRepository_GetMetricConfigACS(t *testing.T) {
 					Name:         "corefactor",
 					Type:         v1.DataTypeFloat,
 					IsSearchable: true,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return func() error {
 						return nil

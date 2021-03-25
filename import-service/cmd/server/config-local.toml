@@ -1,10 +1,10 @@
 environment = "development"
 debug = false
-httpport = "6087"
+httpport = "9092"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
-loglevel = -1
+loglevel = 0
 
 [instrumentation]
 addr = ":8092"
@@ -16,27 +16,29 @@ namespace = "importservice"
 [instrumentation.jaeger]
 enabled = false
 serviceName = "import-service"
-collectorEndpoint = "http://localhost:14268/api/traces"
-agentEndpoint = "localhost:6831"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [database]
-host = "postgres"
+host = "localhost"
 port = 5432
-user = "optisam"
-pass = "optisam"
-name = "dps"
+user = "postgres"
+pass = "postgres"
+name = "postgres"
 
 [grpcservers]
 apiKey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-dps = "optisam-dps-service:5085"
+dps = "localhost:10000"
+simulation = "localhost:22090"
 
 [upload]
-uploadDir = "optisam_data"
+uploadDir = "testdata"
+RawdataUploadDir = "nifi"
 DatafileAllowedRegex = ['''^products\.csv$''','''^products_equipments\.csv$''','''^applications_products\.csv$''',
                '''^products_acquiredRights\.csv$''',
                '''^applications\.csv$''','''^applications_instances\.csv$''','''^instances_equipments\.csv$''','''^instances_products\.csv$'''

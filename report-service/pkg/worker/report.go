@@ -92,7 +92,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 		var complianceObjects []string
 		for _, swidtag := range r.SwidTag {
-			resp, err := w.licenseClient.ListAcqRightsForProduct(ctx, &l_v1.ListAcquiredRightsForProductRequest{SwidTag: swidtag})
+			resp, err := w.licenseClient.ListAcqRightsForProduct(ctx, &l_v1.ListAcquiredRightsForProductRequest{SwidTag: swidtag, Scope: e.Scope})
 			if err != nil {
 				logger.Log.Error("worker - acqrights report - LicenseService - ListAcquiredRightsForProduct", zap.Error(err))
 				return fmt.Errorf("worker - acqrights report - LicenseService - ListAcquiredRightsForProduct failed")
@@ -153,14 +153,14 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 
 		// Find equipment type parents to make columns
-		parents, err := w.dgraphRepo.EquipmentTypeParents(ctx, r.EquipType)
+		parents, err := w.dgraphRepo.EquipmentTypeParents(ctx, r.EquipType, e.Scope)
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("worker - ProductEquipmentsReport -  EquipmentTypeParents", zap.Error(err))
 			return fmt.Errorf("worker - ProductEquipmentsReport - EquipmentTypeParents failed")
 		}
 
 		// Find equipmenttype attributes to make columns
-		attrs, err := w.dgraphRepo.EquipmentTypeAttrs(ctx, r.EquipType)
+		attrs, err := w.dgraphRepo.EquipmentTypeAttrs(ctx, r.EquipType, e.Scope)
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("worker - ProductEquipmentsReport -  EquipmentTypeAttrs", zap.Error(err))
 			return fmt.Errorf("worker - ProductEquipmentsReport - EquipmentTypeAttrs failed")
@@ -187,7 +187,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					jsonValues = append(jsonValues, directEquipmentString)
 					// Find all attributes value if the attribute are available
 					if attrs != nil {
-						attributeJSON, err := w.dgraphRepo.EquipmentAttributes(ctx, equipment.EquipmentID, equipment.EquipmentType, attrs)
+						attributeJSON, err := w.dgraphRepo.EquipmentAttributes(ctx, equipment.EquipmentID, equipment.EquipmentType, attrs, e.Scope)
 						if err != nil {
 							logger.Log.Error("worker - ProductEquipmentsReport -  EquipmentAttributes", zap.Error(err))
 							return fmt.Errorf("worker - ProductEquipmentsReport - EquipmentAttributes failed")

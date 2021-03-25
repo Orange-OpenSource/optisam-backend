@@ -9,7 +9,6 @@ package dgraph
 import (
 	"context"
 	"errors"
-	"fmt"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"testing"
 
@@ -20,14 +19,14 @@ func TestMetricRepository_GetMetricConfigINM(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		metName string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
 		l       *MetricRepository
 		args    args
 		setup   func(l *MetricRepository) (func() error, error)
-		want    *v1.MetricINMConfig
+		want    *v1.MetricINM
 		wantErr bool
 	}{
 		{name: "SUCCESS",
@@ -35,24 +34,24 @@ func TestMetricRepository_GetMetricConfigINM(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				metName: "inm",
+				scopes:  "scope1",
 			},
 			setup: func(l *MetricRepository) (func() error, error) {
 				met1, err := l.CreateMetricInstanceNumberStandard(context.Background(), &v1.MetricINM{
 					Name:        "inm",
 					Coefficient: 5.6,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return func() error {
 						return nil
 					}, errors.New("error while creating metric 1")
 				}
-				fmt.Println(met1.ID)
 				return func() error {
 					assert.Empty(t, deleteNode(met1.ID), "error not expected in deleting metric type")
 					return nil
 				}, nil
 			},
-			want: &v1.MetricINMConfig{
+			want: &v1.MetricINM{
 				Name:        "inm",
 				Coefficient: 5.6,
 			},
@@ -79,7 +78,7 @@ func TestMetricRepository_GetMetricConfigINM(t *testing.T) {
 	}
 }
 
-func compareMetricINM(t *testing.T, name string, exp, act *v1.MetricINMConfig) {
+func compareMetricINM(t *testing.T, name string, exp, act *v1.MetricINM) {
 	if exp == nil && act == nil {
 		return
 	}
@@ -93,4 +92,69 @@ func compareMetricINM(t *testing.T, name string, exp, act *v1.MetricINMConfig) {
 
 	assert.Equalf(t, exp.Name, act.Name, "%s.Source should be same", name)
 	assert.Equalf(t, exp.Coefficient, act.Coefficient, "%s.Coefficient should be same", name)
+}
+
+func TestMetricRepository_CreateMetricInstanceNumberStandard(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		met   *v1.MetricINM
+		scope string
+	}
+	tests := []struct {
+		name            string
+		l               *MetricRepository
+		args            args
+		wantRetmet      *v1.MetricINM
+		wantSchemaNodes []*SchemaNode
+		predicates      []string
+		wantErr         bool
+	}{
+		{
+			name: "sucess",
+			l:    NewMetricRepository(dgClient),
+			args: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+				met: &v1.MetricINM{
+					Name:        "instance.number.standard",
+					Coefficient: 1.0,
+				},
+			},
+			wantRetmet: &v1.MetricINM{
+				Name:        "instance.number.standard",
+				Coefficient: 1.0,
+			},
+			wantSchemaNodes: []*SchemaNode{
+				&SchemaNode{
+					Predicate: "metric.instancenumber.coefficient",
+					Type:      "float",
+					Index:     false,
+					Tokenizer: []string{},
+				},
+			},
+			predicates: []string{
+				"metric.instancenumber.coefficient",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotRetmet, err := tt.l.CreateMetricInstanceNumberStandard(tt.args.ctx, tt.args.met, tt.args.scope)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.CreateMetricACS() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				defer func() {
+					assert.Empty(t, deleteNode(gotRetmet.ID), "error not expected in deleting metric type")
+				}()
+				compareMetricINM(t, "MetricACS", tt.wantRetmet, gotRetmet)
+				sns, err := querySchema(tt.predicates...)
+				if !assert.Emptyf(t, err, "error is not expect while quering schema for predicates: %v", tt.predicates) {
+					return
+				}
+				compareSchemaNodeAll(t, "schemaNodes", tt.wantSchemaNodes, sns)
+			}
+		})
+	}
 }

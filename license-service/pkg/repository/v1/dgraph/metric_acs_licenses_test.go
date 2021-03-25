@@ -19,7 +19,7 @@ func TestLicenseRepository_MetricACSComputedLicenses(t *testing.T) {
 		ctx    context.Context
 		id     string
 		mat    *v1.MetricACSComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {
@@ -80,7 +80,7 @@ func TestLicenseRepository_MetricACSComputedLicensesAgg(t *testing.T) {
 		name   string
 		metric string
 		mat    *v1.MetricACSComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {

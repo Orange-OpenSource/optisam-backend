@@ -7,8 +7,6 @@
 package grpc
 
 import (
-	"optisam-backend/common/optisam/ctxmanage"
-	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/opa"
 
 	"github.com/open-policy-agent/opa/rego"
@@ -20,17 +18,15 @@ import (
 
 func authorizationServerInterceptor(p *rego.PreparedEvalQuery) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+		userClaims, ok := RetrieveClaims(ctx)
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, "invalid claims")
 		}
 		// Authorize
 		authorized, err := opa.EvalAuthZ(ctx, p, opa.AuthzInput{Role: string(userClaims.Role), MethodFullName: info.FullMethod})
 		if err != nil || !authorized {
-			logger.Log.Error("User Unauthorized to access with Role")
 			return nil, status.Errorf(codes.PermissionDenied, "Access to %s denied: %v", info.FullMethod, err)
 		}
-		logger.Log.Sugar().Infof("User Authorized to access %s with Role %s", info.FullMethod, string(userClaims.Role))
 		return handler(ctx, req)
 
 	}

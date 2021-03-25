@@ -11,46 +11,7 @@ import (
 	"strings"
 )
 
-// Example Query
-/*{
-	var(func:uid(0x11190)){
-	   ~instance.product  {
-		   prodIds as uid
-		   instance.id
-		}
-	}
-
-   var(func:uid(prodIds)) @filter(eq(instance.environment,Production)) {
-	  instance.equipment @filter(eq(equipment.type,Server)) {
-		equipIDs as uid
-	  }
-	}
-
-	var(func:uid(prodIds)) @filter( NOT eq(instance.environment,Production)) {
-		instance.equipment @filter(eq(equipment.type,Server)) {
-		  equipIDs_non_prod as uid
-		}
-	}
-
-	var(func:uid(equipIDs)){
-		cn as equipment.Server.ServerCoresNumber
-		cf as equipment.Server.OracleCoreFactor
-		comp as  math (cn*cf)
-	}
-
-	var(func:uid(equipIDs_non_prod)){
-		cn_non_prod as equipment.Server.ServerCoresNumber
-		cf_non_prod as equipment.Server.OracleCoreFactor
-		comp_non_prod as  math (cn_non_prod*cf_non_prod)
-	}
-
-	Licenses(){
-	   Licenses: sum(val(comp))
-	   LicensesNonProd: sum(val(comp_non_prod))
-	}
-}*/
-
-func queryBuilderSPS(metric *v1.MetricSPSComputed, id ...string) string {
+func queryBuilderSPS(metric *v1.MetricSPSComputed, scopes []string, id ...string) string {
 	q := `
 	{
 		var(func:uid($ID)){
@@ -60,14 +21,14 @@ func queryBuilderSPS(metric *v1.MetricSPSComputed, id ...string) string {
 			}
 		}
 	  
-	   var(func:uid(prodIds)) @filter(eq(instance.environment,Production)) {
-		  instance.equipment @filter(eq(equipment.type,$BaseType)) {
+	   var(func:uid(prodIds)) @filter(eq(instance.environment,Production) AND eq(scopes,[$Scopes])) {
+		  instance.equipment @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])) {
 			equipIDs as uid 
 		  }
 		}
 
-		var(func:uid(prodIds)) @filter( NOT eq(instance.environment,Production)) {
-			instance.equipment @filter(eq(equipment.type,$BaseType)) {
+		var(func:uid(prodIds)) @filter( NOT eq(instance.environment,Production) AND eq(scopes,[$Scopes])) {
+			instance.equipment @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])) {
 			  equipIDs_non_prod as uid 
 			}
 		}
@@ -98,5 +59,6 @@ func queryBuilderSPS(metric *v1.MetricSPSComputed, id ...string) string {
 		"$BaseType":   metric.BaseType.Type,
 		"$NumCores":   metric.NumCoresAttr.Name,
 		"$CoreFactor": metric.CoreFactorAttr.Name,
+		"$Scopes":     strings.Join(scopes, ","),
 	})
 }

@@ -32,7 +32,7 @@ func (p predProductAgg) String() string {
 }
 
 // ProductAggregationDetails ...
-func (lr *LicenseRepository) ProductAggregationDetails(ctx context.Context, name string, params *v1.QueryProductAggregations, scopes []string) (*v1.ProductAggregation, error) {
+func (lr *LicenseRepository) ProductAggregationDetails(ctx context.Context, name string, params *v1.QueryProductAggregations, scopes ...string) (*v1.ProductAggregation, error) {
 	q := `
 	{
 		ID as var(func:eq(product_aggregation.name,"` + name + `"))@cascade` + agregateFilters(scopeFilters(scopes)) + `{

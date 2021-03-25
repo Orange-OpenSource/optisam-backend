@@ -20,4 +20,10 @@ type Workerqueue interface {
 	PushJob(ctx context.Context, j job.Job, workerName string) (int32, error)
 	ResumePendingJobs(ctx context.Context) error
 	GetRetries() int32
+	GetLength() int32
+	GetCapacity() int32
+	Shrink()
+	Grow()
+	PopJob() JobChan
+	GetIthLength(int) int32
 }

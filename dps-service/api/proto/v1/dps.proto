@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "v1";
 
-package v1;
+package optisam.dps.v1;
 
 import "google/api/annotations.proto";
 import "validate/validate.proto";
@@ -16,6 +16,19 @@ service DpsService {
       body : "*"
     };
   }
+
+  rpc DashboardQualityOverview(DashboardQualityOverviewRequest) returns (DashboardQualityOverviewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/quality"
+    };
+  }
+
+  rpc DashboardDataFailureRate(DataFailureRateRequest) returns (DataFailureRateResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/quality/datafailurerate"
+    };
+  }
+
   rpc ListUploadData(ListUploadRequest) returns (ListUploadResponse) {
     option (google.api.http) = {
       get : "/api/v1/uploads/data"
@@ -26,16 +39,92 @@ service DpsService {
       get : "/api/v1/uploads/metadata"
     };
   }
+  rpc ListUploadGlobalData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/uploads/globaldata"
+    };
+  }
+  rpc ListFailedRecord(ListFailedRequest) returns (ListFailedResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/failed/data"
+    };
+  } 
+
+  rpc ListFailureReasonsRatio(ListFailureReasonRequest) returns (ListFailureReasonResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/quality/failurereasonsratio"
+    };
+  }
+
+  rpc DeleteInventory(DeleteInventoryRequest) returns (DeleteInventoryResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/data/{scope}"
+    };
+  } 
 }
+
+
+
+message ListFailureReasonRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message ListFailureReasonResponse{
+  map <string,float> failureReasons = 1;
+}
+
+message DataFailureRateRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DataFailureRateResponse{
+  float failureRate = 1;
+}
+
+message DashboardQualityOverviewRequest{
+  enum Frequency {
+    DAILY = 0;
+    MONTHLY = 1;
+  }
+  Frequency frequency =1 [(validate.rules).enum = {in: [0,1]}];
+  int32  noOfDataPoints = 2 [(validate.rules).int32.lte = 12]; 
+  string scope = 3  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+
+message DashboardQualityOverviewResponse{
+  repeated float applications =1;
+  repeated float products =2;
+  repeated float equipments =3;
+  repeated float acqrights =4;
+}
+
 message NotifyUploadRequest {
   string scope = 1;
-  string type = 2 [(validate.rules).string = {in : [ "data", "metadata" ]}];
+  string type = 2 [(validate.rules).string = {in : [ "data", "metadata","globaldata" ]}];
   int32 upload_id = 3;
   string uploaded_by = 4;
   repeated string files = 5 [ (validate.rules).repeated .min_items = 1 ];
+  bool is_delete_old_inventory = 6 ;
 }
 
 message NotifyUploadResponse { bool success = 1; }
+
+message ListFailedRequest {
+  string scope = 1 [(validate.rules).string.min_len = 1];
+  int32 upload_id = 2 [(validate.rules).int32.gt = 0];
+  int32 page_num = 3 [(validate.rules).int32.gte = 1];
+  int32 page_size = 4 [(validate.rules).int32.gte = 1];
+}
+
+message ListFailedResponse { 
+  repeated FailedRecord  failedRecords = 1;
+  int32 totalRecords = 2;
+}
+
+message FailedRecord {
+  map <string,string> data = 1;
+  string reason = 2;
+}
 
 message ListUploadRequest {
   int32 page_num = 1 [
@@ -50,11 +139,10 @@ message ListUploadRequest {
   ];
   enum SortBy {
     upload_id = 0;
-    scope = 1;
-    file_name = 2;
-    status = 3;
-    uploaded_by = 4;
-    uploaded_on = 5;
+    file_name = 1;
+    status = 2;
+    uploaded_by = 3;
+    uploaded_on = 4;
   }
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   enum SortOrder {
@@ -62,6 +150,7 @@ message ListUploadRequest {
     desc = 1;
   }
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  string scope = 5  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message ListUploadResponse {
@@ -79,5 +168,13 @@ message Upload {
   int32 total_records = 7;
   int32 success_records = 8;
   int32 failed_records = 9;
-  int32 invalid_records = 10;
+  string comments = 10;
+}
+
+message DeleteInventoryRequest {
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DeleteInventoryResponse { 
+  bool success = 1; 
 }

@@ -42,6 +42,235 @@ var (
 // define the regex for a UUID once up-front
 var _equipment_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on EquipmentsPerEquipmentTypeRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *EquipmentsPerEquipmentTypeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_EquipmentsPerEquipmentTypeRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return EquipmentsPerEquipmentTypeRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// EquipmentsPerEquipmentTypeRequestValidationError is the validation error
+// returned by EquipmentsPerEquipmentTypeRequest.Validate if the designated
+// constraints aren't met.
+type EquipmentsPerEquipmentTypeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EquipmentsPerEquipmentTypeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EquipmentsPerEquipmentTypeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EquipmentsPerEquipmentTypeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EquipmentsPerEquipmentTypeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EquipmentsPerEquipmentTypeRequestValidationError) ErrorName() string {
+	return "EquipmentsPerEquipmentTypeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EquipmentsPerEquipmentTypeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEquipmentsPerEquipmentTypeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EquipmentsPerEquipmentTypeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EquipmentsPerEquipmentTypeRequestValidationError{}
+
+var _EquipmentsPerEquipmentTypeRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on EquipmentsPerEquipmentTypeResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *EquipmentsPerEquipmentTypeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetTypesEquipments() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return EquipmentsPerEquipmentTypeResponseValidationError{
+					field:  fmt.Sprintf("TypesEquipments[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// EquipmentsPerEquipmentTypeResponseValidationError is the validation error
+// returned by EquipmentsPerEquipmentTypeResponse.Validate if the designated
+// constraints aren't met.
+type EquipmentsPerEquipmentTypeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EquipmentsPerEquipmentTypeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EquipmentsPerEquipmentTypeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EquipmentsPerEquipmentTypeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EquipmentsPerEquipmentTypeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EquipmentsPerEquipmentTypeResponseValidationError) ErrorName() string {
+	return "EquipmentsPerEquipmentTypeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e EquipmentsPerEquipmentTypeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEquipmentsPerEquipmentTypeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EquipmentsPerEquipmentTypeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EquipmentsPerEquipmentTypeResponseValidationError{}
+
+// Validate checks the field values on TypeEquipments with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *TypeEquipments) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for EquipType
+
+	// no validation rules for NumEquipments
+
+	return nil
+}
+
+// TypeEquipmentsValidationError is the validation error returned by
+// TypeEquipments.Validate if the designated constraints aren't met.
+type TypeEquipmentsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TypeEquipmentsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TypeEquipmentsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TypeEquipmentsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TypeEquipmentsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TypeEquipmentsValidationError) ErrorName() string { return "TypeEquipmentsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TypeEquipmentsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTypeEquipments.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TypeEquipmentsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TypeEquipmentsValidationError{}
+
 // Validate checks the field values on UpsertMetadataRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -53,6 +282,14 @@ func (m *UpsertMetadataRequest) Validate() error {
 	// no validation rules for MetadataType
 
 	// no validation rules for MetadataSource
+
+	if utf8.RuneCountInString(m.GetScope()) != 3 {
+		return UpsertMetadataRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be 3 runes",
+		}
+
+	}
 
 	return nil
 }
@@ -190,7 +427,13 @@ func (m *UpsertEquipmentRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Scope
+	if utf8.RuneCountInString(m.GetScope()) != 3 {
+		return UpsertEquipmentRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be 3 runes",
+		}
+
+	}
 
 	// no validation rules for EqType
 
@@ -364,6 +607,26 @@ func (m *ListEquipmentsForProductAggregationRequest) Validate() error {
 
 	// no validation rules for SearchParams
 
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentsForProductAggregationRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentsForProductAggregationRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
 	return nil
 }
 
@@ -455,6 +718,26 @@ func (m *ListEquipmentsForProductRequest) Validate() error {
 	// no validation rules for SortOrder
 
 	// no validation rules for SearchParams
+
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentsForProductRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentsForProductRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
 
 	return nil
 }
@@ -550,6 +833,26 @@ func (m *ListEquipmentChildrenRequest) Validate() error {
 
 	// no validation rules for SearchParams
 
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentChildrenRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentChildrenRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
 	return nil
 }
 
@@ -621,6 +924,26 @@ func (m *ListEquipmentParentsRequest) Validate() error {
 	// no validation rules for TypeId
 
 	// no validation rules for EquipId
+
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentParentsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentParentsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
 
 	return nil
 }
@@ -763,6 +1086,26 @@ func (m *GetEquipmentRequest) Validate() error {
 	// no validation rules for TypeId
 
 	// no validation rules for EquipId
+
+	if len(m.GetScopes()) != 1 {
+		return GetEquipmentRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return GetEquipmentRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
 
 	return nil
 }
@@ -930,6 +1273,26 @@ func (m *ListEquipmentsRequest) Validate() error {
 				cause:  err,
 			}
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
 	}
 
 	return nil
@@ -1157,6 +1520,151 @@ var _ interface {
 	ErrorName() string
 } = ListEquipmentsResponseValidationError{}
 
+// Validate checks the field values on DropEquipmentDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropEquipmentDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DropEquipmentDataRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DropEquipmentDataRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DropEquipmentDataRequestValidationError is the validation error returned by
+// DropEquipmentDataRequest.Validate if the designated constraints aren't met.
+type DropEquipmentDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropEquipmentDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropEquipmentDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropEquipmentDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropEquipmentDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropEquipmentDataRequestValidationError) ErrorName() string {
+	return "DropEquipmentDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropEquipmentDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropEquipmentDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropEquipmentDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropEquipmentDataRequestValidationError{}
+
+var _DropEquipmentDataRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DropEquipmentDataResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropEquipmentDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DropEquipmentDataResponseValidationError is the validation error returned by
+// DropEquipmentDataResponse.Validate if the designated constraints aren't met.
+type DropEquipmentDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropEquipmentDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropEquipmentDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropEquipmentDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropEquipmentDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropEquipmentDataResponseValidationError) ErrorName() string {
+	return "DropEquipmentDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropEquipmentDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropEquipmentDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropEquipmentDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropEquipmentDataResponseValidationError{}
+
 // Validate checks the field values on UpdateEquipmentTypeRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1180,6 +1688,26 @@ func (m *UpdateEquipmentTypeRequest) Validate() error {
 					cause:  err,
 				}
 			}
+		}
+
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return UpdateEquipmentTypeRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return UpdateEquipmentTypeRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
 		}
 
 	}
@@ -1243,6 +1771,169 @@ var _ interface {
 	ErrorName() string
 } = UpdateEquipmentTypeRequestValidationError{}
 
+// Validate checks the field values on DeleteEquipmentTypeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteEquipmentTypeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DeleteEquipmentTypeRequest_EquipType_Pattern.MatchString(m.GetEquipType()) {
+		return DeleteEquipmentTypeRequestValidationError{
+			field:  "EquipType",
+			reason: "value does not match regex pattern \"^[-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetScope()) != 3 {
+		return DeleteEquipmentTypeRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be 3 runes",
+		}
+
+	}
+
+	if !_DeleteEquipmentTypeRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DeleteEquipmentTypeRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"^[A-Z]+$\"",
+		}
+	}
+
+	return nil
+}
+
+// DeleteEquipmentTypeRequestValidationError is the validation error returned
+// by DeleteEquipmentTypeRequest.Validate if the designated constraints aren't met.
+type DeleteEquipmentTypeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteEquipmentTypeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteEquipmentTypeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteEquipmentTypeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteEquipmentTypeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteEquipmentTypeRequestValidationError) ErrorName() string {
+	return "DeleteEquipmentTypeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteEquipmentTypeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteEquipmentTypeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteEquipmentTypeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteEquipmentTypeRequestValidationError{}
+
+var _DeleteEquipmentTypeRequest_EquipType_Pattern = regexp.MustCompile("^[-_A-Za-z0-9]+$")
+
+var _DeleteEquipmentTypeRequest_Scope_Pattern = regexp.MustCompile("^[A-Z]+$")
+
+// Validate checks the field values on DeleteEquipmentTypeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteEquipmentTypeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DeleteEquipmentTypeResponseValidationError is the validation error returned
+// by DeleteEquipmentTypeResponse.Validate if the designated constraints
+// aren't met.
+type DeleteEquipmentTypeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteEquipmentTypeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteEquipmentTypeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteEquipmentTypeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteEquipmentTypeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteEquipmentTypeResponseValidationError) ErrorName() string {
+	return "DeleteEquipmentTypeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteEquipmentTypeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteEquipmentTypeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteEquipmentTypeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteEquipmentTypeResponseValidationError{}
+
 // Validate checks the field values on EquipmentMetadataRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1258,6 +1949,26 @@ func (m *EquipmentMetadataRequest) Validate() error {
 			field:  "Attributes",
 			reason: "value must be one of the defined enum values",
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return EquipmentMetadataRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return EquipmentMetadataRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
 	}
 
 	return nil
@@ -1332,6 +2043,26 @@ func (m *ListEquipmentMetadataRequest) Validate() error {
 			field:  "Type",
 			reason: "value must be one of the defined enum values",
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListEquipmentMetadataRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListEquipmentMetadataRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
 	}
 
 	return nil
@@ -1489,6 +2220,26 @@ func (m *EquipmentMetadata) Validate() error {
 
 	// no validation rules for Name
 
+	if len(m.GetScopes()) != 1 {
+		return EquipmentMetadataValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return EquipmentMetadataValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
 	return nil
 }
 
@@ -1554,6 +2305,26 @@ var _ interface {
 func (m *EquipmentTypesRequest) Validate() error {
 	if m == nil {
 		return nil
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return EquipmentTypesRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return EquipmentTypesRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
 	}
 
 	return nil
@@ -1733,6 +2504,26 @@ func (m *EquipmentType) Validate() error {
 					cause:  err,
 				}
 			}
+		}
+
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return EquipmentTypeValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return EquipmentTypeValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
 		}
 
 	}

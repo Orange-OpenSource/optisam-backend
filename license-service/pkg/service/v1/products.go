@@ -8,8 +8,10 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"log"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
 
@@ -22,16 +24,23 @@ import (
 
 // ListAcqRightsForProduct implements license service ListAcqRightsForProduct function
 func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req *v1.ListAcquiredRightsForProductRequest) (*v1.ListAcquiredRightsForProductResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	ID, prodRights, err := s.licenseRepo.ProductAcquiredRights(ctx, req.SwidTag, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ListAcqRightsForProduct", zap.String("reason", "ScopeError"))
+		return nil, status.Error(codes.Unknown, "ScopeValidationError")
+	}
+	ID, prodRights, err := s.licenseRepo.ProductAcquiredRights(ctx, req.SwidTag, req.GetScope())
 	if err != nil {
+		if errors.Is(err, repo.ErrNodeNotFound) {
+			return &v1.ListAcquiredRightsForProductResponse{}, nil
+		}
 		return nil, status.Error(codes.Internal, "cannot fetch product acquired rights")
 	}
 	log.Println("UID of Product : ", ID)
-	res, err := s.licenseRepo.GetProductInformation(ctx, req.SwidTag, userClaims.Socpes)
+	res, err := s.licenseRepo.GetProductInformation(ctx, req.SwidTag, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to get Products -> "+err.Error())
 	}
@@ -41,19 +50,21 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 		numEquips = res.Products[0].NumofEquipments
 	}
 
-	metrics, err := s.licenseRepo.ListMetrices(ctx, userClaims.Socpes)
+	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil && err != repo.ErrNoData {
 		return nil, status.Error(codes.Internal, "cannot fetch metric OPS")
 
 	}
 
-	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 
 	}
 	prodAcqRights := make([]*v1.ProductAcquiredRights, len(prodRights))
 	ind := 0
+	input := make(map[string]interface{})
+	input[PROD_ID] = ID
 	for i, acqRight := range prodRights {
 		prodAcqRights[i] = &v1.ProductAcquiredRights{
 			SKU:            acqRight.SKU,
@@ -71,73 +82,18 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 			logger.Log.Error("service/v1 - ListAcqRightsForProduct - no equipments linked with product")
 			continue
 		}
-
-		computedLicenses := uint64(0)
-		switch metrics[ind].Type {
-		case repo.MetricOPSOracleProcessorStandard:
-			cal := func(mat *repo.MetricOPSComputed) (uint64, error) {
-				return s.licenseRepo.MetricOPSComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			computedLicenses, err = s.computedLicensesOPS(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - ", zap.String("reason", err.Error()))
-				continue
-			}
-		case repo.MetricSPSSagProcessorStandard:
-			cal := func(mat *repo.MetricSPSComputed) (uint64, uint64, error) {
-				return s.licenseRepo.MetricSPSComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			licensesProd, licensesNonProd, err := s.computedLicensesSPS(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - MetricSPSSagProcessorStandard ", zap.String("reason", err.Error()))
-				continue
-			}
-			if licensesProd > licensesNonProd {
-				computedLicenses = licensesProd
-			} else {
-				computedLicenses = licensesNonProd
-			}
-		case repo.MetricIPSIbmPvuStandard:
-			cal := func(mat *repo.MetricIPSComputed) (uint64, error) {
-				return s.licenseRepo.MetricIPSComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			computedLicenses, err = s.computedLicensesIPS(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - MetricIPSIbmPvuStandard", zap.String("reason", err.Error()))
-				continue
-			}
-		case repo.MetricOracleNUPStandard:
-			cal := func(mat *repo.MetricNUPComputed) (uint64, error) {
-				return s.licenseRepo.MetricNUPComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			computedLicenses, err = s.computedLicensesNUP(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - ", zap.String("reason", err.Error()))
-				continue
-			}
-		case repo.MetricAttrCounterStandard:
-			cal := func(mat *repo.MetricACSComputed) (uint64, error) {
-				return s.licenseRepo.MetricACSComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			computedLicenses, err = s.computedLicensesACS(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - MetricAttrCounterStandard", zap.String("reason", err.Error()))
-				continue
-			}
-		case repo.MetricInstanceNumberStandard:
-			cal := func(mat *repo.MetricINMComputed) (uint64, error) {
-				return s.licenseRepo.MetricINMComputedLicenses(ctx, ID, mat, userClaims.Socpes)
-			}
-			computedLicenses, err = s.computedLicensesINM(ctx, eqTypes, metrics[ind].Name, cal)
-			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - MetricInstanceNumberStandard", zap.String("reason", err.Error()))
-				continue
-			}
-		default:
-			logger.Log.Error("service/v1 - ListAcqRightsForProduct - metric type doesnt match - " + string(metrics[ind].Type))
+		input[METRIC_NAME] = metrics[ind].Name
+		input[SCOPES] = []string{req.GetScope()}
+		input[IS_AGG] = false
+		if _, ok := MetricCalculation[metrics[ind].Type]; !ok {
+			return nil, status.Error(codes.Internal, "this metricType is not supported")
+		}
+		resp, err := MetricCalculation[metrics[ind].Type](s, ctx, eqTypes, input)
+		if err != nil {
+			logger.Log.Error("service/v1 - Failed ListAcqRightsForProduct  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
 			continue
 		}
-
+		computedLicenses := resp[COMPUTED_LICENCES].(uint64)
 		delta := int32(acqRight.AcqLicenses) - int32(computedLicenses)
 
 		prodAcqRights[i].NumCptLicences = int32(computedLicenses)

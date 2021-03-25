@@ -22,7 +22,7 @@ import (
 func TestMetricRepository_ListMetrices(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -35,7 +35,8 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 		{name: "SUCCESS",
 			l: NewMetricRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: "Scope1",
 			},
 			setup: func() (func() error, error) {
 				// TODO create two nodes for metrics
@@ -46,6 +47,11 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 							Subject:     blankID("met1"),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metric"),
+						},
+						&api.NQuad{
+							Subject:     blankID("met1"),
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
 						},
 						&api.NQuad{
 							Subject:     blankID("met1"),
@@ -71,6 +77,11 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 							Subject:     blankID("met2"),
 							Predicate:   "metric.type",
 							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						&api.NQuad{
+							Subject:     blankID("met2"),
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
 						},
 					},
 				}

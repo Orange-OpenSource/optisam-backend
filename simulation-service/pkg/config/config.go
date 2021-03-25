@@ -157,7 +157,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("database.host")
 	v.SetDefault("database.port", 5432)
 	_ = v.BindEnv("database.user")
-	_ = v.BindEnv("database.pass")
+	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 	_ = v.BindEnv("database.name")
 
 	// PKI configuraiton

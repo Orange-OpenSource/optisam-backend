@@ -8,7 +8,8 @@ package v1
 
 import "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/common/optisam/Dps/repository/v1 Dps
+//go:generate mockgen -destination=dbmock/mock.go -package=mock optisam-backend/dps-service/pkg/repository/v1 Dps
+//go:generate mockgen -destination=queuemock/mock.go -package=mock optisam-backend/common/optisam/workerqueue  Workerqueue
 type Dps interface {
 	db.Querier
 }

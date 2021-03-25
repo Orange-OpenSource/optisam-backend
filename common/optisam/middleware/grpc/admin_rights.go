@@ -8,7 +8,6 @@ package grpc
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	os_logger "optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/token/claims"
 
@@ -20,7 +19,7 @@ import (
 type AdminRightsRequiredFunc func(fullMethod string) bool
 
 func validateAdmin(ctx context.Context) error {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := RetrieveClaims(ctx)
 	if !ok {
 		os_logger.Log.Error("ChaniedWithAdminFilter - validateAdmin - can not retrieve claims from context")
 		return status.Error(codes.Unknown, "cannot find claims in context")

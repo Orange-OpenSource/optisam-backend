@@ -10,7 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -145,10 +145,10 @@ func (p *queryMatcherApplicationsForProduct) String() string {
 }
 
 func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"A", "B"},
+		Socpes: []string{"A"},
 	})
 	var mockCtrl *gomock.Controller
 	var rep repo.License
@@ -164,11 +164,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 		want    *v1.ListAcquiredRightsForProductResponse
 		wantErr bool
 	}{
-		{name: "SUCCESS - computelicenseOPS",
+		{
+			name: "SUCCESS - computelicenseOPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -176,7 +178,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -200,7 +202,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -208,7 +210,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -253,9 +255,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -289,8 +291,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(8), nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(8), nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -315,7 +317,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "IMB",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(6), nil)
+				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(6), nil)
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -349,11 +351,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - no equipments",
+		{
+			name: "SUCCESS - no equipments",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -361,7 +365,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -385,7 +389,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 0,
@@ -393,7 +397,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -438,7 +442,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
@@ -467,21 +471,25 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "FAILURE - can not retrieve claims",
+		{
+			name: "FAILURE - can not retrieve claims",
 			args: args{
 				ctx: context.Background(),
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup:   func() {},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch products acquired rights",
+		{
+			name: "FAILURE - cannot fetch products acquired rights",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -489,16 +497,18 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("", nil, errors.New(""))
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("", nil, errors.New(""))
 
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch products",
+		{
+			name: "SUCCESS - Acquired Rights for Product not found",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -506,7 +516,27 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("", nil, repo.ErrNodeNotFound)
+
+			},
+			wantErr: false,
+			want:    &v1.ListAcquiredRightsForProductResponse{},
+		},
+		{
+			name: "FAILURE - cannot fetch products",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcquiredRightsForProductRequest{
+					SwidTag: "P1",
+					Scope:   "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -523,16 +553,18 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch metrices  list",
+		{
+			name: "FAILURE - cannot fetch metrices  list",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -540,7 +572,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -557,7 +589,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -565,16 +597,18 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test srror"))
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test srror"))
 
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch equipment types",
+		{
+			name: "FAILURE - cannot fetch equipment types",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -582,7 +616,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -598,14 +632,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						AvgUnitPrice: 5,
 					},
 				}, nil)
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -616,16 +650,18 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New(""))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New(""))
 
 			},
 			wantErr: true,
 		},
-		{name: "SUCCESS - computelicenseOPS failed- cannot fetch metric OPS",
+		{
+			name: "SUCCESS - computelicenseOPS failed- cannot fetch metric OPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -633,7 +669,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -643,14 +679,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -695,8 +731,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
@@ -711,11 +747,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- metric name doesnot exist",
+		{
+			name: "SUCCESS - computelicenseOPS failed- metric name doesnot exist",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -723,7 +761,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -733,14 +771,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -785,8 +823,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name: "IMB",
 					},
@@ -805,11 +843,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- parent hierarchy not found",
+		{
+			name: "SUCCESS - computelicenseOPS failed- parent hierarchy not found",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -817,7 +857,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -827,14 +867,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -879,8 +919,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -919,11 +959,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- cannot find base level equipment",
+		{
+			name: "SUCCESS - computelicenseOPS failed- cannot find base level equipment",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -931,7 +973,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -941,14 +983,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -993,8 +1035,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1032,11 +1074,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- cannot find aggregate level equipment",
+		{
+			name: "SUCCESS - computelicenseOPS failed- cannot find aggregate level equipment",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1044,7 +1088,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1054,14 +1098,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1106,9 +1150,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1146,11 +1190,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- cannot find end level equipment",
+		{
+			name: "SUCCESS - computelicenseOPS failed- cannot find end level equipment",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1158,7 +1204,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1168,7 +1214,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -1176,7 +1222,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1220,8 +1266,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1260,11 +1306,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- levels are not in valid order",
+		{
+			name: "SUCCESS - computelicenseOPS failed- levels are not in valid order",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1272,7 +1320,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1281,14 +1329,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						AvgUnitPrice: 4,
 					},
 				}, nil)
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1333,8 +1381,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1372,11 +1420,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- numOfcores attribute not valid/exists",
+		{
+			name: "SUCCESS - computelicenseOPS failed- numOfcores attribute not valid/exists",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1384,7 +1434,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1394,14 +1444,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1442,8 +1492,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1481,11 +1531,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- numOfcpu attribute not valid/exists",
+		{
+			name: "SUCCESS - computelicenseOPS failed- numOfcpu attribute not valid/exists",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1493,7 +1545,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1503,14 +1555,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1552,8 +1604,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1592,11 +1644,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- corefactor attribute not valid/exists",
+		{
+			name: "SUCCESS - computelicenseOPS failed- corefactor attribute not valid/exists",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1604,7 +1658,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1614,14 +1668,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1662,8 +1716,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1701,11 +1755,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseOPS failed- cannot compute metric licenses",
+		{
+			name: "SUCCESS - computelicenseOPS failed- cannot compute metric licenses",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1713,7 +1769,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1723,14 +1779,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1775,8 +1831,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricOPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricOPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -1809,7 +1865,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(0), errors.New(""))
+				mockRepo.EXPECT().MetricOPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(0), errors.New(""))
 
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
@@ -1824,11 +1880,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS - licenseProd<=licenseNonProd",
+		{
+			name: "SUCCESS - computeLicenseSPS - licenseProd<=licenseNonProd",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -1836,7 +1894,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -1860,7 +1918,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -1868,7 +1926,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -1913,9 +1971,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -1938,8 +1996,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(8), uint64(8), nil)
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(8), uint64(8), nil)
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -1956,7 +2014,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "IMB",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(6), uint64(6), nil)
+				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(6), uint64(6), nil)
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -1990,11 +2048,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS - licenseProd>licenseNonProd",
+		{
+			name: "SUCCESS - computeLicenseSPS - licenseProd>licenseNonProd",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2002,7 +2062,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2026,7 +2086,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2034,7 +2094,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2079,9 +2139,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2104,8 +2164,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(8), uint64(6), nil)
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(8), uint64(6), nil)
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2122,7 +2182,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "IMB",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(6), uint64(4), nil)
+				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(6), uint64(4), nil)
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -2156,11 +2216,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseSPS failed - cannot fetch metric SPS",
+		{
+			name: "SUCCESS - computelicenseSPS failed - cannot fetch metric SPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2168,7 +2230,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2178,14 +2240,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2230,8 +2292,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
@@ -2246,11 +2308,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseSPS failed - metric name doesnot exist",
+		{
+			name: "SUCCESS - computelicenseSPS failed - metric name doesnot exist",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2258,7 +2322,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2268,14 +2332,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2320,8 +2384,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name: "IMB",
 					},
@@ -2340,11 +2404,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS failed- cannot find base level equipment type",
+		{
+			name: "SUCCESS - computeLicenseSPS failed- cannot find base level equipment type",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2352,7 +2418,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2362,7 +2428,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2370,7 +2436,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2414,9 +2480,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2446,11 +2512,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS failed- numofcores attribute doesnt exits",
+		{
+			name: "SUCCESS - computeLicenseSPS failed- numofcores attribute doesnt exits",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2458,7 +2526,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2468,7 +2536,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2476,7 +2544,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2517,9 +2585,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2549,11 +2617,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS failed- coreFactor attribute doesnt exits",
+		{
+			name: "SUCCESS - computeLicenseSPS failed- coreFactor attribute doesnt exits",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2561,7 +2631,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2571,7 +2641,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2579,7 +2649,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2619,9 +2689,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2651,11 +2721,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseSPS failed- cannot compute licenses for metric SPS",
+		{
+			name: "SUCCESS - computeLicenseSPS failed- cannot compute licenses for metric SPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2663,7 +2735,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2673,7 +2745,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2681,7 +2753,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricSPSSagProcessorStandard,
@@ -2726,9 +2798,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricSPS{
+				mockRepo.EXPECT().ListMetricSPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2751,7 +2823,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(0), uint64(0), errors.New(""))
+				mockRepo.EXPECT().MetricSPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(0), uint64(0), errors.New(""))
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -2765,11 +2837,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseIPS",
+		{
+			name: "SUCCESS - computeLicenseIPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2777,7 +2851,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2801,7 +2875,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -2809,7 +2883,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -2854,9 +2928,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2879,8 +2953,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(8), nil)
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(8), nil)
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -2897,7 +2971,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "IMB",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(6), nil)
+				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(6), nil)
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -2931,11 +3005,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseIPS failed - cannot fetch metric IPS",
+		{
+			name: "SUCCESS - computelicenseIPS failed - cannot fetch metric IPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -2943,7 +3019,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -2953,14 +3029,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3005,8 +3081,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
@@ -3021,11 +3097,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computelicenseIPS failed - metric name doesnot exist",
+		{
+			name: "SUCCESS - computelicenseIPS failed - metric name doesnot exist",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3033,7 +3111,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -3043,14 +3121,14 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
 						},
 					},
 				}, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3095,8 +3173,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name: "IMB",
 					},
@@ -3115,11 +3193,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseIPS failed- cannot find base level equipment type",
+		{
+			name: "SUCCESS - computeLicenseIPS failed- cannot find base level equipment type",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3127,7 +3207,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -3137,7 +3217,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3145,7 +3225,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3189,9 +3269,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -3221,11 +3301,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseIPS failed- numofcores attribute doesnt exits",
+		{
+			name: "SUCCESS - computeLicenseIPS failed- numofcores attribute doesnt exits",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3233,7 +3315,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -3243,7 +3325,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3251,7 +3333,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3292,9 +3374,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -3324,11 +3406,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseIPS failed- coreFactor attribute doesnt exits",
+		{
+			name: "SUCCESS - computeLicenseIPS failed- coreFactor attribute doesnt exits",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3336,7 +3420,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -3346,7 +3430,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3354,7 +3438,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3394,9 +3478,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -3426,11 +3510,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseIPS failed- cannot compute licenses for metric SPS",
+		{
+			name: "SUCCESS - computeLicenseIPS failed- cannot compute licenses for metric SPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "P1",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3438,7 +3524,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "s1",
 						Metric:       "OPS",
@@ -3448,7 +3534,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3456,7 +3542,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricIPSIbmPvuStandard,
@@ -3501,9 +3587,9 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 
-				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricIPS{
+				mockRepo.EXPECT().ListMetricIPS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -3526,7 +3612,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A", "B"}).Times(1).Return(uint64(0), errors.New(""))
+				mockRepo.EXPECT().MetricIPSComputedLicenses(ctx, "pp1", mat, []string{"A"}).Times(1).Return(uint64(0), errors.New(""))
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -3540,11 +3626,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS",
+		{
+			name: "SUCCESS - computeLicenseACS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3552,7 +3640,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -3562,7 +3650,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3570,7 +3658,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -3628,8 +3716,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "attribute.counter.standard",
 						EqType:        "server",
@@ -3650,7 +3738,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					Attribute: corefactor,
 					Value:     "2",
 				}
-				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A", "B"}).Times(1).Return(uint64(10), nil)
+				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A"}).Times(1).Return(uint64(10), nil)
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -3667,11 +3755,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS failed - cannot fetch acs metrics",
+		{
+			name: "SUCCESS - computeLicenseACS failed - cannot fetch acs metrics",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3679,7 +3769,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -3689,7 +3779,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3697,7 +3787,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -3755,8 +3845,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Internal"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -3770,11 +3860,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS failed - cannot find metric name acs",
+		{
+			name: "SUCCESS - computeLicenseACS failed - cannot find metric name acs",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3782,7 +3874,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -3792,7 +3884,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3800,7 +3892,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -3858,8 +3950,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "acs",
 						EqType:        "server",
@@ -3880,11 +3972,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS failed - cannot find equipment type",
+		{
+			name: "SUCCESS - computeLicenseACS failed - cannot find equipment type",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -3892,7 +3986,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -3902,7 +3996,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -3910,7 +4004,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -3968,8 +4062,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "attribute.counter.standard",
 						EqType:        "cluster",
@@ -3990,11 +4084,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS failed - attribute doesnt exits",
+		{
+			name: "SUCCESS - computeLicenseACS failed - attribute doesnt exits",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -4002,7 +4098,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -4012,7 +4108,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -4020,7 +4116,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -4078,8 +4174,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "attribute.counter.standard",
 						EqType:        "server",
@@ -4100,11 +4196,13 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				},
 			},
 		},
-		{name: "SUCCESS - computeLicenseACS failed - cannot compute licenses for metric OPS",
+		{
+			name: "SUCCESS - computeLicenseACS failed - cannot compute licenses for metric OPS",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcquiredRightsForProductRequest{
 					SwidTag: "ORAC001",
+					Scope:   "A",
 				},
 			},
 			setup: func() {
@@ -4112,7 +4210,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
+				mockRepo.EXPECT().ProductAcquiredRights(ctx, "ORAC001", []string{"A"}).Times(1).Return("uidORAC001", []*repo.ProductAcquiredRight{
 					&repo.ProductAcquiredRight{
 						SKU:          "ORAC001ACS",
 						Metric:       "attribute.counter.standard",
@@ -4122,7 +4220,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
+				mockRepo.EXPECT().GetProductInformation(ctx, "ORAC001", []string{"A"}).Times(1).Return(&repo.ProductAdditionalInfo{
 					Products: []repo.ProductAdditionalData{
 						repo.ProductAdditionalData{
 							NumofEquipments: 56,
@@ -4130,7 +4228,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					},
 				}, nil)
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"A"}).Times(1).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
@@ -4188,8 +4286,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					ID: "e5",
 				}
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricACS{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ListMetricACS(ctx, []string{"A"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "attribute.counter.standard",
 						EqType:        "server",
@@ -4203,7 +4301,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					Attribute: corefactor,
 					Value:     "2",
 				}
-				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A", "B"}).Times(1).Return(uint64(0), errors.New("Internal"))
+				mockRepo.EXPECT().MetricACSComputedLicenses(ctx, "uidORAC001", mat, []string{"A"}).Times(1).Return(uint64(0), errors.New("Internal"))
 			},
 			want: &v1.ListAcquiredRightsForProductResponse{
 				AcqRights: []*v1.ProductAcquiredRights{
@@ -4213,95 +4311,6 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Metric:         "attribute.counter.standard",
 						NumAcqLicences: 20,
 						TotalCost:      9270,
-					},
-				},
-			},
-		},
-		{name: "SUCCESS - default",
-			args: args{
-				ctx: ctx,
-				req: &v1.ListAcquiredRightsForProductRequest{
-					SwidTag: "P1",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockLicense(mockCtrl)
-				rep = mockRepo
-
-				mockRepo.EXPECT().ProductAcquiredRights(ctx, "P1", []string{"A", "B"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
-					&repo.ProductAcquiredRight{
-						SKU:          "s1",
-						Metric:       "OPS",
-						AcqLicenses:  5,
-						TotalCost:    20,
-						AvgUnitPrice: 4,
-					},
-				}, nil)
-
-				mockRepo.EXPECT().GetProductInformation(ctx, "P1", []string{"A", "B"}).Times(1).Return(&repo.ProductAdditionalInfo{
-					Products: []repo.ProductAdditionalData{
-						repo.ProductAdditionalData{
-							NumofEquipments: 56,
-						},
-					},
-				}, nil)
-
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.Metric{
-					&repo.Metric{
-						Name: "OPS",
-						Type: "",
-					},
-					&repo.Metric{
-						Name: "WS",
-						Type: "",
-					},
-				}, nil)
-
-				cores := &repo.Attribute{
-					ID:   "cores",
-					Type: repo.DataTypeInt,
-				}
-				cpu := &repo.Attribute{
-					ID:   "cpus",
-					Type: repo.DataTypeInt,
-				}
-				corefactor := &repo.Attribute{
-					ID:   "corefactor",
-					Type: repo.DataTypeInt,
-				}
-
-				base := &repo.EquipmentType{
-					ID:         "e2",
-					ParentID:   "e3",
-					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-				}
-				start := &repo.EquipmentType{
-					ID:       "e1",
-					ParentID: "e2",
-				}
-				agg := &repo.EquipmentType{
-					ID:       "e3",
-					ParentID: "e4",
-				}
-				end := &repo.EquipmentType{
-					ID:       "e4",
-					ParentID: "e5",
-				}
-				endP := &repo.EquipmentType{
-					ID: "e5",
-				}
-
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
-			},
-			want: &v1.ListAcquiredRightsForProductResponse{
-				AcqRights: []*v1.ProductAcquiredRights{
-					&v1.ProductAcquiredRights{
-						SKU:            "s1",
-						SwidTag:        "P1",
-						Metric:         "OPS",
-						NumAcqLicences: 5,
-						TotalCost:      20,
 					},
 				},
 			},
@@ -4321,6 +4330,8 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 			}
 			if tt.setup == nil {
 				mockCtrl.Finish()
+			} else {
+				fmt.Println("Test case passed : [ ", tt.name, "]")
 			}
 		})
 	}

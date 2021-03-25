@@ -8,8 +8,9 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
@@ -20,22 +21,23 @@ import (
 )
 
 func (s *licenseServiceServer) ListAcqRightsForProductAggregation(ctx context.Context, req *v1.ListAcqRightsForProductAggregationRequest) (*v1.ListAcqRightsForProductAggregationResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ListAcqRightsForApplicationsProduct", zap.String("reason", "ScopeError"))
+		return nil, status.Error(codes.Unknown, "ScopeValidationError")
+	}
 	params := &repo.QueryProductAggregations{}
-	prodAgg, err := s.licenseRepo.ProductAggregationDetails(ctx, req.ID, params, userClaims.Socpes)
+	prodAgg, err := s.licenseRepo.ProductAggregationDetails(ctx, req.ID, params, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to get Product Aggregation Details-> "+err.Error())
 	}
-	logger.Log.Info("Aggregation", zap.Any("agrregation_detail", prodAgg))
-	metrics, err := s.licenseRepo.ListMetrices(ctx, userClaims.Socpes)
+	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil && err != repo.ErrNoData {
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
 	}
-	logger.Log.Info("Metrices", zap.Any("metrics_detail", metrics))
 	var totalUnitPrice, totalCost float64
 	var acqLicenses int32
 	skus := make([]string, len(prodAgg.AcqRightsFull))
@@ -49,14 +51,11 @@ func (s *licenseServiceServer) ListAcqRightsForProductAggregation(ctx context.Co
 	}
 
 	acqRight := &v1.ProductAcquiredRights{
-		SKU:     strings.Join(skus, ","),
-		SwidTag: strings.Join(swidTags, ","),
-		Metric:  prodAgg.Metric,
-		//NumCptLicences: int32(computedLicenses),
+		SKU:            strings.Join(skus, ","),
+		SwidTag:        strings.Join(swidTags, ","),
+		Metric:         prodAgg.Metric,
 		NumAcqLicences: acqLicenses,
 		TotalCost:      totalCost,
-		//	DeltaNumber:    delta,
-		//DeltaCost:      float64(delta) * avgUnitPrice,
 	}
 
 	if prodAgg.NumOfEquipments == 0 {
@@ -80,75 +79,33 @@ func (s *licenseServiceServer) ListAcqRightsForProductAggregation(ctx context.Co
 			},
 		}, nil
 	}
-	metricFull := metrics[ind]
+	metricInfo := metrics[ind]
 
-	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
 
-	computedLicenses := uint64(0)
-	switch metricFull.Type {
-	case repo.MetricOPSOracleProcessorStandard:
-		cal := func(mat *repo.MetricOPSComputed) (uint64, error) {
-			return s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, prodAgg.Name, prodAgg.Metric, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesOPS(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute OPS licenses")
-		}
-	case repo.MetricSPSSagProcessorStandard:
-		cal := func(mat *repo.MetricSPSComputed) (uint64, uint64, error) {
-			return s.licenseRepo.MetricSPSComputedLicensesAgg(ctx, prodAgg.Name, prodAgg.Metric, mat, userClaims.Socpes)
-		}
-		licensesProd, licensesNonProd, err := s.computedLicensesSPS(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - MetricSPSSagProcessorStandard ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute SPS licenses")
-		}
-		if licensesProd > licensesNonProd {
-			computedLicenses = licensesProd
-		} else {
-			computedLicenses = licensesNonProd
-		}
-	case repo.MetricIPSIbmPvuStandard:
-		cal := func(mat *repo.MetricIPSComputed) (uint64, error) {
-			return s.licenseRepo.MetricIPSComputedLicensesAgg(ctx, prodAgg.Name, prodAgg.Metric, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesIPS(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductListAcqRightsForProductAggregation - MetricIPSIbmPvuStandard", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute IPS licenses")
-		}
-	case repo.MetricOracleNUPStandard:
-		cal := func(mat *repo.MetricNUPComputed) (uint64, error) {
-			return s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, prodAgg.Name, prodAgg.Metric, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesNUP(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute NUP licenses")
-		}
-	case repo.MetricAttrCounterStandard:
-		cal := func(mat *repo.MetricACSComputed) (uint64, error) {
-			return s.licenseRepo.MetricACSComputedLicensesAgg(ctx, prodAgg.Name, prodAgg.Metric, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesACS(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute ACS licenses")
-		}
-	default:
-		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - metric type doesnt match - " + string(metrics[ind].Type))
-		return nil, status.Error(codes.Internal, "cannot find metric for computation")
+	input := make(map[string]interface{})
+	input[PROD_AGG_NAME] = prodAgg.Name
+	input[METRIC_NAME] = metricInfo.Name
+	input[SCOPES] = []string{req.GetScope()}
+	input[IS_AGG] = true
+	if _, ok := MetricCalculation[metricInfo.Type]; !ok {
+		logger.Log.Error("service/v1 -Failed ListAcqRightsForProductAggregation - ", zap.String("Agg name", prodAgg.Name), zap.String("metric name", prodAgg.Metric))
+		return nil, status.Error(codes.Internal, "this metricType is not supported")
 	}
+	resp, err := MetricCalculation[metricInfo.Type](s, ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Error("service/v1 -Failed ListAcqRightsForProductAggregation - ", zap.String("Agg name", prodAgg.Name), zap.String("metric name", prodAgg.Metric), zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	computedLicenses := resp[COMPUTED_LICENCES].(uint64)
 	delta := acqLicenses - int32(computedLicenses)
 	acqRight.NumCptLicences = int32(computedLicenses)
 	acqRight.DeltaNumber = delta
 	acqRight.DeltaCost = float64(delta) * avgUnitPrice
 	acqRight.AvgUnitPrice = avgUnitPrice
-
 	return &v1.ListAcqRightsForProductAggregationResponse{
 		AcqRights: []*v1.ProductAcquiredRights{
 			acqRight,

@@ -16,6 +16,9 @@ type AcquiredRights {
     acqRights.totalPurchaseCost         
     acqRights.totalMaintenanceCost        
     acqRights.totalCost
+    acqRights.startOfMaintenance
+    acqRights.endOfMaintenance
+    acqRights.version
     <~product.acqRights>                  
 }
 
@@ -27,7 +30,8 @@ type Application {
     application.id       
     application.name     
     application.version  
-    application.owner    
+    application.owner
+    application.domain    
     application.instance 
     application.product                    
 }

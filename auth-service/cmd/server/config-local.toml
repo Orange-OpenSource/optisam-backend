@@ -1,7 +1,7 @@
 environment = "development"
 debug = false
-grpcport = 5084
-httpport = 6084
+grpcport = 9092
+httpport = 9093
 jwtprivatekey = "key.pem"
 
 [log]
@@ -12,15 +12,15 @@ loglevel = -1
 enabled = false
 
 [instrumentation.jaeger]
-enabled = false
-collectorEndpoint = "http://localhost:14268/api/traces"
-agentEndpoint = "localhost:6831"
+enabled = true
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [database]
-host = "postgres"
+host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "account"
+name = "optisam"

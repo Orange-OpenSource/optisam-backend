@@ -92,139 +92,6 @@ func (r *LicenseRepository) CreateProductAggregation(ctx context.Context, pa *v1
 	return pa, nil
 }
 
-//UpdateProductAggregation implements License UpdateProductAggregation function
-func (r *LicenseRepository) UpdateProductAggregation(ctx context.Context, ID string, upa *v1.UpdateProductAggregationRequest, scopes []string) (retErr error) {
-	var addNquads []*api.NQuad
-	var removeNquads []*api.NQuad
-
-	if len(upa.AddedProducts) != 0 {
-		addNquads = append(addNquads, productsNquad(upa.AddedProducts, ID)...)
-	}
-	//As we need to change name here that is why we are adding one more nquad to the slice.
-	if upa.Name != "" {
-		addNquads = append(addNquads, &api.NQuad{
-			Subject:     ID,
-			Predicate:   "product_aggregation.name",
-			ObjectValue: stringObjectValue(upa.Name),
-		})
-	}
-
-	if upa.Product != "" {
-		addNquads = append(addNquads, &api.NQuad{
-			Subject:     ID,
-			Predicate:   "product_aggregation.product_name",
-			ObjectValue: stringObjectValue(upa.Product),
-		})
-	}
-	if len(upa.RemovedProducts) != 0 {
-		removeNquads = append(removeNquads, productsNquad(upa.RemovedProducts, ID)...)
-	}
-	mu := &api.Mutation{
-		Set: addNquads,
-		Del: removeNquads,
-	}
-	txn := r.dg.NewTxn()
-
-	defer func() {
-		if retErr != nil {
-			if err := txn.Discard(ctx); err != nil {
-				logger.Log.Error("dgraph/UpdateProductAggregation - failed to discard txn", zap.String("reason", err.Error()))
-				retErr = fmt.Errorf("dgraph/UpdateProductAggregation - cannot discard txn")
-			}
-			return
-		}
-		if err := txn.Commit(ctx); err != nil {
-			logger.Log.Error("dgraph/UpdateProductAggregation - failed to commit txn", zap.String("reason", err.Error()))
-			retErr = fmt.Errorf("dgraph/UpdateProductAggregation - cannot commit txn")
-		}
-	}()
-
-	_, err := txn.Mutate(ctx, mu)
-	if err != nil {
-		logger.Log.Error("dgraph/UpdateProductAggregation - failed to update aggregation", zap.String("reason", err.Error()))
-		return errors.New("cannot update aggregation")
-	}
-
-	return nil
-}
-
-// ListProductAggregations implements Licence ListProductAggregations function
-func (r *LicenseRepository) ListProductAggregations(ctx context.Context, scopes []string) ([]*v1.ProductAggregation, error) {
-	q := `   {
-		Aggregations(func:eq(type_name,"product_aggregation"))` + agregateFilters(scopeFilters(scopes)) + ` {
-		  ID:uid
-		  Name: product_aggregation.name
-		  Editor: product_aggregation.editor
-		  Product:product_aggregation.product_name
-		  Metric:product_aggregation.metric{
-			  MID: uid
-			  Name: metric.name
-		  }
-		  Products:product_aggregation.products{
-			  PID: product.swidtag
-			  ProductName: product.name
-		  }
-	  }
-   }
-
-	 `
-	resp, err := r.dg.NewTxn().Query(ctx, q)
-	if err != nil {
-		logger.Log.Error("ListProductAggregations - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListProductAggregations - cannot complete query transaction")
-	}
-
-	type Data struct {
-		//Aggregations []*v1.ProductAggregation
-		Aggregations []struct {
-			ID      string
-			Name    string
-			Editor  string
-			Product string
-			Metric  []struct {
-				MID  string
-				Name string
-			}
-			Products []struct {
-				PID         string
-				ProductName string
-			}
-		}
-	}
-	var aggList Data
-	if err := json.Unmarshal(resp.GetJson(), &aggList); err != nil {
-		logger.Log.Error("ListProductAggregations - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListProductAggregations - cannot unmarshal Json object")
-	}
-
-	prodAgg := make([]*v1.ProductAggregation, len(aggList.Aggregations))
-	aggs := aggList.Aggregations
-	for i := range aggs {
-		prodAgg[i] = &v1.ProductAggregation{}
-		prodAgg[i].ID = aggs[i].ID
-		prodAgg[i].Name = aggs[i].Name
-		prodAgg[i].Editor = aggs[i].Editor
-		prodAgg[i].Product = aggs[i].Product
-
-		if len(aggs[i].Metric) > 0 {
-			prodAgg[i].Metric = aggs[i].Metric[0].MID
-			prodAgg[i].MetricName = aggs[i].Metric[0].Name
-		}
-		prodAgg[i].Products = make([]string, len(aggs[i].Products))
-		prodAgg[i].ProductsFull = make([]*v1.ProductData, len(aggs[i].Products))
-		for j := range aggs[i].Products {
-			prodAgg[i].Products[j] = aggs[i].Products[j].PID
-			prodAgg[i].ProductsFull[j] = &v1.ProductData{
-				Swidtag: aggList.Aggregations[i].Products[j].PID,
-				Name:    aggList.Aggregations[i].Products[j].ProductName,
-			}
-		}
-
-	}
-
-	return prodAgg, nil
-}
-
 // ProductAggregationsByName implements Licence ProductAggregationsByName function
 func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name string, scopes []string) (*v1.ProductAggregation, error) {
 
@@ -307,53 +174,6 @@ func (r *LicenseRepository) ProductAggregationsByName(ctx context.Context, name 
 	return prodAgg, nil
 }
 
-// DeleteProductAggregation implements Licence DeleteProductAggregation function
-func (r *LicenseRepository) DeleteProductAggregation(ctx context.Context, id string, scopes []string) (retPa []*v1.ProductAggregation, retErr error) {
-
-	if err := deleteProductAgg(ctx, r, id); err != nil {
-		return nil, err
-	}
-	prodAgg, err := r.ListProductAggregations(ctx, scopes)
-	if err != nil {
-		return nil, errors.New("DeleteProductAggregation - ListProductAggregations - cannot fetch product aggregations")
-	}
-	return prodAgg, nil
-}
-
-func deleteProductAgg(ctx context.Context, r *LicenseRepository, id string) (retErr error) {
-	d := map[string]string{"uid": id}
-	pb, err := json.Marshal(d)
-	if err != nil {
-		return errors.New("deleteProductAgg - cannot marshal Json object")
-	}
-
-	mu := &api.Mutation{
-		//	CommitNow: true,
-		//DeleteJson: []byte(`{"uid": "` + id + `"}`),
-		DeleteJson: pb,
-	}
-	txn := r.dg.NewTxn()
-	defer func() {
-		if retErr != nil {
-			if err := txn.Discard(ctx); err != nil {
-				logger.Log.Error("dgraph/deleteProductAgg - failed to discard txn", zap.String("reason", err.Error()))
-				retErr = fmt.Errorf("dgraph/deleteProductAgg - cannot discard txn")
-			}
-			return
-		}
-		if err := txn.Commit(ctx); err != nil {
-			logger.Log.Error("dgraph/deleteProductAgg - failed to commit txn", zap.String("reason", err.Error()))
-			retErr = fmt.Errorf("dgraph/deleteProductAgg - cannot commit txn")
-		}
-	}()
-	_, err = txn.Mutate(ctx, mu)
-	if err != nil {
-		logger.Log.Error("dgraph/deleteProductAgg - failed to delete aggregation", zap.String("reason", err.Error()), zap.Any("aggregation id", id))
-		return errors.New("cannot delete aggregation")
-	}
-	return nil
-}
-
 func uidNotFilter(uids []string) string {
 	if len(uids) == 0 {
 		return ""
@@ -377,7 +197,7 @@ func aggQueryFromFilterWithID(uid, id string, filter *v1.AggregateFilter) string
 }
 
 // ProductIDForSwidtag implements Licence ProductIDForSwidtag function
-func (r *LicenseRepository) ProductIDForSwidtag(ctx context.Context, id string, params *v1.QueryProducts, scopes []string) (string, error) {
+func (r *LicenseRepository) ProductIDForSwidtag(ctx context.Context, id string, params *v1.QueryProducts, scopes ...string) (string, error) {
 	variables := make(map[string]string)
 
 	variables["$id"] = id

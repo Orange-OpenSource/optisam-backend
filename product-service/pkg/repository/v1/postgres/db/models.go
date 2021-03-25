@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 type JobStatus string
@@ -37,15 +39,54 @@ func (e *JobStatus) Scan(src interface{}) error {
 	return nil
 }
 
+type Acqright struct {
+	Sku                     string          `json:"sku"`
+	Swidtag                 string          `json:"swidtag"`
+	ProductName             string          `json:"product_name"`
+	ProductEditor           string          `json:"product_editor"`
+	Entity                  string          `json:"entity"`
+	Scope                   string          `json:"scope"`
+	Metric                  string          `json:"metric"`
+	NumLicensesAcquired     int32           `json:"num_licenses_acquired"`
+	NumLicencesComputed     int32           `json:"num_licences_computed"`
+	NumLicencesMaintainance int32           `json:"num_licences_maintainance"`
+	AvgUnitPrice            decimal.Decimal `json:"avg_unit_price"`
+	AvgMaintenanceUnitPrice decimal.Decimal `json:"avg_maintenance_unit_price"`
+	TotalPurchaseCost       decimal.Decimal `json:"total_purchase_cost"`
+	TotalComputedCost       decimal.Decimal `json:"total_computed_cost"`
+	TotalMaintenanceCost    decimal.Decimal `json:"total_maintenance_cost"`
+	TotalCost               decimal.Decimal `json:"total_cost"`
+	CreatedOn               time.Time       `json:"created_on"`
+	CreatedBy               string          `json:"created_by"`
+	UpdatedOn               sql.NullTime    `json:"updated_on"`
+	UpdatedBy               sql.NullString  `json:"updated_by"`
+	StartOfMaintenance      sql.NullTime    `json:"start_of_maintenance"`
+	EndOfMaintenance        sql.NullTime    `json:"end_of_maintenance"`
+	Version                 string          `json:"version"`
+}
+
+type Aggregation struct {
+	AggregationID     int32          `json:"aggregation_id"`
+	AggregationName   string         `json:"aggregation_name"`
+	AggregationMetric string         `json:"aggregation_metric"`
+	AggregationScope  string         `json:"aggregation_scope"`
+	Products          []string       `json:"products"`
+	CreatedOn         time.Time      `json:"created_on"`
+	CreatedBy         string         `json:"created_by"`
+	UpdatedOn         sql.NullTime   `json:"updated_on"`
+	UpdatedBy         sql.NullString `json:"updated_by"`
+}
+
 type Job struct {
-	JobID     int32           `json:"job_id"`
-	Type      string          `json:"type"`
-	Status    JobStatus       `json:"status"`
-	Data      json.RawMessage `json:"data"`
-	Comments  sql.NullString  `json:"comments"`
-	StartTime sql.NullTime    `json:"start_time"`
-	EndTime   sql.NullTime    `json:"end_time"`
-	CreatedAt time.Time       `json:"created_at"`
+	JobID      int32           `json:"job_id"`
+	Type       string          `json:"type"`
+	Status     JobStatus       `json:"status"`
+	Data       json.RawMessage `json:"data"`
+	Comments   sql.NullString  `json:"comments"`
+	StartTime  sql.NullTime    `json:"start_time"`
+	EndTime    sql.NullTime    `json:"end_time"`
+	CreatedAt  time.Time       `json:"created_at"`
+	RetryCount sql.NullInt32   `json:"retry_count"`
 }
 
 type Product struct {
@@ -57,7 +98,6 @@ type Product struct {
 	ProductEditor   string         `json:"product_editor"`
 	Scope           string         `json:"scope"`
 	OptionOf        string         `json:"option_of"`
-	Cost            int32          `json:"cost"`
 	AggregationID   int32          `json:"aggregation_id"`
 	AggregationName string         `json:"aggregation_name"`
 	CreatedOn       time.Time      `json:"created_on"`
@@ -69,10 +109,12 @@ type Product struct {
 type ProductsApplication struct {
 	Swidtag       string `json:"swidtag"`
 	ApplicationID string `json:"application_id"`
+	Scope         string `json:"scope"`
 }
 
 type ProductsEquipment struct {
 	Swidtag     string        `json:"swidtag"`
 	EquipmentID string        `json:"equipment_id"`
 	NumOfUsers  sql.NullInt32 `json:"num_of_users"`
+	Scope       string        `json:"scope"`
 }

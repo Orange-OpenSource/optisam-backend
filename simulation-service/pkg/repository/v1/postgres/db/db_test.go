@@ -11,9 +11,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	v1 "optisam-backend/hardware-config-service/pkg/repository/v1"
-	"optisam-backend/hardware-config-service/pkg/repository/v1/postgres"
-	"optisam-backend/hardware-config-service/pkg/repository/v1/postgres/db"
+	v1 "optisam-backend/simulation-service/pkg/repository/v1"
+	"optisam-backend/simulation-service/pkg/repository/v1/postgres"
+	"optisam-backend/simulation-service/pkg/repository/v1/postgres/db"
 	"strings"
 	"testing"
 	"time"
@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHardwareConfigRepo_DeleteConfig(t *testing.T) {
+func TestSimulationServiceRepo_DeleteConfig(t *testing.T) {
 	// Creating data using createConfig.
 	createMasterData := &v1.MasterData{
 		ID:            1,
@@ -75,14 +75,14 @@ func TestHardwareConfigRepo_DeleteConfig(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *postgres.HardwareConfigRepo
+		r       *postgres.SimulationServiceRepo
 		args    args
-		setup   func(h *postgres.HardwareConfigRepo) (func() error, error)
-		verify  func(h *postgres.HardwareConfigRepo) error
+		setup   func(h *postgres.SimulationServiceRepo) (func() error, error)
+		verify  func(h *postgres.SimulationServiceRepo) error
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: postgres.NewHardwareConfigRepository(sqldb),
+			r: postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx: context.Background(),
 				arg: db.DeleteConfigParams{
@@ -90,7 +90,7 @@ func TestHardwareConfigRepo_DeleteConfig(t *testing.T) {
 					Status: 2,
 				},
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData, createData)
 				if err != nil {
 					return nil, err
@@ -99,7 +99,7 @@ func TestHardwareConfigRepo_DeleteConfig(t *testing.T) {
 					return deleteConfig()
 				}, nil
 			},
-			verify: func(h *postgres.HardwareConfigRepo) error {
+			verify: func(h *postgres.SimulationServiceRepo) error {
 				// verify config_master table data
 				masterData, err := h.ListConfig(context.Background(), db.ListConfigParams{
 					Status:        2,
@@ -141,7 +141,7 @@ func TestHardwareConfigRepo_DeleteConfig(t *testing.T) {
 	}
 }
 
-func TestHardwareConfigRepo_DeleteConfigData(t *testing.T) {
+func TestSimulationServiceRepo_DeleteConfigData(t *testing.T) {
 	// Creating data using createConfig.
 	createMasterData := &v1.MasterData{
 		ID:            1,
@@ -195,19 +195,19 @@ func TestHardwareConfigRepo_DeleteConfigData(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *postgres.HardwareConfigRepo
+		r       *postgres.SimulationServiceRepo
 		args    args
-		setup   func(h *postgres.HardwareConfigRepo) (func() error, error)
-		verify  func(h *postgres.HardwareConfigRepo) error
+		setup   func(h *postgres.SimulationServiceRepo) (func() error, error)
+		verify  func(h *postgres.SimulationServiceRepo) error
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: postgres.NewHardwareConfigRepository(sqldb),
+			r: postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx:      context.Background(),
 				configID: 1,
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData, createData)
 				if err != nil {
 					return nil, err
@@ -216,7 +216,7 @@ func TestHardwareConfigRepo_DeleteConfigData(t *testing.T) {
 					return deleteConfig()
 				}, nil
 			},
-			verify: func(h *postgres.HardwareConfigRepo) error {
+			verify: func(h *postgres.SimulationServiceRepo) error {
 
 				// verify config_metadata table data
 				metadata, err := h.GetMetadatabyConfigID(context.Background(), 1)
@@ -251,7 +251,7 @@ func TestHardwareConfigRepo_DeleteConfigData(t *testing.T) {
 	}
 }
 
-func TestHardwareConfigRepo_ListConfig(t *testing.T) {
+func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 	// Creating data using createConfig.
 	createMasterData := &v1.MasterData{
 		ID:            1,
@@ -397,14 +397,14 @@ func TestHardwareConfigRepo_ListConfig(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *postgres.HardwareConfigRepo
+		r       *postgres.SimulationServiceRepo
 		args    args
-		setup   func(h *postgres.HardwareConfigRepo) (func() error, error)
+		setup   func(h *postgres.SimulationServiceRepo) (func() error, error)
 		want    []db.ConfigMaster
 		wantErr bool
 	}{
 		{name: "SUCCESS - With Equipment Type",
-			r: postgres.NewHardwareConfigRepository(sqldb),
+			r: postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx: context.Background(),
 				arg: db.ListConfigParams{
@@ -413,7 +413,7 @@ func TestHardwareConfigRepo_ListConfig(t *testing.T) {
 					Status:        1,
 				},
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData, createData)
 				if err != nil {
 					return nil, err
@@ -442,7 +442,7 @@ func TestHardwareConfigRepo_ListConfig(t *testing.T) {
 			},
 		},
 		{name: "SUCCESS - Without Equipment Type",
-			r: postgres.NewHardwareConfigRepository(sqldb),
+			r: postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx: context.Background(),
 				arg: db.ListConfigParams{
@@ -451,7 +451,7 @@ func TestHardwareConfigRepo_ListConfig(t *testing.T) {
 					Status:        1,
 				},
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData, createData)
 				if err != nil {
 					return nil, err
@@ -512,7 +512,7 @@ func TestHardwareConfigRepo_ListConfig(t *testing.T) {
 	}
 }
 
-func TestHardwareConfigRepo_GetMetadatabyConfigID(t *testing.T) {
+func TestSimulationServiceRepo_GetMetadatabyConfigID(t *testing.T) {
 	createMasterData1 := &v1.MasterData{
 		ID:            2,
 		Name:          "server_1",
@@ -565,20 +565,20 @@ func TestHardwareConfigRepo_GetMetadatabyConfigID(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *postgres.HardwareConfigRepo
+		r       *postgres.SimulationServiceRepo
 		args    args
-		setup   func(h *postgres.HardwareConfigRepo) (func() error, error)
+		setup   func(h *postgres.SimulationServiceRepo) (func() error, error)
 		want    []db.GetMetadatabyConfigIDRow
 		wantErr bool
 	}{
 		{
 			name: "SUCCESS",
-			r:    postgres.NewHardwareConfigRepository(sqldb),
+			r:    postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx:      context.Background(),
 				configID: int32(2),
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData1, createData1)
 				if err != nil {
 					return nil, err
@@ -626,7 +626,7 @@ func TestHardwareConfigRepo_GetMetadatabyConfigID(t *testing.T) {
 	}
 }
 
-func TestHardwareConfigRepo_GetDatabyMetadataID(t *testing.T) {
+func TestSimulationServiceRepo_GetDatabyMetadataID(t *testing.T) {
 	createMasterData1 := &v1.MasterData{
 		ID:            2,
 		Name:          "server_1",
@@ -679,20 +679,20 @@ func TestHardwareConfigRepo_GetDatabyMetadataID(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		r       *postgres.HardwareConfigRepo
+		r       *postgres.SimulationServiceRepo
 		args    args
-		setup   func(h *postgres.HardwareConfigRepo) (func() error, error)
+		setup   func(h *postgres.SimulationServiceRepo) (func() error, error)
 		want    []db.GetDataByMetadataIDRow
 		wantErr bool
 	}{
 		{
 			name: "SUCCESS",
-			r:    postgres.NewHardwareConfigRepository(sqldb),
+			r:    postgres.NewSimulationServiceRepository(sqldb),
 			args: args{
 				ctx:        context.Background(),
 				MetadataID: int32(1),
 			},
-			setup: func(h *postgres.HardwareConfigRepo) (func() error, error) {
+			setup: func(h *postgres.SimulationServiceRepo) (func() error, error) {
 				err := createConfig(createMasterData1, createData1)
 				if err != nil {
 					return nil, err

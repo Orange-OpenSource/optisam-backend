@@ -30,8 +30,8 @@ type metricOracleNUP struct {
 }
 
 // ListMetricNUP implements Licence ListMetricNUP function
-func (l *LicenseRepository) ListMetricNUP(ctx context.Context, scopes []string) ([]*v1.MetricNUPOracle, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOracleNUPStandard, scopes)
+func (l *LicenseRepository) ListMetricNUP(ctx context.Context, scopes ...string) ([]*v1.MetricNUPOracle, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOracleNUPStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricNUP - listMetricWithMetricType", zap.Error(err))
 		return nil, err

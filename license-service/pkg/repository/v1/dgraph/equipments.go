@@ -149,7 +149,7 @@ func (lr *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1
 }
 
 // EquipmentTypes implements Licence EquipmentTypes function
-func (lr *LicenseRepository) EquipmentTypes(ctx context.Context, scopes []string) ([]*v1.EquipmentType, error) {
+func (lr *LicenseRepository) EquipmentTypes(ctx context.Context, scopes ...string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
 		EqTypes(func:has(metadata.equipment.type)){

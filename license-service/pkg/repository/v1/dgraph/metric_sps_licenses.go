@@ -18,8 +18,8 @@ import (
 )
 
 // MetricSPSComputedLicenses implements Licence MetricSPSComputedLicenses function
-func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricSPSComputed, scopes []string) (uint64, uint64, error) {
-	q := queryBuilderSPS(mat, id)
+func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricSPSComputed, scopes ...string) (uint64, uint64, error) {
+	q := queryBuilderSPS(mat, scopes, id)
 	prod, nonProd, err := l.licensesForSPS(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricSPSComputedLicenses - licensesForSPS", zap.Error(err))
@@ -30,7 +30,7 @@ func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id st
 }
 
 // MetricSPSComputedLicensesAgg implements Licence MetricSPSComputedLicensesAgg function
-func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricSPSComputed, scopes []string) (uint64, uint64, error) {
+func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricSPSComputed, scopes ...string) (uint64, uint64, error) {
 	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricSPSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
@@ -39,7 +39,7 @@ func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, na
 	if len(ids) == 0 {
 		return 0, 0, nil
 	}
-	q := queryBuilderSPS(mat, ids...)
+	q := queryBuilderSPS(mat, scopes, ids...)
 	prod, nonProd, err := l.licensesForSPS(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricSPSComputedLicensesAgg - licensesForSPS", zap.Error(err))

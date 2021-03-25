@@ -7,6 +7,7 @@
 package config
 
 import (
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
@@ -61,6 +62,12 @@ type Config struct {
 	//GRPC Server Configuration
 	GrpcServers grpc.Config
 
+	//Handles cron config
+	Cron cron.Config
+
+	//For interservice http calls(non grpc server)["ip:port"]
+	HttpServers httpConfg
+
 	FilesLocation string
 
 	ArchiveLocation string
@@ -79,6 +86,9 @@ type Config struct {
 	//MaxApiWorker
 	MaxApiWorker int
 
+	//MaxDeferWorker
+	MaxDeferWorker int
+
 	// Instrumentation configuration
 	Instrumentation InstrumentationConfig
 
@@ -86,6 +96,10 @@ type Config struct {
 
 	//IAM Configuration
 	IAM iam.Config
+}
+
+type httpConfg struct {
+	Address map[string]string
 }
 
 type Server struct {
@@ -196,7 +210,8 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Dgraph configuration
 	_ = v.BindEnv("dgraph.host")
 
-	// App Params Configuration
+	// Database Password configuration
+	_ = v.BindEnv("postgres.pass", "DB_PASSWORD")
 
 	// PKI configuraiton
 	v.SetDefault("pki.publickeypath", ".")

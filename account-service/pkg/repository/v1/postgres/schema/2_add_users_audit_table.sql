@@ -4,7 +4,8 @@
 CREATE TYPE audit_status AS ENUM ('DELETED', 'UPDATED');
 
 CREATE TABLE IF NOT EXISTS users_audit (
-  username VARCHAR PRIMARY KEY,
+  id SERIAL,
+  username VARCHAR NOT NULL,
   first_name VARCHAR NOT NULL,
   last_name VARCHAR NOT NULL,
   role VARCHAR NOT NULL REFERENCES roles (user_role),
@@ -14,7 +15,8 @@ CREATE TABLE IF NOT EXISTS users_audit (
   last_login  TIMESTAMP,
   operation audit_status,
   updated_by VARCHAR NOT NULL,
-  updated_on TIMESTAMP DEFAULT NOW()
+  updated_on TIMESTAMP DEFAULT NOW(),
+  PRIMARY KEY(id)
 );
 
 -- +migrate Down

@@ -5,119 +5,112 @@ option go_package = "v1";
 package v1;
 
 import "google/api/annotations.proto";
-import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
-
-
 
 service LicenseService {
 
-  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest) returns (ListAcquiredRightsForProductResponse) {
+  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest)
+      returns (ListAcquiredRightsForProductResponse) {
     option (google.api.http) = {
       get : "/api/v1/product/{swid_tag}/acquiredrights"
     };
   }
 
-  
+  rpc ListAcqRightsForApplicationsProduct(
+      ListAcqRightsForApplicationsProductRequest)
+      returns (ListAcqRightsForApplicationsProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/licenses/applications/{app_id}/products/{prod_id}"
+    };
+  }
 
-  rpc CreateProductAggregation(ProductAggregation) returns (ProductAggregation) {
+  rpc CreateProductAggregation(ProductAggregation)
+      returns (ProductAggregation) {
     option (google.api.http) = {
       post : "/api/v1/products/aggregations"
       body : "*"
     };
   }
 
-  // update product aggregation
-  rpc UpdateProductAggregation(UpdateProductAggregationRequest) returns (ProductAggregation) {
-    option (google.api.http) = {
-      put : "/api/v1/products/aggregations/{name}"
-      body : "*"
-    };
-  }
 
- 
-  rpc ListAcqRightsForProductAggregation(ListAcqRightsForProductAggregationRequest) returns (ListAcqRightsForProductAggregationResponse) {
+  rpc ListAcqRightsForProductAggregation(
+      ListAcqRightsForProductAggregationRequest)
+      returns (ListAcqRightsForProductAggregationResponse) {
     option (google.api.http) = {
       get : "/api/v1/products/aggregations/productview/{ID}/acquiredrights"
     };
   }
 
-
-  rpc DeleteProductAggregation(DeleteProductAggregationRequest) returns (ListProductAggregationResponse) {
-    option (google.api.http) = {
-      delete : "/api/v1/products/aggregations/{ID}"
-    };
-  }
-
-  rpc ProductLicensesForMetric(ProductLicensesForMetricRequest) returns (ProductLicensesForMetricResponse) {
+  rpc ProductLicensesForMetric(ProductLicensesForMetricRequest)
+      returns (ProductLicensesForMetricResponse) {
     option (google.api.http) = {
       post : "/api/v1/product/{swid_tag}/metric/{metric_name}"
-      body :"*"
-    };
-  }
-  
-  // TODO: Should be in metric services
-  rpc MetricesForEqType(MetricesForEqTypeRequest)returns(ListMetricResponse){
-    option (google.api.http) = {
-      get : "/api/v1/equipments/types/{type}/metric"
+      body : "*"
     };
   }
 
-  rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)returns (LicensesForEquipAndMetricResponse){
+  rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)
+      returns (LicensesForEquipAndMetricResponse) {
     option (google.api.http) = {
-    post : "/api/v1/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}"
-    body : "*"
+      post : "/api/v1/equipments/types/{equip_type}/{equip_id}/metric/types/"
+             "{metric_type}/{metric_name}"
+      body : "*"
     };
   }
 }
 
-message LicensesForEquipAndMetricRequest{
-      string equip_type = 1;
-      string equip_id  = 2;
-      string metric_type = 3;
-      string metric_name = 4;
-      repeated Attribute attributes = 5;
-      repeated string scopes = 6;
+message ListAcqRightsForApplicationsProductRequest {
+  string app_id = 1;
+  string prod_id = 2;
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
+message ListAcqRightsForApplicationsProductResponse {
+  repeated ProductAcquiredRights acq_rights = 1;
+}
 
-message LicensesForEquipAndMetricResponse{
-    repeated ProductLicenseForEquipAndMetric licenses = 1;
+message LicensesForEquipAndMetricRequest {
+  string equip_type = 1;
+  string equip_id = 2;
+  string metric_type = 3;
+  string metric_name = 4;
+  repeated Attribute attributes = 5;
+  string scope = 6 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message LicensesForEquipAndMetricResponse {
+  repeated ProductLicenseForEquipAndMetric licenses = 1;
 }
 
 message ProductLicenseForEquipAndMetric {
   string metric_name = 1;
-  int64  old_licences = 2;
-  int64  new_licenses = 3;
-  int64  delta = 4;
+  int64 old_licences = 2;
+  int64 new_licenses = 3;
+  int64 delta = 4;
   Product product = 5;
 }
 
-
-message MetricesForEqTypeRequest {
-  string type = 1;
-}
-
-message ProductLicensesForMetricRequest{
+message ProductLicensesForMetricRequest {
   string swid_tag = 1;
   string metric_name = 2;
-  double unit_cost =3;
+  double unit_cost = 3;
+  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
-message ProductLicensesForMetricResponse{
-  uint64 numCptLicences =1;
-  double total_cost =2;
+message ProductLicensesForMetricResponse {
+  uint64 numCptLicences = 1;
+  double total_cost = 2;
   string metric_name = 3;
 }
 
 message ListAcqRightsForProductAggregationRequest {
   string ID = 1;
+  string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message ListAcqRightsForProductAggregationResponse {
   repeated ProductAcquiredRights acq_rights = 1;
 }
-
 
 message UpdateProductAggregationRequest {
   string name = 1;
@@ -131,9 +124,7 @@ message UpdateAggregation {
   repeated string product_names = 4;
 }
 
-message DeleteProductAggregationRequest {
-  string ID = 1;
-}
+message DeleteProductAggregationRequest { string ID = 1; }
 
 message ListProductAggregationResponse {
   repeated ProductAggregation aggregations = 1;
@@ -144,15 +135,12 @@ message ProductAggregation {
   string name = 2;
   string editor = 3;
   repeated string product_names = 4;
-  string metric  = 5;
+  string metric = 5;
   repeated string products = 6;
   repeated Product products_full = 7;
 }
 
-
-message ListMetricResponse {
-  repeated Metric metrices = 1;
-}
+message ListMetricResponse { repeated Metric metrices = 1; }
 
 message Metric {
   string type = 1;
@@ -162,10 +150,11 @@ message Metric {
 
 message ListAcquiredRightsForProductRequest {
   string swid_tag = 1;
+  string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message ListAcquiredRightsForProductResponse {
-      repeated ProductAcquiredRights acq_rights = 1;
+  repeated ProductAcquiredRights acq_rights = 1;
 }
 
 message Product {
@@ -206,19 +195,19 @@ message ProductAcquiredRights {
 }
 
 message Attribute {
-  string ID  = 1;
-  string name = 2 [(validate.rules).string.pattern = "^[-_A-Za-z0-9]+$"];
-  DataTypes data_type = 3 [(validate.rules).enum = {in: [1,2,3]}];
-  bool primary_key = 4  ;
+  string ID = 1;
+  string name = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  DataTypes data_type = 3 [ (validate.rules).enum = {in : [ 1, 2, 3 ]} ];
+  bool primary_key = 4;
   bool displayed = 5;
   bool searchable = 6;
   bool parent_identifier = 7;
   string mapped_to = 8;
   bool simulated = 9;
-  
+
   oneof val {
     int32 int_val = 10;
-    float float_val= 11;
+    float float_val = 11;
     string string_val = 12;
   }
 
@@ -226,20 +215,12 @@ message Attribute {
     int32 int_val_old = 13;
     float float_val_old = 14;
     string string_val_old = 15;
-  }  
+  }
 }
-
-
 
 enum DataTypes {
   UNKNOWN = 0;
   STRING = 1;
-  INT    = 2;
-  FLOAT  = 3;
+  INT = 2;
+  FLOAT = 3;
 }
-
-
-
-  
-
-  

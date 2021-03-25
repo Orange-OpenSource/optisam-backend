@@ -16,8 +16,8 @@ import (
 )
 
 // MetricACSComputedLicenses implements Licence MetricACSComputedLicenses function
-func (l *LicenseRepository) MetricACSComputedLicenses(ctx context.Context, id string, mat *v1.MetricACSComputed, scopes []string) (uint64, error) {
-	q := buildQueryACS(mat, id)
+func (l *LicenseRepository) MetricACSComputedLicenses(ctx context.Context, id string, mat *v1.MetricACSComputed, scopes ...string) (uint64, error) {
+	q := buildQueryACS(mat, scopes, id)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricACSComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))
@@ -27,7 +27,7 @@ func (l *LicenseRepository) MetricACSComputedLicenses(ctx context.Context, id st
 }
 
 // MetricACSComputedLicensesAgg implements Licence MetricIPSComputedLicensesAgg function
-func (l *LicenseRepository) MetricACSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricACSComputed, scopes []string) (uint64, error) {
+func (l *LicenseRepository) MetricACSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricACSComputed, scopes ...string) (uint64, error) {
 	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricACSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
@@ -36,7 +36,7 @@ func (l *LicenseRepository) MetricACSComputedLicensesAgg(ctx context.Context, na
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	q := buildQueryACS(mat, ids...)
+	q := buildQueryACS(mat, scopes, ids...)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricACSComputedLicensesAgg - licensesForQuery", zap.Error(err))

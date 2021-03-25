@@ -12,11 +12,13 @@ import (
 	"log"
 	"net"
 	"optisam-backend/common/optisam/logger"
+	"optisam-backend/dps-service/pkg/errors"
 	mw "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/dps-service/pkg/api/v1"
 	"os"
 	"os/signal"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/open-policy-agent/opa/rego"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
@@ -24,6 +26,7 @@ import (
 
 // RunServer runs gRPC service to publish Auth service
 func RunServer(ctx context.Context, v1API v1.DpsServiceServer, port string, verifyKey *rsa.PublicKey, p *rego.PreparedEvalQuery, apiKey string) error {
+	runtime.HTTPError = errors.CustomHTTPError
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err

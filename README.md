@@ -5,15 +5,15 @@ __OPTISAM__ (Optimized tool for inventive Software Asset Management) is a tool f
 
 
 - account-service
-- acqrights-service
 - application-service
 - auth-service
 - dps-service
 - equipment-service
-- hardware-config-service
+- simulation-service
 - import-service
 - license-service
 - metric-service
+- meta-service
 - product-service
 - report-service
 - simulation-service
@@ -46,16 +46,6 @@ docker build --pull -t optisam/postgres:latest -f Dockerfile .
 docker push optisam/postgres:latest
 ```
 
-### Run
-
-##### - Run using Docker-Compose
-
-you can create and start all the services from your configuration (docker-compose.yml) -
-
-```
-docker-compose -f docker-compose.yml pull
-docker-compose -f docker-compose.yml up
-```
 ##### - Play with factory super admin user
 
 1) Once docker-compose is up and running, open optisam dashboard at http://localhost:8090

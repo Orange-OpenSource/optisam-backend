@@ -10,14 +10,15 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	repo "optisam-backend/product-service/pkg/repository/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/product-service/pkg/worker"
+	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"strings"
 
 	"go.uber.org/zap"
@@ -37,10 +38,9 @@ func NewProductServiceServer(productRepo repo.Product, queue workerqueue.Workerq
 }
 
 func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.UpsertProductRequest) (*v1.UpsertProductResponse, error) {
-	logger.Log.Info("Service", zap.Any("UpsertProduct", req))
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 	err := s.productRepo.UpsertProductTx(ctx, req, userClaims.UserID)
 	if err != nil {
@@ -53,14 +53,14 @@ func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.Upsert
 	if err != nil {
 		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
 	}
-	e := worker.Envelope{Type: worker.UpsertProductRequest, Json: jsonData}
+	e := dgworker.Envelope{Type: dgworker.UpsertProductRequest, JSON: jsonData}
 
 	envolveData, err := json.Marshal(e)
 	if err != nil {
 		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
 	}
 
-	jobId, err := s.queue.PushJob(ctx, job.Job{
+	_, err = s.queue.PushJob(ctx, job.Job{
 		Type:   sql.NullString{String: "aw"},
 		Status: job.JobStatusPENDING,
 		Data:   envolveData,
@@ -68,20 +68,25 @@ func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.Upsert
 	if err != nil {
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 	}
-	logger.Log.Info("Succesfully pushed job", zap.Int32("jobId", jobId))
 	return &v1.UpsertProductResponse{Success: true}, nil
 }
 
 func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
 	var apiresp *v1.ListProductsResponse
 	var err error
 	if req.GetSearchParams().GetApplicationId().GetFilteringkey() != "" {
-		apiresp, err = s.listProductViewInApplication(ctx, req)
+		apiresp, err = s.listProductViewInApplication(ctx, req, req.Scopes)
 	} else if req.GetSearchParams().GetEquipmentId().GetFilteringkey() != "" {
-		apiresp, err = s.listProductViewInEquipment(ctx, req)
+		apiresp, err = s.listProductViewInEquipment(ctx, req, req.Scopes)
 	} else {
-		apiresp, err = s.listProductView(ctx, req)
+		apiresp, err = s.listProductView(ctx, req, req.Scopes)
 	}
 	if err != nil {
 		return nil, err
@@ -89,13 +94,9 @@ func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListPro
 	return apiresp, nil
 }
 
-func (s *productServiceServer) listProductView(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}
+func (s *productServiceServer) listProductView(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
 	dbresp, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
-		Scope:                 userClaims.Socpes,
+		Scope:                 scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
 		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -113,6 +114,8 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 		ProductVersionDesc:    strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditionAsc:     strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditionDesc:    strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductCategoryAsc:    strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductCategoryDesc:   strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditorAsc:      strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditorDesc:     strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		NumOfApplicationsAsc:  strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "asc"),
@@ -126,7 +129,8 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 		PageSize: req.GetPageSize(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Products-> "+err.Error())
+		logger.Log.Error("service/v1 - listProductView - db/ListProductsView", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ListProductsResponse{}
@@ -152,13 +156,10 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}
+func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+
 	dbresp, err := s.productRepo.ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
-		Scope:                 userClaims.Socpes,
+		Scope:                 scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
 		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -180,6 +181,8 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 		ProductVersionDesc:    strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditionAsc:     strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditionDesc:    strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductCategoryAsc:    strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductCategoryDesc:   strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditorAsc:      strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditorDesc:     strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		NumOfApplicationsAsc:  strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "asc"),
@@ -193,7 +196,8 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 		PageSize: req.GetPageSize(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Products-> "+err.Error())
+		logger.Log.Error("service/v1 - listProductViewInApplication - db/ListProductsViewRedirectedApplication", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ListProductsResponse{}
@@ -219,13 +223,9 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}
+func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
 	dbresp, err := s.productRepo.ListProductsViewRedirectedEquipment(ctx, db.ListProductsViewRedirectedEquipmentParams{
-		Scope:                 userClaims.Socpes,
+		Scope:                 scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
 		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -247,6 +247,8 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 		ProductVersionDesc:    strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditionAsc:     strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditionDesc:    strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductCategoryAsc:    strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductCategoryDesc:   strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ProductEditorAsc:      strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ProductEditorDesc:     strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		NumOfApplicationsAsc:  strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "asc"),
@@ -260,7 +262,8 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 		PageSize: req.GetPageSize(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Products-> "+err.Error())
+		logger.Log.Error("service/v1 - listProductViewInEquipment - db/ListProductsViewRedirectedEquipment", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ListProductsResponse{}
@@ -287,16 +290,20 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 }
 
 func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.ProductRequest) (*v1.ProductResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	dbresp, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
-		Swidtag: req.GetSwidTag(),
-		Scope:   userClaims.Socpes,
+		Swidtag: req.SwidTag,
+		Scope:   req.Scopes,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Products-> "+err.Error())
+		logger.Log.Error("service/v1 - GetProductDetail - db/GetProductInformation", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ProductResponse{}
@@ -309,16 +316,20 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 }
 
 func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.ProductRequest) (*v1.ProductOptionsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	dbresp, err := s.productRepo.GetProductOptions(ctx, db.GetProductOptionsParams{
 		Swidtag: req.GetSwidTag(),
-		Scope:   userClaims.Socpes,
+		Scope:   req.Scopes,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Products Options-> "+err.Error())
+		logger.Log.Error("service/v1 - GetProductOptions - db/GetProductOptions", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ProductOptionsResponse{}
@@ -330,6 +341,7 @@ func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.Pr
 	for i := range dbresp {
 		apiresp.Optioninfo[i] = &v1.OptionInfo{}
 		apiresp.Optioninfo[i].SwidTag = dbresp[i].Swidtag
+		apiresp.Optioninfo[i].Name = dbresp[i].ProductName
 		apiresp.Optioninfo[i].Edition = dbresp[i].ProductEdition
 		apiresp.Optioninfo[i].Version = dbresp[i].ProductVersion
 		apiresp.Optioninfo[i].Editor = dbresp[i].ProductEditor
@@ -337,67 +349,37 @@ func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.Pr
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) UpsertProductAggregation(ctx context.Context, req *v1.UpsertAggregationRequest) (*v1.UpsertAggregationResponse, error) {
-	/*userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.DropProductDataRequest) (*v1.DropProductDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}*/
-	var err error
-	switch strings.ToLower(req.ActionType) {
-	case "add":
-		err = s.productRepo.UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-			AggregationID:   req.GetAggregationId(),
-			AggregationName: req.GetAggregationName(),
-			Swidtags:        req.GetSwidtags(),
-		})
-	case "delete":
-
-		err = s.productRepo.DeleteProductAggregation(ctx, db.DeleteProductAggregationParams{AggregationID_2: req.GetAggregationId()})
-
-	case "upsert":
-
-		dbresp, err := s.productRepo.GetProductAggregation(ctx, db.GetProductAggregationParams{
-			AggregationID:   req.AggregationId,
-			AggregationName: req.AggregationName})
-		if err != nil {
-			return nil, status.Error(codes.Unknown, "failed in upsert aggregation "+err.Error())
-		}
-
-		var delIds []string
-		ids := make(map[string]int)
-		for _, id := range dbresp {
-			ids[id] = 0
-		}
-		for _, id := range req.Swidtags {
-			ids[id] = 1
-		}
-		for id, isDel := range ids {
-			if isDel == 0 {
-				delIds = append(delIds, id)
-			}
-		}
-		if len(delIds) > 0 {
-
-			err = s.productRepo.UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-				AggregationID:   0,
-				AggregationName: "",
-				Swidtags:        delIds})
-
-			if err != nil {
-				return nil, status.Error(codes.Unknown, "failed in upsert aggregation "+err.Error())
-			}
-		}
-
-		err = s.productRepo.UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-			AggregationID:   req.AggregationId,
-			AggregationName: req.AggregationName,
-			Swidtags:        req.Swidtags})
-
-	default:
-		return nil, status.Error(codes.Internal, "Undefined action requested ")
+		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
 	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	if err := s.productRepo.DropProductDataTx(ctx, req.Scope); err != nil {
+		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	// For dgworker Queue
+	jsonData, err := json.Marshal(req)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed in upsert aggregation "+err.Error())
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
 	}
-	return &v1.UpsertAggregationResponse{Success: true}, nil
+	e := dgworker.Envelope{Type: dgworker.DropProductDataRequest, JSON: jsonData}
+
+	envolveData, err := json.Marshal(e)
+	if err != nil {
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	}
+
+	_, err = s.queue.PushJob(ctx, job.Job{
+		Type:   sql.NullString{String: "aw"},
+		Status: job.JobStatusPENDING,
+		Data:   envolveData,
+	}, "aw")
+	if err != nil {
+		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+	}
+	return &v1.DropProductDataResponse{Success: true}, nil
 }

@@ -93,7 +93,7 @@ type EquipmentProduct struct {
 	Version string
 }
 
-// Equipment has generic infor mation about equipment an ancestors
+// Equipment has generic information about equipment an ancestors
 type Equipment struct {
 	ID      string
 	EquipID string

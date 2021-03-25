@@ -18,6 +18,12 @@ service EquipmentService {
     };
   }
 
+  rpc EquipmentsPerEquipmentType(EquipmentsPerEquipmentTypeRequest) returns (EquipmentsPerEquipmentTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/types/equipments"
+    };
+  }
+
   rpc UpsertEquipment(UpsertEquipmentRequest)
       returns (UpsertEquipmentResponse) {
     option (google.api.http) = {
@@ -33,8 +39,7 @@ service EquipmentService {
     };
   }
 
-  rpc GetEquipmentMetadata(EquipmentMetadataRequest)
-      returns (EquipmentMetadata) {
+  rpc GetEquipmentMetadata(EquipmentMetadataRequest) returns (EquipmentMetadata) {
     option (google.api.http) = {
       get : "/api/v1/equipments/metadata/{ID}"
     };
@@ -52,7 +57,11 @@ service EquipmentService {
       body : "*"
     };
   }
-
+  rpc DeleteEquipmentType(DeleteEquipmentTypeRequest)returns (DeleteEquipmentTypeResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/equipments/types/{equip_type}"
+    };
+  }
   // UpdateEquipmentType provides support for updating equipment
   // only addition of new attribyte is supported.
   // 1. Attributes added
@@ -60,13 +69,22 @@ service EquipmentService {
     option (google.api.http) = {
       put : "/api/v1/equipments/types/{id}"
       body : "*"
-      additional_bindings {patch : "/api/v1/equipments/types/{id}" body : "*"}
+      additional_bindings {
+        patch : "/api/v1/equipments/types/{id}" 
+        body : "*"
+      }
     };
   }
 
   rpc ListEquipments(ListEquipmentsRequest) returns (ListEquipmentsResponse) {
     option (google.api.http) = {
       get : "/api/v1/equipments/{type_id}"
+    };
+  }
+
+  rpc DropEquipmentData(DropEquipmentDataRequest)returns (DropEquipmentDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/equipments/{scope}"
     };
   }
 
@@ -83,39 +101,49 @@ service EquipmentService {
     };
   }
 
-  rpc ListEquipmentChildren(ListEquipmentChildrenRequest)
-      returns (ListEquipmentsResponse) {
+  rpc ListEquipmentChildren(ListEquipmentChildrenRequest) returns (ListEquipmentsResponse) {
     option (google.api.http) = {
       get : "/api/v1/equipments/{type_id}/{equip_id}/childs/{children_type_id}"
     };
   }
 
-  rpc ListEquipmentsForProductAggregation(
-      ListEquipmentsForProductAggregationRequest)
-      returns (ListEquipmentsResponse) {
+  rpc ListEquipmentsForProductAggregation(ListEquipmentsForProductAggregationRequest) returns (ListEquipmentsResponse) {
     option (google.api.http) = {
       get : "/api/v1/products/aggregations/{name}/equipments/{eq_type_id}"
     };
   }
 
-  rpc ListEquipmentsForProduct(ListEquipmentsForProductRequest)
-      returns (ListEquipmentsResponse) {
+  rpc ListEquipmentsForProduct(ListEquipmentsForProductRequest) returns (ListEquipmentsResponse) {
     option (google.api.http) = {
       get : "/api/v1/products/{swid_tag}/equipments/{eq_type_id}"
     };
   }
 }
 
+message EquipmentsPerEquipmentTypeRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message EquipmentsPerEquipmentTypeResponse {
+  repeated TypeEquipments types_equipments = 1;
+}
+
+message TypeEquipments {
+  string equip_type = 1;
+  int32 num_equipments = 2;
+}
+
 message UpsertMetadataRequest {
   string metadata_type = 1;
   string metadata_source = 2;
   repeated string metadata_attributes = 3;
+  string scope = 4 [(validate.rules).string.len = 3];
 }
 
 message UpsertMetadataResponse { bool success = 1; }
 
 message UpsertEquipmentRequest {
-  string scope =1;
+  string scope = 1 [(validate.rules).string.len = 3] ;
   string eq_type = 2;
   google.protobuf.Struct eq_data = 3;
 }
@@ -137,6 +165,7 @@ message ListEquipmentsForProductAggregationRequest {
   string sort_by = 5;
   SortOrder sort_order = 6;
   string search_params = 7;
+  repeated string scopes = 8  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListEquipmentsForProductRequest {
@@ -155,6 +184,7 @@ message ListEquipmentsForProductRequest {
   string sort_by = 5;
   SortOrder sort_order = 6;
   string search_params = 7;
+  repeated string scopes = 8  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListEquipmentChildrenRequest {
@@ -174,11 +204,13 @@ message ListEquipmentChildrenRequest {
   string sort_by = 6;
   SortOrder sort_order = 7;
   string search_params = 8; // "attr1=val1,attr2=val2,attr3=val3,..."
+  repeated string scopes = 9  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListEquipmentParentsRequest {
   string type_id = 1;
   string equip_id = 2;
+  repeated string scopes = 3  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message GetEquipmentParentsResponse { string equipments = 1; }
@@ -186,6 +218,7 @@ message GetEquipmentParentsResponse { string equipments = 1; }
 message GetEquipmentRequest {
   string type_id = 1;
   string equip_id = 2;
+  repeated string scopes = 3  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message GetEquipmentResponse { string equipment = 1; }
@@ -205,7 +238,8 @@ message ListEquipmentsRequest {
   string sort_by = 4;
   SortOrder sort_order = 5;
   string search_params = 6; // TODO: decide parsing formats
-  EquipFilter filter = 7;
+  EquipFilter filter = 7;  
+  repeated string scopes = 8  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message EquipFilter {
@@ -219,11 +253,32 @@ message ListEquipmentsResponse {
   bytes equipments = 2;
 }
 
+message DropEquipmentDataRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropEquipmentDataResponse { 
+  bool success = 1; 
+}
 message UpdateEquipmentTypeRequest {
   string id = 1;
   // Only send parent id if equipment type does not have a parent.
   string parent_id = 2;
   repeated Attribute attributes = 3;
+  repeated string scopes = 4  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message DeleteEquipmentTypeRequest{
+  string equip_type = 1 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  string scope = 2 [(validate.rules).string = {
+    pattern : "^[A-Z]+$",
+    min_len : 3,
+    max_len: 3,
+  }];
+}
+
+message DeleteEquipmentTypeResponse { 
+  bool success = 1; 
 }
 
 message EquipmentMetadataRequest {
@@ -234,6 +289,7 @@ message EquipmentMetadataRequest {
   }
   string ID = 1;
   Attributes attributes = 2 [ (validate.rules).enum.defined_only = true ];
+  repeated string scopes = 3  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListEquipmentMetadataRequest {
@@ -243,6 +299,7 @@ message ListEquipmentMetadataRequest {
     ALL = 2;
   }
   Type type = 1 [ (validate.rules).enum.defined_only = true ];
+  repeated string scopes = 2  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListEquipmentMetadataResponse {
@@ -252,10 +309,13 @@ message ListEquipmentMetadataResponse {
 message EquipmentMetadata {
   string ID = 1;
   string name = 2;
-  repeated string attributes = 3;
+  repeated string scopes = 3  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  repeated string attributes = 4;
 }
 
-message EquipmentTypesRequest {}
+message EquipmentTypesRequest {
+  repeated string scopes = 1  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
 
 message EquipmentTypesResponse { repeated EquipmentType equipment_types = 1; }
 
@@ -267,6 +327,7 @@ message EquipmentType {
   string metadata_id = 5;
   string metadata_source = 6;
   repeated Attribute attributes = 7;
+  repeated string scopes = 8  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message Attribute {

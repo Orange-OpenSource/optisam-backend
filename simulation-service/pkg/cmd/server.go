@@ -32,6 +32,8 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
+	"github.com/gobuffalo/packr/v2"
+	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
@@ -119,6 +121,16 @@ func RunServer() error {
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
+
+	// Run Migration
+	migrations := &migrate.PackrMigrationSource{
+		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
+	}
+	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
+	if err != nil {
+		logger.Log.Error(err.Error())
+	}
+	log.Printf("Applied %d migrations!\n", n)
 
 	// Record DB stats every 5 seconds until we exit
 	defer ocsql.RecordStats(db, 5*time.Second)()

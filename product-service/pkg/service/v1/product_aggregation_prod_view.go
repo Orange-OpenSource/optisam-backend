@@ -8,23 +8,29 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
+	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"strings"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *productServiceServer) ListProductAggregationView(ctx context.Context, req *v1.ListProductAggregationViewRequest) (*v1.ListProductAggregationViewResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
 	dbresp, err := s.productRepo.ListAggregationsView(ctx, db.ListAggregationsViewParams{
-		Scope:                 userClaims.Socpes,
+		Scope:                 req.Scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
 		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -49,17 +55,18 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 		PageSize: req.GetPageSize(),
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Product Aggregations-> "+err.Error())
+		logger.Log.Error("service/v1 - ListProductAggregationView - db/ListAggregationsView", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
 	apiresp := v1.ListProductAggregationViewResponse{}
-	apiresp.Aggregations = make([]*v1.ProductAggregation, len(dbresp))
+	apiresp.Aggregations = make([]*v1.ProductAggregationView, len(dbresp))
 	if len(dbresp) > 0 {
 		apiresp.TotalRecords = int32(dbresp[0].Totalrecords)
 	}
 
 	for i := range dbresp {
-		apiresp.Aggregations[i] = &v1.ProductAggregation{}
+		apiresp.Aggregations[i] = &v1.ProductAggregationView{}
 		apiresp.Aggregations[i].ID = dbresp[i].AggregationID
 		apiresp.Aggregations[i].Name = dbresp[i].AggregationName
 		apiresp.Aggregations[i].Editor = dbresp[i].ProductEditor
@@ -72,16 +79,20 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 }
 
 func (s *productServiceServer) ListProductAggregationProductView(ctx context.Context, req *v1.ListProductAggregationProductViewRequest) (*v1.ListProductAggregationProductViewResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	dbresp, err := s.productRepo.ListAggregationProductsView(ctx, db.ListAggregationProductsViewParams{
 		AggregationID: req.GetID(),
-		Scope:         userClaims.Socpes,
+		Scope:         req.Scopes,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Product Aggregations Products-> "+err.Error())
+		logger.Log.Error("service/v1 - ListProductAggregationProductView - db/ListAggregationProductsView", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 	apiresp := v1.ListProductAggregationProductViewResponse{}
 	apiresp.Products = make([]*v1.Product, len(dbresp))
@@ -101,18 +112,22 @@ func (s *productServiceServer) ListProductAggregationProductView(ctx context.Con
 }
 
 func (s *productServiceServer) ProductAggregationProductViewDetails(ctx context.Context, req *v1.ProductAggregationProductViewDetailsRequest) (*v1.ProductAggregationProductViewDetailsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
 	dbresp, err := s.productRepo.ProductAggregationDetails(ctx, db.ProductAggregationDetailsParams{
 		AggregationID: req.GetID(),
-		Scope:         userClaims.Socpes,
+		Scope:         req.Scopes,
 	})
 
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Product Aggregation Details-> "+err.Error())
+		logger.Log.Error("service/v1 - ProductAggregationProductViewDetails - db/ProductAggregationDetails", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 	apiresp := v1.ProductAggregationProductViewDetailsResponse{
 		ID:              dbresp.AggregationID,
@@ -129,17 +144,21 @@ func (s *productServiceServer) ProductAggregationProductViewDetails(ctx context.
 
 func (s *productServiceServer) ProductAggregationProductViewOptions(ctx context.Context, req *v1.ProductAggregationProductViewOptionsRequest) (*v1.ProductAggregationProductViewOptionsResponse, error) {
 
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
 	dbresp, err := s.productRepo.ProductAggregationChildOptions(ctx, db.ProductAggregationChildOptionsParams{
 		AggregationID: req.GetID(),
-		Scope:         userClaims.Socpes,
+		Scope:         req.Scopes,
 	})
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to get Product Aggregation Child Options-> "+err.Error())
+		logger.Log.Error("service/v1 - ProductAggregationProductViewOptions - db/ProductAggregationChildOptions", zap.Error(err))
+		return nil, status.Error(codes.Unknown, "DBError")
 	}
 	apiresp := v1.ProductAggregationProductViewOptionsResponse{}
 	apiresp.Optioninfo = make([]*v1.OptionInfo, len(dbresp))

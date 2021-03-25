@@ -7,7 +7,9 @@
 package config
 
 import (
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/dgraph"
+	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
@@ -38,6 +40,15 @@ type Config struct {
 	// gRPC is TCP port to listen by gRPC server
 	GRPCPort string
 
+	//for interservice rpc calls
+	GrpcServers grpc.Config
+
+	//Handles cron config
+	Cron cron.Config
+
+	//For interservice http calls(non grpc server)["ip:port"]
+	HttpServers httpConfg
+
 	// HTTP/REST gateway start parameters section
 	// HTTPPort is TCP port to listen by HTTP/REST gateway
 	HTTPPort string
@@ -48,6 +59,9 @@ type Config struct {
 	// Database connection information
 	Database postgres.Config
 
+	//MaxApiWorker
+	MaxApiWorker int
+
 	// Log configuration
 	Log logger.Config
 
@@ -57,10 +71,17 @@ type Config struct {
 	//WorkerQueue holds queue config
 	WorkerQueue workerqueue.QueueConfig
 
+	//MaxRiskWorker
+	MaxRiskWorker int
+
 	AppParams AppParameters
 
 	//IAM Configuration
 	IAM iam.Config
+}
+
+type httpConfg struct {
+	Address map[string]string
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -168,6 +189,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Dgraph configuration
 	_ = v.BindEnv("dgraph.host")
 
-	// App Params Configuration
+	// Database Password configuration
+	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 
 }

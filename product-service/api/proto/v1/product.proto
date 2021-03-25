@@ -7,11 +7,24 @@ package optisam.products.v1;
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 
 service ProductService {
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {
     option (google.api.http) = {
       get : "/api/v1/products"
+    };
+  }
+
+  rpc DashboardOverview(DashboardOverviewRequest) returns (DashboardOverviewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/overview"
+    };
+  }
+
+  rpc ProductsPerEditor(ProductsPerEditorRequest) returns (ProductsPerEditorResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/editors/products"
     };
   }
 
@@ -77,22 +90,164 @@ service ProductService {
     };
   }
 
-  rpc UpsertProductAggregation(UpsertAggregationRequest) returns (UpsertAggregationResponse) {
+  rpc UpsertAcqRights(UpsertAcqRightsRequest) returns (UpsertAcqRightsResponse) {
     option (google.api.http) = {
-      post : "/api/v1/products/aggregation"
+      post : "/api/v1/acqrights"
       body : "*"
     };
   }
+
+  rpc ProductsPerMetricType(ProductsPerMetricTypeRequest) returns (ProductsPerMetricTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/metrics/products"
+    };
+  }
+
+  rpc ComplianceAlert(ComplianceAlertRequest) returns (ComplianceAlertResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/alert/compliance"
+    };
+  }
+
+  rpc CounterfeitedProducts(CounterfeitedProductsRequest) returns (CounterfeitedProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/compliance/counterfeiting"
+    };
+  }
+
+  rpc OverdeployedProducts(OverdeployedProductsRequest) returns (OverdeployedProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/compliance/overdeployment"
+    };
+  }
+
+  rpc DashboardQualityProducts(DashboardQualityProductsRequest) returns (DashboardQualityProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/quality/products"
+    };
+  }
+
+  rpc ListAcqRights(ListAcqRightsRequest) returns (ListAcqRightsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/acqrights"
+    };
+  }
+
+  rpc ListAcqRightsAggregation(ListAcqRightsAggregationRequest)
+      returns (ListAcqRightsAggregationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/acqrights/aggregations"
+    };
+  }
+
+  rpc ListAcqRightsAggregationRecords(ListAcqRightsAggregationRecordsRequest)
+      returns (ListAcqRightsAggregationRecordsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/acqrights/aggregations/{aggregation_id}/records"
+    };
+  }
+
+  rpc CreateProductAggregation(ProductAggregationMessage)
+      returns (ProductAggregationMessage) {
+    option (google.api.http) = {
+      post : "/api/v1/aggregations"
+      body : "*"
+    };
+  }
+
+  rpc ListAcqRightsEditors(ListAcqRightsEditorsRequest)
+      returns (ListAcqRightsEditorsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/aggregations/editors"
+    };
+  }
+
+  rpc ListAcqRightsProducts(ListAcqRightsProductsRequest)
+      returns (ListAcqRightsProductsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/aggregations/products"
+    };
+  }
+
+  rpc ListAcqRightsMetrics(ListAcqRightsMetricsRequest)
+      returns (ListAcqRightsMetricsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/aggregations/metrics"
+    };
+  }
+
+  rpc ListProductAggregation(ListProductAggregationRequest)
+      returns (ListProductAggregationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/aggregations"
+    };
+  }
+  // update product aggregation
+  rpc UpdateProductAggregation(ProductAggregationMessage)
+      returns (ProductAggregationMessage) {
+    option (google.api.http) = {
+      put : "/api/v1/aggregations/{ID}"
+      body : "*"
+    };
+  }
+
+  rpc DeleteProductAggregation(DeleteProductAggregationRequest)
+      returns (DeleteProductAggregationResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/aggregations/{ID}"
+    };
+  }
+
+  rpc OverviewProductQuality(OverviewProductQualityRequest) returns (OverviewProductQualityResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dashboard/product/quality"
+    };
+  }
+
+  
+  rpc DropProductData(DropProductDataRequest)returns (DropProductDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/products/{scope}"
+    };
+  }
+
 }
 
-message ProductAggregationProductViewOptionsRequest { int32 ID = 1; }
+message OverviewProductQualityRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message OverviewProductQualityResponse{
+ int32 not_acquired_products = 1;
+ int32 not_deployed_products  = 2;
+ double not_acquired_products_percentage = 3;
+ double not_deployed_products_percentage = 4;
+}
+
+
+message ProductsPerEditorRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ProductsPerEditorResponse {
+  repeated EditorProducts editors_products = 1;
+}
+
+message EditorProducts {
+  string editor = 1;
+  int32 num_products = 2;
+}
+
+message ProductAggregationProductViewOptionsRequest { int32 ID = 1;
+  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
 
 message ProductAggregationProductViewOptionsResponse {
   int32 numOfOptions = 1;
   repeated OptionInfo optioninfo = 2;
 }
 
-message ProductAggregationProductViewDetailsRequest { int32 ID = 1; }
+message ProductAggregationProductViewDetailsRequest { int32 ID = 1;
+  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
 
 message ProductAggregationProductViewDetailsResponse {
   int32 ID = 1;
@@ -126,6 +281,7 @@ message ListProductAggregationViewRequest {
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
   ProductAggregationProductViewSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message ProductAggregationProductViewSearchParams {
@@ -140,31 +296,32 @@ message ProductAggregationProductViewSearchParams {
 
 message ListProductAggregationViewResponse {
   int32 totalRecords = 1;
-  repeated ProductAggregation aggregations = 2;
+  repeated ProductAggregationView aggregations = 2;
 }
 
-message ProductAggregation {
+message ProductAggregationView {
   int32 ID = 1;
   string name = 2;
   string editor = 3;
   int32 num_applications = 4;
   int32 num_equipments = 5;
-  int32 total_cost = 6;
+  double total_cost = 6;
   repeated string swidtags = 7;
 }
 
-message ListProductAggregationProductViewRequest { int32 ID = 1; }
+message ListProductAggregationProductViewRequest { int32 ID = 1;
+  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
 
 message ListProductAggregationProductViewResponse {
   repeated Product products = 1;
 }
-message ListEditorsRequest { repeated string scopes = 1;}
+  message ListEditorsRequest { repeated string scopes = 1  [(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];}
 
 message ListEditorsResponse { repeated string editors = 1; }
 
 message ListEditorProductsRequest { 
   string editor = 1;
-  repeated string scopes = 2;
+  repeated string scopes = 2 [(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message ListEditorProductsResponse { repeated Product products = 1; }
@@ -205,6 +362,7 @@ message ListProductsRequest {
       "swidtag",
       "version",
       "edition",
+      "category",
       "editor",
       "totalCost",
       "numOfApplications",
@@ -213,6 +371,7 @@ message ListProductsRequest {
   } ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
   ProductSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message ProductSearchParams {
@@ -223,7 +382,9 @@ message ProductSearchParams {
   StringFilter equipment_id = 5;
 }
 
-message ProductRequest { string swid_tag = 1; }
+message ProductRequest { string swid_tag = 1;
+  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+ }
 
 message ProductResponse {
   string swidTag = 1;
@@ -272,7 +433,8 @@ message UpsertProductRequest {
   string editor = 5;
   string version = 6;
   string optionOf = 7;
-  string scope = 8 [ (validate.rules).string = {min_len : 1, max_len : 10} ];
+  // SCOPE BASED CHANGES
+  string scope = 8 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
   application applications = 9;
   equipment equipments = 10;
   message application {
@@ -293,12 +455,302 @@ message UpsertProductRequest {
 
 message UpsertProductResponse { bool success = 1; }
 
-message UpsertAggregationRequest{
-  int32 aggregationId = 1;
-  string aggregationName = 2;
-  string actionType  = 3;
-  repeated string swidtags = 4;
+message ComplianceAlertRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ComplianceAlertResponse {
+  double counterfeiting_percentage = 1;
+  double overdeployment_percentage = 2;
+}
+
+message OverdeployedProductsRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor = 2;
+}
+
+message OverdeployedProductsResponse {
+  repeated ProductsLicenses products_licenses = 1;
+  repeated ProductsCosts products_costs = 2; 
+}
+
+message DashboardQualityProductsRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DashboardQualityProductsResponse {
+  repeated DashboardQualityProducts products_not_deployed = 1;
+  repeated DashboardQualityProducts products_not_acquired = 2;
+}
+
+message DashboardQualityProducts {
+  string swid_tag = 1;
+  string product_name = 2;
+}
+
+message ProductsLicenses {
+  string swid_tag = 1;
+  string product_name = 2;
+  int64 num_licenses_acquired = 3;
+  int64 num_licenses_computed = 4;
+  int64 delta = 5;
 
 }
 
-message UpsertAggregationResponse{ bool success =1;}
+message ProductsCosts {
+  string swid_tag = 1;
+  string product_name = 2;
+  double licenses_acquired_cost = 3;
+  double licenses_computed_cost = 4;
+  double delta_cost = 5;
+}
+
+
+message FinancialOverdeployedProducts {
+
+}
+
+message ProductsPerMetricTypeRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message CounterfeitedProductsRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor = 2;
+}
+
+message CounterfeitedProductsResponse {
+  repeated ProductsLicenses products_licenses = 1;
+  repeated ProductsCosts products_costs = 2; 
+
+}
+
+
+message ProductsPerMetricTypeResponse {
+  repeated MetricProducts metrics_products = 1;
+}
+
+message MetricProducts {
+  string metric_name = 1;
+  int32 num_products = 2;
+}
+
+message DashboardOverviewRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DashboardOverviewResponse {
+    double total_license_cost = 1;
+    double total_maintenance_cost = 2;
+    int32 num_editors = 3;
+    int32 num_products = 4;
+}
+
+message UpsertAcqRightsRequest {
+  string sku = 1 [ (validate.rules).string.min_len = 1 ];
+  string swidtag = 2 [ (validate.rules).string.min_len = 1 ];
+  string product_name = 3;
+  string product_editor = 4;
+  string metric_type = 5;
+  int32 num_licenses_acquired = 6;
+  double avg_unit_price = 7;
+  double avg_maintenance_unit_price = 8;
+  double total_purchase_cost = 9;
+  double total_maintenance_cost = 10;
+  double total_cost = 11;
+  string entity = 12;
+  string scope = 13 [ (validate.rules).string.min_len = 1 ];
+  string start_of_maintenance = 14 ;
+  string end_of_maintenance = 15 ;
+  int32 num_licences_maintainance = 16;
+  string version = 17 [ (validate.rules).string.min_len = 1 ];
+}
+
+
+
+message UpsertAcqRightsResponse { bool success = 1; }
+
+message ListAcqRightsRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lt : 100},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  enum SortBy {
+    ENTITY = 0;
+    SKU = 1;
+    SWID_TAG = 2;
+    PRODUCT_NAME = 3;
+    EDITOR = 4;
+    METRIC = 5;
+    ACQUIRED_LICENSES_NUMBER = 6;
+    AVG_LICENSE_UNIT_PRICE = 7;
+    AVG_MAINTENANCE_UNIT_PRICE = 8;
+    TOTAL_PURCHASE_COST = 9;
+    TOTAL_MAINTENANCE_COST = 10;
+    TOTAL_COST = 11;
+    START_OF_MAINTENANCE = 12;
+    END_OF_MAINTENANCE = 13;
+    LICENSES_UNDER_MAINTENANCE_NUMBER = 14;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4; //[(validate.rules).enum.defined_only = true];
+  AcqRightsSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message AcqRightsSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter SKU = 2;
+  StringFilter editor = 3;
+  StringFilter productName = 4;
+  StringFilter metric = 5;
+}
+
+message ListAcqRightsResponse {
+  int32 totalRecords = 1;
+  repeated AcqRights acquired_rights = 2;
+}
+
+message AcqRights {
+  string entity = 1;
+  string SKU = 2;
+  string swid_tag = 3;
+  string product_name = 4;
+  string editor = 5;
+  string metric = 6;
+  int32 acquired_licenses_number = 7;
+  double avg_licenes_unit_price = 8;
+  double avg_maintenance_unit_price = 9;
+  double total_purchase_cost = 10;
+  double total_maintenance_cost = 11;
+  double total_cost = 12;
+  google.protobuf.Timestamp start_of_maintenance = 13;
+  google.protobuf.Timestamp end_of_maintenance = 14;
+  string licenses_under_maintenance = 15;
+  int32 licenses_under_maintenance_number = 16;
+  string version = 17 ;
+}
+
+message ListAcqRightsAggregationRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 100}
+  ];
+  enum SortBy {
+    NAME = 0;
+    EDITOR = 1;
+    TOTAL_COST = 2;
+    METRIC = 3;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4;
+  ListAcqRightsAggregationSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+  
+}
+
+message ListAcqRightsAggregationResponse {
+  int32 totalRecords = 1;
+  repeated AcqRightsAggregation aggregations = 2;
+}
+
+message AcqRightsAggregation {
+  int32 ID = 1;
+  string name = 2;
+  string scope = 3;
+  string editor = 4;
+  repeated string swidtags = 5;
+  repeated string skus = 6;
+  string metric = 7;
+  double total_cost = 8;
+}
+
+message ListAcqRightsAggregationSearchParams {
+  StringFilter swidTag = 1;
+  StringFilter name = 2;
+  StringFilter editor = 3;
+  StringFilter SKU = 5;
+  StringFilter metric = 6;
+  /* map<string,string> search_map = 5 [(validate.rules).map.keys.string = {in:
+   * ["name",
+   * "swidtag","version","category","editor","metric","numCptLicences","numAcqLicences","totalCost","deltaNumber","deltaCost","numOfApplications","numofEquipments"]}];*/
+}
+
+message ListAcqRightsAggregationRecordsRequest { int32 aggregation_id = 1;
+repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+ }
+
+message ListAcqRightsAggregationRecordsResponse {
+  repeated AcqRights acquired_rights = 1;
+}
+
+message DeleteProductAggregationRequest {
+  int32 ID = 1;
+  string scope = 2;
+}
+
+message DeleteProductAggregationResponse { bool success = 1; }
+
+message ListProductAggregationResponse {
+  repeated ProductAggregation aggregations = 1;
+}
+
+message ListProductAggregationRequest {
+  // May be required in future
+  repeated string scopes = 1 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ProductAggregationMessage {
+  int32 ID = 1;
+  string name = 2;
+  string editor = 3;
+  string metric = 4;
+  string scope = 5;
+  repeated string products = 6;
+}
+
+message ProductAggregation {
+  int32 ID = 1;
+  string name = 2;
+  string editor = 3;
+  repeated string product_names = 4;
+  string metric = 5;
+  string scope = 6;
+  repeated string products = 7;
+}
+
+
+message ListAcqRightsEditorsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
+message ListAcqRightsEditorsResponse { repeated string editor = 1; }
+
+message ListAcqRightsMetricsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
+message ListAcqRightsMetricsResponse { repeated string metric = 1; }
+
+message ListAcqRightsProductsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; string editor =2; string metric = 3;}
+message ListAcqRightsProductsResponse {
+  repeated AcqRightsProducts acqrights_products = 1;
+  message AcqRightsProducts {
+    string swidtag = 1;
+    string product_name = 2;
+  }
+}
+
+message DropProductDataRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropProductDataResponse { 
+  bool success = 1; 
+}

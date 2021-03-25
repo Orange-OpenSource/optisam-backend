@@ -20,7 +20,7 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		mat    *v1.MetricIPS
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -32,7 +32,8 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 		{name: "sucess",
 			l: NewMetricRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: "scope1",
 			},
 			setup: func() (retMat *v1.MetricIPS, cleanup func() error, retErr error) {
 
@@ -145,7 +146,7 @@ func TestMetricRepository_GetMetricConfigIPS(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		metName string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
@@ -160,9 +161,10 @@ func TestMetricRepository_GetMetricConfigIPS(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				metName: "ips1",
+				scopes:  "scope1",
 			},
 			setup: func() (func() error, error) {
-				ids, err := addMetricIPSConfig("ips1")
+				ids, err := addMetricIPSConfig("ips1", "scope1")
 				if err != nil {
 					t.Errorf("Failed to create config of SPS metric, err : %v", err)
 				}
@@ -199,7 +201,7 @@ func TestMetricRepository_GetMetricConfigIPS(t *testing.T) {
 	}
 }
 
-func addMetricIPSConfig(metName string) (ids map[string]string, err error) {
+func addMetricIPSConfig(metName string, scope string) (ids map[string]string, err error) {
 
 	mu := &api.Mutation{
 		CommitNow: true,
@@ -258,6 +260,11 @@ func addMetricIPSConfig(metName string) (ids map[string]string, err error) {
 				Subject:     blankID("attribute3"),
 				Predicate:   "attribute.name",
 				ObjectValue: stringObjectValue("ips_cores"),
+			},
+			&api.NQuad{
+				Subject:     blankID("metric"),
+				Predicate:   "scopes",
+				ObjectValue: stringObjectValue(scope),
 			},
 		},
 	}

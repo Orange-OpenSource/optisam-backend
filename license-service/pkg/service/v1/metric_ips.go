@@ -8,7 +8,6 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -32,15 +31,15 @@ func metricNameExistsIPS(metrics []*repo.MetricIPS, name string) int {
 	return -1
 }
 
-func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricIPSComputed) (uint64, error)) (uint64, error) {
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricIPS(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricIPS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesIPS", zap.Error(err))
 		return 0, status.Error(codes.Internal, "cannot fetch metric IPS")
 	}
 	ind := 0
-	if ind = metricNameExistsIPS(metrics, met); ind == -1 {
+	if ind = metricNameExistsIPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
 		return 0, status.Error(codes.Internal, "cannot find metric name")
 	}
 
@@ -49,7 +48,12 @@ func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes 
 		logger.Log.Error("service/v1 - computedLicensesIPS - computedMetricIPS - ", zap.Error(err))
 		return 0, err
 	}
-	computedLicenses, err := cal(mat)
+	computedLicenses := uint64(0)
+	if input[IS_AGG].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesIPS - ", zap.String("reason", err.Error()))
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")

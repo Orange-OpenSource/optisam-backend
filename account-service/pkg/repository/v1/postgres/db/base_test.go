@@ -22,6 +22,7 @@ const (
 	dropQuery  = `
 	DROP TABLE IF EXISTS group_ownership;
 	DROP TABLE IF EXISTS groups;
+	DROP TABLE IF EXISTS scopes;
 	DROP TABLE IF EXISTS users;
 	DROP TABLE IF EXISTS users_audit;
 	DROP TYPE  IF EXISTS audit_status;

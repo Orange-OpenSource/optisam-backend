@@ -4,6 +4,10 @@
     "title": "equipment.proto",
     "version": "version not set"
   },
+  "schemes": [
+    "http",
+    "https"
+  ],
   "consumes": [
     "application/json"
   ],
@@ -11,6 +15,30 @@
     "application/json"
   ],
   "paths": {
+    "/api/v1/dashboard/types/equipments": {
+      "get": {
+        "operationId": "EquipmentsPerEquipmentType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EquipmentsPerEquipmentTypeResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipments": {
       "post": {
         "operationId": "UpsertEquipment",
@@ -19,12 +47,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1UpsertEquipmentResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -52,12 +74,6 @@
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentMetadataResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -72,6 +88,15 @@
               "ALL"
             ],
             "default": "UN_MAPPED"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -85,12 +110,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1UpsertMetadataResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -118,12 +137,6 @@
             "schema": {
               "$ref": "#/definitions/v1EquipmentMetadata"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -144,6 +157,15 @@
               "Unmapped"
             ],
             "default": "All"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -160,14 +182,19 @@
             "schema": {
               "$ref": "#/definitions/v1EquipmentTypesResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
         "tags": [
           "EquipmentService"
         ]
@@ -179,12 +206,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1EquipmentType"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -203,6 +224,36 @@
         ]
       }
     },
+    "/api/v1/equipments/types/{equip_type}": {
+      "delete": {
+        "operationId": "DeleteEquipmentType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteEquipmentTypeResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "equip_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipments/types/{id}": {
       "put": {
         "summary": "UpdateEquipmentType provides support for updating equipment\nonly addition of new attribyte is supported.\n1. Attributes added",
@@ -212,12 +263,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1EquipmentType"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -250,12 +295,6 @@
             "schema": {
               "$ref": "#/definitions/v1EquipmentType"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -279,6 +318,30 @@
         ]
       }
     },
+    "/api/v1/equipments/{scope}": {
+      "delete": {
+        "operationId": "DropEquipmentData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DropEquipmentDataResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipments/{type_id}": {
       "get": {
         "operationId": "ListEquipments",
@@ -287,12 +350,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -375,8 +432,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "filter.product_id.filteringOrder",
@@ -409,8 +465,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "filter.instance_id.filteringOrder",
@@ -443,8 +498,16 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -461,12 +524,6 @@
             "schema": {
               "$ref": "#/definitions/v1GetEquipmentResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -481,6 +538,15 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -496,12 +562,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -564,6 +624,15 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -580,12 +649,6 @@
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentsResponse"
             }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
           }
         },
         "parameters": [
@@ -600,6 +663,15 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -615,12 +687,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -677,6 +743,15 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -692,12 +767,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListEquipmentsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -754,6 +823,15 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -772,20 +850,18 @@
       ],
       "default": "All"
     },
-    "protobufAny": {
+    "protobufListValue": {
       "type": "object",
       "properties": {
-        "type_url": {
-          "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
-        },
-        "value": {
-          "type": "string",
-          "format": "byte",
-          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufValue"
+          },
+          "description": "Repeated field of dynamically typed values."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`ListValue` is a wrapper around a repeated field of values.\n\nThe JSON representation for `ListValue` is JSON array."
     },
     "protobufNullValue": {
       "type": "string",
@@ -795,26 +871,50 @@
       "default": "NULL_VALUE",
       "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
-    "runtimeError": {
+    "protobufStruct": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string"
-        },
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "message": {
-          "type": "string"
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/protobufAny"
-          }
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/protobufValue"
+          },
+          "description": "Unordered map of dynamically typed values."
         }
-      }
+      },
+      "description": "`Struct` represents a structured data value, consisting of fields\nwhich map to dynamically typed values. In some languages, `Struct`\nmight be supported by a native representation. For example, in\nscripting languages like JS a struct is represented as an\nobject. The details of that representation are described together\nwith the proto support for the language.\n\nThe JSON representation for `Struct` is JSON object."
+    },
+    "protobufValue": {
+      "type": "object",
+      "properties": {
+        "null_value": {
+          "$ref": "#/definitions/protobufNullValue",
+          "description": "Represents a null value."
+        },
+        "number_value": {
+          "type": "number",
+          "format": "double",
+          "description": "Represents a double value."
+        },
+        "string_value": {
+          "type": "string",
+          "description": "Represents a string value."
+        },
+        "bool_value": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "Represents a boolean value."
+        },
+        "struct_value": {
+          "$ref": "#/definitions/protobufStruct",
+          "description": "Represents a structured value."
+        },
+        "list_value": {
+          "$ref": "#/definitions/protobufListValue",
+          "description": "Represents a repeated `Value`."
+        }
+      },
+      "description": "`Value` represents a dynamically typed value which can be either\nnull, a number, a string, a boolean, a recursive struct value, or a\nlist of values. A producer of value is expected to set one of that\nvariants, absence of any variant indicates an error.\n\nThe JSON representation for `Value` is JSON value."
     },
     "v1Attribute": {
       "type": "object",
@@ -885,6 +985,24 @@
       ],
       "default": "UNKNOWN"
     },
+    "v1DeleteEquipmentTypeResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "v1DropEquipmentDataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
     "v1EquipFilter": {
       "type": "object",
       "properties": {
@@ -907,6 +1025,12 @@
         },
         "name": {
           "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "attributes": {
           "type": "array",
@@ -942,6 +1066,12 @@
           "items": {
             "$ref": "#/definitions/v1Attribute"
           }
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -952,6 +1082,17 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1EquipmentType"
+          }
+        }
+      }
+    },
+    "v1EquipmentsPerEquipmentTypeResponse": {
+      "type": "object",
+      "properties": {
+        "types_equipments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1TypeEquipments"
           }
         }
       }
@@ -1036,6 +1177,18 @@
       ],
       "default": "REGEX"
     },
+    "v1TypeEquipments": {
+      "type": "object",
+      "properties": {
+        "equip_type": {
+          "type": "string"
+        },
+        "num_equipments": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "v1UpdateEquipmentTypeRequest": {
       "type": "object",
       "properties": {
@@ -1051,6 +1204,12 @@
           "items": {
             "$ref": "#/definitions/v1Attribute"
           }
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1064,7 +1223,7 @@
           "type": "string"
         },
         "eq_data": {
-          "type": "object"
+          "$ref": "#/definitions/protobufStruct"
         }
       }
     },
@@ -1091,6 +1250,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "scope": {
+          "type": "string"
         }
       }
     },

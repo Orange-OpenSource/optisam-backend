@@ -100,7 +100,6 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, versi
 		}
 		_, ok := attrMap[idx]
 		if !ok {
-			logger.Log.Info("no mapping is found for csv coloumn", zap.String("csv_coloumn", columns[index]), zap.String("filename:", filename), zap.String("col", attr.MappedTo))
 		}
 	}
 

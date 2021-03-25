@@ -68,7 +68,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 		ctx    context.Context
 		id     string
 		mat    *v1.MetricOPSComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {
@@ -306,7 +306,7 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 		ctx    context.Context
 		id     string
 		mat    *v1.MetricOPSComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {
@@ -551,6 +551,90 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 	}
 
 	//time.Sleep(10 * time.Minute)
+}
+
+func TestLicenseRepository_MetricOPSComputedLicensesForAppProduct(t *testing.T) {
+	cleanup, err := setup()
+	if !assert.Empty(t, err, "error is not expected in setup") {
+		return
+	}
+	defer func() {
+		if !assert.Empty(t, cleanup(), "error is not expected in cleanup") {
+			return
+		}
+	}()
+	type args struct {
+		ctx    context.Context
+		prodID string
+		appID  string
+		mat    *v1.MetricOPSComputed
+		scopes string
+	}
+	tests := []struct {
+		name    string
+		l       *LicenseRepository
+		args    args
+		want    uint64
+		wantErr bool
+	}{
+		{
+			name: "SUCCESS",
+			args: args{
+				ctx:    context.Background(),
+				prodID: "0x28",
+				appID:  "A2",
+				mat: &v1.MetricOPSComputed{
+					EqTypeTree: []*v1.EquipmentType{
+						&v1.EquipmentType{
+							Type: "Partition",
+						},
+						&v1.EquipmentType{
+							Type: "Server",
+						},
+						&v1.EquipmentType{
+							Type: "Cluster",
+						},
+						&v1.EquipmentType{
+							Type: "Vcenter",
+						},
+						&v1.EquipmentType{
+							Type: "Datacenter",
+						},
+					},
+					BaseType: &v1.EquipmentType{
+						Type: "Server",
+					},
+					AggregateLevel: &v1.EquipmentType{
+						Type: "Cluster",
+					},
+					NumCoresAttr: &v1.Attribute{
+						Name: "ServerCoresNumber",
+					},
+					NumCPUAttr: &v1.Attribute{
+						Name: "ServerProcessorsNumber",
+					},
+					CoreFactorAttr: &v1.Attribute{
+						Name: "OracleCoreFactor",
+					},
+				},
+				scopes: "scope3",
+			},
+			want: uint64(112),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := NewLicenseRepository(dgClient)
+			got, err := l.MetricOPSComputedLicensesForAppProduct(tt.args.ctx, tt.args.prodID, tt.args.appID, tt.args.mat, tt.args.scopes)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LicenseRepository.MetricOPSComputedLicensesForAppProduct() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("LicenseRepository.MetricOPSComputedLicensesForAppProduct() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
 func aggSetup(metricName, productID, aggName string) (func() error, error) {

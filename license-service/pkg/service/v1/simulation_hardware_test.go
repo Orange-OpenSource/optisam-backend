@@ -10,7 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -94,7 +94,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			Type: "Datacenter",
 		},
 	}
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -159,7 +159,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -317,7 +317,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -466,7 +466,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -527,7 +527,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -576,7 +576,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -637,7 +637,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -698,7 +698,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -760,7 +760,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -823,7 +823,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -885,7 +885,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -974,7 +974,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1063,7 +1063,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1174,7 +1174,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1295,7 +1295,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1352,7 +1352,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1543,7 +1543,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1763,7 +1763,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -1907,7 +1907,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipType:  "Server",
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1927,7 +1927,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1989,7 +1989,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2051,7 +2051,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2084,7 +2084,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -2118,7 +2118,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -2152,7 +2152,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -2186,7 +2186,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -2248,7 +2248,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					EquipId:    "e1ID",
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
-					Scopes:     []string{"Scope1"},
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -2339,7 +2339,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2457,7 +2457,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2584,7 +2584,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2735,7 +2735,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup:   func() {},
@@ -2778,7 +2778,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope4"},
+					Scope: "Scope4",
 				},
 			},
 			setup:   func() {},
@@ -2821,7 +2821,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2869,7 +2869,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -2914,7 +2914,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3028,7 +3028,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3074,7 +3074,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3128,7 +3128,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3182,7 +3182,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3236,7 +3236,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3310,7 +3310,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3384,7 +3384,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3498,7 +3498,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3544,7 +3544,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3598,7 +3598,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3652,7 +3652,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3706,7 +3706,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -3780,7 +3780,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 					},
-					Scopes: []string{"Scope1"},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {

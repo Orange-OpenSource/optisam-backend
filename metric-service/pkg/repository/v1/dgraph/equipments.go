@@ -90,10 +90,10 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 }
 
 // EquipmentTypes implements Licence EquipmentTypes function
-func (lr *MetricRepository) EquipmentTypes(ctx context.Context, scopes []string) ([]*v1.EquipmentType, error) {
+func (lr *MetricRepository) EquipmentTypes(ctx context.Context, scope string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
-		EqTypes(func:has(metadata.equipment.type)){
+		EqTypes(func:has(metadata.equipment.type))@filter(eq(scopes,` + scope + `)){
 		  ` + eqTypeFields + `
 		}
 	}

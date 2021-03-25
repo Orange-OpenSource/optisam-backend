@@ -15,6 +15,9 @@ CREATE TABLE jobs (
   retry_count INTEGER DEFAULT 0
 );
 
+CREATE INDEX status_index ON jobs (status);
+
+CREATE INDEX uploadID_index ON jobs ( (data ->> 'UploadID'));
 -- +migrate Down
 -- SQL section 'Down' is executed when this migration is rolled back
 DROP TABLE jobs;

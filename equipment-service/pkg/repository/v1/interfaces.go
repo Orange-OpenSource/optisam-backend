@@ -32,6 +32,12 @@ type Equipment interface {
 	// EquipmentTypes fetches all equipment types from database
 	EquipmentTypes(ctx context.Context, scopes []string) ([]*EquipmentType, error)
 
+	// DeleteEquipmentType deletes equipment type from database
+	DeleteEquipmentType(ctx context.Context, eqType, scope string) error
+
+	// EquipmentTypeChildren fetches all equipment type children from database
+	EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*EquipmentType, error)
+
 	//UpsertMetaData stores metadata in dgrpah
 	UpsertMetadata(ctx context.Context, metadata *Metadata) error
 
@@ -39,6 +45,7 @@ type Equipment interface {
 
 	UpdateEquipmentType(ctx context.Context, id string, typ string, req *UpdateEquipmentRequest, scopes []string) (retType []*Attribute, retErr error)
 	Equipments(ctx context.Context, eqType *EquipmentType, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
+	DeleteEquipments(ctx context.Context, scope string) error
 
 	// Equipment gets equipmet for given type and id if exists,if not exist then ErrNotFound
 	Equipment(ctx context.Context, eqType *EquipmentType, id string, scopes []string) (json.RawMessage, error)
@@ -49,7 +56,7 @@ type Equipment interface {
 	// EquipmentChildren return children of the given equipment id for child type
 	EquipmentChildren(ctx context.Context, eqType, childEqType *EquipmentType, id string, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
 
-	EquipmentTypeByType(ctx context.Context, typ string) (*EquipmentType, error)
+	EquipmentTypeByType(ctx context.Context, typ string, scopes []string) (*EquipmentType, error)
 
 	UpsertEquipment(ctx context.Context, scope string, eqType string, parentEqType string, eqData interface{}) error
 }

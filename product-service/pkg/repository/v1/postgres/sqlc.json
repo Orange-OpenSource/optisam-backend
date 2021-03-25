@@ -1,14 +1,20 @@
 {
-    "version": "1",
-    "packages": [
-      {
-        "name": "db",
-        "emit_json_tags": true,
-        "emit_prepared_queries": false,
-        "emit_interface": true,
-        "path": "./db/",
-        "queries": "./query/",
-        "schema": "./schema/"
-      }
-    ]
-  }
+  "version": "1",
+  "packages": [
+    {
+      "name": "db",
+      "emit_json_tags": true,
+      "emit_prepared_queries": false,
+      "emit_interface": true,
+      "path": "./db/",
+      "queries": "./query/",
+      "schema": "./schema/"
+    }
+  ],
+  "overrides": [
+    {
+      "go_type": "github.com/shopspring/decimal.Decimal",
+      "db_type": "pg_catalog.numeric"
+    }
+  ]
+}

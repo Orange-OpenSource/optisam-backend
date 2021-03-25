@@ -71,6 +71,39 @@ func local_request_EquipmentService_UpsertMetadata_0(ctx context.Context, marsha
 
 }
 
+var (
+	filter_EquipmentService_EquipmentsPerEquipmentType_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_EquipmentService_EquipmentsPerEquipmentType_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq EquipmentsPerEquipmentTypeRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EquipmentService_EquipmentsPerEquipmentType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.EquipmentsPerEquipmentType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_EquipmentService_EquipmentsPerEquipmentType_0(ctx context.Context, marshaler runtime.Marshaler, server EquipmentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq EquipmentsPerEquipmentTypeRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EquipmentService_EquipmentsPerEquipmentType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.EquipmentsPerEquipmentType(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_EquipmentService_UpsertEquipment_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UpsertEquipmentRequest
 	var metadata runtime.ServerMetadata
@@ -207,9 +240,20 @@ func local_request_EquipmentService_GetEquipmentMetadata_0(ctx context.Context, 
 
 }
 
+var (
+	filter_EquipmentService_EquipmentsTypes_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_EquipmentService_EquipmentsTypes_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq EquipmentTypesRequest
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EquipmentService_EquipmentsTypes_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.EquipmentsTypes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -219,6 +263,10 @@ func request_EquipmentService_EquipmentsTypes_0(ctx context.Context, marshaler r
 func local_request_EquipmentService_EquipmentsTypes_0(ctx context.Context, marshaler runtime.Marshaler, server EquipmentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq EquipmentTypesRequest
 	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EquipmentService_EquipmentsTypes_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.EquipmentsTypes(ctx, &protoReq)
 	return msg, metadata, err
@@ -255,6 +303,75 @@ func local_request_EquipmentService_CreateEquipmentType_0(ctx context.Context, m
 	}
 
 	msg, err := server.CreateEquipmentType(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_EquipmentService_DeleteEquipmentType_0 = &utilities.DoubleArray{Encoding: map[string]int{"equip_type": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_EquipmentService_DeleteEquipmentType_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteEquipmentTypeRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["equip_type"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "equip_type")
+	}
+
+	protoReq.EquipType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_type", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EquipmentService_DeleteEquipmentType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.DeleteEquipmentType(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_EquipmentService_DeleteEquipmentType_0(ctx context.Context, marshaler runtime.Marshaler, server EquipmentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteEquipmentTypeRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["equip_type"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "equip_type")
+	}
+
+	protoReq.EquipType, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_type", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EquipmentService_DeleteEquipmentType_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteEquipmentType(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -468,6 +585,64 @@ func local_request_EquipmentService_ListEquipments_0(ctx context.Context, marsha
 
 }
 
+func request_EquipmentService_DropEquipmentData_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DropEquipmentDataRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scope"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope")
+	}
+
+	protoReq.Scope, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope", err)
+	}
+
+	msg, err := client.DropEquipmentData(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_EquipmentService_DropEquipmentData_0(ctx context.Context, marshaler runtime.Marshaler, server EquipmentServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DropEquipmentDataRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scope"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope")
+	}
+
+	protoReq.Scope, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope", err)
+	}
+
+	msg, err := server.DropEquipmentData(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_EquipmentService_GetEquipment_0 = &utilities.DoubleArray{Encoding: map[string]int{"type_id": 0, "equip_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
 func request_EquipmentService_GetEquipment_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetEquipmentRequest
 	var metadata runtime.ServerMetadata
@@ -499,6 +674,13 @@ func request_EquipmentService_GetEquipment_0(ctx context.Context, marshaler runt
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EquipmentService_GetEquipment_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetEquipment(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -539,10 +721,18 @@ func local_request_EquipmentService_GetEquipment_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
 	}
 
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EquipmentService_GetEquipment_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
 	msg, err := server.GetEquipment(ctx, &protoReq)
 	return msg, metadata, err
 
 }
+
+var (
+	filter_EquipmentService_ListEquipmentParents_0 = &utilities.DoubleArray{Encoding: map[string]int{"type_id": 0, "equip_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
 
 func request_EquipmentService_ListEquipmentParents_0(ctx context.Context, marshaler runtime.Marshaler, client EquipmentServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListEquipmentParentsRequest
@@ -575,6 +765,13 @@ func request_EquipmentService_ListEquipmentParents_0(ctx context.Context, marsha
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_EquipmentService_ListEquipmentParents_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListEquipmentParents(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -613,6 +810,10 @@ func local_request_EquipmentService_ListEquipmentParents_0(ctx context.Context, 
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_EquipmentService_ListEquipmentParents_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.ListEquipmentParents(ctx, &protoReq)
@@ -940,6 +1141,26 @@ func RegisterEquipmentServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 
 	})
 
+	mux.Handle("GET", pattern_EquipmentService_EquipmentsPerEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_EquipmentService_EquipmentsPerEquipmentType_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_EquipmentsPerEquipmentType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_EquipmentService_UpsertEquipment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1040,6 +1261,26 @@ func RegisterEquipmentServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 
 	})
 
+	mux.Handle("DELETE", pattern_EquipmentService_DeleteEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_EquipmentService_DeleteEquipmentType_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_DeleteEquipmentType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_EquipmentService_UpdateEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1097,6 +1338,26 @@ func RegisterEquipmentServiceHandlerServer(ctx context.Context, mux *runtime.Ser
 		}
 
 		forward_EquipmentService_ListEquipments_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_EquipmentService_DropEquipmentData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_EquipmentService_DropEquipmentData_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_DropEquipmentData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1261,6 +1522,26 @@ func RegisterEquipmentServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
+	mux.Handle("GET", pattern_EquipmentService_EquipmentsPerEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_EquipmentService_EquipmentsPerEquipmentType_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_EquipmentsPerEquipmentType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_EquipmentService_UpsertEquipment_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1361,6 +1642,26 @@ func RegisterEquipmentServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
+	mux.Handle("DELETE", pattern_EquipmentService_DeleteEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_EquipmentService_DeleteEquipmentType_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_DeleteEquipmentType_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_EquipmentService_UpdateEquipmentType_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1418,6 +1719,26 @@ func RegisterEquipmentServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 		}
 
 		forward_EquipmentService_ListEquipments_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_EquipmentService_DropEquipmentData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_EquipmentService_DropEquipmentData_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_EquipmentService_DropEquipmentData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1527,6 +1848,8 @@ func RegisterEquipmentServiceHandlerClient(ctx context.Context, mux *runtime.Ser
 var (
 	pattern_EquipmentService_UpsertMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "equipments", "metadata"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_EquipmentService_EquipmentsPerEquipmentType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "dashboard", "types", "equipments"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_EquipmentService_UpsertEquipment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "equipments"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_EquipmentService_ListEquipmentsMetadata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "equipments", "metadata"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -1537,11 +1860,15 @@ var (
 
 	pattern_EquipmentService_CreateEquipmentType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "equipments", "types"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_EquipmentService_DeleteEquipmentType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "equipments", "types", "equip_type"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_EquipmentService_UpdateEquipmentType_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "equipments", "types", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_EquipmentService_UpdateEquipmentType_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "equipments", "types", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_EquipmentService_ListEquipments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "equipments", "type_id"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_EquipmentService_DropEquipmentData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "equipments", "scope"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_EquipmentService_GetEquipment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "equipments", "type_id", "equip_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -1557,6 +1884,8 @@ var (
 var (
 	forward_EquipmentService_UpsertMetadata_0 = runtime.ForwardResponseMessage
 
+	forward_EquipmentService_EquipmentsPerEquipmentType_0 = runtime.ForwardResponseMessage
+
 	forward_EquipmentService_UpsertEquipment_0 = runtime.ForwardResponseMessage
 
 	forward_EquipmentService_ListEquipmentsMetadata_0 = runtime.ForwardResponseMessage
@@ -1567,11 +1896,15 @@ var (
 
 	forward_EquipmentService_CreateEquipmentType_0 = runtime.ForwardResponseMessage
 
+	forward_EquipmentService_DeleteEquipmentType_0 = runtime.ForwardResponseMessage
+
 	forward_EquipmentService_UpdateEquipmentType_0 = runtime.ForwardResponseMessage
 
 	forward_EquipmentService_UpdateEquipmentType_1 = runtime.ForwardResponseMessage
 
 	forward_EquipmentService_ListEquipments_0 = runtime.ForwardResponseMessage
+
+	forward_EquipmentService_DropEquipmentData_0 = runtime.ForwardResponseMessage
 
 	forward_EquipmentService_GetEquipment_0 = runtime.ForwardResponseMessage
 

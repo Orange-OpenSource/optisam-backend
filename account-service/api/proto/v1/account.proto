@@ -5,7 +5,7 @@ option go_package = "v1";
 package v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/field_mask.proto";
+//import "google/protobuf/field_mask.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -136,9 +136,7 @@ service AccountService {
   }
 }
 
-message ListScopesRequest {
-  
-}
+message ListScopesRequest {}
 
 message ListScopesResponse {
     repeated Scope scopes = 1;
@@ -250,7 +248,7 @@ message Account {
 
 message UpdateAccountRequest {
   UpdateAccount account = 1;
-  google.protobuf.FieldMask update_mask = 2;
+ // google.protobuf.FieldMask update_mask = 2;
 }
 
 message UpdateAccount {

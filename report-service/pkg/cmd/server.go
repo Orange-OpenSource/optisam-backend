@@ -109,6 +109,10 @@ func RunServer() error {
 		os.Exit(3)
 	}
 
+	if cfg.MaxApiWorker == 0 {
+		cfg.MaxApiWorker = 25
+		logger.Log.Info("default max api worker set to 25 ")
+	}
 	ctx := context.Background()
 
 	// Create database connection.
@@ -240,9 +244,13 @@ func RunServer() error {
 	rep := repo.NewReportRepository(db)
 	v1API := v1.NewReportServiceServer(rep, q)
 
-	rWorker := worker.NewWorker("rw", rep, grpcClientMap, drep)
-	q.RegisterWorker(ctx, rWorker)
-	//get the verify key to validate jwt
+	for i := 0; i < cfg.MaxApiWorker; i++ {
+		rWorker := worker.NewWorker("rw", rep, grpcClientMap, drep)
+		q.RegisterWorker(ctx, rWorker)
+	}
+
+	q.IsWorkerRegCompleted = true
+	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
 		logger.Log.Fatal("Failed to get verify key", zap.Error(err))

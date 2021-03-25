@@ -330,7 +330,7 @@ func LoadDefaultEquipmentTypes(repo v1.License) error {
 		EqTypeServer,
 		EqTypePartition,
 	}
-	metas, err := repo.MetadataAllWithType(context.Background(), v1.MetadataTypeEquipment, []string{})
+	metas, err := repo.MetadataAllWithType(context.Background(), v1.MetadataTypeEquipment, "")
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,6 @@ package v1
 import (
 	"context"
 
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -19,14 +18,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricACSComputed) (uint64, error)) (uint64, error) {
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricACS(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricACS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesACS", zap.Error(err))
 		return 0, status.Error(codes.Internal, "cannot fetch metric ACS")
 	}
-	ind := metricNameExistsACS(metrics, met)
+	ind := metricNameExistsACS(metrics, input[METRIC_NAME].(string))
 	if ind == -1 {
 		return 0, status.Error(codes.NotFound, "cannot find metric name")
 	}
@@ -35,7 +34,12 @@ func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes 
 		logger.Log.Error("service/v1 - computedLicensesACS - computedMetricACS - ", zap.Error(err))
 		return 0, err
 	}
-	computedLicenses, err := cal(mat)
+	computedLicenses := uint64(0)
+	if input[IS_AGG].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricACSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicenses, err = s.licenseRepo.MetricACSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesACS - ", zap.String("reason", err.Error()))
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric ACS")

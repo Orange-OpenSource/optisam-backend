@@ -16,280 +16,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLicenseRepository_ProductAggregationsByName(t *testing.T) {
-	mu := &api.Mutation{
-		CommitNow: true,
-		Set: []*api.NQuad{
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "type_name",
-				ObjectValue: stringObjectValue("metric"),
-			},
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "metric.name",
-				ObjectValue: stringObjectValue("Windows.processor.standard"),
-			},
-		},
-	}
-
-	assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	metID, ok := assigned.Uids["metric"]
-	if !ok {
-		t.Fatalf("cannot metric id for metric xid: %v", "metric")
-	}
-	defer func() {
-		err := deleteNodes(metID)
-		assert.Empty(t, err, "error is not expect in deleteNode")
-	}()
-
-	prod1, err := getUIDForProductXID("WIN4")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod2, err := getUIDForProductXID("WIN5")
-	if err != nil {
-		t.Fatal(err)
-	}
-	type args struct {
-		ctx    context.Context
-		name   string
-		scopes []string
-	}
-	tests := []struct {
-		name    string
-		r       *LicenseRepository
-		args    args
-		setup   func() (func() error, error)
-		want    *v1.ProductAggregation
-		wantErr bool
-	}{
-		{name: "SUCCESS",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx:    context.Background(),
-				name:   "Agg1",
-				scopes: []string{"Asia"},
-			},
-			setup: func() (func() error, error) {
-				pa := &v1.ProductAggregation{
-					Name:     "Agg1",
-					Editor:   "Oracle",
-					Product:  "Database",
-					Metric:   metID,
-					Products: []string{prod1, prod2},
-					ProductsFull: []*v1.ProductData{
-						&v1.ProductData{
-							Swidtag: "ORAC001",
-							Name:    "Database",
-						},
-					},
-				}
-				repo := NewLicenseRepository(dgClient)
-				prodAgg, err := repo.CreateProductAggregation(context.Background(), pa, []string{"Asia"})
-				if err != nil {
-					return nil, err
-				}
-				return func() error {
-					if err := deleteNodes(prodAgg.ID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			want: &v1.ProductAggregation{
-				Name:       "Agg1",
-				Editor:     "Oracle",
-				Product:    "Database",
-				Metric:     metID,
-				MetricName: "Windows.processor.standard",
-				Products:   []string{"WIN4", "WIN5"},
-				ProductsFull: []*v1.ProductData{
-					&v1.ProductData{
-						Swidtag: "ORAC001",
-						Name:    "Database",
-					},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "error is not expected in setup") {
-				return
-			}
-			defer func() {
-				err := cleanup()
-				assert.Empty(t, err, "error is not expected in cleanup")
-			}()
-			got, err := tt.r.ProductAggregationsByName(tt.args.ctx, tt.args.name, tt.args.scopes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.ProductAggregationsByName() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr {
-				compareProductAggregation(t, "ProductAggregation", tt.want, got)
-			}
-		})
-	}
-}
-
-func TestLicenseRepository_DeleteProductAggregation(t *testing.T) {
-	mu := &api.Mutation{
-		CommitNow: true,
-		Set: []*api.NQuad{
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "type_name",
-				ObjectValue: stringObjectValue("metric"),
-			},
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "metric.name",
-				ObjectValue: stringObjectValue("Windows.processor.standard"),
-			},
-		},
-	}
-
-	assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	metID, ok := assigned.Uids["metric"]
-	if !ok {
-		t.Fatalf("cannot metric id for metric xid: %v", "metric")
-	}
-	defer func() {
-		err := deleteNodes(metID)
-		assert.Empty(t, err, "error is not expect in deleteNode")
-	}()
-
-	prod1, err := getUIDForProductXID("WIN4")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod2, err := getUIDForProductXID("WIN5")
-	if err != nil {
-		t.Fatal(err)
-	}
-	type args struct {
-		ctx    context.Context
-		id     string
-		scopes []string
-	}
-	tests := []struct {
-		name      string
-		r         *LicenseRepository
-		args      args
-		setup     func() (string, func() error, error)
-		wantRetPa []*v1.ProductAggregation
-		wantErr   bool
-	}{
-		{name: "SUCCESS",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx:    context.Background(),
-				scopes: []string{"Asia"},
-			},
-			setup: func() (string, func() error, error) {
-				pa := &v1.ProductAggregation{
-					Name:     "Agg1",
-					Editor:   "Oracle",
-					Product:  "Database",
-					Metric:   metID,
-					Products: []string{prod1, prod2},
-					ProductsFull: []*v1.ProductData{
-						&v1.ProductData{
-							Swidtag: "ORAC001",
-							Name:    "Database",
-						},
-					},
-				}
-				repo := NewLicenseRepository(dgClient)
-				prodAgg1, err := repo.CreateProductAggregation(context.Background(), pa, []string{"Asia"})
-				if err != nil {
-					return "", nil, err
-				}
-				pa = &v1.ProductAggregation{
-					Name:     "Agg2",
-					Editor:   "Oracle",
-					Product:  "Server",
-					Metric:   metID,
-					Products: []string{prod1, prod2},
-					ProductsFull: []*v1.ProductData{
-						&v1.ProductData{
-							Swidtag: "ORAC001",
-							Name:    "Server",
-						},
-					},
-				}
-
-				prodAgg2, err := repo.CreateProductAggregation(context.Background(), pa, []string{"Asia"})
-				if err != nil {
-					return "", nil, err
-				}
-
-				return prodAgg1.ID, func() error {
-					if err := deleteNodes(prodAgg2.ID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			wantRetPa: []*v1.ProductAggregation{
-				&v1.ProductAggregation{
-					Name:       "Agg2",
-					Editor:     "Oracle",
-					Product:    "Server",
-					Metric:     metID,
-					MetricName: "Windows.processor.standard",
-					Products:   []string{"WIN4", "WIN5"},
-					ProductsFull: []*v1.ProductData{
-						&v1.ProductData{
-							Swidtag: "ORAC001",
-							Name:    "Server",
-						},
-					},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ID, cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "error is not expected in setup") {
-				return
-			}
-			defer func() {
-				err := cleanup()
-				assert.Empty(t, err, "error is not expected in cleanup")
-			}()
-			gotRetPa, err := tt.r.DeleteProductAggregation(tt.args.ctx, ID, tt.args.scopes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.DeleteProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr {
-				compareProductAggregationAll(t, "ProductAggregations", tt.wantRetPa, gotRetPa)
-			}
-		})
-	}
-}
-
 func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		id     string
 		params *v1.QueryProducts
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -305,7 +37,7 @@ func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 				ctx:    context.Background(),
 				id:     "ORAC001",
 				params: &v1.QueryProducts{},
-				scopes: []string{"scope1", "scope2", "scope3"},
+				scopes: "scope1",
 			},
 			setup: func() (func() error, error) {
 				return func() error {
@@ -329,7 +61,7 @@ func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 						},
 					},
 				},
-				scopes: []string{"scope1"},
+				scopes: "scope1",
 			},
 			setup: func() (func() error, error) {
 				prod := "P1"
@@ -400,7 +132,7 @@ func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 						},
 					},
 				},
-				scopes: []string{"scope1"},
+				scopes: "scope1",
 			},
 			setup: func() (func() error, error) {
 				prod := "P1"
@@ -479,7 +211,7 @@ func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 						},
 					},
 				},
-				scopes: []string{"scope1"},
+				scopes: "scope1",
 			},
 			setup: func() (func() error, error) {
 				prod := "P1"
@@ -581,149 +313,6 @@ func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
 				if got == "" {
 					t.Errorf("LicenseRepository.ProductIDForSwidtag() = %v ", got)
 				}
-			}
-		})
-	}
-}
-
-func TestLicenseRepository_UpdateProductAggregation(t *testing.T) {
-	mu := &api.Mutation{
-		CommitNow: true,
-		Set: []*api.NQuad{
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "type_name",
-				ObjectValue: stringObjectValue("metric"),
-			},
-			&api.NQuad{
-				Subject:     blankID("metric"),
-				Predicate:   "metric.name",
-				ObjectValue: stringObjectValue("Windows.processor.standard"),
-			},
-		},
-	}
-
-	assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	metID, ok := assigned.Uids["metric"]
-	if !ok {
-		t.Fatalf("cannot metric id for metric xid: %v", "metric")
-	}
-	defer func() {
-		err := deleteNodes(metID)
-		assert.Empty(t, err, "error is not expect in deleteNode")
-	}()
-
-	prod1, err := getUIDForProductXID("WIN1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod2, err := getUIDForProductXID("WIN2")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod3, err := getUIDForProductXID("WIN3")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod4, err := getUIDForProductXID("WIN4")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	prod5, err := getUIDForProductXID("WIN5")
-	if err != nil {
-		t.Fatal(err)
-	}
-	type args struct {
-		ctx    context.Context
-		ID     string
-		upa    *v1.UpdateProductAggregationRequest
-		scopes []string
-	}
-	tests := []struct {
-		name    string
-		r       *LicenseRepository
-		setup   func() (string, func() error, error)
-		args    args
-		verify  func(r *LicenseRepository) error
-		wantErr bool
-	}{
-		{name: "SUCCESS",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx:    context.Background(),
-				scopes: []string{"Asia"},
-				upa: &v1.UpdateProductAggregationRequest{
-					Name:            "ProIDC1",
-					AddedProducts:   []string{prod1, prod2},
-					RemovedProducts: []string{prod3, prod4},
-					Product:         "pro1",
-				},
-			},
-			setup: func() (string, func() error, error) {
-				pa := &v1.ProductAggregation{
-					Name:       "ProID1",
-					Editor:     "Oracle",
-					Product:    "Database",
-					Metric:     metID,
-					MetricName: "Windows.processor.standard",
-					Products:   []string{prod3, prod4, prod5},
-				}
-				repo := NewLicenseRepository(dgClient)
-				prodAgg1, err := repo.CreateProductAggregation(context.Background(), pa, []string{"Asia"})
-				if err != nil {
-					return "", nil, err
-				}
-
-				return prodAgg1.ID, func() error {
-					if err := deleteNodes(prodAgg1.ID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			verify: func(r *LicenseRepository) error {
-				proAgg, err := r.ProductAggregationsByName(context.Background(), "ProIDC1", []string{"Asia"})
-				if err != nil {
-					return err
-				}
-
-				expectedProAgg := &v1.ProductAggregation{
-					Name:       "ProIDC1",
-					Editor:     "Oracle",
-					Product:    "pro1",
-					Metric:     metID,
-					MetricName: "Windows.processor.standard",
-					Products:   []string{"WIN1", "WIN2", "WIN5"},
-				}
-
-				compareProductAggregation(t, "ProIDC1", expectedProAgg, proAgg)
-				return nil
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ID, cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "error is not expected in setup") {
-				return
-			}
-			defer func() {
-				err := cleanup()
-				assert.Empty(t, err, "error is not expected in cleanup")
-			}()
-			if err := tt.r.UpdateProductAggregation(tt.args.ctx, ID, tt.args.upa, tt.args.scopes); (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.UpdateProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if !tt.wantErr {
-				assert.Empty(t, tt.verify(tt.r))
 			}
 		})
 	}

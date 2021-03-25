@@ -11,16 +11,17 @@ CREATE TABLE jobs (
   comments VARCHAR,
   start_time TIMESTAMP,
   end_time TIMESTAMP,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  retry_count INTEGER DEFAULT 0
 );
 
 CREATE TYPE upload_status AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'INPROGRESS');
 
-CREATE TYPE data_type AS ENUM ('DATA','METADATA');
+CREATE TYPE data_type AS ENUM ('DATA','METADATA','GLOBALDATA');
 
 CREATE TABLE IF NOT EXISTS uploaded_data_files  (
     upload_id SERIAL NOT NULL,
-    scope VARCHAR NOT NULL DEFAULT '',
+    scope VARCHAR NOT NULL,
     data_type data_type,
     file_name VARCHAR NOT NULL,
     status upload_status NOT NULL DEFAULT 'PENDING',
@@ -29,7 +30,7 @@ CREATE TABLE IF NOT EXISTS uploaded_data_files  (
     total_records INTEGER NOT NULL DEFAULT 0,
     success_records INTEGER NOT NULL DEFAULT 0,
     failed_records INTEGER NOT NULL DEFAULT 0,
-    invalid_records INTEGER NOT NULL DEFAULT 0,
+    comments varchar DEFAULT '',
     PRIMARY KEY(upload_id,file_name)
 );
 -- +migrate Down

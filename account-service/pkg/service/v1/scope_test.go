@@ -12,7 +12,7 @@ import (
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repv1 "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/mock"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	"reflect"
 	"testing"
@@ -25,7 +25,7 @@ import (
 func Test_accountServiceServer_CreateScope(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "SuperAdmin",
 	})
@@ -117,7 +117,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 		{
 			name: "Failure - user is admin (not superadmin)",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -132,7 +132,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 		{
 			name: "Failure - user is user (not superadmin)",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "user@test.com",
 					Role:   "User",
 				}),
@@ -176,7 +176,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 func Test_accountServiceServer_ListScopes(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "SuperAdmin",
 		Socpes: []string{"O1", "O2"},
@@ -321,7 +321,7 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 		{
 			name: "Success - Claims scopes are nill",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),

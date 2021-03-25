@@ -236,7 +236,7 @@ func TestLicenseRepository_CreateEquipmentType(t *testing.T) {
 func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string

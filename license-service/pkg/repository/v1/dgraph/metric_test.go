@@ -20,7 +20,7 @@ import (
 func TestLicenseRepository_ListMetrices(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string

@@ -1,11 +1,32 @@
 environment = "development"
 debug = false
-grpcport = "5083"
-httpport = "6083"
+grpcport = "11090"
+httpport = "11091"
+maxapiworker = 50
+
+[cron]
+time = "@every 5s"
+
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
 loglevel = 0
+
+[workerqueue]
+Qsize = 10000
+retries = 0
+basedelay = 1000
+ismultiqueue = false
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+product = "localhost:12090"
+
+[httpservers.Address]
+auth = "localhost:9093"
 
 [instrumentation]
 addr = ":8092"
@@ -15,22 +36,24 @@ enabled = false
 
 [instrumentation.jaeger]
 enabled = false
-collectorEndpoint = "http://localhost:14268/api/traces"
-agentEndpoint = "localhost:6831"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [dgraph]
 hosts = [
-    "dgraph:9080"
+    "localhost:9080"
+#"10.171.44.163:9082"  this is dev dgraph
+
 ]
 
 [database]
-host = "postgres"
+host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "application"
+name = "optisam"
 
 [app.params]
 pageSize = 20

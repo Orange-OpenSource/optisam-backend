@@ -41,7 +41,7 @@ func (m *MockMetric) EXPECT() *MockMetricMockRecorder {
 }
 
 // CreateMetricACS mocks base method
-func (m *MockMetric) CreateMetricACS(arg0 context.Context, arg1 *v1.MetricACS, arg2 *v1.Attribute, arg3 []string) (*v1.MetricACS, error) {
+func (m *MockMetric) CreateMetricACS(arg0 context.Context, arg1 *v1.MetricACS, arg2 *v1.Attribute, arg3 string) (*v1.MetricACS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricACS", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*v1.MetricACS)
@@ -56,7 +56,7 @@ func (mr *MockMetricMockRecorder) CreateMetricACS(arg0, arg1, arg2, arg3 interfa
 }
 
 // CreateMetricIPS mocks base method
-func (m *MockMetric) CreateMetricIPS(arg0 context.Context, arg1 *v1.MetricIPS, arg2 []string) (*v1.MetricIPS, error) {
+func (m *MockMetric) CreateMetricIPS(arg0 context.Context, arg1 *v1.MetricIPS, arg2 string) (*v1.MetricIPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricIPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricIPS)
@@ -71,7 +71,7 @@ func (mr *MockMetricMockRecorder) CreateMetricIPS(arg0, arg1, arg2 interface{}) 
 }
 
 // CreateMetricInstanceNumberStandard mocks base method
-func (m *MockMetric) CreateMetricInstanceNumberStandard(arg0 context.Context, arg1 *v1.MetricINM, arg2 []string) (*v1.MetricINM, error) {
+func (m *MockMetric) CreateMetricInstanceNumberStandard(arg0 context.Context, arg1 *v1.MetricINM, arg2 string) (*v1.MetricINM, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricInstanceNumberStandard", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricINM)
@@ -86,7 +86,7 @@ func (mr *MockMetricMockRecorder) CreateMetricInstanceNumberStandard(arg0, arg1,
 }
 
 // CreateMetricOPS mocks base method
-func (m *MockMetric) CreateMetricOPS(arg0 context.Context, arg1 *v1.MetricOPS, arg2 []string) (*v1.MetricOPS, error) {
+func (m *MockMetric) CreateMetricOPS(arg0 context.Context, arg1 *v1.MetricOPS, arg2 string) (*v1.MetricOPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricOPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricOPS)
@@ -101,7 +101,7 @@ func (mr *MockMetricMockRecorder) CreateMetricOPS(arg0, arg1, arg2 interface{}) 
 }
 
 // CreateMetricOracleNUPStandard mocks base method
-func (m *MockMetric) CreateMetricOracleNUPStandard(arg0 context.Context, arg1 *v1.MetricNUPOracle, arg2 []string) (*v1.MetricNUPOracle, error) {
+func (m *MockMetric) CreateMetricOracleNUPStandard(arg0 context.Context, arg1 *v1.MetricNUPOracle, arg2 string) (*v1.MetricNUPOracle, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricOracleNUPStandard", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricNUPOracle)
@@ -116,7 +116,7 @@ func (mr *MockMetricMockRecorder) CreateMetricOracleNUPStandard(arg0, arg1, arg2
 }
 
 // CreateMetricSPS mocks base method
-func (m *MockMetric) CreateMetricSPS(arg0 context.Context, arg1 *v1.MetricSPS, arg2 []string) (*v1.MetricSPS, error) {
+func (m *MockMetric) CreateMetricSPS(arg0 context.Context, arg1 *v1.MetricSPS, arg2 string) (*v1.MetricSPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMetricSPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricSPS)
@@ -131,7 +131,7 @@ func (mr *MockMetricMockRecorder) CreateMetricSPS(arg0, arg1, arg2 interface{}) 
 }
 
 // EquipmentTypes mocks base method
-func (m *MockMetric) EquipmentTypes(arg0 context.Context, arg1 []string) ([]*v1.EquipmentType, error) {
+func (m *MockMetric) EquipmentTypes(arg0 context.Context, arg1 string) ([]*v1.EquipmentType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EquipmentTypes", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.EquipmentType)
@@ -146,7 +146,7 @@ func (mr *MockMetricMockRecorder) EquipmentTypes(arg0, arg1 interface{}) *gomock
 }
 
 // GetMetricConfigACS mocks base method
-func (m *MockMetric) GetMetricConfigACS(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricACS, error) {
+func (m *MockMetric) GetMetricConfigACS(arg0 context.Context, arg1, arg2 string) (*v1.MetricACS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigACS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricACS)
@@ -161,10 +161,10 @@ func (mr *MockMetricMockRecorder) GetMetricConfigACS(arg0, arg1, arg2 interface{
 }
 
 // GetMetricConfigINM mocks base method
-func (m *MockMetric) GetMetricConfigINM(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricINMConfig, error) {
+func (m *MockMetric) GetMetricConfigINM(arg0 context.Context, arg1, arg2 string) (*v1.MetricINM, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigINM", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*v1.MetricINMConfig)
+	ret0, _ := ret[0].(*v1.MetricINM)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -176,7 +176,7 @@ func (mr *MockMetricMockRecorder) GetMetricConfigINM(arg0, arg1, arg2 interface{
 }
 
 // GetMetricConfigIPS mocks base method
-func (m *MockMetric) GetMetricConfigIPS(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricIPSConfig, error) {
+func (m *MockMetric) GetMetricConfigIPS(arg0 context.Context, arg1, arg2 string) (*v1.MetricIPSConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigIPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricIPSConfig)
@@ -191,7 +191,7 @@ func (mr *MockMetricMockRecorder) GetMetricConfigIPS(arg0, arg1, arg2 interface{
 }
 
 // GetMetricConfigNUP mocks base method
-func (m *MockMetric) GetMetricConfigNUP(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricNUPConfig, error) {
+func (m *MockMetric) GetMetricConfigNUP(arg0 context.Context, arg1, arg2 string) (*v1.MetricNUPConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigNUP", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricNUPConfig)
@@ -206,7 +206,7 @@ func (mr *MockMetricMockRecorder) GetMetricConfigNUP(arg0, arg1, arg2 interface{
 }
 
 // GetMetricConfigOPS mocks base method
-func (m *MockMetric) GetMetricConfigOPS(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricOPSConfig, error) {
+func (m *MockMetric) GetMetricConfigOPS(arg0 context.Context, arg1, arg2 string) (*v1.MetricOPSConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigOPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricOPSConfig)
@@ -221,7 +221,7 @@ func (mr *MockMetricMockRecorder) GetMetricConfigOPS(arg0, arg1, arg2 interface{
 }
 
 // GetMetricConfigSPS mocks base method
-func (m *MockMetric) GetMetricConfigSPS(arg0 context.Context, arg1 string, arg2 []string) (*v1.MetricSPSConfig, error) {
+func (m *MockMetric) GetMetricConfigSPS(arg0 context.Context, arg1, arg2 string) (*v1.MetricSPSConfig, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricConfigSPS", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.MetricSPSConfig)
@@ -236,7 +236,7 @@ func (mr *MockMetricMockRecorder) GetMetricConfigSPS(arg0, arg1, arg2 interface{
 }
 
 // ListMetricACS mocks base method
-func (m *MockMetric) ListMetricACS(arg0 context.Context, arg1 []string) ([]*v1.MetricACS, error) {
+func (m *MockMetric) ListMetricACS(arg0 context.Context, arg1 string) ([]*v1.MetricACS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricACS", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricACS)
@@ -251,7 +251,7 @@ func (mr *MockMetricMockRecorder) ListMetricACS(arg0, arg1 interface{}) *gomock.
 }
 
 // ListMetricIPS mocks base method
-func (m *MockMetric) ListMetricIPS(arg0 context.Context, arg1 []string) ([]*v1.MetricIPS, error) {
+func (m *MockMetric) ListMetricIPS(arg0 context.Context, arg1 string) ([]*v1.MetricIPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricIPS", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricIPS)
@@ -266,7 +266,7 @@ func (mr *MockMetricMockRecorder) ListMetricIPS(arg0, arg1 interface{}) *gomock.
 }
 
 // ListMetricNUP mocks base method
-func (m *MockMetric) ListMetricNUP(arg0 context.Context, arg1 []string) ([]*v1.MetricNUPOracle, error) {
+func (m *MockMetric) ListMetricNUP(arg0 context.Context, arg1 string) ([]*v1.MetricNUPOracle, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricNUP", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricNUPOracle)
@@ -281,7 +281,7 @@ func (mr *MockMetricMockRecorder) ListMetricNUP(arg0, arg1 interface{}) *gomock.
 }
 
 // ListMetricOPS mocks base method
-func (m *MockMetric) ListMetricOPS(arg0 context.Context, arg1 []string) ([]*v1.MetricOPS, error) {
+func (m *MockMetric) ListMetricOPS(arg0 context.Context, arg1 string) ([]*v1.MetricOPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricOPS", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricOPS)
@@ -296,7 +296,7 @@ func (mr *MockMetricMockRecorder) ListMetricOPS(arg0, arg1 interface{}) *gomock.
 }
 
 // ListMetricSPS mocks base method
-func (m *MockMetric) ListMetricSPS(arg0 context.Context, arg1 []string) ([]*v1.MetricSPS, error) {
+func (m *MockMetric) ListMetricSPS(arg0 context.Context, arg1 string) ([]*v1.MetricSPS, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricSPS", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricSPS)
@@ -311,7 +311,7 @@ func (mr *MockMetricMockRecorder) ListMetricSPS(arg0, arg1 interface{}) *gomock.
 }
 
 // ListMetricTypeInfo mocks base method
-func (m *MockMetric) ListMetricTypeInfo(arg0 context.Context, arg1 []string) ([]*v1.MetricTypeInfo, error) {
+func (m *MockMetric) ListMetricTypeInfo(arg0 context.Context, arg1 string) ([]*v1.MetricTypeInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricTypeInfo", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricTypeInfo)
@@ -326,7 +326,7 @@ func (mr *MockMetricMockRecorder) ListMetricTypeInfo(arg0, arg1 interface{}) *go
 }
 
 // ListMetrices mocks base method
-func (m *MockMetric) ListMetrices(arg0 context.Context, arg1 []string) ([]*v1.MetricInfo, error) {
+func (m *MockMetric) ListMetrices(arg0 context.Context, arg1 string) ([]*v1.MetricInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetrices", arg0, arg1)
 	ret0, _ := ret[0].([]*v1.MetricInfo)

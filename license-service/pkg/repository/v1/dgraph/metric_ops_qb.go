@@ -12,24 +12,41 @@ import (
 )
 
 const (
+	qApplicationProduct = `
+	var(func: eq(application.id,$appID))@filter(eq(scopes,[$Scopes])) {
+		app_inst as  application.instance
+	   }
+	var(func: uid($id)) {
+		prod_inst as ~instance.product@filter(uid(app_inst))
+	   }
+	var(func: uid(prod_inst)) {
+		ins_equip as instance.equipment
+	   }
+	`
+	qDirectEquipmentsForAppProduct = `
+	var(func: uid($id)){
+		product.equipment @filter(eq(equipment.type,$CurrentType) AND uid(ins_equip) AND eq(scopes,[$Scopes])){
+			$CurrentTypeIDs as uid
+	   }
+	}`
 	qDirectEquipments = `var(func: uid($id)){
-		product.equipment @filter(eq(equipment.type,$CurrentType)){
+		product.equipment @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){
 			$CurrentTypeIDs as uid
 	   }
 	}`
 
 	qEquipmentFromChild = `var (func: uid($id)){
-		equipment.parent @filter(eq(equipment.type,$CurrentType)){
+		equipment.parent @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){
 			$CurrentTypeIDs_c as uid
 		}  
 	}`
 	qParentEquipment = `var (func: uid($id)){
-		equipment.parent @filter(eq(equipment.type,$CurrentType)){
+		equipment.parent @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){
 			$CurrentTypeIDs as uid
 		}  
 	}`
 
-	qBaseCalulation = `~equipment.parent @filter(eq(equipment.type,$BaseType)){
+	qBaseCalulation = `~equipment.parent @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])){
 			$BaseType_p_$CurrentType as  uid 
 			cpu_$CurrentType as equipment.$BaseType.$AttrNumCPU
 			cores_$CurrentType as equipment.$BaseType.$AttrNumCores
@@ -37,7 +54,7 @@ const (
 			$BaseType_t_$CurrentType as math(cpu_$CurrentType*cores_$CurrentType*coreFactor_$CurrentType)  
 		}`
 
-	qBaseCalulationCeil = `~equipment.parent @filter(eq(equipment.type,$BaseType)){
+	qBaseCalulationCeil = `~equipment.parent @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])){
 			$BaseType_p_$CurrentType as  uid 
 			cpu_$CurrentType as equipment.$BaseType.$AttrNumCPU
 			cores_$CurrentType as equipment.$BaseType.$AttrNumCores
@@ -59,14 +76,14 @@ const (
 
 	qRoundOff = `$VAR_ceil as math(ceil $VAR)  `
 
-	qCalculateLicensesTraverseChildren = `~equipment.parent @filter(eq(equipment.type,$CurrentType)){ 
+	qCalculateLicensesTraverseChildren = `~equipment.parent @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){ 
 		$CurrentType_p_$ParentType as uid
 		$Query
 		$CurrentType_t_$ParentType as sum(val($ChildType_t_$ParentType))
 		$RoundOff      
 	}`
 
-	qCalculateLicensesTraverseChildrenCeil = `~equipment.parent @filter(eq(equipment.type,$CurrentType)){ 
+	qCalculateLicensesTraverseChildrenCeil = `~equipment.parent @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){ 
 		$CurrentType_p_$ParentType as uid
 		$Query
 		$CurrentType_t_$ParentType as sum(val($ChildType_t_$ParentType_ceil))
@@ -108,7 +125,7 @@ func replacer(q string, params map[string]string) string {
 	return q
 }
 
-func queryBuilder(ops *v1.MetricOPSComputed, id ...string) string {
+func queryBuilder(ops *v1.MetricOPSComputed, scopes []string, id ...string) string {
 	//q := ""
 	index := -1
 	aggregateIndex := -1
@@ -126,7 +143,62 @@ func queryBuilder(ops *v1.MetricOPSComputed, id ...string) string {
 		getToTop(ops.EqTypeTree[index:], index > 0),
 		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
-	}, "\n\t"), map[string]string{"$id": strings.Join(id, ",")}) + "\n}"
+	}, "\n\t"), map[string]string{
+		"$id":     strings.Join(id, ","),
+		"$Scopes": strings.Join(scopes, ",")}) + "\n}"
+}
+
+func queryBuilderForAppProduct(ops *v1.MetricOPSComputed, appID string, scopes []string, prodID string) string {
+	index := -1
+	aggregateIndex := -1
+	for i := range ops.EqTypeTree {
+		if ops.EqTypeTree[i].Type == ops.BaseType.Type {
+			index = i
+		}
+		if ops.EqTypeTree[i].Type == ops.AggregateLevel.Type {
+			aggregateIndex = i
+		}
+	}
+
+	return "{\n\t" + replacer(strings.Join([]string{
+		getAppProduct(appID),
+		getToBaseForAppProduct(ops.EqTypeTree[:index+1], appID),
+		getToTop(ops.EqTypeTree[index:], index > 0),
+		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
+		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
+	}, "\n\t"), map[string]string{"$id": prodID, "$Scopes": strings.Join(scopes, ",")}) + "\n}"
+}
+
+func getAppProduct(appID string) string {
+	return replacer(qApplicationProduct, map[string]string{
+		"$appID": appID,
+	})
+}
+func getToBaseForAppProduct(eqTypes []*v1.EquipmentType, appID string) string {
+	queries := []string{}
+	for i := range eqTypes {
+		if i == 0 {
+			vars := map[string]string{
+				"$CurrentType": eqTypes[i].Type,
+			}
+			queries = append(queries, replacer(qDirectEquipmentsForAppProduct, vars))
+			continue
+		}
+		ids := []string{eqTypes[i-1].Type + "IDs"}
+		if i > 1 {
+			ids = append(ids, eqTypes[i-1].Type+"IDs_c")
+		}
+		vars := map[string]string{
+			"$id":          strings.Join(ids, ","),
+			"$CurrentType": eqTypes[i].Type,
+		}
+		queries = append(queries, replacer(qEquipmentFromChild, vars))
+		vars = map[string]string{
+			"$CurrentType": eqTypes[i].Type,
+		}
+		queries = append(queries, replacer(qDirectEquipmentsForAppProduct, vars))
+	}
+	return strings.Join(queries, "\n\t")
 }
 
 func getToBase(eqTypes []*v1.EquipmentType) string {

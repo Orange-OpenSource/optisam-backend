@@ -438,6 +438,9 @@
           "items": {
             "$ref": "#/definitions/v1SimMetricDetails"
           }
+        },
+        "scope": {
+          "type": "string"
         }
       }
     },
@@ -463,6 +466,9 @@
           "items": {
             "$ref": "#/definitions/v1MetricSimDetails"
           }
+        },
+        "scope": {
+          "type": "string"
         }
       }
     },

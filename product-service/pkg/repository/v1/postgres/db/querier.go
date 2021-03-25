@@ -13,24 +13,53 @@ import (
 )
 
 type Querier interface {
+	AddComputedLicenses(ctx context.Context, arg AddComputedLicensesParams) error
+	CounterFeitedProductsCosts(ctx context.Context, arg CounterFeitedProductsCostsParams) ([]CounterFeitedProductsCostsRow, error)
+	CounterFeitedProductsLicences(ctx context.Context, arg CounterFeitedProductsLicencesParams) ([]CounterFeitedProductsLicencesRow, error)
+	CounterfeitPercent(ctx context.Context, scope string) (CounterfeitPercentRow, error)
+	DeleteAcqrightsByScope(ctx context.Context, scope string) error
+	DeleteAggregation(ctx context.Context, arg DeleteAggregationParams) error
 	DeleteProductAggregation(ctx context.Context, arg DeleteProductAggregationParams) error
+	DeleteProductAggregationByScope(ctx context.Context, scope string) error
 	DeleteProductApplications(ctx context.Context, arg DeleteProductApplicationsParams) error
 	DeleteProductEquipments(ctx context.Context, arg DeleteProductEquipmentsParams) error
+	DeleteProductsByScope(ctx context.Context, scope string) error
 	EquipmentProducts(ctx context.Context, equipmentID string) ([]ProductsEquipment, error)
+	GetAcqRightsCost(ctx context.Context, scope []string) (GetAcqRightsCostRow, error)
 	GetProductAggregation(ctx context.Context, arg GetProductAggregationParams) ([]string, error)
 	GetProductInformation(ctx context.Context, arg GetProductInformationParams) (GetProductInformationRow, error)
 	GetProductOptions(ctx context.Context, arg GetProductOptionsParams) ([]GetProductOptionsRow, error)
+	GetProductQualityOverview(ctx context.Context, scope string) (GetProductQualityOverviewRow, error)
 	GetProductsByEditor(ctx context.Context, arg GetProductsByEditorParams) ([]GetProductsByEditorRow, error)
+	InsertAggregation(ctx context.Context, arg InsertAggregationParams) (Aggregation, error)
+	ListAcqRightsAggregation(ctx context.Context, arg ListAcqRightsAggregationParams) ([]ListAcqRightsAggregationRow, error)
+	ListAcqRightsAggregationIndividual(ctx context.Context, arg ListAcqRightsAggregationIndividualParams) ([]ListAcqRightsAggregationIndividualRow, error)
+	ListAcqRightsEditors(ctx context.Context, scope string) ([]string, error)
+	ListAcqRightsIndividual(ctx context.Context, arg ListAcqRightsIndividualParams) ([]ListAcqRightsIndividualRow, error)
+	ListAcqRightsMetrics(ctx context.Context, scope string) ([]string, error)
+	ListAcqRightsProducts(ctx context.Context, arg ListAcqRightsProductsParams) ([]ListAcqRightsProductsRow, error)
+	ListAcqrightsProducts(ctx context.Context) ([]ListAcqrightsProductsRow, error)
+	ListAggregation(ctx context.Context, scope []string) ([]ListAggregationRow, error)
 	ListAggregationProductsView(ctx context.Context, arg ListAggregationProductsViewParams) ([]ListAggregationProductsViewRow, error)
 	ListAggregationsView(ctx context.Context, arg ListAggregationsViewParams) ([]ListAggregationsViewRow, error)
 	ListEditors(ctx context.Context, scope []string) ([]string, error)
 	ListProductsView(ctx context.Context, arg ListProductsViewParams) ([]ListProductsViewRow, error)
 	ListProductsViewRedirectedApplication(ctx context.Context, arg ListProductsViewRedirectedApplicationParams) ([]ListProductsViewRedirectedApplicationRow, error)
 	ListProductsViewRedirectedEquipment(ctx context.Context, arg ListProductsViewRedirectedEquipmentParams) ([]ListProductsViewRedirectedEquipmentRow, error)
+	OverDeployedProductsCosts(ctx context.Context, arg OverDeployedProductsCostsParams) ([]OverDeployedProductsCostsRow, error)
+	OverDeployedProductsLicences(ctx context.Context, arg OverDeployedProductsLicencesParams) ([]OverDeployedProductsLicencesRow, error)
+	OverdeployPercent(ctx context.Context, scope string) (OverdeployPercentRow, error)
 	ProductAggregationChildOptions(ctx context.Context, arg ProductAggregationChildOptionsParams) ([]ProductAggregationChildOptionsRow, error)
 	ProductAggregationDetails(ctx context.Context, arg ProductAggregationDetailsParams) (ProductAggregationDetailsRow, error)
+	ProductsNotAcquired(ctx context.Context, scope string) ([]ProductsNotAcquiredRow, error)
+	ProductsNotDeployed(ctx context.Context, scope string) ([]ProductsNotDeployedRow, error)
+	ProductsPerMetric(ctx context.Context, scope []string) ([]ProductsPerMetricRow, error)
+	UpdateAggregation(ctx context.Context, arg UpdateAggregationParams) (Aggregation, error)
+	UpsertAcqRights(ctx context.Context, arg UpsertAcqRightsParams) error
 	UpsertProduct(ctx context.Context, arg UpsertProductParams) error
 	UpsertProductAggregation(ctx context.Context, arg UpsertProductAggregationParams) error
+	UpsertProductApplications(ctx context.Context, arg UpsertProductApplicationsParams) error
+	UpsertProductEquipments(ctx context.Context, arg UpsertProductEquipmentsParams) error
 	UpsertProductPartial(ctx context.Context, arg UpsertProductPartialParams) error
 }
 

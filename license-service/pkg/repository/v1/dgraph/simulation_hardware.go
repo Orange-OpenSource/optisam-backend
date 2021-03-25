@@ -19,7 +19,7 @@ import (
 )
 
 // ParentsHirerachyForEquipment ...
-func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes []string) (*v1.Equipment, error) {
+func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) (*v1.Equipment, error) {
 	q := `{
 		ParentsHirerachy(func: eq(equipment.id,` + equipID + `) , first: 1) @recurse(depth: ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false) ` + agregateFilters(scopeFilters(scopes)) + ` {
 			ID: uid
@@ -75,26 +75,26 @@ func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, eq
 }
 
 // ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricOPSComputed, scopes []string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes)
+func (r *LicenseRepository) ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricOPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricOracleNUPStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes []string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes)
+func (r *LicenseRepository) ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricIPSStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricIPSComputed, scopes []string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes)
+func (r *LicenseRepository) ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricIPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricSAGStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricSPSComputed, scopes []string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes)
+func (r *LicenseRepository) ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricSPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
 }
 
-func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metricName string, scopes []string) ([]*v1.ProductData, error) {
+func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metricName string, scopes ...string) ([]*v1.ProductData, error) {
 	q := `{
 		var (func:eq(equipment.id,` + equipID + `))@recurse(depth:  ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false) ` + agregateFilters(scopeFilters(scopes)) + `{
 			id as  ~product.equipment
@@ -131,7 +131,7 @@ func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, e
 }
 
 // ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll implements license.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll
-func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes []string) (int64, float64, error) {
+func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, float64, error) {
 	templ, ok := r.templates[opsEquipTemplate]
 	if !ok {
 		return 0, 0, errors.New("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - cannot find template for:  " + string(opsEquipTemplate))
@@ -141,7 +141,7 @@ func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessor
 		logger.Log.Error("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - queryBuilderEquipOPS", zap.Error(err))
 		return 0, 0, errors.New("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - query cannot be built")
 	}
-	//fmt.Println(q)
+	fmt.Println(q)
 	licenses, err := r.licensesForQueryAll(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - query failed", zap.Error(err), zap.String("query", q))
@@ -152,8 +152,8 @@ func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessor
 }
 
 // ComputedLicensesForEquipmentForMetricOracleProcessorStandard gives licenses for product
-func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes []string) (int64, error) {
-	l, _, err := r.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx, equipID, equipType, mat, scopes)
+func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, error) {
+	l, _, err := r.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx, equipID, equipType, mat, scopes...)
 	if err != nil {
 		return 0, err
 	}
@@ -161,7 +161,7 @@ func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessor
 }
 
 //UsersForEquipmentForMetricOracleNUP implements License UsersForEquipmentForMetricOracleNUP function
-func (r *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Context, equipID, equipType, productID string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes []string) ([]*v1.User, error) {
+func (r *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Context, equipID, equipType, productID string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.User, error) {
 	q := `{
 		var(func:eq(equipment.id,"` + equipID + `"))@recurse(depth: ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false)` + agregateFilters(scopeFilters(scopes)) + `{
 		  userIDs as  equipment.users

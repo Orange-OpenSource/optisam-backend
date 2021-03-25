@@ -8,9 +8,7 @@ package v1
 
 import (
 	"context"
-	"log"
 
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -20,14 +18,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricINMComputed) (uint64, error)) (uint64, error) {
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricINM(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricINM(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesINM", zap.Error(err))
 		return 0, status.Error(codes.Internal, "cannot fetch metric INM")
 	}
-	ind := metricNameExistsINM(metrics, met)
+	ind := metricNameExistsINM(metrics, input[METRIC_NAME].(string))
 	if ind == -1 {
 		return 0, status.Error(codes.NotFound, "cannot find metric name")
 	}
@@ -37,8 +35,13 @@ func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, eqTypes 
 		logger.Log.Error("service/v1 - computedLicensesINM - computedMetricINM - ", zap.Error(err))
 		return 0, err
 	}
-	log.Printf("METRIC to be computated %+v", mat)
-	computedLicenses, err := cal(mat)
+	computedLicenses := uint64(0)
+
+	if input[IS_AGG].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricINMComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicenses, err = s.licenseRepo.MetricINMComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesINM - ", zap.String("reason", err.Error()))
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric INM")

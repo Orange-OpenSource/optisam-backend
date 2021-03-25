@@ -2,6 +2,7 @@ application.id       : string @index(exact) @upsert .
 application.name     : string @index(trigram) .
 application.version  : string .
 application.owner    : string @index(trigram) .
+application.domain   : string @index(hash) .
 application.instance : [uid] @count @reverse .
 application.product  : [uid] @count @reverse .
 instance.id         : string @index(exact) .
@@ -22,6 +23,9 @@ acqRights.averageMaintenantUnitPrice:    float .
 acqRights.totalPurchaseCost:             float .
 acqRights.totalMaintenanceCost:          float .
 acqRights.totalCost:                     float .
+acqRights.startOfMaintenance:            string .
+acqRights.endOfMaintenance:              string . 
+acqRights.version:                       string .
 
 product.name     : string @index(trigram,exact) .
 product.version  : string .

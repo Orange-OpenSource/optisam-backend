@@ -8,8 +8,8 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"strings"
@@ -20,9 +20,9 @@ import (
 )
 
 func (s *productServiceServer) ListEditors(ctx context.Context, req *v1.ListEditorsRequest) (*v1.ListEditorsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Unknown, "cannot find claims in context")
+		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
 	}
 	var scopes []string
 	heystack := strings.Join(userClaims.Socpes, "")
@@ -35,7 +35,7 @@ func (s *productServiceServer) ListEditors(ctx context.Context, req *v1.ListEdit
 	dbresp, err := s.productRepo.ListEditors(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEditors - ListEditors", zap.Error(err))
-		return nil, status.Error(codes.Internal, "cannot fetch product aggregations")
+		return nil, status.Error(codes.Internal, "DBError")
 	}
 
 	apiresp := v1.ListEditorsResponse{}
@@ -45,9 +45,9 @@ func (s *productServiceServer) ListEditors(ctx context.Context, req *v1.ListEdit
 }
 
 func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.ListEditorProductsRequest) (*v1.ListEditorProductsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
-		return nil, status.Error(codes.Unknown, "cannot find claims in context")
+		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
 	}
 	var scopes []string
 	heystack := strings.Join(userClaims.Socpes, "/")
@@ -57,10 +57,10 @@ func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.L
 		}
 	}
 
-	dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.GetEditor(), Scopes: userClaims.Socpes})
+	dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.GetEditor(), Scopes: scopes})
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEditorProducts - ListEditorProducts", zap.Error(err))
-		return nil, status.Error(codes.Internal, "cannot fetch ListEditorProducts")
+		return nil, status.Error(codes.Internal, "DBError")
 	}
 
 	apiresp := v1.ListEditorProductsResponse{}

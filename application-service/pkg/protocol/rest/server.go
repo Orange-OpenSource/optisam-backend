@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/open-policy-agent/opa/rego"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
@@ -26,7 +27,7 @@ import (
 )
 
 // RunServer runs HTTP/REST gateway
-func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.PublicKey) error {
+func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.PublicKey, p *rego.PreparedEvalQuery) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -43,8 +44,15 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 		Addr: ":" + httpPort,
 		// Handler: &ochttp.Handler{
 		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
+			// rest_middleware.AddLogger(logger.Log,
+			// 	rest_middleware.ValidateAuth(verifyKey,
+			// 		rest_middleware.ValidateAuthZ(p, mux_http),
 			// rest_middleware.ValidateAuth(verifyKey,
-			rest_middleware.AddLogger(logger.Log, mux_http))},
+			// 	rest_middleware.AddLogger(logger.Log, mux_http),
+			mux_http),
+		// )))
+
+		},
 		// },
 	}
 

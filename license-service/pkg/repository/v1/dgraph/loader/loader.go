@@ -92,7 +92,7 @@ type MetadataFiles struct {
 // NewDefaultConfig ...
 func NewDefaultConfig() *Config {
 	return &Config{
-		Alpha: []string{"localhost:9080"}, //":9084",
+		Alpha: []string{"127.0.0.1:9080"}, //":9084",
 
 		MetadataFiles: new(MetadataFiles),
 		BatchSize:     1000,
@@ -235,6 +235,7 @@ func (al *AggregateLoader) Load() (retErr error) {
 	})
 	dgCl = dg
 	if err != nil {
+		logger.Log.Error("Error in creating new dg connection ", zap.String("Reason", err.Error()))
 		return err
 	}
 
@@ -299,7 +300,7 @@ func (al *AggregateLoader) Load() (retErr error) {
 	// load equipments using equiments types
 	// Preconditions: equipment types must have been created
 	if config.LoadEquipments {
-		eqTypes, err := config.Repository.EquipmentTypes(context.Background(), []string{})
+		eqTypes, err := config.Repository.EquipmentTypes(context.Background(), "")
 		if err != nil {
 			return err
 		}

@@ -42,18 +42,18 @@ func (m *MockDgraphReport) EXPECT() *MockDgraphReportMockRecorder {
 }
 
 // EquipmentAttributes mocks base method
-func (m *MockDgraphReport) EquipmentAttributes(arg0 context.Context, arg1, arg2 string, arg3 []*v1.EquipmentAttributes) (json.RawMessage, error) {
+func (m *MockDgraphReport) EquipmentAttributes(arg0 context.Context, arg1, arg2 string, arg3 []*v1.EquipmentAttributes, arg4 string) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EquipmentAttributes", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "EquipmentAttributes", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(json.RawMessage)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EquipmentAttributes indicates an expected call of EquipmentAttributes
-func (mr *MockDgraphReportMockRecorder) EquipmentAttributes(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockDgraphReportMockRecorder) EquipmentAttributes(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentAttributes", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentAttributes), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentAttributes", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentAttributes), arg0, arg1, arg2, arg3, arg4)
 }
 
 // EquipmentParents mocks base method
@@ -72,33 +72,33 @@ func (mr *MockDgraphReportMockRecorder) EquipmentParents(arg0, arg1, arg2, arg3 
 }
 
 // EquipmentTypeAttrs mocks base method
-func (m *MockDgraphReport) EquipmentTypeAttrs(arg0 context.Context, arg1 string) ([]*v1.EquipmentAttributes, error) {
+func (m *MockDgraphReport) EquipmentTypeAttrs(arg0 context.Context, arg1, arg2 string) ([]*v1.EquipmentAttributes, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EquipmentTypeAttrs", arg0, arg1)
+	ret := m.ctrl.Call(m, "EquipmentTypeAttrs", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*v1.EquipmentAttributes)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EquipmentTypeAttrs indicates an expected call of EquipmentTypeAttrs
-func (mr *MockDgraphReportMockRecorder) EquipmentTypeAttrs(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDgraphReportMockRecorder) EquipmentTypeAttrs(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeAttrs", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentTypeAttrs), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeAttrs", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentTypeAttrs), arg0, arg1, arg2)
 }
 
 // EquipmentTypeParents mocks base method
-func (m *MockDgraphReport) EquipmentTypeParents(arg0 context.Context, arg1 string) ([]string, error) {
+func (m *MockDgraphReport) EquipmentTypeParents(arg0 context.Context, arg1, arg2 string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EquipmentTypeParents", arg0, arg1)
+	ret := m.ctrl.Call(m, "EquipmentTypeParents", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EquipmentTypeParents indicates an expected call of EquipmentTypeParents
-func (mr *MockDgraphReportMockRecorder) EquipmentTypeParents(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockDgraphReportMockRecorder) EquipmentTypeParents(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeParents", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentTypeParents), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeParents", reflect.TypeOf((*MockDgraphReport)(nil).EquipmentTypeParents), arg0, arg1, arg2)
 }
 
 // ProductEquipments mocks base method

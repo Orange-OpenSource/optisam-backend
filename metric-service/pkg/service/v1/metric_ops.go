@@ -9,8 +9,9 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -21,15 +22,18 @@ import (
 )
 
 func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Context, req *v1.CreateMetricOPS) (*v1.CreateMetricOPS, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
 	if req.StartEqTypeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "start level is empty")
 	}
 
-	metrics, err := s.metricRepo.ListMetrices(ctx, userClaims.Socpes)
+	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching metrics", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
@@ -40,7 +44,7 @@ func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Co
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
 
-	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -68,7 +72,7 @@ func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Co
 		return nil, err
 	}
 
-	met, err := s.metricRepo.CreateMetricOPS(ctx, serverToRepoMetricOPS(req), userClaims.Socpes)
+	met, err := s.metricRepo.CreateMetricOPS(ctx, serverToRepoMetricOPS(req), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateMetricOracleProcessorStandard - fetching equipment", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.NotFound, "cannot create metric")
@@ -195,126 +199,4 @@ func validateLevelsNew(levels []*repo.EquipmentType, startIdx int, base string) 
 		}
 	}
 	return -1, errors.New("Not found")
-}
-func (s *metricServiceServer) computedLicensesOPS(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricOPSComputed) (uint64, error)) (uint64, error) {
-	// TODO pass claims here
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.metricRepo.ListMetricOPS(ctx, userClaims.Socpes)
-	if err != nil && err != repo.ErrNoData {
-		return 0, status.Error(codes.Internal, "cannot fetch metric OPS")
-
-	}
-	ind := 0
-	if ind = metricNameExistsOPS(metrics, met); ind == -1 {
-		return 0, status.Error(codes.Internal, "metric name doesnot exists")
-	}
-	parTree, err := parentHierarchy(eqTypes, metrics[ind].StartEqTypeID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot fetch equipment types")
-
-	}
-
-	baseLevelIdx, err := validateLevelsNew(parTree, 0, metrics[ind].BaseEqTypeID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
-	}
-
-	aggLevelIdx, err := validateLevelsNew(parTree, baseLevelIdx, metrics[ind].AggerateLevelEqTypeID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
-	}
-
-	endLevelIdx, err := validateLevelsNew(parTree, aggLevelIdx, metrics[ind].EndEqTypeID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
-	}
-
-	numOfCores, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].NumCoreAttrID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "numofcores attribute doesnt exits")
-
-	}
-	numOfCPU, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].NumCPUAttrID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "numofcpu attribute doesnt exits")
-
-	}
-	coreFactor, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].CoreFactorAttrID)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "coreFactor attribute doesnt exits")
-
-	}
-	mat := &repo.MetricOPSComputed{
-		EqTypeTree:     parTree[:endLevelIdx+1],
-		BaseType:       parTree[baseLevelIdx],
-		AggregateLevel: parTree[aggLevelIdx],
-		NumCoresAttr:   numOfCores,
-		NumCPUAttr:     numOfCPU,
-		CoreFactorAttr: coreFactor,
-	}
-	computedLicenses, err := cal(mat)
-	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")
-
-	}
-
-	return computedLicenses, nil
-}
-
-func computedMetricFromMetricOPSWithName(met *repo.MetricOPS, eqTypes []*repo.EquipmentType, name string) (*repo.MetricOPSComputed, error) {
-	metric, err := computedMetricFromMetricOPS(met, eqTypes)
-	if err != nil {
-		logger.Log.Error("service/v1 - computedMetricFromMetricOPSWithName - ", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot compute OPS metric")
-	}
-	metric.Name = name
-	return metric, nil
-}
-
-func computedMetricFromMetricOPS(metric *repo.MetricOPS, eqTypes []*repo.EquipmentType) (*repo.MetricOPSComputed, error) {
-	parTree, err := parentHierarchy(eqTypes, metric.StartEqTypeID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
-
-	}
-	baseLevelIdx, err := validateLevelsNew(parTree, 0, metric.BaseEqTypeID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
-	}
-
-	aggLevelIdx, err := validateLevelsNew(parTree, baseLevelIdx, metric.AggerateLevelEqTypeID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
-	}
-
-	endLevelIdx, err := validateLevelsNew(parTree, aggLevelIdx, metric.EndEqTypeID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
-	}
-
-	numOfCores, err := attributeExists(parTree[baseLevelIdx].Attributes, metric.NumCoreAttrID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "numofcores attribute doesnt exits")
-
-	}
-	numOfCPU, err := attributeExists(parTree[baseLevelIdx].Attributes, metric.NumCPUAttrID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "numofcpu attribute doesnt exits")
-
-	}
-	coreFactor, err := attributeExists(parTree[baseLevelIdx].Attributes, metric.CoreFactorAttrID)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "coreFactor attribute doesnt exits")
-
-	}
-	mat := &repo.MetricOPSComputed{
-		EqTypeTree:     parTree[:endLevelIdx+1],
-		BaseType:       parTree[baseLevelIdx],
-		AggregateLevel: parTree[aggLevelIdx],
-		NumCoresAttr:   numOfCores,
-		NumCPUAttr:     numOfCPU,
-		CoreFactorAttr: coreFactor,
-	}
-
-	return mat, nil
 }

@@ -42,7 +42,7 @@ const (
 )
 
 // GetProductInformation ...
-func (r *LicenseRepository) GetProductInformation(ctx context.Context, swidtag string, scopes []string) (*v1.ProductAdditionalInfo, error) {
+func (r *LicenseRepository) GetProductInformation(ctx context.Context, swidtag string, scopes ...string) (*v1.ProductAdditionalInfo, error) {
 
 	variables := make(map[string]string)
 	variables["$tag"] = swidtag
@@ -82,7 +82,7 @@ func (r *LicenseRepository) GetProductInformation(ctx context.Context, swidtag s
 }
 
 // ProductAcquiredRights implements Licence ProductAcquiredRights function
-func (r *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag string, scopes []string) (string, []*v1.ProductAcquiredRight, error) {
+func (r *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag string, scopes ...string) (string, []*v1.ProductAcquiredRight, error) {
 	q := `
 	{
 		Products(func: eq(product.swidtag,` + swidTag + `))` + agregateFilters(scopeFilters(scopes)) + `{
@@ -97,7 +97,6 @@ func (r *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag s
 		}
 	  }
 	`
-	logger.Log.Info("", zap.String("Query", q))
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ProductAcquiredRights - query failed", zap.Error(err), zap.String("query", q))
@@ -121,6 +120,7 @@ func (r *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag s
 	}
 
 	if len(data.Products) == 0 {
+		logger.Log.Error("dgraph/ProductAcquiredRights -failed", zap.String("reason", "no data found i"))
 		return "", nil, v1.ErrNodeNotFound
 	}
 

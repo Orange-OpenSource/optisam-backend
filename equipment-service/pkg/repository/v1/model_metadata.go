@@ -28,6 +28,7 @@ type Metadata struct {
 	Type         MetadataType
 	Source       string
 	MetadataType string
+	Scope        string
 	Attributes   []string
 }
 

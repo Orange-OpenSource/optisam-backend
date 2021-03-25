@@ -14,6 +14,7 @@ import (
 	"fmt"
 	v1 "optisam-backend/equipment-service/pkg/repository/v1"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -429,6 +430,38 @@ func TestEquipmentRepository_Equipments(t *testing.T) {
 							&v1.Filter{
 								FilterKey:   "swidtag",
 								FilterValue: "ORAC001",
+							},
+						},
+					},
+				},
+				scopes: []string{"scope1", "scope2"},
+			},
+			want:  3,
+			want1: []byte("[" + strings.Join([]string{equipmentsPar[0], equipmentsPar[1], equipmentsPar[2]}, ",") + "]"),
+		},
+		{name: "success : some sorting - application and instance filter",
+			r: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx:    context.Background(),
+				eqType: eqType1,
+				params: &v1.QueryEquipments{
+					PageSize:  3,
+					Offset:    0,
+					SortBy:    "attr1",
+					SortOrder: v1.SortASC,
+					ApplicationFilter: &v1.AggregateFilter{
+						Filters: []v1.Queryable{
+							&v1.Filter{
+								FilterKey:   "id",
+								FilterValue: "1",
+							},
+						},
+					},
+					InstanceFilter: &v1.AggregateFilter{
+						Filters: []v1.Queryable{
+							&v1.Filter{
+								FilterKey:   "id",
+								FilterValue: "3",
 							},
 						},
 					},
@@ -1260,4 +1293,165 @@ func compareEquipmentProduct(t *testing.T, name string, exp *v1.EquipmentProduct
 	assert.Equalf(t, exp.Name, act.Name, "%s.Name are not same", name)
 	assert.Equalf(t, exp.Editor, act.Editor, "%s.Editor are not same", name)
 	assert.Equalf(t, exp.Version, act.Version, "%s.Version are not same", name)
+}
+func Test_UpsertEquipment(t *testing.T) {
+	type args struct {
+		ctx          context.Context
+		data         interface{}
+		scope        string
+		eqType       string
+		parentEqType string
+	}
+	tests := []struct {
+		name   string
+		r      *EquipmentRepository
+		input  args
+		outErr bool
+	}{
+		{
+			name: "Upsert_equipments_without_parent",
+			r:    NewEquipmentRepository(dgClient),
+			input: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+				data: reflect.New(reflect.StructOf([]reflect.StructField{
+					{
+						Name: "EquipmentID",
+						Type: reflect.TypeOf(string("")),
+						Tag:  `json:",omitempty" dbname:"equipment.id"`,
+					}})).Interface(),
+			},
+			outErr: false,
+		},
+		{
+			name: "Upsert_equipments_with_parent",
+			r:    NewEquipmentRepository(dgClient),
+			input: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+				data: reflect.New(reflect.StructOf([]reflect.StructField{
+					{
+						Name: "EquipmentID",
+						Type: reflect.TypeOf(string("")),
+						Tag:  `json:",omitempty" dbname:"equipment.id"`,
+					},
+					{
+						Name: "ParentID",
+						Type: reflect.TypeOf(string("")),
+						Tag:  `json:",omitempty" dbname:"equipment.parent"`,
+					},
+				})).Interface(),
+			},
+			outErr: false,
+		},
+		{
+			name: "Upsert_equipments_with_parent_with_different_scope",
+			r:    NewEquipmentRepository(dgClient),
+			input: args{
+				ctx:   context.Background(),
+				scope: "scope2",
+				data: reflect.New(reflect.StructOf([]reflect.StructField{
+					{
+						Name: "EquipmentID",
+						Type: reflect.TypeOf(string("")),
+						Tag:  `json:",omitempty" dbname:"equipment.id"`,
+					},
+					{
+						Name: "ParentID",
+						Type: reflect.TypeOf(string("")),
+						Tag:  `json:",omitempty" dbname:"equipment.parent"`,
+					},
+				})).Interface(),
+			},
+			outErr: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.r.UpsertEquipment(test.input.ctx, test.input.scope, test.input.eqType, test.input.parentEqType, test.input.data)
+			if (err != nil) != test.outErr {
+				t.Errorf("EquipmentRepository.UpsertEquipment() error = %v, wantErr %v", err, test.outErr)
+				return
+			}
+		})
+	}
+}
+
+func TestEquipmentRepository_DeleteEquipments(t *testing.T) {
+	eqTypes, cleanup, err := equipmentSetup(t)
+	if !assert.Empty(t, err, "error not expected as cleanup") {
+		return
+	}
+
+	if !assert.Empty(t, loadEquipments("badger", "testdata", []string{"scope1", "scope2", "scope3"}, []string{
+		"equip_3.csv",
+		"equip_4.csv",
+	}...), "error not expected in loading equipments") {
+		return
+	}
+
+	defer func() {
+		assert.Empty(t, cleanup(), "error not expected from clean up")
+	}()
+	eqType := eqTypes[0]
+	_, err = equipmentsJSONFromCSV("testdata/scope1/v1/equip_3.csv", eqType, true)
+	if !assert.Empty(t, err, "error not expected from equipmentsJSONFromCSV") {
+		return
+	}
+	equipments, err := equipmentsJSONFromCSV("testdata/scope3/v1/equip_3.csv", eqType, true)
+	if !assert.Empty(t, err, "error not expected from equipmentsJSONFromCSV") {
+		return
+	}
+	eqType1 := eqTypes[1]
+
+	_, err = equipmentsJSONFromCSV("testdata/scope1/v1/equip_4.csv", eqType1, true)
+	if !assert.Empty(t, err, "error not expected from equipmentsJSONFromCSV") {
+		return
+	}
+	type args struct {
+		ctx   context.Context
+		scope string
+	}
+	tests := []struct {
+		name    string
+		r       *EquipmentRepository
+		args    args
+		verify  func(r *EquipmentRepository, scope string, exp json.RawMessage)
+		want1   json.RawMessage
+		wantErr bool
+	}{
+		{name: "success : some sorting - product filter",
+			r: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+			},
+			wantErr: false,
+			verify: func(r *EquipmentRepository, scope string, exp json.RawMessage) {
+				q := `
+				{
+					Equip(func: type(Equipment)) @filter(eq(scopes,` + scope + `)){
+						expand(_all_)
+					}
+				}
+				`
+				resp, err := r.dg.NewTxn().Query(context.Background(), q)
+				if err != nil {
+					t.Errorf("Unable to get equipments error:%s", err)
+				}
+
+				assert.Equal(t, strings.Join(strings.Split(string(exp), ","), ","), strings.Join(strings.Split(string(resp.Json), ","), ","))
+
+			},
+			want1: []byte("[" + strings.Join([]string{equipments[0], equipments[1], equipments[2]}, ",") + "]"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.r.DeleteEquipments(tt.args.ctx, tt.args.scope); (err != nil) != tt.wantErr {
+				t.Errorf("EquipmentRepository.DeleteEquipments() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			tt.verify(tt.r, tt.args.scope, tt.want1)
+		})
+	}
 }

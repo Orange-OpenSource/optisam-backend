@@ -32,7 +32,7 @@ func TestQueue_RegisterWorker(t *testing.T) {
 	//Mock Repo
 	var r repository.Workerqueue
 
-	notifier := make(chan jobChan, 100)
+	notifier := make(chan JobChan, 100)
 	ctx := context.Background()
 	// // db, _, err := sqlmock.New()
 	// if err != nil {
@@ -139,7 +139,7 @@ func TestQueue_RegisterWorker(t *testing.T) {
 				workers:   make(map[string][]worker.Worker),
 			},
 			setup: func() {
-				notifier <- jobChan{jobId: 1, workerName: "t"}
+				notifier <- JobChan{jobId: 1, workerName: "t"}
 				mockCtrl = gomock.NewController(t)
 				mockworker := workermock.NewMockWorker(mockCtrl)
 				w = mockworker

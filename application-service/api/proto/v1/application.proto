@@ -32,12 +32,18 @@ service ApplicationService {
       body : "*"
     };
   }
-  rpc DeleteApplication(DeleteApplicationRequest)
-      returns (DeleteApplicationResponse) {
+  rpc DropApplicationData(DropApplicationDataRequest)returns (DropApplicationDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/applications/{scope}"
+    };
+  }
+
+  rpc DeleteApplication(DeleteApplicationRequest)returns (DeleteApplicationResponse) {
     option (google.api.http) = {
       delete : "/api/v1/applications/{application_id}"
     };
   }
+
   rpc UpsertInstance(UpsertInstanceRequest) returns (UpsertInstanceResponse) {
     option (google.api.http) = {
       post : "/api/v1/applications/{application_id}/instances"
@@ -57,8 +63,7 @@ service ApplicationService {
   //   };
   // }
 
-  rpc ListApplications(ListApplicationsRequest)
-      returns (ListApplicationsResponse) {
+  rpc ListApplications(ListApplicationsRequest)returns (ListApplicationsResponse) {
     option (google.api.http) = {
       get : "/api/v1/applications"
     };
@@ -69,17 +74,99 @@ service ApplicationService {
       get : "/api/v1/instances"
     };
   }
+
+  // Obsolescense APIs
+  rpc ApplicationDomains(ApplicationDomainsRequest)
+      returns (ApplicationDomainsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/applications/domains"
+    };
+  }
+
+  rpc ObsolescenceDomainCriticityMeta(DomainCriticityMetaRequest)
+      returns (DomainCriticityMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/Obsolescence/meta/domaincriticity"
+    };
+  }
+
+  rpc ObsolescenceMaintenanceCriticityMeta(MaintenanceCriticityMetaRequest)
+      returns (MaintenanceCriticityMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/Obsolescence/meta/maintenancecriticity"
+    };
+  }
+
+  rpc ObsolescenceRiskMeta(RiskMetaRequest) returns (RiskMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/Obsolescence/meta/risks"
+    };
+  }
+
+  rpc ObsolescenceDomainCriticity(DomainCriticityRequest)
+      returns (DomainCriticityResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/obsolescence/domains"
+    };
+  }
+
+  rpc PostObsolescenceDomainCriticity(PostDomainCriticityRequest)
+      returns (PostDomainCriticityResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/obsolescence/domains"
+      body : "*"
+    };
+  }
+
+  rpc ObsolescenseMaintenanceCriticity(MaintenanceCriticityRequest)
+      returns (MaintenanceCriticityResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/obsolescence/maintenance"
+    };
+  }
+
+  rpc PostObsolescenseMaintenanceCriticity(PostMaintenanceCriticityRequest)
+      returns (PostMaintenanceCriticityResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/obsolescence/maintenance"
+      body : "*"
+    };
+  }
+
+  rpc ObsolescenseRiskMatrix(RiskMatrixRequest) returns (RiskMatrixResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/obsolescence/matrix"
+    };
+  }
+
+  rpc PostObsolescenseRiskMatrix(PostRiskMatrixRequest)
+      returns (PostRiskMatrixResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/obsolescence/matrix"
+      body : "*"
+    };
+  }
 }
+
 
 message UpsertApplicationRequest {
   string application_id = 1;
   string name = 2;
   string version = 3;
-  string owner = 4;
-  string scope = 5;
+  string owner = 4; 
+  string domain = 5;
+  string scope = 6 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message UpsertApplicationResponse { bool success = 1; }
+
+message DropApplicationDataRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropApplicationDataResponse { 
+  bool success = 1; 
+}
 
 message DeleteApplicationRequest { string application_id = 1; }
 
@@ -91,7 +178,8 @@ message UpsertInstanceRequest {
   string instance_name = 3;
   product products = 4;
   equipment equipments = 5;
-  string scope = 6;
+  //SCOPE BASED CHANGE
+  string scope = 6 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
   message product {
     string operation = 1
         [ (validate.rules).string = {in : [ "add", "delete" ]} ];
@@ -132,52 +220,6 @@ message DeleteInstanceRequest {
 
 message DeleteInstanceResponse { bool success = 1; }
 
-// message ProductForApplication {
-//   string swidTag = 1;
-//   string name = 2;
-//   string Editor = 3;
-//   string Edition = 4;
-//   string Version = 5;
-//   double totalCost = 6;
-//   int32 numOfInstances = 7;
-//   int32 numofEquipments = 8;
-// }
-
-// message ListProductsForApplicationResponse {
-//   int32 totalRecords = 1;
-//   repeated ProductForApplication products = 2;
-// }
-
-// message ListProductsForApplicationRequest { string application_id = 1; }
-
-// message ListApplicationsForProductAggregationRequest {
-//   string name = 1;
-//   int32 page_num = 2 [
-//     (validate.rules).int32 = {gte : 1, lt : 1000},
-//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-//         {description : "Page number", minimum : 1, maximum : 1000}
-//   ];
-//   int32 page_size = 3 [
-//     (validate.rules).int32 = {gte : 10, lt : 100},
-//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-//         {minimum : 10, maximum : 100, description : "Items per page"}
-//   ];
-//   string sort_by = 4 [ (validate.rules).string = {
-//     in : [
-//       "application_id",
-//       "application_name",
-//       "application_version",
-//       "application_owner",
-//       "num_of_instances",
-//       "num_of_products",
-//       "num_of_equipments",
-//       "cost"
-//     ]
-//   } ];
-//   string sort_order = 5 [ (validate.rules).string = {in : [ "asc", "desc" ]}
-//   ]; ApplicationSearchParams search_params = 6;
-// }
-
 message ListApplicationsRequest {
   int32 page_num = 1 [
     (validate.rules).int32 = {gte : 1, lt : 1000},
@@ -195,11 +237,14 @@ message ListApplicationsRequest {
     num_of_instances = 2;
     num_of_products = 3;
     num_of_equipments = 4;
-    total_cost = 5;
+    domain = 5;
+    total_cost = 6;
+    obsolescence_risk = 7;
   }
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
   ApplicationSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListApplicationsResponse {
@@ -214,23 +259,17 @@ message Application {
   int32 num_of_instances = 4;
   int32 num_of_products = 5;
   double total_cost = 6;
+  string domain = 7;
+  string obsolescence_risk = 8;
+  int32 num_of_equipments = 9;
 }
 
 message ApplicationSearchParams {
   StringFilter name = 1;
   StringFilter owner = 2;
   StringFilter product_id = 3;
-}
-
-message ApplicationRequest { string application_id = 1; }
-
-message ApplicationResponse {
-  string name = 1;
-  string version = 2;
-  string edition = 3;
-  string editor = 4;
-  string metric = 5;
-  int32 num_of_instances = 6;
+  StringFilter domain = 4;
+  StringFilter obsolescence_risk = 5;
 }
 
 message ListInstancesRequest {
@@ -253,6 +292,7 @@ message ListInstancesRequest {
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
   InstanceSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message InstanceSearchParams {
@@ -282,4 +322,111 @@ message StringFilter {
 enum SortOrder {
   asc = 0;
   desc = 1;
+}
+
+message ApplicationDomainsRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message ApplicationDomainsResponse { repeated string domains = 1; }
+
+message DomainCriticityMetaRequest {}
+
+message DomainCriticityMeta {
+  int32 domain_critic_id = 1;
+  string domain_critic_name = 2;
+}
+message DomainCriticityMetaResponse {
+  repeated DomainCriticityMeta domain_criticity_meta = 1;
+}
+
+message MaintenanceCriticityMetaRequest {}
+
+message MaintenanceCriticityMeta {
+  int32 maintenance_critic_id = 1;
+  string maintenance_critic_name = 2;
+}
+message MaintenanceCriticityMetaResponse {
+  repeated MaintenanceCriticityMeta maintenance_criticity_meta = 1;
+}
+
+message RiskMetaRequest {}
+
+message RiskMeta {
+  int32 risk_id = 1;
+  string risk_name = 2;
+}
+message RiskMetaResponse { repeated RiskMeta risk_meta = 1; }
+
+message DomainCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message DomainCriticity {
+  int32 domain_critic_id = 1;
+  string domain_critic_name = 2;
+  repeated string domains = 3;
+}
+
+message DomainCriticityResponse {
+  repeated DomainCriticity domains_criticity = 1;
+}
+
+message PostDomainCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated DomainCriticity domains_criticity = 2;
+}
+
+message PostDomainCriticityResponse {
+  bool success = 1;
+}
+
+message MaintenanceCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message MaintenanceCriticity {
+  int32 maintenance_critic_id = 1;
+  int32 maintenance_level_id = 2;
+  string maintenance_level_name = 3;
+  int32 start_month = 4;
+  int32 end_month = 5;
+}
+
+
+message PostMaintenanceCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated MaintenanceCriticity maintenance_criticy = 2;
+}
+
+message MaintenanceCriticityResponse {
+  repeated MaintenanceCriticity maintenance_criticy = 1;
+}
+
+message PostMaintenanceCriticityResponse {
+  bool success = 1;
+}
+
+message RiskMatrixRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message RiskMatrix {
+  int32 configuration_id = 1;
+  int32 domain_critic_id = 2;
+  string domain_critic_name = 3;
+  int32 maintenance_critic_id = 4;
+  string maintenance_critic_name = 5;
+  int32 risk_id = 6;
+  string risk_name = 7;
+}
+message RiskMatrixResponse { repeated RiskMatrix risk_matrix = 1; }
+
+message PostRiskMatrixRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated RiskMatrix risk_matrix = 2;
+}
+
+message PostRiskMatrixResponse {
+  bool success = 1;
 }

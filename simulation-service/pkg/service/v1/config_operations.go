@@ -8,8 +8,8 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
 	repo "optisam-backend/simulation-service/pkg/repository/v1"
@@ -26,7 +26,7 @@ import (
 
 //DeleteConfig will delete configuration and its all data
 func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteConfigRequest) (*v1.DeleteConfigResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
@@ -99,7 +99,7 @@ func (hcs *SimulationService) ListConfig(ctx context.Context, req *v1.ListConfig
 
 // CreateConfig will add config values into database
 func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateConfigRequest) (*v1.CreateConfigResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
@@ -139,7 +139,7 @@ func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateCo
 
 // UpdateConfig updated the config data
 func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateConfigRequest) (*v1.UpdateConfigResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}

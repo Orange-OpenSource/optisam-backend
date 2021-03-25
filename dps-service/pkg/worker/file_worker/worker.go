@@ -10,12 +10,17 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
+	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/dps-service/pkg/worker/constants"
 	"optisam-backend/dps-service/pkg/worker/models"
+
+	"go.uber.org/zap"
 	//"github.com/pkg/profile"
 )
 
@@ -40,13 +45,19 @@ func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
 	//defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	dataFromJob := gendb.UploadedDataFile{}
 	var data models.FileData
-
-	err := json.Unmarshal(j.Data, &dataFromJob)
+	var err error
+	var jobs []job.Job
+	defer func(error, job.Job, worker) {
+		//Archiving the file when 1.There is no error or 2.When retries exceeded or 3. When no retries set
+		if err == nil || j.RetryCount.Int32 >= w.Queue.GetRetries() || w.Queue.GetRetries() == 0 {
+			archiveFile(dataFromJob.FileName, dataFromJob.UploadID)
+		}
+	}(err, *j, *w)
+	err = json.Unmarshal(j.Data, &dataFromJob)
 	if err != nil {
-		log.Println("Failed to unmarshal the file type job data , err :", err)
+		logger.Log.Debug("Failed to unmarshal the file type job data , err :", zap.Error(err))
 		return err
 	}
-	defer archiveFile(dataFromJob.FileName, dataFromJob.UploadID)
 
 	dataToUpdate := gendb.UpdateFileStatusParams{
 		UploadID: dataFromJob.UploadID,
@@ -56,49 +67,87 @@ func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
 
 	err = w.Queries.UpdateFileStatus(ctx, dataToUpdate)
 	if err != nil {
-		log.Println("Failed to update status , err ", err)
+		logger.Log.Debug("Failed to update status , err ", zap.Error(err))
 		return err
 	}
 
 	data, err = fileProcessing(dataFromJob)
 	if err != nil {
-		log.Println("Failed to process the file ", dataFromJob.FileName, " err : ", err)
-		dataToUpdate.Status = gendb.UploadStatusFAILED
-		dbErr := w.Queries.UpdateFileStatus(ctx, dataToUpdate)
-		if dbErr != nil {
-			log.Println("Failed to update the status of file ", dataFromJob.FileName, " , err :", err)
-			return dbErr
+		logger.Log.Debug("Failed to process the file ", zap.Any("filename", dataFromJob.FileName), zap.Error(err))
+		er := w.Queries.UpdateFileFailure(ctx, gendb.UpdateFileFailureParams{
+			Status:   gendb.UploadStatusFAILED,
+			Comments: sql.NullString{String: data.FileFailureReason, Valid: true},
+			UploadID: dataFromJob.UploadID,
+			FileName: dataFromJob.FileName,
+		})
+		if er != nil {
+			logger.Log.Debug("Failed to update file status ", zap.Any("filename", dataFromJob.FileName), zap.Error(err))
+			return er
 		}
-		return err
+		return errors.New(data.FileFailureReason)
 	}
-	log.Println(" <<<<>>>>>>>>>>>> File processed ", dataFromJob.FileName)
+
+	logger.Log.Debug("proccessed ", zap.Any("file", data.FileName), zap.Any("totalRecord", data.TotalCount))
 
 	err = w.Queries.UpdateFileTotalRecord(ctx, gendb.UpdateFileTotalRecordParams{
-		FileName:     dataFromJob.FileName,
-		UploadID:     dataFromJob.UploadID,
-		TotalRecords: data.TotalCount})
+		FileName:      dataFromJob.FileName,
+		UploadID:      dataFromJob.UploadID,
+		TotalRecords:  data.TotalCount,
+		FailedRecords: data.InvalidCount,
+	})
 	if err != nil {
-		log.Println("Failed to update total Records in DB for file ", dataFromJob.FileName, " err :", err)
+		logger.Log.Debug("Failed to update total Records in DB for file ", zap.Any("filename", dataFromJob.FileName), zap.Error(err))
 		return err
 	}
+	jobs, err = createAPITypeJobs(data)
 
-	//log.Printf(" %s  file's complete data  from file: %+v", dataFromJob.FileName, data)
-	jobs, err := createAPITypeJobs(data)
-	lenJ := len(jobs)
-	log.Println(" <<<<>>>>>>>>>>>> Jobs created in memory ", dataFromJob.FileName, lenJ)
 	for _, job := range jobs {
-		_, err = w.Queue.PushJob(ctx, job, constants.APIWORKER)
-		if err != nil {
-			log.Println("Failed to push api type jobs  , err :", err)
-			return err
-		}
+		//Will implement through workerpool
+		w.Queue.PushJob(ctx, job, constants.APIWORKER)
 	}
-	log.Println(" <<<<>>>>>>>>>>>> Jobs Pushed ", dataFromJob.FileName)
 	dataToUpdate.Status = gendb.UploadStatusCOMPLETED
 	err = w.Queries.UpdateFileStatus(ctx, dataToUpdate)
 	if err != nil {
-		log.Println("Failed to update status , err ", err)
+		logger.Log.Debug("Failed to update status , err ", zap.Error(err))
 		return err
 	}
+	setInvalidRecords(ctx, w, data, dataFromJob.UploadID, dataFromJob.FileName)
+
 	return nil
+}
+
+type InvalidRecord struct {
+	Data struct {
+		AtLineNo string
+	}
+	UploadID int32
+	FileName string
+	Scope    string `json:"scope"`
+}
+
+func setInvalidRecords(ctx context.Context, w *worker, data models.FileData, id int32, fileName string) {
+
+	for i := 0; i < int(data.InvalidCount); i++ {
+		e := InvalidRecord{
+			Data:     struct{ AtLineNo string }{fmt.Sprintf("%d", data.InvalidDataRowNum[i])},
+			UploadID: id,
+			FileName: fileName,
+			Scope:    data.Scope,
+		}
+		dataToPush, err := json.Marshal(e)
+		if err != nil {
+			log.Println("Failed tp marshal the invalid data, err ", err)
+			continue
+		}
+		j := job.Job{
+			Status:   job.JobStatusFAILED,
+			Comments: sql.NullString{String: "InsufficentData", Valid: true},
+			Data:     dataToPush,
+			Type:     sql.NullString{String: constants.APIWORKER, Valid: true},
+		}
+		_, err = w.Queue.PushJob(ctx, j, constants.APIWORKER)
+		if err != nil {
+			log.Println("Failed to upsert invalid-failed records, err ", err)
+		}
+	}
 }

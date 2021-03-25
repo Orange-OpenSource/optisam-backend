@@ -22,7 +22,7 @@ import (
 func TestMetricRepository_CreateMetricOPS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -34,7 +34,8 @@ func TestMetricRepository_CreateMetricOPS(t *testing.T) {
 		{name: "success",
 			l: NewMetricRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: "scope1",
 			},
 			setup: func() (retMat *v1.MetricOPS, cleanup func() error, retErr error) {
 				bottomID := "bottom"
@@ -255,7 +256,7 @@ func compareMetricOPSAll(t *testing.T, name string, exp, act []*v1.MetricOPS) {
 func TestMetricRepository_ListMetricOPS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name  string
@@ -268,7 +269,8 @@ func TestMetricRepository_ListMetricOPS(t *testing.T) {
 		{name: "SUCCESS",
 			l: NewMetricRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: "Scope1",
 			},
 			setup: func() (retMat []*v1.MetricOPS, cleanup func() error, retErr error) {
 				retMat = []*v1.MetricOPS{}
@@ -483,7 +485,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 		CoreFactorAttrID:      coreFactorAttrID,
 		NumCoreAttrID:         numOfCoresAttrID,
 		NumCPUAttrID:          numOfCPUsAttrID,
-	}, []string{})
+	}, "Scope1")
 	return gotRetMat, func() error {
 		//return nil
 		return deleteNodes(gotRetMat.ID, bottomID, baseID, aggregateID, bottomID, coreFactorAttrID, numOfCoresAttrID, numOfCPUsAttrID)
@@ -494,7 +496,7 @@ func TestMetricRepository_GetMetricConfigOPS(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		metName string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
@@ -509,6 +511,7 @@ func TestMetricRepository_GetMetricConfigOPS(t *testing.T) {
 			args: args{
 				metName: "dummyOps1",
 				ctx:     context.Background(),
+				scopes:  "scope1",
 			},
 			setup: func(metName string) (ids map[string]string, retErr error) {
 				ids, err := addMetricConfig(metName)
@@ -534,6 +537,7 @@ func TestMetricRepository_GetMetricConfigOPS(t *testing.T) {
 			args: args{
 				metName: "dummyOps2",
 				ctx:     context.Background(),
+				scopes:  "scope1",
 			},
 			setup:   func(metName string) (ids map[string]string, retErr error) { return },
 			want:    nil,
@@ -573,6 +577,11 @@ func addMetricConfig(metName string) (ids map[string]string, err error) {
 				Subject:     blankID("metric"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("Metric"),
+			},
+			&api.NQuad{
+				Subject:     blankID("metric"),
+				Predicate:   "scopes",
+				ObjectValue: stringObjectValue("scope1"),
 			},
 			&api.NQuad{
 				Subject:   blankID("metric"),

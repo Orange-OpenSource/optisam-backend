@@ -13,6 +13,7 @@ package mock
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
+	workerqueue "optisam-backend/common/optisam/workerqueue"
 	job "optisam-backend/common/optisam/workerqueue/job"
 	worker "optisam-backend/common/optisam/workerqueue/worker"
 	reflect "reflect"
@@ -51,6 +52,88 @@ func (m *MockWorkerqueue) Close(arg0 context.Context) {
 func (mr *MockWorkerqueueMockRecorder) Close(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockWorkerqueue)(nil).Close), arg0)
+}
+
+// GetCapacity mocks base method
+func (m *MockWorkerqueue) GetCapacity() int32 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCapacity")
+	ret0, _ := ret[0].(int32)
+	return ret0
+}
+
+// GetCapacity indicates an expected call of GetCapacity
+func (mr *MockWorkerqueueMockRecorder) GetCapacity() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCapacity", reflect.TypeOf((*MockWorkerqueue)(nil).GetCapacity))
+}
+
+// GetIthLength mocks base method
+func (m *MockWorkerqueue) GetIthLength(arg0 int) int32 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIthLength", arg0)
+	ret0, _ := ret[0].(int32)
+	return ret0
+}
+
+// GetIthLength indicates an expected call of GetIthLength
+func (mr *MockWorkerqueueMockRecorder) GetIthLength(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIthLength", reflect.TypeOf((*MockWorkerqueue)(nil).GetIthLength), arg0)
+}
+
+// GetLength mocks base method
+func (m *MockWorkerqueue) GetLength() int32 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLength")
+	ret0, _ := ret[0].(int32)
+	return ret0
+}
+
+// GetLength indicates an expected call of GetLength
+func (mr *MockWorkerqueueMockRecorder) GetLength() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLength", reflect.TypeOf((*MockWorkerqueue)(nil).GetLength))
+}
+
+// GetRetries mocks base method
+func (m *MockWorkerqueue) GetRetries() int32 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRetries")
+	ret0, _ := ret[0].(int32)
+	return ret0
+}
+
+// GetRetries indicates an expected call of GetRetries
+func (mr *MockWorkerqueueMockRecorder) GetRetries() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRetries", reflect.TypeOf((*MockWorkerqueue)(nil).GetRetries))
+}
+
+// Grow mocks base method
+func (m *MockWorkerqueue) Grow() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Grow")
+}
+
+// Grow indicates an expected call of Grow
+func (mr *MockWorkerqueueMockRecorder) Grow() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Grow", reflect.TypeOf((*MockWorkerqueue)(nil).Grow))
+}
+
+// PopJob mocks base method
+func (m *MockWorkerqueue) PopJob() workerqueue.JobChan {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PopJob")
+	ret0, _ := ret[0].(workerqueue.JobChan)
+	return ret0
+}
+
+// PopJob indicates an expected call of PopJob
+func (mr *MockWorkerqueueMockRecorder) PopJob() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PopJob", reflect.TypeOf((*MockWorkerqueue)(nil).PopJob))
 }
 
 // PushJob mocks base method
@@ -92,4 +175,16 @@ func (m *MockWorkerqueue) ResumePendingJobs(arg0 context.Context) error {
 func (mr *MockWorkerqueueMockRecorder) ResumePendingJobs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResumePendingJobs", reflect.TypeOf((*MockWorkerqueue)(nil).ResumePendingJobs), arg0)
+}
+
+// Shrink mocks base method
+func (m *MockWorkerqueue) Shrink() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Shrink")
+}
+
+// Shrink indicates an expected call of Shrink
+func (mr *MockWorkerqueueMockRecorder) Shrink() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shrink", reflect.TypeOf((*MockWorkerqueue)(nil).Shrink))
 }

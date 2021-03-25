@@ -32,6 +32,7 @@ type ApplicationInfo struct {
 	Name    string
 	Version string
 	Owner   string
+	Domain  string
 	Action  string // This tells whether this info need to upsert or delete
 }
 
@@ -44,41 +45,46 @@ type AppInstance struct {
 
 //Acqright
 type AcqRightsInfo struct {
+	Version              string
 	SwidTag              string
 	Entity               string
 	Sku                  string
 	ProductName          string
 	Editor               string
 	Metric               string
-	NumOfAcqLic          int
 	NumOfMaintenanceLic  int
+	NumOfAcqLic          int
 	AvgPrice             float64
 	AvgMaintenantPrice   float64
 	TotalPurchasedCost   float64
 	TotalMaintenanceCost float64
 	TotalCost            float64
+	StartOfMaintenance   string
+	EndOfMaintenance     string
 	Action               string
 }
 
 //FileData will carry combine information of whole file scope
 type FileData struct {
-	Products       map[string]ProductInfo
-	Equipments     map[string][]map[string]interface{}
-	Applications   map[string]ApplicationInfo
-	AppInstances   map[string][]AppInstance
-	ProdInstances  map[string]map[string][]string
-	EquipInstances map[string]map[string][]string
-	AppProducts    map[string]map[string][]string
-	ProdEquipments map[string]map[string][]ProdEquipemtInfo
-	AcqRights      map[string]AcqRightsInfo
-	Schema         []string // map[type]{schema names}, eg: [cluster]{name, parent}
-	TotalCount     int32
-	InvalidCount   int32
-	TargetServices []string //tells send data to how many services
-	FileType       string
-	Scope          string
-	FileName       string
-	UploadID       int32
+	Products          map[string]ProductInfo
+	Equipments        map[string][]map[string]interface{}
+	Applications      map[string]ApplicationInfo
+	AppInstances      map[string][]AppInstance
+	ProdInstances     map[string]map[string][]string
+	EquipInstances    map[string]map[string][]string
+	AppProducts       map[string]map[string][]string
+	ProdEquipments    map[string]map[string][]ProdEquipemtInfo
+	AcqRights         map[string]AcqRightsInfo
+	Schema            []string // map[type]{schema names}, eg: [cluster]{name, parent}
+	TotalCount        int32
+	InvalidCount      int32
+	TargetServices    []string //tells send data to how many services
+	FileType          string
+	Scope             string
+	FileName          string
+	UploadID          int32
+	FileFailureReason string
+	InvalidDataRowNum []int
 }
 
 type HeadersInfo struct {

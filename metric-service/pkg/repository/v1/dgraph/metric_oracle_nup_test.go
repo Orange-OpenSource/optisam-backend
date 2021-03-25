@@ -20,7 +20,7 @@ import (
 func TestMetricRepository_CreateMetricOracleNUPStandard(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -32,7 +32,8 @@ func TestMetricRepository_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "success",
 			l: NewMetricRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: "scope1",
 			},
 			setup: func() (retMat *v1.MetricNUPOracle, cleanup func() error, retErr error) {
 				bottomID := "bottom"
@@ -224,7 +225,7 @@ func TestMetricRepository_GetMetricConfigNUP(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		metName string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
@@ -239,6 +240,7 @@ func TestMetricRepository_GetMetricConfigNUP(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				metName: "nup1",
+				scopes:  "scope1",
 			},
 			setup: func() (func() error, error) {
 				ids, err := addMetricNUPConfig("nup1")
@@ -298,6 +300,11 @@ func addMetricNUPConfig(metName string) (ids map[string]string, err error) {
 				Subject:     blankID("metric"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("Metric"),
+			},
+			&api.NQuad{
+				Subject:     blankID("metric"),
+				Predicate:   "scopes",
+				ObjectValue: stringObjectValue("scope1"),
 			},
 			&api.NQuad{
 				Subject:   blankID("metric"),

@@ -11,12 +11,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/equipment-service/pkg/repository/v1"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -26,6 +28,7 @@ import (
 //EquipmentRepository for Dgraph
 type EquipmentRepository struct {
 	dg *dgo.Dgraph
+	mu sync.Mutex
 }
 
 //NewEquipmentRepository creates new Repository
@@ -56,6 +59,10 @@ func (r *EquipmentRepository) Equipments(ctx context.Context, eqType *v1.Equipme
 		uids = append(uids, "ID_Pro")
 		querySlice = append(querySlice, aggProEquipsQueryFromID("ID_Pro", params.ProductFilter))
 	}
+	if params.InstanceFilter != nil && len(params.InstanceFilter.Filters) != 0 {
+		uids = append(uids, "ID_Ins")
+		querySlice = append(querySlice, aggInsEquipsQueryFromID("ID_Ins", params.InstanceFilter))
+	}
 	q := `query Equips($tag:string,$pagesize:string,$offset:string) {
 			EquipID as var(func: eq(equipment.type,` + eqType.Type + `)) ` + agregateFilters(scopeFilters(scopes), equipFilter(eqType, params.Filter)) + `{}
 			` + strings.Join(querySlice, "\n") + `
@@ -66,7 +73,6 @@ func (r *EquipmentRepository) Equipments(ctx context.Context, eqType *v1.Equipme
 				` + equipQueryFields(eqType) + `
 			}
 	} `
-	//logger.Log.Info("query", zap.String("q:", q))
 	resp, err := r.dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
 		logger.Log.Error("Equipments - ", zap.String("reason", err.Error()), zap.String("query", q), zap.Any("query params", variables))
@@ -90,6 +96,37 @@ func (r *EquipmentRepository) Equipments(ctx context.Context, eqType *v1.Equipme
 	}
 
 	return equipList.NumOfRecords[0].TotalCount, equipList.Equipments, nil
+}
+
+// DeleteEquipments implements License DeleteEquipments function.
+func (r *EquipmentRepository) DeleteEquipments(ctx context.Context, scope string) error {
+	query := `query {
+		equipmentType as var(func: type(Equipment)) @filter(eq(scopes,` + scope + `)){
+			equipments as equipment.id
+		}
+		`
+	delete := `
+			uid(equipmentType) * * .
+			uid(equipments) * * .
+	`
+	set := `
+			uid(equipmentType) <Recycle> "true" .
+			uid(equipments) <Recycle> "true" .
+	`
+	query += `
+	}`
+	muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+	logger.Log.Info(query)
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{muDelete},
+		CommitNow: true,
+	}
+	if _, err := r.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("DeleteEquipments - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return fmt.Errorf("DeleteEquipments - cannot complete query transaction")
+	}
+	return nil
 }
 
 // Equipment implements License Equipment function.
@@ -306,6 +343,7 @@ func (r *EquipmentRepository) ProductEquipments(ctx context.Context, swidTag str
 	return equipList.NumOfRecords[0].TotalCount, equipList.Equipments, nil
 }
 
+//UpsertEquipment ...
 func (r *EquipmentRepository) UpsertEquipment(ctx context.Context, scope string, eqType string, parentEqType string, eqData interface{}) error {
 	v := reflect.ValueOf(eqData).Elem()
 	var set string
@@ -340,47 +378,71 @@ func (r *EquipmentRepository) UpsertEquipment(ctx context.Context, scope string,
 		uid(equipment) <` + v.Type().Field(i).Tag.Get("dbname") + `> "` + val + `" .
 		`
 	}
-	query := `query{
-		var(func: eq(equipment.id,"` + ID + `")) @filter(eq(type_name,"equipment")){
+	var mutations []*api.Mutation
+	queries := []string{"query{"}
+	query := `var(func: eq(equipment.id,"` + ID + `")) @filter(eq(type_name,"equipment") AND eq(scopes,"` + scope + `")){
 			equipment as uid
-		}
-	  `
-	set += `
-	uid(equipment) <scopes> "` + scope + `" .
-	uid(equipment) <type_name> "equipment" .
-	uid(equipment) <dgraph.type> "Equipment" .
-	uid(equipment) <equipment.type> "` + eqType + `" .
-	`
+		}`
+	mutations = append(mutations, &api.Mutation{
+		SetNquads: []byte(set),
+	})
+	log.Println("m1 ", string(mutations[0].SetNquads))
+	mutations = append(mutations, &api.Mutation{
+		Cond: "@if(eq(len(equipment),0))",
+		SetNquads: []byte(`
+		uid(equipment) <scopes> "` + scope + `" .
+		uid(equipment) <equipment.id> "` + ID + `" .
+		uid(equipment) <type_name> "equipment" .
+		uid(equipment) <dgraph.type> "Equipment" .
+		uid(equipment) <equipment.type> "` + eqType + `" .
+		`),
+	})
+	log.Println("m2 ", string(mutations[1].SetNquads))
+	//SCOPE BASED CHANGE
+	var mut1, mut2 api.Mutation
 	if parentID != "" {
 		query += `
-		var(func: eq(equipment.id,"` + parentID + `")) @filter(eq(type_name,"equipment")){
+		var(func: eq(equipment.id,"` + parentID + `")) @filter(eq(type_name,"equipment") AND eq(scopes,"` + scope + `")){
 			parent as uid
-		}
-		`
-		set += `
-		uid(equipment) <equipment.parent>  uid(parent)   .
-		uid(parent) <equipment.id> "` + parentID + `" .
-		uid(parent) <equipment.type>  "` + parentEqType + `" .
-		uid(parent) <type_name> "equipment" .
-		uid(parent) <dgraph.type> "Equipment" .
-		`
-	}
-	query += `
-	}`
+		}`
 
-	// logger.Log.Info("", zap.String("query", query))
-	// logger.Log.Info("", zap.String("set", set))
+		mut1.Cond = "@if(eq(len(parent),0))"
+		mut1.SetNquads = []byte(`
+			uid(parent) <scopes> "` + scope + `" .
+			uid(parent) <equipment.id> "` + parentID + `" .
+			uid(parent) <equipment.type>  "` + parentEqType + `" .
+			uid(parent) <type_name> "equipment" .
+			uid(parent) <dgraph.type> "Equipment" .
+			`)
+
+		mut2.SetNquads = []byte(`
+			uid(equipment) <equipment.parent>  uid(parent) .
+			`)
+		log.Println("m3 ", string(mut1.SetNquads))
+		log.Println("m4 ", string(mut2.SetNquads))
+	}
+
+	mutations = append(mutations, &mut1)
+	mutations = append(mutations, &mut2)
+
+	queries = append(queries, query)
+	queries = append(queries, "}")
+
 	req := &api.Request{
-		Query:     query,
-		Mutations: []*api.Mutation{{SetNquads: []byte(set)}},
+		Query:     strings.Join(queries, "\n"),
+		Mutations: mutations,
 		CommitNow: true,
 	}
+	//Handling locking mechanism on Uspert txn as dgrpah doesnt provide it
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if _, err := r.dg.NewTxn().Do(ctx, req); err != nil {
-		logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err))
+		logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query))
 		return errors.New("DBError")
 	}
 	return nil
 }
+
 func equipmentProductFilter(filter *v1.AggregateFilter) []string {
 	if filter == nil || len(filter.Filters) == 0 {
 		return nil
@@ -607,5 +669,14 @@ func aggProEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
 	}
 	return ` var(func: eq(product.swidtag,` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `)) @cascade{
 		` + id + ` as product.equipment
+	  }`
+}
+
+func aggInsEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
+	if filter == nil && len(filter.Filters) == 0 {
+		return ""
+	}
+	return ` var(func: eq(instance.id,` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `)) @cascade{
+		` + id + ` as instance.equipment
 	  }`
 }

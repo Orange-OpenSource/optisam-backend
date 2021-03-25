@@ -7,138 +7,14 @@
 package v1
 
 import (
-	"context"
-	"optisam-backend/common/optisam/ctxmanage"
-	"optisam-backend/common/optisam/logger"
+	"fmt"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
 
-	"go.uber.org/zap"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func (s *licenseServiceServer) MetricesForEqType(ctx context.Context, req *v1.MetricesForEqTypeRequest) (*v1.ListMetricResponse, error) {
-	// Steps:
-	// 1. Get equipment types see if given equipment type exists.
-	// 2. Get all oracle.processor.standard metrices see given equipment type exists between top
-	// and botton equipment type hirerachy if yes then return current metric in the result.
-	// 3. Get all oracle.nup.standard metrices see given equipment type exists between top
-	// and botton equipment type hirerachy if yes then return current metric in the result.
-
-	// Note: currently we are supporting only above two metrices we will add functionality for rest
-	// metrices when we will provide hardware simulation support for those metrices.
-
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}
-
-	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, userClaims.Socpes)
-	if err != nil {
-		logger.Log.Error("service/v1 - MetricesForEqType - EquipmentTypes", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
-	}
-
-	index := equipmentTypeExistsByType(req.Type, eqTypes)
-
-	if index == -1 {
-		return nil, status.Error(codes.NotFound, "equipment type does not exist")
-	}
-
-	opsMetrics, err := s.licenseRepo.ListMetricOPS(ctx, userClaims.Socpes)
-	if err != nil {
-		logger.Log.Error("service/v1 - MetricesForEqType - ListMetricOPS", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch OPS metric")
-	}
-
-	response := &v1.ListMetricResponse{}
-
-	for _, metric := range opsMetrics {
-		computedMetric, err := computedMetricFromMetricOPS(metric, eqTypes)
-		if err != nil {
-			logger.Log.Error("service/v1 - MetricesForEqType  - ComputedMetricFromMetricOPS", zap.String("metric", metric.Name), zap.String("reason", err.Error()))
-		} else {
-			index := equipmentTypeExistsByType(req.Type, computedMetric.EqTypeTree)
-			if index != -1 {
-				response.Metrices = append(response.Metrices, &v1.Metric{
-					Name:        metric.Name,
-					Type:        repo.MetricOPSOracleProcessorStandard.String(),
-					Description: repo.MetricDescriptionOracleProcessorStandard.String(),
-				})
-			}
-		}
-	}
-
-	nupMetrics, err := s.licenseRepo.ListMetricNUP(ctx, userClaims.Socpes)
-	if err != nil {
-		logger.Log.Error("service/v1 - MetricesForEqType - ListMetricNUP", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch NUP metric")
-	}
-
-	for _, metric := range nupMetrics {
-		computedMetric, err := computedMetricFromMetricNUP(metric, eqTypes)
-		if err != nil {
-			logger.Log.Error("service/v1 - MetricesForEqType  - ComputedMetricFromMetricNUP", zap.String("metric", metric.Name), zap.String("reason", err.Error()))
-			continue
-		}
-		index := equipmentTypeExistsByType(req.Type, computedMetric.EqTypeTree)
-		if index != -1 {
-			response.Metrices = append(response.Metrices, &v1.Metric{
-				Name:        metric.Name,
-				Type:        repo.MetricOracleNUPStandard.String(),
-				Description: repo.MetricDescriptionOracleNUPStandard.String(),
-			})
-		}
-	}
-
-	ipsMetrics, err := s.licenseRepo.ListMetricIPS(ctx, userClaims.Socpes)
-	if err != nil {
-		logger.Log.Error("service/v1 - MetricesForEqType - ListMetricIPS", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch IPS metric")
-	}
-
-	for _, metric := range ipsMetrics {
-		computedMetric, err := computedMetricIPS(metric, eqTypes)
-		if err != nil {
-			logger.Log.Error("service/v1 - MetricesForEqType  - ComputedMetricFromMetricIPS", zap.String("metric", metric.Name), zap.String("reason", err.Error()))
-		} else {
-			index := equipmentTypeExistsByType(req.Type, []*repo.EquipmentType{computedMetric.BaseType})
-			if index != -1 {
-				response.Metrices = append(response.Metrices, &v1.Metric{
-					Name:        metric.Name,
-					Type:        repo.MetricIPSIbmPvuStandard.String(),
-					Description: repo.MetricDescriptionIbmPvuStandard.String(),
-				})
-			}
-		}
-	}
-
-	spsMetrics, err := s.licenseRepo.ListMetricSPS(ctx, userClaims.Socpes)
-	if err != nil {
-		logger.Log.Error("service/v1 - MetricesForEqType - ListMetricIPS", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch IPS metric")
-	}
-
-	for _, metric := range spsMetrics {
-		computedMetric, err := computedMetricSPS(metric, eqTypes)
-		if err != nil {
-			logger.Log.Error("service/v1 - MetricesForEqType  - ComputedMetricFromMetricSPS", zap.String("metric", metric.Name), zap.String("reason", err.Error()))
-		} else {
-			index := equipmentTypeExistsByType(req.Type, []*repo.EquipmentType{computedMetric.BaseType})
-			if index != -1 {
-				response.Metrices = append(response.Metrices, &v1.Metric{
-					Name:        metric.Name,
-					Type:        repo.MetricSPSSagProcessorStandard.String(),
-					Description: repo.MetricDescriptionSagProcessorStandard.String(),
-				})
-			}
-		}
-	}
-	return response, nil
-}
 
 func equipmentTypeExistsByID(ID string, eqTypes []*repo.EquipmentType) (*repo.EquipmentType, error) {
 	for _, eqt := range eqTypes {
@@ -273,6 +149,8 @@ func servAttrToRepoAttr(attr *v1.Attribute) *repo.Attribute {
 		repoAttr.StringVal = attr.GetStringVal()
 		repoAttr.StringValOld = attr.GetStringValOld()
 	}
+
+	fmt.Println("Repo Attributes: ", repoAttr)
 
 	return repoAttr
 

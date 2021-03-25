@@ -21,7 +21,7 @@ func TestLicenseRepository_Metadata(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		typ    v1.MetadataType
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string

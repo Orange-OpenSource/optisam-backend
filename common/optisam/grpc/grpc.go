@@ -21,18 +21,16 @@ func GetGRPCConnections(ctx context.Context, c Config) (map[string]*grpc.ClientC
 	if c.Timeout == 0 {
 		c.Timeout = 10
 	}
-	logger.Log.Sugar().Info("config :", c)
 	for key, val := range c.Address {
 		var conn *grpc.ClientConn
 		conn, err := grpc.Dial(val, grpc.WithInsecure(),
-			grpc.WithConnectParams(grpc.ConnectParams{MinConnectTimeout: c.Timeout * time.Second}),
-			grpc.WithChainUnaryInterceptor(middleware.AddAuthNClientInterceptor(c.ApiKey)),
+			grpc.WithConnectParams(grpc.ConnectParams{MinConnectTimeout: c.Timeout * time.Millisecond * 10}),
+			grpc.WithChainUnaryInterceptor(middleware.AddContextSharingInterceptor()),
 		)
 		if err != nil {
 			logger.Log.Error("did not connect:", zap.String(key, val), zap.Error(err))
 			return nil, err
 		}
-		logger.Log.Info("grpc connection created with ", zap.String(key, val))
 		grpcGRPCConnections[key] = conn
 	}
 

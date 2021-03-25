@@ -32,12 +32,13 @@ func NewApplicationRepository(db *sql.DB) *ApplicationRepository {
 	}
 }
 
-//ApplicationRepository
+//ApplicationRepositoryTx ...
 type ApplicationRepositoryTx struct {
 	*gendb.Queries
 	db *sql.Tx
 }
 
+//NewApplicationRepositoryTx ...
 func NewApplicationRepositoryTx(db *sql.Tx) *ApplicationRepositoryTx {
 	return &ApplicationRepositoryTx{
 		Queries: gendb.New(db),
@@ -45,6 +46,7 @@ func NewApplicationRepositoryTx(db *sql.Tx) *ApplicationRepositoryTx {
 	}
 }
 
+//UpsertInstanceTX ...
 func (p *ApplicationRepository) UpsertInstanceTX(ctx context.Context, req *v1.UpsertInstanceRequest) error {
 	//Create Transaction
 	tx, err := p.db.BeginTx(ctx, nil)
@@ -95,4 +97,27 @@ func (p *ApplicationRepository) UpsertInstanceTX(ctx context.Context, req *v1.Up
 		_ = tx.Commit()
 	}
 	return err
+}
+
+//DropApplicationDataTX drops all the applications and linking data from a particular scope
+func (p *ApplicationRepository) DropApplicationDataTX(ctx context.Context, scope string) error {
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Log.Error("Failed to start Transaction", zap.Error(err))
+		return err
+	}
+	at := NewApplicationRepositoryTx(tx)
+	if err := at.DeleteApplicationsByScope(ctx, scope); err != nil {
+		tx.Rollback()
+		logger.Log.Error("failed to delete products data", zap.Error(err))
+		return err
+
+	}
+	if err := at.DeleteInstancesByScope(ctx, scope); err != nil {
+		tx.Rollback()
+		logger.Log.Error("failed to delete products data", zap.Error(err))
+		return err
+
+	}
+	return tx.Commit()
 }

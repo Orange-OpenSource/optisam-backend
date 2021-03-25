@@ -8,7 +8,6 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -27,16 +26,16 @@ func metricNameExistsSPS(metrics []*repo.MetricSPS, name string) int {
 	return -1
 }
 
-func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricSPSComputed) (uint64, uint64, error)) (uint64, uint64, error) {
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricSPS(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricSPS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 - computedLicensesSPS - ", zap.String("reason", err.Error()))
 		return 0, 0, status.Error(codes.Internal, "cannot fetch metric SPS")
 
 	}
 	ind := 0
-	if ind = metricNameExistsSPS(metrics, met); ind == -1 {
+	if ind = metricNameExistsSPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
 		return 0, 0, status.Error(codes.Internal, "cannot find metric name")
 	}
 
@@ -45,7 +44,12 @@ func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes 
 		logger.Log.Error("service/v1 - computedLicensesSPS - computedMetricSPS - ", zap.Error(err))
 		return 0, 0, err
 	}
-	computedLicensesProd, computedLicensesNonProd, err := cal(mat)
+	computedLicensesProd, computedLicensesNonProd := uint64(0), uint64(0)
+	if input[IS_AGG].(bool) {
+		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesSPS - ", zap.String("reason", err.Error()))
 		return 0, 0, status.Error(codes.Internal, "cannot compute licenses for metric SPS")

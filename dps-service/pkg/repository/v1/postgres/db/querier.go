@@ -13,12 +13,18 @@ import (
 )
 
 type Querier interface {
+	GetDataFileRecords(ctx context.Context, arg GetDataFileRecordsParams) (GetDataFileRecordsRow, error)
+	GetEntityMonthWise(ctx context.Context, arg GetEntityMonthWiseParams) ([]GetEntityMonthWiseRow, error)
+	GetFailedRecord(ctx context.Context, arg GetFailedRecordParams) ([]GetFailedRecordRow, error)
+	GetFailureReasons(ctx context.Context, arg GetFailureReasonsParams) ([]GetFailureReasonsRow, error)
 	GetFileStatus(ctx context.Context, arg GetFileStatusParams) (UploadStatus, error)
 	InsertUploadedData(ctx context.Context, arg InsertUploadedDataParams) (UploadedDataFile, error)
 	InsertUploadedMetaData(ctx context.Context, arg InsertUploadedMetaDataParams) (UploadedDataFile, error)
 	ListUploadedDataFiles(ctx context.Context, arg ListUploadedDataFilesParams) ([]ListUploadedDataFilesRow, error)
+	ListUploadedGlobalDataFiles(ctx context.Context, arg ListUploadedGlobalDataFilesParams) ([]ListUploadedGlobalDataFilesRow, error)
 	ListUploadedMetaDataFiles(ctx context.Context, arg ListUploadedMetaDataFilesParams) ([]ListUploadedMetaDataFilesRow, error)
 	UpdateFileFailedRecord(ctx context.Context, arg UpdateFileFailedRecordParams) error
+	UpdateFileFailure(ctx context.Context, arg UpdateFileFailureParams) error
 	UpdateFileStatus(ctx context.Context, arg UpdateFileStatusParams) error
 	UpdateFileSuccessRecord(ctx context.Context, arg UpdateFileSuccessRecordParams) error
 	UpdateFileTotalRecord(ctx context.Context, arg UpdateFileTotalRecordParams) error

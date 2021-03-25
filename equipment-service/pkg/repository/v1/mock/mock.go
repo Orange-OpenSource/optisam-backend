@@ -56,6 +56,34 @@ func (mr *MockEquipmentMockRecorder) CreateEquipmentType(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEquipmentType", reflect.TypeOf((*MockEquipment)(nil).CreateEquipmentType), arg0, arg1, arg2)
 }
 
+// DeleteEquipmentType mocks base method
+func (m *MockEquipment) DeleteEquipmentType(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEquipmentType", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteEquipmentType indicates an expected call of DeleteEquipmentType
+func (mr *MockEquipmentMockRecorder) DeleteEquipmentType(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipmentType", reflect.TypeOf((*MockEquipment)(nil).DeleteEquipmentType), arg0, arg1, arg2)
+}
+
+// DeleteEquipments mocks base method
+func (m *MockEquipment) DeleteEquipments(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEquipments", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteEquipments indicates an expected call of DeleteEquipments
+func (mr *MockEquipmentMockRecorder) DeleteEquipments(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipments", reflect.TypeOf((*MockEquipment)(nil).DeleteEquipments), arg0, arg1)
+}
+
 // Equipment mocks base method
 func (m *MockEquipment) Equipment(arg0 context.Context, arg1 *v1.EquipmentType, arg2 string, arg3 []string) (json.RawMessage, error) {
 	m.ctrl.T.Helper()
@@ -104,18 +132,33 @@ func (mr *MockEquipmentMockRecorder) EquipmentParents(arg0, arg1, arg2, arg3, ar
 }
 
 // EquipmentTypeByType mocks base method
-func (m *MockEquipment) EquipmentTypeByType(arg0 context.Context, arg1 string) (*v1.EquipmentType, error) {
+func (m *MockEquipment) EquipmentTypeByType(arg0 context.Context, arg1 string, arg2 []string) (*v1.EquipmentType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EquipmentTypeByType", arg0, arg1)
+	ret := m.ctrl.Call(m, "EquipmentTypeByType", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.EquipmentType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // EquipmentTypeByType indicates an expected call of EquipmentTypeByType
-func (mr *MockEquipmentMockRecorder) EquipmentTypeByType(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockEquipmentMockRecorder) EquipmentTypeByType(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeByType", reflect.TypeOf((*MockEquipment)(nil).EquipmentTypeByType), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeByType", reflect.TypeOf((*MockEquipment)(nil).EquipmentTypeByType), arg0, arg1, arg2)
+}
+
+// EquipmentTypeChildren mocks base method
+func (m *MockEquipment) EquipmentTypeChildren(arg0 context.Context, arg1 string, arg2 int, arg3 []string) ([]*v1.EquipmentType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EquipmentTypeChildren", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*v1.EquipmentType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EquipmentTypeChildren indicates an expected call of EquipmentTypeChildren
+func (mr *MockEquipmentMockRecorder) EquipmentTypeChildren(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypeChildren", reflect.TypeOf((*MockEquipment)(nil).EquipmentTypeChildren), arg0, arg1, arg2, arg3)
 }
 
 // EquipmentTypes mocks base method

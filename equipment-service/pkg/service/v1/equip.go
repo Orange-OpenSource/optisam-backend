@@ -11,9 +11,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
 	"reflect"
@@ -50,7 +50,6 @@ func (p *customType) UnmarshalJSON(data []byte) error {
 	case string:
 		*p = customType(string(v))
 	default:
-		logger.Log.Info("Data doenot maches any type", zap.Any("type", reflect.TypeOf(v)))
 	}
 	return nil
 }
@@ -61,29 +60,42 @@ func NewEquipmentServiceServer(equipmentRepo repo.Equipment) v1.EquipmentService
 }
 
 func (s *equipmentServiceServer) UpsertMetadata(ctx context.Context, req *v1.UpsertMetadataRequest) (*v1.UpsertMetadataResponse, error) {
-	err := s.equipmentRepo.UpsertMetadata(ctx, &repo.Metadata{
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.InvalidArgument, "scope is not owned by user")
+	}
+	if err := s.equipmentRepo.UpsertMetadata(ctx, &repo.Metadata{
 		MetadataType: req.GetMetadataType(),
 		Source:       req.GetMetadataSource(),
 		Attributes:   req.GetMetadataAttributes(),
-	})
-	if err != nil {
+		Scope:        req.GetScope(),
+	}); err != nil {
 		logger.Log.Error("Failed to upser metadat in dgraph", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot upsert metadata")
 	}
-
 	return &v1.UpsertMetadataResponse{Success: true}, nil
 }
 
 //UpsertEquipment to load equipment data
 //uses reflection heavily
 func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.UpsertEquipmentRequest) (*v1.UpsertEquipmentResponse, error) {
+
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.PermissionDenied, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "scope is not owned by user")
+	}
 	validate := validator.New()
-	eqTypedata, err := s.equipmentRepo.EquipmentTypeByType(ctx, req.GetEqType())
+	eqTypedata, err := s.equipmentRepo.EquipmentTypeByType(ctx, req.GetEqType(), []string{req.GetScope()})
 	if err != nil {
 		logger.Log.Error("Failed to get Metadata from dgraph", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot get metadata")
 	}
-	//logger.Log.Info("", zap.Any("eqTypeAttr", eqTypedata))
 
 	var reqEqDataJSON bytes.Buffer
 	marshaler := &jsonpb.Marshaler{}
@@ -91,7 +103,6 @@ func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.Up
 	if err != nil {
 		logger.Log.Error("unable to marshal to json", zap.Error(err))
 	}
-	// logger.Log.Info("", zap.Any("eqTypeData", reqEqDataJSON.String()))
 	dynamicStructFieldsReq := []reflect.StructField{}
 	for _, attr := range eqTypedata.Attributes {
 
@@ -133,7 +144,6 @@ func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.Up
 	if err != nil {
 		logger.Log.Error("Equipment Data Unmarshal Error", zap.Error(err))
 	}
-	logger.Log.Info("", zap.Any("Dynamic Struct Req", instanceReq))
 	err = validate.Struct(instanceReq)
 	if err != nil {
 		logger.Log.Error("Validation Error", zap.Error(err))
@@ -142,7 +152,6 @@ func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.Up
 
 	// type conversion
 	// reflect.ValueOf(instanceReq).Convert(reflect.TypeOf(instanceDB))
-	// logger.Log.Info("", zap.Any("Dynamic Struct valueOf", reflect.ValueOf(instanceReq)))
 
 	err = s.equipmentRepo.UpsertEquipment(ctx, req.GetScope(), req.GetEqType(), eqTypedata.ParentType, instanceReq)
 	if err != nil {
@@ -154,11 +163,14 @@ func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.Up
 
 func (s *equipmentServiceServer) ListEquipments(ctx context.Context, req *v1.ListEquipmentsRequest) (*v1.ListEquipmentsResponse, error) {
 	// TODO: fetch only the required equipment type
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "scope is not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		//logger.Log.Error("service/v1 - ListEquipments - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -190,7 +202,6 @@ func (s *equipmentServiceServer) ListEquipments(ctx context.Context, req *v1.Lis
 	if err != nil {
 		return nil, err
 	}
-
 	queryParams := &repo.QueryEquipments{
 		PageSize:  req.PageSize,
 		Offset:    offset(req.PageSize, req.PageNum),
@@ -201,9 +212,10 @@ func (s *equipmentServiceServer) ListEquipments(ctx context.Context, req *v1.Lis
 	if req.Filter != nil {
 		queryParams.ProductFilter = equipProductFilter(req.Filter)
 		queryParams.ApplicationFilter = equipApplicationFilter(req.Filter)
+		queryParams.InstanceFilter = equipInstanceFilter(req.Filter)
 	}
 
-	numOfrecords, equipments, err := s.equipmentRepo.Equipments(ctx, eqType, queryParams, userClaims.Socpes)
+	numOfrecords, equipments, err := s.equipmentRepo.Equipments(ctx, eqType, queryParams, req.Scopes)
 	if err != nil {
 		// TODO log error
 		return nil, status.Error(codes.Internal, "cannot get equipments")
@@ -224,20 +236,33 @@ func equipProductFilter(proFilter *v1.EquipFilter) *repo.AggregateFilter {
 	return aggFilter
 }
 
-func equipApplicationFilter(proFilter *v1.EquipFilter) *repo.AggregateFilter {
+func equipApplicationFilter(appFilter *v1.EquipFilter) *repo.AggregateFilter {
 	aggFilter := new(repo.AggregateFilter)
 	//	filter := make(map[int32]repo.Queryable)
-	if proFilter.ApplicationId != nil {
-		aggFilter.Filters = append(aggFilter.Filters, addFilter(proFilter.ApplicationId.FilteringOrder, repo.ApplicationSearchKeyID.String(), proFilter.ApplicationId.Filteringkey, nil, 0))
+	if appFilter.ApplicationId != nil {
+		aggFilter.Filters = append(aggFilter.Filters, addFilter(appFilter.ApplicationId.FilteringOrder, repo.ApplicationSearchKeyID.String(), appFilter.ApplicationId.Filteringkey, nil, 0))
 	}
 	return aggFilter
 }
+
+func equipInstanceFilter(insFilter *v1.EquipFilter) *repo.AggregateFilter {
+	aggFilter := new(repo.AggregateFilter)
+	//	filter := make(map[int32]repo.Queryable)
+	if insFilter.InstanceId != nil {
+		aggFilter.Filters = append(aggFilter.Filters, addFilter(insFilter.InstanceId.FilteringOrder, repo.InstanceSearchKeyID.String(), insFilter.InstanceId.Filteringkey, nil, 0))
+	}
+	return aggFilter
+}
+
 func (s *equipmentServiceServer) GetEquipment(ctx context.Context, req *v1.GetEquipmentRequest) (*v1.GetEquipmentResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - GetEquipment - fetching equipment types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -249,7 +274,7 @@ func (s *equipmentServiceServer) GetEquipment(ctx context.Context, req *v1.GetEq
 		return nil, status.Error(codes.NotFound, "cannot fetch equipment type with given Id")
 	}
 
-	resp, err := s.equipmentRepo.Equipment(ctx, eqType, req.EquipId, userClaims.Socpes)
+	resp, err := s.equipmentRepo.Equipment(ctx, eqType, req.EquipId, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -267,11 +292,14 @@ func (s *equipmentServiceServer) GetEquipment(ctx context.Context, req *v1.GetEq
 }
 
 func (s *equipmentServiceServer) ListEquipmentParents(ctx context.Context, req *v1.ListEquipmentParentsRequest) (*v1.ListEquipmentsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "scope is not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEquipmentParents - fetching equipment types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -289,7 +317,7 @@ func (s *equipmentServiceServer) ListEquipmentParents(ctx context.Context, req *
 		return nil, status.Error(codes.NotFound, "cannot fetch equipment type with given Id")
 	}
 
-	records, resp, err := s.equipmentRepo.EquipmentParents(ctx, eqType, equipParent, req.EquipId, userClaims.Socpes)
+	records, resp, err := s.equipmentRepo.EquipmentParents(ctx, eqType, equipParent, req.EquipId, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -308,11 +336,14 @@ func (s *equipmentServiceServer) ListEquipmentParents(ctx context.Context, req *
 }
 
 func (s *equipmentServiceServer) ListEquipmentChildren(ctx context.Context, req *v1.ListEquipmentChildrenRequest) (*v1.ListEquipmentsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "scope is not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEquipmentChildren - fetching equipment types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -346,7 +377,7 @@ func (s *equipmentServiceServer) ListEquipmentChildren(ctx context.Context, req 
 		}
 		queryParams.Filter = filter
 	}
-	records, resp, err := s.equipmentRepo.EquipmentChildren(ctx, equip, equipChild, req.EquipId, queryParams, userClaims.Socpes)
+	records, resp, err := s.equipmentRepo.EquipmentChildren(ctx, equip, equipChild, req.EquipId, queryParams, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -361,6 +392,21 @@ func (s *equipmentServiceServer) ListEquipmentChildren(ctx context.Context, req 
 		TotalRecords: records,
 		Equipments:   resp,
 	}, nil
+}
+
+func (s *equipmentServiceServer) DropEquipmentData(ctx context.Context, req *v1.DropEquipmentDataRequest) (*v1.DropEquipmentDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DropEquipmentDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.DropEquipmentDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	if err := s.equipmentRepo.DeleteEquipments(ctx, req.Scope); err != nil {
+		return &v1.DropEquipmentDataResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.DropEquipmentDataResponse{Success: true}, nil
 }
 
 func parseEquipmentQueryParam(query string, attributes []*repo.Attribute) (*repo.AggregateFilter, error) {

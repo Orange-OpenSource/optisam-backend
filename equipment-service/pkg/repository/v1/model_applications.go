@@ -88,3 +88,17 @@ type QueryApplicationsForProductAggregation struct { //
 func (appAggKey ApplicationSearchKey) String() string {
 	return string(appAggKey)
 }
+
+//InstanceSearchKey for search filter by instance fields
+type InstanceSearchKey string
+
+const (
+	//InstanceSearchKeyID is InstanceSearchKey by instance id
+	InstanceSearchKeyID InstanceSearchKey = "id"
+	//InstanceSearchKeyEnv is InstanceSearchKey by instance environment
+	InstanceSearchKeyEnv InstanceSearchKey = "environment"
+)
+
+func (insAggKey InstanceSearchKey) String() string {
+	return string(insAggKey)
+}

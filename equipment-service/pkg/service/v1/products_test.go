@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
@@ -27,7 +27,7 @@ type productQueryMatcher struct {
 
 func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -117,17 +117,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				mockLicense.EXPECT().ProductEquipments(ctx, "P1", eqTypes[0], &productQueryMatcherEquipments{
 					q: queryParams,
 					t: t,
-				}, []string{"A", "B"}).Times(1).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil)
+				}, []string{"A"}).Times(1).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil)
 
 			},
 			want: &v1.ListEquipmentsResponse{
@@ -146,6 +147,24 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentsForProductRequest{
+					EqTypeId:     "3",
+					SortBy:       "attr1",
+					SearchParams: "attr1=a11,attr2=a22",
+					SwidTag:      "P1",
+					PageNum:      10,
+					PageSize:     10,
+					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -162,13 +181,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			wantErr: true,
@@ -184,13 +204,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -205,13 +226,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -226,13 +248,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type: "typ1",
 						ID:   "1",
@@ -268,13 +291,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -289,17 +313,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				mockLicense.EXPECT().ProductEquipments(ctx, "P1", eqTypes[0], &productQueryMatcherEquipments{
 					q: queryParams,
 					t: t,
-				}, []string{"A", "B"}).Times(1).Return(int32(2), nil, errors.New("test error"))
+				}, []string{"A"}).Times(1).Return(int32(2), nil, errors.New("test error"))
 
 			},
 			wantErr: true,

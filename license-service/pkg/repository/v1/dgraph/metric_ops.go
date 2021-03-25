@@ -35,7 +35,7 @@ type metric struct {
 }
 
 // CreateMetricOPS implements Licence CreateMetricOPS function
-func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scopes []string) (retMat *v1.MetricOPS, retErr error) {
+func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scopes ...string) (retMat *v1.MetricOPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -130,8 +130,8 @@ func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricO
 }
 
 // ListMetricOPS implements Licence ListMetricOPS function
-func (l *LicenseRepository) ListMetricOPS(ctx context.Context, scopes []string) ([]*v1.MetricOPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOPSOracleProcessorStandard, scopes)
+func (l *LicenseRepository) ListMetricOPS(ctx context.Context, scopes ...string) ([]*v1.MetricOPS, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOPSOracleProcessorStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricOPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err

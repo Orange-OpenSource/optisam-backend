@@ -39,6 +39,9 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
+// define the regex for a UUID once up-front
+var _report_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
 // Validate checks the field values on ListReportTypeRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -117,7 +120,9 @@ func (m *ListReportTypeResponse) Validate() error {
 	for idx, item := range m.GetReportType() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListReportTypeResponseValidationError{
 					field:  fmt.Sprintf("ReportType[%v]", idx),
@@ -264,7 +269,12 @@ func (m *SubmitReportRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Scope
+	if !_SubmitReportRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return SubmitReportRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	// no validation rules for ReportTypeId
 
@@ -272,7 +282,9 @@ func (m *SubmitReportRequest) Validate() error {
 
 	case *SubmitReportRequest_AcqrightsReport:
 
-		if v, ok := interface{}(m.GetAcqrightsReport()).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(m.GetAcqrightsReport()).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SubmitReportRequestValidationError{
 					field:  "AcqrightsReport",
@@ -284,7 +296,9 @@ func (m *SubmitReportRequest) Validate() error {
 
 	case *SubmitReportRequest_ProductEquipmentsReport:
 
-		if v, ok := interface{}(m.GetProductEquipmentsReport()).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(m.GetProductEquipmentsReport()).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SubmitReportRequestValidationError{
 					field:  "ProductEquipmentsReport",
@@ -354,6 +368,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SubmitReportRequestValidationError{}
+
+var _SubmitReportRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on AcqRightsReport with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -570,13 +586,40 @@ func (m *ListReportRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for PageNum
+	if val := m.GetPageNum(); val < 1 || val >= 1000 {
+		return ListReportRequestValidationError{
+			field:  "PageNum",
+			reason: "value must be inside range [1, 1000)",
+		}
+	}
 
-	// no validation rules for PageSize
+	if m.GetPageSize() < 10 {
+		return ListReportRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be greater than or equal to 10",
+		}
+	}
 
-	// no validation rules for SortBy
+	if _, ok := _ListReportRequest_SortBy_InLookup[m.GetSortBy()]; !ok {
+		return ListReportRequestValidationError{
+			field:  "SortBy",
+			reason: "value must be in list [report_id report_type report_status created_by created_on]",
+		}
+	}
 
-	// no validation rules for SortOrder
+	if _, ok := SortOrder_name[int32(m.GetSortOrder())]; !ok {
+		return ListReportRequestValidationError{
+			field:  "SortOrder",
+			reason: "value must be one of the defined enum values",
+		}
+	}
+
+	if !_ListReportRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListReportRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
@@ -637,6 +680,16 @@ var _ interface {
 	ErrorName() string
 } = ListReportRequestValidationError{}
 
+var _ListReportRequest_SortBy_InLookup = map[string]struct{}{
+	"report_id":     {},
+	"report_type":   {},
+	"report_status": {},
+	"created_by":    {},
+	"created_on":    {},
+}
+
+var _ListReportRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on ListReportResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -650,7 +703,9 @@ func (m *ListReportResponse) Validate() error {
 	for idx, item := range m.GetReports() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListReportResponseValidationError{
 					field:  fmt.Sprintf("Reports[%v]", idx),
@@ -736,7 +791,9 @@ func (m *Report) Validate() error {
 
 	// no validation rules for CreatedBy
 
-	if v, ok := interface{}(m.GetCreatedOn()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetCreatedOn()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ReportValidationError{
 				field:  "CreatedOn",
@@ -813,6 +870,13 @@ func (m *DownloadReportRequest) Validate() error {
 
 	// no validation rules for ReportID
 
+	if !_DownloadReportRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DownloadReportRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -871,6 +935,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DownloadReportRequestValidationError{}
+
+var _DownloadReportRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on DownloadReportResponse with the rules
 // defined in the proto definition for this message. If any rules are

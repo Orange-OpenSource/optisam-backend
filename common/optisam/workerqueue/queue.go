@@ -22,21 +22,40 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	metadata "google.golang.org/grpc/metadata"
 )
 
-type jobChan struct {
+type JobChan struct {
 	jobId      int32
 	workerName string
+	jobData    job.Job
+	ctx        context.Context
+}
+
+/* multilevel queue is conecpt of bucket filling, once
+bucket is fulled , new bucket is added to system, and when
+old bucket is empty and old bucket is reuesd */
+type mlQueue struct {
+	notifier  []chan JobChan
+	pushIndex int
+	popIndex  int
+	total     int
+	mux       sync.Mutex
 }
 
 // Queue represents a queue
 type Queue struct {
+	//IsWorkerRegCompleted is using for avoid concurrent map read write failure.
+	IsWorkerRegCompleted bool
+
+	//IsMultiQueue flag tells wether to move with single level or multilevel
+	IsMultiQueue bool
 	//ID is a unique identifier for a Queue
 	ID string
 	//repo represents a handle to a repo struct wrapper to *sql.DB and generated queries
 	repo repoInterface.Workerqueue
 	//notifier is a chan used to signal workers there is a job to begin working
-	notifier chan jobChan
+	mq mlQueue
 	//queueSize is the size of notification channel
 	queueSize int
 
@@ -60,10 +79,11 @@ type Queue struct {
 func NewQueue(ctx context.Context, queueID string, db *sql.DB, conf QueueConfig) (*Queue, error) {
 	q := &Queue{ID: queueID}
 	q.repo = repo.NewRepository(db)
-	q.PollRate = time.Duration(100 * time.Millisecond)  //Default
-	q.queueSize = 1000                                  //Default
-	q.retries = 3                                       //default
-	q.baseDelay = time.Duration(100 * time.Millisecond) //Default
+	q.PollRate = time.Duration(100 * time.Millisecond) //Default
+	q.queueSize = 10000                                //Default
+	q.retries = 3                                      //default
+	q.IsMultiQueue = conf.IsMultiQueue
+	q.baseDelay = time.Duration(3 * time.Second) //Default
 
 	if conf.PollingRate > 0 {
 		q.PollRate = conf.PollingRate
@@ -74,16 +94,21 @@ func NewQueue(ctx context.Context, queueID string, db *sql.DB, conf QueueConfig)
 	if conf.BaseDelay > 0 {
 		q.baseDelay = conf.BaseDelay
 	}
-	if conf.Retries > 0 {
+	if conf.Retries >= 0 {
 		q.retries = conf.Retries
 	}
-	// Make notification channels
-	c := make(chan jobChan, q.queueSize) //TODO: channel probably isn't the best way to handle the queue buffer
-	q.notifier = c
+	// Multilevel Queue/channel created
+	temp := mlQueue{}
+	temp.notifier = make([]chan JobChan, 1)
+	temp.notifier[0] = make(chan JobChan, q.queueSize)
+	temp.total = 1
+	q.mq = temp
+
 	m := make(map[string][]worker.Worker)
 	q.workers = m
 	var wg sync.WaitGroup
 	q.wg = &wg
+
 	//resume stopped jobs
 	err := q.ResumePendingJobs(ctx)
 	if err != nil {
@@ -96,7 +121,9 @@ func NewQueue(ctx context.Context, queueID string, db *sql.DB, conf QueueConfig)
 //Close attempts to gracefull shutdown all workers in a queue and shutdown the db connection
 func (q *Queue) Close(ctx context.Context) {
 	q.wg.Wait()
-	close(q.notifier)
+	for i := 0; i < q.mq.total; i++ {
+		close(q.mq.notifier[i])
+	}
 	q.workers = nil
 }
 
@@ -105,9 +132,18 @@ func (q *Queue) GetRetries() int32 {
 	return int32(q.retries)
 }
 
+//GetLength return no of msgs in queue/ith channel
+func (q *Queue) GetLength() int32 {
+	return int32(len(q.mq.notifier[q.mq.pushIndex]))
+}
+
+//GetCapacity return queue's msg holding capacity, default it is 10K
+func (q *Queue) GetCapacity() int32 {
+	return int32(cap(q.mq.notifier[q.mq.pushIndex]))
+}
+
 //RegisterWorker contains the main loop for all Workers.
 func (q *Queue) RegisterWorker(ctx context.Context, w worker.Worker) {
-	logger.Log.Info("", zap.String("Registering worker with ID", w.ID()))
 	ctx, cancelFunc := context.WithCancel(ctx)
 
 	// graceful shutdown
@@ -115,7 +151,6 @@ func (q *Queue) RegisterWorker(ctx context.Context, w worker.Worker) {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			logger.Log.Info("Shutdown Signal Receieved - QUEUE")
 			cancelFunc()
 			q.wg.Wait()
 			q.workers = nil
@@ -126,133 +161,166 @@ func (q *Queue) RegisterWorker(ctx context.Context, w worker.Worker) {
 	q.wg.Add(1)
 	//The big __main loop__ for workers.
 	go func() {
-		logger.Log.Info("Starting up new worker...")
-		var jobC jobChan
+		var jobC JobChan
+		var ok bool
 		for {
+			if q.IsWorkerRegCompleted == false {
+				time.Sleep(5 * time.Second)
+				continue
+			}
 			// receive a notification from the queue chan
 			select {
 			case <-ctx.Done():
-				logger.Log.Info("Received signal to shutdown worker. Exiting.")
 				q.wg.Done()
 				return
-			case jobC = <-q.notifier:
-				lenWorker := len(q.workers[jobC.workerName])
-				if lenWorker == 0 {
-					return
-				}
-				worker := q.workers[jobC.workerName][rand.Intn(lenWorker)]
-				logger.Log.Info("", zap.Int32("Received Job", jobC.jobId), zap.String("Picked By worker", worker.ID()))
-				// err := q.repo.UpdateJobStatusRunning(ctx, dbgen.UpdateJobStatusRunningParams{JobID: jobC.jobId, Status: "RUNNING", StartTime: sql.NullTime{Time: time.Now(), Valid: true}})
-				// if err != nil {
-				// 	logger.Log.Error("Unable to update job status: %s", zap.Error(err))
-				// 	continue
-				// }
-				//If subsequent calls to updateJobStatus fail, the whole thing is probably hosed and
-				//it should probably do something more drastic for error handling.
-				j, err := q.repo.GetJob(ctx, jobC.jobId)
-				if err != nil {
-					logger.Log.Error("Error processing job: %s", zap.Error(err))
-					q.repo.UpdateJobStatusCompleted(ctx, dbgen.UpdateJobStatusCompletedParams{JobID: jobC.jobId, Status: "FAILED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}})
-					if err != nil {
-						logger.Log.Error("Error update status to failed for job: %s", zap.Error(err))
-					}
+			case jobC, ok = <-q.mq.notifier[q.mq.popIndex]:
+				if ok == false && q.IsMultiQueue {
+					q.mq.mux.Lock()
+					q.Shrink()
+					q.mq.mux.Unlock()
 					continue
 				}
-				// Call the worker func handling this job
-				// go func() {
+				logger.Log.Debug("job is poped, queue stats", zap.Any("popIndex", q.mq.popIndex), zap.Any("queueSize", len(q.mq.notifier[q.mq.popIndex])))
+				md, _ := metadata.FromIncomingContext(jobC.ctx)
+				ctx = metadata.NewOutgoingContext(ctx, md)
+				ctx = metadata.NewIncomingContext(ctx, md)
 
-				err = worker.DoWork(ctx, job.FromRepoJob(&j))
-				if err != nil {
-					if j.RetryCount.Int32 < int32(q.retries) {
-						logger.Log.Error("Retry error received from worker retrying ", zap.Error(err), zap.Int32("jobID", j.JobID), zap.Int32("retryCount", j.RetryCount.Int32+1))
-						err = q.repo.UpdateJobStatusRetry(ctx, dbgen.UpdateJobStatusRetryParams{JobID: jobC.jobId, Status: "RETRY"})
-						if err != nil {
-							logger.Log.Error("Failed to Update job", zap.Error(err))
-						}
-						time.Sleep(q.baseDelay * time.Duration(j.RetryCount.Int32) * time.Millisecond)
-						q.notifier <- jobChan{jobC.jobId, jobC.workerName}
-					} else {
-						logger.Log.Error("Retries execceded for ", zap.Int32("jobId", j.JobID))
-					}
-
-				} else {
-					logger.Log.Info("Worker", zap.Int32("Job Processed", jobC.jobId))
-					err = q.repo.UpdateJobStatusCompleted(ctx, dbgen.UpdateJobStatusCompletedParams{JobID: jobC.jobId, Status: "COMPLETED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}})
-					if err != nil {
-						logger.Log.Error("Failed to Update job", zap.Error(err))
-					}
+				lenWorker := len(q.workers[jobC.workerName])
+				if lenWorker == 0 {
+					continue
 				}
-				// }()
-				logger.Log.Info("Finished processing job ", zap.Int32("jobID", jobC.jobId))
+				worker := q.workers[jobC.workerName][rand.Intn(lenWorker)]
+				if jobC.jobData.JobID == 0 {
+					repoJob := job.ToRepoJob(&jobC.jobData)
+					jobID, err := q.repo.CreateJob(ctx, dbgen.CreateJobParams{Type: repoJob.Type, Status: repoJob.Status, Data: repoJob.Data,
+						Comments: repoJob.Comments, StartTime: repoJob.StartTime, EndTime: repoJob.EndTime})
+					if err != nil {
+						logger.Log.Error("Unable to push job to db: %s, requeueing the job", zap.Error(err))
+						q.PushJob(ctx, jobC.jobData, jobC.workerName)
+						continue
+					}
+					jobC.jobId = jobID
+					jobC.jobData.JobID = jobID
+				}
+				processing(ctx, q, worker, jobC)
 			default:
-				//logger.Log.Info("Worker: %s. No message to queue. Sleeping 500ms", w.ID())
-				//logger.Log.Info("Worker: %s. No message to queue. Sleeping 1s", w.ID())
 				time.Sleep(q.PollRate)
 			}
 		}
 	}()
-	// time.Sleep(100 * time.Millisecond)
+}
+
+func processing(ctx context.Context, q *Queue, worker worker.Worker, jobC JobChan) {
+	for {
+		if jobC.jobData.Status == job.JobStatusFAILED {
+			err := q.repo.UpdateJobStatusFailed(ctx, dbgen.UpdateJobStatusFailedParams{JobID: jobC.jobId, Status: "FAILED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}, Comments: jobC.jobData.Comments})
+			if err != nil {
+				logger.Log.Error("Error update status to failed for job: %s  requeued", zap.Error(err))
+				q.PushJob(ctx, jobC.jobData, jobC.jobData.Type.String)
+			}
+			break
+		}
+		err := worker.DoWork(ctx, &jobC.jobData)
+		if err != nil {
+			if jobC.jobData.RetryCount.Int32 < int32(q.retries) && int32(q.retries) != 0 {
+				q.repo.UpdateJobStatusRetry(ctx, dbgen.UpdateJobStatusRetryParams{
+					JobID:  jobC.jobId,
+					Status: "RETRY",
+				})
+				jobC.jobData.RetryCount.Int32++
+				logger.Log.Error("Error In Retries ", zap.Error(err), zap.Int32("jobID", jobC.jobId), zap.Int32("retryCount", jobC.jobData.RetryCount.Int32))
+				time.Sleep(q.baseDelay * time.Millisecond)
+			} else if jobC.jobData.Type.String == "DEFER_WORKER" {
+				q.PushJob(ctx, jobC.jobData, jobC.jobData.Type.String)
+			} else {
+				logger.Log.Error("Retries execceded for ", zap.Int32("jobId", jobC.jobData.JobID))
+				err = q.repo.UpdateJobStatusFailed(ctx, dbgen.UpdateJobStatusFailedParams{JobID: jobC.jobId, Status: "FAILED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}, Comments: sql.NullString{String: err.Error(), Valid: true}, RetryCount: sql.NullInt32{Int32: jobC.jobData.RetryCount.Int32, Valid: true}})
+				if err != nil {
+					logger.Log.Error("Error update status to failed for job: %s", zap.Error(err))
+					q.PushJob(ctx, jobC.jobData, jobC.jobData.Type.String)
+				}
+				break
+			}
+
+		} else {
+			err = q.repo.UpdateJobStatusCompleted(ctx, dbgen.UpdateJobStatusCompletedParams{JobID: jobC.jobId, Status: "COMPLETED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}})
+			if err != nil {
+				logger.Log.Error("Failed to Update job", zap.Error(err))
+			}
+			break
+		}
+	}
 }
 
 //PushJob pushes a job to the queue and notifies workers
 func (q *Queue) PushJob(ctx context.Context, j job.Job, workerName string) (int32, error) {
-	repoJob := job.ToRepoJob(&j)
-	jobID, err := q.repo.CreateJob(ctx, dbgen.CreateJobParams{Type: repoJob.Type, Status: repoJob.Status, Data: repoJob.Data,
-		Comments: repoJob.Comments, StartTime: repoJob.StartTime, EndTime: repoJob.EndTime})
-	if err != nil {
-		logger.Log.Error("Unable to push job to queue: %s", zap.Error(err))
-		return 0, err
+	q.mq.mux.Lock()
+	if q.GetLength() == q.GetCapacity() && q.IsMultiQueue {
+		q.Grow()
 	}
-	q.notifier <- jobChan{jobID, workerName}
-	return jobID, nil
+	q.mq.notifier[q.mq.pushIndex] <- JobChan{j.JobID, workerName, j, ctx}
+	logger.Log.Debug("queue info", zap.Any("queueno", q.mq.pushIndex), zap.Any("queueLen", q.GetLength()))
+	q.mq.mux.Unlock()
+	return 0, nil
 }
 
-/*
-//PushJob pushes a job to the queue and notifies workers
-func (q *Queue) PushJobs(ctx context.Context, j []job.Job, workerName string) (int, error) {
-	query := getBulkJobQuery(j)
-	jobIDs, err := q.repo.CreateJobs(ctx, query)
-	if err != nil {
-		logger.Log.Error("Failed To push jobs in bulk err %v", zap.Error(err))
-		return 0, err
-	}
-	for _, jobID := range jobIDs {
-		logger.Log.Info("Job pushed ", zap.Int("jobID", jobID))
-		q.notifier <- jobChan{int32(jobID), workerName}
-	}
-	return len(jobIDs), nil
+//GetIthLength gives the current msg count in ith length
+func (q *Queue) GetIthLength(i int) int32 {
+	return int32(len(q.mq.notifier[i]))
 }
 
-func getBulkJobQuery(j []job.Job) (query string) {
-	query = "insert into jobs (type,status,data,comments) values  "
-	for _, data := range j {
-		query += fmt.Sprintf("('%s','%s','%s','%s') ,", data.Type.String, data.Status, string(data.Data), data.Comments.String)
+//Shrink shrinks the queue
+func (q *Queue) Shrink() {
+	if q.GetIthLength(q.mq.popIndex) == 0 && q.mq.pushIndex > 0 {
+		q.mq.notifier = q.mq.notifier[q.mq.popIndex+1:]
+		q.mq.total--
+		q.mq.pushIndex--
+		//log.Printf("After shrink new mq %+v", q.mq)
+		logger.Log.Error("WorkerQueue Stats", zap.Any("popindex", q.mq.popIndex), zap.Any("queueSize", len(q.mq.notifier[q.mq.popIndex])), zap.Any("totalChannelList", q.mq.total))
 	}
-	query = query[0 : len(query)-1]
-	query += " returning job_id ;"
-	return
+}
+
+//Grow dynmically changes the queue size as per msgs
+func (q *Queue) Grow() {
+	if q.GetLength() == q.GetCapacity() {
+		temp := make(chan JobChan, q.queueSize)
+		q.mq.notifier = append(q.mq.notifier, temp)
+		close(q.mq.notifier[q.mq.pushIndex])
+		q.mq.total++
+		q.mq.pushIndex++
+		//log.Printf("After grow new mq %+v", q.mq)
+		logger.Log.Error("WorkerQueue Stats", zap.Any("pushindex", q.mq.pushIndex), zap.Any("queueSize", len(q.mq.notifier[q.mq.pushIndex-1])), zap.Any("totalChannelList", q.mq.total))
+	}
+
+}
+
+//Pop get the data from queue
+func (q *Queue) PopJob() JobChan {
+	return <-q.mq.notifier[q.mq.popIndex]
 }
 
 //CurrentSize tells total msgs in queue
 func (q *Queue) CurrentSize() int {
-	return len(q.notifier)
+	return len(q.mq.notifier[q.mq.pushIndex])
 }
-*/
 
 //ResumePendingJobs loops through all pending jobs
 func (q *Queue) ResumePendingJobs(ctx context.Context) error {
-	jobs, err := q.repo.GetJobs(ctx)
+	jobs, err := q.repo.GetJobsForRetry(ctx)
 	if err != nil {
 		logger.Log.Error("Error getting jobs from DB %v", zap.Error(err))
 		return err
 	}
+	logger.Log.Debug("Total Resume jobs ", zap.Any("jobs", len(jobs)))
 	for _, j := range jobs {
-		if j.Status == "PENDING" || j.Status == "RETRY" || j.Status == "RUNNING" {
-			if j.RetryCount.Int32 < int32(q.retries) {
-				logger.Log.Info("Job not processed. Retrying...", zap.Int32("jobID", j.JobID))
-				q.notifier <- jobChan{j.JobID, j.Type}
-			} else {
-				logger.Log.Error("Error already retires execeeded for ", zap.Int32("jobID", j.JobID))
+		if j.RetryCount.Int32 < int32(q.retries) {
+			job := *(job.FromRepoJob(&j))
+			q.PushJob(ctx, job, job.Type.String)
+		} else {
+			logger.Log.Error("Error already retires execeeded for ", zap.Int32("jobID", j.JobID))
+			err = q.repo.UpdateJobStatusCompleted(ctx, dbgen.UpdateJobStatusCompletedParams{JobID: j.JobID, Status: "FAILED", EndTime: sql.NullTime{Time: time.Now(), Valid: true}})
+			if err != nil {
+				logger.Log.Error("Error update status to failed for job: %s", zap.Error(err))
 			}
 		}
 	}

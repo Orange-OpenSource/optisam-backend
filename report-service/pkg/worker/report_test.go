@@ -10,7 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/workerqueue/job"
 	ls "optisam-backend/license-service/pkg/api/v1"
@@ -25,7 +25,7 @@ import (
 )
 
 func TestWorker_DoWork(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -64,8 +64,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -96,7 +96,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e11", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp1",
@@ -124,7 +124,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e2", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp3",
@@ -168,7 +168,7 @@ func TestWorker_DoWork(t *testing.T) {
 				drep = dmockRepo
 
 				gomock.InOrder(
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku1",
@@ -183,7 +183,7 @@ func TestWorker_DoWork(t *testing.T) {
 							},
 						},
 					}, nil),
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku2",
@@ -232,7 +232,7 @@ func TestWorker_DoWork(t *testing.T) {
 				drep = dmockRepo
 
 				gomock.InOrder(
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku1",
@@ -247,7 +247,7 @@ func TestWorker_DoWork(t *testing.T) {
 							},
 						},
 					}, nil),
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: nil,
 					}, nil),
 				)
@@ -284,7 +284,7 @@ func TestWorker_DoWork(t *testing.T) {
 				drep = dmockRepo
 
 				gomock.InOrder(
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku1",
@@ -299,7 +299,7 @@ func TestWorker_DoWork(t *testing.T) {
 							},
 						},
 					}, nil),
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku2",
@@ -345,7 +345,7 @@ func TestWorker_DoWork(t *testing.T) {
 				drep = dmockRepo
 
 				gomock.InOrder(
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku1",
@@ -360,7 +360,7 @@ func TestWorker_DoWork(t *testing.T) {
 							},
 						},
 					}, nil),
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p2", Scope: "Scope1"}).Times(1).Return(&ls.ListAcquiredRightsForProductResponse{
 						AcqRights: []*ls.ProductAcquiredRights{
 							&ls.ProductAcquiredRights{
 								SKU:            "sku2",
@@ -410,7 +410,7 @@ func TestWorker_DoWork(t *testing.T) {
 				drep = dmockRepo
 
 				gomock.InOrder(
-					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1"}).Return(nil, errors.New("Internal Error")),
+					mocklicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &ls.ListAcquiredRightsForProductRequest{SwidTag: "p1", Scope: "Scope1"}).Return(nil, errors.New("Internal Error")),
 				)
 
 			},
@@ -435,8 +435,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -467,7 +467,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e11", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp1",
@@ -491,7 +491,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e2", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp3",
@@ -548,7 +548,7 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return(nil, errors.New("Internal Error"))
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return(nil, errors.New("Internal Error"))
 
 			},
 			wantErr: true,
@@ -572,8 +572,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return(nil, errors.New("Internal Error"))
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return(nil, errors.New("Internal Error"))
 			},
 			wantErr: true,
 		},
@@ -596,8 +596,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -635,8 +635,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -667,7 +667,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return(nil, errors.New("Internal Error")),
+					}, "Scope1").Return(nil, errors.New("Internal Error")),
 				)
 			},
 			wantErr: true,
@@ -691,8 +691,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -723,7 +723,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e11", "partition", "Scope1").Return(nil, errors.New("Internal Error")),
 				)
 			},
@@ -748,8 +748,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -780,7 +780,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e11", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp1",
@@ -808,7 +808,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e2", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp3",
@@ -847,8 +847,8 @@ func TestWorker_DoWork(t *testing.T) {
 				dmockRepo := dmock.NewMockDgraphReport(mockCtrl)
 				drep = dmockRepo
 
-				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition").Times(1).Return([]string{"server", "cluster"}, nil)
-				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition").Times(1).Return([]*repv1.EquipmentAttributes{
+				dmockRepo.EXPECT().EquipmentTypeParents(ctx, "partition", "Scope1").Times(1).Return([]string{"server", "cluster"}, nil)
+				dmockRepo.EXPECT().EquipmentTypeAttrs(ctx, "partition", "Scope1").Times(1).Return([]*repv1.EquipmentAttributes{
 					&repv1.EquipmentAttributes{
 						AttributeName:       "ap1",
 						AttributeIdentifier: true,
@@ -879,7 +879,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv1","ap2":"apv2"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e11", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp1",
@@ -907,7 +907,7 @@ func TestWorker_DoWork(t *testing.T) {
 							AttributeIdentifier: false,
 							ParentIdentifier:    true,
 						},
-					}).Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
+					}, "Scope1").Return([]byte(`{"ap1":"apv3","ap2":"apv4"}`), nil),
 					dmockRepo.EXPECT().EquipmentParents(ctx, "e2", "partition", "Scope1").Return([]*repv1.ProductEquipment{
 						&repv1.ProductEquipment{
 							EquipmentID:   "pp3",

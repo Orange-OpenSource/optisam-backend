@@ -8,8 +8,9 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
 
@@ -19,16 +20,21 @@ import (
 )
 
 func (s *licenseServiceServer) ProductLicensesForMetric(ctx context.Context, req *v1.ProductLicensesForMetricRequest) (*v1.ProductLicensesForMetricResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	input := make(map[string]interface{})
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, req.SwidTag, &repo.QueryProducts{}, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ProductLicensesForMetric", zap.String("reason", "ScopeError"))
+		return nil, status.Error(codes.Unknown, "ScopeValidationError")
+	}
+	proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, req.SwidTag, &repo.QueryProducts{}, req.GetScope())
 	if err != nil {
 		logger.Log.Error("service/v1 - ProductLicensesForMetric - ProductIDForSwidtag", zap.Error(err))
 		return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
 	}
-	metrics, err := s.licenseRepo.ListMetrices(ctx, userClaims.Socpes)
+	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil {
 		logger.Log.Error("service/v1 - ProductLicensesForMetric - ListMetrices", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
@@ -38,71 +44,27 @@ func (s *licenseServiceServer) ProductLicensesForMetric(ctx context.Context, req
 		logger.Log.Error("service/v1 - ProductLicensesForMetric - metricNameExistsAll - " + req.MetricName)
 		return nil, status.Error(codes.Internal, "metric name does not exist")
 	}
-	metricFull := metrics[ind]
-
-	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	metricInfo := metrics[ind]
+	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
-	computedLicenses := uint64(0)
-	switch metricFull.Type {
-	case repo.MetricOPSOracleProcessorStandard:
-		cal := func(mat *repo.MetricOPSComputed) (uint64, error) {
-			return s.licenseRepo.MetricOPSComputedLicenses(ctx, proID, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesOPS(ctx, eqTypes, metricFull.Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ProductLicensesForMetric - ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute OPS licenses")
-		}
-	case repo.MetricSPSSagProcessorStandard:
-		cal := func(mat *repo.MetricSPSComputed) (uint64, uint64, error) {
-			return s.licenseRepo.MetricSPSComputedLicenses(ctx, proID, mat, userClaims.Socpes)
-		}
-		licensesProd, licensesNonProd, err := s.computedLicensesSPS(ctx, eqTypes, metrics[ind].Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ProductLicensesForMetric - MetricSPSSagProcessorStandard ", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute SPS licenses")
-		}
-		if licensesProd > licensesNonProd {
-			computedLicenses = licensesProd
-		} else {
-			computedLicenses = licensesNonProd
-		}
-	case repo.MetricIPSIbmPvuStandard:
-		cal := func(mat *repo.MetricIPSComputed) (uint64, error) {
-			return s.licenseRepo.MetricIPSComputedLicenses(ctx, proID, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesIPS(ctx, eqTypes, metrics[ind].Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ProductLicensesForMetric - MetricIPSIbmPvuStandard", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute IPS licenses")
-		}
-	case repo.MetricOracleNUPStandard:
-		cal := func(mat *repo.MetricNUPComputed) (uint64, error) {
-			return s.licenseRepo.MetricNUPComputedLicenses(ctx, proID, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesNUP(ctx, eqTypes, metrics[ind].Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ProductLicensesForMetric - MetricIPSIbmPvuStandard", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute NUP licenses")
-		}
-	case repo.MetricAttrCounterStandard:
-		cal := func(mat *repo.MetricACSComputed) (uint64, error) {
-			return s.licenseRepo.MetricACSComputedLicenses(ctx, proID, mat, userClaims.Socpes)
-		}
-		computedLicenses, err = s.computedLicensesACS(ctx, eqTypes, metrics[ind].Name, cal)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProduct - MetricAttrCounterStandard", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot compute ACS licenses")
-		}
-	default:
-		logger.Log.Error("service/v1 - ProductLicensesForMetric - metric type doesnt match - " + string(metricFull.Type))
-		return nil, status.Error(codes.Internal, "cannot find metric for computation")
+	input[PROD_ID] = proID
+	input[METRIC_NAME] = metricInfo.Name
+	input[SCOPES] = []string{req.GetScope()}
+	input[IS_AGG] = false
+	if _, ok := MetricCalculation[metricInfo.Type]; !ok {
+		logger.Log.Error("service/v1 - Failed ProductLicensesForMetric for  - ", zap.String("metric :", metricInfo.Name), zap.Any("metricType", metricInfo.Type))
+		return nil, status.Error(codes.Internal, "this metricType is not supported")
+	}
+	resp, err := MetricCalculation[metricInfo.Type](s, ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Error("service/v1 - Failed ProductLicensesForMetric for  - ", zap.String("metric :", metricInfo.Name), zap.Any("metricType", metricInfo.Type), zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "cannot compute licenses")
 	}
 	return &v1.ProductLicensesForMetricResponse{
 		MetricName:     req.MetricName,
-		NumCptLicences: computedLicenses,
-		TotalCost:      float64(computedLicenses) * req.UnitCost,
+		NumCptLicences: resp[COMPUTED_LICENCES].(uint64),
+		TotalCost:      float64(resp[COMPUTED_LICENCES].(uint64)) * req.UnitCost,
 	}, nil
 }

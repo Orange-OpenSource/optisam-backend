@@ -46,6 +46,9 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	// TODO add a import handler here
 	router.POST("/api/v1/import/data", h.UploadDataHandler)
 	router.POST("/api/v1/import/metadata", h.UploadMetaDataHandler)
+	router.POST("/api/v1/config", h.CreateConfigHandler)
+	router.PUT("/api/v1/config/:config_id", h.UpdateConfigHandler)
+	router.POST("/api/v1/import/globaldata", h.UploadGlobalDataHandler)
 
 	srv := &http.Server{
 		Addr: ":" + config.HTTPPort,

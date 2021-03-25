@@ -51,6 +51,9 @@ type Config struct {
 	// Database connection information
 	Database postgres.Config
 
+	//MaxApiWorker
+	MaxApiWorker int
+
 	// Log configuration
 	Log logger.Config
 
@@ -167,6 +170,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Dgraph configuration
 	_ = v.BindEnv("dgraph.host")
 
-	// App Params Configuration
+	// Database Password configuration
+	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 
 }

@@ -32,6 +32,7 @@ test
 # Docker files
 Dockerfile
 Dockerfile*
+docker-compose.yml
 
 # Deployment files
 **/.gitlab-ci.yml
@@ -42,6 +43,10 @@ Dockerfile*
 # Configuraiton files
 **/config-*.toml
 !**/config-local.toml
+karate-config.js
 
 # sql DB scripts
 1_optisam_db.sql
+
+# nifi-service
+nifi-service/**/*

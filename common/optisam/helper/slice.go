@@ -6,7 +6,9 @@
 
 package helper
 
-import "regexp"
+import (
+	"regexp"
+)
 
 //RemoveElements removes all elements from originalSlice
 // that are in removeElementSlice
@@ -52,13 +54,30 @@ func RegexContains(reslice []string, val string) bool {
 	return false
 }
 
-func Contains(slice []string, val string) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
+func Contains(slice []string, vals ...string) bool {
+outer:
+	for _, val := range vals {
+		for _, item := range slice {
+			if item == val {
+				continue outer
+			}
 		}
+		return false
 	}
-	return false
+	return true
+}
+
+func ContainsInts(slice []int32, vals ...int32) bool {
+outer:
+	for _, val := range vals {
+		for _, item := range slice {
+			if item == val {
+				continue outer
+			}
+		}
+		return false
+	}
+	return true
 }
 
 func MakeRange(min, max int) []int {

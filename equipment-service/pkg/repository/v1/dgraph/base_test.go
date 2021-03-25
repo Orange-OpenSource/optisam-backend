@@ -131,18 +131,22 @@ func loadDgraphData(badgerDir string) error {
 	config.LoadMetadata = true
 	config.LoadStaticData = true
 	config.SchemaFiles = []string{
-		"schema/application.schema",
-		"schema/products.schema",
-		"schema/instance.schema",
-		"schema/equipment.schema",
-		"schema/metadata.schema",
-		"schema/acq_rights.schema",
-		"schema/metric_ops.schema",
-		"schema/metric_ips.schema",
-		"schema/metric_sps.schema",
-		"schema/metric_oracle_nup.schema",
-		"schema/editor.schema",
-		"schema/products_aggregations.schema",
+		"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.schema",
+		// "schema/application.schema",
+		// "schema/products.schema",
+		// "schema/instance.schema",
+		// "schema/equipment.schema",
+		// "schema/metadata.schema",
+		// "schema/acq_rights.schema",
+		// "schema/metric_ops.schema",
+		// "schema/metric_ips.schema",
+		// "schema/metric_sps.schema",
+		// "schema/metric_oracle_nup.schema",
+		// "schema/editor.schema",
+		// "schema/products_aggregations.schema",
+	}
+	config.TypeFiles = []string{
+		"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.types",
 	}
 	config.ScopeSkeleten = "skeletonscope"
 	config.MasterDir = "testdata"
@@ -182,7 +186,6 @@ func loadDgraphData(badgerDir string) error {
 	config.UsersFiles = []string{
 		"products_equipments_users.csv",
 	}
-	log.Printf("ddddd %+v", config)
 	return loader.Load(config)
 }
 

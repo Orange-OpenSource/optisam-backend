@@ -8,8 +8,8 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
@@ -39,26 +39,27 @@ func TestListProductAggregationView(t *testing.T) {
 			input: &v1.ListProductAggregationViewRequest{
 				PageNum:  int32(1),
 				PageSize: int32(10),
+				Scopes:   []string{"s1", "s2"},
 			},
 			output: &v1.ListProductAggregationViewResponse{
 				TotalRecords: int32(2),
-				Aggregations: []*v1.ProductAggregation{
-					&v1.ProductAggregation{
+				Aggregations: []*v1.ProductAggregationView{
+					&v1.ProductAggregationView{
 						ID:              int32(100),
 						Name:            "agg1",
 						Editor:          "e1",
 						NumApplications: int32(5),
 						NumEquipments:   int32(5),
-						TotalCost:       int32(25),
+						TotalCost:       float64(25),
 						Swidtags:        []string{"p1", "p2"},
 					},
-					&v1.ProductAggregation{
+					&v1.ProductAggregationView{
 						ID:              int32(101),
 						Name:            "agg2",
 						Editor:          "e2",
 						NumApplications: int32(10),
 						NumEquipments:   int32(10),
-						TotalCost:       int32(100),
+						TotalCost:       float64(100),
 						Swidtags:        []string{"p3", "p4"},
 					},
 				},
@@ -66,12 +67,8 @@ func TestListProductAggregationView(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductAggregationViewRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ListAggregationsView(ctx, db.ListAggregationsViewParams{
-					Scope:    userClaims.Socpes,
+					Scope:    input.Scopes,
 					PageNum:  input.PageSize * (input.PageNum - 1),
 					PageSize: input.PageSize}).Return([]db.ListAggregationsViewRow{
 					{
@@ -82,7 +79,7 @@ func TestListProductAggregationView(t *testing.T) {
 						Swidtags:          []string{"p1", "p2"},
 						NumOfApplications: int32(5),
 						NumOfEquipments:   int32(5),
-						TotalCost:         int32(25),
+						TotalCost:         float64(25),
 					},
 					{
 						Totalrecords:      int64(2),
@@ -92,7 +89,7 @@ func TestListProductAggregationView(t *testing.T) {
 						Swidtags:          []string{"p3", "p4"},
 						NumOfApplications: int32(10),
 						NumOfEquipments:   int32(10),
-						TotalCost:         int32(100),
+						TotalCost:         float64(100),
 					},
 				}, nil).Times(1)
 			},
@@ -102,9 +99,21 @@ func TestListProductAggregationView(t *testing.T) {
 			input: &v1.ListProductAggregationViewRequest{
 				PageNum:  int32(1),
 				PageSize: int32(10),
+				Scopes:   []string{"s1", "s2"},
 			},
 			outErr: true,
 			ctx:    context.Background(),
+			mock:   func(input *v1.ListProductAggregationViewRequest) {},
+		},
+		{
+			name: "FAILURE: No access to scopes",
+			input: &v1.ListProductAggregationViewRequest{
+				PageNum:  int32(1),
+				PageSize: int32(10),
+				Scopes:   []string{"s4"},
+			},
+			outErr: true,
+			ctx:    ctx,
 			mock:   func(input *v1.ListProductAggregationViewRequest) {},
 		},
 		{
@@ -112,15 +121,16 @@ func TestListProductAggregationView(t *testing.T) {
 			input: &v1.ListProductAggregationViewRequest{
 				PageNum:  int32(1),
 				PageSize: int32(10),
+				Scopes:   []string{"s1", "s2"},
 			},
 			outErr: true,
 			output: &v1.ListProductAggregationViewResponse{
 				TotalRecords: int32(0),
-				Aggregations: []*v1.ProductAggregation{},
+				Aggregations: []*v1.ProductAggregationView{},
 			},
 			ctx: context.Background(),
 			mock: func(input *v1.ListProductAggregationViewRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 				if !ok {
 					t.Errorf("cannot find claims in context")
 				}
@@ -164,7 +174,7 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 	}{
 		{
 			name:  "ProductAggregationProductViewOptionswitCorrectData",
-			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1)},
+			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			output: &v1.ProductAggregationProductViewOptionsResponse{
 				NumOfOptions: int32(2),
 				Optioninfo: []*v1.OptionInfo{
@@ -187,13 +197,9 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ProductAggregationProductViewOptionsRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ProductAggregationChildOptions(ctx, db.ProductAggregationChildOptionsParams{
 					AggregationID: input.ID,
-					Scope:         userClaims.Socpes,
+					Scope:         input.Scopes,
 				}).Return([]db.ProductAggregationChildOptionsRow{
 					{
 						Swidtag:        "p1",
@@ -214,15 +220,22 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 		},
 		{
 			name:   "ProductAggregationProductViewOptionswithoutContext",
-			input:  &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1)},
+			input:  &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			ctx:    context.Background(),
+			outErr: true,
+			mock:   func(input *v1.ProductAggregationProductViewOptionsRequest) {},
+		},
+		{
+			name:   "FAILURE - No access to Scopes",
+			input:  &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s4"}},
+			ctx:    ctx,
 			outErr: true,
 			mock:   func(input *v1.ProductAggregationProductViewOptionsRequest) {},
 		},
 
 		{
 			name:  "ProductAggregationProductViewOptionswithNoResult",
-			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1)},
+			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			ctx:   context.Background(),
 			output: &v1.ProductAggregationProductViewOptionsResponse{
 				NumOfOptions: int32(0),
@@ -264,7 +277,7 @@ func TestListProductAggregationProductView(t *testing.T) {
 	}{
 		{
 			name:  "ListProductAggregationProductViewWithCorrectData",
-			input: &v1.ListProductAggregationProductViewRequest{ID: int32(1)},
+			input: &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			output: &v1.ListProductAggregationProductViewResponse{
 				Products: []*v1.Product{
 					&v1.Product{
@@ -292,13 +305,9 @@ func TestListProductAggregationProductView(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductAggregationProductViewRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ListAggregationProductsView(ctx, db.ListAggregationProductsViewParams{
 					AggregationID: input.ID,
-					Scope:         userClaims.Socpes}).Return([]db.ListAggregationProductsViewRow{
+					Scope:         input.Scopes}).Return([]db.ListAggregationProductsViewRow{
 					{
 						Swidtag:           "p1",
 						ProductName:       "pname1",
@@ -326,19 +335,26 @@ func TestListProductAggregationProductView(t *testing.T) {
 		},
 		{
 			name:   "ListProductAggregationProductViewWithoutContext",
-			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1)},
+			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			outErr: true,
 			ctx:    context.Background(),
 			mock:   func(input *v1.ListProductAggregationProductViewRequest) {},
 		},
 		{
+			name:   "FAILURE: No access to Scopes",
+			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s4"}},
+			outErr: true,
+			ctx:    ctx,
+			mock:   func(input *v1.ListProductAggregationProductViewRequest) {},
+		},
+		{
 			name:   "ListProductAggregationProductViewWithnoResultSEt",
-			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1)},
+			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			output: &v1.ListProductAggregationProductViewResponse{Products: []*v1.Product{}},
 			outErr: true,
 			ctx:    context.Background(),
 			mock: func(input *v1.ListProductAggregationProductViewRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 				if !ok {
 					t.Errorf("cannot find claims in context")
 				}
@@ -380,7 +396,7 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 	}{
 		{
 			name:  "ProductAggregationProductViewDetailsWithCorrectData",
-			input: &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1)},
+			input: &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			output: &v1.ProductAggregationProductViewDetailsResponse{
 				ID:              int32(1),
 				Name:            "agg",
@@ -393,13 +409,9 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ProductAggregationProductViewDetailsRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ProductAggregationDetails(ctx, db.ProductAggregationDetailsParams{
 					AggregationID: input.ID,
-					Scope:         userClaims.Socpes,
+					Scope:         input.Scopes,
 				}).Return(db.ProductAggregationDetailsRow{
 					AggregationID:     int32(1),
 					AggregationName:   "agg",
@@ -413,8 +425,15 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 		},
 		{
 			name:   "ProductAggregationProductViewDetailsWithOutContext",
-			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1)},
+			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
 			ctx:    context.Background(),
+			outErr: true,
+			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
+		},
+		{
+			name:   "FAILURE: No access to Scopes",
+			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s4"}},
+			ctx:    ctx,
 			outErr: true,
 			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
 		},

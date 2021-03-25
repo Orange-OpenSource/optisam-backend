@@ -85,6 +85,21 @@ func (mr *MockWorkerqueueMockRecorder) GetJobs(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobs", reflect.TypeOf((*MockWorkerqueue)(nil).GetJobs), arg0)
 }
 
+// GetJobsForRetry mocks base method
+func (m *MockWorkerqueue) GetJobsForRetry(arg0 context.Context) ([]db.Job, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJobsForRetry", arg0)
+	ret0, _ := ret[0].([]db.Job)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJobsForRetry indicates an expected call of GetJobsForRetry
+func (mr *MockWorkerqueueMockRecorder) GetJobsForRetry(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobsForRetry", reflect.TypeOf((*MockWorkerqueue)(nil).GetJobsForRetry), arg0)
+}
+
 // UpdateJobStatusCompleted mocks base method
 func (m *MockWorkerqueue) UpdateJobStatusCompleted(arg0 context.Context, arg1 db.UpdateJobStatusCompletedParams) error {
 	m.ctrl.T.Helper()
@@ -97,6 +112,20 @@ func (m *MockWorkerqueue) UpdateJobStatusCompleted(arg0 context.Context, arg1 db
 func (mr *MockWorkerqueueMockRecorder) UpdateJobStatusCompleted(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobStatusCompleted", reflect.TypeOf((*MockWorkerqueue)(nil).UpdateJobStatusCompleted), arg0, arg1)
+}
+
+// UpdateJobStatusFailed mocks base method
+func (m *MockWorkerqueue) UpdateJobStatusFailed(arg0 context.Context, arg1 db.UpdateJobStatusFailedParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateJobStatusFailed", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateJobStatusFailed indicates an expected call of UpdateJobStatusFailed
+func (mr *MockWorkerqueueMockRecorder) UpdateJobStatusFailed(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJobStatusFailed", reflect.TypeOf((*MockWorkerqueue)(nil).UpdateJobStatusFailed), arg0, arg1)
 }
 
 // UpdateJobStatusRetry mocks base method

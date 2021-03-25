@@ -46,28 +46,27 @@ func createSchema(dg *dgo.Dgraph, files, typeFiles []string) error {
 		return err
 	}
 
-	types, err := readFiles(typeFiles, "\n")
-	if err != nil {
-		return err
+	if len(typeFiles) > 0 {
+		types, err := readFiles(typeFiles, "\n")
+		if err != nil {
+			return err
+		}
+
+		if err := alterSchema(dg, types); err != nil {
+			return err
+		}
 	}
-
-	//fmt.Println(types)
-
-	if err := alterSchema(dg, types); err != nil {
-		return err
-	}
-
-	//fmt.Println(schema)
 
 	log.Println("completed schema creation")
 	return nil
 }
 
 func alterSchema(dg *dgo.Dgraph, schema string) error {
-	fmt.Println(schema)
+	//fmt.Println(schema)
 	if err := dg.Alter(context.Background(), &api.Operation{
 		Schema: strings.TrimSpace(schema),
 	}); err != nil {
+		fmt.Println(schema)
 		logger.Log.Error("cannot create schema", zap.String("reasons", err.Error()))
 		return err
 	}

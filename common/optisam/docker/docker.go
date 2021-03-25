@@ -9,14 +9,15 @@ package docker
 import (
 	"context"
 	"fmt"
+	"optisam-backend/common/optisam/logger"
+	"strings"
+	"time"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"go.uber.org/zap"
-	"optisam-backend/common/optisam/logger"
-	"strings"
-	"time"
 )
 
 var cli *client.Client
@@ -51,7 +52,6 @@ func getPortBindingMap(binds []string, host string) (nat.PortMap, error) {
 				bindings = append(bindings, nat.PortBinding{HostIP: host, HostPort: strings.TrimSpace(port)})
 			}
 		} else {
-			logger.Log.Info("Skipping port")
 			continue
 		}
 		val[containerPort] = bindings
@@ -101,7 +101,6 @@ func Start(cfg []Config) (dockers []*DockerInfo, err error) {
 
 	dockers = make([]*DockerInfo, 0)
 	prerequisites(cfg)
-	logger.Log.Info("Creating Docker Container.........")
 	for _, data := range cfg {
 		docker := &DockerInfo{}
 		var containerConfig *container.Config
@@ -134,7 +133,6 @@ func Start(cfg []Config) (dockers []*DockerInfo, err error) {
 			docker.cli.ContainerRemove(docker.ctx, docker.body.ID, types.ContainerRemoveOptions{})
 			return dockers, err
 		}
-		logger.Log.Info("Docker Container name : [" + docker.name + "] and ID [" + docker.body.ID + "] created successfully :):):)")
 		if len(containerConfig.Cmd) > 0 {
 			time.Sleep(data.Wait * time.Second)
 			for _, cmd := range containerConfig.Cmd {
@@ -160,13 +158,11 @@ func Start(cfg []Config) (dockers []*DockerInfo, err error) {
 }
 
 func prerequisites(cfg []Config) {
-	logger.Log.Info("removing old containers .....")
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
 	for _, c := range containers {
-		logger.Log.Info("Currently running containers: " + strings.Join(c.Names, ","))
 		if isContainerRunning(cfg, c.Names) {
 			if err := cli.ContainerStop(context.Background(), c.ID, nil); err != nil {
 				panic(err)
@@ -217,7 +213,6 @@ func Stop(dockers []*DockerInfo) error {
 			logger.Log.Error("ERROR : ", zap.String("reason", err.Error()))
 			continue
 		}
-		logger.Log.Info("Container name [" + dock.name + "] and ID [" + dock.body.ID + "] stopped successfully")
 	}
 	return nil
 }

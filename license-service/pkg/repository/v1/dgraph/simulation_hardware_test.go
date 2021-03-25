@@ -30,7 +30,7 @@ func TestLicenseRepository_ParentsHirerachyForEquipment(t *testing.T) {
 		equipID        string
 		equipType      string
 		hirearchyLevel uint8
-		scopes         []string
+		scopes         string
 	}
 	tests := []struct {
 		name    string
@@ -46,7 +46,7 @@ func TestLicenseRepository_ParentsHirerachyForEquipment(t *testing.T) {
 				equipID:        "SERV_0001",
 				equipType:      "Vcenter",
 				hirearchyLevel: 5,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: &v1.Equipment{
 				EquipID: "SERV_0001",
@@ -104,7 +104,7 @@ func TestLicenseRepository_ProductsForEquipmentForMetricOracleProcessorStandard(
 		equipType      string
 		hirearchyLevel uint8
 		metric         *v1.MetricOPSComputed
-		scopes         []string
+		scopes         string
 	}
 	tests := []struct {
 		name    string
@@ -123,7 +123,7 @@ func TestLicenseRepository_ProductsForEquipmentForMetricOracleProcessorStandard(
 				metric: &v1.MetricOPSComputed{
 					Name: "oracle.processor.standard",
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want: []*v1.ProductData{
 				&v1.ProductData{
@@ -184,7 +184,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 		equipID   string
 		equipType string
 		mat       *v1.MetricOPSComputed
-		scopes    []string
+		scopes    string
 	}
 	tests := []struct {
 		name    string
@@ -234,7 +234,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						Name: "OracleCoreFactor",
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want:  int64(2),
 			want1: 2,
@@ -279,7 +279,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						Name: "OracleCoreFactor",
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want:  int64(8),
 			want1: 8,
@@ -324,7 +324,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						Name: "OracleCoreFactor",
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want: int64(36),
 		},
@@ -368,7 +368,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						Name: "OracleCoreFactor",
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want: int64(44),
 		},
@@ -421,7 +421,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						FloatVal:    2,
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want:  int64(16),
 			want1: 16,
@@ -475,7 +475,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						FloatVal:    2,
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want:  int64(32),
 			want1: 32,
@@ -529,7 +529,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						FloatVal:    2,
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want: int64(64),
 		},
@@ -582,7 +582,7 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 						FloatVal:    2,
 					},
 				},
-				scopes: []string{"scope1", "scope2"},
+				scopes: "scope1",
 			},
 			want: int64(256),
 		},
@@ -621,7 +621,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 		productID      string
 		hirearchyLevel uint8
 		metric         *v1.MetricNUPComputed
-		scopes         []string
+		scopes         string
 	}
 	tests := []struct {
 		name    string
@@ -638,7 +638,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				equipType:      "Server",
 				productID:      "ORAC099",
 				hirearchyLevel: 1,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: []*v1.User{
 				&v1.User{
@@ -655,7 +655,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				equipType:      "Server",
 				productID:      "ORAC099",
 				hirearchyLevel: 2,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: []*v1.User{
 				&v1.User{
@@ -672,7 +672,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				equipType:      "Cluster",
 				productID:      "ORAC099",
 				hirearchyLevel: 3,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: []*v1.User{
 				&v1.User{
@@ -689,7 +689,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				equipType:      "Vcenter",
 				productID:      "ORAC099",
 				hirearchyLevel: 4,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: []*v1.User{
 				&v1.User{
@@ -706,7 +706,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				equipType:      "DataCenter",
 				productID:      "ORAC099",
 				hirearchyLevel: 5,
-				scopes:         []string{"scope1", "scope2"},
+				scopes:         "scope1",
 			},
 			want: []*v1.User{
 				&v1.User{

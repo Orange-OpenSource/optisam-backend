@@ -58,7 +58,14 @@ func (m *UpsertApplicationRequest) Validate() error {
 
 	// no validation rules for Owner
 
-	// no validation rules for Scope
+	// no validation rules for Domain
+
+	if !_UpsertApplicationRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return UpsertApplicationRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
@@ -118,6 +125,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertApplicationRequestValidationError{}
+
+var _UpsertApplicationRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on UpsertApplicationResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -187,6 +196,152 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertApplicationResponseValidationError{}
+
+// Validate checks the field values on DropApplicationDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropApplicationDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DropApplicationDataRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DropApplicationDataRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DropApplicationDataRequestValidationError is the validation error returned
+// by DropApplicationDataRequest.Validate if the designated constraints aren't met.
+type DropApplicationDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropApplicationDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropApplicationDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropApplicationDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropApplicationDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropApplicationDataRequestValidationError) ErrorName() string {
+	return "DropApplicationDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropApplicationDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropApplicationDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropApplicationDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropApplicationDataRequestValidationError{}
+
+var _DropApplicationDataRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DropApplicationDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropApplicationDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DropApplicationDataResponseValidationError is the validation error returned
+// by DropApplicationDataResponse.Validate if the designated constraints
+// aren't met.
+type DropApplicationDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropApplicationDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropApplicationDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropApplicationDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropApplicationDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropApplicationDataResponseValidationError) ErrorName() string {
+	return "DropApplicationDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropApplicationDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropApplicationDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropApplicationDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropApplicationDataResponseValidationError{}
 
 // Validate checks the field values on DeleteApplicationRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -360,7 +515,12 @@ func (m *UpsertInstanceRequest) Validate() error {
 		}
 	}
 
-	// no validation rules for Scope
+	if !_UpsertInstanceRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return UpsertInstanceRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
@@ -420,6 +580,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertInstanceRequestValidationError{}
+
+var _UpsertInstanceRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on UpsertInstanceResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -676,6 +838,26 @@ func (m *ListApplicationsRequest) Validate() error {
 		}
 	}
 
+	if len(m.GetScopes()) != 1 {
+		return ListApplicationsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListApplicationsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
 	return nil
 }
 
@@ -839,6 +1021,12 @@ func (m *Application) Validate() error {
 
 	// no validation rules for TotalCost
 
+	// no validation rules for Domain
+
+	// no validation rules for ObsolescenceRisk
+
+	// no validation rules for NumOfEquipments
+
 	return nil
 }
 
@@ -934,6 +1122,26 @@ func (m *ApplicationSearchParams) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetDomain()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ApplicationSearchParamsValidationError{
+				field:  "Domain",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetObsolescenceRisk()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ApplicationSearchParamsValidationError{
+				field:  "ObsolescenceRisk",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -993,154 +1201,6 @@ var _ interface {
 	ErrorName() string
 } = ApplicationSearchParamsValidationError{}
 
-// Validate checks the field values on ApplicationRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *ApplicationRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for ApplicationId
-
-	return nil
-}
-
-// ApplicationRequestValidationError is the validation error returned by
-// ApplicationRequest.Validate if the designated constraints aren't met.
-type ApplicationRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ApplicationRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ApplicationRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ApplicationRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ApplicationRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ApplicationRequestValidationError) ErrorName() string {
-	return "ApplicationRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ApplicationRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sApplicationRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ApplicationRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ApplicationRequestValidationError{}
-
-// Validate checks the field values on ApplicationResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *ApplicationResponse) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Name
-
-	// no validation rules for Version
-
-	// no validation rules for Edition
-
-	// no validation rules for Editor
-
-	// no validation rules for Metric
-
-	// no validation rules for NumOfInstances
-
-	return nil
-}
-
-// ApplicationResponseValidationError is the validation error returned by
-// ApplicationResponse.Validate if the designated constraints aren't met.
-type ApplicationResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ApplicationResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ApplicationResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ApplicationResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ApplicationResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ApplicationResponseValidationError) ErrorName() string {
-	return "ApplicationResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ApplicationResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sApplicationResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ApplicationResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ApplicationResponseValidationError{}
-
 // Validate checks the field values on ListInstancesRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1185,6 +1245,26 @@ func (m *ListInstancesRequest) Validate() error {
 				cause:  err,
 			}
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListInstancesRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return ListInstancesRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
 	}
 
 	return nil
@@ -1559,6 +1639,1988 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = StringFilterValidationError{}
+
+// Validate checks the field values on ApplicationDomainsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ApplicationDomainsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ApplicationDomainsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ApplicationDomainsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ApplicationDomainsRequestValidationError is the validation error returned by
+// ApplicationDomainsRequest.Validate if the designated constraints aren't met.
+type ApplicationDomainsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ApplicationDomainsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ApplicationDomainsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ApplicationDomainsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ApplicationDomainsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ApplicationDomainsRequestValidationError) ErrorName() string {
+	return "ApplicationDomainsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ApplicationDomainsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sApplicationDomainsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ApplicationDomainsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ApplicationDomainsRequestValidationError{}
+
+var _ApplicationDomainsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ApplicationDomainsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ApplicationDomainsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ApplicationDomainsResponseValidationError is the validation error returned
+// by ApplicationDomainsResponse.Validate if the designated constraints aren't met.
+type ApplicationDomainsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ApplicationDomainsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ApplicationDomainsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ApplicationDomainsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ApplicationDomainsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ApplicationDomainsResponseValidationError) ErrorName() string {
+	return "ApplicationDomainsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ApplicationDomainsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sApplicationDomainsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ApplicationDomainsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ApplicationDomainsResponseValidationError{}
+
+// Validate checks the field values on DomainCriticityMetaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DomainCriticityMetaRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// DomainCriticityMetaRequestValidationError is the validation error returned
+// by DomainCriticityMetaRequest.Validate if the designated constraints aren't met.
+type DomainCriticityMetaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityMetaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityMetaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityMetaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityMetaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityMetaRequestValidationError) ErrorName() string {
+	return "DomainCriticityMetaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityMetaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticityMetaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityMetaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityMetaRequestValidationError{}
+
+// Validate checks the field values on DomainCriticityMeta with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DomainCriticityMeta) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for DomainCriticId
+
+	// no validation rules for DomainCriticName
+
+	return nil
+}
+
+// DomainCriticityMetaValidationError is the validation error returned by
+// DomainCriticityMeta.Validate if the designated constraints aren't met.
+type DomainCriticityMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityMetaValidationError) ErrorName() string {
+	return "DomainCriticityMetaValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticityMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityMetaValidationError{}
+
+// Validate checks the field values on DomainCriticityMetaResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DomainCriticityMetaResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetDomainCriticityMeta() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return DomainCriticityMetaResponseValidationError{
+					field:  fmt.Sprintf("DomainCriticityMeta[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// DomainCriticityMetaResponseValidationError is the validation error returned
+// by DomainCriticityMetaResponse.Validate if the designated constraints
+// aren't met.
+type DomainCriticityMetaResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityMetaResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityMetaResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityMetaResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityMetaResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityMetaResponseValidationError) ErrorName() string {
+	return "DomainCriticityMetaResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityMetaResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticityMetaResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityMetaResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityMetaResponseValidationError{}
+
+// Validate checks the field values on MaintenanceCriticityMetaRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MaintenanceCriticityMetaRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// MaintenanceCriticityMetaRequestValidationError is the validation error
+// returned by MaintenanceCriticityMetaRequest.Validate if the designated
+// constraints aren't met.
+type MaintenanceCriticityMetaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityMetaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityMetaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityMetaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityMetaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityMetaRequestValidationError) ErrorName() string {
+	return "MaintenanceCriticityMetaRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityMetaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticityMetaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityMetaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityMetaRequestValidationError{}
+
+// Validate checks the field values on MaintenanceCriticityMeta with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MaintenanceCriticityMeta) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for MaintenanceCriticId
+
+	// no validation rules for MaintenanceCriticName
+
+	return nil
+}
+
+// MaintenanceCriticityMetaValidationError is the validation error returned by
+// MaintenanceCriticityMeta.Validate if the designated constraints aren't met.
+type MaintenanceCriticityMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityMetaValidationError) ErrorName() string {
+	return "MaintenanceCriticityMetaValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticityMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityMetaValidationError{}
+
+// Validate checks the field values on MaintenanceCriticityMetaResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *MaintenanceCriticityMetaResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetMaintenanceCriticityMeta() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MaintenanceCriticityMetaResponseValidationError{
+					field:  fmt.Sprintf("MaintenanceCriticityMeta[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MaintenanceCriticityMetaResponseValidationError is the validation error
+// returned by MaintenanceCriticityMetaResponse.Validate if the designated
+// constraints aren't met.
+type MaintenanceCriticityMetaResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityMetaResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityMetaResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityMetaResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityMetaResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityMetaResponseValidationError) ErrorName() string {
+	return "MaintenanceCriticityMetaResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityMetaResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticityMetaResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityMetaResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityMetaResponseValidationError{}
+
+// Validate checks the field values on RiskMetaRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RiskMetaRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// RiskMetaRequestValidationError is the validation error returned by
+// RiskMetaRequest.Validate if the designated constraints aren't met.
+type RiskMetaRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMetaRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMetaRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMetaRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMetaRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMetaRequestValidationError) ErrorName() string { return "RiskMetaRequestValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RiskMetaRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMetaRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMetaRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMetaRequestValidationError{}
+
+// Validate checks the field values on RiskMeta with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *RiskMeta) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for RiskId
+
+	// no validation rules for RiskName
+
+	return nil
+}
+
+// RiskMetaValidationError is the validation error returned by
+// RiskMeta.Validate if the designated constraints aren't met.
+type RiskMetaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMetaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMetaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMetaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMetaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMetaValidationError) ErrorName() string { return "RiskMetaValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RiskMetaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMeta.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMetaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMetaValidationError{}
+
+// Validate checks the field values on RiskMetaResponse with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RiskMetaResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetRiskMeta() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RiskMetaResponseValidationError{
+					field:  fmt.Sprintf("RiskMeta[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// RiskMetaResponseValidationError is the validation error returned by
+// RiskMetaResponse.Validate if the designated constraints aren't met.
+type RiskMetaResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMetaResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMetaResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMetaResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMetaResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMetaResponseValidationError) ErrorName() string { return "RiskMetaResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RiskMetaResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMetaResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMetaResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMetaResponseValidationError{}
+
+// Validate checks the field values on DomainCriticityRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DomainCriticityRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DomainCriticityRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DomainCriticityRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DomainCriticityRequestValidationError is the validation error returned by
+// DomainCriticityRequest.Validate if the designated constraints aren't met.
+type DomainCriticityRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityRequestValidationError) ErrorName() string {
+	return "DomainCriticityRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticityRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityRequestValidationError{}
+
+var _DomainCriticityRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DomainCriticity with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *DomainCriticity) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for DomainCriticId
+
+	// no validation rules for DomainCriticName
+
+	return nil
+}
+
+// DomainCriticityValidationError is the validation error returned by
+// DomainCriticity.Validate if the designated constraints aren't met.
+type DomainCriticityValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityValidationError) ErrorName() string { return "DomainCriticityValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticity.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityValidationError{}
+
+// Validate checks the field values on DomainCriticityResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DomainCriticityResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetDomainsCriticity() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return DomainCriticityResponseValidationError{
+					field:  fmt.Sprintf("DomainsCriticity[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// DomainCriticityResponseValidationError is the validation error returned by
+// DomainCriticityResponse.Validate if the designated constraints aren't met.
+type DomainCriticityResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DomainCriticityResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DomainCriticityResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DomainCriticityResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DomainCriticityResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DomainCriticityResponseValidationError) ErrorName() string {
+	return "DomainCriticityResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DomainCriticityResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDomainCriticityResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DomainCriticityResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DomainCriticityResponseValidationError{}
+
+// Validate checks the field values on PostDomainCriticityRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *PostDomainCriticityRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_PostDomainCriticityRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return PostDomainCriticityRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	for idx, item := range m.GetDomainsCriticity() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PostDomainCriticityRequestValidationError{
+					field:  fmt.Sprintf("DomainsCriticity[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// PostDomainCriticityRequestValidationError is the validation error returned
+// by PostDomainCriticityRequest.Validate if the designated constraints aren't met.
+type PostDomainCriticityRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostDomainCriticityRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostDomainCriticityRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostDomainCriticityRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostDomainCriticityRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostDomainCriticityRequestValidationError) ErrorName() string {
+	return "PostDomainCriticityRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostDomainCriticityRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostDomainCriticityRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostDomainCriticityRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostDomainCriticityRequestValidationError{}
+
+var _PostDomainCriticityRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on PostDomainCriticityResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *PostDomainCriticityResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// PostDomainCriticityResponseValidationError is the validation error returned
+// by PostDomainCriticityResponse.Validate if the designated constraints
+// aren't met.
+type PostDomainCriticityResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostDomainCriticityResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostDomainCriticityResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostDomainCriticityResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostDomainCriticityResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostDomainCriticityResponseValidationError) ErrorName() string {
+	return "PostDomainCriticityResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostDomainCriticityResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostDomainCriticityResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostDomainCriticityResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostDomainCriticityResponseValidationError{}
+
+// Validate checks the field values on MaintenanceCriticityRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MaintenanceCriticityRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_MaintenanceCriticityRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return MaintenanceCriticityRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// MaintenanceCriticityRequestValidationError is the validation error returned
+// by MaintenanceCriticityRequest.Validate if the designated constraints
+// aren't met.
+type MaintenanceCriticityRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityRequestValidationError) ErrorName() string {
+	return "MaintenanceCriticityRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticityRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityRequestValidationError{}
+
+var _MaintenanceCriticityRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on MaintenanceCriticity with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MaintenanceCriticity) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for MaintenanceCriticId
+
+	// no validation rules for MaintenanceLevelId
+
+	// no validation rules for MaintenanceLevelName
+
+	// no validation rules for StartMonth
+
+	// no validation rules for EndMonth
+
+	return nil
+}
+
+// MaintenanceCriticityValidationError is the validation error returned by
+// MaintenanceCriticity.Validate if the designated constraints aren't met.
+type MaintenanceCriticityValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityValidationError) ErrorName() string {
+	return "MaintenanceCriticityValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticity.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityValidationError{}
+
+// Validate checks the field values on PostMaintenanceCriticityRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *PostMaintenanceCriticityRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_PostMaintenanceCriticityRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return PostMaintenanceCriticityRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	for idx, item := range m.GetMaintenanceCriticy() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PostMaintenanceCriticityRequestValidationError{
+					field:  fmt.Sprintf("MaintenanceCriticy[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// PostMaintenanceCriticityRequestValidationError is the validation error
+// returned by PostMaintenanceCriticityRequest.Validate if the designated
+// constraints aren't met.
+type PostMaintenanceCriticityRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostMaintenanceCriticityRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostMaintenanceCriticityRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostMaintenanceCriticityRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostMaintenanceCriticityRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostMaintenanceCriticityRequestValidationError) ErrorName() string {
+	return "PostMaintenanceCriticityRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostMaintenanceCriticityRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostMaintenanceCriticityRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostMaintenanceCriticityRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostMaintenanceCriticityRequestValidationError{}
+
+var _PostMaintenanceCriticityRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on MaintenanceCriticityResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *MaintenanceCriticityResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetMaintenanceCriticy() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return MaintenanceCriticityResponseValidationError{
+					field:  fmt.Sprintf("MaintenanceCriticy[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// MaintenanceCriticityResponseValidationError is the validation error returned
+// by MaintenanceCriticityResponse.Validate if the designated constraints
+// aren't met.
+type MaintenanceCriticityResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MaintenanceCriticityResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MaintenanceCriticityResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MaintenanceCriticityResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MaintenanceCriticityResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MaintenanceCriticityResponseValidationError) ErrorName() string {
+	return "MaintenanceCriticityResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e MaintenanceCriticityResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMaintenanceCriticityResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MaintenanceCriticityResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MaintenanceCriticityResponseValidationError{}
+
+// Validate checks the field values on PostMaintenanceCriticityResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *PostMaintenanceCriticityResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// PostMaintenanceCriticityResponseValidationError is the validation error
+// returned by PostMaintenanceCriticityResponse.Validate if the designated
+// constraints aren't met.
+type PostMaintenanceCriticityResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostMaintenanceCriticityResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostMaintenanceCriticityResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostMaintenanceCriticityResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostMaintenanceCriticityResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostMaintenanceCriticityResponseValidationError) ErrorName() string {
+	return "PostMaintenanceCriticityResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostMaintenanceCriticityResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostMaintenanceCriticityResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostMaintenanceCriticityResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostMaintenanceCriticityResponseValidationError{}
+
+// Validate checks the field values on RiskMatrixRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *RiskMatrixRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_RiskMatrixRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return RiskMatrixRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// RiskMatrixRequestValidationError is the validation error returned by
+// RiskMatrixRequest.Validate if the designated constraints aren't met.
+type RiskMatrixRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMatrixRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMatrixRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMatrixRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMatrixRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMatrixRequestValidationError) ErrorName() string {
+	return "RiskMatrixRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RiskMatrixRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMatrixRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMatrixRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMatrixRequestValidationError{}
+
+var _RiskMatrixRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on RiskMatrix with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *RiskMatrix) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ConfigurationId
+
+	// no validation rules for DomainCriticId
+
+	// no validation rules for DomainCriticName
+
+	// no validation rules for MaintenanceCriticId
+
+	// no validation rules for MaintenanceCriticName
+
+	// no validation rules for RiskId
+
+	// no validation rules for RiskName
+
+	return nil
+}
+
+// RiskMatrixValidationError is the validation error returned by
+// RiskMatrix.Validate if the designated constraints aren't met.
+type RiskMatrixValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMatrixValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMatrixValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMatrixValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMatrixValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMatrixValidationError) ErrorName() string { return "RiskMatrixValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RiskMatrixValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMatrix.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMatrixValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMatrixValidationError{}
+
+// Validate checks the field values on RiskMatrixResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RiskMatrixResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetRiskMatrix() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RiskMatrixResponseValidationError{
+					field:  fmt.Sprintf("RiskMatrix[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// RiskMatrixResponseValidationError is the validation error returned by
+// RiskMatrixResponse.Validate if the designated constraints aren't met.
+type RiskMatrixResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RiskMatrixResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RiskMatrixResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RiskMatrixResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RiskMatrixResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RiskMatrixResponseValidationError) ErrorName() string {
+	return "RiskMatrixResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RiskMatrixResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRiskMatrixResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RiskMatrixResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RiskMatrixResponseValidationError{}
+
+// Validate checks the field values on PostRiskMatrixRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *PostRiskMatrixRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_PostRiskMatrixRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return PostRiskMatrixRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	for idx, item := range m.GetRiskMatrix() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return PostRiskMatrixRequestValidationError{
+					field:  fmt.Sprintf("RiskMatrix[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// PostRiskMatrixRequestValidationError is the validation error returned by
+// PostRiskMatrixRequest.Validate if the designated constraints aren't met.
+type PostRiskMatrixRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostRiskMatrixRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostRiskMatrixRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostRiskMatrixRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostRiskMatrixRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostRiskMatrixRequestValidationError) ErrorName() string {
+	return "PostRiskMatrixRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostRiskMatrixRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostRiskMatrixRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostRiskMatrixRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostRiskMatrixRequestValidationError{}
+
+var _PostRiskMatrixRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on PostRiskMatrixResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *PostRiskMatrixResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// PostRiskMatrixResponseValidationError is the validation error returned by
+// PostRiskMatrixResponse.Validate if the designated constraints aren't met.
+type PostRiskMatrixResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e PostRiskMatrixResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e PostRiskMatrixResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e PostRiskMatrixResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e PostRiskMatrixResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e PostRiskMatrixResponseValidationError) ErrorName() string {
+	return "PostRiskMatrixResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e PostRiskMatrixResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sPostRiskMatrixResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = PostRiskMatrixResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = PostRiskMatrixResponseValidationError{}
 
 // Validate checks the field values on UpsertInstanceRequestProduct with the
 // rules defined in the proto definition for this message. If any rules are

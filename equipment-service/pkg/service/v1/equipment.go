@@ -8,8 +8,9 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
@@ -22,16 +23,19 @@ import (
 )
 
 func (s *equipmentServiceServer) ListEquipmentsMetadata(ctx context.Context, req *v1.ListEquipmentMetadataRequest) (*v1.ListEquipmentMetadataResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEquipmentsMetadata - query parameter", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
-	res, err := s.equipmentRepo.MetadataAllWithType(ctx, repo.MetadataTypeEquipment, userClaims.Socpes)
+	res, err := s.equipmentRepo.MetadataAllWithType(ctx, repo.MetadataTypeEquipment, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -70,11 +74,14 @@ func (s *equipmentServiceServer) ListEquipmentsMetadata(ctx context.Context, req
 }
 
 func (s *equipmentServiceServer) EquipmentsTypes(ctx context.Context, req *v1.EquipmentTypesRequest) (*v1.EquipmentTypesResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	res, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	res, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - EquipmentsTypes - query parameter", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -84,12 +91,85 @@ func (s *equipmentServiceServer) EquipmentsTypes(ctx context.Context, req *v1.Eq
 	}, nil
 }
 
+func (s *equipmentServiceServer) DeleteEquipmentType(ctx context.Context, req *v1.DeleteEquipmentTypeRequest) (*v1.DeleteEquipmentTypeResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	//check if equipment type exists
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, []string{req.Scope})
+	if err != nil {
+		logger.Log.Debug("service/v1 - DeleteEquipmentType - repo/EquipmentTypes -", zap.String("reason", err.Error()))
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	idx := equipmentTypeExistsByType(req.EquipType, eqTypes)
+	if idx == -1 {
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.NotFound, "equipment type does not exist")
+	}
+	//check if equipment type has children
+	_, err = s.equipmentRepo.EquipmentTypeChildren(ctx, eqTypes[idx].ID, len(eqTypes), []string{req.Scope})
+	if err != nil {
+		if err != repo.ErrNoData {
+			logger.Log.Debug("service/v1 - DeleteEquipmentType - repo/quipmentTypeChildren - ", zap.String("reason", err.Error()))
+			return &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			}, status.Error(codes.Internal, "cannot fetch equipment type children")
+		}
+	} else {
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "equipment type has children")
+	}
+	//check if equipments data exists
+	numEquipments, _, err := s.equipmentRepo.Equipments(ctx, eqTypes[idx], &repo.QueryEquipments{
+		PageSize:  50,
+		Offset:    offset(50, 1),
+		SortOrder: sortOrder(v1.SortOrder_ASC),
+	}, []string{req.Scope})
+	if err != nil {
+		if err != repo.ErrNoData {
+			logger.Log.Debug("service/v1 - DeleteEquipmentType - repo/Equipments -", zap.String("reason", err.Error()))
+			return &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			}, status.Error(codes.Internal, "cannot fetch equipments")
+		}
+	}
+	if numEquipments != 0 {
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "equipment type contains equipments data")
+	}
+	if err := s.equipmentRepo.DeleteEquipmentType(ctx, req.EquipType, req.Scope); err != nil {
+		logger.Log.Debug("service/v1 - DeleteEquipmentType - repo/DeleteEquipmentType - ", zap.String("reason", err.Error()))
+		return &v1.DeleteEquipmentTypeResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot delete equipment type")
+	}
+	return &v1.DeleteEquipmentTypeResponse{
+		Success: true,
+	}, nil
+}
+
 func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v1.EquipmentType) (*v1.EquipmentType, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateEquipmentType - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -106,7 +186,7 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 		}
 	}
 
-	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.MetadataId, userClaims.Socpes)
+	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.MetadataId, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -121,7 +201,7 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 		return nil, err
 	}
 
-	resp, err := s.equipmentRepo.CreateEquipmentType(ctx, servEquipTypeToRepoType(req), userClaims.Socpes)
+	resp, err := s.equipmentRepo.CreateEquipmentType(ctx, servEquipTypeToRepoType(req), req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateEquipmentType - creating equipment type", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot create equipment type")
@@ -130,11 +210,14 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 }
 
 func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v1.UpdateEquipmentTypeRequest) (*v1.EquipmentType, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - UpdateEquipmentType - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -145,7 +228,7 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 		return nil, status.Error(codes.NotFound, "cannot fetch equipment with given Id")
 	}
 
-	metadata, err := s.equipmentRepo.MetadataWithID(ctx, equip.SourceID, userClaims.Socpes)
+	metadata, err := s.equipmentRepo.MetadataWithID(ctx, equip.SourceID, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -155,21 +238,44 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 		logger.Log.Error("service/v1 - UpdateEquipmentType - fetching metadata with id", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment metadata")
 	}
-
-	if equip.ParentID != "" {
-		if req.ParentId != "" {
-			return nil, status.Error(codes.InvalidArgument, "parent already exists")
+	if req.ParentId != "" {
+		if req.ParentId == req.Id {
+			return nil, status.Error(codes.InvalidArgument, "equipment type cannot be parent of itself")
 		}
-	} else {
-		if req.ParentId != "" {
-
-			if req.ParentId == req.Id {
-				return nil, status.Error(codes.InvalidArgument, "equipment type cannot be parent of itself")
+		// check if parent exists ot not
+		_, err := equipmentTypeExistsByID(req.ParentId, eqTypes)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "parent not found")
+		}
+		//check if parent is any of the children of equip
+		equipChildren, err := s.equipmentRepo.EquipmentTypeChildren(ctx, req.Id, len(eqTypes), req.Scopes)
+		if err != nil {
+			if err != repo.ErrNoData {
+				logger.Log.Error("service/v1 - UpdateEquipmentType - EquipmentTypeChildren - fetching equipment type children", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch equipment type children")
 			}
-			// check if parent exists ot not
-			_, err := equipmentTypeExistsByID(req.ParentId, eqTypes)
+		} else {
+			_, err = equipmentTypeExistsByID(req.ParentId, equipChildren)
+			if err == nil {
+				return nil, status.Error(codes.InvalidArgument, "child can not be parent")
+			}
+		}
+		// if parent id already exits
+		if equip.ParentID != "" {
+			//check if data exists
+			numEquipments, _, err := s.equipmentRepo.Equipments(ctx, equip, &repo.QueryEquipments{
+				PageSize:  50,
+				Offset:    offset(50, 1),
+				SortOrder: sortOrder(v1.SortOrder_ASC),
+			}, req.Scopes)
 			if err != nil {
-				return nil, status.Error(codes.InvalidArgument, "parent not found")
+				if err != repo.ErrNoData {
+					logger.Log.Error("service/v1 - UpdateEquipmentType - Equipments - fetching equipments for eqType", zap.String("reason", err.Error()))
+					return nil, status.Error(codes.Internal, "cannot fetch equipments")
+				}
+			}
+			if numEquipments != 0 {
+				return nil, status.Error(codes.InvalidArgument, "equipment type contains equipments data")
 			}
 		}
 	}
@@ -180,10 +286,10 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 		ParentID: req.ParentId,
 		Attr:     servAttrToRepoAttrAll(req.Attributes),
 	}
-	resp, err := s.equipmentRepo.UpdateEquipmentType(ctx, equip.ID, equip.Type, repoUpdateRequest, userClaims.Socpes)
+	resp, err := s.equipmentRepo.UpdateEquipmentType(ctx, equip.ID, equip.Type, repoUpdateRequest, req.Scopes)
 	if err != nil {
-		logger.Log.Error("service/v1 -UpdateEquipmentType - creating equipment type", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot create equipment type")
+		logger.Log.Error("service/v1 -UpdateEquipmentType - updating equipment type", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "cannot update equipment type")
 	}
 
 	if req.ParentId != "" {
@@ -194,11 +300,14 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 }
 
 func (s *equipmentServiceServer) GetEquipmentMetadata(ctx context.Context, req *v1.EquipmentMetadataRequest) (*v1.EquipmentMetadata, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.ID, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.ID, req.Scopes)
 	if err != nil {
 		switch err {
 		case repo.ErrNoData:
@@ -208,7 +317,7 @@ func (s *equipmentServiceServer) GetEquipmentMetadata(ctx context.Context, req *
 		logger.Log.Error("service/v1 -GetEquipmentMetadata - fetching metadata with id", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment metadata")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - GetEquipmentMetadata - query parameter", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -279,16 +388,18 @@ func validateEquipUpdation(mappedTo []string, equip *repo.EquipmentType, parentI
 			}
 		}
 	}
-
-	if equip.ParentID != "" && countParentKey > 0 {
-		return status.Error(codes.InvalidArgument, "no parent identifier required when parent is already present ")
-	}
-
-	if parentID == "" && countParentKey > 0 {
-		return status.Error(codes.InvalidArgument, "parent is not selected for equipment type ")
-	}
-
-	if countParentKey > 1 {
+	if countParentKey == 0 {
+		if equip.ParentID == "" && parentID != "" {
+			return status.Error(codes.InvalidArgument, "one parent identifier required")
+		}
+	} else if countParentKey == 1 {
+		if equip.ParentID != "" {
+			return status.Error(codes.InvalidArgument, "no parent identifier required when parent is already present")
+		}
+		if parentID == "" {
+			return status.Error(codes.InvalidArgument, "parent is not selected for equipment type")
+		}
+	} else {
 		return status.Errorf(codes.InvalidArgument, "multiple parent keys are found")
 	}
 	return validateNewAttributes(mappedTo, equip.Attributes, newAttr)
@@ -310,7 +421,7 @@ func validateNewAttributes(mappedTo []string, oldAttr []*repo.Attribute, newAttr
 		_, ok := names[name]
 		if ok {
 			// we arlready have this name for some other attribute
-			return status.Errorf(codes.InvalidArgument, "attribute name: %v, is already given to some other attribte", attr.Name)
+			return status.Errorf(codes.InvalidArgument, "attribute name: %v, is already given to some other attribute", attr.Name)
 		}
 
 		// atttribute name does not exist before
@@ -362,6 +473,7 @@ func servEquipTypeToRepoType(eqType *v1.EquipmentType) *repo.EquipmentType {
 		Type:       eqType.Type,
 		ParentID:   eqType.ParentId,
 		SourceID:   eqType.MetadataId,
+		Scopes:     eqType.Scopes,
 		Attributes: servAttrToRepoAttrAll(eqType.Attributes),
 	}
 }
@@ -374,6 +486,7 @@ func repoEquipTypeToServiceType(eqType *repo.EquipmentType) *v1.EquipmentType {
 		ParentType:     eqType.ParentType,
 		MetadataId:     eqType.SourceID,
 		MetadataSource: eqType.SourceName,
+		Scopes:         eqType.Scopes,
 		Attributes:     repoAttrToServiceAttrAll(eqType.Attributes),
 	}
 }
@@ -565,6 +678,7 @@ func repoMetadataToSrvMetadata(metadata *repo.Metadata) *v1.EquipmentMetadata {
 		ID:         metadata.ID,
 		Name:       metadata.Source,
 		Attributes: metadata.Attributes,
+		Scopes:     []string{metadata.Scope},
 	}
 }
 

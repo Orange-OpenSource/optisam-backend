@@ -43,9 +43,11 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 		Addr: ":" + httpPort,
 		// Handler: &ochttp.Handler{
 		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
-			rest_middleware.ValidateAuth(verifyKey,
-				rest_middleware.AddLogger(logger.Log, mux_http)))},
-		// },
+			// rest_middleware.ValidateAuth(verifyKey,
+			// 	rest_middleware.AddLogger(logger.Log,
+			mux_http),
+		// ))},
+		},
 	}
 
 	// graceful shutdown

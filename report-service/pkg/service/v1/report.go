@@ -11,9 +11,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	v1 "optisam-backend/report-service/pkg/api/v1"
@@ -54,7 +54,7 @@ func (r *ReportServiceServer) ListReportType(ctx context.Context, req *v1.ListRe
 }
 
 func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitReportRequest) (*v1.SubmitReportResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -97,7 +97,7 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 			logger.Log.Error("Failed to do json marshalling of worker envelope", zap.Error(err))
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
-		jobID, err := r.queue.PushJob(ctx, job.Job{
+		_, err = r.queue.PushJob(ctx, job.Job{
 			Type:   sql.NullString{String: "rw"},
 			Status: job.JobStatusPENDING,
 			Data:   envolveData,
@@ -106,7 +106,6 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 			logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
-		logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
 	case int32(2):
 		_, ok := req.ReportMetadata.(*v1.SubmitReportRequest_ProductEquipmentsReport)
 		if !ok {
@@ -136,7 +135,7 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 			logger.Log.Error("Failed to do json marshalling of worker envelope", zap.Error(err))
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
-		jobID, err := r.queue.PushJob(ctx, job.Job{
+		_, err = r.queue.PushJob(ctx, job.Job{
 			Type:   sql.NullString{String: "rw"},
 			Status: job.JobStatusPENDING,
 			Data:   envolveData,
@@ -145,7 +144,6 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 			logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
-		logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
 	default:
 		return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Wrong ReportID sent")
 
@@ -154,12 +152,20 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 }
 
 func (r *ReportServiceServer) ListReport(ctx context.Context, req *v1.ListReportRequest) (*v1.ListReportResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ListReport", zap.String("reason", "ScopeError"))
+		return nil, status.Error(codes.PermissionDenied, "User do not have access to the asked scope.")
+	}
+
+	var scopes []string
+	scopes = append(scopes, req.Scope)
+
 	dbresp, err := r.reportRepo.GetReport(ctx, db.GetReportParams{
-		Scope:              userClaims.Socpes,
+		Scope:              scopes,
 		ReportIDAsc:        strings.Contains(req.GetSortBy(), "report_id") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ReportIDDesc:       strings.Contains(req.GetSortBy(), "report_id") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ReportStatusAsc:    strings.Contains(req.GetSortBy(), "report_status") && strings.Contains(req.GetSortOrder().String(), "asc"),
@@ -199,11 +205,18 @@ func (r *ReportServiceServer) ListReport(ctx context.Context, req *v1.ListReport
 }
 
 func (r *ReportServiceServer) DownloadReport(ctx context.Context, req *v1.DownloadReportRequest) (*v1.DownloadReportResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	dbresp, err := r.reportRepo.DownloadReport(ctx, db.DownloadReportParams{ReportID: req.ReportID, Scope: userClaims.Socpes})
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - DownloadReport", zap.String("reason", "ScopeError"))
+		return nil, status.Error(codes.PermissionDenied, "User do not have access to the asked scope.")
+	}
+
+	var scopes []string
+	scopes = append(scopes, req.Scope)
+	dbresp, err := r.reportRepo.DownloadReport(ctx, db.DownloadReportParams{ReportID: req.ReportID, Scope: scopes})
 
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to get Reports-> "+err.Error())

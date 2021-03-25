@@ -25,8 +25,8 @@ type metricIPS struct {
 }
 
 // ListMetricIPS implements Licence ListMetricIPS function
-func (l *LicenseRepository) ListMetricIPS(ctx context.Context, scopes []string) ([]*v1.MetricIPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricIPSIbmPvuStandard, scopes)
+func (l *LicenseRepository) ListMetricIPS(ctx context.Context, scopes ...string) ([]*v1.MetricIPS, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricIPSIbmPvuStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricIPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err

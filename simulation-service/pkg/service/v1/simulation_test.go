@@ -9,7 +9,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	ls "optisam-backend/license-service/pkg/api/v1"
 	mockls "optisam-backend/license-service/pkg/api/v1/mock"
@@ -21,7 +21,7 @@ import (
 )
 
 func TestSimulationService_SimulationByMetric(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -56,6 +56,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 							UnitCost:   300,
 						},
 					},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -97,6 +98,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 				req: &v1.SimulationByMetricRequest{
 					SwidTag:       "Oracle_Database_11g_Enterprise_Edition_10.3",
 					MetricDetails: []*v1.MetricSimDetails{},
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -122,7 +124,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 }
 
 func TestSimulationService_SimulationByHardware(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -216,6 +218,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 							MetricName: "ibm_pvu",
 						},
 					},
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
@@ -281,6 +284,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 					EquipId:       "30373237-3132-5a43-3336-32364341424d",
 					MetricDetails: []*v1.SimMetricDetails{},
 					Attributes:    attributes,
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {

@@ -13,7 +13,9 @@ import (
 	"net/http"
 	"net/url"
 	"optisam-backend/common/optisam/buildinfo"
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/dgraph"
+	gconn "optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/healthcheck"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
@@ -22,11 +24,13 @@ import (
 	"optisam-backend/common/optisam/prometheus"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/product-service/pkg/config"
+	cronJob "optisam-backend/product-service/pkg/cron"
 	"optisam-backend/product-service/pkg/protocol/grpc"
 	"optisam-backend/product-service/pkg/protocol/rest"
 	repo "optisam-backend/product-service/pkg/repository/v1/postgres"
 	v1 "optisam-backend/product-service/pkg/service/v1"
-	"optisam-backend/product-service/pkg/worker"
+	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
+	licenseworker "optisam-backend/product-service/pkg/worker/license_calculator"
 	"os"
 	"time"
 
@@ -107,6 +111,10 @@ func RunServer() error {
 		os.Exit(3)
 	}
 
+	if cfg.MaxApiWorker == 0 {
+		cfg.MaxApiWorker = 25
+		logger.Log.Info("default max api worker set to 25 ")
+	}
 	ctx := context.Background()
 
 	// Create Dgraph Connection
@@ -221,16 +229,29 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
+	//GRPC Connections
+	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize GRPC client")
+	}
+	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
+
 	//Worker Queue Initialization
 	q, err := workerqueue.NewQueue(ctx, "product-service", db, cfg.WorkerQueue)
 	if err != nil {
 		return fmt.Errorf("failed to create worker queue: %v", err)
 	}
 	defer q.Close(ctx)
-	lWorker := worker.NewWorker("aw", dg)
-	q.RegisterWorker(ctx, lWorker)
+	for i := 0; i < cfg.MaxApiWorker; i++ {
+		lWorker := dgworker.NewWorker("aw", dg)
+		q.RegisterWorker(ctx, lWorker)
+	}
 
 	rep := repo.NewProductRepository(db)
+	licenseWorker := licenseworker.NewWorker("lcalw", grpcClientMap, rep)
+	q.RegisterWorker(ctx, licenseWorker)
+
+	q.IsWorkerRegCompleted = true
 
 	v1API := v1.NewProductServiceServer(rep, q)
 
@@ -245,6 +266,14 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to Load RBAC policies", zap.Error(err))
 	}
+
+	//This is one time
+	cron.CronConfigInit(cfg.Cron)
+	// cron Job
+	cronJob.CronJobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HttpServers.Address["auth"]))
+	//Run once the service is up and then once in 12~ hours
+	cronJob.Job() //not cron job just push job for worker
+	cron.AddCronJob(cronJob.Job)
 
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)

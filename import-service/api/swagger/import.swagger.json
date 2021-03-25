@@ -9,9 +9,9 @@
         "https"
       ],
     "paths": {
-        "/api/v1/import": {
+        "/api/v1/import/data": {
            "post": {
-              "summary": "Uploads a file.",
+              "summary": "Upload multiple Data files.",
               "consumes": [
                  "multipart/form-data"
               ],
@@ -34,8 +34,176 @@
                    "type": "file",
                    "required": false
                 }
-             ]
+             ],
+             "responses": {
+               "200": {
+                 "description": "A successful response."
+               }
+             }
            }
+        },
+        "/api/v1/import/metadata": {
+         "post": {
+            "summary": "Upload multiple MetaData files.",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+              {
+                 "in": "formData",
+                 "name": "upfile1",
+                 "type": "file",
+                 "required": true
+              },
+              {
+                 "in": "formData",
+                 "name": "attribute1",
+                 "type": "file",
+                 "required": false
+              },
+              {
+                 "in": "formData",
+                 "name": "attribute2",
+                 "type": "file",
+                 "required": false
+              }
+           ],
+           "responses": {
+            "200": {
+              "description": "A successful response."
+            }
+          }
+         }
+      },
+        "/api/v1/import/globaldata": {
+         "post": {
+            "summary": "Upload multiple global data files.",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+              {
+                 "in": "formData",
+                 "name": "upfile1",
+                 "type": "file",
+                 "required": true
+              },
+              {
+                 "in": "formData",
+                 "name": "scope",
+                 "type": "string",
+                 "required": true
+              },
+              {
+                 "in": "formData",
+                 "name": "isDeleteOldInventory",
+                 "type": "boolean",
+                 "required": false
+              }
+           ],
+           "responses": {
+            "200": {
+              "description": "A successful response."
+            }
+          }
+         }
+      },
+      "/api/v1/config": {
+         "post": {
+            "summary": "Create new Simulation Configuration",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+              {
+                  "name": "equipment_type",
+                  "in": "formData",
+                  "required": true,
+                  "type": "string"
+              },
+              {
+                  "name": "scopes",
+                  "in": "formData",
+                  "required": true,
+                  "type": "string"
+
+              },
+              {
+                 "name": "config_name",
+                 "in":"formData",
+                 "required":true,
+                 "type": "string"
+              },
+              {
+                 "in": "formData",
+                 "name": "attribute1",
+                 "type": "file",
+                 "required": true
+              },
+              {
+                 "in": "formData",
+                 "name": "attribute2",
+                 "type": "file",
+                 "required": false
+              },
+              {
+                 "in": "formData",
+                 "name": "attribute3",
+                 "type": "file",
+                 "required": false
+              }
+           ],
+           "responses": {
+              "200": {
+                "description": "A successful response."
+              }
+            }
+         }
+      },
+      "/api/v1/config/{config_id}": {
+      "put": {
+        "summary": "Update Simulation configuration",
+        "consumes": [
+           "multipart/form-data"
+        ],
+        "parameters": [
+          {
+              "name": "config_id",
+              "in": "path",
+              "required": true,
+              "type": "string"
+          },
+          {
+              "name": "scopes",
+              "in": "formData",
+              "required": true,
+              "type": "string"
+          },
+          {
+             "in": "formData",
+             "name": "attribute1",
+             "type": "file",
+             "required": false
+          },
+          {
+             "in": "formData",
+             "name": "attribute2",
+             "type": "file",
+             "required": false
+          },
+          {
+            "in": "formData",
+            "name": "deletedMetadataIDs",
+            "type": "string",
+            "required": false
+          }
+       ],
+       "responses": {
+          "200": {
+            "description": "A successful response."
+          }
         }
+     }
+  }
      }
 }

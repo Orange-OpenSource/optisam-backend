@@ -27,7 +27,7 @@ type metricIPS struct {
 }
 
 // CreateMetricIPS implements Licence CreateMetricIPS function
-func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIPS, scopes []string) (retMat *v1.MetricIPS, retErr error) {
+func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIPS, scope string) (retMat *v1.MetricIPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -65,6 +65,11 @@ func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIP
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricIPS"),
 		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
+		},
 	}
 
 	mu := &api.Mutation{
@@ -89,22 +94,22 @@ func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIP
 
 	assigned, err := txn.Mutate(ctx, mu)
 	if err != nil {
-		logger.Log.Error("dgraph/CreateMetricSPS - failed to create matrix", zap.String("reason", err.Error()), zap.Any("matrix", mat))
-		return nil, errors.New("cannot create matrix")
+		logger.Log.Error("dgraph/CreateMetricIPS - failed to create metrics", zap.String("reason", err.Error()), zap.Any("metric", mat))
+		return nil, errors.New("cannot create metric")
 	}
 	id, ok := assigned.Uids[mat.Name]
 	if !ok {
-		logger.Log.Error("dgraph/CreateMetricOPS - failed to create matrix", zap.String("reason", "cannot find id in assigned Uids map"), zap.Any("matrix", mat))
-		return nil, errors.New("cannot create matrix")
+		logger.Log.Error("dgraph/CreateMetricIPS - failed to create metrics", zap.String("reason", "cannot find id in assigned Uids map"), zap.Any("metric", mat))
+		return nil, errors.New("cannot create metric")
 	}
 	mat.ID = id
 	return mat, nil
 }
 
 // ListMetricIPS implements Licence ListMetricIPS function
-func (l *MetricRepository) ListMetricIPS(ctx context.Context, scopes []string) ([]*v1.MetricIPS, error) {
+func (l *MetricRepository) ListMetricIPS(ctx context.Context, scope string) ([]*v1.MetricIPS, error) {
 	q := `{
-		Data(func: eq(metric.type,ibm.pvu.standard)){
+		Data(func: eq(metric.type,ibm.pvu.standard)) @filter(eq(scopes,` + scope + `)){
 		 uid
 		 expand(_all_){
 		  uid
@@ -132,9 +137,9 @@ func (l *MetricRepository) ListMetricIPS(ctx context.Context, scopes []string) (
 }
 
 // GetMetricConfigIPS implements Metric GetMetricConfigIPS function
-func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName string, scopes []string) (*v1.MetricIPSConfig, error) {
+func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName string, scope string) (*v1.MetricIPSConfig, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			BaseEqType: metric.ips.base{
 				 metadata.equipment.type

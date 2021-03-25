@@ -14,7 +14,7 @@ import (
 	repv1 "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/mock"
 	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	"reflect"
 	"testing"
@@ -42,7 +42,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 	}{
 		{name: "SUCCESS - personal information",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -60,7 +60,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -70,7 +70,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:     "fr",
 					ProfilePic: []byte("profilepic"),
 				}, nil)
-				mockRepo.EXPECT().UpdateAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateAccount(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", &repv1.UpdateAccount{
@@ -86,7 +86,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "SUCCESS - role superadmin",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -104,7 +104,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -114,7 +114,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:    "fr",
 					Role:      repv1.RoleUser,
 				}, nil)
-				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateUserAccount(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com", &repv1.UpdateUserAccount{
@@ -127,7 +127,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "SUCCESS - role admin",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -142,7 +142,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -152,11 +152,11 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:    "fr",
 					Role:      repv1.RoleUser,
 				}, nil)
-				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UserBelongsToAdminGroup(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", "admin1@test.com").Times(1).Return(true, nil)
-				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateUserAccount(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin3@test.com", &repv1.UpdateUserAccount{
@@ -185,7 +185,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - user does not exist",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -202,7 +202,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(nil, repv1.ErrNoData)
@@ -214,7 +214,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to get Account info",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -231,7 +231,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(nil, errors.New("Internal"))
@@ -243,7 +243,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - personal information|failed to update account",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -260,7 +260,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -270,7 +270,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:     "fr",
 					ProfilePic: []byte("profilepic"),
 				}, nil)
-				mockRepo.EXPECT().UpdateAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateAccount(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", &repv1.UpdateAccount{
@@ -287,7 +287,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - user does not have the access to update other users",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "User",
 				}),
@@ -305,7 +305,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "User",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -323,7 +323,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to validate update account request|undefined role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -341,7 +341,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -359,7 +359,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to validate update account request|can not update role of superadmin",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -377,7 +377,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -395,7 +395,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to validate update account request|can not update role to superadmin",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -413,7 +413,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -431,7 +431,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to update account",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -449,7 +449,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -459,7 +459,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:    "fr",
 					Role:      repv1.RoleAdmin,
 				}, nil)
-				mockRepo.EXPECT().UpdateUserAccount(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateUserAccount(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com", &repv1.UpdateUserAccount{
@@ -473,7 +473,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - failed to check if user belongs to the admin groups",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -488,7 +488,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -498,7 +498,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:    "fr",
 					Role:      repv1.RoleUser,
 				}, nil)
-				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UserBelongsToAdminGroup(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", "admin1@test.com").Times(1).Return(false, errors.New("Internal"))
@@ -510,7 +510,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateAccount - user does not belong to admin's group",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -525,7 +525,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -535,7 +535,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					Locale:    "fr",
 					Role:      repv1.RoleUser,
 				}, nil)
-				mockRepo.EXPECT().UserBelongsToAdminGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UserBelongsToAdminGroup(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", "admin1@test.com").Times(1).Return(false, nil)
@@ -566,7 +566,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 }
 
 func Test_accountServiceServer_DeleteAccount(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "Admin",
 	})
@@ -586,7 +586,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 	}{
 		{name: "SUCCESS - role superadmin",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -598,7 +598,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -609,7 +609,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					Locale:          "en",
 					ContFailedLogin: int16(3),
 				}, nil)
-				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().InsertUserAudit(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), db.InsertUserAuditParams{
@@ -622,7 +622,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					Operation:       db.AuditStatusDELETED,
 					UpdatedBy:       "admin@test.com",
 				}).Times(1).Return(nil)
-				mockRepo.EXPECT().DeleteUser(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().DeleteUser(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(nil)
@@ -770,7 +770,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 		},
 		{name: "FAILURE - DeleteAccount -  InsertUserAudit - DBError",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -782,7 +782,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -793,7 +793,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					Locale:          "en",
 					ContFailedLogin: int16(3),
 				}, nil)
-				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().InsertUserAudit(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), db.InsertUserAuditParams{
@@ -814,7 +814,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 		},
 		{name: "FAILURE - DeleteAccount - DeleteAccount - DBError",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}),
@@ -826,7 +826,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
@@ -837,7 +837,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					Locale:          "en",
 					ContFailedLogin: int16(3),
 				}, nil)
-				mockRepo.EXPECT().InsertUserAudit(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().InsertUserAudit(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), db.InsertUserAuditParams{
@@ -850,7 +850,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					Operation:       db.AuditStatusDELETED,
 					UpdatedBy:       "admin@test.com",
 				}).Times(1).Return(nil)
-				mockRepo.EXPECT().DeleteUser(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().DeleteUser(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(errors.New("DBError"))
@@ -897,7 +897,7 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 	}{
 		{name: "SUCCESS",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}),
 			},
@@ -905,7 +905,7 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}), "admin@superuser.com").Times(1).Return(&repv1.AccountInfo{
 					UserId:     "admin@superuser.com",
@@ -929,7 +929,7 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 		},
 		{name: "FAILURE - GetAccount - failed to get Account info",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}),
 			},
@@ -937,7 +937,7 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().AccountInfo(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}), "admin@superuser.com").Times(1).Return(nil, errors.New("test error"))
 			},
@@ -982,7 +982,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	mockRepo := mock.NewMockAccount(mockCtrl)
 	rep = mockRepo
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   claims.RoleAdmin,
 	})
@@ -1093,7 +1093,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 		},
 		{name: "failure - only admin users can create users",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@user.com",
 					Role:   claims.RoleUser,
 				}),
@@ -1489,7 +1489,7 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 }
 
 func Test_accountServiceServer_GetUsers(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "SuperAdmin",
 	})
@@ -1636,7 +1636,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 		},
 		{name: "SUCCESS - get list of users",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -1650,7 +1650,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UsersWithUserSearchParams(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UsersWithUserSearchParams(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", &repv1.UserQueryParams{}).Return([]*repv1.AccountInfo{
@@ -1740,7 +1740,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 		},
 		{name: "FAILURE - GetUsers - failed to get list of users",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}),
@@ -1754,7 +1754,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UsersWithUserSearchParams(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UsersWithUserSearchParams(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", &repv1.UserQueryParams{}).Return(nil, errors.New("Internal")).Times(1)
@@ -1799,7 +1799,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 	}{
 		{name: "SUCCESS",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -1811,7 +1811,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnedGroups(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnedGroups(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
@@ -1830,7 +1830,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 						Scopes:             []string{"C", "D"},
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(2)).Return([]*repv1.AccountInfo{
@@ -1892,7 +1892,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 		},
 		{name: "FAILURE - GetGroupUsers - failed to get groups",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -1904,7 +1904,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnedGroups(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnedGroups(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(0, nil, errors.New("")).Times(1)
@@ -1913,7 +1913,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 		},
 		{name: "FAILURE - GetGroupUsers - user does not have access to group",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -1925,7 +1925,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnedGroups(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnedGroups(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
@@ -1949,7 +1949,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 		},
 		{name: "FAILURE - GetGroupUsers - failed to get users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -1961,7 +1961,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnedGroups(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnedGroups(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
@@ -1980,7 +1980,7 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 						Scopes:             []string{"C", "D"},
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(2)).Return(nil, errors.New("")).Times(1)
@@ -2024,7 +2024,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 	}{
 		{name: "SUCCESS",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2037,31 +2037,31 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
 				gomock.InOrder(
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u1", int64(1)).Return(true, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u2", int64(1)).Return(false, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u3", int64(1)).Return(false, nil),
 				)
-				mockRepo.EXPECT().AddGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().AddGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u2", "u3"}).Return(nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2123,7 +2123,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - GetUsers - user doesnot have access to add users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 				}),
@@ -2133,7 +2133,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - user doesnt own group",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2146,7 +2146,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(false, nil)
@@ -2155,7 +2155,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot access userOwnsGroupByID",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2168,7 +2168,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, errors.New("Test Error"))
@@ -2177,7 +2177,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot access userOwnsGroupByID of given users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2190,13 +2190,13 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
 				gomock.InOrder(
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u1", int64(1)).Return(true, errors.New("Test error")),
@@ -2206,7 +2206,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot add user",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2219,26 +2219,26 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
 				gomock.InOrder(
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u1", int64(1)).Return(true, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u2", int64(1)).Return(false, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u3", int64(1)).Return(false, nil),
 				)
-				mockRepo.EXPECT().AddGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().AddGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u2", "u3"}).Return(errors.New("Test Error"))
@@ -2248,7 +2248,7 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot fetch group users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2261,31 +2261,31 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
 				gomock.InOrder(
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u1", int64(1)).Return(true, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u2", int64(1)).Return(false, nil),
-					mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+					mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 						UserID: "admin@superuser.com",
 						Role:   "SuperAdmin",
 					}), "u3", int64(1)).Return(false, nil),
 				)
-				mockRepo.EXPECT().AddGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().AddGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u2", "u3"}).Return(nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(nil, errors.New("Test Error")).Times(1)
@@ -2329,7 +2329,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 	}{
 		{name: "SUCCESS",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2342,12 +2342,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2388,17 +2388,17 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				mockRepo.EXPECT().IsGroupRoot(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().DeleteGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u4", "u5"}).Return(nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2460,7 +2460,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - GetUsers - user doesnot have access to delete users",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 				}),
@@ -2470,7 +2470,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - user doesnt own group",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2483,7 +2483,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(false, nil)
@@ -2492,7 +2492,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot access userOwnsGroupByID",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2505,7 +2505,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, errors.New("Test Error"))
@@ -2514,7 +2514,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot fetch groups of user",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2527,12 +2527,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(nil, errors.New("Test Error")).Times(1)
@@ -2542,7 +2542,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - user doesnt exists",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2555,12 +2555,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2599,7 +2599,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot delete all admins of a root group",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2612,12 +2612,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2658,7 +2658,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				mockRepo.EXPECT().IsGroupRoot(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(true, nil)
@@ -2668,7 +2668,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - IsRootGroup returns error",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2681,12 +2681,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2727,7 +2727,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				mockRepo.EXPECT().IsGroupRoot(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(false, errors.New("test error"))
@@ -2737,7 +2737,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot delete user",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2750,12 +2750,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2795,12 +2795,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 						Role:      repv1.RoleUser,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().IsGroupRoot(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().DeleteGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u4", "u5"}).Return(errors.New("Test Error"))
@@ -2810,7 +2810,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 		},
 		{name: "FAILURE - cannot fetch groups",
 			args: args{
-				ctx: ctxmanage.AddClaims(ctx, &claims.Claims{
+				ctx: grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}),
@@ -2823,12 +2823,12 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().UserOwnsGroupByID(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().UserOwnsGroupByID(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
@@ -2868,17 +2868,17 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 						Role:      repv1.RoleUser,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().IsGroupRoot(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(true, nil)
 
-				mockRepo.EXPECT().DeleteGroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1), []string{"u4", "u5"}).Return(nil)
 
-				mockRepo.EXPECT().GroupUsers(ctxmanage.AddClaims(ctx, &claims.Claims{
+				mockRepo.EXPECT().GroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return(nil, errors.New("Test Error")).Times(1)
@@ -2909,7 +2909,7 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 	clms := &claims.Claims{
 		UserID: "admin@superuser.com",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
 

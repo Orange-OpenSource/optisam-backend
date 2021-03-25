@@ -25,7 +25,7 @@ const (
 )
 
 // MetadataAllWithType implements Licence MetadataAllWithType function
-func (lr *LicenseRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes []string) ([]*v1.Metadata, error) {
+func (lr *LicenseRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes ...string) ([]*v1.Metadata, error) {
 	id, err := convertMetadataTypeDGType(typ)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,6 @@ package main
 import (
 	"fmt"
 	"os"
-
 	"optisam-backend/import-service/pkg/cmd"
 )
 

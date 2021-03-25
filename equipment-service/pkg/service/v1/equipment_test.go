@@ -8,13 +8,15 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
 	"optisam-backend/equipment-service/pkg/repository/v1/mock"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -22,7 +24,7 @@ import (
 )
 
 func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -43,12 +45,15 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 		{name: "success",
 			args: args{
 				ctx: ctx,
+				req: &v1.EquipmentTypesRequest{
+					Scopes: []string{"A"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:       "typ1",
 						ID:         "1",
@@ -56,6 +61,7 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 						ParentID:   "p1",
 						ParentType: "typ_parent",
 						SourceName: "equip1.csv",
+						Scopes:     []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								ID:                 "1",
@@ -94,6 +100,7 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 						ID:       "2",
 						SourceID: "s2",
 						ParentID: "p2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								ID:                 "1",
@@ -118,6 +125,7 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 						MetadataId:     "s1",
 						ParentType:     "typ_parent",
 						MetadataSource: "equip1.csv",
+						Scopes:         []string{"A"},
 						Attributes: []*v1.Attribute{
 							&v1.Attribute{
 								ID:               "1",
@@ -156,6 +164,7 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 						Type:       "typ2",
 						ParentId:   "p2",
 						MetadataId: "s2",
+						Scopes:     []string{"A"},
 						Attributes: []*v1.Attribute{
 							&v1.Attribute{
 								ID:               "1",
@@ -175,6 +184,19 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 		{name: "failure|can not retrieve claims",
 			args: args{
 				ctx: context.Background(),
+				req: &v1.EquipmentTypesRequest{
+					Scopes: []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "failure|scope does not belong to user",
+			args: args{
+				ctx: ctx,
+				req: &v1.EquipmentTypesRequest{
+					Scopes: []string{"C"},
+				},
 			},
 			setup:   func() {},
 			wantErr: true,
@@ -182,12 +204,15 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 		{name: "failure",
 			args: args{
 				ctx: ctx,
+				req: &v1.EquipmentTypesRequest{
+					Scopes: []string{"A"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -212,7 +237,7 @@ func Test_equipmentServiceServer_EquipmentsTypes(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -264,13 +289,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_4",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
@@ -283,7 +309,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 						ParentID: "p1",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).
 					Times(1).Return(&repo.Metadata{
 					ID:     "s1",
 					Source: "equip_1.csv",
@@ -298,6 +324,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 					Type:     "typ1",
 					SourceID: "s1",
 					ParentID: "p1",
+					Scopes:   []string{"A"},
 					Attributes: []*repo.Attribute{
 						&repo.Attribute{
 							Name:         "attr_1",
@@ -331,6 +358,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 					ID:       "1",
 					SourceID: "s1",
 					ParentID: "p1",
+					Scopes:   []string{"A"},
 					Attributes: []*repo.Attribute{
 						&repo.Attribute{
 							ID:           "1",
@@ -363,13 +391,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 						},
 					},
 				}
-				mockRepo.EXPECT().CreateEquipmentType(ctx, eqType, []string{"A", "B"}).Times(1).Return(retEqType, nil)
+				mockRepo.EXPECT().CreateEquipmentType(ctx, eqType, []string{"A"}).Times(1).Return(retEqType, nil)
 			},
 			want: &v1.EquipmentType{
 				ID:         "1",
 				Type:       "typ1",
 				ParentId:   "p1",
 				MetadataId: "s1",
+				Scopes:     []string{"A"},
 				Attributes: []*v1.Attribute{
 					&v1.Attribute{
 						ID:               "1",
@@ -423,6 +452,30 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "failure|some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.EquipmentType{
+					Type:       "typ1",
+					ParentId:   "p1",
+					MetadataId: "s1",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:       "attr_1",
+							DataType:   v1.DataTypes_STRING,
+							PrimaryKey: true,
+							Displayed:  true,
+							Searchable: true,
+							MappedTo:   "mapping_1",
+						},
+					},
+					Scopes: []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -445,13 +498,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
@@ -484,13 +538,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ1",
 						ID:       "p1",
@@ -517,13 +572,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ1",
 						ID:       "p1",
@@ -550,20 +606,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p2",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{}, nil)
 			},
 			wantErr: true,
 		},
@@ -584,20 +641,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{}, nil)
 			},
 			wantErr: true,
 		},
@@ -626,20 +684,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{}, nil)
 			},
 			wantErr: true,
 		},
@@ -667,20 +726,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:         "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{}, nil)
 			},
 			wantErr: true,
 		},
@@ -717,20 +777,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:         "mapping_3",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{}, nil)
 			},
 			wantErr: true,
 		},
@@ -759,20 +820,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:         "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -812,20 +874,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_3",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -865,20 +928,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -911,20 +975,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_3",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -949,20 +1014,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -995,20 +1061,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:         "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -1040,20 +1107,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -1085,20 +1153,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_2",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -1123,13 +1192,14 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -1150,20 +1220,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(nil, repo.ErrNoData)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -1184,20 +1255,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -1218,20 +1290,21 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 							MappedTo:   "mapping_1",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type:     "typ2",
 						ID:       "p1",
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2"},
@@ -1241,6 +1314,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 					Type:     "typ1",
 					SourceID: "s1",
 					ParentID: "p1",
+					Scopes:   []string{"A"},
 					Attributes: []*repo.Attribute{
 						&repo.Attribute{
 							Name:         "attr_1",
@@ -1252,7 +1326,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 						},
 					},
 				}
-				mockRepo.EXPECT().CreateEquipmentType(ctx, eqType, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().CreateEquipmentType(ctx, eqType, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -1274,7 +1348,7 @@ func Test_equipmentServiceServer_CreateEquipmentType(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -1298,14 +1372,15 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_ALL,
+					Type:   v1.ListEquipmentMetadataRequest_ALL,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
@@ -1313,7 +1388,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 						SourceID: "3",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return([]*repo.Metadata{
 					&repo.Metadata{
 						ID:     "1",
@@ -1322,6 +1397,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "2",
@@ -1330,6 +1406,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "3",
@@ -1338,6 +1415,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "4",
@@ -1346,6 +1424,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 				}, nil)
 			},
@@ -1358,6 +1437,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 					&v1.EquipmentMetadata{
 						ID:   "2",
@@ -1366,6 +1446,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 					&v1.EquipmentMetadata{
 						ID:   "3",
@@ -1374,6 +1455,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 					&v1.EquipmentMetadata{
 						ID:   "4",
@@ -1382,6 +1464,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 				},
 			},
@@ -1391,14 +1474,15 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_MAPPED,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
@@ -1406,7 +1490,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 						SourceID: "3",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return([]*repo.Metadata{
 					&repo.Metadata{
 						ID:     "1",
@@ -1415,6 +1499,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "2",
@@ -1423,6 +1508,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "3",
@@ -1431,6 +1517,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "4",
@@ -1439,6 +1526,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 				}, nil)
 			},
@@ -1451,6 +1539,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 					&v1.EquipmentMetadata{
 						ID:   "3",
@@ -1459,6 +1548,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 				},
 			},
@@ -1468,14 +1558,15 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
@@ -1483,7 +1574,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 						SourceID: "3",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return([]*repo.Metadata{
 					&repo.Metadata{
 						ID:     "1",
@@ -1492,6 +1583,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "2",
@@ -1500,6 +1592,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "3",
@@ -1508,6 +1601,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 					&repo.Metadata{
 						ID:     "4",
@@ -1516,6 +1610,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scope: "A",
 					},
 				}, nil)
 			},
@@ -1528,6 +1623,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 					&v1.EquipmentMetadata{
 						ID:   "4",
@@ -1536,6 +1632,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 							"attr_1",
 							"attr_2",
 						},
+						Scopes: []string{"A"},
 					},
 				},
 			},
@@ -1545,7 +1642,19 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "failure|some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentMetadataRequest{
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -1555,14 +1664,15 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -1570,19 +1680,20 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return(nil, repo.ErrNoData)
 			},
 			wantErr: true,
@@ -1591,19 +1702,20 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Type:   v1.ListEquipmentMetadataRequest_UN_MAPPED,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
@@ -1612,14 +1724,15 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentMetadataRequest{
-					Type: 10000,
+					Type:   10000,
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						SourceID: "2",
 					},
@@ -1627,7 +1740,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 						SourceID: "3",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A", "B"}).
+				mockRepo.EXPECT().MetadataAllWithType(ctx, repo.MetadataTypeEquipment, []string{"A"}).
 					Times(1).Return([]*repo.Metadata{
 					&repo.Metadata{
 						ID:     "1",
@@ -1669,7 +1782,6 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			t.Log(tt.name)
 			s := NewEquipmentServiceServer(rep)
 			got, err := s.ListEquipmentsMetadata(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
@@ -1687,7 +1799,7 @@ func Test_equipmentServiceServer_ListEquipmentsMetadata(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -1710,7 +1822,8 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
+					Id:       "1",
+					ParentId: "2",
 					Attributes: []*v1.Attribute{
 						&v1.Attribute{
 							Name:       "attr3",
@@ -1732,18 +1845,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
-						ParentID: "2",
+						ParentID: "3",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -1752,10 +1867,11 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 								MappedTo:     "mapping_1",
 							},
 							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
 							},
 						},
 					},
@@ -1764,14 +1880,57 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						Type:     "MyType2",
 						SourceID: "s2",
 					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
 				}, nil)
-
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "MyType",
+					SourceID: "s1",
+					ParentID: "3",
+					Scopes:   []string{"A"},
+					Attributes: []*repo.Attribute{
+						&repo.Attribute{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "mapping_1",
+						},
+						&repo.Attribute{
+							Name:               "attr2",
+							Type:               repo.DataTypeString,
+							IsDisplayed:        true,
+							IsParentIdentifier: true,
+							MappedTo:           "mapping_2",
+						},
+					},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Times(1).Return(int32(0), nil, repo.ErrNoData)
 				mockRepo.EXPECT().UpdateEquipmentType(ctx, "1", "MyType", &repo.UpdateEquipmentRequest{
+					ParentID: "2",
 					Attr: []*repo.Attribute{
 						&repo.Attribute{
 							Name:         "attr3",
@@ -1793,7 +1952,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
-				}, []string{"A", "B"}).Times(1).Return([]*repo.Attribute{
+				}, []string{"A"}).Times(1).Return([]*repo.Attribute{
 					&repo.Attribute{
 						Name:         "attr3",
 						Type:         repo.DataTypeString,
@@ -1820,6 +1979,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 				Type:       "MyType",
 				MetadataId: "s1",
 				ParentId:   "2",
+				Scopes:     []string{"A"},
 				Attributes: []*v1.Attribute{
 					&v1.Attribute{
 						Name:       "attr1",
@@ -1828,10 +1988,11 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						MappedTo:   "mapping_1",
 					},
 					&v1.Attribute{
-						Name:       "attr2",
-						DataType:   v1.DataTypes_STRING,
-						Searchable: true,
-						MappedTo:   "mapping_2",
+						Name:             "attr2",
+						DataType:         v1.DataTypes_STRING,
+						Displayed:        true,
+						ParentIdentifier: true,
+						MappedTo:         "mapping_2",
 					},
 					&v1.Attribute{
 						Name:       "attr3",
@@ -1856,7 +2017,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{name: "SUCCESS - new parent created",
+		{name: "SUCCESS - parent id does not exist",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -1884,17 +2045,19 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -1916,12 +2079,18 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						SourceID: "s2",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
 				}, nil)
-
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
 				mockRepo.EXPECT().UpdateEquipmentType(ctx, "1", "MyType", &repo.UpdateEquipmentRequest{
 					ParentID: "2",
 					Attr: []*repo.Attribute{
@@ -1946,7 +2115,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
-				}, []string{"A", "B"}).Times(1).Return([]*repo.Attribute{
+				}, []string{"A"}).Times(1).Return([]*repo.Attribute{
 					&repo.Attribute{
 						Name:               "attr3",
 						Type:               repo.DataTypeString,
@@ -1973,6 +2142,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 				ID:         "1",
 				Type:       "MyType",
 				MetadataId: "s1",
+				Scopes:     []string{"A"},
 				ParentId:   "2",
 				Attributes: []*v1.Attribute{
 					&v1.Attribute{
@@ -2011,7 +2181,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{name: "failure|can not retrieve claims",
+		{name: "FAILURE - can not retrieve claims",
 			args: args{
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -2041,7 +2211,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 			setup:   func() {},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch equipment types",
+		{name: "FAILURE - some claims are not owned by user",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -2066,18 +2236,49 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"C"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - repo/EquipmentTypes - cannot fetch equipment types",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id: "1",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:       "attr3",
+							DataType:   v1.DataTypes_STRING,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
-
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - equipment not exists",
+		{name: "FAILURE - equipment type does not exist",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -2102,18 +2303,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
 						ParentID: "2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2133,13 +2336,13 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
-					},
+						Scopes:   []string{"A"}},
 				}, nil)
 
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - cannot fetch meta data",
+		{name: "FAILURE - repo/MetadataWithID - cannot fetch meta data",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -2164,18 +2367,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
 						ParentID: "2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2195,13 +2400,24 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - no meta data",
+		{name: "FAILURE - repo/MetadataWithID - no meta data",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -2226,18 +2442,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
 						ParentID: "2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2257,76 +2475,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(nil, repo.ErrNoData)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - parent id already exists but new parent creation requested ",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id:       "1",
-					ParentId: "3",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr3",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						ParentID: "2",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
+						Scopes:   []string{"A"},
 					},
 					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -2356,17 +2518,19 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2386,9 +2550,15 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
@@ -2422,17 +2592,19 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2452,9 +2624,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
 					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
@@ -2462,226 +2645,25 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - parent not selected for identifier ",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:             "attr3",
-							DataType:         v1.DataTypes_STRING,
-							Searchable:       true,
-							Displayed:        true,
-							ParentIdentifier: true,
-							MappedTo:         "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - primary key given in argument",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr3",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							PrimaryKey: true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - parent id exists already but parent identifier given",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:             "attr3",
-							DataType:         v1.DataTypes_STRING,
-							Searchable:       true,
-							Displayed:        true,
-							ParentIdentifier: true,
-							MappedTo:         "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						ParentID: "2",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - multiple parent keys ",
+		{name: "FAILURE - repo/EquipmentTypeChildren - cannot fetch equipment children",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
 					Id:       "1",
-					ParentId: "2",
+					ParentId: "4",
 					Attributes: []*v1.Attribute{
 						&v1.Attribute{
-							Name:             "attr3",
-							DataType:         v1.DataTypes_STRING,
-							Searchable:       true,
-							Displayed:        true,
-							ParentIdentifier: true,
-							MappedTo:         "mapping_3",
+							Name:       "attr3",
+							DataType:   v1.DataTypes_STRING,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_3",
 						},
 						&v1.Attribute{
-							Name:             "attr4",
-							DataType:         v1.DataTypes_INT,
-							Searchable:       true,
-							ParentIdentifier: true,
-							MappedTo:         "mapping_4",
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							MappedTo:   "mapping_4",
 						},
 						&v1.Attribute{
 							Name:     "attr5",
@@ -2689,17 +2671,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
+						ParentID: "3",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -2708,10 +2693,11 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 								MappedTo:     "mapping_1",
 							},
 							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
 							},
 						},
 					},
@@ -2720,285 +2706,32 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						Type:     "MyType2",
 						SourceID: "s2",
 					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
 				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - only string data type is allowed for parent key ",
+		{name: "FAILURE - parent can not be any of the children",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
 					Id:       "1",
-					ParentId: "2",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr3",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:             "attr4",
-							DataType:         v1.DataTypes_INT,
-							Searchable:       true,
-							ParentIdentifier: true,
-							MappedTo:         "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - attribute name already exists ",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr2",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						ParentID: "2",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - attribute name already exists - case insensitive",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "Attr2",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						ParentID: "2",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - mapping already taken ",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr3",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
-							Displayed:  true,
-							MappedTo:   "mapping_2",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						ParentID: "2",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - mapping not found ",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
+					ParentId: "4",
 					Attributes: []*v1.Attribute{
 						&v1.Attribute{
 							Name:       "attr3",
@@ -3016,21 +2749,23 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						&v1.Attribute{
 							Name:     "attr5",
 							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_6",
+							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
-						ParentID: "2",
+						ParentID: "3",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -3039,10 +2774,11 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 								MappedTo:     "mapping_1",
 							},
 							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
 							},
 						},
 					},
@@ -3051,16 +2787,33 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						Type:     "MyType2",
 						SourceID: "s2",
 					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
 				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE - searchable attribute should be dispayable ",
+		{name: "FAILURE - parent id already exists - equipment type contains equipments data",
 			args: args{
 				ctx: ctx,
 				req: &v1.UpdateEquipmentTypeRequest{
@@ -3078,72 +2831,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							Name:       "attr4",
 							DataType:   v1.DataTypes_INT,
 							Searchable: true,
-							Displayed:  false,
-							MappedTo:   "mapping_4",
-						},
-						&v1.Attribute{
-							Name:     "attr5",
-							DataType: v1.DataTypes_FLOAT,
-							MappedTo: "mapping_5",
-						},
-					},
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockEquipment(mockCtrl)
-				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
-						ID:       "1",
-						Type:     "MyType",
-						SourceID: "s1",
-						Attributes: []*repo.Attribute{
-							&repo.Attribute{
-								Name:         "attr1",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_1",
-							},
-							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
-							},
-						},
-					},
-					&repo.EquipmentType{
-						ID:       "2",
-						Type:     "MyType2",
-						SourceID: "s2",
-					},
-				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
-					ID:         "s1",
-					Source:     "test.csv",
-					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
-				}, nil)
-			},
-			wantErr: true,
-		},
-		{name: "FAILURE - cannot update equipment",
-			args: args{
-				ctx: ctx,
-				req: &v1.UpdateEquipmentTypeRequest{
-					Id: "1",
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:       "attr3",
-							DataType:   v1.DataTypes_STRING,
-							Searchable: true,
 							Displayed:  true,
-							MappedTo:   "mapping_3",
-						},
-						&v1.Attribute{
-							Name:       "attr4",
-							DataType:   v1.DataTypes_INT,
-							Searchable: true,
 							MappedTo:   "mapping_4",
 						},
 						&v1.Attribute{
@@ -3152,18 +2840,20 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
-						ParentID: "2",
+						ParentID: "3",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -3172,10 +2862,11 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 								MappedTo:     "mapping_1",
 							},
 							&repo.Attribute{
-								Name:         "attr2",
-								Type:         repo.DataTypeString,
-								IsSearchable: true,
-								MappedTo:     "mapping_2",
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
 							},
 						},
 					},
@@ -3184,26 +2875,1169 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 						Type:     "MyType2",
 						SourceID: "s2",
 					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
 				}, nil)
-				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:         "s1",
 					Source:     "test.csv",
 					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
 				}, nil)
-
-				mockRepo.EXPECT().UpdateEquipmentType(ctx, "1", "MyType", &repo.UpdateEquipmentRequest{
-					Attr: []*repo.Attribute{
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "MyType",
+					SourceID: "s1",
+					ParentID: "3",
+					Scopes:   []string{"A"},
+					Attributes: []*repo.Attribute{
 						&repo.Attribute{
-							Name:         "attr3",
+							Name:         "attr1",
 							Type:         repo.DataTypeString,
 							IsSearchable: true,
-							IsDisplayed:  true,
-							MappedTo:     "mapping_3",
+							MappedTo:     "mapping_1",
+						},
+						&repo.Attribute{
+							Name:               "attr2",
+							Type:               repo.DataTypeString,
+							IsDisplayed:        true,
+							IsParentIdentifier: true,
+							MappedTo:           "mapping_2",
+						},
+					},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Times(1).Return(int32(2), json.RawMessage(`{"id":1}`), nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - parent id already exists - cannot fetch equipments",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:       "attr3",
+							DataType:   v1.DataTypes_STRING,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						ParentID: "3",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "MyType",
+					SourceID: "s1",
+					ParentID: "3",
+					Scopes:   []string{"A"},
+					Attributes: []*repo.Attribute{
+						&repo.Attribute{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "mapping_1",
+						},
+						&repo.Attribute{
+							Name:               "attr2",
+							Type:               repo.DataTypeString,
+							IsDisplayed:        true,
+							IsParentIdentifier: true,
+							MappedTo:           "mapping_2",
+						},
+					},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Times(1).Return(int32(0), nil, errors.New("Internal"))
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - primary key not required",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							PrimaryKey: true,
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - only string data type is allowed for parent identifier",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_FLOAT,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - one parent identifier required",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:       "attr3",
+							DataType:   v1.DataTypes_STRING,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - no parent identifier required when parent is already present",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						ParentID: "3",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:               "attr2",
+								Type:               repo.DataTypeString,
+								IsDisplayed:        true,
+								IsParentIdentifier: true,
+								MappedTo:           "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "MyType",
+					SourceID: "s1",
+					ParentID: "3",
+					Scopes:   []string{"A"},
+					Attributes: []*repo.Attribute{
+						&repo.Attribute{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "mapping_1",
+						},
+						&repo.Attribute{
+							Name:               "attr2",
+							Type:               repo.DataTypeString,
+							IsDisplayed:        true,
+							IsParentIdentifier: true,
+							MappedTo:           "mapping_2",
+						},
+					},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Times(1).Return(int32(0), nil, repo.ErrNoData)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - parent is not selected for equipment type",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id: "1",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - multiple parent keys are found",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id: "1",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:             "attr4",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - attribute name already exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr2",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - attribute mapping does not exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_7",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - mapping already given to some attribute",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_2",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - validateEquipUpdation - searchable object should always be displayable",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:        "attr2",
+								Type:        repo.DataTypeString,
+								IsDisplayed: true,
+								MappedTo:    "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - repo/UpdateEquipmentType - cannot update equipment type",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpdateEquipmentTypeRequest{
+					Id:       "1",
+					ParentId: "2",
+					Attributes: []*v1.Attribute{
+						&v1.Attribute{
+							Name:             "attr3",
+							DataType:         v1.DataTypes_STRING,
+							Searchable:       true,
+							Displayed:        true,
+							ParentIdentifier: true,
+							MappedTo:         "mapping_3",
+						},
+						&v1.Attribute{
+							Name:       "attr4",
+							DataType:   v1.DataTypes_INT,
+							Searchable: true,
+							Displayed:  true,
+							MappedTo:   "mapping_4",
+						},
+						&v1.Attribute{
+							Name:     "attr5",
+							DataType: v1.DataTypes_FLOAT,
+							MappedTo: "mapping_5",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "1",
+						Type:     "MyType",
+						SourceID: "s1",
+						Scopes:   []string{"A"},
+						Attributes: []*repo.Attribute{
+							&repo.Attribute{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_1",
+							},
+							&repo.Attribute{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "mapping_2",
+							},
+						},
+					},
+					&repo.EquipmentType{
+						ID:       "2",
+						Type:     "MyType2",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					&repo.EquipmentType{
+						ID:       "3",
+						Type:     "MyType3",
+						SourceID: "s3",
+					},
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().MetadataWithID(ctx, "s1", []string{"A"}).Times(1).Return(&repo.Metadata{
+					ID:         "s1",
+					Source:     "test.csv",
+					Attributes: []string{"mapping_1", "mapping_2", "mapping_3", "mapping_4", "mapping_5"},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 4, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
+					&repo.EquipmentType{
+						ID:       "4",
+						Type:     "MyType4",
+						SourceID: "s4",
+					},
+				}, nil)
+				mockRepo.EXPECT().UpdateEquipmentType(ctx, "1", "MyType", &repo.UpdateEquipmentRequest{
+					ParentID: "2",
+					Attr: []*repo.Attribute{
+						&repo.Attribute{
+							Name:               "attr3",
+							Type:               repo.DataTypeString,
+							IsSearchable:       true,
+							IsDisplayed:        true,
+							IsParentIdentifier: true,
+							MappedTo:           "mapping_3",
 						},
 						&repo.Attribute{
 							Name:         "attr4",
 							Type:         repo.DataTypeInt,
 							IsSearchable: true,
+							IsDisplayed:  true,
 							MappedTo:     "mapping_4",
 						},
 						&repo.Attribute{
@@ -3212,7 +4046,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 							MappedTo: "mapping_5",
 						},
 					},
-				}, []string{"A", "B"}).Return(nil, errors.New("test error")).Times(1)
+				}, []string{"A"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -3234,7 +4068,7 @@ func Test_equipmentServiceServer_UpdateEquipmentType(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -3257,27 +4091,30 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.EquipmentMetadataRequest{
-					ID: "1",
+					ID:     "1",
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:     "s3",
 					Source: "equip_1.csv",
 					Attributes: []string{
 						"attr_1",
 						"attr_2",
 					},
+					Scope: "A",
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
 						ParentID: "2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -3297,6 +4134,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
 					},
 				}, nil)
 			},
@@ -3307,6 +4145,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 					"attr_1",
 					"attr_2",
 				},
+				Scopes: []string{"A"},
 			},
 			wantErr: false,
 		},
@@ -3316,26 +4155,29 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 				req: &v1.EquipmentMetadataRequest{
 					ID:         "1",
 					Attributes: v1.EquipmentMetadataRequest_All,
+					Scopes:     []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:     "s1",
 					Source: "equip_1.csv",
 					Attributes: []string{
 						"attr_1",
 						"attr_2",
 					},
+					Scope: "A",
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
 						SourceID: "s1",
 						ParentID: "2",
+						Scopes:   []string{"A"},
 						Attributes: []*repo.Attribute{
 							&repo.Attribute{
 								Name:         "attr1",
@@ -3355,6 +4197,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
 					},
 				}, nil)
 			},
@@ -3365,6 +4208,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 					"attr_1",
 					"attr_2",
 				},
+				Scopes: []string{"A"},
 			},
 			wantErr: false,
 		},
@@ -3374,13 +4218,14 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 				req: &v1.EquipmentMetadataRequest{
 					ID:         "1",
 					Attributes: v1.EquipmentMetadataRequest_Mapped,
+					Scopes:     []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:     "s1",
 					Source: "equip_1.csv",
 					Attributes: []string{
@@ -3389,8 +4234,9 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 						"attr_3",
 						"attr_4",
 					},
+					Scope: "A",
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
@@ -3410,11 +4256,13 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 								MappedTo:     "attr_3",
 							},
 						},
+						Scopes: []string{"A"},
 					},
 					&repo.EquipmentType{
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
 					},
 				}, nil)
 			},
@@ -3425,6 +4273,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 					"attr_2",
 					"attr_3",
 				},
+				Scopes: []string{"A"},
 			},
 			wantErr: false,
 		},
@@ -3434,13 +4283,14 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 				req: &v1.EquipmentMetadataRequest{
 					ID:         "1",
 					Attributes: v1.EquipmentMetadataRequest_Unmapped,
+					Scopes:     []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:     "s1",
 					Source: "equip_1.csv",
 					Attributes: []string{
@@ -3449,8 +4299,9 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 						"attr_3",
 						"attr_4",
 					},
+					Scope: "A",
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "1",
 						Type:     "MyType",
@@ -3470,11 +4321,13 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 								MappedTo:     "attr_3",
 							},
 						},
+						Scopes: []string{"A"},
 					},
 					&repo.EquipmentType{
 						ID:       "2",
 						Type:     "MyType2",
 						SourceID: "s2",
+						Scopes:   []string{"A"},
 					},
 				}, nil)
 			},
@@ -3485,6 +4338,7 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 					"attr_1",
 					"attr_4",
 				},
+				Scopes: []string{"A"},
 			},
 			wantErr: false,
 		},
@@ -3492,7 +4346,19 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				req: &v1.EquipmentMetadataRequest{
-					ID: "1",
+					ID:     "1",
+					Scopes: []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "failure|some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.EquipmentMetadataRequest{
+					ID:     "1",
+					Scopes: []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -3502,14 +4368,15 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.EquipmentMetadataRequest{
-					ID: "1",
+					ID:     "1",
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(nil, repo.ErrNoData)
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -3517,14 +4384,15 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.EquipmentMetadataRequest{
-					ID: "1",
+					ID:     "1",
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(nil, errors.New("Test Error"))
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -3532,22 +4400,24 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.EquipmentMetadataRequest{
-					ID: "1",
+					ID:     "1",
+					Scopes: []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A", "B"}).Times(1).Return(&repo.Metadata{
+				mockRepo.EXPECT().MetadataWithID(ctx, "1", []string{"A"}).Times(1).Return(&repo.Metadata{
 					ID:     "s3",
 					Source: "equip_1.csv",
 					Attributes: []string{
 						"attr_1",
 						"attr_2",
 					},
+					Scope: "A",
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -3566,6 +4436,526 @@ func Test_equipmentServiceServer_GetEquipmentMetadata(t *testing.T) {
 			}
 			if tt.setup == nil {
 				mockCtrl.Finish()
+			}
+		})
+	}
+}
+
+func Test_equipmentServiceServer_DeleteEquipmentType(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"A", "B"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Equipment
+	type args struct {
+		ctx context.Context
+		req *v1.DeleteEquipmentTypeRequest
+	}
+	tests := []struct {
+		name    string
+		s       *equipmentServiceServer
+		args    args
+		setup   func()
+		want    *v1.DeleteEquipmentTypeResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "2",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Return(nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "server",
+					SourceID: "s1",
+					ParentID: "2",
+					Attributes: []*repo.Attribute{
+						{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_2",
+						},
+						{
+							Name:         "attr2",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_3",
+						},
+					},
+					Scopes: []string{"A"},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Return(int32(0), nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().DeleteEquipmentType(ctx, "server", "A").Return(nil).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - can not retrieve claims",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "C",
+				},
+			},
+			setup: func() {},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot fetch equipment types",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return(nil, errors.New("DBError")).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - equipment type does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+					{
+						ID:       "3",
+						Type:     "vcenter",
+						SourceID: "s3",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot fetch equipment type children",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "2",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Return(nil, errors.New("DBError")).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - equipment type has children",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "partition",
+						SourceID: "s2",
+						ParentID: "2",
+						Scopes:   []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "3",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "3",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "2", 3, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "partition",
+						SourceID: "s2",
+						ParentID: "2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot fetch equipments",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "2",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Return(nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "server",
+					SourceID: "s1",
+					ParentID: "2",
+					Attributes: []*repo.Attribute{
+						{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_2",
+						},
+						{
+							Name:         "attr2",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_3",
+						},
+					},
+					Scopes: []string{"A"},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Return(int32(0), nil, errors.New("DBError")).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - equipment type contains equipments data",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "2",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Return(nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "server",
+					SourceID: "s1",
+					ParentID: "2",
+					Attributes: []*repo.Attribute{
+						{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_2",
+						},
+						{
+							Name:         "attr2",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_3",
+						},
+					},
+					Scopes: []string{"A"},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot delete equipment type",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteEquipmentTypeRequest{
+					EquipType: "server",
+					Scope:     "A",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Return([]*repo.EquipmentType{
+					{
+						ID:       "1",
+						Type:     "server",
+						SourceID: "s1",
+						ParentID: "2",
+						Attributes: []*repo.Attribute{
+							{
+								Name:         "attr1",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_2",
+							},
+							{
+								Name:         "attr2",
+								Type:         repo.DataTypeString,
+								IsSearchable: true,
+								MappedTo:     "attr_3",
+							},
+						},
+						Scopes: []string{"A"},
+					},
+					{
+						ID:       "2",
+						Type:     "cluster",
+						SourceID: "s2",
+						Scopes:   []string{"A"},
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypeChildren(ctx, "1", 2, []string{"A"}).Return(nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().Equipments(ctx, &repo.EquipmentType{
+					ID:       "1",
+					Type:     "server",
+					SourceID: "s1",
+					ParentID: "2",
+					Attributes: []*repo.Attribute{
+						{
+							Name:         "attr1",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_2",
+						},
+						{
+							Name:         "attr2",
+							Type:         repo.DataTypeString,
+							IsSearchable: true,
+							MappedTo:     "attr_3",
+						},
+					},
+					Scopes: []string{"A"},
+				}, &repo.QueryEquipments{
+					PageSize:  50,
+					Offset:    offset(50, 1),
+					SortOrder: sortOrder(v1.SortOrder_ASC),
+				}, []string{"A"}).Return(int32(0), nil, repo.ErrNoData).Times(1)
+				mockRepo.EXPECT().DeleteEquipmentType(ctx, "server", "A").Return(errors.New("DBError")).Times(1)
+			},
+			want: &v1.DeleteEquipmentTypeResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewEquipmentServiceServer(rep)
+			got, err := s.DeleteEquipmentType(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("equipmentServiceServer.DeleteEquipmentType() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("equipmentServiceServer.DeleteEquipmentType() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -3609,6 +4999,7 @@ func compareEquipmentType(t *testing.T, name string, exp *v1.EquipmentType, act 
 	assert.Equalf(t, exp.MetadataId, act.MetadataId, "%s.MetadataId are not same", name)
 	assert.Equalf(t, exp.ParentType, act.ParentType, "%s.MetadataId are not same", name)
 	assert.Equalf(t, exp.MetadataSource, act.MetadataSource, "%s.MetadataId are not same", name)
+	assert.Equalf(t, exp.Scopes, act.Scopes, "%s.Scope are not same", name)
 	compareAttributeAll(t, fmt.Sprintf("%s.Attributes are not same", name), exp.Attributes, act.Attributes)
 }
 

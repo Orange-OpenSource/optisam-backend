@@ -1,28 +1,39 @@
 debug = false
-grpcport = "5085"
-httpport = "6085"
-fileslocation = "optisam_data"
-archivelocation = "optisam_archived"
-maxfileworker = 1
-maxapiworker = 10
-batchsize = 40
+grpcport = "10000"
+httpport = "10001"
+fileslocation = "testdata"
+archivelocation = "history"
+maxfileworker = 5
+maxapiworker = 100
+
+
+#crontime will be either in 2 formats 
+#foramt-1 : "@every X" where X is any integer value combines with [s:sec,m:min,h:hour,d:day] eg : 5s/30m/20h/2h30m  -> "every 10m" for every 10 minutes
+#format-2 : "s m h d M W" as cron standard "sec min hour day Mon Week" -> "0 0 0 1 * 0" for 1sday of every month for more details follow 
+#https://pkg.go.dev/github.com/robfig/cron
+[cron]
+time = "@every 1m"
+
+[httpservers.Address]
+auth = "localhost:9093"
 
 [workerqueue]
-Qsize = 1000
-retries = 1
-basedelay = 1000
+Qsize = 10000
+retries = 5
+basedelay = 2000
+ismultiqueue = true
 
 
 [grpcservers]
 apikey = "12345678"
-timeout = 10
+timeout = 10000
 
 
 [grpcservers.Address]
-product = "optisam-product-service:5091"
-application = "optisam-application-service:5083"
-acqright = "optisam-acqrights-service:5082"
-equipment = "optisam-equipment-service:5086"
+product = "localhost:12090"
+application = "localhost:11090"
+#acqright = "localhost:13090"
+equipment = "localhost:14090"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -39,17 +50,17 @@ namespace = "dpsservice"
 [instrumentation.jaeger]
 enabled = false
 serviceName = "dps-service"
-collectorEndpoint = "http://localhost:14268/api/traces"
-agentEndpoint = "localhost:6831"
+collectorEndpoint = "http://jaeger-collector.dev-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
 # username = ""
 # password = ""
 
 [postgres]
-host = "postgres"
+host = "localhost"
 port = 5432
 user = "optisam"
 pass = "optisam"
-name = "dps"
+name = "optisam"
 
 [app.params]
 pageSize = 20

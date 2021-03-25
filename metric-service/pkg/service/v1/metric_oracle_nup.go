@@ -8,8 +8,9 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -20,15 +21,18 @@ import (
 )
 
 func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context, req *v1.CreateMetricNUP) (*v1.CreateMetricNUP, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
 	if req.StartEqTypeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "start level is empty")
 	}
 
-	metrics, err := s.metricRepo.ListMetrices(ctx, userClaims.Socpes)
+	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching metrics", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
@@ -39,7 +43,7 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
 
-	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -67,7 +71,7 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 		return nil, err
 	}
 
-	met, err := s.metricRepo.CreateMetricOracleNUPStandard(ctx, serverToRepoMetricOracleNUP(req), userClaims.Socpes)
+	met, err := s.metricRepo.CreateMetricOracleNUPStandard(ctx, serverToRepoMetricOracleNUP(req), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateMetricOracleProcessorStandard - fetching equipment", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.NotFound, "cannot create metric")

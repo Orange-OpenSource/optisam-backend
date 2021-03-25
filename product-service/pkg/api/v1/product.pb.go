@@ -14,6 +14,7 @@ import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
 	proto "github.com/golang/protobuf/proto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
@@ -120,11 +121,334 @@ func (x ListProductAggregationViewRequest_SortBy) String() string {
 }
 
 func (ListProductAggregationViewRequest_SortBy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{4, 0}
+	return fileDescriptor_f0fd8b59378f44a5, []int{9, 0}
+}
+
+type ListAcqRightsRequest_SortBy int32
+
+const (
+	ListAcqRightsRequest_ENTITY                            ListAcqRightsRequest_SortBy = 0
+	ListAcqRightsRequest_SKU                               ListAcqRightsRequest_SortBy = 1
+	ListAcqRightsRequest_SWID_TAG                          ListAcqRightsRequest_SortBy = 2
+	ListAcqRightsRequest_PRODUCT_NAME                      ListAcqRightsRequest_SortBy = 3
+	ListAcqRightsRequest_EDITOR                            ListAcqRightsRequest_SortBy = 4
+	ListAcqRightsRequest_METRIC                            ListAcqRightsRequest_SortBy = 5
+	ListAcqRightsRequest_ACQUIRED_LICENSES_NUMBER          ListAcqRightsRequest_SortBy = 6
+	ListAcqRightsRequest_AVG_LICENSE_UNIT_PRICE            ListAcqRightsRequest_SortBy = 7
+	ListAcqRightsRequest_AVG_MAINTENANCE_UNIT_PRICE        ListAcqRightsRequest_SortBy = 8
+	ListAcqRightsRequest_TOTAL_PURCHASE_COST               ListAcqRightsRequest_SortBy = 9
+	ListAcqRightsRequest_TOTAL_MAINTENANCE_COST            ListAcqRightsRequest_SortBy = 10
+	ListAcqRightsRequest_TOTAL_COST                        ListAcqRightsRequest_SortBy = 11
+	ListAcqRightsRequest_START_OF_MAINTENANCE              ListAcqRightsRequest_SortBy = 12
+	ListAcqRightsRequest_END_OF_MAINTENANCE                ListAcqRightsRequest_SortBy = 13
+	ListAcqRightsRequest_LICENSES_UNDER_MAINTENANCE_NUMBER ListAcqRightsRequest_SortBy = 14
+)
+
+var ListAcqRightsRequest_SortBy_name = map[int32]string{
+	0:  "ENTITY",
+	1:  "SKU",
+	2:  "SWID_TAG",
+	3:  "PRODUCT_NAME",
+	4:  "EDITOR",
+	5:  "METRIC",
+	6:  "ACQUIRED_LICENSES_NUMBER",
+	7:  "AVG_LICENSE_UNIT_PRICE",
+	8:  "AVG_MAINTENANCE_UNIT_PRICE",
+	9:  "TOTAL_PURCHASE_COST",
+	10: "TOTAL_MAINTENANCE_COST",
+	11: "TOTAL_COST",
+	12: "START_OF_MAINTENANCE",
+	13: "END_OF_MAINTENANCE",
+	14: "LICENSES_UNDER_MAINTENANCE_NUMBER",
+}
+
+var ListAcqRightsRequest_SortBy_value = map[string]int32{
+	"ENTITY":                            0,
+	"SKU":                               1,
+	"SWID_TAG":                          2,
+	"PRODUCT_NAME":                      3,
+	"EDITOR":                            4,
+	"METRIC":                            5,
+	"ACQUIRED_LICENSES_NUMBER":          6,
+	"AVG_LICENSE_UNIT_PRICE":            7,
+	"AVG_MAINTENANCE_UNIT_PRICE":        8,
+	"TOTAL_PURCHASE_COST":               9,
+	"TOTAL_MAINTENANCE_COST":            10,
+	"TOTAL_COST":                        11,
+	"START_OF_MAINTENANCE":              12,
+	"END_OF_MAINTENANCE":                13,
+	"LICENSES_UNDER_MAINTENANCE_NUMBER": 14,
+}
+
+func (x ListAcqRightsRequest_SortBy) String() string {
+	return proto.EnumName(ListAcqRightsRequest_SortBy_name, int32(x))
+}
+
+func (ListAcqRightsRequest_SortBy) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{50, 0}
+}
+
+type ListAcqRightsAggregationRequest_SortBy int32
+
+const (
+	ListAcqRightsAggregationRequest_NAME       ListAcqRightsAggregationRequest_SortBy = 0
+	ListAcqRightsAggregationRequest_EDITOR     ListAcqRightsAggregationRequest_SortBy = 1
+	ListAcqRightsAggregationRequest_TOTAL_COST ListAcqRightsAggregationRequest_SortBy = 2
+	ListAcqRightsAggregationRequest_METRIC     ListAcqRightsAggregationRequest_SortBy = 3
+)
+
+var ListAcqRightsAggregationRequest_SortBy_name = map[int32]string{
+	0: "NAME",
+	1: "EDITOR",
+	2: "TOTAL_COST",
+	3: "METRIC",
+}
+
+var ListAcqRightsAggregationRequest_SortBy_value = map[string]int32{
+	"NAME":       0,
+	"EDITOR":     1,
+	"TOTAL_COST": 2,
+	"METRIC":     3,
+}
+
+func (x ListAcqRightsAggregationRequest_SortBy) String() string {
+	return proto.EnumName(ListAcqRightsAggregationRequest_SortBy_name, int32(x))
+}
+
+func (ListAcqRightsAggregationRequest_SortBy) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{54, 0}
+}
+
+type OverviewProductQualityRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *OverviewProductQualityRequest) Reset()         { *m = OverviewProductQualityRequest{} }
+func (m *OverviewProductQualityRequest) String() string { return proto.CompactTextString(m) }
+func (*OverviewProductQualityRequest) ProtoMessage()    {}
+func (*OverviewProductQualityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{0}
+}
+
+func (m *OverviewProductQualityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OverviewProductQualityRequest.Unmarshal(m, b)
+}
+func (m *OverviewProductQualityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OverviewProductQualityRequest.Marshal(b, m, deterministic)
+}
+func (m *OverviewProductQualityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OverviewProductQualityRequest.Merge(m, src)
+}
+func (m *OverviewProductQualityRequest) XXX_Size() int {
+	return xxx_messageInfo_OverviewProductQualityRequest.Size(m)
+}
+func (m *OverviewProductQualityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OverviewProductQualityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OverviewProductQualityRequest proto.InternalMessageInfo
+
+func (m *OverviewProductQualityRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type OverviewProductQualityResponse struct {
+	NotAcquiredProducts           int32    `protobuf:"varint,1,opt,name=not_acquired_products,json=notAcquiredProducts,proto3" json:"not_acquired_products,omitempty"`
+	NotDeployedProducts           int32    `protobuf:"varint,2,opt,name=not_deployed_products,json=notDeployedProducts,proto3" json:"not_deployed_products,omitempty"`
+	NotAcquiredProductsPercentage float64  `protobuf:"fixed64,3,opt,name=not_acquired_products_percentage,json=notAcquiredProductsPercentage,proto3" json:"not_acquired_products_percentage,omitempty"`
+	NotDeployedProductsPercentage float64  `protobuf:"fixed64,4,opt,name=not_deployed_products_percentage,json=notDeployedProductsPercentage,proto3" json:"not_deployed_products_percentage,omitempty"`
+	XXX_NoUnkeyedLiteral          struct{} `json:"-"`
+	XXX_unrecognized              []byte   `json:"-"`
+	XXX_sizecache                 int32    `json:"-"`
+}
+
+func (m *OverviewProductQualityResponse) Reset()         { *m = OverviewProductQualityResponse{} }
+func (m *OverviewProductQualityResponse) String() string { return proto.CompactTextString(m) }
+func (*OverviewProductQualityResponse) ProtoMessage()    {}
+func (*OverviewProductQualityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{1}
+}
+
+func (m *OverviewProductQualityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OverviewProductQualityResponse.Unmarshal(m, b)
+}
+func (m *OverviewProductQualityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OverviewProductQualityResponse.Marshal(b, m, deterministic)
+}
+func (m *OverviewProductQualityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OverviewProductQualityResponse.Merge(m, src)
+}
+func (m *OverviewProductQualityResponse) XXX_Size() int {
+	return xxx_messageInfo_OverviewProductQualityResponse.Size(m)
+}
+func (m *OverviewProductQualityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OverviewProductQualityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OverviewProductQualityResponse proto.InternalMessageInfo
+
+func (m *OverviewProductQualityResponse) GetNotAcquiredProducts() int32 {
+	if m != nil {
+		return m.NotAcquiredProducts
+	}
+	return 0
+}
+
+func (m *OverviewProductQualityResponse) GetNotDeployedProducts() int32 {
+	if m != nil {
+		return m.NotDeployedProducts
+	}
+	return 0
+}
+
+func (m *OverviewProductQualityResponse) GetNotAcquiredProductsPercentage() float64 {
+	if m != nil {
+		return m.NotAcquiredProductsPercentage
+	}
+	return 0
+}
+
+func (m *OverviewProductQualityResponse) GetNotDeployedProductsPercentage() float64 {
+	if m != nil {
+		return m.NotDeployedProductsPercentage
+	}
+	return 0
+}
+
+type ProductsPerEditorRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductsPerEditorRequest) Reset()         { *m = ProductsPerEditorRequest{} }
+func (m *ProductsPerEditorRequest) String() string { return proto.CompactTextString(m) }
+func (*ProductsPerEditorRequest) ProtoMessage()    {}
+func (*ProductsPerEditorRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{2}
+}
+
+func (m *ProductsPerEditorRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsPerEditorRequest.Unmarshal(m, b)
+}
+func (m *ProductsPerEditorRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsPerEditorRequest.Marshal(b, m, deterministic)
+}
+func (m *ProductsPerEditorRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsPerEditorRequest.Merge(m, src)
+}
+func (m *ProductsPerEditorRequest) XXX_Size() int {
+	return xxx_messageInfo_ProductsPerEditorRequest.Size(m)
+}
+func (m *ProductsPerEditorRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsPerEditorRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsPerEditorRequest proto.InternalMessageInfo
+
+func (m *ProductsPerEditorRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ProductsPerEditorResponse struct {
+	EditorsProducts      []*EditorProducts `protobuf:"bytes,1,rep,name=editors_products,json=editorsProducts,proto3" json:"editors_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *ProductsPerEditorResponse) Reset()         { *m = ProductsPerEditorResponse{} }
+func (m *ProductsPerEditorResponse) String() string { return proto.CompactTextString(m) }
+func (*ProductsPerEditorResponse) ProtoMessage()    {}
+func (*ProductsPerEditorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{3}
+}
+
+func (m *ProductsPerEditorResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsPerEditorResponse.Unmarshal(m, b)
+}
+func (m *ProductsPerEditorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsPerEditorResponse.Marshal(b, m, deterministic)
+}
+func (m *ProductsPerEditorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsPerEditorResponse.Merge(m, src)
+}
+func (m *ProductsPerEditorResponse) XXX_Size() int {
+	return xxx_messageInfo_ProductsPerEditorResponse.Size(m)
+}
+func (m *ProductsPerEditorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsPerEditorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsPerEditorResponse proto.InternalMessageInfo
+
+func (m *ProductsPerEditorResponse) GetEditorsProducts() []*EditorProducts {
+	if m != nil {
+		return m.EditorsProducts
+	}
+	return nil
+}
+
+type EditorProducts struct {
+	Editor               string   `protobuf:"bytes,1,opt,name=editor,proto3" json:"editor,omitempty"`
+	NumProducts          int32    `protobuf:"varint,2,opt,name=num_products,json=numProducts,proto3" json:"num_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *EditorProducts) Reset()         { *m = EditorProducts{} }
+func (m *EditorProducts) String() string { return proto.CompactTextString(m) }
+func (*EditorProducts) ProtoMessage()    {}
+func (*EditorProducts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{4}
+}
+
+func (m *EditorProducts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_EditorProducts.Unmarshal(m, b)
+}
+func (m *EditorProducts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_EditorProducts.Marshal(b, m, deterministic)
+}
+func (m *EditorProducts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EditorProducts.Merge(m, src)
+}
+func (m *EditorProducts) XXX_Size() int {
+	return xxx_messageInfo_EditorProducts.Size(m)
+}
+func (m *EditorProducts) XXX_DiscardUnknown() {
+	xxx_messageInfo_EditorProducts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EditorProducts proto.InternalMessageInfo
+
+func (m *EditorProducts) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *EditorProducts) GetNumProducts() int32 {
+	if m != nil {
+		return m.NumProducts
+	}
+	return 0
 }
 
 type ProductAggregationProductViewOptionsRequest struct {
 	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Scopes               []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -138,7 +462,7 @@ func (m *ProductAggregationProductViewOptionsRequest) String() string {
 }
 func (*ProductAggregationProductViewOptionsRequest) ProtoMessage() {}
 func (*ProductAggregationProductViewOptionsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{0}
+	return fileDescriptor_f0fd8b59378f44a5, []int{5}
 }
 
 func (m *ProductAggregationProductViewOptionsRequest) XXX_Unmarshal(b []byte) error {
@@ -166,6 +490,13 @@ func (m *ProductAggregationProductViewOptionsRequest) GetID() int32 {
 	return 0
 }
 
+func (m *ProductAggregationProductViewOptionsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ProductAggregationProductViewOptionsResponse struct {
 	NumOfOptions         int32         `protobuf:"varint,1,opt,name=numOfOptions,proto3" json:"numOfOptions,omitempty"`
 	Optioninfo           []*OptionInfo `protobuf:"bytes,2,rep,name=optioninfo,proto3" json:"optioninfo,omitempty"`
@@ -182,7 +513,7 @@ func (m *ProductAggregationProductViewOptionsResponse) String() string {
 }
 func (*ProductAggregationProductViewOptionsResponse) ProtoMessage() {}
 func (*ProductAggregationProductViewOptionsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{1}
+	return fileDescriptor_f0fd8b59378f44a5, []int{6}
 }
 
 func (m *ProductAggregationProductViewOptionsResponse) XXX_Unmarshal(b []byte) error {
@@ -219,6 +550,7 @@ func (m *ProductAggregationProductViewOptionsResponse) GetOptioninfo() []*Option
 
 type ProductAggregationProductViewDetailsRequest struct {
 	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Scopes               []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -232,7 +564,7 @@ func (m *ProductAggregationProductViewDetailsRequest) String() string {
 }
 func (*ProductAggregationProductViewDetailsRequest) ProtoMessage() {}
 func (*ProductAggregationProductViewDetailsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{2}
+	return fileDescriptor_f0fd8b59378f44a5, []int{7}
 }
 
 func (m *ProductAggregationProductViewDetailsRequest) XXX_Unmarshal(b []byte) error {
@@ -260,6 +592,13 @@ func (m *ProductAggregationProductViewDetailsRequest) GetID() int32 {
 	return 0
 }
 
+func (m *ProductAggregationProductViewDetailsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ProductAggregationProductViewDetailsResponse struct {
 	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -282,7 +621,7 @@ func (m *ProductAggregationProductViewDetailsResponse) String() string {
 }
 func (*ProductAggregationProductViewDetailsResponse) ProtoMessage() {}
 func (*ProductAggregationProductViewDetailsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{3}
+	return fileDescriptor_f0fd8b59378f44a5, []int{8}
 }
 
 func (m *ProductAggregationProductViewDetailsResponse) XXX_Unmarshal(b []byte) error {
@@ -365,6 +704,7 @@ type ListProductAggregationViewRequest struct {
 	SortBy               ListProductAggregationViewRequest_SortBy   `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.products.v1.ListProductAggregationViewRequest_SortBy" json:"sort_by,omitempty"`
 	SortOrder            SortOrder                                  `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.products.v1.SortOrder" json:"sort_order,omitempty"`
 	SearchParams         *ProductAggregationProductViewSearchParams `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string                                   `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                   `json:"-"`
 	XXX_unrecognized     []byte                                     `json:"-"`
 	XXX_sizecache        int32                                      `json:"-"`
@@ -374,7 +714,7 @@ func (m *ListProductAggregationViewRequest) Reset()         { *m = ListProductAg
 func (m *ListProductAggregationViewRequest) String() string { return proto.CompactTextString(m) }
 func (*ListProductAggregationViewRequest) ProtoMessage()    {}
 func (*ListProductAggregationViewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{4}
+	return fileDescriptor_f0fd8b59378f44a5, []int{9}
 }
 
 func (m *ListProductAggregationViewRequest) XXX_Unmarshal(b []byte) error {
@@ -430,6 +770,13 @@ func (m *ListProductAggregationViewRequest) GetSearchParams() *ProductAggregatio
 	return nil
 }
 
+func (m *ListProductAggregationViewRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ProductAggregationProductViewSearchParams struct {
 	SwidTag              *StringFilter `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
 	Name                 *StringFilter `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -448,7 +795,7 @@ func (m *ProductAggregationProductViewSearchParams) String() string {
 }
 func (*ProductAggregationProductViewSearchParams) ProtoMessage() {}
 func (*ProductAggregationProductViewSearchParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{5}
+	return fileDescriptor_f0fd8b59378f44a5, []int{10}
 }
 
 func (m *ProductAggregationProductViewSearchParams) XXX_Unmarshal(b []byte) error {
@@ -498,18 +845,18 @@ func (m *ProductAggregationProductViewSearchParams) GetProductName() *StringFilt
 }
 
 type ListProductAggregationViewResponse struct {
-	TotalRecords         int32                 `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
-	Aggregations         []*ProductAggregation `protobuf:"bytes,2,rep,name=aggregations,proto3" json:"aggregations,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
+	TotalRecords         int32                     `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
+	Aggregations         []*ProductAggregationView `protobuf:"bytes,2,rep,name=aggregations,proto3" json:"aggregations,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
 func (m *ListProductAggregationViewResponse) Reset()         { *m = ListProductAggregationViewResponse{} }
 func (m *ListProductAggregationViewResponse) String() string { return proto.CompactTextString(m) }
 func (*ListProductAggregationViewResponse) ProtoMessage()    {}
 func (*ListProductAggregationViewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{6}
+	return fileDescriptor_f0fd8b59378f44a5, []int{11}
 }
 
 func (m *ListProductAggregationViewResponse) XXX_Unmarshal(b []byte) error {
@@ -537,94 +884,94 @@ func (m *ListProductAggregationViewResponse) GetTotalRecords() int32 {
 	return 0
 }
 
-func (m *ListProductAggregationViewResponse) GetAggregations() []*ProductAggregation {
+func (m *ListProductAggregationViewResponse) GetAggregations() []*ProductAggregationView {
 	if m != nil {
 		return m.Aggregations
 	}
 	return nil
 }
 
-type ProductAggregation struct {
+type ProductAggregationView struct {
 	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Editor               string   `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
 	NumApplications      int32    `protobuf:"varint,4,opt,name=num_applications,json=numApplications,proto3" json:"num_applications,omitempty"`
 	NumEquipments        int32    `protobuf:"varint,5,opt,name=num_equipments,json=numEquipments,proto3" json:"num_equipments,omitempty"`
-	TotalCost            int32    `protobuf:"varint,6,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
+	TotalCost            float64  `protobuf:"fixed64,6,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
 	Swidtags             []string `protobuf:"bytes,7,rep,name=swidtags,proto3" json:"swidtags,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ProductAggregation) Reset()         { *m = ProductAggregation{} }
-func (m *ProductAggregation) String() string { return proto.CompactTextString(m) }
-func (*ProductAggregation) ProtoMessage()    {}
-func (*ProductAggregation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{7}
+func (m *ProductAggregationView) Reset()         { *m = ProductAggregationView{} }
+func (m *ProductAggregationView) String() string { return proto.CompactTextString(m) }
+func (*ProductAggregationView) ProtoMessage()    {}
+func (*ProductAggregationView) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{12}
 }
 
-func (m *ProductAggregation) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ProductAggregation.Unmarshal(m, b)
+func (m *ProductAggregationView) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductAggregationView.Unmarshal(m, b)
 }
-func (m *ProductAggregation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ProductAggregation.Marshal(b, m, deterministic)
+func (m *ProductAggregationView) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductAggregationView.Marshal(b, m, deterministic)
 }
-func (m *ProductAggregation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductAggregation.Merge(m, src)
+func (m *ProductAggregationView) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductAggregationView.Merge(m, src)
 }
-func (m *ProductAggregation) XXX_Size() int {
-	return xxx_messageInfo_ProductAggregation.Size(m)
+func (m *ProductAggregationView) XXX_Size() int {
+	return xxx_messageInfo_ProductAggregationView.Size(m)
 }
-func (m *ProductAggregation) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProductAggregation.DiscardUnknown(m)
+func (m *ProductAggregationView) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductAggregationView.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ProductAggregation proto.InternalMessageInfo
+var xxx_messageInfo_ProductAggregationView proto.InternalMessageInfo
 
-func (m *ProductAggregation) GetID() int32 {
+func (m *ProductAggregationView) GetID() int32 {
 	if m != nil {
 		return m.ID
 	}
 	return 0
 }
 
-func (m *ProductAggregation) GetName() string {
+func (m *ProductAggregationView) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *ProductAggregation) GetEditor() string {
+func (m *ProductAggregationView) GetEditor() string {
 	if m != nil {
 		return m.Editor
 	}
 	return ""
 }
 
-func (m *ProductAggregation) GetNumApplications() int32 {
+func (m *ProductAggregationView) GetNumApplications() int32 {
 	if m != nil {
 		return m.NumApplications
 	}
 	return 0
 }
 
-func (m *ProductAggregation) GetNumEquipments() int32 {
+func (m *ProductAggregationView) GetNumEquipments() int32 {
 	if m != nil {
 		return m.NumEquipments
 	}
 	return 0
 }
 
-func (m *ProductAggregation) GetTotalCost() int32 {
+func (m *ProductAggregationView) GetTotalCost() float64 {
 	if m != nil {
 		return m.TotalCost
 	}
 	return 0
 }
 
-func (m *ProductAggregation) GetSwidtags() []string {
+func (m *ProductAggregationView) GetSwidtags() []string {
 	if m != nil {
 		return m.Swidtags
 	}
@@ -633,6 +980,7 @@ func (m *ProductAggregation) GetSwidtags() []string {
 
 type ListProductAggregationProductViewRequest struct {
 	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Scopes               []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -644,7 +992,7 @@ func (m *ListProductAggregationProductViewRequest) Reset() {
 func (m *ListProductAggregationProductViewRequest) String() string { return proto.CompactTextString(m) }
 func (*ListProductAggregationProductViewRequest) ProtoMessage()    {}
 func (*ListProductAggregationProductViewRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{8}
+	return fileDescriptor_f0fd8b59378f44a5, []int{13}
 }
 
 func (m *ListProductAggregationProductViewRequest) XXX_Unmarshal(b []byte) error {
@@ -672,6 +1020,13 @@ func (m *ListProductAggregationProductViewRequest) GetID() int32 {
 	return 0
 }
 
+func (m *ListProductAggregationProductViewRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ListProductAggregationProductViewResponse struct {
 	Products             []*Product `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
@@ -687,7 +1042,7 @@ func (m *ListProductAggregationProductViewResponse) String() string {
 }
 func (*ListProductAggregationProductViewResponse) ProtoMessage() {}
 func (*ListProductAggregationProductViewResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{9}
+	return fileDescriptor_f0fd8b59378f44a5, []int{14}
 }
 
 func (m *ListProductAggregationProductViewResponse) XXX_Unmarshal(b []byte) error {
@@ -726,7 +1081,7 @@ func (m *ListEditorsRequest) Reset()         { *m = ListEditorsRequest{} }
 func (m *ListEditorsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListEditorsRequest) ProtoMessage()    {}
 func (*ListEditorsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{10}
+	return fileDescriptor_f0fd8b59378f44a5, []int{15}
 }
 
 func (m *ListEditorsRequest) XXX_Unmarshal(b []byte) error {
@@ -765,7 +1120,7 @@ func (m *ListEditorsResponse) Reset()         { *m = ListEditorsResponse{} }
 func (m *ListEditorsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListEditorsResponse) ProtoMessage()    {}
 func (*ListEditorsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{11}
+	return fileDescriptor_f0fd8b59378f44a5, []int{16}
 }
 
 func (m *ListEditorsResponse) XXX_Unmarshal(b []byte) error {
@@ -805,7 +1160,7 @@ func (m *ListEditorProductsRequest) Reset()         { *m = ListEditorProductsReq
 func (m *ListEditorProductsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListEditorProductsRequest) ProtoMessage()    {}
 func (*ListEditorProductsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{12}
+	return fileDescriptor_f0fd8b59378f44a5, []int{17}
 }
 
 func (m *ListEditorProductsRequest) XXX_Unmarshal(b []byte) error {
@@ -851,7 +1206,7 @@ func (m *ListEditorProductsResponse) Reset()         { *m = ListEditorProductsRe
 func (m *ListEditorProductsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListEditorProductsResponse) ProtoMessage()    {}
 func (*ListEditorProductsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{13}
+	return fileDescriptor_f0fd8b59378f44a5, []int{18}
 }
 
 func (m *ListEditorProductsResponse) XXX_Unmarshal(b []byte) error {
@@ -890,7 +1245,7 @@ func (m *Editor) Reset()         { *m = Editor{} }
 func (m *Editor) String() string { return proto.CompactTextString(m) }
 func (*Editor) ProtoMessage()    {}
 func (*Editor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{14}
+	return fileDescriptor_f0fd8b59378f44a5, []int{19}
 }
 
 func (m *Editor) XXX_Unmarshal(b []byte) error {
@@ -937,7 +1292,7 @@ func (m *Product) Reset()         { *m = Product{} }
 func (m *Product) String() string { return proto.CompactTextString(m) }
 func (*Product) ProtoMessage()    {}
 func (*Product) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{15}
+	return fileDescriptor_f0fd8b59378f44a5, []int{20}
 }
 
 func (m *Product) XXX_Unmarshal(b []byte) error {
@@ -1033,7 +1388,7 @@ func (m *ListProductsResponse) Reset()         { *m = ListProductsResponse{} }
 func (m *ListProductsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListProductsResponse) ProtoMessage()    {}
 func (*ListProductsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{16}
+	return fileDescriptor_f0fd8b59378f44a5, []int{21}
 }
 
 func (m *ListProductsResponse) XXX_Unmarshal(b []byte) error {
@@ -1074,6 +1429,7 @@ type ListProductsRequest struct {
 	SortBy               string               `protobuf:"bytes,3,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`
 	SortOrder            SortOrder            `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.products.v1.SortOrder" json:"sort_order,omitempty"`
 	SearchParams         *ProductSearchParams `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string             `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -1083,7 +1439,7 @@ func (m *ListProductsRequest) Reset()         { *m = ListProductsRequest{} }
 func (m *ListProductsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListProductsRequest) ProtoMessage()    {}
 func (*ListProductsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{17}
+	return fileDescriptor_f0fd8b59378f44a5, []int{22}
 }
 
 func (m *ListProductsRequest) XXX_Unmarshal(b []byte) error {
@@ -1139,6 +1495,13 @@ func (m *ListProductsRequest) GetSearchParams() *ProductSearchParams {
 	return nil
 }
 
+func (m *ListProductsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ProductSearchParams struct {
 	SwidTag              *StringFilter `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
 	Name                 *StringFilter `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
@@ -1154,7 +1517,7 @@ func (m *ProductSearchParams) Reset()         { *m = ProductSearchParams{} }
 func (m *ProductSearchParams) String() string { return proto.CompactTextString(m) }
 func (*ProductSearchParams) ProtoMessage()    {}
 func (*ProductSearchParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{18}
+	return fileDescriptor_f0fd8b59378f44a5, []int{23}
 }
 
 func (m *ProductSearchParams) XXX_Unmarshal(b []byte) error {
@@ -1212,6 +1575,7 @@ func (m *ProductSearchParams) GetEquipmentId() *StringFilter {
 
 type ProductRequest struct {
 	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	Scopes               []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1221,7 +1585,7 @@ func (m *ProductRequest) Reset()         { *m = ProductRequest{} }
 func (m *ProductRequest) String() string { return proto.CompactTextString(m) }
 func (*ProductRequest) ProtoMessage()    {}
 func (*ProductRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{19}
+	return fileDescriptor_f0fd8b59378f44a5, []int{24}
 }
 
 func (m *ProductRequest) XXX_Unmarshal(b []byte) error {
@@ -1249,6 +1613,13 @@ func (m *ProductRequest) GetSwidTag() string {
 	return ""
 }
 
+func (m *ProductRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ProductResponse struct {
 	SwidTag              string   `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
 	Editor               string   `protobuf:"bytes,2,opt,name=editor,proto3" json:"editor,omitempty"`
@@ -1263,7 +1634,7 @@ func (m *ProductResponse) Reset()         { *m = ProductResponse{} }
 func (m *ProductResponse) String() string { return proto.CompactTextString(m) }
 func (*ProductResponse) ProtoMessage()    {}
 func (*ProductResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{20}
+	return fileDescriptor_f0fd8b59378f44a5, []int{25}
 }
 
 func (m *ProductResponse) XXX_Unmarshal(b []byte) error {
@@ -1324,7 +1695,7 @@ func (m *ProductOptionsResponse) Reset()         { *m = ProductOptionsResponse{}
 func (m *ProductOptionsResponse) String() string { return proto.CompactTextString(m) }
 func (*ProductOptionsResponse) ProtoMessage()    {}
 func (*ProductOptionsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{21}
+	return fileDescriptor_f0fd8b59378f44a5, []int{26}
 }
 
 func (m *ProductOptionsResponse) XXX_Unmarshal(b []byte) error {
@@ -1374,7 +1745,7 @@ func (m *OptionInfo) Reset()         { *m = OptionInfo{} }
 func (m *OptionInfo) String() string { return proto.CompactTextString(m) }
 func (*OptionInfo) ProtoMessage()    {}
 func (*OptionInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{22}
+	return fileDescriptor_f0fd8b59378f44a5, []int{27}
 }
 
 func (m *OptionInfo) XXX_Unmarshal(b []byte) error {
@@ -1444,7 +1815,7 @@ func (m *StringFilter) Reset()         { *m = StringFilter{} }
 func (m *StringFilter) String() string { return proto.CompactTextString(m) }
 func (*StringFilter) ProtoMessage()    {}
 func (*StringFilter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{23}
+	return fileDescriptor_f0fd8b59378f44a5, []int{28}
 }
 
 func (m *StringFilter) XXX_Unmarshal(b []byte) error {
@@ -1494,13 +1865,14 @@ func (m *StringFilter) GetFilteringkeyMultiple() []string {
 }
 
 type UpsertProductRequest struct {
-	SwidTag              string                           `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
-	Name                 string                           `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Category             string                           `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
-	Edition              string                           `protobuf:"bytes,4,opt,name=edition,proto3" json:"edition,omitempty"`
-	Editor               string                           `protobuf:"bytes,5,opt,name=editor,proto3" json:"editor,omitempty"`
-	Version              string                           `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
-	OptionOf             string                           `protobuf:"bytes,7,opt,name=optionOf,proto3" json:"optionOf,omitempty"`
+	SwidTag  string `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
+	Name     string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Category string `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
+	Edition  string `protobuf:"bytes,4,opt,name=edition,proto3" json:"edition,omitempty"`
+	Editor   string `protobuf:"bytes,5,opt,name=editor,proto3" json:"editor,omitempty"`
+	Version  string `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
+	OptionOf string `protobuf:"bytes,7,opt,name=optionOf,proto3" json:"optionOf,omitempty"`
+	// SCOPE BASED CHANGES
 	Scope                string                           `protobuf:"bytes,8,opt,name=scope,proto3" json:"scope,omitempty"`
 	Applications         *UpsertProductRequestApplication `protobuf:"bytes,9,opt,name=applications,proto3" json:"applications,omitempty"`
 	Equipments           *UpsertProductRequestEquipment   `protobuf:"bytes,10,opt,name=equipments,proto3" json:"equipments,omitempty"`
@@ -1513,7 +1885,7 @@ func (m *UpsertProductRequest) Reset()         { *m = UpsertProductRequest{} }
 func (m *UpsertProductRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertProductRequest) ProtoMessage()    {}
 func (*UpsertProductRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{24}
+	return fileDescriptor_f0fd8b59378f44a5, []int{29}
 }
 
 func (m *UpsertProductRequest) XXX_Unmarshal(b []byte) error {
@@ -1616,7 +1988,7 @@ func (m *UpsertProductRequestApplication) Reset()         { *m = UpsertProductRe
 func (m *UpsertProductRequestApplication) String() string { return proto.CompactTextString(m) }
 func (*UpsertProductRequestApplication) ProtoMessage()    {}
 func (*UpsertProductRequestApplication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{24, 0}
+	return fileDescriptor_f0fd8b59378f44a5, []int{29, 0}
 }
 
 func (m *UpsertProductRequestApplication) XXX_Unmarshal(b []byte) error {
@@ -1663,7 +2035,7 @@ func (m *UpsertProductRequestEquipment) Reset()         { *m = UpsertProductRequ
 func (m *UpsertProductRequestEquipment) String() string { return proto.CompactTextString(m) }
 func (*UpsertProductRequestEquipment) ProtoMessage()    {}
 func (*UpsertProductRequestEquipment) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{24, 1}
+	return fileDescriptor_f0fd8b59378f44a5, []int{29, 1}
 }
 
 func (m *UpsertProductRequestEquipment) XXX_Unmarshal(b []byte) error {
@@ -1714,7 +2086,7 @@ func (m *UpsertProductRequestEquipmentEquipmentuser) String() string {
 }
 func (*UpsertProductRequestEquipmentEquipmentuser) ProtoMessage() {}
 func (*UpsertProductRequestEquipmentEquipmentuser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{24, 1, 0}
+	return fileDescriptor_f0fd8b59378f44a5, []int{29, 1, 0}
 }
 
 func (m *UpsertProductRequestEquipmentEquipmentuser) XXX_Unmarshal(b []byte) error {
@@ -1760,7 +2132,7 @@ func (m *UpsertProductResponse) Reset()         { *m = UpsertProductResponse{} }
 func (m *UpsertProductResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertProductResponse) ProtoMessage()    {}
 func (*UpsertProductResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{25}
+	return fileDescriptor_f0fd8b59378f44a5, []int{30}
 }
 
 func (m *UpsertProductResponse) XXX_Unmarshal(b []byte) error {
@@ -1788,102 +2160,2469 @@ func (m *UpsertProductResponse) GetSuccess() bool {
 	return false
 }
 
-type UpsertAggregationRequest struct {
-	AggregationId        int32    `protobuf:"varint,1,opt,name=aggregationId,proto3" json:"aggregationId,omitempty"`
-	AggregationName      string   `protobuf:"bytes,2,opt,name=aggregationName,proto3" json:"aggregationName,omitempty"`
-	ActionType           string   `protobuf:"bytes,3,opt,name=actionType,proto3" json:"actionType,omitempty"`
-	Swidtags             []string `protobuf:"bytes,4,rep,name=swidtags,proto3" json:"swidtags,omitempty"`
+type ComplianceAlertRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UpsertAggregationRequest) Reset()         { *m = UpsertAggregationRequest{} }
-func (m *UpsertAggregationRequest) String() string { return proto.CompactTextString(m) }
-func (*UpsertAggregationRequest) ProtoMessage()    {}
-func (*UpsertAggregationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{26}
+func (m *ComplianceAlertRequest) Reset()         { *m = ComplianceAlertRequest{} }
+func (m *ComplianceAlertRequest) String() string { return proto.CompactTextString(m) }
+func (*ComplianceAlertRequest) ProtoMessage()    {}
+func (*ComplianceAlertRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{31}
 }
 
-func (m *UpsertAggregationRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_UpsertAggregationRequest.Unmarshal(m, b)
+func (m *ComplianceAlertRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ComplianceAlertRequest.Unmarshal(m, b)
 }
-func (m *UpsertAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_UpsertAggregationRequest.Marshal(b, m, deterministic)
+func (m *ComplianceAlertRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ComplianceAlertRequest.Marshal(b, m, deterministic)
 }
-func (m *UpsertAggregationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpsertAggregationRequest.Merge(m, src)
+func (m *ComplianceAlertRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ComplianceAlertRequest.Merge(m, src)
 }
-func (m *UpsertAggregationRequest) XXX_Size() int {
-	return xxx_messageInfo_UpsertAggregationRequest.Size(m)
+func (m *ComplianceAlertRequest) XXX_Size() int {
+	return xxx_messageInfo_ComplianceAlertRequest.Size(m)
 }
-func (m *UpsertAggregationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpsertAggregationRequest.DiscardUnknown(m)
+func (m *ComplianceAlertRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ComplianceAlertRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpsertAggregationRequest proto.InternalMessageInfo
+var xxx_messageInfo_ComplianceAlertRequest proto.InternalMessageInfo
 
-func (m *UpsertAggregationRequest) GetAggregationId() int32 {
+func (m *ComplianceAlertRequest) GetScope() string {
 	if m != nil {
-		return m.AggregationId
+		return m.Scope
+	}
+	return ""
+}
+
+type ComplianceAlertResponse struct {
+	CounterfeitingPercentage float64  `protobuf:"fixed64,1,opt,name=counterfeiting_percentage,json=counterfeitingPercentage,proto3" json:"counterfeiting_percentage,omitempty"`
+	OverdeploymentPercentage float64  `protobuf:"fixed64,2,opt,name=overdeployment_percentage,json=overdeploymentPercentage,proto3" json:"overdeployment_percentage,omitempty"`
+	XXX_NoUnkeyedLiteral     struct{} `json:"-"`
+	XXX_unrecognized         []byte   `json:"-"`
+	XXX_sizecache            int32    `json:"-"`
+}
+
+func (m *ComplianceAlertResponse) Reset()         { *m = ComplianceAlertResponse{} }
+func (m *ComplianceAlertResponse) String() string { return proto.CompactTextString(m) }
+func (*ComplianceAlertResponse) ProtoMessage()    {}
+func (*ComplianceAlertResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{32}
+}
+
+func (m *ComplianceAlertResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ComplianceAlertResponse.Unmarshal(m, b)
+}
+func (m *ComplianceAlertResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ComplianceAlertResponse.Marshal(b, m, deterministic)
+}
+func (m *ComplianceAlertResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ComplianceAlertResponse.Merge(m, src)
+}
+func (m *ComplianceAlertResponse) XXX_Size() int {
+	return xxx_messageInfo_ComplianceAlertResponse.Size(m)
+}
+func (m *ComplianceAlertResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ComplianceAlertResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ComplianceAlertResponse proto.InternalMessageInfo
+
+func (m *ComplianceAlertResponse) GetCounterfeitingPercentage() float64 {
+	if m != nil {
+		return m.CounterfeitingPercentage
 	}
 	return 0
 }
 
-func (m *UpsertAggregationRequest) GetAggregationName() string {
+func (m *ComplianceAlertResponse) GetOverdeploymentPercentage() float64 {
 	if m != nil {
-		return m.AggregationName
+		return m.OverdeploymentPercentage
+	}
+	return 0
+}
+
+type OverdeployedProductsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Editor               string   `protobuf:"bytes,2,opt,name=editor,proto3" json:"editor,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *OverdeployedProductsRequest) Reset()         { *m = OverdeployedProductsRequest{} }
+func (m *OverdeployedProductsRequest) String() string { return proto.CompactTextString(m) }
+func (*OverdeployedProductsRequest) ProtoMessage()    {}
+func (*OverdeployedProductsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{33}
+}
+
+func (m *OverdeployedProductsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OverdeployedProductsRequest.Unmarshal(m, b)
+}
+func (m *OverdeployedProductsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OverdeployedProductsRequest.Marshal(b, m, deterministic)
+}
+func (m *OverdeployedProductsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OverdeployedProductsRequest.Merge(m, src)
+}
+func (m *OverdeployedProductsRequest) XXX_Size() int {
+	return xxx_messageInfo_OverdeployedProductsRequest.Size(m)
+}
+func (m *OverdeployedProductsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OverdeployedProductsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OverdeployedProductsRequest proto.InternalMessageInfo
+
+func (m *OverdeployedProductsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
 	}
 	return ""
 }
 
-func (m *UpsertAggregationRequest) GetActionType() string {
+func (m *OverdeployedProductsRequest) GetEditor() string {
 	if m != nil {
-		return m.ActionType
+		return m.Editor
 	}
 	return ""
 }
 
-func (m *UpsertAggregationRequest) GetSwidtags() []string {
+type OverdeployedProductsResponse struct {
+	ProductsLicenses     []*ProductsLicenses `protobuf:"bytes,1,rep,name=products_licenses,json=productsLicenses,proto3" json:"products_licenses,omitempty"`
+	ProductsCosts        []*ProductsCosts    `protobuf:"bytes,2,rep,name=products_costs,json=productsCosts,proto3" json:"products_costs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *OverdeployedProductsResponse) Reset()         { *m = OverdeployedProductsResponse{} }
+func (m *OverdeployedProductsResponse) String() string { return proto.CompactTextString(m) }
+func (*OverdeployedProductsResponse) ProtoMessage()    {}
+func (*OverdeployedProductsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{34}
+}
+
+func (m *OverdeployedProductsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OverdeployedProductsResponse.Unmarshal(m, b)
+}
+func (m *OverdeployedProductsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OverdeployedProductsResponse.Marshal(b, m, deterministic)
+}
+func (m *OverdeployedProductsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OverdeployedProductsResponse.Merge(m, src)
+}
+func (m *OverdeployedProductsResponse) XXX_Size() int {
+	return xxx_messageInfo_OverdeployedProductsResponse.Size(m)
+}
+func (m *OverdeployedProductsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OverdeployedProductsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OverdeployedProductsResponse proto.InternalMessageInfo
+
+func (m *OverdeployedProductsResponse) GetProductsLicenses() []*ProductsLicenses {
 	if m != nil {
-		return m.Swidtags
+		return m.ProductsLicenses
 	}
 	return nil
 }
 
-type UpsertAggregationResponse struct {
+func (m *OverdeployedProductsResponse) GetProductsCosts() []*ProductsCosts {
+	if m != nil {
+		return m.ProductsCosts
+	}
+	return nil
+}
+
+type DashboardQualityProductsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DashboardQualityProductsRequest) Reset()         { *m = DashboardQualityProductsRequest{} }
+func (m *DashboardQualityProductsRequest) String() string { return proto.CompactTextString(m) }
+func (*DashboardQualityProductsRequest) ProtoMessage()    {}
+func (*DashboardQualityProductsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{35}
+}
+
+func (m *DashboardQualityProductsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardQualityProductsRequest.Unmarshal(m, b)
+}
+func (m *DashboardQualityProductsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardQualityProductsRequest.Marshal(b, m, deterministic)
+}
+func (m *DashboardQualityProductsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardQualityProductsRequest.Merge(m, src)
+}
+func (m *DashboardQualityProductsRequest) XXX_Size() int {
+	return xxx_messageInfo_DashboardQualityProductsRequest.Size(m)
+}
+func (m *DashboardQualityProductsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardQualityProductsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardQualityProductsRequest proto.InternalMessageInfo
+
+func (m *DashboardQualityProductsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DashboardQualityProductsResponse struct {
+	ProductsNotDeployed  []*DashboardQualityProducts `protobuf:"bytes,1,rep,name=products_not_deployed,json=productsNotDeployed,proto3" json:"products_not_deployed,omitempty"`
+	ProductsNotAcquired  []*DashboardQualityProducts `protobuf:"bytes,2,rep,name=products_not_acquired,json=productsNotAcquired,proto3" json:"products_not_acquired,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *DashboardQualityProductsResponse) Reset()         { *m = DashboardQualityProductsResponse{} }
+func (m *DashboardQualityProductsResponse) String() string { return proto.CompactTextString(m) }
+func (*DashboardQualityProductsResponse) ProtoMessage()    {}
+func (*DashboardQualityProductsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{36}
+}
+
+func (m *DashboardQualityProductsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardQualityProductsResponse.Unmarshal(m, b)
+}
+func (m *DashboardQualityProductsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardQualityProductsResponse.Marshal(b, m, deterministic)
+}
+func (m *DashboardQualityProductsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardQualityProductsResponse.Merge(m, src)
+}
+func (m *DashboardQualityProductsResponse) XXX_Size() int {
+	return xxx_messageInfo_DashboardQualityProductsResponse.Size(m)
+}
+func (m *DashboardQualityProductsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardQualityProductsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardQualityProductsResponse proto.InternalMessageInfo
+
+func (m *DashboardQualityProductsResponse) GetProductsNotDeployed() []*DashboardQualityProducts {
+	if m != nil {
+		return m.ProductsNotDeployed
+	}
+	return nil
+}
+
+func (m *DashboardQualityProductsResponse) GetProductsNotAcquired() []*DashboardQualityProducts {
+	if m != nil {
+		return m.ProductsNotAcquired
+	}
+	return nil
+}
+
+type DashboardQualityProducts struct {
+	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	ProductName          string   `protobuf:"bytes,2,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DashboardQualityProducts) Reset()         { *m = DashboardQualityProducts{} }
+func (m *DashboardQualityProducts) String() string { return proto.CompactTextString(m) }
+func (*DashboardQualityProducts) ProtoMessage()    {}
+func (*DashboardQualityProducts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{37}
+}
+
+func (m *DashboardQualityProducts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardQualityProducts.Unmarshal(m, b)
+}
+func (m *DashboardQualityProducts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardQualityProducts.Marshal(b, m, deterministic)
+}
+func (m *DashboardQualityProducts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardQualityProducts.Merge(m, src)
+}
+func (m *DashboardQualityProducts) XXX_Size() int {
+	return xxx_messageInfo_DashboardQualityProducts.Size(m)
+}
+func (m *DashboardQualityProducts) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardQualityProducts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardQualityProducts proto.InternalMessageInfo
+
+func (m *DashboardQualityProducts) GetSwidTag() string {
+	if m != nil {
+		return m.SwidTag
+	}
+	return ""
+}
+
+func (m *DashboardQualityProducts) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+type ProductsLicenses struct {
+	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	ProductName          string   `protobuf:"bytes,2,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	NumLicensesAcquired  int64    `protobuf:"varint,3,opt,name=num_licenses_acquired,json=numLicensesAcquired,proto3" json:"num_licenses_acquired,omitempty"`
+	NumLicensesComputed  int64    `protobuf:"varint,4,opt,name=num_licenses_computed,json=numLicensesComputed,proto3" json:"num_licenses_computed,omitempty"`
+	Delta                int64    `protobuf:"varint,5,opt,name=delta,proto3" json:"delta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductsLicenses) Reset()         { *m = ProductsLicenses{} }
+func (m *ProductsLicenses) String() string { return proto.CompactTextString(m) }
+func (*ProductsLicenses) ProtoMessage()    {}
+func (*ProductsLicenses) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{38}
+}
+
+func (m *ProductsLicenses) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsLicenses.Unmarshal(m, b)
+}
+func (m *ProductsLicenses) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsLicenses.Marshal(b, m, deterministic)
+}
+func (m *ProductsLicenses) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsLicenses.Merge(m, src)
+}
+func (m *ProductsLicenses) XXX_Size() int {
+	return xxx_messageInfo_ProductsLicenses.Size(m)
+}
+func (m *ProductsLicenses) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsLicenses.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsLicenses proto.InternalMessageInfo
+
+func (m *ProductsLicenses) GetSwidTag() string {
+	if m != nil {
+		return m.SwidTag
+	}
+	return ""
+}
+
+func (m *ProductsLicenses) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+func (m *ProductsLicenses) GetNumLicensesAcquired() int64 {
+	if m != nil {
+		return m.NumLicensesAcquired
+	}
+	return 0
+}
+
+func (m *ProductsLicenses) GetNumLicensesComputed() int64 {
+	if m != nil {
+		return m.NumLicensesComputed
+	}
+	return 0
+}
+
+func (m *ProductsLicenses) GetDelta() int64 {
+	if m != nil {
+		return m.Delta
+	}
+	return 0
+}
+
+type ProductsCosts struct {
+	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	ProductName          string   `protobuf:"bytes,2,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	LicensesAcquiredCost float64  `protobuf:"fixed64,3,opt,name=licenses_acquired_cost,json=licensesAcquiredCost,proto3" json:"licenses_acquired_cost,omitempty"`
+	LicensesComputedCost float64  `protobuf:"fixed64,4,opt,name=licenses_computed_cost,json=licensesComputedCost,proto3" json:"licenses_computed_cost,omitempty"`
+	DeltaCost            float64  `protobuf:"fixed64,5,opt,name=delta_cost,json=deltaCost,proto3" json:"delta_cost,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductsCosts) Reset()         { *m = ProductsCosts{} }
+func (m *ProductsCosts) String() string { return proto.CompactTextString(m) }
+func (*ProductsCosts) ProtoMessage()    {}
+func (*ProductsCosts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{39}
+}
+
+func (m *ProductsCosts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsCosts.Unmarshal(m, b)
+}
+func (m *ProductsCosts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsCosts.Marshal(b, m, deterministic)
+}
+func (m *ProductsCosts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsCosts.Merge(m, src)
+}
+func (m *ProductsCosts) XXX_Size() int {
+	return xxx_messageInfo_ProductsCosts.Size(m)
+}
+func (m *ProductsCosts) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsCosts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsCosts proto.InternalMessageInfo
+
+func (m *ProductsCosts) GetSwidTag() string {
+	if m != nil {
+		return m.SwidTag
+	}
+	return ""
+}
+
+func (m *ProductsCosts) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+func (m *ProductsCosts) GetLicensesAcquiredCost() float64 {
+	if m != nil {
+		return m.LicensesAcquiredCost
+	}
+	return 0
+}
+
+func (m *ProductsCosts) GetLicensesComputedCost() float64 {
+	if m != nil {
+		return m.LicensesComputedCost
+	}
+	return 0
+}
+
+func (m *ProductsCosts) GetDeltaCost() float64 {
+	if m != nil {
+		return m.DeltaCost
+	}
+	return 0
+}
+
+type FinancialOverdeployedProducts struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *FinancialOverdeployedProducts) Reset()         { *m = FinancialOverdeployedProducts{} }
+func (m *FinancialOverdeployedProducts) String() string { return proto.CompactTextString(m) }
+func (*FinancialOverdeployedProducts) ProtoMessage()    {}
+func (*FinancialOverdeployedProducts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{40}
+}
+
+func (m *FinancialOverdeployedProducts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FinancialOverdeployedProducts.Unmarshal(m, b)
+}
+func (m *FinancialOverdeployedProducts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FinancialOverdeployedProducts.Marshal(b, m, deterministic)
+}
+func (m *FinancialOverdeployedProducts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FinancialOverdeployedProducts.Merge(m, src)
+}
+func (m *FinancialOverdeployedProducts) XXX_Size() int {
+	return xxx_messageInfo_FinancialOverdeployedProducts.Size(m)
+}
+func (m *FinancialOverdeployedProducts) XXX_DiscardUnknown() {
+	xxx_messageInfo_FinancialOverdeployedProducts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FinancialOverdeployedProducts proto.InternalMessageInfo
+
+type ProductsPerMetricTypeRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductsPerMetricTypeRequest) Reset()         { *m = ProductsPerMetricTypeRequest{} }
+func (m *ProductsPerMetricTypeRequest) String() string { return proto.CompactTextString(m) }
+func (*ProductsPerMetricTypeRequest) ProtoMessage()    {}
+func (*ProductsPerMetricTypeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{41}
+}
+
+func (m *ProductsPerMetricTypeRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsPerMetricTypeRequest.Unmarshal(m, b)
+}
+func (m *ProductsPerMetricTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsPerMetricTypeRequest.Marshal(b, m, deterministic)
+}
+func (m *ProductsPerMetricTypeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsPerMetricTypeRequest.Merge(m, src)
+}
+func (m *ProductsPerMetricTypeRequest) XXX_Size() int {
+	return xxx_messageInfo_ProductsPerMetricTypeRequest.Size(m)
+}
+func (m *ProductsPerMetricTypeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsPerMetricTypeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsPerMetricTypeRequest proto.InternalMessageInfo
+
+func (m *ProductsPerMetricTypeRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type CounterfeitedProductsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Editor               string   `protobuf:"bytes,2,opt,name=editor,proto3" json:"editor,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CounterfeitedProductsRequest) Reset()         { *m = CounterfeitedProductsRequest{} }
+func (m *CounterfeitedProductsRequest) String() string { return proto.CompactTextString(m) }
+func (*CounterfeitedProductsRequest) ProtoMessage()    {}
+func (*CounterfeitedProductsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{42}
+}
+
+func (m *CounterfeitedProductsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CounterfeitedProductsRequest.Unmarshal(m, b)
+}
+func (m *CounterfeitedProductsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CounterfeitedProductsRequest.Marshal(b, m, deterministic)
+}
+func (m *CounterfeitedProductsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CounterfeitedProductsRequest.Merge(m, src)
+}
+func (m *CounterfeitedProductsRequest) XXX_Size() int {
+	return xxx_messageInfo_CounterfeitedProductsRequest.Size(m)
+}
+func (m *CounterfeitedProductsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CounterfeitedProductsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CounterfeitedProductsRequest proto.InternalMessageInfo
+
+func (m *CounterfeitedProductsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *CounterfeitedProductsRequest) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+type CounterfeitedProductsResponse struct {
+	ProductsLicenses     []*ProductsLicenses `protobuf:"bytes,1,rep,name=products_licenses,json=productsLicenses,proto3" json:"products_licenses,omitempty"`
+	ProductsCosts        []*ProductsCosts    `protobuf:"bytes,2,rep,name=products_costs,json=productsCosts,proto3" json:"products_costs,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *CounterfeitedProductsResponse) Reset()         { *m = CounterfeitedProductsResponse{} }
+func (m *CounterfeitedProductsResponse) String() string { return proto.CompactTextString(m) }
+func (*CounterfeitedProductsResponse) ProtoMessage()    {}
+func (*CounterfeitedProductsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{43}
+}
+
+func (m *CounterfeitedProductsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CounterfeitedProductsResponse.Unmarshal(m, b)
+}
+func (m *CounterfeitedProductsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CounterfeitedProductsResponse.Marshal(b, m, deterministic)
+}
+func (m *CounterfeitedProductsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CounterfeitedProductsResponse.Merge(m, src)
+}
+func (m *CounterfeitedProductsResponse) XXX_Size() int {
+	return xxx_messageInfo_CounterfeitedProductsResponse.Size(m)
+}
+func (m *CounterfeitedProductsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CounterfeitedProductsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CounterfeitedProductsResponse proto.InternalMessageInfo
+
+func (m *CounterfeitedProductsResponse) GetProductsLicenses() []*ProductsLicenses {
+	if m != nil {
+		return m.ProductsLicenses
+	}
+	return nil
+}
+
+func (m *CounterfeitedProductsResponse) GetProductsCosts() []*ProductsCosts {
+	if m != nil {
+		return m.ProductsCosts
+	}
+	return nil
+}
+
+type ProductsPerMetricTypeResponse struct {
+	MetricsProducts      []*MetricProducts `protobuf:"bytes,1,rep,name=metrics_products,json=metricsProducts,proto3" json:"metrics_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *ProductsPerMetricTypeResponse) Reset()         { *m = ProductsPerMetricTypeResponse{} }
+func (m *ProductsPerMetricTypeResponse) String() string { return proto.CompactTextString(m) }
+func (*ProductsPerMetricTypeResponse) ProtoMessage()    {}
+func (*ProductsPerMetricTypeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{44}
+}
+
+func (m *ProductsPerMetricTypeResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductsPerMetricTypeResponse.Unmarshal(m, b)
+}
+func (m *ProductsPerMetricTypeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductsPerMetricTypeResponse.Marshal(b, m, deterministic)
+}
+func (m *ProductsPerMetricTypeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductsPerMetricTypeResponse.Merge(m, src)
+}
+func (m *ProductsPerMetricTypeResponse) XXX_Size() int {
+	return xxx_messageInfo_ProductsPerMetricTypeResponse.Size(m)
+}
+func (m *ProductsPerMetricTypeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductsPerMetricTypeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductsPerMetricTypeResponse proto.InternalMessageInfo
+
+func (m *ProductsPerMetricTypeResponse) GetMetricsProducts() []*MetricProducts {
+	if m != nil {
+		return m.MetricsProducts
+	}
+	return nil
+}
+
+type MetricProducts struct {
+	MetricName           string   `protobuf:"bytes,1,opt,name=metric_name,json=metricName,proto3" json:"metric_name,omitempty"`
+	NumProducts          int32    `protobuf:"varint,2,opt,name=num_products,json=numProducts,proto3" json:"num_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MetricProducts) Reset()         { *m = MetricProducts{} }
+func (m *MetricProducts) String() string { return proto.CompactTextString(m) }
+func (*MetricProducts) ProtoMessage()    {}
+func (*MetricProducts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{45}
+}
+
+func (m *MetricProducts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MetricProducts.Unmarshal(m, b)
+}
+func (m *MetricProducts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MetricProducts.Marshal(b, m, deterministic)
+}
+func (m *MetricProducts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MetricProducts.Merge(m, src)
+}
+func (m *MetricProducts) XXX_Size() int {
+	return xxx_messageInfo_MetricProducts.Size(m)
+}
+func (m *MetricProducts) XXX_DiscardUnknown() {
+	xxx_messageInfo_MetricProducts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MetricProducts proto.InternalMessageInfo
+
+func (m *MetricProducts) GetMetricName() string {
+	if m != nil {
+		return m.MetricName
+	}
+	return ""
+}
+
+func (m *MetricProducts) GetNumProducts() int32 {
+	if m != nil {
+		return m.NumProducts
+	}
+	return 0
+}
+
+type DashboardOverviewRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DashboardOverviewRequest) Reset()         { *m = DashboardOverviewRequest{} }
+func (m *DashboardOverviewRequest) String() string { return proto.CompactTextString(m) }
+func (*DashboardOverviewRequest) ProtoMessage()    {}
+func (*DashboardOverviewRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{46}
+}
+
+func (m *DashboardOverviewRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardOverviewRequest.Unmarshal(m, b)
+}
+func (m *DashboardOverviewRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardOverviewRequest.Marshal(b, m, deterministic)
+}
+func (m *DashboardOverviewRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardOverviewRequest.Merge(m, src)
+}
+func (m *DashboardOverviewRequest) XXX_Size() int {
+	return xxx_messageInfo_DashboardOverviewRequest.Size(m)
+}
+func (m *DashboardOverviewRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardOverviewRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardOverviewRequest proto.InternalMessageInfo
+
+func (m *DashboardOverviewRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DashboardOverviewResponse struct {
+	TotalLicenseCost     float64  `protobuf:"fixed64,1,opt,name=total_license_cost,json=totalLicenseCost,proto3" json:"total_license_cost,omitempty"`
+	TotalMaintenanceCost float64  `protobuf:"fixed64,2,opt,name=total_maintenance_cost,json=totalMaintenanceCost,proto3" json:"total_maintenance_cost,omitempty"`
+	NumEditors           int32    `protobuf:"varint,3,opt,name=num_editors,json=numEditors,proto3" json:"num_editors,omitempty"`
+	NumProducts          int32    `protobuf:"varint,4,opt,name=num_products,json=numProducts,proto3" json:"num_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DashboardOverviewResponse) Reset()         { *m = DashboardOverviewResponse{} }
+func (m *DashboardOverviewResponse) String() string { return proto.CompactTextString(m) }
+func (*DashboardOverviewResponse) ProtoMessage()    {}
+func (*DashboardOverviewResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{47}
+}
+
+func (m *DashboardOverviewResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardOverviewResponse.Unmarshal(m, b)
+}
+func (m *DashboardOverviewResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardOverviewResponse.Marshal(b, m, deterministic)
+}
+func (m *DashboardOverviewResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardOverviewResponse.Merge(m, src)
+}
+func (m *DashboardOverviewResponse) XXX_Size() int {
+	return xxx_messageInfo_DashboardOverviewResponse.Size(m)
+}
+func (m *DashboardOverviewResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardOverviewResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardOverviewResponse proto.InternalMessageInfo
+
+func (m *DashboardOverviewResponse) GetTotalLicenseCost() float64 {
+	if m != nil {
+		return m.TotalLicenseCost
+	}
+	return 0
+}
+
+func (m *DashboardOverviewResponse) GetTotalMaintenanceCost() float64 {
+	if m != nil {
+		return m.TotalMaintenanceCost
+	}
+	return 0
+}
+
+func (m *DashboardOverviewResponse) GetNumEditors() int32 {
+	if m != nil {
+		return m.NumEditors
+	}
+	return 0
+}
+
+func (m *DashboardOverviewResponse) GetNumProducts() int32 {
+	if m != nil {
+		return m.NumProducts
+	}
+	return 0
+}
+
+type UpsertAcqRightsRequest struct {
+	Sku                     string   `protobuf:"bytes,1,opt,name=sku,proto3" json:"sku,omitempty"`
+	Swidtag                 string   `protobuf:"bytes,2,opt,name=swidtag,proto3" json:"swidtag,omitempty"`
+	ProductName             string   `protobuf:"bytes,3,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	ProductEditor           string   `protobuf:"bytes,4,opt,name=product_editor,json=productEditor,proto3" json:"product_editor,omitempty"`
+	MetricType              string   `protobuf:"bytes,5,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"`
+	NumLicensesAcquired     int32    `protobuf:"varint,6,opt,name=num_licenses_acquired,json=numLicensesAcquired,proto3" json:"num_licenses_acquired,omitempty"`
+	AvgUnitPrice            float64  `protobuf:"fixed64,7,opt,name=avg_unit_price,json=avgUnitPrice,proto3" json:"avg_unit_price,omitempty"`
+	AvgMaintenanceUnitPrice float64  `protobuf:"fixed64,8,opt,name=avg_maintenance_unit_price,json=avgMaintenanceUnitPrice,proto3" json:"avg_maintenance_unit_price,omitempty"`
+	TotalPurchaseCost       float64  `protobuf:"fixed64,9,opt,name=total_purchase_cost,json=totalPurchaseCost,proto3" json:"total_purchase_cost,omitempty"`
+	TotalMaintenanceCost    float64  `protobuf:"fixed64,10,opt,name=total_maintenance_cost,json=totalMaintenanceCost,proto3" json:"total_maintenance_cost,omitempty"`
+	TotalCost               float64  `protobuf:"fixed64,11,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
+	Entity                  string   `protobuf:"bytes,12,opt,name=entity,proto3" json:"entity,omitempty"`
+	Scope                   string   `protobuf:"bytes,13,opt,name=scope,proto3" json:"scope,omitempty"`
+	StartOfMaintenance      string   `protobuf:"bytes,14,opt,name=start_of_maintenance,json=startOfMaintenance,proto3" json:"start_of_maintenance,omitempty"`
+	EndOfMaintenance        string   `protobuf:"bytes,15,opt,name=end_of_maintenance,json=endOfMaintenance,proto3" json:"end_of_maintenance,omitempty"`
+	NumLicencesMaintainance int32    `protobuf:"varint,16,opt,name=num_licences_maintainance,json=numLicencesMaintainance,proto3" json:"num_licences_maintainance,omitempty"`
+	Version                 string   `protobuf:"bytes,17,opt,name=version,proto3" json:"version,omitempty"`
+	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
+	XXX_unrecognized        []byte   `json:"-"`
+	XXX_sizecache           int32    `json:"-"`
+}
+
+func (m *UpsertAcqRightsRequest) Reset()         { *m = UpsertAcqRightsRequest{} }
+func (m *UpsertAcqRightsRequest) String() string { return proto.CompactTextString(m) }
+func (*UpsertAcqRightsRequest) ProtoMessage()    {}
+func (*UpsertAcqRightsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{48}
+}
+
+func (m *UpsertAcqRightsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertAcqRightsRequest.Unmarshal(m, b)
+}
+func (m *UpsertAcqRightsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertAcqRightsRequest.Marshal(b, m, deterministic)
+}
+func (m *UpsertAcqRightsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertAcqRightsRequest.Merge(m, src)
+}
+func (m *UpsertAcqRightsRequest) XXX_Size() int {
+	return xxx_messageInfo_UpsertAcqRightsRequest.Size(m)
+}
+func (m *UpsertAcqRightsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertAcqRightsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpsertAcqRightsRequest proto.InternalMessageInfo
+
+func (m *UpsertAcqRightsRequest) GetSku() string {
+	if m != nil {
+		return m.Sku
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetSwidtag() string {
+	if m != nil {
+		return m.Swidtag
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetProductEditor() string {
+	if m != nil {
+		return m.ProductEditor
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetMetricType() string {
+	if m != nil {
+		return m.MetricType
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetNumLicensesAcquired() int32 {
+	if m != nil {
+		return m.NumLicensesAcquired
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetAvgUnitPrice() float64 {
+	if m != nil {
+		return m.AvgUnitPrice
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetAvgMaintenanceUnitPrice() float64 {
+	if m != nil {
+		return m.AvgMaintenanceUnitPrice
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetTotalPurchaseCost() float64 {
+	if m != nil {
+		return m.TotalPurchaseCost
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetTotalMaintenanceCost() float64 {
+	if m != nil {
+		return m.TotalMaintenanceCost
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetTotalCost() float64 {
+	if m != nil {
+		return m.TotalCost
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetEntity() string {
+	if m != nil {
+		return m.Entity
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetStartOfMaintenance() string {
+	if m != nil {
+		return m.StartOfMaintenance
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetEndOfMaintenance() string {
+	if m != nil {
+		return m.EndOfMaintenance
+	}
+	return ""
+}
+
+func (m *UpsertAcqRightsRequest) GetNumLicencesMaintainance() int32 {
+	if m != nil {
+		return m.NumLicencesMaintainance
+	}
+	return 0
+}
+
+func (m *UpsertAcqRightsRequest) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+type UpsertAcqRightsResponse struct {
 	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *UpsertAggregationResponse) Reset()         { *m = UpsertAggregationResponse{} }
-func (m *UpsertAggregationResponse) String() string { return proto.CompactTextString(m) }
-func (*UpsertAggregationResponse) ProtoMessage()    {}
-func (*UpsertAggregationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f0fd8b59378f44a5, []int{27}
+func (m *UpsertAcqRightsResponse) Reset()         { *m = UpsertAcqRightsResponse{} }
+func (m *UpsertAcqRightsResponse) String() string { return proto.CompactTextString(m) }
+func (*UpsertAcqRightsResponse) ProtoMessage()    {}
+func (*UpsertAcqRightsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{49}
 }
 
-func (m *UpsertAggregationResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_UpsertAggregationResponse.Unmarshal(m, b)
+func (m *UpsertAcqRightsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpsertAcqRightsResponse.Unmarshal(m, b)
 }
-func (m *UpsertAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_UpsertAggregationResponse.Marshal(b, m, deterministic)
+func (m *UpsertAcqRightsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpsertAcqRightsResponse.Marshal(b, m, deterministic)
 }
-func (m *UpsertAggregationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpsertAggregationResponse.Merge(m, src)
+func (m *UpsertAcqRightsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpsertAcqRightsResponse.Merge(m, src)
 }
-func (m *UpsertAggregationResponse) XXX_Size() int {
-	return xxx_messageInfo_UpsertAggregationResponse.Size(m)
+func (m *UpsertAcqRightsResponse) XXX_Size() int {
+	return xxx_messageInfo_UpsertAcqRightsResponse.Size(m)
 }
-func (m *UpsertAggregationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_UpsertAggregationResponse.DiscardUnknown(m)
+func (m *UpsertAcqRightsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpsertAcqRightsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UpsertAggregationResponse proto.InternalMessageInfo
+var xxx_messageInfo_UpsertAcqRightsResponse proto.InternalMessageInfo
 
-func (m *UpsertAggregationResponse) GetSuccess() bool {
+func (m *UpsertAcqRightsResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+type ListAcqRightsRequest struct {
+	PageNum              int32                       `protobuf:"varint,1,opt,name=page_num,json=pageNum,proto3" json:"page_num,omitempty"`
+	PageSize             int32                       `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	SortBy               ListAcqRightsRequest_SortBy `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.products.v1.ListAcqRightsRequest_SortBy" json:"sort_by,omitempty"`
+	SortOrder            SortOrder                   `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.products.v1.SortOrder" json:"sort_order,omitempty"`
+	SearchParams         *AcqRightsSearchParams      `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string                    `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *ListAcqRightsRequest) Reset()         { *m = ListAcqRightsRequest{} }
+func (m *ListAcqRightsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsRequest) ProtoMessage()    {}
+func (*ListAcqRightsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{50}
+}
+
+func (m *ListAcqRightsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsRequest.Merge(m, src)
+}
+func (m *ListAcqRightsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsRequest.Size(m)
+}
+func (m *ListAcqRightsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsRequest) GetPageNum() int32 {
+	if m != nil {
+		return m.PageNum
+	}
+	return 0
+}
+
+func (m *ListAcqRightsRequest) GetPageSize() int32 {
+	if m != nil {
+		return m.PageSize
+	}
+	return 0
+}
+
+func (m *ListAcqRightsRequest) GetSortBy() ListAcqRightsRequest_SortBy {
+	if m != nil {
+		return m.SortBy
+	}
+	return ListAcqRightsRequest_ENTITY
+}
+
+func (m *ListAcqRightsRequest) GetSortOrder() SortOrder {
+	if m != nil {
+		return m.SortOrder
+	}
+	return SortOrder_asc
+}
+
+func (m *ListAcqRightsRequest) GetSearchParams() *AcqRightsSearchParams {
+	if m != nil {
+		return m.SearchParams
+	}
+	return nil
+}
+
+func (m *ListAcqRightsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
+type AcqRightsSearchParams struct {
+	SwidTag              *StringFilter `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
+	SKU                  *StringFilter `protobuf:"bytes,2,opt,name=SKU,proto3" json:"SKU,omitempty"`
+	Editor               *StringFilter `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
+	ProductName          *StringFilter `protobuf:"bytes,4,opt,name=productName,proto3" json:"productName,omitempty"`
+	Metric               *StringFilter `protobuf:"bytes,5,opt,name=metric,proto3" json:"metric,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *AcqRightsSearchParams) Reset()         { *m = AcqRightsSearchParams{} }
+func (m *AcqRightsSearchParams) String() string { return proto.CompactTextString(m) }
+func (*AcqRightsSearchParams) ProtoMessage()    {}
+func (*AcqRightsSearchParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{51}
+}
+
+func (m *AcqRightsSearchParams) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AcqRightsSearchParams.Unmarshal(m, b)
+}
+func (m *AcqRightsSearchParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AcqRightsSearchParams.Marshal(b, m, deterministic)
+}
+func (m *AcqRightsSearchParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AcqRightsSearchParams.Merge(m, src)
+}
+func (m *AcqRightsSearchParams) XXX_Size() int {
+	return xxx_messageInfo_AcqRightsSearchParams.Size(m)
+}
+func (m *AcqRightsSearchParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_AcqRightsSearchParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AcqRightsSearchParams proto.InternalMessageInfo
+
+func (m *AcqRightsSearchParams) GetSwidTag() *StringFilter {
+	if m != nil {
+		return m.SwidTag
+	}
+	return nil
+}
+
+func (m *AcqRightsSearchParams) GetSKU() *StringFilter {
+	if m != nil {
+		return m.SKU
+	}
+	return nil
+}
+
+func (m *AcqRightsSearchParams) GetEditor() *StringFilter {
+	if m != nil {
+		return m.Editor
+	}
+	return nil
+}
+
+func (m *AcqRightsSearchParams) GetProductName() *StringFilter {
+	if m != nil {
+		return m.ProductName
+	}
+	return nil
+}
+
+func (m *AcqRightsSearchParams) GetMetric() *StringFilter {
+	if m != nil {
+		return m.Metric
+	}
+	return nil
+}
+
+type ListAcqRightsResponse struct {
+	TotalRecords         int32        `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
+	AcquiredRights       []*AcqRights `protobuf:"bytes,2,rep,name=acquired_rights,json=acquiredRights,proto3" json:"acquired_rights,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *ListAcqRightsResponse) Reset()         { *m = ListAcqRightsResponse{} }
+func (m *ListAcqRightsResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsResponse) ProtoMessage()    {}
+func (*ListAcqRightsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{52}
+}
+
+func (m *ListAcqRightsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsResponse.Merge(m, src)
+}
+func (m *ListAcqRightsResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsResponse.Size(m)
+}
+func (m *ListAcqRightsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsResponse) GetTotalRecords() int32 {
+	if m != nil {
+		return m.TotalRecords
+	}
+	return 0
+}
+
+func (m *ListAcqRightsResponse) GetAcquiredRights() []*AcqRights {
+	if m != nil {
+		return m.AcquiredRights
+	}
+	return nil
+}
+
+type AcqRights struct {
+	Entity                         string               `protobuf:"bytes,1,opt,name=entity,proto3" json:"entity,omitempty"`
+	SKU                            string               `protobuf:"bytes,2,opt,name=SKU,proto3" json:"SKU,omitempty"`
+	SwidTag                        string               `protobuf:"bytes,3,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	ProductName                    string               `protobuf:"bytes,4,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	Editor                         string               `protobuf:"bytes,5,opt,name=editor,proto3" json:"editor,omitempty"`
+	Metric                         string               `protobuf:"bytes,6,opt,name=metric,proto3" json:"metric,omitempty"`
+	AcquiredLicensesNumber         int32                `protobuf:"varint,7,opt,name=acquired_licenses_number,json=acquiredLicensesNumber,proto3" json:"acquired_licenses_number,omitempty"`
+	AvgLicenesUnitPrice            float64              `protobuf:"fixed64,8,opt,name=avg_licenes_unit_price,json=avgLicenesUnitPrice,proto3" json:"avg_licenes_unit_price,omitempty"`
+	AvgMaintenanceUnitPrice        float64              `protobuf:"fixed64,9,opt,name=avg_maintenance_unit_price,json=avgMaintenanceUnitPrice,proto3" json:"avg_maintenance_unit_price,omitempty"`
+	TotalPurchaseCost              float64              `protobuf:"fixed64,10,opt,name=total_purchase_cost,json=totalPurchaseCost,proto3" json:"total_purchase_cost,omitempty"`
+	TotalMaintenanceCost           float64              `protobuf:"fixed64,11,opt,name=total_maintenance_cost,json=totalMaintenanceCost,proto3" json:"total_maintenance_cost,omitempty"`
+	TotalCost                      float64              `protobuf:"fixed64,12,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
+	StartOfMaintenance             *timestamp.Timestamp `protobuf:"bytes,13,opt,name=start_of_maintenance,json=startOfMaintenance,proto3" json:"start_of_maintenance,omitempty"`
+	EndOfMaintenance               *timestamp.Timestamp `protobuf:"bytes,14,opt,name=end_of_maintenance,json=endOfMaintenance,proto3" json:"end_of_maintenance,omitempty"`
+	LicensesUnderMaintenance       string               `protobuf:"bytes,15,opt,name=licenses_under_maintenance,json=licensesUnderMaintenance,proto3" json:"licenses_under_maintenance,omitempty"`
+	LicensesUnderMaintenanceNumber int32                `protobuf:"varint,16,opt,name=licenses_under_maintenance_number,json=licensesUnderMaintenanceNumber,proto3" json:"licenses_under_maintenance_number,omitempty"`
+	Version                        string               `protobuf:"bytes,17,opt,name=version,proto3" json:"version,omitempty"`
+	XXX_NoUnkeyedLiteral           struct{}             `json:"-"`
+	XXX_unrecognized               []byte               `json:"-"`
+	XXX_sizecache                  int32                `json:"-"`
+}
+
+func (m *AcqRights) Reset()         { *m = AcqRights{} }
+func (m *AcqRights) String() string { return proto.CompactTextString(m) }
+func (*AcqRights) ProtoMessage()    {}
+func (*AcqRights) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{53}
+}
+
+func (m *AcqRights) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AcqRights.Unmarshal(m, b)
+}
+func (m *AcqRights) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AcqRights.Marshal(b, m, deterministic)
+}
+func (m *AcqRights) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AcqRights.Merge(m, src)
+}
+func (m *AcqRights) XXX_Size() int {
+	return xxx_messageInfo_AcqRights.Size(m)
+}
+func (m *AcqRights) XXX_DiscardUnknown() {
+	xxx_messageInfo_AcqRights.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AcqRights proto.InternalMessageInfo
+
+func (m *AcqRights) GetEntity() string {
+	if m != nil {
+		return m.Entity
+	}
+	return ""
+}
+
+func (m *AcqRights) GetSKU() string {
+	if m != nil {
+		return m.SKU
+	}
+	return ""
+}
+
+func (m *AcqRights) GetSwidTag() string {
+	if m != nil {
+		return m.SwidTag
+	}
+	return ""
+}
+
+func (m *AcqRights) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+func (m *AcqRights) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *AcqRights) GetMetric() string {
+	if m != nil {
+		return m.Metric
+	}
+	return ""
+}
+
+func (m *AcqRights) GetAcquiredLicensesNumber() int32 {
+	if m != nil {
+		return m.AcquiredLicensesNumber
+	}
+	return 0
+}
+
+func (m *AcqRights) GetAvgLicenesUnitPrice() float64 {
+	if m != nil {
+		return m.AvgLicenesUnitPrice
+	}
+	return 0
+}
+
+func (m *AcqRights) GetAvgMaintenanceUnitPrice() float64 {
+	if m != nil {
+		return m.AvgMaintenanceUnitPrice
+	}
+	return 0
+}
+
+func (m *AcqRights) GetTotalPurchaseCost() float64 {
+	if m != nil {
+		return m.TotalPurchaseCost
+	}
+	return 0
+}
+
+func (m *AcqRights) GetTotalMaintenanceCost() float64 {
+	if m != nil {
+		return m.TotalMaintenanceCost
+	}
+	return 0
+}
+
+func (m *AcqRights) GetTotalCost() float64 {
+	if m != nil {
+		return m.TotalCost
+	}
+	return 0
+}
+
+func (m *AcqRights) GetStartOfMaintenance() *timestamp.Timestamp {
+	if m != nil {
+		return m.StartOfMaintenance
+	}
+	return nil
+}
+
+func (m *AcqRights) GetEndOfMaintenance() *timestamp.Timestamp {
+	if m != nil {
+		return m.EndOfMaintenance
+	}
+	return nil
+}
+
+func (m *AcqRights) GetLicensesUnderMaintenance() string {
+	if m != nil {
+		return m.LicensesUnderMaintenance
+	}
+	return ""
+}
+
+func (m *AcqRights) GetLicensesUnderMaintenanceNumber() int32 {
+	if m != nil {
+		return m.LicensesUnderMaintenanceNumber
+	}
+	return 0
+}
+
+func (m *AcqRights) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+type ListAcqRightsAggregationRequest struct {
+	PageNum              int32                                  `protobuf:"varint,1,opt,name=page_num,json=pageNum,proto3" json:"page_num,omitempty"`
+	PageSize             int32                                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	SortBy               ListAcqRightsAggregationRequest_SortBy `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.products.v1.ListAcqRightsAggregationRequest_SortBy" json:"sort_by,omitempty"`
+	SortOrder            SortOrder                              `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.products.v1.SortOrder" json:"sort_order,omitempty"`
+	SearchParams         *ListAcqRightsAggregationSearchParams  `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string                               `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                               `json:"-"`
+	XXX_unrecognized     []byte                                 `json:"-"`
+	XXX_sizecache        int32                                  `json:"-"`
+}
+
+func (m *ListAcqRightsAggregationRequest) Reset()         { *m = ListAcqRightsAggregationRequest{} }
+func (m *ListAcqRightsAggregationRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsAggregationRequest) ProtoMessage()    {}
+func (*ListAcqRightsAggregationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{54}
+}
+
+func (m *ListAcqRightsAggregationRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsAggregationRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsAggregationRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsAggregationRequest.Merge(m, src)
+}
+func (m *ListAcqRightsAggregationRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsAggregationRequest.Size(m)
+}
+func (m *ListAcqRightsAggregationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsAggregationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsAggregationRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsAggregationRequest) GetPageNum() int32 {
+	if m != nil {
+		return m.PageNum
+	}
+	return 0
+}
+
+func (m *ListAcqRightsAggregationRequest) GetPageSize() int32 {
+	if m != nil {
+		return m.PageSize
+	}
+	return 0
+}
+
+func (m *ListAcqRightsAggregationRequest) GetSortBy() ListAcqRightsAggregationRequest_SortBy {
+	if m != nil {
+		return m.SortBy
+	}
+	return ListAcqRightsAggregationRequest_NAME
+}
+
+func (m *ListAcqRightsAggregationRequest) GetSortOrder() SortOrder {
+	if m != nil {
+		return m.SortOrder
+	}
+	return SortOrder_asc
+}
+
+func (m *ListAcqRightsAggregationRequest) GetSearchParams() *ListAcqRightsAggregationSearchParams {
+	if m != nil {
+		return m.SearchParams
+	}
+	return nil
+}
+
+func (m *ListAcqRightsAggregationRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
+type ListAcqRightsAggregationResponse struct {
+	TotalRecords         int32                   `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
+	Aggregations         []*AcqRightsAggregation `protobuf:"bytes,2,rep,name=aggregations,proto3" json:"aggregations,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
+}
+
+func (m *ListAcqRightsAggregationResponse) Reset()         { *m = ListAcqRightsAggregationResponse{} }
+func (m *ListAcqRightsAggregationResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsAggregationResponse) ProtoMessage()    {}
+func (*ListAcqRightsAggregationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{55}
+}
+
+func (m *ListAcqRightsAggregationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsAggregationResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsAggregationResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsAggregationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsAggregationResponse.Merge(m, src)
+}
+func (m *ListAcqRightsAggregationResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsAggregationResponse.Size(m)
+}
+func (m *ListAcqRightsAggregationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsAggregationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsAggregationResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsAggregationResponse) GetTotalRecords() int32 {
+	if m != nil {
+		return m.TotalRecords
+	}
+	return 0
+}
+
+func (m *ListAcqRightsAggregationResponse) GetAggregations() []*AcqRightsAggregation {
+	if m != nil {
+		return m.Aggregations
+	}
+	return nil
+}
+
+type AcqRightsAggregation struct {
+	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Scope                string   `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
+	Editor               string   `protobuf:"bytes,4,opt,name=editor,proto3" json:"editor,omitempty"`
+	Swidtags             []string `protobuf:"bytes,5,rep,name=swidtags,proto3" json:"swidtags,omitempty"`
+	Skus                 []string `protobuf:"bytes,6,rep,name=skus,proto3" json:"skus,omitempty"`
+	Metric               string   `protobuf:"bytes,7,opt,name=metric,proto3" json:"metric,omitempty"`
+	TotalCost            float64  `protobuf:"fixed64,8,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AcqRightsAggregation) Reset()         { *m = AcqRightsAggregation{} }
+func (m *AcqRightsAggregation) String() string { return proto.CompactTextString(m) }
+func (*AcqRightsAggregation) ProtoMessage()    {}
+func (*AcqRightsAggregation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{56}
+}
+
+func (m *AcqRightsAggregation) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AcqRightsAggregation.Unmarshal(m, b)
+}
+func (m *AcqRightsAggregation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AcqRightsAggregation.Marshal(b, m, deterministic)
+}
+func (m *AcqRightsAggregation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AcqRightsAggregation.Merge(m, src)
+}
+func (m *AcqRightsAggregation) XXX_Size() int {
+	return xxx_messageInfo_AcqRightsAggregation.Size(m)
+}
+func (m *AcqRightsAggregation) XXX_DiscardUnknown() {
+	xxx_messageInfo_AcqRightsAggregation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AcqRightsAggregation proto.InternalMessageInfo
+
+func (m *AcqRightsAggregation) GetID() int32 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *AcqRightsAggregation) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *AcqRightsAggregation) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *AcqRightsAggregation) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *AcqRightsAggregation) GetSwidtags() []string {
+	if m != nil {
+		return m.Swidtags
+	}
+	return nil
+}
+
+func (m *AcqRightsAggregation) GetSkus() []string {
+	if m != nil {
+		return m.Skus
+	}
+	return nil
+}
+
+func (m *AcqRightsAggregation) GetMetric() string {
+	if m != nil {
+		return m.Metric
+	}
+	return ""
+}
+
+func (m *AcqRightsAggregation) GetTotalCost() float64 {
+	if m != nil {
+		return m.TotalCost
+	}
+	return 0
+}
+
+type ListAcqRightsAggregationSearchParams struct {
+	SwidTag              *StringFilter `protobuf:"bytes,1,opt,name=swidTag,proto3" json:"swidTag,omitempty"`
+	Name                 *StringFilter `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Editor               *StringFilter `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
+	SKU                  *StringFilter `protobuf:"bytes,5,opt,name=SKU,proto3" json:"SKU,omitempty"`
+	Metric               *StringFilter `protobuf:"bytes,6,opt,name=metric,proto3" json:"metric,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *ListAcqRightsAggregationSearchParams) Reset()         { *m = ListAcqRightsAggregationSearchParams{} }
+func (m *ListAcqRightsAggregationSearchParams) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsAggregationSearchParams) ProtoMessage()    {}
+func (*ListAcqRightsAggregationSearchParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{57}
+}
+
+func (m *ListAcqRightsAggregationSearchParams) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsAggregationSearchParams.Unmarshal(m, b)
+}
+func (m *ListAcqRightsAggregationSearchParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsAggregationSearchParams.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsAggregationSearchParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsAggregationSearchParams.Merge(m, src)
+}
+func (m *ListAcqRightsAggregationSearchParams) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsAggregationSearchParams.Size(m)
+}
+func (m *ListAcqRightsAggregationSearchParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsAggregationSearchParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsAggregationSearchParams proto.InternalMessageInfo
+
+func (m *ListAcqRightsAggregationSearchParams) GetSwidTag() *StringFilter {
+	if m != nil {
+		return m.SwidTag
+	}
+	return nil
+}
+
+func (m *ListAcqRightsAggregationSearchParams) GetName() *StringFilter {
+	if m != nil {
+		return m.Name
+	}
+	return nil
+}
+
+func (m *ListAcqRightsAggregationSearchParams) GetEditor() *StringFilter {
+	if m != nil {
+		return m.Editor
+	}
+	return nil
+}
+
+func (m *ListAcqRightsAggregationSearchParams) GetSKU() *StringFilter {
+	if m != nil {
+		return m.SKU
+	}
+	return nil
+}
+
+func (m *ListAcqRightsAggregationSearchParams) GetMetric() *StringFilter {
+	if m != nil {
+		return m.Metric
+	}
+	return nil
+}
+
+type ListAcqRightsAggregationRecordsRequest struct {
+	AggregationId        int32    `protobuf:"varint,1,opt,name=aggregation_id,json=aggregationId,proto3" json:"aggregation_id,omitempty"`
+	Scopes               []string `protobuf:"bytes,2,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsAggregationRecordsRequest) Reset() {
+	*m = ListAcqRightsAggregationRecordsRequest{}
+}
+func (m *ListAcqRightsAggregationRecordsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsAggregationRecordsRequest) ProtoMessage()    {}
+func (*ListAcqRightsAggregationRecordsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{58}
+}
+
+func (m *ListAcqRightsAggregationRecordsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsAggregationRecordsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsAggregationRecordsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsAggregationRecordsRequest.Merge(m, src)
+}
+func (m *ListAcqRightsAggregationRecordsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsRequest.Size(m)
+}
+func (m *ListAcqRightsAggregationRecordsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsAggregationRecordsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsAggregationRecordsRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsAggregationRecordsRequest) GetAggregationId() int32 {
+	if m != nil {
+		return m.AggregationId
+	}
+	return 0
+}
+
+func (m *ListAcqRightsAggregationRecordsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
+type ListAcqRightsAggregationRecordsResponse struct {
+	AcquiredRights       []*AcqRights `protobuf:"bytes,1,rep,name=acquired_rights,json=acquiredRights,proto3" json:"acquired_rights,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *ListAcqRightsAggregationRecordsResponse) Reset() {
+	*m = ListAcqRightsAggregationRecordsResponse{}
+}
+func (m *ListAcqRightsAggregationRecordsResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsAggregationRecordsResponse) ProtoMessage()    {}
+func (*ListAcqRightsAggregationRecordsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{59}
+}
+
+func (m *ListAcqRightsAggregationRecordsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsAggregationRecordsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsAggregationRecordsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsAggregationRecordsResponse.Merge(m, src)
+}
+func (m *ListAcqRightsAggregationRecordsResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsAggregationRecordsResponse.Size(m)
+}
+func (m *ListAcqRightsAggregationRecordsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsAggregationRecordsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsAggregationRecordsResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsAggregationRecordsResponse) GetAcquiredRights() []*AcqRights {
+	if m != nil {
+		return m.AcquiredRights
+	}
+	return nil
+}
+
+type DeleteProductAggregationRequest struct {
+	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Scope                string   `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteProductAggregationRequest) Reset()         { *m = DeleteProductAggregationRequest{} }
+func (m *DeleteProductAggregationRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteProductAggregationRequest) ProtoMessage()    {}
+func (*DeleteProductAggregationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{60}
+}
+
+func (m *DeleteProductAggregationRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteProductAggregationRequest.Unmarshal(m, b)
+}
+func (m *DeleteProductAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteProductAggregationRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteProductAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteProductAggregationRequest.Merge(m, src)
+}
+func (m *DeleteProductAggregationRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteProductAggregationRequest.Size(m)
+}
+func (m *DeleteProductAggregationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteProductAggregationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteProductAggregationRequest proto.InternalMessageInfo
+
+func (m *DeleteProductAggregationRequest) GetID() int32 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *DeleteProductAggregationRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DeleteProductAggregationResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteProductAggregationResponse) Reset()         { *m = DeleteProductAggregationResponse{} }
+func (m *DeleteProductAggregationResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteProductAggregationResponse) ProtoMessage()    {}
+func (*DeleteProductAggregationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{61}
+}
+
+func (m *DeleteProductAggregationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteProductAggregationResponse.Unmarshal(m, b)
+}
+func (m *DeleteProductAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteProductAggregationResponse.Marshal(b, m, deterministic)
+}
+func (m *DeleteProductAggregationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteProductAggregationResponse.Merge(m, src)
+}
+func (m *DeleteProductAggregationResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteProductAggregationResponse.Size(m)
+}
+func (m *DeleteProductAggregationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteProductAggregationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteProductAggregationResponse proto.InternalMessageInfo
+
+func (m *DeleteProductAggregationResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+type ListProductAggregationResponse struct {
+	Aggregations         []*ProductAggregation `protobuf:"bytes,1,rep,name=aggregations,proto3" json:"aggregations,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *ListProductAggregationResponse) Reset()         { *m = ListProductAggregationResponse{} }
+func (m *ListProductAggregationResponse) String() string { return proto.CompactTextString(m) }
+func (*ListProductAggregationResponse) ProtoMessage()    {}
+func (*ListProductAggregationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{62}
+}
+
+func (m *ListProductAggregationResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListProductAggregationResponse.Unmarshal(m, b)
+}
+func (m *ListProductAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListProductAggregationResponse.Marshal(b, m, deterministic)
+}
+func (m *ListProductAggregationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListProductAggregationResponse.Merge(m, src)
+}
+func (m *ListProductAggregationResponse) XXX_Size() int {
+	return xxx_messageInfo_ListProductAggregationResponse.Size(m)
+}
+func (m *ListProductAggregationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListProductAggregationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListProductAggregationResponse proto.InternalMessageInfo
+
+func (m *ListProductAggregationResponse) GetAggregations() []*ProductAggregation {
+	if m != nil {
+		return m.Aggregations
+	}
+	return nil
+}
+
+type ListProductAggregationRequest struct {
+	// May be required in future
+	Scopes               []string `protobuf:"bytes,1,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListProductAggregationRequest) Reset()         { *m = ListProductAggregationRequest{} }
+func (m *ListProductAggregationRequest) String() string { return proto.CompactTextString(m) }
+func (*ListProductAggregationRequest) ProtoMessage()    {}
+func (*ListProductAggregationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{63}
+}
+
+func (m *ListProductAggregationRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListProductAggregationRequest.Unmarshal(m, b)
+}
+func (m *ListProductAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListProductAggregationRequest.Marshal(b, m, deterministic)
+}
+func (m *ListProductAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListProductAggregationRequest.Merge(m, src)
+}
+func (m *ListProductAggregationRequest) XXX_Size() int {
+	return xxx_messageInfo_ListProductAggregationRequest.Size(m)
+}
+func (m *ListProductAggregationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListProductAggregationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListProductAggregationRequest proto.InternalMessageInfo
+
+func (m *ListProductAggregationRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
+type ProductAggregationMessage struct {
+	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Editor               string   `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
+	Metric               string   `protobuf:"bytes,4,opt,name=metric,proto3" json:"metric,omitempty"`
+	Scope                string   `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
+	Products             []string `protobuf:"bytes,6,rep,name=products,proto3" json:"products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductAggregationMessage) Reset()         { *m = ProductAggregationMessage{} }
+func (m *ProductAggregationMessage) String() string { return proto.CompactTextString(m) }
+func (*ProductAggregationMessage) ProtoMessage()    {}
+func (*ProductAggregationMessage) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{64}
+}
+
+func (m *ProductAggregationMessage) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductAggregationMessage.Unmarshal(m, b)
+}
+func (m *ProductAggregationMessage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductAggregationMessage.Marshal(b, m, deterministic)
+}
+func (m *ProductAggregationMessage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductAggregationMessage.Merge(m, src)
+}
+func (m *ProductAggregationMessage) XXX_Size() int {
+	return xxx_messageInfo_ProductAggregationMessage.Size(m)
+}
+func (m *ProductAggregationMessage) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductAggregationMessage.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductAggregationMessage proto.InternalMessageInfo
+
+func (m *ProductAggregationMessage) GetID() int32 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *ProductAggregationMessage) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *ProductAggregationMessage) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *ProductAggregationMessage) GetMetric() string {
+	if m != nil {
+		return m.Metric
+	}
+	return ""
+}
+
+func (m *ProductAggregationMessage) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *ProductAggregationMessage) GetProducts() []string {
+	if m != nil {
+		return m.Products
+	}
+	return nil
+}
+
+type ProductAggregation struct {
+	ID                   int32    `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Editor               string   `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
+	ProductNames         []string `protobuf:"bytes,4,rep,name=product_names,json=productNames,proto3" json:"product_names,omitempty"`
+	Metric               string   `protobuf:"bytes,5,opt,name=metric,proto3" json:"metric,omitempty"`
+	Scope                string   `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
+	Products             []string `protobuf:"bytes,7,rep,name=products,proto3" json:"products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProductAggregation) Reset()         { *m = ProductAggregation{} }
+func (m *ProductAggregation) String() string { return proto.CompactTextString(m) }
+func (*ProductAggregation) ProtoMessage()    {}
+func (*ProductAggregation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{65}
+}
+
+func (m *ProductAggregation) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProductAggregation.Unmarshal(m, b)
+}
+func (m *ProductAggregation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProductAggregation.Marshal(b, m, deterministic)
+}
+func (m *ProductAggregation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductAggregation.Merge(m, src)
+}
+func (m *ProductAggregation) XXX_Size() int {
+	return xxx_messageInfo_ProductAggregation.Size(m)
+}
+func (m *ProductAggregation) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProductAggregation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProductAggregation proto.InternalMessageInfo
+
+func (m *ProductAggregation) GetID() int32 {
+	if m != nil {
+		return m.ID
+	}
+	return 0
+}
+
+func (m *ProductAggregation) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *ProductAggregation) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *ProductAggregation) GetProductNames() []string {
+	if m != nil {
+		return m.ProductNames
+	}
+	return nil
+}
+
+func (m *ProductAggregation) GetMetric() string {
+	if m != nil {
+		return m.Metric
+	}
+	return ""
+}
+
+func (m *ProductAggregation) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *ProductAggregation) GetProducts() []string {
+	if m != nil {
+		return m.Products
+	}
+	return nil
+}
+
+type ListAcqRightsEditorsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsEditorsRequest) Reset()         { *m = ListAcqRightsEditorsRequest{} }
+func (m *ListAcqRightsEditorsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsEditorsRequest) ProtoMessage()    {}
+func (*ListAcqRightsEditorsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{66}
+}
+
+func (m *ListAcqRightsEditorsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsEditorsRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsEditorsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsEditorsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsEditorsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsEditorsRequest.Merge(m, src)
+}
+func (m *ListAcqRightsEditorsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsEditorsRequest.Size(m)
+}
+func (m *ListAcqRightsEditorsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsEditorsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsEditorsRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsEditorsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ListAcqRightsEditorsResponse struct {
+	Editor               []string `protobuf:"bytes,1,rep,name=editor,proto3" json:"editor,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsEditorsResponse) Reset()         { *m = ListAcqRightsEditorsResponse{} }
+func (m *ListAcqRightsEditorsResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsEditorsResponse) ProtoMessage()    {}
+func (*ListAcqRightsEditorsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{67}
+}
+
+func (m *ListAcqRightsEditorsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsEditorsResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsEditorsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsEditorsResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsEditorsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsEditorsResponse.Merge(m, src)
+}
+func (m *ListAcqRightsEditorsResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsEditorsResponse.Size(m)
+}
+func (m *ListAcqRightsEditorsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsEditorsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsEditorsResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsEditorsResponse) GetEditor() []string {
+	if m != nil {
+		return m.Editor
+	}
+	return nil
+}
+
+type ListAcqRightsMetricsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsMetricsRequest) Reset()         { *m = ListAcqRightsMetricsRequest{} }
+func (m *ListAcqRightsMetricsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsMetricsRequest) ProtoMessage()    {}
+func (*ListAcqRightsMetricsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{68}
+}
+
+func (m *ListAcqRightsMetricsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsMetricsRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsMetricsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsMetricsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsMetricsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsMetricsRequest.Merge(m, src)
+}
+func (m *ListAcqRightsMetricsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsMetricsRequest.Size(m)
+}
+func (m *ListAcqRightsMetricsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsMetricsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsMetricsRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsMetricsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ListAcqRightsMetricsResponse struct {
+	Metric               []string `protobuf:"bytes,1,rep,name=metric,proto3" json:"metric,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsMetricsResponse) Reset()         { *m = ListAcqRightsMetricsResponse{} }
+func (m *ListAcqRightsMetricsResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsMetricsResponse) ProtoMessage()    {}
+func (*ListAcqRightsMetricsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{69}
+}
+
+func (m *ListAcqRightsMetricsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsMetricsResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsMetricsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsMetricsResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsMetricsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsMetricsResponse.Merge(m, src)
+}
+func (m *ListAcqRightsMetricsResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsMetricsResponse.Size(m)
+}
+func (m *ListAcqRightsMetricsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsMetricsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsMetricsResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsMetricsResponse) GetMetric() []string {
+	if m != nil {
+		return m.Metric
+	}
+	return nil
+}
+
+type ListAcqRightsProductsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Editor               string   `protobuf:"bytes,2,opt,name=editor,proto3" json:"editor,omitempty"`
+	Metric               string   `protobuf:"bytes,3,opt,name=metric,proto3" json:"metric,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsProductsRequest) Reset()         { *m = ListAcqRightsProductsRequest{} }
+func (m *ListAcqRightsProductsRequest) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsProductsRequest) ProtoMessage()    {}
+func (*ListAcqRightsProductsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{70}
+}
+
+func (m *ListAcqRightsProductsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsProductsRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsProductsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsProductsRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsProductsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsProductsRequest.Merge(m, src)
+}
+func (m *ListAcqRightsProductsRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsProductsRequest.Size(m)
+}
+func (m *ListAcqRightsProductsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsProductsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsProductsRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsProductsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *ListAcqRightsProductsRequest) GetEditor() string {
+	if m != nil {
+		return m.Editor
+	}
+	return ""
+}
+
+func (m *ListAcqRightsProductsRequest) GetMetric() string {
+	if m != nil {
+		return m.Metric
+	}
+	return ""
+}
+
+type ListAcqRightsProductsResponse struct {
+	AcqrightsProducts    []*ListAcqRightsProductsResponse_AcqRightsProducts `protobuf:"bytes,1,rep,name=acqrights_products,json=acqrightsProducts,proto3" json:"acqrights_products,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                           `json:"-"`
+	XXX_unrecognized     []byte                                             `json:"-"`
+	XXX_sizecache        int32                                              `json:"-"`
+}
+
+func (m *ListAcqRightsProductsResponse) Reset()         { *m = ListAcqRightsProductsResponse{} }
+func (m *ListAcqRightsProductsResponse) String() string { return proto.CompactTextString(m) }
+func (*ListAcqRightsProductsResponse) ProtoMessage()    {}
+func (*ListAcqRightsProductsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{71}
+}
+
+func (m *ListAcqRightsProductsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsProductsResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsProductsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsProductsResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsProductsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsProductsResponse.Merge(m, src)
+}
+func (m *ListAcqRightsProductsResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsProductsResponse.Size(m)
+}
+func (m *ListAcqRightsProductsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsProductsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsProductsResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsProductsResponse) GetAcqrightsProducts() []*ListAcqRightsProductsResponse_AcqRightsProducts {
+	if m != nil {
+		return m.AcqrightsProducts
+	}
+	return nil
+}
+
+type ListAcqRightsProductsResponse_AcqRightsProducts struct {
+	Swidtag              string   `protobuf:"bytes,1,opt,name=swidtag,proto3" json:"swidtag,omitempty"`
+	ProductName          string   `protobuf:"bytes,2,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) Reset() {
+	*m = ListAcqRightsProductsResponse_AcqRightsProducts{}
+}
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ListAcqRightsProductsResponse_AcqRightsProducts) ProtoMessage() {}
+func (*ListAcqRightsProductsResponse_AcqRightsProducts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{71, 0}
+}
+
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts.Unmarshal(m, b)
+}
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts.Merge(m, src)
+}
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts.Size(m)
+}
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsProductsResponse_AcqRightsProducts proto.InternalMessageInfo
+
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) GetSwidtag() string {
+	if m != nil {
+		return m.Swidtag
+	}
+	return ""
+}
+
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) GetProductName() string {
+	if m != nil {
+		return m.ProductName
+	}
+	return ""
+}
+
+type DropProductDataRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DropProductDataRequest) Reset()         { *m = DropProductDataRequest{} }
+func (m *DropProductDataRequest) String() string { return proto.CompactTextString(m) }
+func (*DropProductDataRequest) ProtoMessage()    {}
+func (*DropProductDataRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{72}
+}
+
+func (m *DropProductDataRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DropProductDataRequest.Unmarshal(m, b)
+}
+func (m *DropProductDataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DropProductDataRequest.Marshal(b, m, deterministic)
+}
+func (m *DropProductDataRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DropProductDataRequest.Merge(m, src)
+}
+func (m *DropProductDataRequest) XXX_Size() int {
+	return xxx_messageInfo_DropProductDataRequest.Size(m)
+}
+func (m *DropProductDataRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DropProductDataRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DropProductDataRequest proto.InternalMessageInfo
+
+func (m *DropProductDataRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DropProductDataResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DropProductDataResponse) Reset()         { *m = DropProductDataResponse{} }
+func (m *DropProductDataResponse) String() string { return proto.CompactTextString(m) }
+func (*DropProductDataResponse) ProtoMessage()    {}
+func (*DropProductDataResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f0fd8b59378f44a5, []int{73}
+}
+
+func (m *DropProductDataResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DropProductDataResponse.Unmarshal(m, b)
+}
+func (m *DropProductDataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DropProductDataResponse.Marshal(b, m, deterministic)
+}
+func (m *DropProductDataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DropProductDataResponse.Merge(m, src)
+}
+func (m *DropProductDataResponse) XXX_Size() int {
+	return xxx_messageInfo_DropProductDataResponse.Size(m)
+}
+func (m *DropProductDataResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DropProductDataResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DropProductDataResponse proto.InternalMessageInfo
+
+func (m *DropProductDataResponse) GetSuccess() bool {
 	if m != nil {
 		return m.Success
 	}
@@ -1894,6 +4633,13 @@ func init() {
 	proto.RegisterEnum("optisam.products.v1.SortOrder", SortOrder_name, SortOrder_value)
 	proto.RegisterEnum("optisam.products.v1.DataTypes", DataTypes_name, DataTypes_value)
 	proto.RegisterEnum("optisam.products.v1.ListProductAggregationViewRequest_SortBy", ListProductAggregationViewRequest_SortBy_name, ListProductAggregationViewRequest_SortBy_value)
+	proto.RegisterEnum("optisam.products.v1.ListAcqRightsRequest_SortBy", ListAcqRightsRequest_SortBy_name, ListAcqRightsRequest_SortBy_value)
+	proto.RegisterEnum("optisam.products.v1.ListAcqRightsAggregationRequest_SortBy", ListAcqRightsAggregationRequest_SortBy_name, ListAcqRightsAggregationRequest_SortBy_value)
+	proto.RegisterType((*OverviewProductQualityRequest)(nil), "optisam.products.v1.OverviewProductQualityRequest")
+	proto.RegisterType((*OverviewProductQualityResponse)(nil), "optisam.products.v1.OverviewProductQualityResponse")
+	proto.RegisterType((*ProductsPerEditorRequest)(nil), "optisam.products.v1.ProductsPerEditorRequest")
+	proto.RegisterType((*ProductsPerEditorResponse)(nil), "optisam.products.v1.ProductsPerEditorResponse")
+	proto.RegisterType((*EditorProducts)(nil), "optisam.products.v1.EditorProducts")
 	proto.RegisterType((*ProductAggregationProductViewOptionsRequest)(nil), "optisam.products.v1.ProductAggregationProductViewOptionsRequest")
 	proto.RegisterType((*ProductAggregationProductViewOptionsResponse)(nil), "optisam.products.v1.ProductAggregationProductViewOptionsResponse")
 	proto.RegisterType((*ProductAggregationProductViewDetailsRequest)(nil), "optisam.products.v1.ProductAggregationProductViewDetailsRequest")
@@ -1901,7 +4647,7 @@ func init() {
 	proto.RegisterType((*ListProductAggregationViewRequest)(nil), "optisam.products.v1.ListProductAggregationViewRequest")
 	proto.RegisterType((*ProductAggregationProductViewSearchParams)(nil), "optisam.products.v1.ProductAggregationProductViewSearchParams")
 	proto.RegisterType((*ListProductAggregationViewResponse)(nil), "optisam.products.v1.ListProductAggregationViewResponse")
-	proto.RegisterType((*ProductAggregation)(nil), "optisam.products.v1.ProductAggregation")
+	proto.RegisterType((*ProductAggregationView)(nil), "optisam.products.v1.ProductAggregationView")
 	proto.RegisterType((*ListProductAggregationProductViewRequest)(nil), "optisam.products.v1.ListProductAggregationProductViewRequest")
 	proto.RegisterType((*ListProductAggregationProductViewResponse)(nil), "optisam.products.v1.ListProductAggregationProductViewResponse")
 	proto.RegisterType((*ListEditorsRequest)(nil), "optisam.products.v1.ListEditorsRequest")
@@ -1923,138 +4669,331 @@ func init() {
 	proto.RegisterType((*UpsertProductRequestEquipment)(nil), "optisam.products.v1.UpsertProductRequest.equipment")
 	proto.RegisterType((*UpsertProductRequestEquipmentEquipmentuser)(nil), "optisam.products.v1.UpsertProductRequest.equipment.equipmentuser")
 	proto.RegisterType((*UpsertProductResponse)(nil), "optisam.products.v1.UpsertProductResponse")
-	proto.RegisterType((*UpsertAggregationRequest)(nil), "optisam.products.v1.UpsertAggregationRequest")
-	proto.RegisterType((*UpsertAggregationResponse)(nil), "optisam.products.v1.UpsertAggregationResponse")
+	proto.RegisterType((*ComplianceAlertRequest)(nil), "optisam.products.v1.ComplianceAlertRequest")
+	proto.RegisterType((*ComplianceAlertResponse)(nil), "optisam.products.v1.ComplianceAlertResponse")
+	proto.RegisterType((*OverdeployedProductsRequest)(nil), "optisam.products.v1.OverdeployedProductsRequest")
+	proto.RegisterType((*OverdeployedProductsResponse)(nil), "optisam.products.v1.OverdeployedProductsResponse")
+	proto.RegisterType((*DashboardQualityProductsRequest)(nil), "optisam.products.v1.DashboardQualityProductsRequest")
+	proto.RegisterType((*DashboardQualityProductsResponse)(nil), "optisam.products.v1.DashboardQualityProductsResponse")
+	proto.RegisterType((*DashboardQualityProducts)(nil), "optisam.products.v1.DashboardQualityProducts")
+	proto.RegisterType((*ProductsLicenses)(nil), "optisam.products.v1.ProductsLicenses")
+	proto.RegisterType((*ProductsCosts)(nil), "optisam.products.v1.ProductsCosts")
+	proto.RegisterType((*FinancialOverdeployedProducts)(nil), "optisam.products.v1.FinancialOverdeployedProducts")
+	proto.RegisterType((*ProductsPerMetricTypeRequest)(nil), "optisam.products.v1.ProductsPerMetricTypeRequest")
+	proto.RegisterType((*CounterfeitedProductsRequest)(nil), "optisam.products.v1.CounterfeitedProductsRequest")
+	proto.RegisterType((*CounterfeitedProductsResponse)(nil), "optisam.products.v1.CounterfeitedProductsResponse")
+	proto.RegisterType((*ProductsPerMetricTypeResponse)(nil), "optisam.products.v1.ProductsPerMetricTypeResponse")
+	proto.RegisterType((*MetricProducts)(nil), "optisam.products.v1.MetricProducts")
+	proto.RegisterType((*DashboardOverviewRequest)(nil), "optisam.products.v1.DashboardOverviewRequest")
+	proto.RegisterType((*DashboardOverviewResponse)(nil), "optisam.products.v1.DashboardOverviewResponse")
+	proto.RegisterType((*UpsertAcqRightsRequest)(nil), "optisam.products.v1.UpsertAcqRightsRequest")
+	proto.RegisterType((*UpsertAcqRightsResponse)(nil), "optisam.products.v1.UpsertAcqRightsResponse")
+	proto.RegisterType((*ListAcqRightsRequest)(nil), "optisam.products.v1.ListAcqRightsRequest")
+	proto.RegisterType((*AcqRightsSearchParams)(nil), "optisam.products.v1.AcqRightsSearchParams")
+	proto.RegisterType((*ListAcqRightsResponse)(nil), "optisam.products.v1.ListAcqRightsResponse")
+	proto.RegisterType((*AcqRights)(nil), "optisam.products.v1.AcqRights")
+	proto.RegisterType((*ListAcqRightsAggregationRequest)(nil), "optisam.products.v1.ListAcqRightsAggregationRequest")
+	proto.RegisterType((*ListAcqRightsAggregationResponse)(nil), "optisam.products.v1.ListAcqRightsAggregationResponse")
+	proto.RegisterType((*AcqRightsAggregation)(nil), "optisam.products.v1.AcqRightsAggregation")
+	proto.RegisterType((*ListAcqRightsAggregationSearchParams)(nil), "optisam.products.v1.ListAcqRightsAggregationSearchParams")
+	proto.RegisterType((*ListAcqRightsAggregationRecordsRequest)(nil), "optisam.products.v1.ListAcqRightsAggregationRecordsRequest")
+	proto.RegisterType((*ListAcqRightsAggregationRecordsResponse)(nil), "optisam.products.v1.ListAcqRightsAggregationRecordsResponse")
+	proto.RegisterType((*DeleteProductAggregationRequest)(nil), "optisam.products.v1.DeleteProductAggregationRequest")
+	proto.RegisterType((*DeleteProductAggregationResponse)(nil), "optisam.products.v1.DeleteProductAggregationResponse")
+	proto.RegisterType((*ListProductAggregationResponse)(nil), "optisam.products.v1.ListProductAggregationResponse")
+	proto.RegisterType((*ListProductAggregationRequest)(nil), "optisam.products.v1.ListProductAggregationRequest")
+	proto.RegisterType((*ProductAggregationMessage)(nil), "optisam.products.v1.ProductAggregationMessage")
+	proto.RegisterType((*ProductAggregation)(nil), "optisam.products.v1.ProductAggregation")
+	proto.RegisterType((*ListAcqRightsEditorsRequest)(nil), "optisam.products.v1.ListAcqRightsEditorsRequest")
+	proto.RegisterType((*ListAcqRightsEditorsResponse)(nil), "optisam.products.v1.ListAcqRightsEditorsResponse")
+	proto.RegisterType((*ListAcqRightsMetricsRequest)(nil), "optisam.products.v1.ListAcqRightsMetricsRequest")
+	proto.RegisterType((*ListAcqRightsMetricsResponse)(nil), "optisam.products.v1.ListAcqRightsMetricsResponse")
+	proto.RegisterType((*ListAcqRightsProductsRequest)(nil), "optisam.products.v1.ListAcqRightsProductsRequest")
+	proto.RegisterType((*ListAcqRightsProductsResponse)(nil), "optisam.products.v1.ListAcqRightsProductsResponse")
+	proto.RegisterType((*ListAcqRightsProductsResponse_AcqRightsProducts)(nil), "optisam.products.v1.ListAcqRightsProductsResponse.AcqRightsProducts")
+	proto.RegisterType((*DropProductDataRequest)(nil), "optisam.products.v1.DropProductDataRequest")
+	proto.RegisterType((*DropProductDataResponse)(nil), "optisam.products.v1.DropProductDataResponse")
 }
 
 func init() { proto.RegisterFile("product.proto", fileDescriptor_f0fd8b59378f44a5) }
 
 var fileDescriptor_f0fd8b59378f44a5 = []byte{
-	// 1981 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcd, 0x6f, 0xdb, 0xc8,
-	0x15, 0x37, 0xf5, 0x69, 0x3e, 0xd9, 0x0a, 0x33, 0xf9, 0x52, 0x58, 0x6f, 0x2c, 0xb3, 0xde, 0x46,
-	0x76, 0x1c, 0xa9, 0x71, 0x90, 0x6d, 0x9a, 0x62, 0xb3, 0xb1, 0xea, 0xdd, 0x54, 0xc8, 0x46, 0x0e,
-	0x68, 0x67, 0xdb, 0x2c, 0x50, 0xa8, 0x8c, 0x34, 0x52, 0x89, 0x4a, 0xa4, 0x96, 0xa4, 0x6c, 0x78,
-	0x17, 0x39, 0x74, 0x0b, 0xf4, 0x5a, 0xb4, 0x8b, 0x62, 0xaf, 0x45, 0x0f, 0x3d, 0xf7, 0xd0, 0x1e,
-	0xfa, 0x77, 0x34, 0x40, 0x4f, 0xbd, 0xf5, 0x50, 0xa0, 0x97, 0xde, 0x0a, 0xb8, 0x97, 0x62, 0x3e,
-	0x48, 0x0e, 0x29, 0x4a, 0xa6, 0x9d, 0x02, 0xed, 0xe6, 0x12, 0xcd, 0xe3, 0xbc, 0xef, 0xf7, 0x7e,
-	0x6f, 0x66, 0x0c, 0xcb, 0x63, 0xc7, 0xee, 0x4d, 0xba, 0x5e, 0x7d, 0xec, 0xd8, 0x9e, 0x8d, 0x2e,
-	0xd9, 0x63, 0xcf, 0x74, 0x8d, 0x51, 0x9d, 0x93, 0xdd, 0xfa, 0xe1, 0x1d, 0x75, 0x65, 0x60, 0xdb,
-	0x83, 0x21, 0x6e, 0x18, 0x63, 0xb3, 0x61, 0x58, 0x96, 0xed, 0x19, 0x9e, 0x69, 0x5b, 0x2e, 0x63,
-	0x51, 0xb7, 0xe8, 0x7f, 0xdd, 0xdb, 0x03, 0x6c, 0xdd, 0x76, 0x8f, 0x8c, 0xc1, 0x00, 0x3b, 0x0d,
-	0x22, 0xc5, 0xb6, 0xdc, 0x84, 0xdd, 0xd7, 0x0e, 0x8d, 0xa1, 0xd9, 0x33, 0x3c, 0xdc, 0xf0, 0x7f,
-	0xb0, 0x0f, 0xda, 0xbb, 0x70, 0xeb, 0x19, 0xd3, 0xb9, 0x33, 0x18, 0x38, 0x78, 0x40, 0xb9, 0x38,
-	0xe5, 0x23, 0x13, 0x1f, 0xed, 0x31, 0x91, 0x3a, 0xfe, 0x64, 0x82, 0x5d, 0x0f, 0x95, 0x21, 0xd3,
-	0xda, 0xad, 0x48, 0x55, 0xa9, 0x96, 0xd7, 0x33, 0xad, 0x5d, 0xed, 0x0b, 0x09, 0xb6, 0xd2, 0xf1,
-	0xbb, 0x63, 0xdb, 0x72, 0x31, 0xd2, 0x60, 0xc9, 0x9a, 0x8c, 0xf6, 0xfa, 0x9c, 0xce, 0x45, 0x45,
-	0x68, 0xe8, 0x3d, 0x00, 0xe6, 0x89, 0x69, 0xf5, 0xed, 0x4a, 0xa6, 0x9a, 0xad, 0x95, 0xb6, 0x57,
-	0xeb, 0x09, 0x21, 0xaa, 0x33, 0x8e, 0x96, 0xd5, 0xb7, 0x75, 0x81, 0xe5, 0x54, 0xa7, 0x76, 0xb1,
-	0x67, 0x98, 0xc3, 0x99, 0x4e, 0x7d, 0x99, 0x39, 0xc5, 0xa9, 0x80, 0x9f, 0x3b, 0x15, 0x13, 0x80,
-	0x10, 0xe4, 0x2c, 0x63, 0x84, 0x2b, 0x99, 0xaa, 0x54, 0x93, 0x75, 0xfa, 0x1b, 0x5d, 0x85, 0x02,
-	0xee, 0x99, 0x9e, 0xed, 0x54, 0xb2, 0x94, 0xca, 0x57, 0x68, 0x0d, 0x96, 0xb8, 0x47, 0x1d, 0xca,
-	0x93, 0xa3, 0x5f, 0x4b, 0x9c, 0xd6, 0x26, 0xac, 0x1b, 0xa0, 0x58, 0x93, 0x51, 0xc7, 0x18, 0x8f,
-	0x87, 0x66, 0x97, 0xa5, 0xb5, 0x92, 0xa7, 0xca, 0x2e, 0x58, 0x93, 0xd1, 0x8e, 0x40, 0x46, 0x6f,
-	0x43, 0x99, 0x6c, 0xc5, 0x9f, 0x4c, 0xcc, 0xf1, 0x08, 0x5b, 0x9e, 0x5b, 0x29, 0xd0, 0x8d, 0xcb,
-	0xd6, 0x64, 0xf4, 0x7e, 0x40, 0x44, 0x2a, 0x2c, 0xfa, 0x61, 0xac, 0x14, 0xab, 0xd9, 0x9a, 0xac,
-	0x07, 0x6b, 0xf2, 0x8d, 0x98, 0x46, 0xb5, 0x2c, 0xb2, 0x6f, 0xfe, 0x5a, 0xfb, 0x63, 0x0e, 0xd6,
-	0x3e, 0x34, 0x5d, 0x6f, 0x3a, 0x3a, 0x24, 0x2c, 0x7e, 0x3c, 0x1f, 0xc3, 0xe2, 0xd8, 0x18, 0xe0,
-	0x8e, 0x35, 0x19, 0xb1, 0xa0, 0x34, 0xb7, 0x7e, 0xb5, 0xb3, 0xba, 0x5d, 0x7a, 0x66, 0x0c, 0x70,
-	0xd5, 0x9a, 0x8c, 0x5e, 0x62, 0xe7, 0xc5, 0x02, 0xf9, 0xf7, 0xe8, 0x17, 0x8f, 0x4c, 0xfa, 0x63,
-	0xe1, 0x9f, 0xef, 0x9d, 0x34, 0x8b, 0x6a, 0x5e, 0xf9, 0x7b, 0xb1, 0x26, 0xe9, 0x45, 0xc2, 0xdd,
-	0x9e, 0x8c, 0x50, 0x0b, 0x64, 0x2a, 0xc8, 0x35, 0x3f, 0x65, 0xc1, 0xa4, 0x92, 0xb4, 0xed, 0x72,
-	0xcb, 0xc3, 0x23, 0xb7, 0x3a, 0xc6, 0x4e, 0x95, 0x7c, 0x67, 0xc2, 0x16, 0x5e, 0xf8, 0xc2, 0xd6,
-	0x1f, 0x9d, 0x34, 0x73, 0x6a, 0xa6, 0x06, 0x3a, 0xb5, 0x63, 0xdf, 0xfc, 0x14, 0xa3, 0x1f, 0x41,
-	0xd1, 0xb5, 0x1d, 0xaf, 0xf3, 0xf2, 0x98, 0xc6, 0xbf, 0xbc, 0xfd, 0x6e, 0x62, 0x41, 0x9d, 0xea,
-	0x5c, 0x7d, 0xdf, 0x76, 0xbc, 0xe6, 0x71, 0x73, 0xf1, 0xa4, 0x99, 0xff, 0x5c, 0xca, 0x28, 0x92,
-	0x5e, 0x70, 0x29, 0x05, 0x3d, 0x06, 0xa0, 0x1a, 0x6c, 0xa7, 0x87, 0x1d, 0x9a, 0xc6, 0xf2, 0xf6,
-	0x8d, 0x44, 0x25, 0x44, 0xc4, 0x1e, 0xd9, 0x25, 0x48, 0x91, 0x5d, 0x9f, 0x88, 0xba, 0xb0, 0xec,
-	0x62, 0xc3, 0xe9, 0xfe, 0xb8, 0x33, 0x36, 0x1c, 0x63, 0xc4, 0x72, 0x5d, 0xda, 0x7e, 0x98, 0x28,
-	0x6b, 0x6e, 0x9d, 0xee, 0x53, 0x31, 0xcf, 0xa8, 0x14, 0x7d, 0xc9, 0x15, 0x56, 0xda, 0x10, 0x0a,
-	0xcc, 0x13, 0x74, 0x19, 0x14, 0x23, 0xe4, 0xa6, 0x45, 0xa8, 0x2c, 0x20, 0x04, 0x65, 0xbf, 0x2c,
-	0x59, 0xa1, 0x2a, 0x12, 0xba, 0x06, 0x97, 0x48, 0x71, 0xd9, 0xfd, 0x48, 0x29, 0x2a, 0x19, 0x74,
-	0x05, 0x2e, 0xf2, 0x0f, 0x61, 0xe1, 0x29, 0x59, 0xb4, 0x08, 0xb9, 0xae, 0xed, 0x7a, 0x4a, 0x4e,
-	0xfb, 0x4d, 0x06, 0x36, 0x52, 0x5b, 0x8a, 0xbe, 0x03, 0x45, 0xf7, 0xc8, 0xec, 0x1d, 0x18, 0x03,
-	0x5a, 0x3e, 0xa5, 0xed, 0xb5, 0xe4, 0x30, 0x7a, 0x8e, 0x69, 0x0d, 0x3e, 0x30, 0x87, 0x1e, 0x76,
-	0x74, 0x9f, 0x03, 0xdd, 0x13, 0x7a, 0x2f, 0x15, 0x27, 0x6b, 0xcf, 0x6f, 0x47, 0xda, 0x33, 0x15,
-	0xa3, 0xdf, 0xc1, 0xbb, 0x09, 0x1d, 0x9c, 0x4a, 0x80, 0xd8, 0xe4, 0xda, 0xaf, 0x25, 0xd0, 0xe6,
-	0x55, 0x5f, 0x88, 0x9f, 0x9e, 0xed, 0x19, 0x43, 0x1d, 0x77, 0x6d, 0xa7, 0x17, 0xe0, 0xa7, 0x48,
-	0x43, 0x4f, 0x60, 0x49, 0xc8, 0xa8, 0xcb, 0x11, 0xf4, 0x66, 0xca, 0xfa, 0xd1, 0x23, 0xcc, 0xda,
-	0x5f, 0x25, 0x40, 0xd3, 0x9b, 0xde, 0x08, 0xf2, 0x92, 0xf0, 0x2c, 0x97, 0x16, 0xcf, 0xf2, 0x49,
-	0x78, 0xf6, 0x16, 0x00, 0x8d, 0x40, 0x87, 0xd4, 0x1b, 0x87, 0x3c, 0x99, 0x52, 0xbe, 0x6b, 0xbb,
-	0x1e, 0x81, 0x34, 0x52, 0x1e, 0x9e, 0x31, 0x08, 0xe0, 0xce, 0x5f, 0x6b, 0x0f, 0xa0, 0x96, 0x1c,
-	0x76, 0xa1, 0x3a, 0x67, 0x0d, 0x0a, 0x0c, 0x1b, 0x29, 0x78, 0x79, 0xe6, 0xee, 0x0b, 0x98, 0x2b,
-	0xd1, 0x8c, 0xac, 0xcc, 0xcb, 0x48, 0x88, 0xc8, 0xda, 0x16, 0x20, 0xa2, 0xe6, 0x7d, 0x1a, 0xbd,
-	0x60, 0x6a, 0x5d, 0x85, 0x82, 0xdb, 0xb5, 0xc7, 0x98, 0x49, 0x93, 0x75, 0xbe, 0xd2, 0x1a, 0x70,
-	0x29, 0xb2, 0x9b, 0xab, 0xaf, 0x40, 0x91, 0x85, 0xdf, 0xdf, 0xef, 0x2f, 0xb5, 0x27, 0x70, 0x3d,
-	0x64, 0xe0, 0xda, 0x45, 0x2d, 0x3c, 0x87, 0x52, 0x24, 0x87, 0xa1, 0xf6, 0x4c, 0x44, 0xfb, 0x47,
-	0xa0, 0x26, 0x09, 0x7b, 0xe3, 0x18, 0xac, 0x40, 0x81, 0xc9, 0x24, 0x95, 0x46, 0x1a, 0x86, 0xdb,
-	0x93, 0x63, 0xcd, 0x93, 0x81, 0x22, 0xe7, 0x21, 0x8e, 0x8a, 0xe8, 0x21, 0x87, 0xd0, 0x90, 0x54,
-	0xa3, 0x15, 0x28, 0x1e, 0x62, 0xc7, 0x35, 0x6d, 0x8b, 0x17, 0xa9, 0xbf, 0x24, 0x45, 0xd3, 0x35,
-	0x3c, 0x3c, 0xb0, 0x9d, 0x63, 0x3e, 0x94, 0x83, 0xb5, 0x1f, 0x4c, 0xc2, 0x95, 0x67, 0x5c, 0x7c,
-	0x29, 0xc4, 0xab, 0x10, 0x89, 0xd7, 0x0a, 0x84, 0xf5, 0x58, 0x29, 0x56, 0xa5, 0x9a, 0x24, 0x16,
-	0xe8, 0x16, 0x05, 0xd0, 0xbd, 0xbe, 0x58, 0xfb, 0x95, 0x45, 0x5a, 0x67, 0xd3, 0x1f, 0x50, 0x0d,
-	0x48, 0x9f, 0xd8, 0xfd, 0xb0, 0x01, 0x2a, 0x72, 0xd0, 0x3e, 0x22, 0x59, 0xf3, 0xe0, 0xb2, 0x50,
-	0xa0, 0xee, 0x99, 0x50, 0x44, 0xcc, 0x55, 0xe6, 0x4c, 0xb9, 0xfa, 0x53, 0x96, 0x95, 0x60, 0xbc,
-	0x96, 0xfe, 0x1f, 0xcf, 0x05, 0x87, 0xd1, 0x73, 0x81, 0xdc, 0xfc, 0xe1, 0x49, 0xf3, 0x63, 0xe7,
-	0x07, 0xac, 0x3a, 0x58, 0xe9, 0x78, 0xc6, 0x20, 0xa8, 0x8a, 0x20, 0xd1, 0x7e, 0x62, 0x85, 0x2c,
-	0x26, 0xa4, 0x6a, 0x2a, 0x23, 0xff, 0xfd, 0xd3, 0xc2, 0xd3, 0xe4, 0xd3, 0x42, 0x6d, 0x5e, 0xae,
-	0xe6, 0x9c, 0x0b, 0x5e, 0x67, 0xe0, 0x52, 0xc2, 0xae, 0xaf, 0xda, 0x4c, 0xfe, 0x1e, 0x94, 0x85,
-	0xf1, 0xd2, 0x31, 0x7b, 0xe9, 0xa7, 0xf2, 0xb2, 0xc0, 0xd8, 0xea, 0x91, 0xe9, 0x1e, 0x4c, 0x1f,
-	0x22, 0x27, 0x9f, 0x7a, 0xba, 0x07, 0x6c, 0xad, 0x9e, 0x76, 0x0b, 0xca, 0x7e, 0x9f, 0xf0, 0x66,
-	0xb8, 0xce, 0x66, 0x52, 0xc7, 0x9b, 0xc2, 0x29, 0xed, 0x08, 0x2e, 0x04, 0x9b, 0x43, 0xf4, 0x9e,
-	0x01, 0x6a, 0x21, 0xe0, 0x64, 0x22, 0x80, 0x23, 0x40, 0x54, 0x36, 0x0a, 0x51, 0x15, 0x28, 0x3a,
-	0x78, 0x88, 0x0d, 0xd7, 0xbf, 0x6c, 0xf8, 0x4b, 0xed, 0x15, 0x5c, 0xe5, 0x8a, 0xff, 0x27, 0xd7,
-	0xb6, 0x9f, 0x4b, 0x00, 0xe1, 0xa7, 0xf9, 0x40, 0xde, 0x16, 0x80, 0xbc, 0xcd, 0x81, 0x7c, 0x86,
-	0xbf, 0x61, 0x84, 0x72, 0xf1, 0x08, 0xf9, 0xd0, 0x9f, 0x8f, 0x40, 0xbf, 0xf6, 0x7b, 0x09, 0x96,
-	0xc4, 0x5c, 0xa2, 0x6f, 0x40, 0xb9, 0x4f, 0x7f, 0x99, 0xd6, 0x80, 0xb6, 0x1d, 0x0f, 0x40, 0x8c,
-	0x4a, 0xc2, 0x14, 0x50, 0x7e, 0x82, 0x8f, 0xb9, 0x81, 0x11, 0x1a, 0x5a, 0x85, 0x12, 0x5b, 0x77,
-	0xbc, 0xe3, 0x31, 0xa6, 0xc6, 0x2e, 0xea, 0xc0, 0x48, 0x07, 0xc7, 0x63, 0x8c, 0xee, 0xc2, 0x15,
-	0x91, 0xa1, 0x33, 0x9a, 0x0c, 0x3d, 0x73, 0x3c, 0x24, 0xd9, 0x22, 0x93, 0xf6, 0xb2, 0xf8, 0xf1,
-	0x29, 0xff, 0xa6, 0xfd, 0x3b, 0x0f, 0x97, 0x9f, 0x8f, 0x5d, 0xec, 0x78, 0xb1, 0x3a, 0x3b, 0xdb,
-	0x38, 0x14, 0x87, 0x5e, 0x76, 0xf6, 0xd0, 0xcb, 0xcd, 0x8a, 0x70, 0x7e, 0x56, 0x84, 0x0b, 0x53,
-	0xc3, 0x95, 0x25, 0x7e, 0xaf, 0x4f, 0xa7, 0xa1, 0xac, 0x07, 0x6b, 0xb4, 0x0a, 0x79, 0x7a, 0x98,
-	0xa0, 0x03, 0x50, 0x6e, 0xca, 0x27, 0xcd, 0x82, 0x93, 0x53, 0xa4, 0x0a, 0xe8, 0x8c, 0x8e, 0x5e,
-	0xc0, 0x52, 0xe4, 0xec, 0x28, 0xd3, 0x96, 0xbc, 0x97, 0x58, 0x6a, 0x49, 0x31, 0xa9, 0x0b, 0xdc,
-	0x7a, 0x44, 0x14, 0xda, 0x07, 0x10, 0xce, 0x9a, 0x40, 0x05, 0xdf, 0x4d, 0x2f, 0x38, 0xe0, 0xd5,
-	0x05, 0x31, 0x6a, 0x1f, 0x4a, 0x82, 0x12, 0xf4, 0x4d, 0x90, 0xed, 0x31, 0x76, 0xe8, 0x82, 0xe5,
-	0xa4, 0x89, 0x4e, 0x9a, 0x17, 0x9c, 0x65, 0x3d, 0x6b, 0xf4, 0x7a, 0x7a, 0xa1, 0x87, 0x87, 0xd8,
-	0xc3, 0x7a, 0xb8, 0x89, 0x9c, 0x82, 0x63, 0x68, 0xc6, 0x0e, 0x5d, 0x51, 0xa8, 0x52, 0xff, 0x25,
-	0x81, 0x1c, 0xa8, 0x3d, 0x87, 0x1a, 0x13, 0xca, 0x01, 0xfb, 0xc4, 0xc5, 0x8e, 0x3f, 0xf7, 0x77,
-	0xce, 0x11, 0x80, 0x7a, 0x44, 0x92, 0x1e, 0x13, 0xac, 0x3e, 0x85, 0xe5, 0x08, 0x05, 0xad, 0xc5,
-	0x60, 0x96, 0xd5, 0xaa, 0x88, 0xa1, 0x04, 0x31, 0xc9, 0x5d, 0x80, 0x6c, 0x67, 0x43, 0x5f, 0x2f,
-	0x5a, 0x93, 0xd1, 0x73, 0x17, 0x3b, 0xda, 0x1d, 0xb8, 0x12, 0x33, 0x47, 0xc0, 0xcd, 0x49, 0xb7,
-	0x8b, 0x5d, 0x06, 0x59, 0x8b, 0xba, 0xbf, 0xd4, 0x7e, 0x27, 0x41, 0x85, 0xf1, 0x88, 0x77, 0x1f,
-	0xde, 0x34, 0xeb, 0xb0, 0x2c, 0x5c, 0x82, 0x5a, 0x3d, 0xde, 0xee, 0x51, 0x22, 0x39, 0x87, 0x09,
-	0x04, 0x01, 0x91, 0xe2, 0x64, 0x74, 0x03, 0xc0, 0xe8, 0x92, 0xd5, 0x81, 0xdf, 0xf2, 0xb2, 0x2e,
-	0x50, 0x22, 0x17, 0x94, 0x5c, 0xec, 0x82, 0x72, 0x0f, 0xae, 0x27, 0xd8, 0x79, 0x9a, 0x7f, 0x9b,
-	0x37, 0x40, 0x0e, 0x4e, 0x0e, 0xa8, 0x08, 0x59, 0xc3, 0xed, 0x2a, 0x0b, 0xe4, 0x4a, 0xde, 0xc3,
-	0x6e, 0x57, 0x91, 0x36, 0xef, 0x83, 0xbc, 0x6b, 0x78, 0x06, 0x51, 0xef, 0xa2, 0x12, 0x14, 0x9f,
-	0xb7, 0x9f, 0xb4, 0xf7, 0xbe, 0xdf, 0x56, 0x16, 0x10, 0x40, 0x61, 0xff, 0x40, 0x6f, 0xb5, 0x1f,
-	0x2b, 0x12, 0x61, 0x6c, 0xb5, 0x0f, 0x94, 0x0c, 0x92, 0x21, 0xff, 0xc1, 0x87, 0x7b, 0x3b, 0x07,
-	0x4a, 0x76, 0xfb, 0x75, 0x39, 0x18, 0x66, 0xfb, 0xd8, 0x39, 0x34, 0xbb, 0x18, 0xbd, 0x82, 0x25,
-	0xf1, 0xc0, 0x87, 0x6a, 0xa7, 0x3d, 0xae, 0xf8, 0x67, 0x42, 0x75, 0x23, 0xc5, 0x4e, 0xe6, 0xab,
-	0x56, 0xf9, 0xfc, 0xcf, 0x7f, 0xfb, 0x22, 0x83, 0x90, 0x42, 0x5f, 0x44, 0x0f, 0xef, 0x34, 0x82,
-	0x27, 0xab, 0x9f, 0x4a, 0xa0, 0x3c, 0xc6, 0x3e, 0x07, 0x7b, 0x9d, 0x43, 0x5f, 0x9f, 0x7b, 0x5a,
-	0xe5, 0xea, 0xd7, 0xe7, 0x6f, 0xe2, 0x9a, 0x35, 0xaa, 0x79, 0x05, 0xa9, 0x31, 0xcd, 0x8d, 0xcf,
-	0xfc, 0x11, 0xfe, 0x0a, 0xfd, 0x52, 0x82, 0x8b, 0xa1, 0x0d, 0xfe, 0x4c, 0x4c, 0x65, 0xc4, 0xad,
-	0x79, 0x9b, 0x62, 0x93, 0x58, 0xdb, 0xa4, 0xb6, 0xac, 0x23, 0x6d, 0xb6, 0x2d, 0xfe, 0x3b, 0x30,
-	0xfa, 0x83, 0xc4, 0x6e, 0x63, 0xc9, 0x6f, 0x0a, 0xe8, 0x9d, 0xf3, 0x3d, 0x81, 0xa9, 0xdf, 0x3a,
-	0x33, 0x1f, 0xb7, 0xfd, 0x6d, 0x6a, 0xfb, 0x2a, 0x7a, 0x2b, 0x9e, 0xc1, 0x86, 0xf8, 0xe4, 0x80,
-	0xfe, 0x22, 0xcd, 0x7a, 0x65, 0x14, 0xee, 0xd5, 0xe8, 0x2c, 0x0f, 0x78, 0xd3, 0x77, 0x79, 0xf5,
-	0xe1, 0x79, 0xd9, 0xb9, 0x2f, 0x77, 0xa9, 0x2f, 0xb7, 0xd1, 0xad, 0xb9, 0xbe, 0x34, 0x3e, 0x6b,
-	0xed, 0xbe, 0x0a, 0x0b, 0xf5, 0x1f, 0x12, 0xac, 0xa7, 0x79, 0x59, 0x46, 0x8f, 0xce, 0xfe, 0xd8,
-	0x17, 0x7d, 0xd4, 0x56, 0x77, 0xde, 0x40, 0x02, 0x77, 0xf1, 0x21, 0x75, 0xf1, 0x3e, 0x7a, 0x67,
-	0xbe, 0x8b, 0x9c, 0x7a, 0x68, 0xe2, 0x23, 0xe6, 0x6e, 0x8f, 0x3b, 0x71, 0xaa, 0xb7, 0x7e, 0x97,
-	0x9c, 0xc3, 0xdb, 0xe8, 0xdf, 0x25, 0xce, 0xe3, 0x6d, 0xbc, 0xb1, 0xce, 0xeb, 0xad, 0xdf, 0x6c,
-	0xc7, 0x50, 0x12, 0xde, 0x5d, 0xd0, 0xcd, 0x99, 0xf5, 0x15, 0x7d, 0xc7, 0x51, 0x6b, 0xa7, 0x6f,
-	0xe4, 0x16, 0x5e, 0xa3, 0x16, 0x5e, 0x44, 0x17, 0x7c, 0x0b, 0xf9, 0x0b, 0x0e, 0xfa, 0x52, 0x12,
-	0x5f, 0x88, 0x02, 0x14, 0xae, 0x9f, 0x22, 0x39, 0x8e, 0xc5, 0x8d, 0xd4, 0xfb, 0xb9, 0x41, 0x55,
-	0x6a, 0x90, 0x8a, 0x2a, 0x31, 0x83, 0xc2, 0x82, 0xff, 0x99, 0x04, 0xcb, 0x91, 0xc9, 0x8c, 0x36,
-	0x52, 0x1f, 0x26, 0xd4, 0xcd, 0x34, 0x5b, 0xb9, 0x29, 0x5f, 0xa3, 0xa6, 0x5c, 0xd1, 0xa6, 0x86,
-	0xc3, 0x03, 0x69, 0x13, 0xfd, 0x36, 0x98, 0xf5, 0x09, 0x2f, 0x99, 0xb7, 0xe7, 0x68, 0x99, 0x3e,
-	0x1a, 0xa8, 0xf5, 0xb4, 0xdb, 0xb9, 0x61, 0x37, 0xa9, 0x61, 0x6b, 0xda, 0xca, 0xbc, 0xb2, 0x7a,
-	0x20, 0x6d, 0x36, 0x73, 0x1f, 0x67, 0x0e, 0xef, 0xbc, 0x2c, 0xd0, 0x3f, 0xcb, 0xdd, 0xfd, 0x4f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x03, 0xed, 0x5f, 0x2b, 0x21, 0x1c, 0x00, 0x00,
+	// 4390 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x3c, 0x4b, 0x6c, 0x1c, 0xc9,
+	0x75, 0xea, 0xf9, 0x72, 0x1e, 0xc9, 0xe1, 0xb0, 0xf8, 0xd1, 0x70, 0x96, 0x14, 0xa9, 0x5e, 0x69,
+	0x97, 0xd2, 0x4a, 0xa4, 0x44, 0x7a, 0xd7, 0xbb, 0xd2, 0x7a, 0x77, 0x87, 0x1f, 0x69, 0x27, 0x12,
+	0x87, 0x74, 0x73, 0xb8, 0xce, 0xda, 0x8e, 0xc7, 0xad, 0x99, 0xe2, 0x6c, 0x63, 0x67, 0xba, 0x47,
+	0xdd, 0x3d, 0x14, 0x68, 0x41, 0x80, 0xe3, 0x7c, 0x0e, 0x09, 0x10, 0x23, 0xbb, 0x70, 0x9c, 0x0f,
+	0x92, 0xd8, 0x87, 0x5c, 0x02, 0x03, 0x31, 0xe0, 0x5c, 0x93, 0x1c, 0x92, 0x1c, 0x93, 0x1c, 0x1c,
+	0x20, 0xb9, 0xe4, 0x10, 0x20, 0x08, 0x0c, 0xe4, 0x92, 0x9c, 0x02, 0xe8, 0x64, 0x74, 0x7d, 0xba,
+	0xab, 0x7f, 0xf3, 0x21, 0x57, 0xb0, 0x57, 0x17, 0x4d, 0x57, 0xd5, 0x7b, 0xf5, 0xea, 0xd5, 0xab,
+	0xf7, 0x5e, 0xbd, 0xf7, 0x8a, 0x30, 0xd9, 0x35, 0x8d, 0x66, 0xaf, 0x61, 0xaf, 0x75, 0x4d, 0xc3,
+	0x36, 0xd0, 0x8c, 0xd1, 0xb5, 0x35, 0x4b, 0xed, 0xac, 0xb1, 0x66, 0x6b, 0xed, 0xe4, 0x76, 0x69,
+	0xb1, 0x65, 0x18, 0xad, 0x36, 0x5e, 0x57, 0xbb, 0xda, 0xba, 0xaa, 0xeb, 0x86, 0xad, 0xda, 0x9a,
+	0xa1, 0x5b, 0x14, 0xa4, 0x74, 0x83, 0xfc, 0xd7, 0xb8, 0xd9, 0xc2, 0xfa, 0x4d, 0xeb, 0x89, 0xda,
+	0x6a, 0x61, 0x73, 0xdd, 0xc1, 0x62, 0xe8, 0x56, 0xc4, 0xe8, 0x8b, 0x27, 0x6a, 0x5b, 0x6b, 0xaa,
+	0x36, 0x5e, 0xe7, 0x3f, 0x58, 0xc7, 0x32, 0x9b, 0x84, 0x7c, 0x3d, 0xea, 0x1d, 0xaf, 0xdb, 0x5a,
+	0x07, 0x5b, 0xb6, 0xda, 0xe9, 0xd2, 0x01, 0xf2, 0xaf, 0xc0, 0xd2, 0xfe, 0x09, 0x36, 0x4f, 0x34,
+	0xfc, 0xe4, 0x80, 0x12, 0xf7, 0xe5, 0x9e, 0xda, 0xd6, 0xec, 0x53, 0x05, 0x3f, 0xee, 0x61, 0xcb,
+	0x46, 0xd7, 0x20, 0x6d, 0x35, 0x8c, 0x2e, 0x2e, 0x4a, 0x2b, 0xd2, 0x6a, 0x6e, 0x6b, 0xe6, 0xf9,
+	0x56, 0xc1, 0xcc, 0x6f, 0x4c, 0x7c, 0xfd, 0xd1, 0xd7, 0xca, 0x37, 0xbf, 0xfa, 0x6b, 0x4f, 0x37,
+	0x9f, 0x7d, 0xfd, 0x91, 0x42, 0x47, 0xc8, 0x7f, 0x9c, 0x80, 0x4b, 0x71, 0xc8, 0xac, 0xae, 0xa1,
+	0x5b, 0x18, 0x6d, 0xc0, 0x9c, 0x6e, 0xd8, 0x75, 0xb5, 0xf1, 0xb8, 0xa7, 0x99, 0xb8, 0x59, 0xe7,
+	0x0c, 0x21, 0xd8, 0xd3, 0xca, 0x8c, 0x6e, 0xd8, 0x65, 0xd6, 0xc7, 0x30, 0x58, 0x1c, 0xa6, 0x89,
+	0xbb, 0x6d, 0xe3, 0x54, 0x84, 0x49, 0xb8, 0x30, 0x3b, 0xac, 0xcf, 0x85, 0xb9, 0x0f, 0x2b, 0x91,
+	0xf3, 0xd4, 0xbb, 0xd8, 0x6c, 0x60, 0xdd, 0x56, 0x5b, 0xb8, 0x98, 0x5c, 0x91, 0x56, 0x25, 0x65,
+	0x29, 0x62, 0xca, 0x03, 0x77, 0x10, 0x47, 0x14, 0x9a, 0x5c, 0x44, 0x94, 0x72, 0x11, 0x05, 0xe9,
+	0xf0, 0x10, 0xc9, 0xbb, 0x50, 0x14, 0x5a, 0x77, 0x9b, 0x9a, 0x6d, 0x98, 0x67, 0xe0, 0xf1, 0xc7,
+	0xb0, 0x10, 0x81, 0x86, 0x71, 0xb7, 0x0a, 0x05, 0x4c, 0x5a, 0x2c, 0x91, 0xb1, 0xc9, 0xd5, 0xf1,
+	0x8d, 0x97, 0xd7, 0x22, 0x44, 0x70, 0x8d, 0x82, 0x73, 0x7c, 0xca, 0x14, 0x03, 0xe6, 0x0d, 0xf2,
+	0x03, 0xc8, 0xfb, 0x87, 0xa0, 0x79, 0xc8, 0xd0, 0x41, 0x94, 0x54, 0x85, 0x7d, 0xa1, 0xcb, 0x30,
+	0xa1, 0xf7, 0x3a, 0xc1, 0xad, 0x19, 0xd7, 0x7b, 0x1d, 0x17, 0xd9, 0x29, 0xbc, 0xc6, 0x7e, 0x97,
+	0x5b, 0x2d, 0x13, 0xb7, 0x88, 0x00, 0xb3, 0x96, 0x0f, 0x34, 0xfc, 0x64, 0x9f, 0x4a, 0x37, 0xe7,
+	0x49, 0x1e, 0x12, 0x95, 0x1d, 0x26, 0x16, 0x89, 0xca, 0x0e, 0xba, 0x03, 0x19, 0xc2, 0x01, 0x07,
+	0x77, 0x72, 0x35, 0xb7, 0x25, 0x3f, 0xdf, 0xca, 0x7e, 0x22, 0xa5, 0xc6, 0xa4, 0x82, 0xf4, 0x7c,
+	0x6b, 0xee, 0x13, 0x09, 0xc9, 0x61, 0x9e, 0x31, 0x08, 0xf9, 0x53, 0x09, 0x6e, 0x0c, 0x37, 0x37,
+	0x63, 0xa4, 0x4c, 0x96, 0xb3, 0x7f, 0xcc, 0xda, 0x19, 0x19, 0xbe, 0x36, 0xf4, 0x2e, 0x00, 0x3d,
+	0x90, 0x9a, 0x7e, 0x6c, 0x10, 0xa2, 0xc6, 0x37, 0x96, 0x23, 0xd9, 0x4c, 0x21, 0x2a, 0xfa, 0xb1,
+	0xa1, 0x08, 0x20, 0x03, 0x19, 0xb2, 0x83, 0x6d, 0x55, 0x6b, 0xbf, 0x10, 0x86, 0x7c, 0x3f, 0x31,
+	0x80, 0x21, 0xee, 0xdc, 0x8c, 0x21, 0xc1, 0xc9, 0x11, 0xa4, 0x74, 0xb5, 0x83, 0xc9, 0x3e, 0xe7,
+	0x14, 0xf2, 0x5b, 0x90, 0x8d, 0x64, 0x50, 0x36, 0x18, 0x37, 0xea, 0x04, 0x26, 0x45, 0x7a, 0xc7,
+	0x59, 0x5b, 0xd5, 0x01, 0xbd, 0x06, 0x05, 0x47, 0x7c, 0xd4, 0x6e, 0xb7, 0xad, 0x35, 0xa8, 0x66,
+	0x2b, 0xa6, 0xc9, 0x64, 0x53, 0x7a, 0xaf, 0x53, 0x16, 0x9a, 0xd1, 0x55, 0xc8, 0x3b, 0x43, 0xf1,
+	0xe3, 0x9e, 0xd6, 0xed, 0x60, 0xdd, 0xb6, 0x8a, 0x19, 0x32, 0x70, 0x52, 0xef, 0x75, 0x76, 0xdd,
+	0x46, 0x54, 0x82, 0x31, 0x57, 0x18, 0xb3, 0x0e, 0x7f, 0x14, 0xf7, 0xdb, 0xe9, 0x73, 0x48, 0x23,
+	0xb3, 0x8c, 0xd1, 0x3e, 0xfe, 0x2d, 0xff, 0x5f, 0x0a, 0x2e, 0x3f, 0xd4, 0x2c, 0x3b, 0xcc, 0x1d,
+	0x87, 0x2d, 0x7c, 0x2f, 0xee, 0xc3, 0x58, 0x57, 0x6d, 0xe1, 0xba, 0xde, 0xeb, 0x50, 0xa6, 0x6c,
+	0xdd, 0xf8, 0xa4, 0xbc, 0xbc, 0x31, 0x7e, 0xa0, 0xb6, 0xf0, 0x8a, 0xde, 0xeb, 0x3c, 0xc2, 0xe6,
+	0x87, 0x17, 0x9c, 0x7f, 0xef, 0x7d, 0xf7, 0x3d, 0x8d, 0xfc, 0xb8, 0xf0, 0xbf, 0xef, 0x3e, 0xdf,
+	0xca, 0x96, 0xd2, 0x85, 0x9f, 0x65, 0x57, 0x25, 0x25, 0xeb, 0x40, 0x57, 0x7b, 0x1d, 0x54, 0x81,
+	0x1c, 0x41, 0x64, 0x69, 0xdf, 0xa2, 0xcc, 0x24, 0x98, 0xe4, 0x8d, 0x7c, 0xc5, 0xc6, 0x1d, 0x6b,
+	0xa5, 0x8b, 0xcd, 0x15, 0xa7, 0x9f, 0x22, 0xbb, 0xf0, 0x21, 0x47, 0x76, 0xe5, 0xbd, 0xe7, 0x5b,
+	0xa9, 0x52, 0x62, 0x15, 0x14, 0x42, 0xc7, 0xa1, 0xf6, 0x2d, 0x8c, 0xbe, 0x09, 0x59, 0xcb, 0x30,
+	0xed, 0xfa, 0xa3, 0x53, 0xc2, 0xff, 0xfc, 0xc6, 0x97, 0x22, 0x85, 0x71, 0xe0, 0xe2, 0xd6, 0x0e,
+	0x0d, 0xd3, 0xde, 0x3a, 0xdd, 0x1a, 0x7b, 0xbe, 0x95, 0xfe, 0x8e, 0x94, 0x28, 0x48, 0x4a, 0xc6,
+	0x22, 0x2d, 0xe8, 0x3e, 0x00, 0x99, 0xc1, 0x30, 0x9b, 0xd8, 0x24, 0xdb, 0x98, 0xdf, 0xb8, 0x14,
+	0x39, 0x89, 0x83, 0x62, 0xdf, 0x19, 0x25, 0x60, 0xc9, 0x59, 0xbc, 0x11, 0x35, 0x60, 0xd2, 0xc2,
+	0xaa, 0xd9, 0xf8, 0xa8, 0xde, 0x55, 0x4d, 0xb5, 0x43, 0xf7, 0x7a, 0x7c, 0xe3, 0x9d, 0x48, 0x5c,
+	0x7d, 0xe5, 0xf4, 0x90, 0xa0, 0x39, 0x20, 0x58, 0x94, 0x09, 0x4b, 0xf8, 0x12, 0xce, 0x47, 0x66,
+	0xe4, 0xf3, 0xd1, 0x86, 0x0c, 0xe5, 0x02, 0x9a, 0x85, 0x82, 0xea, 0xcd, 0x4c, 0x04, 0xb8, 0x70,
+	0x01, 0x21, 0xc8, 0x73, 0x91, 0xa6, 0x42, 0x5e, 0x90, 0xd0, 0x45, 0x98, 0x71, 0x04, 0xd3, 0x38,
+	0xf6, 0x89, 0x71, 0x21, 0x81, 0xe6, 0x60, 0x9a, 0x75, 0x78, 0x42, 0x5b, 0x48, 0xa2, 0x31, 0x48,
+	0x35, 0x0c, 0xcb, 0x2e, 0xa4, 0xe4, 0x1f, 0x24, 0xe0, 0xda, 0xd0, 0xab, 0x44, 0x77, 0x21, 0x6b,
+	0x3d, 0xd1, 0x9a, 0x35, 0xb5, 0x45, 0x44, 0x6f, 0x7c, 0xe3, 0x72, 0xf4, 0x16, 0xd8, 0xa6, 0xa6,
+	0xb7, 0xee, 0x69, 0x6d, 0x1b, 0x9b, 0x0a, 0x87, 0x40, 0xaf, 0x0b, 0xe7, 0x76, 0x28, 0x48, 0x7a,
+	0xb4, 0xdf, 0xf2, 0x1d, 0xed, 0xa1, 0x00, 0xf9, 0xe9, 0xdf, 0x89, 0x38, 0xfd, 0x43, 0x21, 0x10,
+	0x15, 0x84, 0xfc, 0x47, 0x12, 0xc8, 0xfd, 0x24, 0xd7, 0xd3, 0xdb, 0xb6, 0x61, 0xab, 0x6d, 0x05,
+	0x37, 0x0c, 0xb3, 0xe9, 0xea, 0x6d, 0xb1, 0x0d, 0xed, 0xc3, 0x84, 0xb0, 0xa3, 0x16, 0xd3, 0xdc,
+	0xaf, 0x0d, 0x29, 0x7b, 0x64, 0x3a, 0x1f, 0x02, 0xf9, 0x3f, 0x25, 0x98, 0x8f, 0x1e, 0x78, 0x2e,
+	0xb5, 0x19, 0xa5, 0x13, 0x53, 0xc3, 0xea, 0xc4, 0x74, 0x94, 0x4e, 0x5c, 0x02, 0x20, 0x9c, 0xa8,
+	0x3b, 0x72, 0x47, 0xd4, 0xa6, 0xa4, 0xe4, 0x48, 0xcb, 0xb6, 0x61, 0xd9, 0x8e, 0x5a, 0x74, 0xc4,
+	0xc4, 0x56, 0x5b, 0xae, 0xca, 0xe4, 0xdf, 0xf2, 0x09, 0xac, 0x46, 0xb3, 0x5f, 0x90, 0xd2, 0x17,
+	0x61, 0xa8, 0x30, 0x5c, 0x1b, 0x62, 0x5e, 0xb6, 0xfb, 0x6f, 0x0a, 0x3a, 0x9f, 0xba, 0x3d, 0x8b,
+	0xfd, 0x76, 0xd5, 0xb3, 0x08, 0xf2, 0x3d, 0x40, 0xce, 0x34, 0xd4, 0xd9, 0x71, 0x2d, 0xee, 0x2d,
+	0x97, 0x70, 0x89, 0x10, 0x5e, 0x1c, 0x48, 0xee, 0x3a, 0xcc, 0xf8, 0xf0, 0x30, 0xc2, 0x8a, 0x90,
+	0x65, 0xae, 0x15, 0xc5, 0xa4, 0xf0, 0x4f, 0x19, 0xc3, 0x82, 0x07, 0xe0, 0x3a, 0x62, 0x6c, 0xfe,
+	0x38, 0x67, 0xeb, 0x56, 0x80, 0xa1, 0x83, 0xe9, 0xfa, 0x00, 0x4a, 0x51, 0xd3, 0x9c, 0x9b, 0x6f,
+	0x8b, 0x90, 0xa1, 0x38, 0x1d, 0xc9, 0x76, 0x0e, 0x2a, 0xa3, 0x94, 0xfc, 0x96, 0xbf, 0x97, 0x80,
+	0x2c, 0x83, 0x71, 0x58, 0x20, 0x6a, 0xad, 0x9c, 0xa7, 0x92, 0xa2, 0xce, 0x44, 0x11, 0xb2, 0x27,
+	0xd8, 0xb4, 0x34, 0x43, 0x67, 0x87, 0x82, 0x7f, 0x3a, 0x42, 0xda, 0x50, 0x6d, 0xdc, 0x32, 0xcc,
+	0x53, 0xe6, 0x48, 0xb8, 0xdf, 0x9c, 0xcd, 0x0e, 0x54, 0x9a, 0x42, 0xb1, 0x4f, 0x81, 0x93, 0x19,
+	0x1f, 0x27, 0x17, 0xc1, 0x93, 0xff, 0x62, 0x36, 0x78, 0x20, 0x6e, 0x10, 0xc5, 0xbd, 0x7f, 0x2c,
+	0x9e, 0xb5, 0xe2, 0x18, 0x91, 0xeb, 0x70, 0x07, 0x5a, 0x05, 0xe7, 0x5c, 0x1a, 0xc7, 0xde, 0x81,
+	0x2b, 0xe6, 0xdc, 0xe3, 0x2a, 0x36, 0xcb, 0x36, 0xcc, 0x0a, 0x42, 0x6d, 0x8d, 0xa4, 0xbd, 0xc4,
+	0xbd, 0x4a, 0x8c, 0xb4, 0x57, 0xdf, 0x4e, 0x51, 0xe1, 0x0c, 0x4a, 0xd9, 0x2f, 0xa3, 0x2f, 0xf3,
+	0x6d, 0xc9, 0xef, 0xcc, 0xe4, 0xb6, 0x5a, 0xcf, 0xb7, 0x9a, 0xe6, 0x23, 0x2a, 0x1e, 0x54, 0x76,
+	0x6c, 0xb5, 0xe5, 0x8a, 0x85, 0xbb, 0xd3, 0x9e, 0x34, 0xf0, 0x3d, 0x16, 0x36, 0x34, 0x62, 0xd7,
+	0x42, 0x9b, 0xf3, 0xd9, 0x3b, 0x3b, 0x7b, 0xd1, 0xce, 0xce, 0x6a, 0xbf, 0x6d, 0x7b, 0x41, 0x6e,
+	0xcd, 0xbf, 0x26, 0x60, 0x26, 0x62, 0x86, 0xcf, 0x9b, 0x4b, 0xf1, 0x3e, 0xe4, 0x05, 0xab, 0x58,
+	0xd7, 0x9a, 0xc3, 0x3b, 0x15, 0x93, 0x02, 0x60, 0xa5, 0xe9, 0x38, 0x27, 0xae, 0xd1, 0x74, 0xf0,
+	0xa4, 0x87, 0x76, 0x4e, 0x5c, 0xb0, 0x4a, 0x53, 0x6e, 0x41, 0x9e, 0x1f, 0x37, 0x76, 0xa6, 0x16,
+	0xa8, 0x29, 0xad, 0xdb, 0x61, 0x75, 0x77, 0x1e, 0x6b, 0xf8, 0x04, 0xa6, 0xdc, 0x89, 0x3c, 0xd3,
+	0x12, 0xa3, 0x57, 0x3d, 0x9d, 0x97, 0xf0, 0xe9, 0x3c, 0x41, 0x4b, 0x26, 0xfd, 0x5a, 0xb2, 0x08,
+	0x59, 0x13, 0xb7, 0xb1, 0x6a, 0xf1, 0x3b, 0x1a, 0xff, 0x94, 0x9f, 0xb9, 0x1e, 0xce, 0x2f, 0xe4,
+	0xa6, 0xfc, 0xdb, 0x12, 0x80, 0xd7, 0xd5, 0xdf, 0x96, 0x54, 0x05, 0x5b, 0x52, 0x65, 0xb6, 0x24,
+	0x66, 0xbd, 0x1e, 0x87, 0x52, 0x41, 0x0e, 0x71, 0xeb, 0x93, 0xf6, 0x59, 0x1f, 0xf9, 0xc7, 0x12,
+	0x4c, 0x88, 0x72, 0x80, 0x5e, 0x81, 0xfc, 0x31, 0xf9, 0xa5, 0xe9, 0x2d, 0x72, 0xdc, 0x19, 0x03,
+	0x02, 0xad, 0x0e, 0x9b, 0xdc, 0x96, 0x8f, 0xf1, 0x29, 0x23, 0xd0, 0xd7, 0x86, 0x96, 0x61, 0x9c,
+	0x7e, 0xd7, 0xed, 0xd3, 0x2e, 0x0d, 0x4f, 0x8d, 0x29, 0x40, 0x9b, 0x6a, 0xa7, 0x5d, 0x8c, 0x36,
+	0x61, 0x4e, 0x04, 0xa8, 0x77, 0x7a, 0x6d, 0x5b, 0xeb, 0xb6, 0x9d, 0xdd, 0x72, 0x9c, 0x8a, 0x59,
+	0xb1, 0x73, 0x8f, 0xf5, 0xc9, 0xbf, 0x95, 0x81, 0xd9, 0xa3, 0xae, 0x85, 0x4d, 0x3b, 0x20, 0xa3,
+	0xa3, 0x59, 0x64, 0xd1, 0xee, 0x26, 0xe3, 0xed, 0x6e, 0x2a, 0x8e, 0xc3, 0xe9, 0x38, 0x0e, 0x67,
+	0x42, 0xf6, 0x9d, 0x6e, 0xfc, 0xfe, 0x31, 0x31, 0xc8, 0x39, 0xc5, 0xfd, 0xf6, 0xc2, 0x64, 0x63,
+	0x83, 0xc2, 0x64, 0xe8, 0x43, 0x98, 0xf0, 0x39, 0xce, 0x39, 0x72, 0xb0, 0x5f, 0x8f, 0x14, 0xba,
+	0x28, 0xee, 0xac, 0x09, 0xd0, 0x8a, 0x0f, 0x15, 0x3a, 0x04, 0x10, 0x1c, 0x6d, 0x20, 0x88, 0x37,
+	0x87, 0x47, 0xec, 0xc2, 0x2a, 0x02, 0x9a, 0xd2, 0x31, 0x8c, 0x0b, 0x93, 0xa0, 0x5b, 0x90, 0x33,
+	0xba, 0xd8, 0x24, 0x1f, 0x2c, 0x28, 0x88, 0x9e, 0x6f, 0x4d, 0x99, 0x93, 0x4a, 0x52, 0x6d, 0x36,
+	0x95, 0x4c, 0x13, 0xb7, 0xb1, 0x8d, 0x15, 0x6f, 0x90, 0x73, 0x05, 0x08, 0xe8, 0x44, 0xa2, 0x5e,
+	0x02, 0x0a, 0xaf, 0xf4, 0xff, 0x12, 0xe4, 0xdc, 0x69, 0xcf, 0x30, 0x8d, 0x06, 0x79, 0x17, 0xbc,
+	0x67, 0x61, 0x93, 0x3b, 0x21, 0xe5, 0x33, 0x30, 0x60, 0xcd, 0x87, 0x49, 0x09, 0x20, 0x2e, 0xed,
+	0xc1, 0xa4, 0xaf, 0x05, 0x5d, 0x0e, 0x28, 0x6b, 0x2a, 0xb5, 0xa2, 0x26, 0x76, 0xf4, 0xae, 0x73,
+	0x11, 0x72, 0x86, 0xb3, 0x10, 0x64, 0x56, 0xef, 0x75, 0x8e, 0x2c, 0x6c, 0xca, 0xb7, 0x61, 0x2e,
+	0x40, 0x8e, 0xa0, 0x41, 0x7b, 0x8d, 0x06, 0xb6, 0xa8, 0xf2, 0x1a, 0x53, 0xf8, 0xa7, 0xbc, 0x0d,
+	0xf3, 0xdb, 0x46, 0xa7, 0xdb, 0xd6, 0x54, 0xbd, 0x81, 0xcb, 0x6d, 0x6c, 0xda, 0x67, 0x08, 0xd8,
+	0x7e, 0x2a, 0xc1, 0xc5, 0x10, 0x16, 0x36, 0xf5, 0x5d, 0x58, 0x68, 0x18, 0x3d, 0xdd, 0xc6, 0xe6,
+	0x31, 0xd6, 0x6c, 0x4d, 0x6f, 0x89, 0x51, 0x65, 0x89, 0xb8, 0xa3, 0x45, 0xff, 0x00, 0x21, 0x32,
+	0x7d, 0x17, 0x16, 0x8c, 0x13, 0x6c, 0xd2, 0xc8, 0x34, 0xe1, 0x89, 0x00, 0x9c, 0xa0, 0xc0, 0xfe,
+	0x01, 0x42, 0x34, 0xfa, 0x9b, 0xf0, 0xd2, 0xbe, 0xdb, 0xe7, 0xc5, 0xab, 0x47, 0x5f, 0x5f, 0x9c,
+	0x99, 0x91, 0xff, 0x46, 0x82, 0xc5, 0xe8, 0x29, 0xd8, 0xe2, 0x15, 0x98, 0x76, 0x83, 0xe9, 0x6d,
+	0xad, 0x81, 0x75, 0x0b, 0xf3, 0xeb, 0xc7, 0xd5, 0x7e, 0xbe, 0x91, 0xf5, 0x90, 0x0d, 0x56, 0x0a,
+	0xdd, 0x40, 0x0b, 0xaa, 0xb8, 0x71, 0x19, 0x8b, 0x5c, 0x72, 0xb9, 0x78, 0xca, 0x7d, 0x11, 0x3a,
+	0xbe, 0xa1, 0xa5, 0xf0, 0x9c, 0x0d, 0xfd, 0x94, 0x1f, 0xc2, 0xf2, 0x8e, 0x6a, 0x7d, 0xf4, 0xc8,
+	0x50, 0xcd, 0x26, 0xcb, 0x62, 0x9c, 0x9d, 0x4b, 0xf2, 0xcf, 0x24, 0x58, 0x89, 0x47, 0xc7, 0x38,
+	0xa2, 0xc2, 0x9c, 0x4b, 0xbd, 0x98, 0x74, 0x60, 0x5c, 0xb9, 0x19, 0xb9, 0x88, 0x58, 0xac, 0x33,
+	0x7c, 0x54, 0xd5, 0xcb, 0x4b, 0x84, 0xa6, 0xe0, 0x09, 0x12, 0xc6, 0xa7, 0x73, 0x4c, 0xc1, 0x73,
+	0x28, 0xf2, 0xaf, 0x42, 0x31, 0x0e, 0xa0, 0x9f, 0x5f, 0x14, 0x8c, 0x12, 0x27, 0x42, 0x51, 0x62,
+	0xf9, 0x9f, 0x25, 0x28, 0x04, 0x85, 0xe0, 0x7c, 0x28, 0x49, 0x6e, 0xa9, 0xd7, 0x71, 0xe5, 0xcf,
+	0xe3, 0x87, 0x63, 0xe3, 0x92, 0xca, 0x8c, 0xde, 0xeb, 0xf0, 0x99, 0xf8, 0x02, 0x43, 0x30, 0x0d,
+	0xa3, 0xd3, 0xed, 0xd9, 0x98, 0x7a, 0xa1, 0x7e, 0x98, 0x6d, 0xd6, 0x85, 0x66, 0x21, 0xdd, 0xc4,
+	0x6d, 0x5b, 0x25, 0x76, 0x30, 0xa9, 0xd0, 0x0f, 0xf9, 0xdf, 0x25, 0x98, 0xf4, 0x09, 0xe1, 0x39,
+	0x57, 0xf3, 0x05, 0x98, 0x0f, 0xad, 0x84, 0x06, 0x7b, 0x68, 0xae, 0x6b, 0xb6, 0x1d, 0x58, 0x0b,
+	0xb9, 0xe6, 0x8a, 0x50, 0x7c, 0x2d, 0x14, 0x2a, 0xe5, 0x87, 0xe2, 0xab, 0x21, 0x50, 0x4b, 0x00,
+	0x64, 0x11, 0x74, 0x64, 0x9a, 0xde, 0x9d, 0x49, 0x8b, 0xd3, 0x2d, 0x2f, 0xc3, 0xd2, 0x3d, 0x4d,
+	0x57, 0xf5, 0x86, 0xa6, 0xb6, 0xa3, 0xd4, 0x80, 0x5c, 0x81, 0x45, 0x21, 0x91, 0xb5, 0x87, 0x6d,
+	0x53, 0x6b, 0x38, 0x5e, 0xce, 0x19, 0x0e, 0x97, 0x0a, 0x8b, 0xdb, 0x9e, 0x96, 0x7c, 0x21, 0xda,
+	0xec, 0x6f, 0x25, 0x58, 0x8a, 0x99, 0xe3, 0xf3, 0xa1, 0xce, 0x0c, 0x58, 0x8a, 0x61, 0xb7, 0x97,
+	0x3b, 0xec, 0x90, 0xd6, 0x21, 0x73, 0x87, 0x14, 0x85, 0x97, 0x3b, 0x64, 0xc0, 0xee, 0xfe, 0xd6,
+	0x20, 0xef, 0x1f, 0xe2, 0xf8, 0xb7, 0x74, 0x10, 0x95, 0x5f, 0x2a, 0xde, 0x40, 0x9b, 0x88, 0xf8,
+	0x0e, 0x91, 0x44, 0xdc, 0x15, 0x94, 0x0b, 0x4f, 0x35, 0x9f, 0x41, 0x62, 0xfe, 0x5e, 0x82, 0x85,
+	0x08, 0x3c, 0x8c, 0x15, 0x37, 0x00, 0xd1, 0x38, 0x29, 0xdb, 0x47, 0x2a, 0xe2, 0xd4, 0x1e, 0x17,
+	0x48, 0x0f, 0xdb, 0x21, 0x7e, 0x7c, 0xe8, 0xe8, 0x8e, 0xaa, 0xe9, 0x36, 0x76, 0x64, 0x9e, 0x41,
+	0x50, 0x23, 0x3c, 0x4b, 0x7a, 0xf7, 0xbc, 0x4e, 0x02, 0xb5, 0x0c, 0xe3, 0x24, 0x64, 0xcb, 0xc2,
+	0x82, 0x49, 0xb2, 0x54, 0xd0, 0x7b, 0x1d, 0x16, 0x3b, 0x0c, 0x31, 0x23, 0x15, 0x66, 0xc6, 0x4f,
+	0xd3, 0x30, 0x4f, 0x7d, 0x9a, 0x72, 0xe3, 0xb1, 0xa2, 0xb5, 0x3e, 0xf2, 0x44, 0x7e, 0x01, 0x92,
+	0xd6, 0xc7, 0x3d, 0xc6, 0x89, 0xec, 0xf3, 0xad, 0x94, 0x99, 0x28, 0x48, 0x8a, 0xd3, 0x86, 0x2e,
+	0x03, 0x0f, 0x9f, 0x50, 0x19, 0xf7, 0xba, 0x79, 0x7b, 0x48, 0xd5, 0x24, 0xc3, 0xaa, 0xe6, 0x6a,
+	0x30, 0x03, 0xc2, 0x5c, 0x7f, 0x2e, 0x76, 0x2c, 0x2c, 0xe8, 0xed, 0x39, 0xb9, 0xd3, 0xa4, 0xc5,
+	0x3d, 0x27, 0x77, 0x9a, 0x58, 0x05, 0x9c, 0x61, 0xc9, 0xfd, 0x08, 0x05, 0x7c, 0x05, 0xf2, 0xea,
+	0x49, 0xab, 0xde, 0xd3, 0x35, 0xbb, 0xde, 0x35, 0xb5, 0x06, 0x66, 0xa1, 0xbb, 0x09, 0xf5, 0xa4,
+	0x75, 0xa4, 0x6b, 0xf6, 0x81, 0xd3, 0x86, 0xee, 0x42, 0xc9, 0x19, 0x25, 0xee, 0x8a, 0x00, 0x31,
+	0x46, 0x20, 0x2e, 0xaa, 0x27, 0x2d, 0x61, 0x67, 0x3c, 0xe0, 0x35, 0x98, 0xa1, 0x9b, 0xda, 0xed,
+	0x99, 0x8d, 0x8f, 0x54, 0x2e, 0x03, 0x39, 0x02, 0x35, 0x4d, 0xba, 0x0e, 0x58, 0xcf, 0x00, 0x21,
+	0x80, 0x3e, 0x42, 0xe0, 0x0f, 0xc8, 0x8f, 0x07, 0xe3, 0x8f, 0x8e, 0x32, 0xd2, 0x6d, 0xcd, 0x3e,
+	0x2d, 0x4e, 0x30, 0x65, 0x44, 0xbe, 0xd0, 0x12, 0x17, 0xf4, 0x49, 0xff, 0xfe, 0x31, 0x1d, 0x76,
+	0x0b, 0x66, 0x2d, 0x5b, 0x35, 0xed, 0xba, 0x71, 0x2c, 0x92, 0x53, 0xcc, 0x13, 0x24, 0x88, 0xf4,
+	0xed, 0x1f, 0x0b, 0xb4, 0x38, 0x02, 0x8f, 0xf5, 0x66, 0x70, 0xfc, 0x14, 0x19, 0x5f, 0xc0, 0x7a,
+	0xd3, 0x3f, 0xfa, 0x0e, 0x2c, 0xb8, 0x5b, 0xd6, 0xc0, 0x16, 0x85, 0x51, 0x35, 0x0a, 0x54, 0x20,
+	0xdb, 0x76, 0x91, 0x6f, 0x5b, 0x03, 0x5b, 0x7b, 0x42, 0xb7, 0x23, 0x7c, 0xfc, 0xe2, 0x37, 0x1d,
+	0x10, 0x3e, 0x7e, 0xc7, 0xde, 0x84, 0x8b, 0x21, 0xa1, 0x1e, 0xe8, 0xaa, 0xff, 0x69, 0x86, 0xc6,
+	0x54, 0x43, 0x07, 0xe1, 0x33, 0x8b, 0x6e, 0x3e, 0x08, 0x47, 0x37, 0xd7, 0x86, 0x8c, 0x6e, 0x66,
+	0x4a, 0xa9, 0x42, 0xd3, 0x17, 0xdf, 0x3c, 0x0c, 0xe6, 0x6a, 0x6f, 0xc5, 0xe6, 0x6a, 0x83, 0x2b,
+	0x8a, 0x4f, 0xcf, 0x7e, 0x69, 0xf4, 0x88, 0xa5, 0x18, 0xa7, 0xdc, 0x8f, 0x8e, 0x53, 0x5e, 0x8f,
+	0xc4, 0xe0, 0x52, 0xf5, 0x82, 0x22, 0x95, 0xff, 0x94, 0x70, 0x33, 0xb0, 0x00, 0x99, 0xdd, 0x6a,
+	0xad, 0x52, 0xfb, 0xb0, 0x70, 0x01, 0x65, 0x21, 0x79, 0xf8, 0xe0, 0xa8, 0x20, 0xa1, 0x09, 0x18,
+	0x3b, 0xfc, 0x4a, 0x65, 0xa7, 0x5e, 0x2b, 0xdf, 0x2f, 0x24, 0x50, 0x01, 0x26, 0x0e, 0x94, 0xfd,
+	0x9d, 0xa3, 0xed, 0x5a, 0xbd, 0x5a, 0xde, 0xdb, 0x2d, 0x24, 0x09, 0xd0, 0x4e, 0xa5, 0xb6, 0xaf,
+	0x14, 0x52, 0xce, 0xef, 0xbd, 0xdd, 0x9a, 0x52, 0xd9, 0x2e, 0xa4, 0xd1, 0x22, 0x14, 0xcb, 0xdb,
+	0x5f, 0x3e, 0xaa, 0x28, 0xbb, 0x3b, 0xf5, 0x87, 0x95, 0xed, 0xdd, 0xea, 0xe1, 0xee, 0x61, 0xbd,
+	0x7a, 0xb4, 0xb7, 0xb5, 0xab, 0x14, 0x32, 0xa8, 0x04, 0xf3, 0xe5, 0x0f, 0xee, 0xf3, 0x8e, 0xfa,
+	0x51, 0xb5, 0x52, 0xab, 0x1f, 0x28, 0x95, 0xed, 0xdd, 0x42, 0x16, 0x5d, 0x82, 0x92, 0xd3, 0xb7,
+	0x57, 0xae, 0x54, 0x6b, 0xbb, 0xd5, 0x72, 0x75, 0xdb, 0xd7, 0x3f, 0x86, 0x2e, 0xc2, 0x4c, 0x6d,
+	0xbf, 0x56, 0x7e, 0x58, 0x3f, 0x38, 0x52, 0xb6, 0xdf, 0x2f, 0x1f, 0xee, 0xd6, 0xb7, 0xf7, 0x0f,
+	0x6b, 0x85, 0x9c, 0x83, 0x94, 0x76, 0x88, 0xa0, 0xa4, 0x0f, 0x50, 0x1e, 0x80, 0xf6, 0x91, 0xef,
+	0x71, 0x54, 0x84, 0xd9, 0xc3, 0x5a, 0x59, 0xa9, 0xd5, 0xf7, 0xef, 0x89, 0xc3, 0x0b, 0x13, 0x68,
+	0x1e, 0xd0, 0x6e, 0x75, 0x27, 0xd8, 0x3e, 0x89, 0xae, 0xc2, 0x65, 0x77, 0x1d, 0x47, 0xd5, 0x9d,
+	0x5d, 0xc5, 0x37, 0x0d, 0x5b, 0x59, 0x5e, 0xfe, 0x87, 0x04, 0xcc, 0x45, 0xee, 0xd9, 0xf9, 0x62,
+	0xbf, 0x9b, 0x64, 0x3f, 0x86, 0x0f, 0xfd, 0x3a, 0xa3, 0xcf, 0x13, 0xf9, 0xdd, 0x06, 0xd1, 0x08,
+	0x9d, 0x2d, 0x97, 0xec, 0xcc, 0x4f, 0x0d, 0xd0, 0xf0, 0xe1, 0x5e, 0x06, 0x20, 0xff, 0xa6, 0x04,
+	0x73, 0x81, 0x43, 0x39, 0x42, 0xee, 0xe6, 0x3e, 0x4c, 0xb9, 0x5e, 0xb9, 0x49, 0xc0, 0x99, 0x3f,
+	0x77, 0xa9, 0xff, 0x19, 0x53, 0xf2, 0x1c, 0x8c, 0x7e, 0xcb, 0xdf, 0xcd, 0x40, 0xce, 0xed, 0x15,
+	0xcc, 0x84, 0xe4, 0x33, 0x13, 0x05, 0x6f, 0x73, 0x72, 0x94, 0xf3, 0xe2, 0xed, 0x22, 0xd9, 0xff,
+	0x76, 0x11, 0x51, 0xa4, 0x13, 0x17, 0xcc, 0x9b, 0x77, 0xf9, 0xc9, 0x92, 0x6b, 0xf4, 0x0b, 0xbd,
+	0x09, 0x45, 0x77, 0xb9, 0xae, 0x7d, 0xa7, 0x2a, 0x97, 0x18, 0xec, 0xb4, 0x32, 0xcf, 0xfb, 0xb9,
+	0x89, 0xaf, 0x92, 0x5e, 0xb4, 0x09, 0xf3, 0x8e, 0xe9, 0x26, 0x40, 0xd8, 0x0a, 0x9b, 0xed, 0x19,
+	0xf5, 0xa4, 0xf5, 0x90, 0x76, 0x0e, 0x6b, 0xef, 0x73, 0x67, 0xb2, 0xf7, 0x30, 0xba, 0xbd, 0x1f,
+	0x1f, 0xda, 0xde, 0x4f, 0x04, 0xed, 0xfd, 0xc3, 0x18, 0xc3, 0x3d, 0x49, 0xc4, 0xb4, 0xb4, 0x46,
+	0x6b, 0x39, 0xd7, 0x78, 0x2d, 0xe7, 0x5a, 0x8d, 0xd7, 0x72, 0x46, 0x1a, 0xf5, 0xf7, 0x23, 0x8d,
+	0x7a, 0x7e, 0x20, 0xae, 0xb0, 0xc1, 0x7f, 0x1b, 0x4a, 0xee, 0xfe, 0xf5, 0xf4, 0x26, 0x36, 0x23,
+	0xdc, 0x84, 0x22, 0x1f, 0x71, 0xe4, 0x0c, 0x10, 0xa1, 0x2b, 0x70, 0x39, 0x1e, 0x9a, 0xcb, 0x03,
+	0x75, 0x1b, 0x2e, 0xc5, 0x21, 0x61, 0x72, 0x51, 0x0c, 0x78, 0x0f, 0x9e, 0xd3, 0xf0, 0xa3, 0x14,
+	0x2c, 0xfb, 0x0e, 0xa6, 0x50, 0x2a, 0xf0, 0xcb, 0x9c, 0xe8, 0xfc, 0x46, 0xd0, 0x11, 0xb8, 0x3b,
+	0xd8, 0x11, 0x08, 0x2f, 0xed, 0x85, 0xf9, 0x04, 0xdf, 0x88, 0xf6, 0x09, 0xde, 0x1a, 0x89, 0xc8,
+	0x17, 0xe4, 0x22, 0xdc, 0x71, 0x3d, 0x84, 0x31, 0x48, 0x11, 0xb3, 0x7f, 0x41, 0x30, 0xfb, 0x52,
+	0xc0, 0xb6, 0x26, 0x04, 0x37, 0x20, 0x29, 0x7f, 0x4f, 0x82, 0x95, 0x78, 0x9e, 0x8e, 0xa0, 0xd2,
+	0xf7, 0x22, 0x8b, 0x89, 0xae, 0xf5, 0xd7, 0xe7, 0xe2, 0x64, 0xfe, 0x52, 0xa2, 0x7f, 0x91, 0x60,
+	0x36, 0x6a, 0xd8, 0x50, 0x85, 0x44, 0xb3, 0xfc, 0x5a, 0x40, 0x55, 0x7b, 0x28, 0xa2, 0xe1, 0x4f,
+	0x72, 0x89, 0xd5, 0x3e, 0x69, 0x7f, 0xb5, 0x8f, 0x83, 0xdd, 0xfa, 0xb8, 0xc7, 0x36, 0x45, 0x21,
+	0xbf, 0x05, 0x2d, 0x9f, 0xf5, 0x69, 0x79, 0xbf, 0x4e, 0x1b, 0x0b, 0xe8, 0x34, 0xf9, 0x1f, 0x13,
+	0x70, 0x65, 0x18, 0xc1, 0xf8, 0xbc, 0xe5, 0xa0, 0x99, 0xe7, 0x93, 0x1e, 0xd5, 0xf3, 0x11, 0x2c,
+	0xe5, 0x48, 0x9e, 0xc7, 0xef, 0x4a, 0xf0, 0x4a, 0xbc, 0xc4, 0x12, 0x61, 0xe4, 0x7a, 0xee, 0x2a,
+	0xe4, 0xc5, 0x92, 0x45, 0x96, 0x29, 0x49, 0x2b, 0x93, 0x42, 0x6b, 0xa5, 0x79, 0xae, 0x44, 0xb4,
+	0x09, 0xaf, 0x0e, 0x24, 0x86, 0x9d, 0xa2, 0x08, 0xa7, 0x47, 0x3a, 0x93, 0xd3, 0x73, 0x1f, 0x96,
+	0x77, 0x48, 0x3e, 0x2a, 0x5c, 0x0c, 0x16, 0x57, 0x79, 0xe6, 0x9e, 0x88, 0x84, 0x70, 0x22, 0xe4,
+	0xb7, 0x61, 0x25, 0x1e, 0xd1, 0xc0, 0x9b, 0x66, 0x07, 0x2e, 0x45, 0x57, 0xa4, 0xb9, 0xb0, 0x0f,
+	0x02, 0x3a, 0x81, 0x2e, 0xf7, 0xd5, 0x21, 0x0b, 0x0c, 0x03, 0x1a, 0xe1, 0x6b, 0xb0, 0x14, 0x37,
+	0x1d, 0x5d, 0xf3, 0x9d, 0x40, 0x91, 0xda, 0x28, 0xdb, 0xf8, 0x43, 0xc9, 0x7d, 0x4d, 0x20, 0x60,
+	0xde, 0xc3, 0x96, 0xa5, 0xb6, 0xce, 0x57, 0xf3, 0xed, 0x69, 0x8b, 0x94, 0x4f, 0x5b, 0xb8, 0x3b,
+	0x92, 0x16, 0x75, 0x94, 0x58, 0xac, 0x9d, 0xf1, 0x17, 0x6b, 0xcb, 0x7f, 0x27, 0x01, 0x0a, 0xd3,
+	0x78, 0x2e, 0xe2, 0x5e, 0x76, 0xdf, 0xe7, 0x10, 0x5f, 0xd7, 0x62, 0xf9, 0xf3, 0x09, 0xc1, 0xd9,
+	0x15, 0xf5, 0x5d, 0x3a, 0x7a, 0x05, 0x99, 0xb8, 0x15, 0x04, 0xca, 0xcd, 0xe5, 0xf7, 0xe1, 0x25,
+	0xdf, 0x61, 0x09, 0x54, 0x19, 0x8e, 0x10, 0xb6, 0x7c, 0x03, 0x16, 0xa3, 0x31, 0x31, 0xc9, 0x13,
+	0x0b, 0x06, 0x93, 0x42, 0xf4, 0x3a, 0x48, 0x01, 0x0d, 0xcc, 0x7e, 0x16, 0x14, 0xb8, 0x98, 0x3c,
+	0x0a, 0x18, 0xd7, 0x18, 0x05, 0x4c, 0x7d, 0x9d, 0x06, 0xe0, 0x3e, 0xfb, 0x10, 0xbd, 0x30, 0x75,
+	0x52, 0xdc, 0x30, 0xf9, 0xbf, 0x25, 0x7a, 0x84, 0x22, 0xe6, 0x66, 0x44, 0x5b, 0x80, 0xd4, 0xc6,
+	0x63, 0xaa, 0x9c, 0x82, 0xc1, 0xef, 0x9d, 0xc1, 0xae, 0x4e, 0x10, 0xdf, 0x5a, 0xb8, 0x67, 0xda,
+	0xc5, 0xcf, 0x9b, 0x4a, 0x07, 0x30, 0x1d, 0x1a, 0xc7, 0x6b, 0x32, 0x02, 0xd9, 0x1f, 0x7b, 0xb8,
+	0xf4, 0xd8, 0x36, 0xcc, 0xef, 0x98, 0x46, 0x97, 0x21, 0xdb, 0x51, 0x6d, 0xf5, 0x0c, 0x1b, 0xbc,
+	0x09, 0x17, 0x43, 0x48, 0x06, 0xe9, 0xc4, 0xeb, 0x97, 0x20, 0xe7, 0xba, 0x8f, 0x28, 0x0b, 0x49,
+	0xd5, 0x6a, 0x14, 0x2e, 0x38, 0x6e, 0x59, 0x13, 0x5b, 0x8d, 0x82, 0x74, 0xfd, 0x4d, 0xc8, 0x39,
+	0x98, 0x6a, 0xa7, 0x5d, 0x6c, 0xa1, 0x71, 0xc8, 0x1e, 0x55, 0x1f, 0x54, 0xf7, 0xbf, 0x52, 0xa5,
+	0x0e, 0xdb, 0x61, 0x4d, 0xa9, 0x54, 0xef, 0x17, 0x24, 0x07, 0xb0, 0x52, 0x75, 0x3c, 0xb5, 0x1c,
+	0xa4, 0xef, 0x3d, 0xdc, 0x2f, 0xd7, 0x0a, 0xc9, 0x8d, 0x9f, 0xbc, 0xea, 0xd6, 0x56, 0x1d, 0x62,
+	0xf3, 0xc4, 0xb9, 0xaa, 0x3d, 0x83, 0x09, 0xb1, 0x8c, 0x11, 0xad, 0x0e, 0x7a, 0xe6, 0xc0, 0x85,
+	0xac, 0x74, 0x6d, 0x88, 0x91, 0x74, 0xad, 0x72, 0xf1, 0x3b, 0x3f, 0xfd, 0xaf, 0x4f, 0x13, 0x08,
+	0x15, 0xc8, 0xf3, 0xbc, 0x93, 0xdb, 0xeb, 0xee, 0xe3, 0x91, 0x3f, 0x90, 0x60, 0x3a, 0x94, 0x3a,
+	0x40, 0x03, 0x12, 0xa7, 0x81, 0x54, 0x45, 0x69, 0x6d, 0xd8, 0xe1, 0x8c, 0x1c, 0x99, 0x90, 0xb3,
+	0x88, 0x4a, 0x9c, 0x9c, 0x26, 0x1f, 0xba, 0x6e, 0x70, 0x12, 0xfe, 0x4c, 0x82, 0xe9, 0xd0, 0xd3,
+	0xb0, 0x18, 0xc2, 0xe2, 0x5e, 0xa2, 0xc5, 0x10, 0x16, 0xfb, 0xe2, 0x4c, 0xbe, 0x4e, 0x08, 0xbb,
+	0x82, 0xe4, 0x30, 0x61, 0x2c, 0xb5, 0xe1, 0x71, 0xee, 0xd7, 0x25, 0x28, 0xdc, 0xc7, 0x9c, 0xd7,
+	0xf4, 0x85, 0x11, 0x7a, 0xb9, 0x6f, 0xf5, 0x2a, 0xa3, 0xea, 0x4a, 0xff, 0x41, 0x71, 0x4c, 0x62,
+	0x83, 0xd7, 0x9f, 0xf2, 0xa0, 0xc7, 0x33, 0xf4, 0xfb, 0x12, 0x4c, 0x7b, 0x34, 0xf0, 0x02, 0xb5,
+	0xa1, 0x88, 0xe8, 0xfb, 0x42, 0x20, 0x50, 0x16, 0x17, 0xe6, 0x4b, 0x98, 0x16, 0xfe, 0x9c, 0x13,
+	0xfd, 0xb5, 0x44, 0xab, 0xb3, 0x63, 0xde, 0x10, 0xbc, 0x71, 0xb6, 0x67, 0x3c, 0xa5, 0x2f, 0x8e,
+	0x0c, 0xc7, 0x68, 0xbf, 0x4a, 0x68, 0x5f, 0x46, 0x4b, 0x41, 0xd9, 0x5f, 0x17, 0x3d, 0x13, 0xf4,
+	0x6f, 0x52, 0xdc, 0x4b, 0x29, 0xa1, 0x36, 0x1f, 0x8d, 0xf2, 0x08, 0x29, 0xfc, 0x96, 0xa0, 0xf4,
+	0xce, 0x59, 0xc1, 0xd9, 0x5a, 0x36, 0xc9, 0x5a, 0x6e, 0xa2, 0xd7, 0xfa, 0xae, 0x65, 0xfd, 0x69,
+	0x65, 0xe7, 0x99, 0x27, 0xa8, 0xff, 0x23, 0xc1, 0x95, 0x61, 0x5e, 0xc7, 0xa1, 0xf7, 0x46, 0x7f,
+	0xb0, 0xe4, 0x7f, 0xd4, 0x57, 0x2a, 0x9f, 0x03, 0x03, 0x5b, 0xe2, 0x3b, 0x64, 0x89, 0x6f, 0xa2,
+	0x37, 0xfa, 0x2f, 0x91, 0xb5, 0x3a, 0xaa, 0x82, 0x2e, 0xb7, 0xc9, 0x16, 0x31, 0x70, 0xb5, 0xfc,
+	0x94, 0x9c, 0x61, 0xb5, 0xfe, 0x37, 0x9d, 0x67, 0x59, 0x6d, 0xf0, 0x60, 0x9d, 0x75, 0xb5, 0xfc,
+	0xb0, 0x9d, 0xc2, 0xb8, 0xf0, 0x42, 0x03, 0xbd, 0x1a, 0x2b, 0x5f, 0x7e, 0x2f, 0xad, 0xb4, 0x3a,
+	0x78, 0x20, 0xa3, 0xf0, 0x22, 0xa1, 0x70, 0x1a, 0x4d, 0x71, 0x0a, 0x99, 0x22, 0x44, 0xdf, 0x97,
+	0xc4, 0x57, 0x26, 0xae, 0xfd, 0x5a, 0x1b, 0x80, 0x39, 0x68, 0xc5, 0xd6, 0x87, 0x1e, 0xcf, 0x08,
+	0x5a, 0x21, 0x04, 0x95, 0x50, 0x31, 0x40, 0x90, 0x27, 0xf0, 0xbf, 0x21, 0xc1, 0xa4, 0xaf, 0x38,
+	0x0e, 0x5d, 0x1b, 0xba, 0x9e, 0xaf, 0x74, 0x7d, 0x98, 0xa1, 0x8c, 0x94, 0x97, 0x08, 0x29, 0x73,
+	0x72, 0xc8, 0xac, 0xde, 0x91, 0xae, 0xa3, 0xdf, 0x91, 0x60, 0x2a, 0x90, 0xf9, 0x43, 0xaf, 0xf5,
+	0x41, 0x1e, 0xcc, 0x8c, 0x95, 0x6e, 0x0c, 0x37, 0x98, 0xd1, 0xb2, 0x48, 0x68, 0x99, 0x97, 0xa7,
+	0x39, 0x2d, 0xae, 0x8f, 0xe6, 0x10, 0xf3, 0x97, 0x12, 0xcc, 0x45, 0x16, 0x4c, 0xa0, 0xdb, 0x83,
+	0x4c, 0x64, 0xa8, 0x96, 0xa5, 0xb4, 0x31, 0x0a, 0xc8, 0x60, 0xcb, 0xca, 0x4a, 0x2d, 0xbc, 0xfd,
+	0xfb, 0x43, 0x09, 0xa6, 0x02, 0x35, 0x86, 0x31, 0x9c, 0x8b, 0xae, 0x67, 0x8c, 0xe1, 0x5c, 0x4c,
+	0xd9, 0x62, 0x3f, 0xd2, 0x54, 0x67, 0xe0, 0x7a, 0xc3, 0x05, 0x44, 0x3f, 0x91, 0x60, 0x2e, 0xb2,
+	0x70, 0x26, 0x86, 0x8f, 0xfd, 0x0a, 0x79, 0x62, 0xf8, 0xd8, 0xb7, 0x2e, 0x27, 0x6c, 0x01, 0x3c,
+	0x62, 0x3d, 0x32, 0xd7, 0xfd, 0x55, 0x96, 0xe8, 0xc7, 0x12, 0xcc, 0x46, 0x55, 0x2d, 0xa1, 0xe8,
+	0x3c, 0x6d, 0x9f, 0x52, 0xca, 0xd2, 0xed, 0x11, 0x20, 0x46, 0x22, 0xd9, 0x5f, 0xdb, 0xe9, 0x30,
+	0x3a, 0xbe, 0xee, 0xee, 0x0b, 0xa3, 0xd5, 0xf5, 0x31, 0xd2, 0x5f, 0x1f, 0x11, 0x6a, 0xb0, 0x78,
+	0x3c, 0xa6, 0x20, 0x3e, 0x9f, 0x70, 0xd2, 0x77, 0x99, 0x42, 0xd7, 0x86, 0xce, 0x84, 0xc7, 0x68,
+	0x9e, 0xc8, 0xfc, 0x9c, 0xbc, 0x40, 0x88, 0x9a, 0x41, 0xe1, 0xd3, 0x8e, 0xfe, 0x4a, 0x82, 0x62,
+	0x5c, 0x34, 0x2b, 0x86, 0x73, 0x03, 0xe2, 0xf1, 0x31, 0x9c, 0x1b, 0x14, 0x71, 0x96, 0x5f, 0x21,
+	0x44, 0xae, 0xa0, 0x4b, 0x21, 0x22, 0xfd, 0xae, 0xd7, 0x7f, 0x48, 0xfd, 0xb2, 0x1d, 0x34, 0x32,
+	0x3d, 0x6a, 0x22, 0x41, 0x0c, 0x21, 0x96, 0xde, 0x3e, 0x1b, 0x30, 0x5b, 0xc6, 0xbb, 0x64, 0x19,
+	0x6f, 0xa1, 0x2f, 0xf6, 0x5f, 0xc6, 0xfa, 0x53, 0x7f, 0x98, 0xf2, 0xd9, 0xba, 0xc9, 0x68, 0xff,
+	0x13, 0x09, 0x8a, 0xdb, 0x26, 0x56, 0xa3, 0x42, 0x74, 0x68, 0x6d, 0x48, 0x27, 0x82, 0x85, 0xb1,
+	0x4a, 0x23, 0x8e, 0x97, 0x97, 0x09, 0xf5, 0x0b, 0xf2, 0xac, 0x4b, 0xbd, 0x40, 0xb3, 0x63, 0x1a,
+	0x7e, 0x28, 0x05, 0x6a, 0x4d, 0xb8, 0x33, 0x31, 0x44, 0x11, 0x47, 0xc0, 0xab, 0xb8, 0x3d, 0x02,
+	0x04, 0x63, 0xee, 0x15, 0x42, 0xde, 0x25, 0xb4, 0x18, 0x45, 0x9e, 0xeb, 0x6b, 0xfc, 0x45, 0x30,
+	0x51, 0x3d, 0x40, 0xed, 0xf6, 0x0b, 0xce, 0xc4, 0xa8, 0xdd, 0xbe, 0x31, 0x90, 0xf0, 0x25, 0x22,
+	0xca, 0x3d, 0xb3, 0xc2, 0xbc, 0x64, 0x01, 0xa5, 0x61, 0x78, 0xe9, 0x8f, 0x62, 0x0d, 0xc3, 0xcb,
+	0x40, 0xb4, 0x6a, 0x00, 0x2f, 0x99, 0x99, 0x45, 0x7f, 0x2e, 0xc1, 0x7c, 0xf4, 0x8d, 0x03, 0x6d,
+	0x8c, 0x70, 0x3d, 0xe1, 0x74, 0x6e, 0x8e, 0x04, 0xe3, 0x77, 0x56, 0x50, 0xa4, 0x50, 0xa2, 0x1f,
+	0x48, 0x50, 0x3c, 0xea, 0x36, 0x7f, 0x31, 0xe7, 0x85, 0x31, 0xb1, 0xb4, 0x10, 0xc9, 0x44, 0xc7,
+	0xf9, 0x66, 0xfe, 0x54, 0x31, 0x2e, 0xea, 0x1e, 0x67, 0x9e, 0xfa, 0x47, 0xfb, 0xe3, 0xcc, 0xd3,
+	0x80, 0xd0, 0xbe, 0x7c, 0x99, 0xd0, 0xfb, 0xd2, 0xf5, 0x78, 0x7a, 0xd1, 0x8f, 0x24, 0x98, 0x8f,
+	0xfe, 0x43, 0x46, 0x31, 0x3b, 0xde, 0xf7, 0x4f, 0x28, 0xc5, 0xec, 0x78, 0xff, 0xbf, 0x94, 0x24,
+	0x5f, 0x23, 0x64, 0xbe, 0x8c, 0x2e, 0x87, 0xad, 0x28, 0x8f, 0x25, 0x30, 0x6b, 0x8a, 0x7e, 0x4f,
+	0x82, 0xa9, 0x40, 0xd0, 0x2e, 0xc6, 0xfd, 0x8b, 0x8e, 0x0f, 0xc6, 0xb8, 0x7f, 0x31, 0x71, 0x40,
+	0x7e, 0x9f, 0xb8, 0x5e, 0x0c, 0x5d, 0xc1, 0x9e, 0x92, 0x18, 0xe2, 0xb3, 0xad, 0xd4, 0x57, 0x13,
+	0x27, 0xb7, 0x1f, 0x65, 0x48, 0x71, 0xc1, 0xe6, 0xcf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x85, 0x98,
+	0x31, 0x1c, 0x0d, 0x4b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2070,6 +5009,8 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ProductServiceClient interface {
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
+	DashboardOverview(ctx context.Context, in *DashboardOverviewRequest, opts ...grpc.CallOption) (*DashboardOverviewResponse, error)
+	ProductsPerEditor(ctx context.Context, in *ProductsPerEditorRequest, opts ...grpc.CallOption) (*ProductsPerEditorResponse, error)
 	GetProductDetail(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
 	GetProductOptions(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductOptionsResponse, error)
 	ListProductAggregationView(ctx context.Context, in *ListProductAggregationViewRequest, opts ...grpc.CallOption) (*ListProductAggregationViewResponse, error)
@@ -2079,7 +5020,25 @@ type ProductServiceClient interface {
 	ListEditors(ctx context.Context, in *ListEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error)
 	ListEditorProducts(ctx context.Context, in *ListEditorProductsRequest, opts ...grpc.CallOption) (*ListEditorProductsResponse, error)
 	UpsertProduct(ctx context.Context, in *UpsertProductRequest, opts ...grpc.CallOption) (*UpsertProductResponse, error)
-	UpsertProductAggregation(ctx context.Context, in *UpsertAggregationRequest, opts ...grpc.CallOption) (*UpsertAggregationResponse, error)
+	UpsertAcqRights(ctx context.Context, in *UpsertAcqRightsRequest, opts ...grpc.CallOption) (*UpsertAcqRightsResponse, error)
+	ProductsPerMetricType(ctx context.Context, in *ProductsPerMetricTypeRequest, opts ...grpc.CallOption) (*ProductsPerMetricTypeResponse, error)
+	ComplianceAlert(ctx context.Context, in *ComplianceAlertRequest, opts ...grpc.CallOption) (*ComplianceAlertResponse, error)
+	CounterfeitedProducts(ctx context.Context, in *CounterfeitedProductsRequest, opts ...grpc.CallOption) (*CounterfeitedProductsResponse, error)
+	OverdeployedProducts(ctx context.Context, in *OverdeployedProductsRequest, opts ...grpc.CallOption) (*OverdeployedProductsResponse, error)
+	DashboardQualityProducts(ctx context.Context, in *DashboardQualityProductsRequest, opts ...grpc.CallOption) (*DashboardQualityProductsResponse, error)
+	ListAcqRights(ctx context.Context, in *ListAcqRightsRequest, opts ...grpc.CallOption) (*ListAcqRightsResponse, error)
+	ListAcqRightsAggregation(ctx context.Context, in *ListAcqRightsAggregationRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationResponse, error)
+	ListAcqRightsAggregationRecords(ctx context.Context, in *ListAcqRightsAggregationRecordsRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationRecordsResponse, error)
+	CreateProductAggregation(ctx context.Context, in *ProductAggregationMessage, opts ...grpc.CallOption) (*ProductAggregationMessage, error)
+	ListAcqRightsEditors(ctx context.Context, in *ListAcqRightsEditorsRequest, opts ...grpc.CallOption) (*ListAcqRightsEditorsResponse, error)
+	ListAcqRightsProducts(ctx context.Context, in *ListAcqRightsProductsRequest, opts ...grpc.CallOption) (*ListAcqRightsProductsResponse, error)
+	ListAcqRightsMetrics(ctx context.Context, in *ListAcqRightsMetricsRequest, opts ...grpc.CallOption) (*ListAcqRightsMetricsResponse, error)
+	ListProductAggregation(ctx context.Context, in *ListProductAggregationRequest, opts ...grpc.CallOption) (*ListProductAggregationResponse, error)
+	// update product aggregation
+	UpdateProductAggregation(ctx context.Context, in *ProductAggregationMessage, opts ...grpc.CallOption) (*ProductAggregationMessage, error)
+	DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*DeleteProductAggregationResponse, error)
+	OverviewProductQuality(ctx context.Context, in *OverviewProductQualityRequest, opts ...grpc.CallOption) (*OverviewProductQualityResponse, error)
+	DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error)
 }
 
 type productServiceClient struct {
@@ -2093,6 +5052,24 @@ func NewProductServiceClient(cc grpc.ClientConnInterface) ProductServiceClient {
 func (c *productServiceClient) ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error) {
 	out := new(ListProductsResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DashboardOverview(ctx context.Context, in *DashboardOverviewRequest, opts ...grpc.CallOption) (*DashboardOverviewResponse, error) {
+	out := new(DashboardOverviewResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DashboardOverview", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ProductsPerEditor(ctx context.Context, in *ProductsPerEditorRequest, opts ...grpc.CallOption) (*ProductsPerEditorResponse, error) {
+	out := new(ProductsPerEditorResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductsPerEditor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2180,9 +5157,162 @@ func (c *productServiceClient) UpsertProduct(ctx context.Context, in *UpsertProd
 	return out, nil
 }
 
-func (c *productServiceClient) UpsertProductAggregation(ctx context.Context, in *UpsertAggregationRequest, opts ...grpc.CallOption) (*UpsertAggregationResponse, error) {
-	out := new(UpsertAggregationResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertProductAggregation", in, out, opts...)
+func (c *productServiceClient) UpsertAcqRights(ctx context.Context, in *UpsertAcqRightsRequest, opts ...grpc.CallOption) (*UpsertAcqRightsResponse, error) {
+	out := new(UpsertAcqRightsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertAcqRights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ProductsPerMetricType(ctx context.Context, in *ProductsPerMetricTypeRequest, opts ...grpc.CallOption) (*ProductsPerMetricTypeResponse, error) {
+	out := new(ProductsPerMetricTypeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductsPerMetricType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ComplianceAlert(ctx context.Context, in *ComplianceAlertRequest, opts ...grpc.CallOption) (*ComplianceAlertResponse, error) {
+	out := new(ComplianceAlertResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ComplianceAlert", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) CounterfeitedProducts(ctx context.Context, in *CounterfeitedProductsRequest, opts ...grpc.CallOption) (*CounterfeitedProductsResponse, error) {
+	out := new(CounterfeitedProductsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/CounterfeitedProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) OverdeployedProducts(ctx context.Context, in *OverdeployedProductsRequest, opts ...grpc.CallOption) (*OverdeployedProductsResponse, error) {
+	out := new(OverdeployedProductsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/OverdeployedProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DashboardQualityProducts(ctx context.Context, in *DashboardQualityProductsRequest, opts ...grpc.CallOption) (*DashboardQualityProductsResponse, error) {
+	out := new(DashboardQualityProductsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DashboardQualityProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRights(ctx context.Context, in *ListAcqRightsRequest, opts ...grpc.CallOption) (*ListAcqRightsResponse, error) {
+	out := new(ListAcqRightsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRightsAggregation(ctx context.Context, in *ListAcqRightsAggregationRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationResponse, error) {
+	out := new(ListAcqRightsAggregationResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsAggregation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRightsAggregationRecords(ctx context.Context, in *ListAcqRightsAggregationRecordsRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationRecordsResponse, error) {
+	out := new(ListAcqRightsAggregationRecordsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) CreateProductAggregation(ctx context.Context, in *ProductAggregationMessage, opts ...grpc.CallOption) (*ProductAggregationMessage, error) {
+	out := new(ProductAggregationMessage)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/CreateProductAggregation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRightsEditors(ctx context.Context, in *ListAcqRightsEditorsRequest, opts ...grpc.CallOption) (*ListAcqRightsEditorsResponse, error) {
+	out := new(ListAcqRightsEditorsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsEditors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRightsProducts(ctx context.Context, in *ListAcqRightsProductsRequest, opts ...grpc.CallOption) (*ListAcqRightsProductsResponse, error) {
+	out := new(ListAcqRightsProductsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAcqRightsMetrics(ctx context.Context, in *ListAcqRightsMetricsRequest, opts ...grpc.CallOption) (*ListAcqRightsMetricsResponse, error) {
+	out := new(ListAcqRightsMetricsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsMetrics", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListProductAggregation(ctx context.Context, in *ListProductAggregationRequest, opts ...grpc.CallOption) (*ListProductAggregationResponse, error) {
+	out := new(ListProductAggregationResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListProductAggregation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) UpdateProductAggregation(ctx context.Context, in *ProductAggregationMessage, opts ...grpc.CallOption) (*ProductAggregationMessage, error) {
+	out := new(ProductAggregationMessage)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpdateProductAggregation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*DeleteProductAggregationResponse, error) {
+	out := new(DeleteProductAggregationResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteProductAggregation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) OverviewProductQuality(ctx context.Context, in *OverviewProductQualityRequest, opts ...grpc.CallOption) (*OverviewProductQualityResponse, error) {
+	out := new(OverviewProductQualityResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/OverviewProductQuality", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error) {
+	out := new(DropProductDataResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DropProductData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2192,6 +5322,8 @@ func (c *productServiceClient) UpsertProductAggregation(ctx context.Context, in 
 // ProductServiceServer is the server API for ProductService service.
 type ProductServiceServer interface {
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
+	DashboardOverview(context.Context, *DashboardOverviewRequest) (*DashboardOverviewResponse, error)
+	ProductsPerEditor(context.Context, *ProductsPerEditorRequest) (*ProductsPerEditorResponse, error)
 	GetProductDetail(context.Context, *ProductRequest) (*ProductResponse, error)
 	GetProductOptions(context.Context, *ProductRequest) (*ProductOptionsResponse, error)
 	ListProductAggregationView(context.Context, *ListProductAggregationViewRequest) (*ListProductAggregationViewResponse, error)
@@ -2201,7 +5333,25 @@ type ProductServiceServer interface {
 	ListEditors(context.Context, *ListEditorsRequest) (*ListEditorsResponse, error)
 	ListEditorProducts(context.Context, *ListEditorProductsRequest) (*ListEditorProductsResponse, error)
 	UpsertProduct(context.Context, *UpsertProductRequest) (*UpsertProductResponse, error)
-	UpsertProductAggregation(context.Context, *UpsertAggregationRequest) (*UpsertAggregationResponse, error)
+	UpsertAcqRights(context.Context, *UpsertAcqRightsRequest) (*UpsertAcqRightsResponse, error)
+	ProductsPerMetricType(context.Context, *ProductsPerMetricTypeRequest) (*ProductsPerMetricTypeResponse, error)
+	ComplianceAlert(context.Context, *ComplianceAlertRequest) (*ComplianceAlertResponse, error)
+	CounterfeitedProducts(context.Context, *CounterfeitedProductsRequest) (*CounterfeitedProductsResponse, error)
+	OverdeployedProducts(context.Context, *OverdeployedProductsRequest) (*OverdeployedProductsResponse, error)
+	DashboardQualityProducts(context.Context, *DashboardQualityProductsRequest) (*DashboardQualityProductsResponse, error)
+	ListAcqRights(context.Context, *ListAcqRightsRequest) (*ListAcqRightsResponse, error)
+	ListAcqRightsAggregation(context.Context, *ListAcqRightsAggregationRequest) (*ListAcqRightsAggregationResponse, error)
+	ListAcqRightsAggregationRecords(context.Context, *ListAcqRightsAggregationRecordsRequest) (*ListAcqRightsAggregationRecordsResponse, error)
+	CreateProductAggregation(context.Context, *ProductAggregationMessage) (*ProductAggregationMessage, error)
+	ListAcqRightsEditors(context.Context, *ListAcqRightsEditorsRequest) (*ListAcqRightsEditorsResponse, error)
+	ListAcqRightsProducts(context.Context, *ListAcqRightsProductsRequest) (*ListAcqRightsProductsResponse, error)
+	ListAcqRightsMetrics(context.Context, *ListAcqRightsMetricsRequest) (*ListAcqRightsMetricsResponse, error)
+	ListProductAggregation(context.Context, *ListProductAggregationRequest) (*ListProductAggregationResponse, error)
+	// update product aggregation
+	UpdateProductAggregation(context.Context, *ProductAggregationMessage) (*ProductAggregationMessage, error)
+	DeleteProductAggregation(context.Context, *DeleteProductAggregationRequest) (*DeleteProductAggregationResponse, error)
+	OverviewProductQuality(context.Context, *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error)
+	DropProductData(context.Context, *DropProductDataRequest) (*DropProductDataResponse, error)
 }
 
 // UnimplementedProductServiceServer can be embedded to have forward compatible implementations.
@@ -2210,6 +5360,12 @@ type UnimplementedProductServiceServer struct {
 
 func (*UnimplementedProductServiceServer) ListProducts(ctx context.Context, req *ListProductsRequest) (*ListProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProducts not implemented")
+}
+func (*UnimplementedProductServiceServer) DashboardOverview(ctx context.Context, req *DashboardOverviewRequest) (*DashboardOverviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DashboardOverview not implemented")
+}
+func (*UnimplementedProductServiceServer) ProductsPerEditor(ctx context.Context, req *ProductsPerEditorRequest) (*ProductsPerEditorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductsPerEditor not implemented")
 }
 func (*UnimplementedProductServiceServer) GetProductDetail(ctx context.Context, req *ProductRequest) (*ProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductDetail not implemented")
@@ -2238,8 +5394,59 @@ func (*UnimplementedProductServiceServer) ListEditorProducts(ctx context.Context
 func (*UnimplementedProductServiceServer) UpsertProduct(ctx context.Context, req *UpsertProductRequest) (*UpsertProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProduct not implemented")
 }
-func (*UnimplementedProductServiceServer) UpsertProductAggregation(ctx context.Context, req *UpsertAggregationRequest) (*UpsertAggregationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductAggregation not implemented")
+func (*UnimplementedProductServiceServer) UpsertAcqRights(ctx context.Context, req *UpsertAcqRightsRequest) (*UpsertAcqRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertAcqRights not implemented")
+}
+func (*UnimplementedProductServiceServer) ProductsPerMetricType(ctx context.Context, req *ProductsPerMetricTypeRequest) (*ProductsPerMetricTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductsPerMetricType not implemented")
+}
+func (*UnimplementedProductServiceServer) ComplianceAlert(ctx context.Context, req *ComplianceAlertRequest) (*ComplianceAlertResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ComplianceAlert not implemented")
+}
+func (*UnimplementedProductServiceServer) CounterfeitedProducts(ctx context.Context, req *CounterfeitedProductsRequest) (*CounterfeitedProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CounterfeitedProducts not implemented")
+}
+func (*UnimplementedProductServiceServer) OverdeployedProducts(ctx context.Context, req *OverdeployedProductsRequest) (*OverdeployedProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OverdeployedProducts not implemented")
+}
+func (*UnimplementedProductServiceServer) DashboardQualityProducts(ctx context.Context, req *DashboardQualityProductsRequest) (*DashboardQualityProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DashboardQualityProducts not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRights(ctx context.Context, req *ListAcqRightsRequest) (*ListAcqRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRights not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRightsAggregation(ctx context.Context, req *ListAcqRightsAggregationRequest) (*ListAcqRightsAggregationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsAggregation not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRightsAggregationRecords(ctx context.Context, req *ListAcqRightsAggregationRecordsRequest) (*ListAcqRightsAggregationRecordsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsAggregationRecords not implemented")
+}
+func (*UnimplementedProductServiceServer) CreateProductAggregation(ctx context.Context, req *ProductAggregationMessage) (*ProductAggregationMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProductAggregation not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRightsEditors(ctx context.Context, req *ListAcqRightsEditorsRequest) (*ListAcqRightsEditorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsEditors not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRightsProducts(ctx context.Context, req *ListAcqRightsProductsRequest) (*ListAcqRightsProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsProducts not implemented")
+}
+func (*UnimplementedProductServiceServer) ListAcqRightsMetrics(ctx context.Context, req *ListAcqRightsMetricsRequest) (*ListAcqRightsMetricsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsMetrics not implemented")
+}
+func (*UnimplementedProductServiceServer) ListProductAggregation(ctx context.Context, req *ListProductAggregationRequest) (*ListProductAggregationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListProductAggregation not implemented")
+}
+func (*UnimplementedProductServiceServer) UpdateProductAggregation(ctx context.Context, req *ProductAggregationMessage) (*ProductAggregationMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateProductAggregation not implemented")
+}
+func (*UnimplementedProductServiceServer) DeleteProductAggregation(ctx context.Context, req *DeleteProductAggregationRequest) (*DeleteProductAggregationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteProductAggregation not implemented")
+}
+func (*UnimplementedProductServiceServer) OverviewProductQuality(ctx context.Context, req *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OverviewProductQuality not implemented")
+}
+func (*UnimplementedProductServiceServer) DropProductData(ctx context.Context, req *DropProductDataRequest) (*DropProductDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropProductData not implemented")
 }
 
 func RegisterProductServiceServer(s *grpc.Server, srv ProductServiceServer) {
@@ -2260,6 +5467,42 @@ func _ProductService_ListProducts_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).ListProducts(ctx, req.(*ListProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DashboardOverview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DashboardOverviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DashboardOverview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DashboardOverview",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DashboardOverview(ctx, req.(*DashboardOverviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ProductsPerEditor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductsPerEditorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductsPerEditor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductsPerEditor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductsPerEditor(ctx, req.(*ProductsPerEditorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2426,20 +5669,326 @@ func _ProductService_UpsertProduct_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_UpsertProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertAggregationRequest)
+func _ProductService_UpsertAcqRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertAcqRightsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).UpsertProductAggregation(ctx, in)
+		return srv.(ProductServiceServer).UpsertAcqRights(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/UpsertProductAggregation",
+		FullMethod: "/optisam.products.v1.ProductService/UpsertAcqRights",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).UpsertProductAggregation(ctx, req.(*UpsertAggregationRequest))
+		return srv.(ProductServiceServer).UpsertAcqRights(ctx, req.(*UpsertAcqRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ProductsPerMetricType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductsPerMetricTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductsPerMetricType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductsPerMetricType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductsPerMetricType(ctx, req.(*ProductsPerMetricTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ComplianceAlert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ComplianceAlertRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ComplianceAlert(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ComplianceAlert",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ComplianceAlert(ctx, req.(*ComplianceAlertRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_CounterfeitedProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CounterfeitedProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).CounterfeitedProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/CounterfeitedProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).CounterfeitedProducts(ctx, req.(*CounterfeitedProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_OverdeployedProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OverdeployedProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).OverdeployedProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/OverdeployedProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).OverdeployedProducts(ctx, req.(*OverdeployedProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DashboardQualityProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DashboardQualityProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DashboardQualityProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DashboardQualityProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DashboardQualityProducts(ctx, req.(*DashboardQualityProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRights",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRights(ctx, req.(*ListAcqRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRightsAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsAggregationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRightsAggregation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsAggregation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRightsAggregation(ctx, req.(*ListAcqRightsAggregationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRightsAggregationRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsAggregationRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRightsAggregationRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRightsAggregationRecords(ctx, req.(*ListAcqRightsAggregationRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_CreateProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductAggregationMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).CreateProductAggregation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/CreateProductAggregation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).CreateProductAggregation(ctx, req.(*ProductAggregationMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRightsEditors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsEditorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRightsEditors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsEditors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRightsEditors(ctx, req.(*ListAcqRightsEditorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRightsProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRightsProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRightsProducts(ctx, req.(*ListAcqRightsProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAcqRightsMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsMetricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAcqRightsMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsMetrics",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAcqRightsMetrics(ctx, req.(*ListAcqRightsMetricsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListProductAggregationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListProductAggregation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListProductAggregation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListProductAggregation(ctx, req.(*ListProductAggregationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_UpdateProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductAggregationMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateProductAggregation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpdateProductAggregation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateProductAggregation(ctx, req.(*ProductAggregationMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteProductAggregationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteProductAggregation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteProductAggregation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteProductAggregation(ctx, req.(*DeleteProductAggregationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_OverviewProductQuality_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OverviewProductQualityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).OverviewProductQuality(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/OverviewProductQuality",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).OverviewProductQuality(ctx, req.(*OverviewProductQualityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DropProductData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropProductDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DropProductData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DropProductData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DropProductData(ctx, req.(*DropProductDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2451,6 +6000,14 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListProducts",
 			Handler:    _ProductService_ListProducts_Handler,
+		},
+		{
+			MethodName: "DashboardOverview",
+			Handler:    _ProductService_DashboardOverview_Handler,
+		},
+		{
+			MethodName: "ProductsPerEditor",
+			Handler:    _ProductService_ProductsPerEditor_Handler,
 		},
 		{
 			MethodName: "GetProductDetail",
@@ -2489,8 +6046,76 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_UpsertProduct_Handler,
 		},
 		{
-			MethodName: "UpsertProductAggregation",
-			Handler:    _ProductService_UpsertProductAggregation_Handler,
+			MethodName: "UpsertAcqRights",
+			Handler:    _ProductService_UpsertAcqRights_Handler,
+		},
+		{
+			MethodName: "ProductsPerMetricType",
+			Handler:    _ProductService_ProductsPerMetricType_Handler,
+		},
+		{
+			MethodName: "ComplianceAlert",
+			Handler:    _ProductService_ComplianceAlert_Handler,
+		},
+		{
+			MethodName: "CounterfeitedProducts",
+			Handler:    _ProductService_CounterfeitedProducts_Handler,
+		},
+		{
+			MethodName: "OverdeployedProducts",
+			Handler:    _ProductService_OverdeployedProducts_Handler,
+		},
+		{
+			MethodName: "DashboardQualityProducts",
+			Handler:    _ProductService_DashboardQualityProducts_Handler,
+		},
+		{
+			MethodName: "ListAcqRights",
+			Handler:    _ProductService_ListAcqRights_Handler,
+		},
+		{
+			MethodName: "ListAcqRightsAggregation",
+			Handler:    _ProductService_ListAcqRightsAggregation_Handler,
+		},
+		{
+			MethodName: "ListAcqRightsAggregationRecords",
+			Handler:    _ProductService_ListAcqRightsAggregationRecords_Handler,
+		},
+		{
+			MethodName: "CreateProductAggregation",
+			Handler:    _ProductService_CreateProductAggregation_Handler,
+		},
+		{
+			MethodName: "ListAcqRightsEditors",
+			Handler:    _ProductService_ListAcqRightsEditors_Handler,
+		},
+		{
+			MethodName: "ListAcqRightsProducts",
+			Handler:    _ProductService_ListAcqRightsProducts_Handler,
+		},
+		{
+			MethodName: "ListAcqRightsMetrics",
+			Handler:    _ProductService_ListAcqRightsMetrics_Handler,
+		},
+		{
+			MethodName: "ListProductAggregation",
+			Handler:    _ProductService_ListProductAggregation_Handler,
+		},
+		{
+			MethodName: "UpdateProductAggregation",
+			Handler:    _ProductService_UpdateProductAggregation_Handler,
+		},
+		{
+			MethodName: "DeleteProductAggregation",
+			Handler:    _ProductService_DeleteProductAggregation_Handler,
+		},
+		{
+			MethodName: "OverviewProductQuality",
+			Handler:    _ProductService_OverviewProductQuality_Handler,
+		},
+		{
+			MethodName: "DropProductData",
+			Handler:    _ProductService_DropProductData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

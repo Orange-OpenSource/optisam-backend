@@ -19,7 +19,7 @@ import (
 func TestLicenseRepository_ListMetricACS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name    string
@@ -33,7 +33,7 @@ func TestLicenseRepository_ListMetricACS(t *testing.T) {
 			l: NewLicenseRepository(dgClient),
 			args: args{
 				ctx:    context.Background(),
-				scopes: []string{"scope1"},
+				scopes: "scope1",
 			},
 			setup: func(l *LicenseRepository) (retMat []*v1.MetricACS, cleanup func() error, retErr error) {
 				retMat = []*v1.MetricACS{}
@@ -46,7 +46,7 @@ func TestLicenseRepository_ListMetricACS(t *testing.T) {
 					Name:         "corefactor",
 					Type:         v1.DataTypeFloat,
 					IsSearchable: true,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return nil, nil, errors.New("error while creating metric 1")
 				}
@@ -59,7 +59,7 @@ func TestLicenseRepository_ListMetricACS(t *testing.T) {
 					Name:         "cpu",
 					Type:         v1.DataTypeInt,
 					IsSearchable: true,
-				}, []string{"scope1"})
+				}, "scope1")
 				if err != nil {
 					return nil, nil, errors.New("error while creating metric 1")
 				}

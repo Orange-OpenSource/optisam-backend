@@ -73,6 +73,7 @@ type EquipmentType struct {
 	SourceName string
 	ParentID   string
 	ParentType string
+	Scopes     []string
 	Attributes []*Attribute
 }
 
@@ -130,6 +131,7 @@ type QueryEquipments struct {
 	Filter            *AggregateFilter
 	ProductFilter     *AggregateFilter
 	ApplicationFilter *AggregateFilter
+	InstanceFilter    *AggregateFilter
 }
 
 // UpdateEquipmentRequest ...

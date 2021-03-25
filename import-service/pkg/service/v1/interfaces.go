@@ -12,7 +12,12 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+//for go mock
+//mockgen.exe -source=../../../optisam-backend/dps-service/pkg/api/v1/dps.pb.go  -destination=./mock/dps_mock.go -package=mock
 type ImportServiceServer interface {
 	UploadDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	UploadMetaDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	CreateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	UpdateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	UploadGlobalDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 }

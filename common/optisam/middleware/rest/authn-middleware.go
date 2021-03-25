@@ -7,20 +7,40 @@
 package rest
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"net/http"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/token/claims"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+type key uint8
+
+const (
+	keyClaims key = 0
+)
+
+// AddClaims add claims to context
+func AddClaims(ctx context.Context, clms *claims.Claims) context.Context {
+	ctx.Value(LoggerKey{}).(*LoggerUserDetails).UserID = clms.UserID
+	ctx.Value(LoggerKey{}).(*LoggerUserDetails).Role = string(clms.Role)
+	return context.WithValue(ctx, keyClaims, clms)
+}
+
+// RetrieveClaims retuive claims from context
+func RetrieveClaims(ctx context.Context) (*claims.Claims, bool) {
+	clms, ok := ctx.Value(keyClaims).(*claims.Claims)
+	return clms, ok
+}
+
 // ValidateAuth is a middleware to check for JWT authorization
 // TODO
 func ValidateAuth(verifyKey *rsa.PublicKey, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		authorizationHeader := r.Header.Get("Authorization")
 		if authorizationHeader != "" {
 			bearerToken := strings.TrimPrefix(authorizationHeader, "Bearer")
@@ -39,11 +59,12 @@ func ValidateAuth(verifyKey *rsa.PublicKey, h http.Handler) http.Handler {
 
 			if !token.Valid { //Token is invalid, maybe not signed on this server
 				w.WriteHeader(http.StatusForbidden)
+
 				return
 			}
-
+			ctx := r.Context()
 			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
-			r = r.WithContext(ctxmanage.AddClaims(r.Context(), customClaims))
+			r = r.WithContext(AddClaims(ctx, customClaims))
 			h.ServeHTTP(w, r) //proceed in the middleware chain!
 
 			//fmt.Println(len(bearerToken))

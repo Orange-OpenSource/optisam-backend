@@ -1,7 +1,8 @@
 environment = "development"
 debug = false
-grpcport = 5092
-httpport = 6092
+grpcport = 9090
+httpport = 9091
+#maxapiworker = 10
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -13,28 +14,28 @@ enabled = false
 [instrumentation.jaeger]
 enabled = false
 serviceName = "report-service"
-collectorEndpoint = "http://localhost:14268/api/traces"
-agentEndpoint = "localhost:6831"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
 # username = ""
 # password = ""
 
 [database]
-host = "postgres"
+host = "localhost"
 port = 5432
-user = "optisam"
-pass = "optisam"
-name = "report"
+user = "postgres"
+pass = "postgres"
+name = "postgres"
 
 [grpcservers]
 apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "optisam-license-service:5088"
+license = "localhost:8090"
 
 [dgraph]
 hosts = [
-    "dgraph:9080"
+    "10.171.44.163:9081"
 ]
 
 [iam]

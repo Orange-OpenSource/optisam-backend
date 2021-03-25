@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"optisam-backend/common/optisam/buildinfo"
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/healthcheck"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
@@ -20,6 +21,7 @@ import (
 	"optisam-backend/common/optisam/postgres"
 	"optisam-backend/common/optisam/prometheus"
 	"optisam-backend/dps-service/pkg/config"
+	cronJob "optisam-backend/dps-service/pkg/poller"
 	"optisam-backend/dps-service/pkg/protocol/grpc"
 	"optisam-backend/dps-service/pkg/protocol/rest"
 	repo "optisam-backend/dps-service/pkg/repository/v1/postgres"
@@ -29,6 +31,7 @@ import (
 	v1 "optisam-backend/dps-service/pkg/service/v1"
 	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
 	constants "optisam-backend/dps-service/pkg/worker/constants"
+	"optisam-backend/dps-service/pkg/worker/defer_worker"
 	fileworker "optisam-backend/dps-service/pkg/worker/file_worker"
 	"os"
 	"time"
@@ -123,6 +126,19 @@ func RunServer() error {
 
 	ctx := context.Background()
 
+	if cfg.MaxApiWorker == 0 {
+		cfg.MaxApiWorker = 25 //Default api worker count
+		logger.Log.Info("max api worker set default : 25 ")
+	}
+	if cfg.MaxFileWorker == 0 {
+		cfg.MaxFileWorker = 5 //Default api worker count
+		logger.Log.Info("max MaxFileWorker set default :  5 ")
+	}
+	if cfg.MaxDeferWorker == 0 {
+		cfg.MaxDeferWorker = 10 //Default api worker count
+		logger.Log.Info("max MaxDeferWorker set default : 10 ")
+	}
+
 	db, err := postgres.NewConnection(*cfg.Postgres)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
@@ -155,7 +171,7 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize GRPC client")
 	}
-	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
+	//log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 	for _, conn := range grpcClientMap {
 		defer conn.Close()
 	}
@@ -172,9 +188,17 @@ func RunServer() error {
 	}
 
 	for i := 0; i < cfg.MaxApiWorker; i++ {
-		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap)
+		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap, cfg.GrpcServers.Timeout)
 		Queue.RegisterWorker(ctx, w)
 	}
+
+	for i := 0; i < cfg.MaxDeferWorker; i++ {
+		w := defer_worker.NewWorker(constants.DEFERWORKER, Queue, db)
+		Queue.RegisterWorker(ctx, w)
+	}
+
+	//All worker will wait till all registration will completed , to avoid concurrent map read write errors
+	Queue.IsWorkerRegCompleted = true
 
 	// Register http health check
 	{
@@ -250,12 +274,23 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	v1API := v1.NewDpsServiceServer(dbObj.Queries, *Queue)
+	v1API := v1.NewDpsServiceServer(dbObj.Queries, *Queue, grpcClientMap)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
 		logger.Log.Fatal("Failed to get verify key")
 	}
+
+	//This is one time
+	cron.CronConfigInit(cfg.Cron)
+
+	// cron Job
+	cronJob.Init(*Queue, fmt.Sprintf("http://%s/api/v1/token", cfg.HttpServers.Address["auth"]), cfg.FilesLocation, v1API, verifyKey)
+
+	// Below command will trigger the cron job as soon as the service starts
+	cronJob.Job()
+	cron.AddCronJob(cronJob.Job)
+
 	// get Authorization Policy
 	authZPolicies, err := iam.NewOPA(ctx, cfg.IAM.RegoPath)
 	if err != nil {

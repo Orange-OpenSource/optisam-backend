@@ -25,7 +25,10 @@ func NewConnection(config Config) (*sql.DB, error) {
 	}
 
 	db, err := sql.Open(driverName, config.DSN())
-	db.SetConnMaxLifetime(0)
+
+	// Max connections for DB to run multiple queries parellel/concurrent
+	db.SetMaxOpenConns(1000)
+	// max idle connections in pool time
 	db.SetMaxIdleConns(0)
 	return db, errors.WithStack(err)
 }

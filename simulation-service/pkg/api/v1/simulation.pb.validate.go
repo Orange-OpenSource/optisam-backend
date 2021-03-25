@@ -39,6 +39,9 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
+// define the regex for a UUID once up-front
+var _simulation_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
 // Validate checks the field values on SimulationByHardwareRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -54,7 +57,9 @@ func (m *SimulationByHardwareRequest) Validate() error {
 	for idx, item := range m.GetAttributes() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByHardwareRequestValidationError{
 					field:  fmt.Sprintf("Attributes[%v]", idx),
@@ -69,7 +74,9 @@ func (m *SimulationByHardwareRequest) Validate() error {
 	for idx, item := range m.GetMetricDetails() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByHardwareRequestValidationError{
 					field:  fmt.Sprintf("MetricDetails[%v]", idx),
@@ -79,6 +86,13 @@ func (m *SimulationByHardwareRequest) Validate() error {
 			}
 		}
 
+	}
+
+	if !_SimulationByHardwareRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return SimulationByHardwareRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
 	}
 
 	return nil
@@ -141,6 +155,8 @@ var _ interface {
 	ErrorName() string
 } = SimulationByHardwareRequestValidationError{}
 
+var _SimulationByHardwareRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on SimulationByHardwareResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -152,7 +168,9 @@ func (m *SimulationByHardwareResponse) Validate() error {
 	for idx, item := range m.GetSimulationResult() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByHardwareResponseValidationError{
 					field:  fmt.Sprintf("SimulationResult[%v]", idx),
@@ -237,7 +255,9 @@ func (m *SimulatedProductsLicenses) Validate() error {
 	for idx, item := range m.GetLicenses() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulatedProductsLicensesValidationError{
 					field:  fmt.Sprintf("Licenses[%v]", idx),
@@ -470,9 +490,19 @@ func (m *EquipAttribute) Validate() error {
 
 	// no validation rules for ID
 
-	// no validation rules for Name
+	if !_EquipAttribute_Name_Pattern.MatchString(m.GetName()) {
+		return EquipAttributeValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[-_A-Za-z0-9]+$\"",
+		}
+	}
 
-	// no validation rules for DataType
+	if _, ok := _EquipAttribute_DataType_InLookup[m.GetDataType()]; !ok {
+		return EquipAttributeValidationError{
+			field:  "DataType",
+			reason: "value must be in list [1 2 3]",
+		}
+	}
 
 	// no validation rules for PrimaryKey
 
@@ -569,6 +599,14 @@ var _ interface {
 	ErrorName() string
 } = EquipAttributeValidationError{}
 
+var _EquipAttribute_Name_Pattern = regexp.MustCompile("^[-_A-Za-z0-9]+$")
+
+var _EquipAttribute_DataType_InLookup = map[DataTypes]struct{}{
+	1: {},
+	2: {},
+	3: {},
+}
+
 // Validate checks the field values on SimulationByMetricRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -582,7 +620,9 @@ func (m *SimulationByMetricRequest) Validate() error {
 	for idx, item := range m.GetMetricDetails() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByMetricRequestValidationError{
 					field:  fmt.Sprintf("MetricDetails[%v]", idx),
@@ -592,6 +632,13 @@ func (m *SimulationByMetricRequest) Validate() error {
 			}
 		}
 
+	}
+
+	if !_SimulationByMetricRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return SimulationByMetricRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
 	}
 
 	return nil
@@ -652,6 +699,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = SimulationByMetricRequestValidationError{}
+
+var _SimulationByMetricRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on MetricSimDetails with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -733,7 +782,9 @@ func (m *SimulationByMetricResponse) Validate() error {
 	for idx, item := range m.GetMetricSimResult() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByMetricResponseValidationError{
 					field:  fmt.Sprintf("MetricSimResult[%v]", idx),
@@ -1101,7 +1152,9 @@ func (m *ListConfigResponse) Validate() error {
 	for idx, item := range m.GetConfigurations() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListConfigResponseValidationError{
 					field:  fmt.Sprintf("Configurations[%v]", idx),
@@ -1188,7 +1241,9 @@ func (m *Configuration) Validate() error {
 
 	// no validation rules for CreatedBy
 
-	if v, ok := interface{}(m.GetCreatedOn()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetCreatedOn()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ConfigurationValidationError{
 				field:  "CreatedOn",
@@ -1201,7 +1256,9 @@ func (m *Configuration) Validate() error {
 	for idx, item := range m.GetConfigAttributes() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ConfigurationValidationError{
 					field:  fmt.Sprintf("ConfigAttributes[%v]", idx),
@@ -1483,7 +1540,9 @@ func (m *Data) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetMetadata()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetMetadata()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return DataValidationError{
 				field:  "Metadata",
@@ -1496,7 +1555,9 @@ func (m *Data) Validate() error {
 	for idx, item := range m.GetValues() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return DataValidationError{
 					field:  fmt.Sprintf("Values[%v]", idx),
@@ -1580,7 +1641,9 @@ func (m *CreateConfigRequest) Validate() error {
 	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return CreateConfigRequestValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),
@@ -1868,7 +1931,9 @@ func (m *UpdateConfigRequest) Validate() error {
 	for idx, item := range m.GetData() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return UpdateConfigRequestValidationError{
 					field:  fmt.Sprintf("Data[%v]", idx),

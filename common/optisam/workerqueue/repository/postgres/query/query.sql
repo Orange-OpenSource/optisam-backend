@@ -3,7 +3,10 @@ SELECT * FROM jobs
 WHERE job_id = $1;
 
 -- name: GetJobs :many
-SELECT * FROM jobs;
+SELECT * FROM jobs ;
+
+-- name: GetJobsForRetry :many
+SELECT * FROM Jobs WHERE status  not in ('FAILED' ,'COMPLETED');
 
 -- name: CreateJob :one
 INSERT INTO jobs (type,status,data,comments,start_time,end_time) VALUES ($1,$2,$3,$4,$5,$6) RETURNING job_id;
@@ -17,3 +20,6 @@ UPDATE jobs SET status = $2,end_time = $3 WHERE job_id = $1;
 
 -- name: UpdateJobStatusRetry :exec
 UPDATE jobs SET status = $2,retry_count = retry_count + 1 WHERE job_id = $1;
+
+-- name: UpdateJobStatusFailed :exec
+UPDATE jobs SET status = $2, end_time = $3, comments = $4 , retry_count = $5 where job_id = $1;

@@ -9,7 +9,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -21,7 +21,7 @@ import (
 )
 
 func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2"},
@@ -48,13 +48,14 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				req: &v1.CreateINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.5,
+					Scopes:      []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -66,7 +67,7 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				mockRepo.EXPECT().CreateMetricInstanceNumberStandard(ctx, &repo.MetricINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.5,
-				}, []string{"Scope1", "Scope2"}).Return(&repo.MetricINM{
+				}, "Scope1").Return(&repo.MetricINM{
 					ID:          "Met_INM1ID",
 					Name:        "Met_INM1",
 					Coefficient: 1.5,
@@ -84,6 +85,7 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				req: &v1.CreateINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.6,
+					Scopes:      []string{"Scope1"},
 				},
 			},
 			setup:  func() {},
@@ -95,13 +97,14 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				req: &v1.CreateINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.6,
+					Scopes:      []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			outErr: true,
 		},
@@ -111,13 +114,14 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				req: &v1.CreateINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.6,
+					Scopes:      []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -135,13 +139,14 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				req: &v1.CreateINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.5,
+					Scopes:      []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -152,7 +157,7 @@ func Test_metricServiceServer_CreateMetricInstanceNumberStandard(t *testing.T) {
 				mockRepo.EXPECT().CreateMetricInstanceNumberStandard(ctx, &repo.MetricINM{
 					Name:        "Met_INM1",
 					Coefficient: 1.5,
-				}, []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				}, "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			outErr: true,
 		},

@@ -101,6 +101,43 @@ func (q *Queries) GetJobs(ctx context.Context) ([]Job, error) {
 	return items, nil
 }
 
+const getJobsForRetry = `-- name: GetJobsForRetry :many
+SELECT job_id, type, status, data, comments, start_time, end_time, created_at, retry_count FROM Jobs WHERE status  not in ('FAILED' ,'COMPLETED')
+`
+
+func (q *Queries) GetJobsForRetry(ctx context.Context) ([]Job, error) {
+	rows, err := q.db.QueryContext(ctx, getJobsForRetry)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Job
+	for rows.Next() {
+		var i Job
+		if err := rows.Scan(
+			&i.JobID,
+			&i.Type,
+			&i.Status,
+			&i.Data,
+			&i.Comments,
+			&i.StartTime,
+			&i.EndTime,
+			&i.CreatedAt,
+			&i.RetryCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateJobStatusCompleted = `-- name: UpdateJobStatusCompleted :exec
 UPDATE jobs SET status = $2,end_time = $3 WHERE job_id = $1
 `
@@ -113,6 +150,29 @@ type UpdateJobStatusCompletedParams struct {
 
 func (q *Queries) UpdateJobStatusCompleted(ctx context.Context, arg UpdateJobStatusCompletedParams) error {
 	_, err := q.db.ExecContext(ctx, updateJobStatusCompleted, arg.JobID, arg.Status, arg.EndTime)
+	return err
+}
+
+const updateJobStatusFailed = `-- name: UpdateJobStatusFailed :exec
+UPDATE jobs SET status = $2, end_time = $3, comments = $4 , retry_count = $5 where job_id = $1
+`
+
+type UpdateJobStatusFailedParams struct {
+	JobID      int32          `json:"job_id"`
+	Status     JobStatus      `json:"status"`
+	EndTime    sql.NullTime   `json:"end_time"`
+	Comments   sql.NullString `json:"comments"`
+	RetryCount sql.NullInt32  `json:"retry_count"`
+}
+
+func (q *Queries) UpdateJobStatusFailed(ctx context.Context, arg UpdateJobStatusFailedParams) error {
+	_, err := q.db.ExecContext(ctx, updateJobStatusFailed,
+		arg.JobID,
+		arg.Status,
+		arg.EndTime,
+		arg.Comments,
+		arg.RetryCount,
+	)
 	return err
 }
 

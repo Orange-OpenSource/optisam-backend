@@ -27,7 +27,7 @@ type metricACS struct {
 	Value    string `json:"metric.acs.attr_value"`
 }
 
-func (l *LicenseRepository) CreateMetricACS(ctx context.Context, met *v1.MetricACS, attribute *v1.Attribute, scopes []string) (retmet *v1.MetricACS, retErr error) {
+func (l *LicenseRepository) CreateMetricACS(ctx context.Context, met *v1.MetricACS, attribute *v1.Attribute, scopes ...string) (retmet *v1.MetricACS, retErr error) {
 	blankID := blankID(met.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -109,8 +109,8 @@ func (l *LicenseRepository) CreateMetricACS(ctx context.Context, met *v1.MetricA
 }
 
 // ListMetricACS implements Licence ListMetricIPS function
-func (l *LicenseRepository) ListMetricACS(ctx context.Context, scopes []string) ([]*v1.MetricACS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricAttrCounterStandard, scopes)
+func (l *LicenseRepository) ListMetricACS(ctx context.Context, scopes ...string) ([]*v1.MetricACS, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricAttrCounterStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricACS - listMetricWithMetricType", zap.Error(err))
 		return nil, err

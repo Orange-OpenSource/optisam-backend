@@ -16,7 +16,7 @@ import (
 	"reflect"
 	"testing"
 
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
@@ -29,7 +29,7 @@ func Test_accountServiceServer_ListGroups(t *testing.T) {
 	clms := &claims.Claims{
 		UserID: "admin@superuser.com",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 
@@ -181,7 +181,7 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 
@@ -571,7 +571,7 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 		},
 		{name: "FAILURE - permission denied - user do not have access to create name",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 				}),
@@ -586,7 +586,7 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 		},
 		{name: "FAILURE - permission denied - unknown role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Abc",
 				}),
@@ -626,7 +626,7 @@ func Test_accountServiceServer_ListUserGroups(t *testing.T) {
 	clms := &claims.Claims{
 		UserID: "admin@superuser.com",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 
@@ -735,7 +735,7 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 	clms := &claims.Claims{
 		UserID: "admin@superuser.com",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 
@@ -958,7 +958,7 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 	type args struct {
@@ -1059,7 +1059,7 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateGroup - permission denied - user do not have access to update name",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 				}),
@@ -1201,7 +1201,7 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateGroup - unknown role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "ABC",
 				}),
@@ -1217,7 +1217,7 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 		},
 		{name: "SUCCESS - UpdateGroup - Admin userRole",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}),
@@ -1232,7 +1232,7 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().GroupInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().GroupInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}), int64(2)).Return(&repo.Group{
@@ -1242,11 +1242,11 @@ func Test_accountServiceServer_UpdateGroup(t *testing.T) {
 					FullyQualifiedName: "Orange.OBS.OLS",
 					Scopes:             []string{"A", "B"},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GroupExistsByFQN(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().GroupExistsByFQN(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}), "Orange.OBS.OFS").Return(false, nil).Times(1)
-				mockRepo.EXPECT().UpdateGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().UpdateGroup(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}), int64(2), &repo.GroupUpdate{
@@ -1286,7 +1286,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
 	}
-	ctx = ctxmanage.AddClaims(ctx, clms)
+	ctx = grpc_middleware.AddClaims(ctx, clms)
 	var mockCtrl *gomock.Controller
 	var rep repo.Account
 	type args struct {
@@ -1346,7 +1346,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 		},
 		{name: "FAILURE - DeleteGroup - permission denied - user do not have access to update name",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 				}),
@@ -1444,7 +1444,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 		},
 		{name: "FAILURE - DeleteGroup - unknown user role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "ABC",
 				}),
@@ -1457,7 +1457,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 		},
 		{name: "SUCCESS - Admin UserRole",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}),
@@ -1469,7 +1469,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().GroupInfo(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().GroupInfo(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}), int64(2)).Return(&repo.Group{
@@ -1481,7 +1481,7 @@ func Test_accountServiceServer_DeleteGroup(t *testing.T) {
 					NumberOfGroups:     0,
 					NumberOfUsers:      0,
 				}, nil).Times(1)
-				mockRepo.EXPECT().DeleteGroup(ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				mockRepo.EXPECT().DeleteGroup(grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "Admin",
 				}), int64(2)).Return(nil).Times(1)

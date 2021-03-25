@@ -52,7 +52,7 @@ func compareMetricOPSAll(t *testing.T, name string, exp, act []*v1.MetricOPS) {
 func TestLicenseRepository_ListMetricOPS(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		scopes []string
+		scopes string
 	}
 	tests := []struct {
 		name  string
@@ -280,7 +280,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 		CoreFactorAttrID:      coreFactorAttrID,
 		NumCoreAttrID:         numOfCoresAttrID,
 		NumCPUAttrID:          numOfCPUsAttrID,
-	}, []string{})
+	}, "")
 	return gotRetMat, func() error {
 		//return nil
 		return deleteNodes(gotRetMat.ID, bottomID, baseID, aggregateID, bottomID, coreFactorAttrID, numOfCoresAttrID, numOfCPUsAttrID)

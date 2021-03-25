@@ -9,7 +9,6 @@ package grpc
 import (
 	"context"
 	"crypto/rsa"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/token/claims"
 
@@ -22,7 +21,25 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap/ctxzap"
 )
+
+type key uint8
+
+const (
+	keyClaims key = 0
+)
+
+// AddClaims add claims to context
+func AddClaims(ctx context.Context, clms *claims.Claims) context.Context {
+	return context.WithValue(ctx, keyClaims, clms)
+}
+
+// RetrieveClaims retuive claims from context
+func RetrieveClaims(ctx context.Context) (*claims.Claims, bool) {
+	clms, ok := ctx.Value(keyClaims).(*claims.Claims)
+	return clms, ok
+}
 
 func authHandler(verifyKey *rsa.PublicKey, apiKey string) func(ctx context.Context) (context.Context, error) {
 	return func(ctx context.Context) (context.Context, error) {
@@ -50,14 +67,20 @@ func authHandler(verifyKey *rsa.PublicKey, apiKey string) func(ctx context.Conte
 			if !ok {
 				return nil, status.Error(codes.Unauthenticated, "InvalidClaimsError")
 			}
-			return ctxmanage.AddClaims(ctx, customClaims), nil
+
+			ctxzap.AddFields(
+				ctx,
+				zap.String("user-id", customClaims.UserID),
+				zap.String("user-role", string(customClaims.Role)))
+			return AddClaims(ctx, customClaims), nil
 		}
 		if xApiKey, ok := md["x-api-key"]; ok {
 			if xApiKey[0] != apiKey {
 				return nil, status.Error(codes.Unauthenticated, "InvalidAPIKeyError")
 			}
 			//TODO service to service call should manage scopes
-			return ctxmanage.AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"OFR", "OSP"}}), nil
+			//return AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"OFR", "OSP", "DEM", "TST", "AUT"}}), nil
+			return AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"ABC"}}), nil
 		}
 		return nil, status.Error(codes.Unauthenticated, "NoAuthNError")
 	}

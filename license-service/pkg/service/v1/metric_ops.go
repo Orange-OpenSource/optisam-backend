@@ -9,7 +9,6 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -109,16 +108,15 @@ func validateLevelsNew(levels []*repo.EquipmentType, startIdx int, base string) 
 	return -1, errors.New("Not found")
 }
 
-func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricOPSComputed) (uint64, error)) (uint64, error) {
-	// TODO pass claims here
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricOPS(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricOPS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		return 0, status.Error(codes.Internal, "cannot fetch metric OPS")
 
 	}
 	ind := 0
-	if ind = metricNameExistsOPS(metrics, met); ind == -1 {
+	if ind = metricNameExistsOPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
 		return 0, status.Error(codes.Internal, "metric name doesnot exists")
 	}
 	parTree, err := parentHierarchy(eqTypes, metrics[ind].StartEqTypeID)
@@ -165,10 +163,15 @@ func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes 
 		NumCPUAttr:     numOfCPU,
 		CoreFactorAttr: coreFactor,
 	}
-	computedLicenses, err := cal(mat)
+
+	computedLicenses := uint64(0)
+	if input[IS_AGG].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")
-
 	}
 
 	return computedLicenses, nil

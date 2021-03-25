@@ -11,15 +11,17 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	acq "optisam-backend/acqrights-service/pkg/api/v1"
 	application "optisam-backend/application-service/pkg/api/v1"
 	"optisam-backend/dps-service/pkg/worker/constants"
 	"optisam-backend/dps-service/pkg/worker/models"
 	equipment "optisam-backend/equipment-service/pkg/api/v1"
 	product "optisam-backend/product-service/pkg/api/v1"
+	"time"
 
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -40,19 +42,33 @@ func init() {
 
 	dataToRPCMappings[constants.METADATA][constants.UPSERT] = sendUpsertMetaDataReq
 	dataToRPCMappings[constants.EQUIPMENTS][constants.UPSERT] = sendUpsertEqDataReq
+	dataToRPCMappings[constants.EQUIPMENTS][constants.DROP] = sendDropEquipmentDataReq
 	dataToRPCMappings[constants.APPLICATIONS][constants.UPSERT] = sendUpsertApplicationReq
 	dataToRPCMappings[constants.APPLICATIONS][constants.DELETE] = sendDeleteApplicationReq
+	dataToRPCMappings[constants.APPLICATIONS][constants.DROP] = sendDropApplicationDataReq
 	dataToRPCMappings[constants.APPLICATIONS_INSTANCES][constants.UPSERT] = sendUpsertInstanceReq
 	dataToRPCMappings[constants.APPLICATIONS_INSTANCES][constants.DELETE] = sendDeleteInstanceReq
 	dataToRPCMappings[constants.INSTANCES_PRODUCTS][constants.UPSERT] = sendUpsertInstanceReq
 	dataToRPCMappings[constants.INSTANCES_EQUIPMENTS][constants.UPSERT] = sendUpsertInstanceReq
 	dataToRPCMappings[constants.PRODUCTS][constants.UPSERT] = sendUpsertProductReq
+	dataToRPCMappings[constants.PRODUCTS][constants.DROP] = sendDropProductDataReq
 	dataToRPCMappings[constants.APPLICATIONS_PRODUCTS][constants.UPSERT] = sendUpsertProductReq
 	dataToRPCMappings[constants.PRODUCTS_EQUIPMENTS][constants.UPSERT] = sendUpsertProductReq
 	dataToRPCMappings[constants.PRODUCTS_ACQUIREDRIGHTS][constants.UPSERT] = sendUpsertAcqRightsReq
 }
 
-func getDataCountInPayload(data []byte, fileType string) int32 {
+var rpcTimeOut time.Duration
+
+//setRpcTimeOut sets rpctimeout default  3000 milisecond ()
+func setRpcTimeOut(t time.Duration) {
+	rpcTimeOut = 3000
+	if t > 0 {
+		rpcTimeOut = t
+	}
+}
+
+//GetDataCountInPayload ...
+func GetDataCountInPayload(data []byte, fileType string) int32 {
 	var count int32
 	switch fileType {
 	case constants.APPLICATIONS_PRODUCTS:
@@ -91,12 +107,17 @@ func getDataCountInPayload(data []byte, fileType string) int32 {
 		}
 		count = int32(len(temp.Equipments.EquipmentId))
 
+	default:
+		count = 1
 	}
 
 	return count
 }
 
 func sendUpsertEqDataReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := equipment.UpsertEquipmentRequest{}
 
 	err = jsonpb.Unmarshal(bytes.NewReader(data.Data), &appData)
@@ -104,7 +125,7 @@ func sendUpsertEqDataReq(ctx context.Context, data models.Envlope, cc grpc.Clien
 		log.Println("Failed to marshal data ")
 		return
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := equipment.NewEquipmentServiceClient(cc).UpsertEquipment(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertMetaDataReq err :", err, " for data ", appData)
@@ -116,13 +137,16 @@ func sendUpsertEqDataReq(ctx context.Context, data models.Envlope, cc grpc.Clien
 	return
 }
 func sendUpsertMetaDataReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := equipment.UpsertMetadataRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
 		log.Println("Failed to marshal data ")
 		return
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := equipment.NewEquipmentServiceClient(cc).UpsertMetadata(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertMetaDataReq err :", err, " for data ", appData)
@@ -135,14 +159,17 @@ func sendUpsertMetaDataReq(ctx context.Context, data models.Envlope, cc grpc.Cli
 }
 
 func sendUpsertAcqRightsReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
-	appData := acq.UpsertAcqRightsRequest{}
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	appData := product.UpsertAcqRightsRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
 		log.Println("Failed to marshal data ")
 		return
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
-	resp, err := acq.NewAcqRightsServiceClient(cc).UpsertAcqRights(ctx, &appData)
+	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	resp, err := product.NewProductServiceClient(cc).UpsertAcqRights(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertAcqRightsReq err :", err, " for data ", appData)
 		return err
@@ -154,13 +181,16 @@ func sendUpsertAcqRightsReq(ctx context.Context, data models.Envlope, cc grpc.Cl
 }
 
 func sendUpsertProductReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := product.UpsertProductRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
 		log.Println("Failed to marshal data ")
 		return
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v] ,  and %+v", data.TargetService, appData, cc)
+	log.Printf("DEBUG sending data  to service %s  is [%+v] ,  and %+v", data.TargetService, appData, cc)
 	resp, err := product.NewProductServiceClient(cc).UpsertProduct(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertProductReq err :", err, " for data ", appData)
@@ -173,18 +203,22 @@ func sendUpsertProductReq(ctx context.Context, data models.Envlope, cc grpc.Clie
 }
 
 func sendUpsertApplicationReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := application.UpsertApplicationRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
 		log.Println("Failed to marshal data ")
-		return
+		return status.Error(codes.Internal, "ParsingError")
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := application.NewApplicationServiceClient(cc).UpsertApplication(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertApplicationReq err :", err, " for data ", appData)
 		return err
 	}
+
 	if resp.Success == false {
 		log.Println("FAILEDTOSEND")
 	}
@@ -192,6 +226,9 @@ func sendUpsertApplicationReq(ctx context.Context, data models.Envlope, cc grpc.
 }
 
 func sendDeleteApplicationReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := application.DeleteApplicationRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
@@ -210,6 +247,9 @@ func sendDeleteApplicationReq(ctx context.Context, data models.Envlope, cc grpc.
 }
 
 func sendDeleteInstanceReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
 	appData := application.DeleteInstanceRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
@@ -227,19 +267,103 @@ func sendDeleteInstanceReq(ctx context.Context, data models.Envlope, cc grpc.Cli
 	return
 }
 
-func sendUpsertInstanceReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
-	appData := application.UpsertInstanceRequest{}
+func sendDeleteApplicationsReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	appData := application.DropApplicationDataRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
 		return
 	}
 	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	resp, err := application.NewApplicationServiceClient(cc).DropApplicationData(ctx, &appData)
+	if err != nil {
+		log.Println("FAILED sendDeleteApplicationsReq err :", err, " for data ", appData)
+		return err
+	}
+	if resp.Success == false {
+		log.Println("FAILEDTOSEND")
+	}
+	return
+}
+
+func sendUpsertInstanceReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	appData := application.UpsertInstanceRequest{}
+	err = json.Unmarshal(data.Data, &appData)
+	if err != nil {
+		return
+	}
+	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := application.NewApplicationServiceClient(cc).UpsertInstance(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertInstanceReq :", err, " for data ", appData)
 		return err
 	}
 	if resp.Success == false {
+		log.Println("FAILEDTOSEND")
+	}
+	return
+}
+
+func sendDropApplicationDataReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	appReq := &application.DropApplicationDataRequest{}
+	err = json.Unmarshal(data.Data, &appReq)
+	if err != nil {
+		return
+	}
+	resp, err := application.NewApplicationServiceClient(cc).DropApplicationData(ctx, appReq)
+	if err != nil {
+		log.Println("FAILED sendDropApplicationDataReq err :", err, " for data ", appReq)
+		return err
+	}
+	if !resp.Success {
+		log.Println("FAILEDTOSEND")
+	}
+	return
+}
+
+func sendDropEquipmentDataReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	equipReq := &equipment.DropEquipmentDataRequest{}
+	err = json.Unmarshal(data.Data, &equipReq)
+	if err != nil {
+		return
+	}
+	resp, err := equipment.NewEquipmentServiceClient(cc).DropEquipmentData(ctx, equipReq)
+	if err != nil {
+		log.Println("FAILED sendDropEquipmentDataReq err :", err, " for data ", equipReq)
+		return err
+	}
+	if !resp.Success {
+		log.Println("FAILEDTOSEND")
+	}
+	return
+}
+
+func sendDropProductDataReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	prodReq := &product.DropProductDataRequest{}
+	err = json.Unmarshal(data.Data, &prodReq)
+	if err != nil {
+		return
+	}
+	resp, err := product.NewProductServiceClient(cc).DropProductData(ctx, prodReq)
+	if err != nil {
+		log.Println("FAILED sendDropProductDataReq err :", err, " for data ", prodReq)
+		return err
+	}
+	if !resp.Success {
 		log.Println("FAILEDTOSEND")
 	}
 	return

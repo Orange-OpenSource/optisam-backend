@@ -10,18 +10,22 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/ctxmanage"
+	"errors"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/token/claims"
+	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	v1 "optisam-backend/product-service/pkg/api/v1"
+	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
-	"optisam-backend/product-service/pkg/worker"
+	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 )
@@ -40,7 +44,7 @@ func TestGetProductDetail(t *testing.T) {
 	}{
 		{
 			name:  "GetProductDetailWithCorrectData",
-			input: &v1.ProductRequest{SwidTag: "p"},
+			input: &v1.ProductRequest{SwidTag: "p", Scopes: []string{"s1", "s2"}},
 			output: &v1.ProductResponse{
 				SwidTag: "p",
 				Editor:  "e",
@@ -50,13 +54,9 @@ func TestGetProductDetail(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ProductRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().GetProductInformation(ctx, db.GetProductInformationParams{
 					Swidtag: input.SwidTag,
-					Scope:   userClaims.Socpes}).Return(db.GetProductInformationRow{
+					Scope:   input.Scopes}).Return(db.GetProductInformationRow{
 					Swidtag:        "p",
 					ProductEditor:  "e",
 					ProductEdition: "ed",
@@ -66,10 +66,17 @@ func TestGetProductDetail(t *testing.T) {
 		},
 		{
 			name:   "GetProductDetailWithoutContext",
-			input:  &v1.ProductRequest{SwidTag: "p1"},
+			input:  &v1.ProductRequest{SwidTag: "p1", Scopes: []string{"s1", "s2"}},
 			ctx:    context.Background(),
 			outErr: true,
 			mock:   func(input *v1.ProductRequest) {},
+		},
+		{
+			name:   "FAILURE: No access to scopes",
+			input:  &v1.ProductRequest{SwidTag: "p1", Scopes: []string{"s4"}},
+			ctx:    ctx,
+			outErr: true,
+			mock:   func(*v1.ProductRequest) {},
 		},
 	}
 	for _, test := range testSet {
@@ -104,18 +111,20 @@ func TestGetProductOptions(t *testing.T) {
 	}{
 		{
 			name:  "GetProductOptionsWithCorrectData",
-			input: &v1.ProductRequest{SwidTag: "p"},
+			input: &v1.ProductRequest{SwidTag: "p", Scopes: []string{"s1", "s2"}},
 			output: &v1.ProductOptionsResponse{
 				NumOfOptions: int32(2),
 				Optioninfo: []*v1.OptionInfo{
 					&v1.OptionInfo{
 						SwidTag: "p1",
+						Name:    "n1",
 						Edition: "ed1",
 						Editor:  "e1",
 						Version: "v1",
 					},
 					&v1.OptionInfo{
 						SwidTag: "p2",
+						Name:    "n2",
 						Edition: "ed2",
 						Editor:  "e2",
 						Version: "v2",
@@ -125,13 +134,9 @@ func TestGetProductOptions(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ProductRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().GetProductOptions(ctx, db.GetProductOptionsParams{
 					Swidtag: input.SwidTag,
-					Scope:   userClaims.Socpes,
+					Scope:   input.Scopes,
 				}).Return([]db.GetProductOptionsRow{
 					{
 						Swidtag:        "p1",
@@ -156,6 +161,13 @@ func TestGetProductOptions(t *testing.T) {
 			outErr: true,
 			ctx:    context.Background(),
 			mock:   func(input *v1.ProductRequest) {},
+		},
+		{
+			name:   "FAILURE: No access to scopes",
+			input:  &v1.ProductRequest{SwidTag: "p1", Scopes: []string{"s4"}},
+			outErr: true,
+			ctx:    ctx,
+			mock:   func(*v1.ProductRequest) {},
 		},
 	}
 	for _, test := range testSet {
@@ -193,6 +205,7 @@ func TestListProducts(t *testing.T) {
 			input: &v1.ListProductsRequest{
 				PageNum:  int32(1),
 				PageSize: int32(10),
+				Scopes:   []string{"s1"},
 			},
 			output: &v1.ListProductsResponse{
 				TotalRecords: int32(1),
@@ -213,12 +226,8 @@ func TestListProducts(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductsRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ListProductsView(ctx, db.ListProductsViewParams{
-					Scope:    userClaims.Socpes,
+					Scope:    input.Scopes,
 					PageNum:  input.PageSize * (input.PageNum - 1),
 					PageSize: input.PageSize}).Return([]db.ListProductsViewRow{
 					{
@@ -246,6 +255,7 @@ func TestListProducts(t *testing.T) {
 						Filteringkey: "app",
 					},
 				},
+				Scopes: []string{"s1", "s2"},
 			},
 			output: &v1.ListProductsResponse{
 				TotalRecords: int32(1),
@@ -266,12 +276,8 @@ func TestListProducts(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductsRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
-					Scope:         userClaims.Socpes,
+					Scope:         input.Scopes,
 					PageNum:       input.PageSize * (input.PageNum - 1),
 					ApplicationID: "app",
 					PageSize:      input.PageSize}).Return([]db.ListProductsViewRedirectedApplicationRow{
@@ -300,6 +306,7 @@ func TestListProducts(t *testing.T) {
 						Filteringkey: "equip",
 					},
 				},
+				Scopes: []string{"s1", "s2"},
 			},
 			output: &v1.ListProductsResponse{
 				TotalRecords: int32(1),
@@ -320,12 +327,8 @@ func TestListProducts(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductsRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
 				dbObj.EXPECT().ListProductsViewRedirectedEquipment(ctx, db.ListProductsViewRedirectedEquipmentParams{
-					Scope:       userClaims.Socpes,
+					Scope:       input.Scopes,
 					PageNum:     input.PageSize * (input.PageNum - 1),
 					EquipmentID: "equip",
 					PageSize:    input.PageSize}).Return([]db.ListProductsViewRedirectedEquipmentRow{
@@ -349,9 +352,21 @@ func TestListProducts(t *testing.T) {
 			input: &v1.ListProductsRequest{
 				PageNum:  int32(1),
 				PageSize: int32(10),
+				Scopes:   []string{"s1", "s2"},
 			},
 			outErr: true,
 			ctx:    context.Background(),
+			mock:   func(input *v1.ListProductsRequest) {},
+		},
+		{
+			name: "FAILURE: No scope access",
+			input: &v1.ListProductsRequest{
+				PageNum:  int32(1),
+				PageSize: int32(10),
+				Scopes:   []string{"s4"},
+			},
+			outErr: true,
+			ctx:    ctx,
 			mock:   func(input *v1.ListProductsRequest) {},
 		},
 	}
@@ -414,7 +429,7 @@ func TestUpsertProduct(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.UpsertProductRequest) {
-				userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 				if !ok {
 					t.Errorf("cannot find claims in context")
 				}
@@ -423,7 +438,7 @@ func TestUpsertProduct(t *testing.T) {
 				if err != nil {
 					t.Errorf("Failed to do json marshalling")
 				}
-				e := worker.Envelope{Type: worker.UpsertProductRequest, Json: jsonData}
+				e := dgworker.Envelope{Type: dgworker.UpsertProductRequest, JSON: jsonData}
 
 				envolveData, err := json.Marshal(e)
 				if err != nil {
@@ -461,100 +476,126 @@ func TestUpsertProduct(t *testing.T) {
 	}
 }
 
-func TestUpsertProductAggregation(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.UpsertAggregationRequest
-		output *v1.UpsertAggregationResponse
-		mock   func(*v1.UpsertAggregationRequest)
-		ctx    context.Context
-		outErr bool
+func Test_productServiceServer_DropProductData(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.DropProductDataRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.DropProductDataResponse
+		wantErr bool
 	}{
-		{
-			name: "UpsertAggregationRequestWithActionAdd",
-			input: &v1.UpsertAggregationRequest{
-				AggregationId:   int32(1),
-				AggregationName: "agg",
-				ActionType:      "add",
-				Swidtags:        []string{"p1", "p2"},
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropProductDataRequest{
+					Scope: "Scope1",
+				},
 			},
-			output: &v1.UpsertAggregationResponse{Success: true},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.UpsertAggregationRequest) {
-				dbObj.EXPECT().UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-					AggregationID:   input.AggregationId,
-					AggregationName: input.AggregationName,
-					Swidtags:        input.Swidtags}).Return(nil).Times(1)
-			},
-		},
-		{
-			name: "UpsertAggregationRequestWithActiondel",
-			input: &v1.UpsertAggregationRequest{
-				AggregationId: int32(1),
-				ActionType:    "delete",
-			},
-			output: &v1.UpsertAggregationResponse{Success: true},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.UpsertAggregationRequest) {
-				dbObj.EXPECT().DeleteProductAggregation(ctx, db.DeleteProductAggregationParams{AggregationID_2: input.AggregationId}).Return(nil).Times(1)
-			},
-		},
-		{
-			name: "UpsertAggregationRequestWithActionUpsert",
-			input: &v1.UpsertAggregationRequest{
-				AggregationId:   int32(1),
-				ActionType:      "upsert",
-				AggregationName: "agg",
-				Swidtags:        []string{"p1", "p3", "p4"},
-			},
-			output: &v1.UpsertAggregationResponse{Success: true},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.UpsertAggregationRequest) {
-				dbObj.EXPECT().GetProductAggregation(ctx, db.GetProductAggregationParams{
-					AggregationID:   input.AggregationId,
-					AggregationName: input.AggregationName}).Return([]string{"p1", "p2"}, nil).Times(1)
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DropProductDataTx(ctx, "Scope1").Times(1).Return(nil)
+				jsonData, err := json.Marshal(&v1.DropProductDataRequest{
+					Scope: "Scope1",
+				})
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test %v", err)
+				}
+				e := dgworker.Envelope{Type: dgworker.DropProductDataRequest, JSON: jsonData}
 
-				dbObj.EXPECT().UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-					AggregationID:   0,
-					AggregationName: "",
-					Swidtags:        []string{"p2"}}).Return(nil).Times(1)
-
-				dbObj.EXPECT().UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-					AggregationID:   input.AggregationId,
-					AggregationName: input.AggregationName,
-					Swidtags:        []string{"p1", "p3", "p4"}}).Return(nil).Times(1)
+				envolveData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				job := job.Job{
+					Type:   sql.NullString{String: "aw"},
+					Status: job.JobStatusPENDING,
+					Data:   envolveData,
+				}
+				mockQueue.EXPECT().PushJob(ctx, job, "aw").Return(int32(1000), nil)
 			},
+			want: &v1.DropProductDataResponse{
+				Success: true,
+			},
+			wantErr: false,
 		},
-		{
-			name: "UpsertAggregationRequestWithUnknownAction",
-			input: &v1.UpsertAggregationRequest{
-				AggregationId: int32(1),
-				ActionType:    "abc",
+		{name: "FAILURE - ClaimsNotFound",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DropProductDataRequest{
+					Scope: "Scope1",
+				},
 			},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.UpsertAggregationRequest) {},
+			setup: func() {},
+			want: &v1.DropProductDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropProductDataRequest{
+					Scope: "Scope4",
+				},
+			},
+			setup: func() {},
+			want: &v1.DropProductDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DropProductDataTx - DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropProductDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DropProductDataTx(ctx, "Scope1").Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.DropProductDataResponse{
+				Success: false,
+			},
+			wantErr: true,
 		},
 	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.UpsertProductAggregation(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+			}
+			got, err := tt.s.DropProductData(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.DropProductData() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.DropProductData() = %v, want %v", got, tt.want)
 			}
 		})
 	}

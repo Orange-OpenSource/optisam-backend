@@ -7,7 +7,9 @@
 package config
 
 import (
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/dgraph"
+	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
@@ -48,6 +50,12 @@ type Config struct {
 	//WorkerQueue holds queue config
 	WorkerQueue workerqueue.QueueConfig
 
+	//Handles cron config
+	Cron cron.Config
+
+	//MaxApiWorker to handle concurrent processing of jobs
+	MaxApiWorker int
+
 	// Database connection information
 	Database postgres.Config
 
@@ -61,6 +69,15 @@ type Config struct {
 
 	//IAM Configuration
 	IAM iam.Config
+
+	GrpcServers grpc.Config
+
+	//For interservice http calls(non grpc server)["ip:port"]
+	HttpServers httpConfg
+}
+
+type httpConfg struct {
+	Address map[string]string
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -167,7 +184,8 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Dgraph configuration
 	_ = v.BindEnv("dgraph.host")
 
-	// App Params Configuration
+	// Database Password configuration
+	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", "cert.pem")

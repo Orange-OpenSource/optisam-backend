@@ -20,15 +20,23 @@ import (
 )
 
 type metadataType string
+type metadata struct {
+	ID         string
+	Source     string
+	Attributes []string
+	Scopes     []string
+}
 
 const (
 	metadataTypeEquipment   metadataType = "equipment"
 	metadataTypeUnsupported metadataType = "unsupported"
 )
 
-func (r *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.Metadata) error {
+//UpsertMetadata ...
+func (lr *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.Metadata) error {
+
 	q := `query {
-		var(func: eq(metadata.source,"` + metadata.Source + `")) @filter(eq(type_name,"metadata")){
+		var(func: eq(metadata.source,"` + metadata.Source + `"))  @filter(eq(type_name, "metadata") AND eq(scopes,"` + metadata.Scope + `")){
 			metadata as uid
 			}
 		}
@@ -38,6 +46,7 @@ func (r *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.M
 		uid(metadata) <dgraph.type> "Metadata" .
 		uid(metadata) <metadata.source> "` + metadata.Source + `" .
 		uid(metadata) <metadata.type> "` + metadata.MetadataType + `" .
+		uid(metadata) <scopes> "` + metadata.Scope + `" .
 	`
 	for _, attr := range metadata.Attributes {
 		set += `
@@ -49,7 +58,7 @@ func (r *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.M
 		//	CommitNow: true,
 	}
 	log.Printf("MU %+v", mu)
-	_, err := r.dg.NewTxn().Do(ctx, &api.Request{
+	_, err := lr.dg.NewTxn().Do(ctx, &api.Request{
 		CommitNow: true,
 		Query:     q,
 		Mutations: []*api.Mutation{mu}},
@@ -68,13 +77,13 @@ func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.M
 		return nil, err
 	}
 	q := `{
-		Metadatas(func: eq(metadata.type,` + string(id) + `),orderasc: metadata.source ) {
+		Metadatas(func: eq(metadata.type,` + string(id) + `),orderasc: metadata.source )  ` + agregateFilters(scopeFilters(scopes)) + ` {
 		   ID:         uid
 		   Source:     metadata.source
 		   Attributes: metadata.attributes
+		   Scopes: 	   scopes
 		}
 	  }`
-
 	resp, err := lr.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()), zap.String("query", q))
@@ -82,7 +91,7 @@ func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.M
 	}
 
 	type data struct {
-		Metadatas []*v1.Metadata
+		Metadatas []*metadata
 	}
 
 	metadata := data{}
@@ -91,16 +100,17 @@ func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.M
 		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()))
 		return nil, fmt.Errorf("dgraph/Metadata - cannot unmarshal Json object")
 	}
-	return metadata.Metadatas, nil
+	return convertMetadataAll(metadata.Metadatas), nil
 }
 
 // MetadataWithID implements Licence MetadataWithID function
 func (lr *EquipmentRepository) MetadataWithID(ctx context.Context, id string, scopes []string) (*v1.Metadata, error) {
 	q := `{
-		Metadatas(func: uid(` + id + `)) @cascade{
+		Metadatas(func: uid(` + id + `))  ` + agregateFilters(scopeFilters(scopes)) + `@cascade{
 		   ID:         uid
 		   Source:     metadata.source
 		   Attributes: metadata.attributes
+		   Scopes: 	   scopes
 		}
 	  }`
 
@@ -111,7 +121,7 @@ func (lr *EquipmentRepository) MetadataWithID(ctx context.Context, id string, sc
 	}
 
 	type data struct {
-		Metadatas []*v1.Metadata
+		Metadatas []*metadata
 	}
 
 	metadata := data{}
@@ -124,7 +134,7 @@ func (lr *EquipmentRepository) MetadataWithID(ctx context.Context, id string, sc
 		// TODO: Add unit test case for this
 		return nil, v1.ErrNoData
 	}
-	return metadata.Metadatas[0], nil
+	return convertMetadata(metadata.Metadatas[0]), nil
 }
 
 func convertMetadataTypeDGType(typ v1.MetadataType) (metadataType, error) {
@@ -133,5 +143,22 @@ func convertMetadataTypeDGType(typ v1.MetadataType) (metadataType, error) {
 		return metadataTypeEquipment, nil
 	default:
 		return metadataTypeUnsupported, fmt.Errorf("dgraph/metadataID - is not supported for MetadataType: %v", typ)
+	}
+}
+
+func convertMetadataAll(dbData []*metadata) []*v1.Metadata {
+	srvData := make([]*v1.Metadata, len(dbData))
+	for i := range dbData {
+		srvData[i] = convertMetadata(dbData[i])
+	}
+	return srvData
+}
+
+func convertMetadata(dbData *metadata) *v1.Metadata {
+	return &v1.Metadata{
+		ID:         dbData.ID,
+		Source:     dbData.Source,
+		Attributes: dbData.Attributes,
+		Scope:      dbData.Scopes[0],
 	}
 }

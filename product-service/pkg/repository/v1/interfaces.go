@@ -16,8 +16,7 @@ import (
 //go:generate mockgen -destination=dbmock/mock.go -package=mock optisam-backend/product-service/pkg/repository/v1 Product
 //go:generate mockgen -destination=queuemock/mock.go -package=mock optisam-backend/common/optisam/workerqueue  Workerqueue
 
-
-//Interface to satisfy SQL DB and TX interface
+//DBTX to satisfy SQL DB and TX interface
 type DBTX interface {
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)
 	PrepareContext(context.Context, string) (*sql.Stmt, error)
@@ -28,6 +27,7 @@ type DBTX interface {
 //Product interface
 type Product interface {
 	gendb.Querier
-	// Need to add this for transaction support
+	// Need to add these for transaction support
 	UpsertProductTx(ctx context.Context, req *v1.UpsertProductRequest, user string) error
+	DropProductDataTx(ctx context.Context, scope string) error
 }

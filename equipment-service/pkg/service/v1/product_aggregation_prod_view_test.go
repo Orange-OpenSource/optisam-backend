@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
@@ -136,7 +136,7 @@ func (p *productQueryMatcherEquipments) String() string {
 	return "productQueryMatcherEquipments"
 }
 func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2"},
@@ -229,17 +229,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypes, nil)
 				mockLicense.EXPECT().ListEquipmentsForProductAggregation(ctx, "agg1", eqTypes[0], &productQueryMatcherEquipments{
 					q: queryParams,
 					t: t,
-				}, []string{"Scope1", "Scope2"}).Times(1).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil)
+				}, []string{"Scope1"}).Times(1).Return(int32(2), json.RawMessage(`[{ID:"1"}]`), nil)
 
 			},
 			want: &v1.ListEquipmentsResponse{
@@ -259,6 +260,24 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - ListEquipmentsForProductAggregation - some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentsForProductAggregationRequest{
+					EqTypeId:     "1",
+					SortBy:       "attr1",
+					SearchParams: "attr1=a11,attr2=a22",
+					Name:         "agg1",
+					PageNum:      10,
+					PageSize:     10,
+					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope3"},
 				},
 			},
 			setup:   func() {},
@@ -275,13 +294,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(nil, errors.New("test error"))
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("test error"))
 
 			},
 			wantErr: true,
@@ -297,13 +317,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -318,13 +339,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -339,13 +361,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return([]*repo.EquipmentType{
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						Type: "typ1",
 						ID:   "1",
@@ -381,13 +404,14 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -402,17 +426,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProductAggregation(t *testing.
 					PageNum:      10,
 					PageSize:     10,
 					SortOrder:    v1.SortOrder_ASC,
+					Scopes:       []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2"}).Times(1).Return(eqTypes, nil)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypes, nil)
 				mockLicense.EXPECT().ListEquipmentsForProductAggregation(ctx, "agg1", eqTypes[0], &productQueryMatcherEquipments{
 					q: queryParams,
 					t: t,
-				}, []string{"Scope1", "Scope2"}).Times(1).Return(int32(2), nil, errors.New("test error"))
+				}, []string{"Scope1"}).Times(1).Return(int32(2), nil, errors.New("test error"))
 
 			},
 			wantErr: true,

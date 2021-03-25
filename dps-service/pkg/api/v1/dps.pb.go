@@ -34,33 +34,55 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type DashboardQualityOverviewRequest_Frequency int32
+
+const (
+	DashboardQualityOverviewRequest_DAILY   DashboardQualityOverviewRequest_Frequency = 0
+	DashboardQualityOverviewRequest_MONTHLY DashboardQualityOverviewRequest_Frequency = 1
+)
+
+var DashboardQualityOverviewRequest_Frequency_name = map[int32]string{
+	0: "DAILY",
+	1: "MONTHLY",
+}
+
+var DashboardQualityOverviewRequest_Frequency_value = map[string]int32{
+	"DAILY":   0,
+	"MONTHLY": 1,
+}
+
+func (x DashboardQualityOverviewRequest_Frequency) String() string {
+	return proto.EnumName(DashboardQualityOverviewRequest_Frequency_name, int32(x))
+}
+
+func (DashboardQualityOverviewRequest_Frequency) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{4, 0}
+}
+
 type ListUploadRequest_SortBy int32
 
 const (
 	ListUploadRequest_upload_id   ListUploadRequest_SortBy = 0
-	ListUploadRequest_scope       ListUploadRequest_SortBy = 1
-	ListUploadRequest_file_name   ListUploadRequest_SortBy = 2
-	ListUploadRequest_status      ListUploadRequest_SortBy = 3
-	ListUploadRequest_uploaded_by ListUploadRequest_SortBy = 4
-	ListUploadRequest_uploaded_on ListUploadRequest_SortBy = 5
+	ListUploadRequest_file_name   ListUploadRequest_SortBy = 1
+	ListUploadRequest_status      ListUploadRequest_SortBy = 2
+	ListUploadRequest_uploaded_by ListUploadRequest_SortBy = 3
+	ListUploadRequest_uploaded_on ListUploadRequest_SortBy = 4
 )
 
 var ListUploadRequest_SortBy_name = map[int32]string{
 	0: "upload_id",
-	1: "scope",
-	2: "file_name",
-	3: "status",
-	4: "uploaded_by",
-	5: "uploaded_on",
+	1: "file_name",
+	2: "status",
+	3: "uploaded_by",
+	4: "uploaded_on",
 }
 
 var ListUploadRequest_SortBy_value = map[string]int32{
 	"upload_id":   0,
-	"scope":       1,
-	"file_name":   2,
-	"status":      3,
-	"uploaded_by": 4,
-	"uploaded_on": 5,
+	"file_name":   1,
+	"status":      2,
+	"uploaded_by": 3,
+	"uploaded_on": 4,
 }
 
 func (x ListUploadRequest_SortBy) String() string {
@@ -68,7 +90,7 @@ func (x ListUploadRequest_SortBy) String() string {
 }
 
 func (ListUploadRequest_SortBy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{2, 0}
+	return fileDescriptor_a611899297971007, []int{11, 0}
 }
 
 type ListUploadRequest_SortOrder int32
@@ -93,7 +115,281 @@ func (x ListUploadRequest_SortOrder) String() string {
 }
 
 func (ListUploadRequest_SortOrder) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{2, 1}
+	return fileDescriptor_a611899297971007, []int{11, 1}
+}
+
+type ListFailureReasonRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListFailureReasonRequest) Reset()         { *m = ListFailureReasonRequest{} }
+func (m *ListFailureReasonRequest) String() string { return proto.CompactTextString(m) }
+func (*ListFailureReasonRequest) ProtoMessage()    {}
+func (*ListFailureReasonRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{0}
+}
+
+func (m *ListFailureReasonRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListFailureReasonRequest.Unmarshal(m, b)
+}
+func (m *ListFailureReasonRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListFailureReasonRequest.Marshal(b, m, deterministic)
+}
+func (m *ListFailureReasonRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListFailureReasonRequest.Merge(m, src)
+}
+func (m *ListFailureReasonRequest) XXX_Size() int {
+	return xxx_messageInfo_ListFailureReasonRequest.Size(m)
+}
+func (m *ListFailureReasonRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListFailureReasonRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListFailureReasonRequest proto.InternalMessageInfo
+
+func (m *ListFailureReasonRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ListFailureReasonResponse struct {
+	FailureReasons       map[string]float32 `protobuf:"bytes,1,rep,name=failureReasons,proto3" json:"failureReasons,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"fixed32,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
+}
+
+func (m *ListFailureReasonResponse) Reset()         { *m = ListFailureReasonResponse{} }
+func (m *ListFailureReasonResponse) String() string { return proto.CompactTextString(m) }
+func (*ListFailureReasonResponse) ProtoMessage()    {}
+func (*ListFailureReasonResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{1}
+}
+
+func (m *ListFailureReasonResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListFailureReasonResponse.Unmarshal(m, b)
+}
+func (m *ListFailureReasonResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListFailureReasonResponse.Marshal(b, m, deterministic)
+}
+func (m *ListFailureReasonResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListFailureReasonResponse.Merge(m, src)
+}
+func (m *ListFailureReasonResponse) XXX_Size() int {
+	return xxx_messageInfo_ListFailureReasonResponse.Size(m)
+}
+func (m *ListFailureReasonResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListFailureReasonResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListFailureReasonResponse proto.InternalMessageInfo
+
+func (m *ListFailureReasonResponse) GetFailureReasons() map[string]float32 {
+	if m != nil {
+		return m.FailureReasons
+	}
+	return nil
+}
+
+type DataFailureRateRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DataFailureRateRequest) Reset()         { *m = DataFailureRateRequest{} }
+func (m *DataFailureRateRequest) String() string { return proto.CompactTextString(m) }
+func (*DataFailureRateRequest) ProtoMessage()    {}
+func (*DataFailureRateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{2}
+}
+
+func (m *DataFailureRateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DataFailureRateRequest.Unmarshal(m, b)
+}
+func (m *DataFailureRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DataFailureRateRequest.Marshal(b, m, deterministic)
+}
+func (m *DataFailureRateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DataFailureRateRequest.Merge(m, src)
+}
+func (m *DataFailureRateRequest) XXX_Size() int {
+	return xxx_messageInfo_DataFailureRateRequest.Size(m)
+}
+func (m *DataFailureRateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DataFailureRateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DataFailureRateRequest proto.InternalMessageInfo
+
+func (m *DataFailureRateRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DataFailureRateResponse struct {
+	FailureRate          float32  `protobuf:"fixed32,1,opt,name=failureRate,proto3" json:"failureRate,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DataFailureRateResponse) Reset()         { *m = DataFailureRateResponse{} }
+func (m *DataFailureRateResponse) String() string { return proto.CompactTextString(m) }
+func (*DataFailureRateResponse) ProtoMessage()    {}
+func (*DataFailureRateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{3}
+}
+
+func (m *DataFailureRateResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DataFailureRateResponse.Unmarshal(m, b)
+}
+func (m *DataFailureRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DataFailureRateResponse.Marshal(b, m, deterministic)
+}
+func (m *DataFailureRateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DataFailureRateResponse.Merge(m, src)
+}
+func (m *DataFailureRateResponse) XXX_Size() int {
+	return xxx_messageInfo_DataFailureRateResponse.Size(m)
+}
+func (m *DataFailureRateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DataFailureRateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DataFailureRateResponse proto.InternalMessageInfo
+
+func (m *DataFailureRateResponse) GetFailureRate() float32 {
+	if m != nil {
+		return m.FailureRate
+	}
+	return 0
+}
+
+type DashboardQualityOverviewRequest struct {
+	Frequency            DashboardQualityOverviewRequest_Frequency `protobuf:"varint,1,opt,name=frequency,proto3,enum=optisam.dps.v1.DashboardQualityOverviewRequest_Frequency" json:"frequency,omitempty"`
+	NoOfDataPoints       int32                                     `protobuf:"varint,2,opt,name=noOfDataPoints,proto3" json:"noOfDataPoints,omitempty"`
+	Scope                string                                    `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                  `json:"-"`
+	XXX_unrecognized     []byte                                    `json:"-"`
+	XXX_sizecache        int32                                     `json:"-"`
+}
+
+func (m *DashboardQualityOverviewRequest) Reset()         { *m = DashboardQualityOverviewRequest{} }
+func (m *DashboardQualityOverviewRequest) String() string { return proto.CompactTextString(m) }
+func (*DashboardQualityOverviewRequest) ProtoMessage()    {}
+func (*DashboardQualityOverviewRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{4}
+}
+
+func (m *DashboardQualityOverviewRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardQualityOverviewRequest.Unmarshal(m, b)
+}
+func (m *DashboardQualityOverviewRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardQualityOverviewRequest.Marshal(b, m, deterministic)
+}
+func (m *DashboardQualityOverviewRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardQualityOverviewRequest.Merge(m, src)
+}
+func (m *DashboardQualityOverviewRequest) XXX_Size() int {
+	return xxx_messageInfo_DashboardQualityOverviewRequest.Size(m)
+}
+func (m *DashboardQualityOverviewRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardQualityOverviewRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardQualityOverviewRequest proto.InternalMessageInfo
+
+func (m *DashboardQualityOverviewRequest) GetFrequency() DashboardQualityOverviewRequest_Frequency {
+	if m != nil {
+		return m.Frequency
+	}
+	return DashboardQualityOverviewRequest_DAILY
+}
+
+func (m *DashboardQualityOverviewRequest) GetNoOfDataPoints() int32 {
+	if m != nil {
+		return m.NoOfDataPoints
+	}
+	return 0
+}
+
+func (m *DashboardQualityOverviewRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DashboardQualityOverviewResponse struct {
+	Applications         []float32 `protobuf:"fixed32,1,rep,packed,name=applications,proto3" json:"applications,omitempty"`
+	Products             []float32 `protobuf:"fixed32,2,rep,packed,name=products,proto3" json:"products,omitempty"`
+	Equipments           []float32 `protobuf:"fixed32,3,rep,packed,name=equipments,proto3" json:"equipments,omitempty"`
+	Acqrights            []float32 `protobuf:"fixed32,4,rep,packed,name=acqrights,proto3" json:"acqrights,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *DashboardQualityOverviewResponse) Reset()         { *m = DashboardQualityOverviewResponse{} }
+func (m *DashboardQualityOverviewResponse) String() string { return proto.CompactTextString(m) }
+func (*DashboardQualityOverviewResponse) ProtoMessage()    {}
+func (*DashboardQualityOverviewResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{5}
+}
+
+func (m *DashboardQualityOverviewResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DashboardQualityOverviewResponse.Unmarshal(m, b)
+}
+func (m *DashboardQualityOverviewResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DashboardQualityOverviewResponse.Marshal(b, m, deterministic)
+}
+func (m *DashboardQualityOverviewResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DashboardQualityOverviewResponse.Merge(m, src)
+}
+func (m *DashboardQualityOverviewResponse) XXX_Size() int {
+	return xxx_messageInfo_DashboardQualityOverviewResponse.Size(m)
+}
+func (m *DashboardQualityOverviewResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DashboardQualityOverviewResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DashboardQualityOverviewResponse proto.InternalMessageInfo
+
+func (m *DashboardQualityOverviewResponse) GetApplications() []float32 {
+	if m != nil {
+		return m.Applications
+	}
+	return nil
+}
+
+func (m *DashboardQualityOverviewResponse) GetProducts() []float32 {
+	if m != nil {
+		return m.Products
+	}
+	return nil
+}
+
+func (m *DashboardQualityOverviewResponse) GetEquipments() []float32 {
+	if m != nil {
+		return m.Equipments
+	}
+	return nil
+}
+
+func (m *DashboardQualityOverviewResponse) GetAcqrights() []float32 {
+	if m != nil {
+		return m.Acqrights
+	}
+	return nil
 }
 
 type NotifyUploadRequest struct {
@@ -102,6 +398,7 @@ type NotifyUploadRequest struct {
 	UploadId             int32    `protobuf:"varint,3,opt,name=upload_id,json=uploadId,proto3" json:"upload_id,omitempty"`
 	UploadedBy           string   `protobuf:"bytes,4,opt,name=uploaded_by,json=uploadedBy,proto3" json:"uploaded_by,omitempty"`
 	Files                []string `protobuf:"bytes,5,rep,name=files,proto3" json:"files,omitempty"`
+	IsDeleteOldInventory bool     `protobuf:"varint,6,opt,name=is_delete_old_inventory,json=isDeleteOldInventory,proto3" json:"is_delete_old_inventory,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -111,7 +408,7 @@ func (m *NotifyUploadRequest) Reset()         { *m = NotifyUploadRequest{} }
 func (m *NotifyUploadRequest) String() string { return proto.CompactTextString(m) }
 func (*NotifyUploadRequest) ProtoMessage()    {}
 func (*NotifyUploadRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{0}
+	return fileDescriptor_a611899297971007, []int{6}
 }
 
 func (m *NotifyUploadRequest) XXX_Unmarshal(b []byte) error {
@@ -167,6 +464,13 @@ func (m *NotifyUploadRequest) GetFiles() []string {
 	return nil
 }
 
+func (m *NotifyUploadRequest) GetIsDeleteOldInventory() bool {
+	if m != nil {
+		return m.IsDeleteOldInventory
+	}
+	return false
+}
+
 type NotifyUploadResponse struct {
 	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -178,7 +482,7 @@ func (m *NotifyUploadResponse) Reset()         { *m = NotifyUploadResponse{} }
 func (m *NotifyUploadResponse) String() string { return proto.CompactTextString(m) }
 func (*NotifyUploadResponse) ProtoMessage()    {}
 func (*NotifyUploadResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{1}
+	return fileDescriptor_a611899297971007, []int{7}
 }
 
 func (m *NotifyUploadResponse) XXX_Unmarshal(b []byte) error {
@@ -206,11 +510,169 @@ func (m *NotifyUploadResponse) GetSuccess() bool {
 	return false
 }
 
+type ListFailedRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	UploadId             int32    `protobuf:"varint,2,opt,name=upload_id,json=uploadId,proto3" json:"upload_id,omitempty"`
+	PageNum              int32    `protobuf:"varint,3,opt,name=page_num,json=pageNum,proto3" json:"page_num,omitempty"`
+	PageSize             int32    `protobuf:"varint,4,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListFailedRequest) Reset()         { *m = ListFailedRequest{} }
+func (m *ListFailedRequest) String() string { return proto.CompactTextString(m) }
+func (*ListFailedRequest) ProtoMessage()    {}
+func (*ListFailedRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{8}
+}
+
+func (m *ListFailedRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListFailedRequest.Unmarshal(m, b)
+}
+func (m *ListFailedRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListFailedRequest.Marshal(b, m, deterministic)
+}
+func (m *ListFailedRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListFailedRequest.Merge(m, src)
+}
+func (m *ListFailedRequest) XXX_Size() int {
+	return xxx_messageInfo_ListFailedRequest.Size(m)
+}
+func (m *ListFailedRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListFailedRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListFailedRequest proto.InternalMessageInfo
+
+func (m *ListFailedRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *ListFailedRequest) GetUploadId() int32 {
+	if m != nil {
+		return m.UploadId
+	}
+	return 0
+}
+
+func (m *ListFailedRequest) GetPageNum() int32 {
+	if m != nil {
+		return m.PageNum
+	}
+	return 0
+}
+
+func (m *ListFailedRequest) GetPageSize() int32 {
+	if m != nil {
+		return m.PageSize
+	}
+	return 0
+}
+
+type ListFailedResponse struct {
+	FailedRecords        []*FailedRecord `protobuf:"bytes,1,rep,name=failedRecords,proto3" json:"failedRecords,omitempty"`
+	TotalRecords         int32           `protobuf:"varint,2,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *ListFailedResponse) Reset()         { *m = ListFailedResponse{} }
+func (m *ListFailedResponse) String() string { return proto.CompactTextString(m) }
+func (*ListFailedResponse) ProtoMessage()    {}
+func (*ListFailedResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{9}
+}
+
+func (m *ListFailedResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListFailedResponse.Unmarshal(m, b)
+}
+func (m *ListFailedResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListFailedResponse.Marshal(b, m, deterministic)
+}
+func (m *ListFailedResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListFailedResponse.Merge(m, src)
+}
+func (m *ListFailedResponse) XXX_Size() int {
+	return xxx_messageInfo_ListFailedResponse.Size(m)
+}
+func (m *ListFailedResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListFailedResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListFailedResponse proto.InternalMessageInfo
+
+func (m *ListFailedResponse) GetFailedRecords() []*FailedRecord {
+	if m != nil {
+		return m.FailedRecords
+	}
+	return nil
+}
+
+func (m *ListFailedResponse) GetTotalRecords() int32 {
+	if m != nil {
+		return m.TotalRecords
+	}
+	return 0
+}
+
+type FailedRecord struct {
+	Data                 map[string]string `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Reason               string            `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *FailedRecord) Reset()         { *m = FailedRecord{} }
+func (m *FailedRecord) String() string { return proto.CompactTextString(m) }
+func (*FailedRecord) ProtoMessage()    {}
+func (*FailedRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{10}
+}
+
+func (m *FailedRecord) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FailedRecord.Unmarshal(m, b)
+}
+func (m *FailedRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FailedRecord.Marshal(b, m, deterministic)
+}
+func (m *FailedRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FailedRecord.Merge(m, src)
+}
+func (m *FailedRecord) XXX_Size() int {
+	return xxx_messageInfo_FailedRecord.Size(m)
+}
+func (m *FailedRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_FailedRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FailedRecord proto.InternalMessageInfo
+
+func (m *FailedRecord) GetData() map[string]string {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *FailedRecord) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
 type ListUploadRequest struct {
 	PageNum              int32                       `protobuf:"varint,1,opt,name=page_num,json=pageNum,proto3" json:"page_num,omitempty"`
 	PageSize             int32                       `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	SortBy               ListUploadRequest_SortBy    `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=v1.ListUploadRequest_SortBy" json:"sort_by,omitempty"`
-	SortOrder            ListUploadRequest_SortOrder `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=v1.ListUploadRequest_SortOrder" json:"sort_order,omitempty"`
+	SortBy               ListUploadRequest_SortBy    `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.dps.v1.ListUploadRequest_SortBy" json:"sort_by,omitempty"`
+	SortOrder            ListUploadRequest_SortOrder `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.dps.v1.ListUploadRequest_SortOrder" json:"sort_order,omitempty"`
+	Scope                string                      `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`
@@ -220,7 +682,7 @@ func (m *ListUploadRequest) Reset()         { *m = ListUploadRequest{} }
 func (m *ListUploadRequest) String() string { return proto.CompactTextString(m) }
 func (*ListUploadRequest) ProtoMessage()    {}
 func (*ListUploadRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{2}
+	return fileDescriptor_a611899297971007, []int{11}
 }
 
 func (m *ListUploadRequest) XXX_Unmarshal(b []byte) error {
@@ -269,6 +731,13 @@ func (m *ListUploadRequest) GetSortOrder() ListUploadRequest_SortOrder {
 	return ListUploadRequest_asc
 }
 
+func (m *ListUploadRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
 type ListUploadResponse struct {
 	TotalRecords         int32     `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
 	Uploads              []*Upload `protobuf:"bytes,2,rep,name=uploads,proto3" json:"uploads,omitempty"`
@@ -281,7 +750,7 @@ func (m *ListUploadResponse) Reset()         { *m = ListUploadResponse{} }
 func (m *ListUploadResponse) String() string { return proto.CompactTextString(m) }
 func (*ListUploadResponse) ProtoMessage()    {}
 func (*ListUploadResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{3}
+	return fileDescriptor_a611899297971007, []int{12}
 }
 
 func (m *ListUploadResponse) XXX_Unmarshal(b []byte) error {
@@ -326,7 +795,7 @@ type Upload struct {
 	TotalRecords         int32                `protobuf:"varint,7,opt,name=total_records,json=totalRecords,proto3" json:"total_records,omitempty"`
 	SuccessRecords       int32                `protobuf:"varint,8,opt,name=success_records,json=successRecords,proto3" json:"success_records,omitempty"`
 	FailedRecords        int32                `protobuf:"varint,9,opt,name=failed_records,json=failedRecords,proto3" json:"failed_records,omitempty"`
-	InvalidRecords       int32                `protobuf:"varint,10,opt,name=invalid_records,json=invalidRecords,proto3" json:"invalid_records,omitempty"`
+	Comments             string               `protobuf:"bytes,10,opt,name=comments,proto3" json:"comments,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -336,7 +805,7 @@ func (m *Upload) Reset()         { *m = Upload{} }
 func (m *Upload) String() string { return proto.CompactTextString(m) }
 func (*Upload) ProtoMessage()    {}
 func (*Upload) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a611899297971007, []int{4}
+	return fileDescriptor_a611899297971007, []int{13}
 }
 
 func (m *Upload) XXX_Unmarshal(b []byte) error {
@@ -420,78 +889,214 @@ func (m *Upload) GetFailedRecords() int32 {
 	return 0
 }
 
-func (m *Upload) GetInvalidRecords() int32 {
+func (m *Upload) GetComments() string {
 	if m != nil {
-		return m.InvalidRecords
+		return m.Comments
 	}
-	return 0
+	return ""
+}
+
+type DeleteInventoryRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteInventoryRequest) Reset()         { *m = DeleteInventoryRequest{} }
+func (m *DeleteInventoryRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteInventoryRequest) ProtoMessage()    {}
+func (*DeleteInventoryRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{14}
+}
+
+func (m *DeleteInventoryRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteInventoryRequest.Unmarshal(m, b)
+}
+func (m *DeleteInventoryRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteInventoryRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteInventoryRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteInventoryRequest.Merge(m, src)
+}
+func (m *DeleteInventoryRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteInventoryRequest.Size(m)
+}
+func (m *DeleteInventoryRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteInventoryRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteInventoryRequest proto.InternalMessageInfo
+
+func (m *DeleteInventoryRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DeleteInventoryResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteInventoryResponse) Reset()         { *m = DeleteInventoryResponse{} }
+func (m *DeleteInventoryResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteInventoryResponse) ProtoMessage()    {}
+func (*DeleteInventoryResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a611899297971007, []int{15}
+}
+
+func (m *DeleteInventoryResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteInventoryResponse.Unmarshal(m, b)
+}
+func (m *DeleteInventoryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteInventoryResponse.Marshal(b, m, deterministic)
+}
+func (m *DeleteInventoryResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteInventoryResponse.Merge(m, src)
+}
+func (m *DeleteInventoryResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteInventoryResponse.Size(m)
+}
+func (m *DeleteInventoryResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteInventoryResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteInventoryResponse proto.InternalMessageInfo
+
+func (m *DeleteInventoryResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
 }
 
 func init() {
-	proto.RegisterEnum("v1.ListUploadRequest_SortBy", ListUploadRequest_SortBy_name, ListUploadRequest_SortBy_value)
-	proto.RegisterEnum("v1.ListUploadRequest_SortOrder", ListUploadRequest_SortOrder_name, ListUploadRequest_SortOrder_value)
-	proto.RegisterType((*NotifyUploadRequest)(nil), "v1.NotifyUploadRequest")
-	proto.RegisterType((*NotifyUploadResponse)(nil), "v1.NotifyUploadResponse")
-	proto.RegisterType((*ListUploadRequest)(nil), "v1.ListUploadRequest")
-	proto.RegisterType((*ListUploadResponse)(nil), "v1.ListUploadResponse")
-	proto.RegisterType((*Upload)(nil), "v1.Upload")
+	proto.RegisterEnum("optisam.dps.v1.DashboardQualityOverviewRequest_Frequency", DashboardQualityOverviewRequest_Frequency_name, DashboardQualityOverviewRequest_Frequency_value)
+	proto.RegisterEnum("optisam.dps.v1.ListUploadRequest_SortBy", ListUploadRequest_SortBy_name, ListUploadRequest_SortBy_value)
+	proto.RegisterEnum("optisam.dps.v1.ListUploadRequest_SortOrder", ListUploadRequest_SortOrder_name, ListUploadRequest_SortOrder_value)
+	proto.RegisterType((*ListFailureReasonRequest)(nil), "optisam.dps.v1.ListFailureReasonRequest")
+	proto.RegisterType((*ListFailureReasonResponse)(nil), "optisam.dps.v1.ListFailureReasonResponse")
+	proto.RegisterMapType((map[string]float32)(nil), "optisam.dps.v1.ListFailureReasonResponse.FailureReasonsEntry")
+	proto.RegisterType((*DataFailureRateRequest)(nil), "optisam.dps.v1.DataFailureRateRequest")
+	proto.RegisterType((*DataFailureRateResponse)(nil), "optisam.dps.v1.DataFailureRateResponse")
+	proto.RegisterType((*DashboardQualityOverviewRequest)(nil), "optisam.dps.v1.DashboardQualityOverviewRequest")
+	proto.RegisterType((*DashboardQualityOverviewResponse)(nil), "optisam.dps.v1.DashboardQualityOverviewResponse")
+	proto.RegisterType((*NotifyUploadRequest)(nil), "optisam.dps.v1.NotifyUploadRequest")
+	proto.RegisterType((*NotifyUploadResponse)(nil), "optisam.dps.v1.NotifyUploadResponse")
+	proto.RegisterType((*ListFailedRequest)(nil), "optisam.dps.v1.ListFailedRequest")
+	proto.RegisterType((*ListFailedResponse)(nil), "optisam.dps.v1.ListFailedResponse")
+	proto.RegisterType((*FailedRecord)(nil), "optisam.dps.v1.FailedRecord")
+	proto.RegisterMapType((map[string]string)(nil), "optisam.dps.v1.FailedRecord.DataEntry")
+	proto.RegisterType((*ListUploadRequest)(nil), "optisam.dps.v1.ListUploadRequest")
+	proto.RegisterType((*ListUploadResponse)(nil), "optisam.dps.v1.ListUploadResponse")
+	proto.RegisterType((*Upload)(nil), "optisam.dps.v1.Upload")
+	proto.RegisterType((*DeleteInventoryRequest)(nil), "optisam.dps.v1.DeleteInventoryRequest")
+	proto.RegisterType((*DeleteInventoryResponse)(nil), "optisam.dps.v1.DeleteInventoryResponse")
 }
 
 func init() { proto.RegisterFile("dps.proto", fileDescriptor_a611899297971007) }
 
 var fileDescriptor_a611899297971007 = []byte{
-	// 811 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0x41, 0x8f, 0xdb, 0x44,
-	0x14, 0x8e, 0x9d, 0x38, 0xb6, 0xdf, 0x76, 0x53, 0x33, 0x6c, 0x53, 0xcb, 0xbb, 0x6a, 0x8c, 0x29,
-	0x22, 0xa0, 0x36, 0x21, 0xe1, 0x06, 0x87, 0x2e, 0x56, 0x25, 0x58, 0x09, 0xb6, 0xc8, 0x0b, 0x87,
-	0x22, 0x41, 0x34, 0xb1, 0x27, 0x91, 0xa5, 0xd8, 0x63, 0x3c, 0xe3, 0xa0, 0xf4, 0xd8, 0x3f, 0x80,
-	0x54, 0x7e, 0x0a, 0x1c, 0xf8, 0x1f, 0xfc, 0x05, 0x0e, 0x1c, 0x38, 0x70, 0xce, 0x09, 0x79, 0x3c,
-	0xce, 0x3a, 0xc9, 0x72, 0x21, 0x97, 0xcc, 0x7c, 0xf3, 0xcd, 0xf7, 0x9e, 0xbf, 0xf7, 0xde, 0x80,
-	0x19, 0x65, 0x6c, 0x94, 0xe5, 0x94, 0x53, 0xa4, 0xae, 0x27, 0xce, 0xc5, 0x92, 0xd2, 0xe5, 0x8a,
-	0x8c, 0x71, 0x16, 0x8f, 0x71, 0x9a, 0x52, 0x8e, 0x79, 0x4c, 0x53, 0xc9, 0x70, 0x1e, 0xae, 0xf1,
-	0x2a, 0x8e, 0x30, 0x27, 0xe3, 0x7a, 0x21, 0x0f, 0x06, 0xf2, 0x9a, 0xd8, 0xcd, 0x8b, 0xc5, 0x98,
-	0xc7, 0x09, 0x61, 0x1c, 0x27, 0x99, 0x24, 0x3c, 0x11, 0x7f, 0xe1, 0xd3, 0x25, 0x49, 0x9f, 0xb2,
-	0x9f, 0xf0, 0x72, 0x49, 0xf2, 0x31, 0xcd, 0x84, 0xf6, 0x71, 0x1c, 0xef, 0x37, 0x05, 0xde, 0xbe,
-	0xa6, 0x3c, 0x5e, 0x6c, 0xbe, 0xcd, 0x56, 0x14, 0x47, 0x01, 0xf9, 0xb1, 0x20, 0x8c, 0xa3, 0x33,
-	0xd0, 0x58, 0x48, 0x33, 0x62, 0x2b, 0xae, 0x32, 0x34, 0x83, 0x6a, 0x83, 0x3e, 0x80, 0x0e, 0xdf,
-	0x64, 0xc4, 0x56, 0x4b, 0xd0, 0x7f, 0xb0, 0xf5, 0x51, 0x6e, 0x05, 0x9d, 0x08, 0x73, 0x1c, 0x18,
-	0x09, 0xe1, 0x58, 0xac, 0x04, 0x05, 0x9d, 0x83, 0x59, 0x08, 0xc5, 0x59, 0x1c, 0xd9, 0x6d, 0x57,
-	0x19, 0x6a, 0x81, 0x51, 0x01, 0x57, 0x11, 0x1a, 0xc0, 0x49, 0xb5, 0x26, 0xd1, 0x6c, 0xbe, 0xb1,
-	0x3b, 0x22, 0x06, 0xd4, 0x90, 0xbf, 0x41, 0x8f, 0x40, 0x5b, 0xc4, 0x2b, 0xc2, 0x6c, 0xcd, 0x6d,
-	0x0f, 0x4d, 0xdf, 0xd8, 0xfa, 0xda, 0x1b, 0x45, 0x35, 0x94, 0xa0, 0x82, 0xbd, 0x8f, 0xe0, 0x6c,
-	0x3f, 0x6b, 0x96, 0xd1, 0x94, 0x11, 0x64, 0x83, 0xce, 0x8a, 0x30, 0x24, 0x8c, 0x89, 0xc4, 0x8d,
-	0xa0, 0xde, 0x7a, 0xbf, 0xb6, 0xe1, 0xad, 0x2f, 0x63, 0xc6, 0xf7, 0x3f, 0xf3, 0x73, 0x30, 0x32,
-	0xbc, 0x24, 0xb3, 0xb4, 0x48, 0xc4, 0x05, 0xcd, 0x7f, 0xf2, 0xe6, 0xb3, 0xc1, 0xf4, 0xe4, 0x6b,
-	0xbc, 0x24, 0x6e, 0x5a, 0x24, 0x73, 0x92, 0xbf, 0x6c, 0x95, 0xbf, 0xcb, 0x9f, 0x2f, 0x63, 0xb1,
-	0x68, 0xfd, 0xf3, 0x6c, 0xeb, 0xeb, 0x8e, 0x66, 0xfd, 0xa5, 0x0f, 0x95, 0x40, 0x2f, 0x6f, 0x5f,
-	0x17, 0x09, 0xba, 0x02, 0x53, 0x08, 0xb1, 0xf8, 0x55, 0x65, 0x8f, 0x50, 0xf2, 0xa6, 0xbd, 0x2b,
-	0x4e, 0x12, 0xe6, 0x66, 0x24, 0x77, 0xcb, 0xf3, 0x4a, 0xac, 0xf5, 0xb2, 0x16, 0x7b, 0x7c, 0xb9,
-	0xf5, 0x3b, 0x8e, 0x3a, 0x84, 0x40, 0xe4, 0x71, 0x13, 0xbf, 0x22, 0xe8, 0x19, 0xe8, 0x8c, 0xe6,
-	0xbc, 0x34, 0xa6, 0xf4, 0xad, 0x37, 0xbd, 0x18, 0xad, 0x27, 0xa3, 0xa3, 0xdc, 0x47, 0x37, 0x34,
-	0xe7, 0xfe, 0x46, 0x78, 0xf3, 0x5a, 0x51, 0x2d, 0x25, 0xe8, 0x32, 0x81, 0xa0, 0x2f, 0x00, 0x84,
-	0x00, 0xcd, 0x23, 0x92, 0x0b, 0x73, 0x7b, 0xd3, 0xc1, 0x7f, 0x6b, 0xbc, 0x28, 0x69, 0x0d, 0x19,
-	0x93, 0xd5, 0xa0, 0x37, 0x83, 0x6e, 0x15, 0x05, 0x9d, 0x36, 0xca, 0x69, 0xb5, 0x90, 0x29, 0xdb,
-	0xc3, 0x52, 0xca, 0x93, 0xb2, 0x26, 0xb3, 0x14, 0x27, 0xc4, 0x52, 0x11, 0x40, 0x97, 0x71, 0xcc,
-	0x0b, 0x66, 0xb5, 0xd1, 0xfd, 0xbd, 0x32, 0x5b, 0x9d, 0x3d, 0x80, 0xa6, 0x96, 0xe6, 0x3d, 0x02,
-	0x73, 0x97, 0x02, 0xd2, 0xa1, 0x8d, 0x59, 0x68, 0xb5, 0x90, 0x01, 0x9d, 0x88, 0xb0, 0xd0, 0x52,
-	0xbc, 0x1f, 0x00, 0x35, 0x93, 0x96, 0x55, 0xf6, 0xe0, 0x1e, 0xa7, 0x1c, 0xaf, 0x02, 0x12, 0xd2,
-	0x3c, 0xaa, 0x4a, 0xad, 0x05, 0x7b, 0x18, 0x7a, 0x0c, 0x7a, 0x15, 0x8a, 0xd9, 0xaa, 0xdb, 0x1e,
-	0x9e, 0x4c, 0xa1, 0x74, 0x40, 0x0a, 0xd5, 0x47, 0xde, 0xdf, 0x2a, 0x74, 0x2b, 0x6c, 0xbf, 0x61,
-	0x95, 0x83, 0x86, 0xdd, 0x8d, 0x83, 0xda, 0x1c, 0x87, 0xf3, 0xc6, 0xa7, 0x8b, 0x5a, 0x99, 0x81,
-	0x51, 0x02, 0xd7, 0x38, 0x21, 0xa8, 0x5f, 0x1b, 0x21, 0xdb, 0x5b, 0xee, 0x0e, 0x7b, 0x5f, 0x3b,
-	0xea, 0xfd, 0x4f, 0xf7, 0x4c, 0xb2, 0xbb, 0xae, 0x32, 0x3c, 0x99, 0x3a, 0xa3, 0x6a, 0xee, 0x47,
-	0xf5, 0xdc, 0x8f, 0xbe, 0xa9, 0xe7, 0xfe, 0xf6, 0xf2, 0x8b, 0x14, 0xbd, 0x0b, 0xa7, 0xc2, 0x86,
-	0x59, 0x2e, 0xbd, 0xd1, 0xef, 0xf0, 0xe6, 0x7d, 0xb8, 0x2f, 0xc7, 0x62, 0x47, 0x33, 0x04, 0xad,
-	0x27, 0xe1, 0x9a, 0xf8, 0x1e, 0xf4, 0x16, 0x38, 0x5e, 0x91, 0x68, 0xc7, 0x33, 0x05, 0xef, 0xb4,
-	0x42, 0x1b, 0x7a, 0x71, 0x2a, 0xde, 0xa9, 0x1d, 0x0f, 0x2a, 0x3d, 0x09, 0x4b, 0xe2, 0xf4, 0x77,
-	0x15, 0xe0, 0x79, 0xc6, 0x6e, 0x48, 0xbe, 0x8e, 0x43, 0x82, 0x22, 0xb8, 0xd7, 0x9c, 0x62, 0xf4,
-	0xb0, 0x2c, 0xd1, 0x1d, 0xaf, 0x91, 0x63, 0x1f, 0x1f, 0x54, 0xad, 0xe0, 0xbd, 0xf3, 0xfa, 0x8f,
-	0x3f, 0x7f, 0x51, 0xcf, 0xbd, 0xbe, 0x78, 0x47, 0xd7, 0x93, 0xb1, 0xac, 0xec, 0x38, 0x15, 0xec,
-	0x4f, 0x94, 0x0f, 0xd1, 0xf7, 0xd0, 0xbb, 0xed, 0xa1, 0xe7, 0x98, 0x63, 0xf4, 0xe0, 0xce, 0x61,
-	0x70, 0xfa, 0x87, 0xb0, 0x8c, 0x71, 0x21, 0x62, 0xf4, 0xd1, 0xd9, 0x61, 0x8c, 0xf2, 0xb9, 0x43,
-	0xa4, 0xd9, 0xa2, 0x5f, 0x11, 0x8e, 0xff, 0x4f, 0x08, 0x57, 0x84, 0x70, 0x90, 0x7d, 0x18, 0xa2,
-	0x7e, 0x55, 0xfd, 0xce, 0x77, 0xea, 0x7a, 0x32, 0xef, 0x8a, 0xf2, 0x7f, 0xfc, 0x6f, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x2d, 0xd7, 0x43, 0xd3, 0x4c, 0x06, 0x00, 0x00,
+	// 1520 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xf7, 0xfa, 0x23, 0xf6, 0xbe, 0xa4, 0xae, 0x99, 0x84, 0xc4, 0xdd, 0x84, 0xc4, 0xd9, 0x96,
+	0xd6, 0xfd, 0x88, 0xdd, 0xb8, 0xaa, 0x80, 0x56, 0x88, 0x66, 0x49, 0x5b, 0x22, 0xda, 0xa4, 0x6c,
+	0xc3, 0x21, 0xa5, 0xc8, 0x1a, 0x7b, 0xc7, 0xee, 0x82, 0xbd, 0xbb, 0xd9, 0x19, 0xbb, 0x72, 0x3f,
+	0x24, 0xe8, 0x85, 0x23, 0x52, 0x39, 0x22, 0xa1, 0x0a, 0x89, 0x3f, 0x85, 0xbf, 0x80, 0x3f, 0x80,
+	0x0b, 0x07, 0xa4, 0x5e, 0xb8, 0x21, 0xe5, 0x84, 0x76, 0x66, 0xd7, 0xde, 0xdd, 0x38, 0x1f, 0x54,
+	0xcd, 0x25, 0x3b, 0x6f, 0xde, 0xbc, 0x8f, 0xdf, 0xbc, 0xf7, 0x9b, 0x67, 0x90, 0x0d, 0x87, 0x56,
+	0x1c, 0xd7, 0x66, 0x36, 0xca, 0xdb, 0x0e, 0x33, 0x29, 0xee, 0x56, 0x3c, 0x51, 0x7f, 0x55, 0x59,
+	0x68, 0xdb, 0x76, 0xbb, 0x43, 0xaa, 0xd8, 0x31, 0xab, 0xd8, 0xb2, 0x6c, 0x86, 0x99, 0x69, 0x5b,
+	0xbe, 0xb6, 0x32, 0xd7, 0xc7, 0x1d, 0xd3, 0xc0, 0x8c, 0x54, 0x83, 0x0f, 0x7f, 0x63, 0xc9, 0x3f,
+	0xc6, 0x57, 0x8d, 0x5e, 0xab, 0xca, 0xcc, 0x2e, 0xa1, 0x0c, 0x77, 0x1d, 0x5f, 0xe1, 0x12, 0xff,
+	0xd7, 0x5c, 0x69, 0x13, 0x6b, 0x85, 0x3e, 0xc6, 0xed, 0x36, 0x71, 0xab, 0x9e, 0x6b, 0xdb, 0xa2,
+	0xfb, 0xfd, 0xa8, 0x37, 0xa1, 0x78, 0xc7, 0xa4, 0xec, 0x16, 0x36, 0x3b, 0x3d, 0x97, 0xe8, 0x04,
+	0x53, 0xdb, 0xd2, 0xc9, 0x6e, 0x8f, 0x50, 0x86, 0xce, 0x43, 0x86, 0x36, 0x6d, 0x87, 0x14, 0xa5,
+	0x92, 0x54, 0x96, 0xb5, 0xe9, 0x3d, 0xad, 0xe0, 0xe6, 0x6b, 0x53, 0x0f, 0x1b, 0x5f, 0xad, 0xad,
+	0x3c, 0xf8, 0xfa, 0xe9, 0x95, 0xe7, 0x0f, 0x1b, 0xba, 0xd0, 0x50, 0x7f, 0x97, 0xe0, 0xd4, 0x18,
+	0x3b, 0xd4, 0xb1, 0x2d, 0x4a, 0x10, 0x81, 0x7c, 0x2b, 0xbc, 0x41, 0x8b, 0x52, 0x29, 0x55, 0x9e,
+	0xac, 0x7d, 0x5c, 0x89, 0x62, 0x52, 0x39, 0xd0, 0x44, 0x25, 0x22, 0xa5, 0x37, 0x2d, 0xe6, 0x0e,
+	0xf4, 0x98, 0x51, 0x65, 0x0d, 0xa6, 0xc7, 0xa8, 0xa1, 0x02, 0xa4, 0xbe, 0x25, 0x03, 0x91, 0x84,
+	0xee, 0x7d, 0xa2, 0x19, 0xc8, 0xf4, 0x71, 0xa7, 0x47, 0x8a, 0xc9, 0x92, 0x54, 0x4e, 0xea, 0x62,
+	0x71, 0x2d, 0xf9, 0xa1, 0xa4, 0x7e, 0x0a, 0xb3, 0xeb, 0x98, 0xe1, 0xc0, 0x0c, 0x66, 0xe4, 0x0d,
+	0xc0, 0xb8, 0x0e, 0x73, 0xfb, 0x8c, 0xf8, 0x48, 0x94, 0x60, 0xb2, 0x35, 0x12, 0x73, 0x5b, 0x49,
+	0x3d, 0x2c, 0x52, 0x7f, 0x48, 0xc2, 0xd2, 0x3a, 0xa6, 0x8f, 0x1a, 0x36, 0x76, 0x8d, 0x2f, 0x7a,
+	0xb8, 0x63, 0xb2, 0xc1, 0x56, 0x9f, 0xb8, 0x7d, 0x93, 0x3c, 0x0e, 0x62, 0x69, 0x82, 0xdc, 0x72,
+	0xbd, 0x6f, 0xab, 0x29, 0xf2, 0xca, 0xd7, 0x3e, 0x8a, 0x43, 0x79, 0x84, 0x8d, 0xca, 0xad, 0xc0,
+	0x80, 0x06, 0x7b, 0x5a, 0xf6, 0x85, 0x94, 0x2e, 0x26, 0x8a, 0x92, 0x3e, 0xb2, 0x8b, 0xaa, 0x90,
+	0xb7, 0xec, 0xad, 0x96, 0x97, 0xc9, 0x3d, 0xdb, 0xb4, 0x18, 0xe5, 0x68, 0x65, 0xb4, 0xec, 0x9e,
+	0x96, 0x56, 0x92, 0xc5, 0x29, 0x3d, 0xb6, 0x3d, 0x42, 0x28, 0x75, 0x24, 0x42, 0xa7, 0x41, 0x1e,
+	0xfa, 0x47, 0x32, 0x64, 0xd6, 0xd7, 0x36, 0xee, 0xec, 0x14, 0x12, 0x68, 0x12, 0xb2, 0x77, 0xb7,
+	0x36, 0xb7, 0x3f, 0xbb, 0xb3, 0x53, 0x90, 0xd4, 0x57, 0x12, 0x94, 0x0e, 0xce, 0xc2, 0x07, 0x54,
+	0x85, 0x29, 0xec, 0x38, 0x1d, 0xb3, 0x29, 0xaa, 0x9a, 0x17, 0x56, 0x52, 0x8f, 0xc8, 0x90, 0x02,
+	0x39, 0xc7, 0xb5, 0x8d, 0x5e, 0x93, 0xe7, 0xe0, 0xed, 0x0f, 0xd7, 0x68, 0x11, 0x80, 0xec, 0xf6,
+	0x4c, 0xa7, 0x4b, 0xbc, 0x0c, 0x53, 0x7c, 0x37, 0x24, 0x41, 0x0b, 0x20, 0xe3, 0xe6, 0xae, 0x6b,
+	0xb6, 0x1f, 0x31, 0x5a, 0x4c, 0xf3, 0xed, 0x91, 0x40, 0xfd, 0x57, 0x82, 0xe9, 0x4d, 0x9b, 0x99,
+	0xad, 0xc1, 0x97, 0x4e, 0xc7, 0xc6, 0x46, 0x70, 0x41, 0x33, 0x91, 0x62, 0xf1, 0xb3, 0x46, 0x57,
+	0x21, 0xcd, 0x06, 0x8e, 0xa8, 0x3a, 0x59, 0x5b, 0xde, 0xd3, 0x16, 0xdd, 0x05, 0x3d, 0x6d, 0x60,
+	0x86, 0xf5, 0x5c, 0x97, 0x30, 0xcc, 0xbf, 0xa0, 0xdd, 0xb1, 0x1b, 0xb8, 0xc3, 0xbf, 0xb9, 0x3a,
+	0x9a, 0x07, 0xb9, 0xc7, 0xad, 0xd7, 0x4d, 0x83, 0x63, 0x9b, 0xd1, 0x73, 0x42, 0xb0, 0x61, 0xa0,
+	0x25, 0x98, 0x14, 0xdf, 0xc4, 0xa8, 0x37, 0x06, 0xc5, 0x34, 0xf7, 0x07, 0x81, 0x48, 0x1b, 0xa0,
+	0x45, 0xc8, 0xb4, 0xcc, 0x0e, 0xa1, 0xc5, 0x4c, 0x29, 0x55, 0x96, 0xb5, 0xdc, 0x9e, 0x96, 0x79,
+	0x29, 0x25, 0x73, 0x92, 0x2e, 0xc4, 0xe8, 0x2a, 0xcc, 0x99, 0xb4, 0x6e, 0x90, 0x0e, 0x61, 0xa4,
+	0x6e, 0x77, 0x8c, 0xba, 0x69, 0xf5, 0x89, 0xc5, 0x6c, 0x77, 0x50, 0x9c, 0x28, 0x49, 0xe5, 0x9c,
+	0x3e, 0x63, 0xd2, 0x75, 0xbe, 0xbb, 0xd5, 0x31, 0x36, 0x82, 0x3d, 0xf5, 0x32, 0xcc, 0x44, 0x13,
+	0xf7, 0xef, 0xa3, 0x08, 0x59, 0xda, 0x6b, 0x36, 0x09, 0xa5, 0x3c, 0xf7, 0x9c, 0x1e, 0x2c, 0xd5,
+	0x5f, 0x25, 0x78, 0x27, 0xe8, 0x6f, 0x32, 0x44, 0xea, 0xbd, 0x68, 0x5b, 0x79, 0xc5, 0xe5, 0x26,
+	0x0b, 0x52, 0x00, 0xd9, 0x99, 0x70, 0xee, 0xe1, 0xfa, 0x2b, 0x25, 0x42, 0x20, 0xa8, 0x90, 0x73,
+	0x70, 0x9b, 0xd4, 0xad, 0x5e, 0x57, 0x00, 0xe4, 0x2b, 0x95, 0x25, 0x3d, 0xeb, 0x6d, 0x6c, 0xf6,
+	0xba, 0x9e, 0x25, 0xae, 0x43, 0xcd, 0x27, 0x84, 0xc3, 0x14, 0x52, 0xe2, 0xa7, 0xef, 0x9b, 0x4f,
+	0x88, 0xfa, 0x0c, 0x50, 0x38, 0x46, 0x3f, 0x29, 0x0d, 0x4e, 0xb4, 0x7c, 0x49, 0xd3, 0x76, 0x8d,
+	0x80, 0xbe, 0x16, 0xe2, 0x3d, 0x77, 0x2b, 0xa4, 0xa4, 0x47, 0x8f, 0x78, 0x85, 0xca, 0x6c, 0x86,
+	0x3b, 0x81, 0x09, 0x9e, 0x8c, 0x1e, 0x91, 0xa9, 0x3f, 0x4b, 0x30, 0x15, 0xb6, 0x81, 0xae, 0x01,
+	0x2f, 0x0f, 0xdf, 0xdf, 0xd9, 0xc3, 0xfc, 0x55, 0xbc, 0x4e, 0x14, 0xbc, 0xc8, 0xcf, 0xa0, 0x59,
+	0x98, 0x70, 0x39, 0x0d, 0x8a, 0x7a, 0xd3, 0xfd, 0x95, 0xf2, 0x01, 0xc8, 0x43, 0xd5, 0xa3, 0xb8,
+	0x51, 0x0e, 0x73, 0xe3, 0xeb, 0x94, 0xb8, 0xc0, 0x68, 0xa9, 0xdf, 0x0e, 0x61, 0x2f, 0x71, 0x58,
+	0x2f, 0xbd, 0x5c, 0x5b, 0xaa, 0x4d, 0xde, 0xc3, 0x6d, 0x52, 0xb2, 0x7a, 0xdd, 0x06, 0x71, 0x77,
+	0x12, 0xde, 0xdf, 0x8d, 0x1f, 0x6f, 0x98, 0xfc, 0x23, 0xf1, 0xcf, 0x27, 0x7b, 0x5a, 0x56, 0xc9,
+	0x14, 0xfe, 0xce, 0x86, 0x2f, 0x68, 0x23, 0x7c, 0x41, 0xc9, 0xc0, 0x92, 0x5a, 0xcb, 0x6f, 0x30,
+	0xd2, 0xa5, 0x25, 0x87, 0xb8, 0x25, 0x6f, 0x5f, 0x18, 0x4b, 0xec, 0x04, 0xc6, 0xce, 0xdc, 0x10,
+	0xb7, 0x08, 0xa3, 0x5b, 0x44, 0x9f, 0x43, 0x96, 0xda, 0x2e, 0xf3, 0x1a, 0x22, 0xc5, 0xd9, 0xb1,
+	0x3c, 0xee, 0xa1, 0x89, 0xe4, 0x51, 0xb9, 0x6f, 0xbb, 0x4c, 0x1b, 0xf0, 0xfe, 0x78, 0x21, 0x79,
+	0x15, 0x38, 0x41, 0xb9, 0x04, 0x6d, 0x03, 0x70, 0x63, 0xb6, 0x6b, 0x10, 0x97, 0x57, 0x4e, 0xbe,
+	0x76, 0xf1, 0x78, 0xf6, 0xb6, 0xbc, 0x23, 0x21, 0x93, 0x32, 0x0d, 0x84, 0x23, 0xb2, 0xcc, 0x1c,
+	0x49, 0x96, 0xdb, 0x30, 0x21, 0x82, 0x43, 0x27, 0x42, 0xdd, 0x50, 0x48, 0x78, 0x4b, 0xaf, 0x87,
+	0xeb, 0x16, 0xee, 0x92, 0x82, 0x84, 0x00, 0x26, 0x28, 0xc3, 0xac, 0x47, 0x0b, 0x49, 0x74, 0x32,
+	0x42, 0x0b, 0x85, 0x54, 0x44, 0x60, 0x5b, 0x85, 0xb4, 0xba, 0x08, 0xf2, 0x30, 0x44, 0x94, 0x85,
+	0x14, 0xa6, 0xcd, 0x42, 0x02, 0xe5, 0x20, 0x6d, 0x10, 0xda, 0x2c, 0x48, 0xea, 0x37, 0xa2, 0x13,
+	0x62, 0xed, 0x1d, 0xaf, 0x62, 0x69, 0x7f, 0x15, 0xa3, 0xcb, 0x90, 0x15, 0xae, 0x04, 0xdb, 0x4e,
+	0xd6, 0x66, 0xe3, 0x68, 0xf9, 0x46, 0x03, 0x35, 0xf5, 0xcf, 0x24, 0x4c, 0x08, 0x59, 0x94, 0xec,
+	0xa4, 0x18, 0xd9, 0x0d, 0x69, 0x35, 0x19, 0xa6, 0xd5, 0xf9, 0x10, 0x0c, 0xe2, 0xed, 0xd1, 0x73,
+	0x9e, 0x60, 0x13, 0x77, 0x89, 0xd7, 0x05, 0x02, 0x14, 0x9f, 0x1a, 0xfd, 0x55, 0x9c, 0x37, 0x33,
+	0xfb, 0x78, 0xf3, 0x7a, 0x04, 0x30, 0xce, 0x85, 0x93, 0x35, 0xa5, 0x22, 0xa6, 0xaf, 0x4a, 0x30,
+	0x7d, 0x55, 0xb6, 0x83, 0xe9, 0x6b, 0x74, 0x78, 0xcb, 0x42, 0xa7, 0xe1, 0x04, 0x87, 0xa4, 0xee,
+	0xfa, 0x38, 0x65, 0xc7, 0xe0, 0x74, 0x0e, 0x4e, 0xfa, 0xdc, 0x38, 0x54, 0xcb, 0x71, 0xb5, 0xbc,
+	0x2f, 0x0e, 0x14, 0xdf, 0x17, 0xe3, 0x13, 0x31, 0x86, 0x7a, 0x32, 0xd7, 0x8b, 0x31, 0x8c, 0x02,
+	0xb9, 0xa6, 0xdd, 0x15, 0x0f, 0x19, 0x08, 0x18, 0x82, 0x35, 0x9f, 0x6b, 0x38, 0x89, 0x0f, 0x19,
+	0xfc, 0x0d, 0xe6, 0x9a, 0x2b, 0x30, 0xb7, 0xcf, 0xc8, 0x51, 0xb4, 0x5f, 0x7b, 0x2d, 0x03, 0xac,
+	0x3b, 0xf4, 0xbe, 0xf7, 0x6e, 0x37, 0x09, 0x7a, 0x06, 0x53, 0xe1, 0x77, 0x03, 0x9d, 0x8e, 0xd7,
+	0xc6, 0x98, 0xe7, 0x54, 0x39, 0x73, 0xb8, 0x92, 0x88, 0x41, 0x5d, 0x7e, 0xf1, 0xc7, 0x5f, 0x3f,
+	0x25, 0xe7, 0xd5, 0x59, 0x3e, 0x52, 0xf7, 0x57, 0xab, 0x7e, 0x79, 0x55, 0x2d, 0xae, 0x7d, 0x4d,
+	0xba, 0x80, 0x5e, 0x49, 0x50, 0x3c, 0x68, 0xa4, 0x40, 0xd5, 0xff, 0x39, 0x42, 0x29, 0x97, 0x8f,
+	0x7f, 0x20, 0x1a, 0x22, 0x3a, 0x15, 0x84, 0x68, 0x04, 0x27, 0xaa, 0xbb, 0xe2, 0x08, 0xfa, 0x25,
+	0x1c, 0x62, 0x6c, 0x8c, 0x44, 0x67, 0xf7, 0x7b, 0x1c, 0x37, 0xac, 0x2a, 0xe7, 0x8e, 0xd4, 0xf3,
+	0x03, 0x5a, 0xe5, 0x01, 0x5d, 0x44, 0xe7, 0x0f, 0x0c, 0xa8, 0xea, 0x3d, 0x26, 0xfe, 0x80, 0xea,
+	0x7a, 0x31, 0xf4, 0x20, 0x3f, 0x22, 0x06, 0xcf, 0x2e, 0x5a, 0x3e, 0x92, 0x0d, 0x15, 0xf5, 0x30,
+	0x15, 0x3f, 0x96, 0x05, 0x1e, 0xcb, 0x2c, 0x9a, 0x89, 0xdf, 0x1f, 0x7f, 0xce, 0x9e, 0x87, 0xf9,
+	0xe8, 0x2e, 0x61, 0xf8, 0x6d, 0xba, 0x2e, 0x71, 0xd7, 0x0a, 0x2a, 0xc6, 0x5d, 0x07, 0x63, 0x19,
+	0xfa, 0x5e, 0x82, 0x99, 0xd1, 0xc1, 0xdb, 0x7c, 0x46, 0x7b, 0x9b, 0x11, 0xa8, 0x3c, 0x82, 0x05,
+	0xa4, 0xc4, 0x23, 0x18, 0x8d, 0x83, 0xa8, 0x0f, 0x85, 0xf0, 0x70, 0xc2, 0x27, 0x84, 0xe5, 0x83,
+	0x7e, 0x42, 0x91, 0xc3, 0xdd, 0x47, 0x27, 0x1c, 0x75, 0x9e, 0xbb, 0x7f, 0x17, 0x4d, 0x07, 0xee,
+	0x05, 0xb5, 0x08, 0xe8, 0x7f, 0x93, 0x60, 0x6e, 0xdf, 0x2f, 0x33, 0xaa, 0x7b, 0xd3, 0x35, 0x2a,
+	0x1f, 0xe3, 0x27, 0x9c, 0x08, 0xe3, 0xfc, 0xb1, 0x7f, 0xec, 0xa9, 0x57, 0x79, 0x34, 0x55, 0xb4,
+	0x72, 0x70, 0x55, 0x06, 0x15, 0x29, 0x62, 0x71, 0x79, 0x2c, 0xdf, 0x49, 0x70, 0x32, 0x46, 0x50,
+	0x63, 0x3a, 0x66, 0x2c, 0x0d, 0x8e, 0xe9, 0x98, 0xf1, 0x4c, 0x17, 0x54, 0xe9, 0x85, 0x99, 0x51,
+	0x6c, 0x0c, 0x57, 0x9f, 0x72, 0x86, 0x7c, 0xae, 0xa5, 0x1f, 0x24, 0xfb, 0xab, 0x8d, 0x09, 0xfe,
+	0x3c, 0x5c, 0xf9, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x96, 0x7b, 0x59, 0xb8, 0xfe, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -507,8 +1112,14 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DpsServiceClient interface {
 	NotifyUpload(ctx context.Context, in *NotifyUploadRequest, opts ...grpc.CallOption) (*NotifyUploadResponse, error)
+	DashboardQualityOverview(ctx context.Context, in *DashboardQualityOverviewRequest, opts ...grpc.CallOption) (*DashboardQualityOverviewResponse, error)
+	DashboardDataFailureRate(ctx context.Context, in *DataFailureRateRequest, opts ...grpc.CallOption) (*DataFailureRateResponse, error)
 	ListUploadData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error)
 	ListUploadMetaData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error)
+	ListUploadGlobalData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error)
+	ListFailedRecord(ctx context.Context, in *ListFailedRequest, opts ...grpc.CallOption) (*ListFailedResponse, error)
+	ListFailureReasonsRatio(ctx context.Context, in *ListFailureReasonRequest, opts ...grpc.CallOption) (*ListFailureReasonResponse, error)
+	DeleteInventory(ctx context.Context, in *DeleteInventoryRequest, opts ...grpc.CallOption) (*DeleteInventoryResponse, error)
 }
 
 type dpsServiceClient struct {
@@ -521,7 +1132,25 @@ func NewDpsServiceClient(cc grpc.ClientConnInterface) DpsServiceClient {
 
 func (c *dpsServiceClient) NotifyUpload(ctx context.Context, in *NotifyUploadRequest, opts ...grpc.CallOption) (*NotifyUploadResponse, error) {
 	out := new(NotifyUploadResponse)
-	err := c.cc.Invoke(ctx, "/v1.DpsService/NotifyUpload", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/NotifyUpload", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) DashboardQualityOverview(ctx context.Context, in *DashboardQualityOverviewRequest, opts ...grpc.CallOption) (*DashboardQualityOverviewResponse, error) {
+	out := new(DashboardQualityOverviewResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/DashboardQualityOverview", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) DashboardDataFailureRate(ctx context.Context, in *DataFailureRateRequest, opts ...grpc.CallOption) (*DataFailureRateResponse, error) {
+	out := new(DataFailureRateResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/DashboardDataFailureRate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +1159,7 @@ func (c *dpsServiceClient) NotifyUpload(ctx context.Context, in *NotifyUploadReq
 
 func (c *dpsServiceClient) ListUploadData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error) {
 	out := new(ListUploadResponse)
-	err := c.cc.Invoke(ctx, "/v1.DpsService/ListUploadData", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ListUploadData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +1168,43 @@ func (c *dpsServiceClient) ListUploadData(ctx context.Context, in *ListUploadReq
 
 func (c *dpsServiceClient) ListUploadMetaData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error) {
 	out := new(ListUploadResponse)
-	err := c.cc.Invoke(ctx, "/v1.DpsService/ListUploadMetaData", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ListUploadMetaData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) ListUploadGlobalData(ctx context.Context, in *ListUploadRequest, opts ...grpc.CallOption) (*ListUploadResponse, error) {
+	out := new(ListUploadResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ListUploadGlobalData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) ListFailedRecord(ctx context.Context, in *ListFailedRequest, opts ...grpc.CallOption) (*ListFailedResponse, error) {
+	out := new(ListFailedResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ListFailedRecord", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) ListFailureReasonsRatio(ctx context.Context, in *ListFailureReasonRequest, opts ...grpc.CallOption) (*ListFailureReasonResponse, error) {
+	out := new(ListFailureReasonResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ListFailureReasonsRatio", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) DeleteInventory(ctx context.Context, in *DeleteInventoryRequest, opts ...grpc.CallOption) (*DeleteInventoryResponse, error) {
+	out := new(DeleteInventoryResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/DeleteInventory", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -549,8 +1214,14 @@ func (c *dpsServiceClient) ListUploadMetaData(ctx context.Context, in *ListUploa
 // DpsServiceServer is the server API for DpsService service.
 type DpsServiceServer interface {
 	NotifyUpload(context.Context, *NotifyUploadRequest) (*NotifyUploadResponse, error)
+	DashboardQualityOverview(context.Context, *DashboardQualityOverviewRequest) (*DashboardQualityOverviewResponse, error)
+	DashboardDataFailureRate(context.Context, *DataFailureRateRequest) (*DataFailureRateResponse, error)
 	ListUploadData(context.Context, *ListUploadRequest) (*ListUploadResponse, error)
 	ListUploadMetaData(context.Context, *ListUploadRequest) (*ListUploadResponse, error)
+	ListUploadGlobalData(context.Context, *ListUploadRequest) (*ListUploadResponse, error)
+	ListFailedRecord(context.Context, *ListFailedRequest) (*ListFailedResponse, error)
+	ListFailureReasonsRatio(context.Context, *ListFailureReasonRequest) (*ListFailureReasonResponse, error)
+	DeleteInventory(context.Context, *DeleteInventoryRequest) (*DeleteInventoryResponse, error)
 }
 
 // UnimplementedDpsServiceServer can be embedded to have forward compatible implementations.
@@ -560,11 +1231,29 @@ type UnimplementedDpsServiceServer struct {
 func (*UnimplementedDpsServiceServer) NotifyUpload(ctx context.Context, req *NotifyUploadRequest) (*NotifyUploadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyUpload not implemented")
 }
+func (*UnimplementedDpsServiceServer) DashboardQualityOverview(ctx context.Context, req *DashboardQualityOverviewRequest) (*DashboardQualityOverviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DashboardQualityOverview not implemented")
+}
+func (*UnimplementedDpsServiceServer) DashboardDataFailureRate(ctx context.Context, req *DataFailureRateRequest) (*DataFailureRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DashboardDataFailureRate not implemented")
+}
 func (*UnimplementedDpsServiceServer) ListUploadData(ctx context.Context, req *ListUploadRequest) (*ListUploadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUploadData not implemented")
 }
 func (*UnimplementedDpsServiceServer) ListUploadMetaData(ctx context.Context, req *ListUploadRequest) (*ListUploadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListUploadMetaData not implemented")
+}
+func (*UnimplementedDpsServiceServer) ListUploadGlobalData(ctx context.Context, req *ListUploadRequest) (*ListUploadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUploadGlobalData not implemented")
+}
+func (*UnimplementedDpsServiceServer) ListFailedRecord(ctx context.Context, req *ListFailedRequest) (*ListFailedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFailedRecord not implemented")
+}
+func (*UnimplementedDpsServiceServer) ListFailureReasonsRatio(ctx context.Context, req *ListFailureReasonRequest) (*ListFailureReasonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFailureReasonsRatio not implemented")
+}
+func (*UnimplementedDpsServiceServer) DeleteInventory(ctx context.Context, req *DeleteInventoryRequest) (*DeleteInventoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteInventory not implemented")
 }
 
 func RegisterDpsServiceServer(s *grpc.Server, srv DpsServiceServer) {
@@ -581,10 +1270,46 @@ func _DpsService_NotifyUpload_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1.DpsService/NotifyUpload",
+		FullMethod: "/optisam.dps.v1.DpsService/NotifyUpload",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DpsServiceServer).NotifyUpload(ctx, req.(*NotifyUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_DashboardQualityOverview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DashboardQualityOverviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).DashboardQualityOverview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/DashboardQualityOverview",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).DashboardQualityOverview(ctx, req.(*DashboardQualityOverviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_DashboardDataFailureRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DataFailureRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).DashboardDataFailureRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/DashboardDataFailureRate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).DashboardDataFailureRate(ctx, req.(*DataFailureRateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -599,7 +1324,7 @@ func _DpsService_ListUploadData_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1.DpsService/ListUploadData",
+		FullMethod: "/optisam.dps.v1.DpsService/ListUploadData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DpsServiceServer).ListUploadData(ctx, req.(*ListUploadRequest))
@@ -617,7 +1342,7 @@ func _DpsService_ListUploadMetaData_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/v1.DpsService/ListUploadMetaData",
+		FullMethod: "/optisam.dps.v1.DpsService/ListUploadMetaData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DpsServiceServer).ListUploadMetaData(ctx, req.(*ListUploadRequest))
@@ -625,13 +1350,93 @@ func _DpsService_ListUploadMetaData_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DpsService_ListUploadGlobalData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).ListUploadGlobalData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/ListUploadGlobalData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).ListUploadGlobalData(ctx, req.(*ListUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_ListFailedRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFailedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).ListFailedRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/ListFailedRecord",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).ListFailedRecord(ctx, req.(*ListFailedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_ListFailureReasonsRatio_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFailureReasonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).ListFailureReasonsRatio(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/ListFailureReasonsRatio",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).ListFailureReasonsRatio(ctx, req.(*ListFailureReasonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_DeleteInventory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteInventoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).DeleteInventory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/DeleteInventory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).DeleteInventory(ctx, req.(*DeleteInventoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DpsService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "v1.DpsService",
+	ServiceName: "optisam.dps.v1.DpsService",
 	HandlerType: (*DpsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "NotifyUpload",
 			Handler:    _DpsService_NotifyUpload_Handler,
+		},
+		{
+			MethodName: "DashboardQualityOverview",
+			Handler:    _DpsService_DashboardQualityOverview_Handler,
+		},
+		{
+			MethodName: "DashboardDataFailureRate",
+			Handler:    _DpsService_DashboardDataFailureRate_Handler,
 		},
 		{
 			MethodName: "ListUploadData",
@@ -640,6 +1445,22 @@ var _DpsService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListUploadMetaData",
 			Handler:    _DpsService_ListUploadMetaData_Handler,
+		},
+		{
+			MethodName: "ListUploadGlobalData",
+			Handler:    _DpsService_ListUploadGlobalData_Handler,
+		},
+		{
+			MethodName: "ListFailedRecord",
+			Handler:    _DpsService_ListFailedRecord_Handler,
+		},
+		{
+			MethodName: "ListFailureReasonsRatio",
+			Handler:    _DpsService_ListFailureReasonsRatio_Handler,
+		},
+		{
+			MethodName: "DeleteInventory",
+			Handler:    _DpsService_DeleteInventory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

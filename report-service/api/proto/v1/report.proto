@@ -47,7 +47,7 @@ message ReportType {
   string report_type_name = 2;
 }
 message SubmitReportRequest {
-  string scope = 1;
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
   int32 report_type_id = 2;
   oneof report_metadata {
     AcqRightsReport acqrights_report = 3;
@@ -88,6 +88,7 @@ message ListReportRequest {
     ]
   } ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  string scope = 5 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 message ListReportResponse {
   int32 totalRecords = 1;
@@ -101,7 +102,8 @@ message Report {
   string created_by = 4;
   google.protobuf.Timestamp created_on = 5;
 }
-message DownloadReportRequest { int32 reportID = 1; }
+message DownloadReportRequest { int32 reportID = 1;
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
 message DownloadReportResponse { bytes report_data = 1; }
 
 enum SortOrder {

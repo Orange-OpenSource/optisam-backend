@@ -8,8 +8,9 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
 
@@ -19,11 +20,14 @@ import (
 )
 
 func (s *equipmentServiceServer) ListEquipmentsForProductAggregation(ctx context.Context, req *v1.ListEquipmentsForProductAggregationRequest) (*v1.ListEquipmentsResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEquipmentsForProductAggregation - fetching equipment types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -58,7 +62,7 @@ func (s *equipmentServiceServer) ListEquipmentsForProductAggregation(ctx context
 		Filter:    filter,
 	}
 
-	numOfrecords, equipments, err := s.equipmentRepo.ListEquipmentsForProductAggregation(ctx, req.Name, eqType, queryParams, userClaims.Socpes)
+	numOfrecords, equipments, err := s.equipmentRepo.ListEquipmentsForProductAggregation(ctx, req.Name, eqType, queryParams, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEquipmentsForProductAggregation - ", zap.String("reason", err.Error()), zap.Any("request params", queryParams))
 		return nil, status.Error(codes.Internal, "cannot fetch equipments for product aggregation")

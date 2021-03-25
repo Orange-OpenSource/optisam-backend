@@ -66,7 +66,9 @@ const (
 	ListApplicationsRequest_num_of_instances  ListApplicationsRequest_SortBy = 2
 	ListApplicationsRequest_num_of_products   ListApplicationsRequest_SortBy = 3
 	ListApplicationsRequest_num_of_equipments ListApplicationsRequest_SortBy = 4
-	ListApplicationsRequest_total_cost        ListApplicationsRequest_SortBy = 5
+	ListApplicationsRequest_domain            ListApplicationsRequest_SortBy = 5
+	ListApplicationsRequest_total_cost        ListApplicationsRequest_SortBy = 6
+	ListApplicationsRequest_obsolescence_risk ListApplicationsRequest_SortBy = 7
 )
 
 var ListApplicationsRequest_SortBy_name = map[int32]string{
@@ -75,7 +77,9 @@ var ListApplicationsRequest_SortBy_name = map[int32]string{
 	2: "num_of_instances",
 	3: "num_of_products",
 	4: "num_of_equipments",
-	5: "total_cost",
+	5: "domain",
+	6: "total_cost",
+	7: "obsolescence_risk",
 }
 
 var ListApplicationsRequest_SortBy_value = map[string]int32{
@@ -84,7 +88,9 @@ var ListApplicationsRequest_SortBy_value = map[string]int32{
 	"num_of_instances":  2,
 	"num_of_products":   3,
 	"num_of_equipments": 4,
-	"total_cost":        5,
+	"domain":            5,
+	"total_cost":        6,
+	"obsolescence_risk": 7,
 }
 
 func (x ListApplicationsRequest_SortBy) String() string {
@@ -92,7 +98,7 @@ func (x ListApplicationsRequest_SortBy) String() string {
 }
 
 func (ListApplicationsRequest_SortBy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{8, 0}
+	return fileDescriptor_fc846aced8fe6ea6, []int{10, 0}
 }
 
 type ListInstancesRequest_SortBy int32
@@ -131,7 +137,8 @@ type UpsertApplicationRequest struct {
 	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Version              string   `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 	Owner                string   `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
-	Scope                string   `protobuf:"bytes,5,opt,name=scope,proto3" json:"scope,omitempty"`
+	Domain               string   `protobuf:"bytes,5,opt,name=domain,proto3" json:"domain,omitempty"`
+	Scope                string   `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -190,6 +197,13 @@ func (m *UpsertApplicationRequest) GetOwner() string {
 	return ""
 }
 
+func (m *UpsertApplicationRequest) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
 func (m *UpsertApplicationRequest) GetScope() string {
 	if m != nil {
 		return m.Scope
@@ -236,6 +250,84 @@ func (m *UpsertApplicationResponse) GetSuccess() bool {
 	return false
 }
 
+type DropApplicationDataRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DropApplicationDataRequest) Reset()         { *m = DropApplicationDataRequest{} }
+func (m *DropApplicationDataRequest) String() string { return proto.CompactTextString(m) }
+func (*DropApplicationDataRequest) ProtoMessage()    {}
+func (*DropApplicationDataRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{2}
+}
+
+func (m *DropApplicationDataRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DropApplicationDataRequest.Unmarshal(m, b)
+}
+func (m *DropApplicationDataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DropApplicationDataRequest.Marshal(b, m, deterministic)
+}
+func (m *DropApplicationDataRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DropApplicationDataRequest.Merge(m, src)
+}
+func (m *DropApplicationDataRequest) XXX_Size() int {
+	return xxx_messageInfo_DropApplicationDataRequest.Size(m)
+}
+func (m *DropApplicationDataRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DropApplicationDataRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DropApplicationDataRequest proto.InternalMessageInfo
+
+func (m *DropApplicationDataRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DropApplicationDataResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DropApplicationDataResponse) Reset()         { *m = DropApplicationDataResponse{} }
+func (m *DropApplicationDataResponse) String() string { return proto.CompactTextString(m) }
+func (*DropApplicationDataResponse) ProtoMessage()    {}
+func (*DropApplicationDataResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{3}
+}
+
+func (m *DropApplicationDataResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DropApplicationDataResponse.Unmarshal(m, b)
+}
+func (m *DropApplicationDataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DropApplicationDataResponse.Marshal(b, m, deterministic)
+}
+func (m *DropApplicationDataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DropApplicationDataResponse.Merge(m, src)
+}
+func (m *DropApplicationDataResponse) XXX_Size() int {
+	return xxx_messageInfo_DropApplicationDataResponse.Size(m)
+}
+func (m *DropApplicationDataResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DropApplicationDataResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DropApplicationDataResponse proto.InternalMessageInfo
+
+func (m *DropApplicationDataResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 type DeleteApplicationRequest struct {
 	ApplicationId        string   `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -247,7 +339,7 @@ func (m *DeleteApplicationRequest) Reset()         { *m = DeleteApplicationReque
 func (m *DeleteApplicationRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteApplicationRequest) ProtoMessage()    {}
 func (*DeleteApplicationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{2}
+	return fileDescriptor_fc846aced8fe6ea6, []int{4}
 }
 
 func (m *DeleteApplicationRequest) XXX_Unmarshal(b []byte) error {
@@ -286,7 +378,7 @@ func (m *DeleteApplicationResponse) Reset()         { *m = DeleteApplicationResp
 func (m *DeleteApplicationResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteApplicationResponse) ProtoMessage()    {}
 func (*DeleteApplicationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{3}
+	return fileDescriptor_fc846aced8fe6ea6, []int{5}
 }
 
 func (m *DeleteApplicationResponse) XXX_Unmarshal(b []byte) error {
@@ -315,22 +407,23 @@ func (m *DeleteApplicationResponse) GetSuccess() bool {
 }
 
 type UpsertInstanceRequest struct {
-	ApplicationId        string                          `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	InstanceId           string                          `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	InstanceName         string                          `protobuf:"bytes,3,opt,name=instance_name,json=instanceName,proto3" json:"instance_name,omitempty"`
-	Products             *UpsertInstanceRequestProduct   `protobuf:"bytes,4,opt,name=products,proto3" json:"products,omitempty"`
-	Equipments           *UpsertInstanceRequestEquipment `protobuf:"bytes,5,opt,name=equipments,proto3" json:"equipments,omitempty"`
-	Scope                string                          `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
-	XXX_unrecognized     []byte                          `json:"-"`
-	XXX_sizecache        int32                           `json:"-"`
+	ApplicationId string                          `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	InstanceId    string                          `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceName  string                          `protobuf:"bytes,3,opt,name=instance_name,json=instanceName,proto3" json:"instance_name,omitempty"`
+	Products      *UpsertInstanceRequestProduct   `protobuf:"bytes,4,opt,name=products,proto3" json:"products,omitempty"`
+	Equipments    *UpsertInstanceRequestEquipment `protobuf:"bytes,5,opt,name=equipments,proto3" json:"equipments,omitempty"`
+	//SCOPE BASED CHANGE
+	Scope                string   `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *UpsertInstanceRequest) Reset()         { *m = UpsertInstanceRequest{} }
 func (m *UpsertInstanceRequest) String() string { return proto.CompactTextString(m) }
 func (*UpsertInstanceRequest) ProtoMessage()    {}
 func (*UpsertInstanceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{4}
+	return fileDescriptor_fc846aced8fe6ea6, []int{6}
 }
 
 func (m *UpsertInstanceRequest) XXX_Unmarshal(b []byte) error {
@@ -405,7 +498,7 @@ func (m *UpsertInstanceRequestProduct) Reset()         { *m = UpsertInstanceRequ
 func (m *UpsertInstanceRequestProduct) String() string { return proto.CompactTextString(m) }
 func (*UpsertInstanceRequestProduct) ProtoMessage()    {}
 func (*UpsertInstanceRequestProduct) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{4, 0}
+	return fileDescriptor_fc846aced8fe6ea6, []int{6, 0}
 }
 
 func (m *UpsertInstanceRequestProduct) XXX_Unmarshal(b []byte) error {
@@ -452,7 +545,7 @@ func (m *UpsertInstanceRequestEquipment) Reset()         { *m = UpsertInstanceRe
 func (m *UpsertInstanceRequestEquipment) String() string { return proto.CompactTextString(m) }
 func (*UpsertInstanceRequestEquipment) ProtoMessage()    {}
 func (*UpsertInstanceRequestEquipment) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{4, 1}
+	return fileDescriptor_fc846aced8fe6ea6, []int{6, 1}
 }
 
 func (m *UpsertInstanceRequestEquipment) XXX_Unmarshal(b []byte) error {
@@ -498,7 +591,7 @@ func (m *UpsertInstanceResponse) Reset()         { *m = UpsertInstanceResponse{}
 func (m *UpsertInstanceResponse) String() string { return proto.CompactTextString(m) }
 func (*UpsertInstanceResponse) ProtoMessage()    {}
 func (*UpsertInstanceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{5}
+	return fileDescriptor_fc846aced8fe6ea6, []int{7}
 }
 
 func (m *UpsertInstanceResponse) XXX_Unmarshal(b []byte) error {
@@ -538,7 +631,7 @@ func (m *DeleteInstanceRequest) Reset()         { *m = DeleteInstanceRequest{} }
 func (m *DeleteInstanceRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteInstanceRequest) ProtoMessage()    {}
 func (*DeleteInstanceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{6}
+	return fileDescriptor_fc846aced8fe6ea6, []int{8}
 }
 
 func (m *DeleteInstanceRequest) XXX_Unmarshal(b []byte) error {
@@ -584,7 +677,7 @@ func (m *DeleteInstanceResponse) Reset()         { *m = DeleteInstanceResponse{}
 func (m *DeleteInstanceResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteInstanceResponse) ProtoMessage()    {}
 func (*DeleteInstanceResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{7}
+	return fileDescriptor_fc846aced8fe6ea6, []int{9}
 }
 
 func (m *DeleteInstanceResponse) XXX_Unmarshal(b []byte) error {
@@ -618,6 +711,7 @@ type ListApplicationsRequest struct {
 	SortBy               ListApplicationsRequest_SortBy `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.applications.v1.ListApplicationsRequest_SortBy" json:"sort_by,omitempty"`
 	SortOrder            SortOrder                      `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.applications.v1.SortOrder" json:"sort_order,omitempty"`
 	SearchParams         *ApplicationSearchParams       `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string                       `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                       `json:"-"`
 	XXX_unrecognized     []byte                         `json:"-"`
 	XXX_sizecache        int32                          `json:"-"`
@@ -627,7 +721,7 @@ func (m *ListApplicationsRequest) Reset()         { *m = ListApplicationsRequest
 func (m *ListApplicationsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListApplicationsRequest) ProtoMessage()    {}
 func (*ListApplicationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{8}
+	return fileDescriptor_fc846aced8fe6ea6, []int{10}
 }
 
 func (m *ListApplicationsRequest) XXX_Unmarshal(b []byte) error {
@@ -683,6 +777,13 @@ func (m *ListApplicationsRequest) GetSearchParams() *ApplicationSearchParams {
 	return nil
 }
 
+func (m *ListApplicationsRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
+	}
+	return nil
+}
+
 type ListApplicationsResponse struct {
 	TotalRecords         int32          `protobuf:"varint,1,opt,name=totalRecords,proto3" json:"totalRecords,omitempty"`
 	Applications         []*Application `protobuf:"bytes,2,rep,name=applications,proto3" json:"applications,omitempty"`
@@ -695,7 +796,7 @@ func (m *ListApplicationsResponse) Reset()         { *m = ListApplicationsRespon
 func (m *ListApplicationsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListApplicationsResponse) ProtoMessage()    {}
 func (*ListApplicationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{9}
+	return fileDescriptor_fc846aced8fe6ea6, []int{11}
 }
 
 func (m *ListApplicationsResponse) XXX_Unmarshal(b []byte) error {
@@ -737,6 +838,9 @@ type Application struct {
 	NumOfInstances       int32    `protobuf:"varint,4,opt,name=num_of_instances,json=numOfInstances,proto3" json:"num_of_instances,omitempty"`
 	NumOfProducts        int32    `protobuf:"varint,5,opt,name=num_of_products,json=numOfProducts,proto3" json:"num_of_products,omitempty"`
 	TotalCost            float64  `protobuf:"fixed64,6,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
+	Domain               string   `protobuf:"bytes,7,opt,name=domain,proto3" json:"domain,omitempty"`
+	ObsolescenceRisk     string   `protobuf:"bytes,8,opt,name=obsolescence_risk,json=obsolescenceRisk,proto3" json:"obsolescence_risk,omitempty"`
+	NumOfEquipments      int32    `protobuf:"varint,9,opt,name=num_of_equipments,json=numOfEquipments,proto3" json:"num_of_equipments,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -746,7 +850,7 @@ func (m *Application) Reset()         { *m = Application{} }
 func (m *Application) String() string { return proto.CompactTextString(m) }
 func (*Application) ProtoMessage()    {}
 func (*Application) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{10}
+	return fileDescriptor_fc846aced8fe6ea6, []int{12}
 }
 
 func (m *Application) XXX_Unmarshal(b []byte) error {
@@ -809,10 +913,33 @@ func (m *Application) GetTotalCost() float64 {
 	return 0
 }
 
+func (m *Application) GetDomain() string {
+	if m != nil {
+		return m.Domain
+	}
+	return ""
+}
+
+func (m *Application) GetObsolescenceRisk() string {
+	if m != nil {
+		return m.ObsolescenceRisk
+	}
+	return ""
+}
+
+func (m *Application) GetNumOfEquipments() int32 {
+	if m != nil {
+		return m.NumOfEquipments
+	}
+	return 0
+}
+
 type ApplicationSearchParams struct {
 	Name                 *StringFilter `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Owner                *StringFilter `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
 	ProductId            *StringFilter `protobuf:"bytes,3,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	Domain               *StringFilter `protobuf:"bytes,4,opt,name=domain,proto3" json:"domain,omitempty"`
+	ObsolescenceRisk     *StringFilter `protobuf:"bytes,5,opt,name=obsolescence_risk,json=obsolescenceRisk,proto3" json:"obsolescence_risk,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -822,7 +949,7 @@ func (m *ApplicationSearchParams) Reset()         { *m = ApplicationSearchParams
 func (m *ApplicationSearchParams) String() string { return proto.CompactTextString(m) }
 func (*ApplicationSearchParams) ProtoMessage()    {}
 func (*ApplicationSearchParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{11}
+	return fileDescriptor_fc846aced8fe6ea6, []int{13}
 }
 
 func (m *ApplicationSearchParams) XXX_Unmarshal(b []byte) error {
@@ -864,122 +991,18 @@ func (m *ApplicationSearchParams) GetProductId() *StringFilter {
 	return nil
 }
 
-type ApplicationRequest struct {
-	ApplicationId        string   `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ApplicationRequest) Reset()         { *m = ApplicationRequest{} }
-func (m *ApplicationRequest) String() string { return proto.CompactTextString(m) }
-func (*ApplicationRequest) ProtoMessage()    {}
-func (*ApplicationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{12}
-}
-
-func (m *ApplicationRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ApplicationRequest.Unmarshal(m, b)
-}
-func (m *ApplicationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ApplicationRequest.Marshal(b, m, deterministic)
-}
-func (m *ApplicationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApplicationRequest.Merge(m, src)
-}
-func (m *ApplicationRequest) XXX_Size() int {
-	return xxx_messageInfo_ApplicationRequest.Size(m)
-}
-func (m *ApplicationRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ApplicationRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ApplicationRequest proto.InternalMessageInfo
-
-func (m *ApplicationRequest) GetApplicationId() string {
+func (m *ApplicationSearchParams) GetDomain() *StringFilter {
 	if m != nil {
-		return m.ApplicationId
+		return m.Domain
 	}
-	return ""
+	return nil
 }
 
-type ApplicationResponse struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Version              string   `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	Edition              string   `protobuf:"bytes,3,opt,name=edition,proto3" json:"edition,omitempty"`
-	Editor               string   `protobuf:"bytes,4,opt,name=editor,proto3" json:"editor,omitempty"`
-	Metric               string   `protobuf:"bytes,5,opt,name=metric,proto3" json:"metric,omitempty"`
-	NumOfInstances       int32    `protobuf:"varint,6,opt,name=num_of_instances,json=numOfInstances,proto3" json:"num_of_instances,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ApplicationResponse) Reset()         { *m = ApplicationResponse{} }
-func (m *ApplicationResponse) String() string { return proto.CompactTextString(m) }
-func (*ApplicationResponse) ProtoMessage()    {}
-func (*ApplicationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fc846aced8fe6ea6, []int{13}
-}
-
-func (m *ApplicationResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ApplicationResponse.Unmarshal(m, b)
-}
-func (m *ApplicationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ApplicationResponse.Marshal(b, m, deterministic)
-}
-func (m *ApplicationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApplicationResponse.Merge(m, src)
-}
-func (m *ApplicationResponse) XXX_Size() int {
-	return xxx_messageInfo_ApplicationResponse.Size(m)
-}
-func (m *ApplicationResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ApplicationResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ApplicationResponse proto.InternalMessageInfo
-
-func (m *ApplicationResponse) GetName() string {
+func (m *ApplicationSearchParams) GetObsolescenceRisk() *StringFilter {
 	if m != nil {
-		return m.Name
+		return m.ObsolescenceRisk
 	}
-	return ""
-}
-
-func (m *ApplicationResponse) GetVersion() string {
-	if m != nil {
-		return m.Version
-	}
-	return ""
-}
-
-func (m *ApplicationResponse) GetEdition() string {
-	if m != nil {
-		return m.Edition
-	}
-	return ""
-}
-
-func (m *ApplicationResponse) GetEditor() string {
-	if m != nil {
-		return m.Editor
-	}
-	return ""
-}
-
-func (m *ApplicationResponse) GetMetric() string {
-	if m != nil {
-		return m.Metric
-	}
-	return ""
-}
-
-func (m *ApplicationResponse) GetNumOfInstances() int32 {
-	if m != nil {
-		return m.NumOfInstances
-	}
-	return 0
+	return nil
 }
 
 type ListInstancesRequest struct {
@@ -988,6 +1011,7 @@ type ListInstancesRequest struct {
 	SortBy               ListInstancesRequest_SortBy `protobuf:"varint,3,opt,name=sort_by,json=sortBy,proto3,enum=optisam.applications.v1.ListInstancesRequest_SortBy" json:"sort_by,omitempty"`
 	SortOrder            SortOrder                   `protobuf:"varint,4,opt,name=sort_order,json=sortOrder,proto3,enum=optisam.applications.v1.SortOrder" json:"sort_order,omitempty"`
 	SearchParams         *InstanceSearchParams       `protobuf:"bytes,5,opt,name=search_params,json=searchParams,proto3" json:"search_params,omitempty"`
+	Scopes               []string                    `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`
@@ -1049,6 +1073,13 @@ func (m *ListInstancesRequest) GetSortOrder() SortOrder {
 func (m *ListInstancesRequest) GetSearchParams() *InstanceSearchParams {
 	if m != nil {
 		return m.SearchParams
+	}
+	return nil
+}
+
+func (m *ListInstancesRequest) GetScopes() []string {
+	if m != nil {
+		return m.Scopes
 	}
 	return nil
 }
@@ -1273,12 +1304,1148 @@ func (m *StringFilter) GetFilteringkeyMultiple() []string {
 	return nil
 }
 
+type ApplicationDomainsRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ApplicationDomainsRequest) Reset()         { *m = ApplicationDomainsRequest{} }
+func (m *ApplicationDomainsRequest) String() string { return proto.CompactTextString(m) }
+func (*ApplicationDomainsRequest) ProtoMessage()    {}
+func (*ApplicationDomainsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{19}
+}
+
+func (m *ApplicationDomainsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ApplicationDomainsRequest.Unmarshal(m, b)
+}
+func (m *ApplicationDomainsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ApplicationDomainsRequest.Marshal(b, m, deterministic)
+}
+func (m *ApplicationDomainsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApplicationDomainsRequest.Merge(m, src)
+}
+func (m *ApplicationDomainsRequest) XXX_Size() int {
+	return xxx_messageInfo_ApplicationDomainsRequest.Size(m)
+}
+func (m *ApplicationDomainsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ApplicationDomainsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ApplicationDomainsRequest proto.InternalMessageInfo
+
+func (m *ApplicationDomainsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ApplicationDomainsResponse struct {
+	Domains              []string `protobuf:"bytes,1,rep,name=domains,proto3" json:"domains,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ApplicationDomainsResponse) Reset()         { *m = ApplicationDomainsResponse{} }
+func (m *ApplicationDomainsResponse) String() string { return proto.CompactTextString(m) }
+func (*ApplicationDomainsResponse) ProtoMessage()    {}
+func (*ApplicationDomainsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{20}
+}
+
+func (m *ApplicationDomainsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ApplicationDomainsResponse.Unmarshal(m, b)
+}
+func (m *ApplicationDomainsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ApplicationDomainsResponse.Marshal(b, m, deterministic)
+}
+func (m *ApplicationDomainsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApplicationDomainsResponse.Merge(m, src)
+}
+func (m *ApplicationDomainsResponse) XXX_Size() int {
+	return xxx_messageInfo_ApplicationDomainsResponse.Size(m)
+}
+func (m *ApplicationDomainsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ApplicationDomainsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ApplicationDomainsResponse proto.InternalMessageInfo
+
+func (m *ApplicationDomainsResponse) GetDomains() []string {
+	if m != nil {
+		return m.Domains
+	}
+	return nil
+}
+
+type DomainCriticityMetaRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DomainCriticityMetaRequest) Reset()         { *m = DomainCriticityMetaRequest{} }
+func (m *DomainCriticityMetaRequest) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticityMetaRequest) ProtoMessage()    {}
+func (*DomainCriticityMetaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{21}
+}
+
+func (m *DomainCriticityMetaRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticityMetaRequest.Unmarshal(m, b)
+}
+func (m *DomainCriticityMetaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticityMetaRequest.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticityMetaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticityMetaRequest.Merge(m, src)
+}
+func (m *DomainCriticityMetaRequest) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticityMetaRequest.Size(m)
+}
+func (m *DomainCriticityMetaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticityMetaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticityMetaRequest proto.InternalMessageInfo
+
+type DomainCriticityMeta struct {
+	DomainCriticId       int32    `protobuf:"varint,1,opt,name=domain_critic_id,json=domainCriticId,proto3" json:"domain_critic_id,omitempty"`
+	DomainCriticName     string   `protobuf:"bytes,2,opt,name=domain_critic_name,json=domainCriticName,proto3" json:"domain_critic_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DomainCriticityMeta) Reset()         { *m = DomainCriticityMeta{} }
+func (m *DomainCriticityMeta) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticityMeta) ProtoMessage()    {}
+func (*DomainCriticityMeta) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{22}
+}
+
+func (m *DomainCriticityMeta) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticityMeta.Unmarshal(m, b)
+}
+func (m *DomainCriticityMeta) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticityMeta.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticityMeta) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticityMeta.Merge(m, src)
+}
+func (m *DomainCriticityMeta) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticityMeta.Size(m)
+}
+func (m *DomainCriticityMeta) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticityMeta.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticityMeta proto.InternalMessageInfo
+
+func (m *DomainCriticityMeta) GetDomainCriticId() int32 {
+	if m != nil {
+		return m.DomainCriticId
+	}
+	return 0
+}
+
+func (m *DomainCriticityMeta) GetDomainCriticName() string {
+	if m != nil {
+		return m.DomainCriticName
+	}
+	return ""
+}
+
+type DomainCriticityMetaResponse struct {
+	DomainCriticityMeta  []*DomainCriticityMeta `protobuf:"bytes,1,rep,name=domain_criticity_meta,json=domainCriticityMeta,proto3" json:"domain_criticity_meta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
+}
+
+func (m *DomainCriticityMetaResponse) Reset()         { *m = DomainCriticityMetaResponse{} }
+func (m *DomainCriticityMetaResponse) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticityMetaResponse) ProtoMessage()    {}
+func (*DomainCriticityMetaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{23}
+}
+
+func (m *DomainCriticityMetaResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticityMetaResponse.Unmarshal(m, b)
+}
+func (m *DomainCriticityMetaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticityMetaResponse.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticityMetaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticityMetaResponse.Merge(m, src)
+}
+func (m *DomainCriticityMetaResponse) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticityMetaResponse.Size(m)
+}
+func (m *DomainCriticityMetaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticityMetaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticityMetaResponse proto.InternalMessageInfo
+
+func (m *DomainCriticityMetaResponse) GetDomainCriticityMeta() []*DomainCriticityMeta {
+	if m != nil {
+		return m.DomainCriticityMeta
+	}
+	return nil
+}
+
+type MaintenanceCriticityMetaRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MaintenanceCriticityMetaRequest) Reset()         { *m = MaintenanceCriticityMetaRequest{} }
+func (m *MaintenanceCriticityMetaRequest) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticityMetaRequest) ProtoMessage()    {}
+func (*MaintenanceCriticityMetaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{24}
+}
+
+func (m *MaintenanceCriticityMetaRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticityMetaRequest.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticityMetaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticityMetaRequest.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticityMetaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticityMetaRequest.Merge(m, src)
+}
+func (m *MaintenanceCriticityMetaRequest) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticityMetaRequest.Size(m)
+}
+func (m *MaintenanceCriticityMetaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticityMetaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticityMetaRequest proto.InternalMessageInfo
+
+type MaintenanceCriticityMeta struct {
+	MaintenanceCriticId   int32    `protobuf:"varint,1,opt,name=maintenance_critic_id,json=maintenanceCriticId,proto3" json:"maintenance_critic_id,omitempty"`
+	MaintenanceCriticName string   `protobuf:"bytes,2,opt,name=maintenance_critic_name,json=maintenanceCriticName,proto3" json:"maintenance_critic_name,omitempty"`
+	XXX_NoUnkeyedLiteral  struct{} `json:"-"`
+	XXX_unrecognized      []byte   `json:"-"`
+	XXX_sizecache         int32    `json:"-"`
+}
+
+func (m *MaintenanceCriticityMeta) Reset()         { *m = MaintenanceCriticityMeta{} }
+func (m *MaintenanceCriticityMeta) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticityMeta) ProtoMessage()    {}
+func (*MaintenanceCriticityMeta) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{25}
+}
+
+func (m *MaintenanceCriticityMeta) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticityMeta.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticityMeta) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticityMeta.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticityMeta) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticityMeta.Merge(m, src)
+}
+func (m *MaintenanceCriticityMeta) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticityMeta.Size(m)
+}
+func (m *MaintenanceCriticityMeta) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticityMeta.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticityMeta proto.InternalMessageInfo
+
+func (m *MaintenanceCriticityMeta) GetMaintenanceCriticId() int32 {
+	if m != nil {
+		return m.MaintenanceCriticId
+	}
+	return 0
+}
+
+func (m *MaintenanceCriticityMeta) GetMaintenanceCriticName() string {
+	if m != nil {
+		return m.MaintenanceCriticName
+	}
+	return ""
+}
+
+type MaintenanceCriticityMetaResponse struct {
+	MaintenanceCriticityMeta []*MaintenanceCriticityMeta `protobuf:"bytes,1,rep,name=maintenance_criticity_meta,json=maintenanceCriticityMeta,proto3" json:"maintenance_criticity_meta,omitempty"`
+	XXX_NoUnkeyedLiteral     struct{}                    `json:"-"`
+	XXX_unrecognized         []byte                      `json:"-"`
+	XXX_sizecache            int32                       `json:"-"`
+}
+
+func (m *MaintenanceCriticityMetaResponse) Reset()         { *m = MaintenanceCriticityMetaResponse{} }
+func (m *MaintenanceCriticityMetaResponse) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticityMetaResponse) ProtoMessage()    {}
+func (*MaintenanceCriticityMetaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{26}
+}
+
+func (m *MaintenanceCriticityMetaResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticityMetaResponse.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticityMetaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticityMetaResponse.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticityMetaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticityMetaResponse.Merge(m, src)
+}
+func (m *MaintenanceCriticityMetaResponse) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticityMetaResponse.Size(m)
+}
+func (m *MaintenanceCriticityMetaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticityMetaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticityMetaResponse proto.InternalMessageInfo
+
+func (m *MaintenanceCriticityMetaResponse) GetMaintenanceCriticityMeta() []*MaintenanceCriticityMeta {
+	if m != nil {
+		return m.MaintenanceCriticityMeta
+	}
+	return nil
+}
+
+type RiskMetaRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RiskMetaRequest) Reset()         { *m = RiskMetaRequest{} }
+func (m *RiskMetaRequest) String() string { return proto.CompactTextString(m) }
+func (*RiskMetaRequest) ProtoMessage()    {}
+func (*RiskMetaRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{27}
+}
+
+func (m *RiskMetaRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMetaRequest.Unmarshal(m, b)
+}
+func (m *RiskMetaRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMetaRequest.Marshal(b, m, deterministic)
+}
+func (m *RiskMetaRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMetaRequest.Merge(m, src)
+}
+func (m *RiskMetaRequest) XXX_Size() int {
+	return xxx_messageInfo_RiskMetaRequest.Size(m)
+}
+func (m *RiskMetaRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMetaRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMetaRequest proto.InternalMessageInfo
+
+type RiskMeta struct {
+	RiskId               int32    `protobuf:"varint,1,opt,name=risk_id,json=riskId,proto3" json:"risk_id,omitempty"`
+	RiskName             string   `protobuf:"bytes,2,opt,name=risk_name,json=riskName,proto3" json:"risk_name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RiskMeta) Reset()         { *m = RiskMeta{} }
+func (m *RiskMeta) String() string { return proto.CompactTextString(m) }
+func (*RiskMeta) ProtoMessage()    {}
+func (*RiskMeta) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{28}
+}
+
+func (m *RiskMeta) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMeta.Unmarshal(m, b)
+}
+func (m *RiskMeta) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMeta.Marshal(b, m, deterministic)
+}
+func (m *RiskMeta) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMeta.Merge(m, src)
+}
+func (m *RiskMeta) XXX_Size() int {
+	return xxx_messageInfo_RiskMeta.Size(m)
+}
+func (m *RiskMeta) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMeta.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMeta proto.InternalMessageInfo
+
+func (m *RiskMeta) GetRiskId() int32 {
+	if m != nil {
+		return m.RiskId
+	}
+	return 0
+}
+
+func (m *RiskMeta) GetRiskName() string {
+	if m != nil {
+		return m.RiskName
+	}
+	return ""
+}
+
+type RiskMetaResponse struct {
+	RiskMeta             []*RiskMeta `protobuf:"bytes,1,rep,name=risk_meta,json=riskMeta,proto3" json:"risk_meta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
+}
+
+func (m *RiskMetaResponse) Reset()         { *m = RiskMetaResponse{} }
+func (m *RiskMetaResponse) String() string { return proto.CompactTextString(m) }
+func (*RiskMetaResponse) ProtoMessage()    {}
+func (*RiskMetaResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{29}
+}
+
+func (m *RiskMetaResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMetaResponse.Unmarshal(m, b)
+}
+func (m *RiskMetaResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMetaResponse.Marshal(b, m, deterministic)
+}
+func (m *RiskMetaResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMetaResponse.Merge(m, src)
+}
+func (m *RiskMetaResponse) XXX_Size() int {
+	return xxx_messageInfo_RiskMetaResponse.Size(m)
+}
+func (m *RiskMetaResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMetaResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMetaResponse proto.InternalMessageInfo
+
+func (m *RiskMetaResponse) GetRiskMeta() []*RiskMeta {
+	if m != nil {
+		return m.RiskMeta
+	}
+	return nil
+}
+
+type DomainCriticityRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DomainCriticityRequest) Reset()         { *m = DomainCriticityRequest{} }
+func (m *DomainCriticityRequest) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticityRequest) ProtoMessage()    {}
+func (*DomainCriticityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{30}
+}
+
+func (m *DomainCriticityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticityRequest.Unmarshal(m, b)
+}
+func (m *DomainCriticityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticityRequest.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticityRequest.Merge(m, src)
+}
+func (m *DomainCriticityRequest) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticityRequest.Size(m)
+}
+func (m *DomainCriticityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticityRequest proto.InternalMessageInfo
+
+func (m *DomainCriticityRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type DomainCriticity struct {
+	DomainCriticId       int32    `protobuf:"varint,1,opt,name=domain_critic_id,json=domainCriticId,proto3" json:"domain_critic_id,omitempty"`
+	DomainCriticName     string   `protobuf:"bytes,2,opt,name=domain_critic_name,json=domainCriticName,proto3" json:"domain_critic_name,omitempty"`
+	Domains              []string `protobuf:"bytes,3,rep,name=domains,proto3" json:"domains,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DomainCriticity) Reset()         { *m = DomainCriticity{} }
+func (m *DomainCriticity) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticity) ProtoMessage()    {}
+func (*DomainCriticity) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{31}
+}
+
+func (m *DomainCriticity) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticity.Unmarshal(m, b)
+}
+func (m *DomainCriticity) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticity.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticity) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticity.Merge(m, src)
+}
+func (m *DomainCriticity) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticity.Size(m)
+}
+func (m *DomainCriticity) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticity.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticity proto.InternalMessageInfo
+
+func (m *DomainCriticity) GetDomainCriticId() int32 {
+	if m != nil {
+		return m.DomainCriticId
+	}
+	return 0
+}
+
+func (m *DomainCriticity) GetDomainCriticName() string {
+	if m != nil {
+		return m.DomainCriticName
+	}
+	return ""
+}
+
+func (m *DomainCriticity) GetDomains() []string {
+	if m != nil {
+		return m.Domains
+	}
+	return nil
+}
+
+type DomainCriticityResponse struct {
+	DomainsCriticity     []*DomainCriticity `protobuf:"bytes,1,rep,name=domains_criticity,json=domainsCriticity,proto3" json:"domains_criticity,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
+}
+
+func (m *DomainCriticityResponse) Reset()         { *m = DomainCriticityResponse{} }
+func (m *DomainCriticityResponse) String() string { return proto.CompactTextString(m) }
+func (*DomainCriticityResponse) ProtoMessage()    {}
+func (*DomainCriticityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{32}
+}
+
+func (m *DomainCriticityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DomainCriticityResponse.Unmarshal(m, b)
+}
+func (m *DomainCriticityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DomainCriticityResponse.Marshal(b, m, deterministic)
+}
+func (m *DomainCriticityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DomainCriticityResponse.Merge(m, src)
+}
+func (m *DomainCriticityResponse) XXX_Size() int {
+	return xxx_messageInfo_DomainCriticityResponse.Size(m)
+}
+func (m *DomainCriticityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DomainCriticityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DomainCriticityResponse proto.InternalMessageInfo
+
+func (m *DomainCriticityResponse) GetDomainsCriticity() []*DomainCriticity {
+	if m != nil {
+		return m.DomainsCriticity
+	}
+	return nil
+}
+
+type PostDomainCriticityRequest struct {
+	Scope                string             `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	DomainsCriticity     []*DomainCriticity `protobuf:"bytes,2,rep,name=domains_criticity,json=domainsCriticity,proto3" json:"domains_criticity,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
+}
+
+func (m *PostDomainCriticityRequest) Reset()         { *m = PostDomainCriticityRequest{} }
+func (m *PostDomainCriticityRequest) String() string { return proto.CompactTextString(m) }
+func (*PostDomainCriticityRequest) ProtoMessage()    {}
+func (*PostDomainCriticityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{33}
+}
+
+func (m *PostDomainCriticityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostDomainCriticityRequest.Unmarshal(m, b)
+}
+func (m *PostDomainCriticityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostDomainCriticityRequest.Marshal(b, m, deterministic)
+}
+func (m *PostDomainCriticityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostDomainCriticityRequest.Merge(m, src)
+}
+func (m *PostDomainCriticityRequest) XXX_Size() int {
+	return xxx_messageInfo_PostDomainCriticityRequest.Size(m)
+}
+func (m *PostDomainCriticityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostDomainCriticityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostDomainCriticityRequest proto.InternalMessageInfo
+
+func (m *PostDomainCriticityRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *PostDomainCriticityRequest) GetDomainsCriticity() []*DomainCriticity {
+	if m != nil {
+		return m.DomainsCriticity
+	}
+	return nil
+}
+
+type PostDomainCriticityResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PostDomainCriticityResponse) Reset()         { *m = PostDomainCriticityResponse{} }
+func (m *PostDomainCriticityResponse) String() string { return proto.CompactTextString(m) }
+func (*PostDomainCriticityResponse) ProtoMessage()    {}
+func (*PostDomainCriticityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{34}
+}
+
+func (m *PostDomainCriticityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostDomainCriticityResponse.Unmarshal(m, b)
+}
+func (m *PostDomainCriticityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostDomainCriticityResponse.Marshal(b, m, deterministic)
+}
+func (m *PostDomainCriticityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostDomainCriticityResponse.Merge(m, src)
+}
+func (m *PostDomainCriticityResponse) XXX_Size() int {
+	return xxx_messageInfo_PostDomainCriticityResponse.Size(m)
+}
+func (m *PostDomainCriticityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostDomainCriticityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostDomainCriticityResponse proto.InternalMessageInfo
+
+func (m *PostDomainCriticityResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+type MaintenanceCriticityRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MaintenanceCriticityRequest) Reset()         { *m = MaintenanceCriticityRequest{} }
+func (m *MaintenanceCriticityRequest) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticityRequest) ProtoMessage()    {}
+func (*MaintenanceCriticityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{35}
+}
+
+func (m *MaintenanceCriticityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticityRequest.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticityRequest.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticityRequest.Merge(m, src)
+}
+func (m *MaintenanceCriticityRequest) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticityRequest.Size(m)
+}
+func (m *MaintenanceCriticityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticityRequest proto.InternalMessageInfo
+
+func (m *MaintenanceCriticityRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type MaintenanceCriticity struct {
+	MaintenanceCriticId  int32    `protobuf:"varint,1,opt,name=maintenance_critic_id,json=maintenanceCriticId,proto3" json:"maintenance_critic_id,omitempty"`
+	MaintenanceLevelId   int32    `protobuf:"varint,2,opt,name=maintenance_level_id,json=maintenanceLevelId,proto3" json:"maintenance_level_id,omitempty"`
+	MaintenanceLevelName string   `protobuf:"bytes,3,opt,name=maintenance_level_name,json=maintenanceLevelName,proto3" json:"maintenance_level_name,omitempty"`
+	StartMonth           int32    `protobuf:"varint,4,opt,name=start_month,json=startMonth,proto3" json:"start_month,omitempty"`
+	EndMonth             int32    `protobuf:"varint,5,opt,name=end_month,json=endMonth,proto3" json:"end_month,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MaintenanceCriticity) Reset()         { *m = MaintenanceCriticity{} }
+func (m *MaintenanceCriticity) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticity) ProtoMessage()    {}
+func (*MaintenanceCriticity) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{36}
+}
+
+func (m *MaintenanceCriticity) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticity.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticity) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticity.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticity) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticity.Merge(m, src)
+}
+func (m *MaintenanceCriticity) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticity.Size(m)
+}
+func (m *MaintenanceCriticity) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticity.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticity proto.InternalMessageInfo
+
+func (m *MaintenanceCriticity) GetMaintenanceCriticId() int32 {
+	if m != nil {
+		return m.MaintenanceCriticId
+	}
+	return 0
+}
+
+func (m *MaintenanceCriticity) GetMaintenanceLevelId() int32 {
+	if m != nil {
+		return m.MaintenanceLevelId
+	}
+	return 0
+}
+
+func (m *MaintenanceCriticity) GetMaintenanceLevelName() string {
+	if m != nil {
+		return m.MaintenanceLevelName
+	}
+	return ""
+}
+
+func (m *MaintenanceCriticity) GetStartMonth() int32 {
+	if m != nil {
+		return m.StartMonth
+	}
+	return 0
+}
+
+func (m *MaintenanceCriticity) GetEndMonth() int32 {
+	if m != nil {
+		return m.EndMonth
+	}
+	return 0
+}
+
+type PostMaintenanceCriticityRequest struct {
+	Scope                string                  `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	MaintenanceCriticy   []*MaintenanceCriticity `protobuf:"bytes,2,rep,name=maintenance_criticy,json=maintenanceCriticy,proto3" json:"maintenance_criticy,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
+}
+
+func (m *PostMaintenanceCriticityRequest) Reset()         { *m = PostMaintenanceCriticityRequest{} }
+func (m *PostMaintenanceCriticityRequest) String() string { return proto.CompactTextString(m) }
+func (*PostMaintenanceCriticityRequest) ProtoMessage()    {}
+func (*PostMaintenanceCriticityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{37}
+}
+
+func (m *PostMaintenanceCriticityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostMaintenanceCriticityRequest.Unmarshal(m, b)
+}
+func (m *PostMaintenanceCriticityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostMaintenanceCriticityRequest.Marshal(b, m, deterministic)
+}
+func (m *PostMaintenanceCriticityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostMaintenanceCriticityRequest.Merge(m, src)
+}
+func (m *PostMaintenanceCriticityRequest) XXX_Size() int {
+	return xxx_messageInfo_PostMaintenanceCriticityRequest.Size(m)
+}
+func (m *PostMaintenanceCriticityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostMaintenanceCriticityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostMaintenanceCriticityRequest proto.InternalMessageInfo
+
+func (m *PostMaintenanceCriticityRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *PostMaintenanceCriticityRequest) GetMaintenanceCriticy() []*MaintenanceCriticity {
+	if m != nil {
+		return m.MaintenanceCriticy
+	}
+	return nil
+}
+
+type MaintenanceCriticityResponse struct {
+	MaintenanceCriticy   []*MaintenanceCriticity `protobuf:"bytes,1,rep,name=maintenance_criticy,json=maintenanceCriticy,proto3" json:"maintenance_criticy,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
+}
+
+func (m *MaintenanceCriticityResponse) Reset()         { *m = MaintenanceCriticityResponse{} }
+func (m *MaintenanceCriticityResponse) String() string { return proto.CompactTextString(m) }
+func (*MaintenanceCriticityResponse) ProtoMessage()    {}
+func (*MaintenanceCriticityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{38}
+}
+
+func (m *MaintenanceCriticityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MaintenanceCriticityResponse.Unmarshal(m, b)
+}
+func (m *MaintenanceCriticityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MaintenanceCriticityResponse.Marshal(b, m, deterministic)
+}
+func (m *MaintenanceCriticityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MaintenanceCriticityResponse.Merge(m, src)
+}
+func (m *MaintenanceCriticityResponse) XXX_Size() int {
+	return xxx_messageInfo_MaintenanceCriticityResponse.Size(m)
+}
+func (m *MaintenanceCriticityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MaintenanceCriticityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MaintenanceCriticityResponse proto.InternalMessageInfo
+
+func (m *MaintenanceCriticityResponse) GetMaintenanceCriticy() []*MaintenanceCriticity {
+	if m != nil {
+		return m.MaintenanceCriticy
+	}
+	return nil
+}
+
+type PostMaintenanceCriticityResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PostMaintenanceCriticityResponse) Reset()         { *m = PostMaintenanceCriticityResponse{} }
+func (m *PostMaintenanceCriticityResponse) String() string { return proto.CompactTextString(m) }
+func (*PostMaintenanceCriticityResponse) ProtoMessage()    {}
+func (*PostMaintenanceCriticityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{39}
+}
+
+func (m *PostMaintenanceCriticityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostMaintenanceCriticityResponse.Unmarshal(m, b)
+}
+func (m *PostMaintenanceCriticityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostMaintenanceCriticityResponse.Marshal(b, m, deterministic)
+}
+func (m *PostMaintenanceCriticityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostMaintenanceCriticityResponse.Merge(m, src)
+}
+func (m *PostMaintenanceCriticityResponse) XXX_Size() int {
+	return xxx_messageInfo_PostMaintenanceCriticityResponse.Size(m)
+}
+func (m *PostMaintenanceCriticityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostMaintenanceCriticityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostMaintenanceCriticityResponse proto.InternalMessageInfo
+
+func (m *PostMaintenanceCriticityResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+type RiskMatrixRequest struct {
+	Scope                string   `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RiskMatrixRequest) Reset()         { *m = RiskMatrixRequest{} }
+func (m *RiskMatrixRequest) String() string { return proto.CompactTextString(m) }
+func (*RiskMatrixRequest) ProtoMessage()    {}
+func (*RiskMatrixRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{40}
+}
+
+func (m *RiskMatrixRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMatrixRequest.Unmarshal(m, b)
+}
+func (m *RiskMatrixRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMatrixRequest.Marshal(b, m, deterministic)
+}
+func (m *RiskMatrixRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMatrixRequest.Merge(m, src)
+}
+func (m *RiskMatrixRequest) XXX_Size() int {
+	return xxx_messageInfo_RiskMatrixRequest.Size(m)
+}
+func (m *RiskMatrixRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMatrixRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMatrixRequest proto.InternalMessageInfo
+
+func (m *RiskMatrixRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type RiskMatrix struct {
+	ConfigurationId       int32    `protobuf:"varint,1,opt,name=configuration_id,json=configurationId,proto3" json:"configuration_id,omitempty"`
+	DomainCriticId        int32    `protobuf:"varint,2,opt,name=domain_critic_id,json=domainCriticId,proto3" json:"domain_critic_id,omitempty"`
+	DomainCriticName      string   `protobuf:"bytes,3,opt,name=domain_critic_name,json=domainCriticName,proto3" json:"domain_critic_name,omitempty"`
+	MaintenanceCriticId   int32    `protobuf:"varint,4,opt,name=maintenance_critic_id,json=maintenanceCriticId,proto3" json:"maintenance_critic_id,omitempty"`
+	MaintenanceCriticName string   `protobuf:"bytes,5,opt,name=maintenance_critic_name,json=maintenanceCriticName,proto3" json:"maintenance_critic_name,omitempty"`
+	RiskId                int32    `protobuf:"varint,6,opt,name=risk_id,json=riskId,proto3" json:"risk_id,omitempty"`
+	RiskName              string   `protobuf:"bytes,7,opt,name=risk_name,json=riskName,proto3" json:"risk_name,omitempty"`
+	XXX_NoUnkeyedLiteral  struct{} `json:"-"`
+	XXX_unrecognized      []byte   `json:"-"`
+	XXX_sizecache         int32    `json:"-"`
+}
+
+func (m *RiskMatrix) Reset()         { *m = RiskMatrix{} }
+func (m *RiskMatrix) String() string { return proto.CompactTextString(m) }
+func (*RiskMatrix) ProtoMessage()    {}
+func (*RiskMatrix) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{41}
+}
+
+func (m *RiskMatrix) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMatrix.Unmarshal(m, b)
+}
+func (m *RiskMatrix) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMatrix.Marshal(b, m, deterministic)
+}
+func (m *RiskMatrix) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMatrix.Merge(m, src)
+}
+func (m *RiskMatrix) XXX_Size() int {
+	return xxx_messageInfo_RiskMatrix.Size(m)
+}
+func (m *RiskMatrix) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMatrix.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMatrix proto.InternalMessageInfo
+
+func (m *RiskMatrix) GetConfigurationId() int32 {
+	if m != nil {
+		return m.ConfigurationId
+	}
+	return 0
+}
+
+func (m *RiskMatrix) GetDomainCriticId() int32 {
+	if m != nil {
+		return m.DomainCriticId
+	}
+	return 0
+}
+
+func (m *RiskMatrix) GetDomainCriticName() string {
+	if m != nil {
+		return m.DomainCriticName
+	}
+	return ""
+}
+
+func (m *RiskMatrix) GetMaintenanceCriticId() int32 {
+	if m != nil {
+		return m.MaintenanceCriticId
+	}
+	return 0
+}
+
+func (m *RiskMatrix) GetMaintenanceCriticName() string {
+	if m != nil {
+		return m.MaintenanceCriticName
+	}
+	return ""
+}
+
+func (m *RiskMatrix) GetRiskId() int32 {
+	if m != nil {
+		return m.RiskId
+	}
+	return 0
+}
+
+func (m *RiskMatrix) GetRiskName() string {
+	if m != nil {
+		return m.RiskName
+	}
+	return ""
+}
+
+type RiskMatrixResponse struct {
+	RiskMatrix           []*RiskMatrix `protobuf:"bytes,1,rep,name=risk_matrix,json=riskMatrix,proto3" json:"risk_matrix,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *RiskMatrixResponse) Reset()         { *m = RiskMatrixResponse{} }
+func (m *RiskMatrixResponse) String() string { return proto.CompactTextString(m) }
+func (*RiskMatrixResponse) ProtoMessage()    {}
+func (*RiskMatrixResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{42}
+}
+
+func (m *RiskMatrixResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RiskMatrixResponse.Unmarshal(m, b)
+}
+func (m *RiskMatrixResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RiskMatrixResponse.Marshal(b, m, deterministic)
+}
+func (m *RiskMatrixResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RiskMatrixResponse.Merge(m, src)
+}
+func (m *RiskMatrixResponse) XXX_Size() int {
+	return xxx_messageInfo_RiskMatrixResponse.Size(m)
+}
+func (m *RiskMatrixResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_RiskMatrixResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RiskMatrixResponse proto.InternalMessageInfo
+
+func (m *RiskMatrixResponse) GetRiskMatrix() []*RiskMatrix {
+	if m != nil {
+		return m.RiskMatrix
+	}
+	return nil
+}
+
+type PostRiskMatrixRequest struct {
+	Scope                string        `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	RiskMatrix           []*RiskMatrix `protobuf:"bytes,2,rep,name=risk_matrix,json=riskMatrix,proto3" json:"risk_matrix,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *PostRiskMatrixRequest) Reset()         { *m = PostRiskMatrixRequest{} }
+func (m *PostRiskMatrixRequest) String() string { return proto.CompactTextString(m) }
+func (*PostRiskMatrixRequest) ProtoMessage()    {}
+func (*PostRiskMatrixRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{43}
+}
+
+func (m *PostRiskMatrixRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostRiskMatrixRequest.Unmarshal(m, b)
+}
+func (m *PostRiskMatrixRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostRiskMatrixRequest.Marshal(b, m, deterministic)
+}
+func (m *PostRiskMatrixRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostRiskMatrixRequest.Merge(m, src)
+}
+func (m *PostRiskMatrixRequest) XXX_Size() int {
+	return xxx_messageInfo_PostRiskMatrixRequest.Size(m)
+}
+func (m *PostRiskMatrixRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostRiskMatrixRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostRiskMatrixRequest proto.InternalMessageInfo
+
+func (m *PostRiskMatrixRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *PostRiskMatrixRequest) GetRiskMatrix() []*RiskMatrix {
+	if m != nil {
+		return m.RiskMatrix
+	}
+	return nil
+}
+
+type PostRiskMatrixResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PostRiskMatrixResponse) Reset()         { *m = PostRiskMatrixResponse{} }
+func (m *PostRiskMatrixResponse) String() string { return proto.CompactTextString(m) }
+func (*PostRiskMatrixResponse) ProtoMessage()    {}
+func (*PostRiskMatrixResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fc846aced8fe6ea6, []int{44}
+}
+
+func (m *PostRiskMatrixResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostRiskMatrixResponse.Unmarshal(m, b)
+}
+func (m *PostRiskMatrixResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostRiskMatrixResponse.Marshal(b, m, deterministic)
+}
+func (m *PostRiskMatrixResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostRiskMatrixResponse.Merge(m, src)
+}
+func (m *PostRiskMatrixResponse) XXX_Size() int {
+	return xxx_messageInfo_PostRiskMatrixResponse.Size(m)
+}
+func (m *PostRiskMatrixResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostRiskMatrixResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostRiskMatrixResponse proto.InternalMessageInfo
+
+func (m *PostRiskMatrixResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterEnum("optisam.applications.v1.SortOrder", SortOrder_name, SortOrder_value)
 	proto.RegisterEnum("optisam.applications.v1.ListApplicationsRequest_SortBy", ListApplicationsRequest_SortBy_name, ListApplicationsRequest_SortBy_value)
 	proto.RegisterEnum("optisam.applications.v1.ListInstancesRequest_SortBy", ListInstancesRequest_SortBy_name, ListInstancesRequest_SortBy_value)
 	proto.RegisterType((*UpsertApplicationRequest)(nil), "optisam.applications.v1.UpsertApplicationRequest")
 	proto.RegisterType((*UpsertApplicationResponse)(nil), "optisam.applications.v1.UpsertApplicationResponse")
+	proto.RegisterType((*DropApplicationDataRequest)(nil), "optisam.applications.v1.DropApplicationDataRequest")
+	proto.RegisterType((*DropApplicationDataResponse)(nil), "optisam.applications.v1.DropApplicationDataResponse")
 	proto.RegisterType((*DeleteApplicationRequest)(nil), "optisam.applications.v1.DeleteApplicationRequest")
 	proto.RegisterType((*DeleteApplicationResponse)(nil), "optisam.applications.v1.DeleteApplicationResponse")
 	proto.RegisterType((*UpsertInstanceRequest)(nil), "optisam.applications.v1.UpsertInstanceRequest")
@@ -1291,112 +2458,198 @@ func init() {
 	proto.RegisterType((*ListApplicationsResponse)(nil), "optisam.applications.v1.ListApplicationsResponse")
 	proto.RegisterType((*Application)(nil), "optisam.applications.v1.Application")
 	proto.RegisterType((*ApplicationSearchParams)(nil), "optisam.applications.v1.ApplicationSearchParams")
-	proto.RegisterType((*ApplicationRequest)(nil), "optisam.applications.v1.ApplicationRequest")
-	proto.RegisterType((*ApplicationResponse)(nil), "optisam.applications.v1.ApplicationResponse")
 	proto.RegisterType((*ListInstancesRequest)(nil), "optisam.applications.v1.ListInstancesRequest")
 	proto.RegisterType((*InstanceSearchParams)(nil), "optisam.applications.v1.InstanceSearchParams")
 	proto.RegisterType((*ListInstancesResponse)(nil), "optisam.applications.v1.ListInstancesResponse")
 	proto.RegisterType((*Instance)(nil), "optisam.applications.v1.Instance")
 	proto.RegisterType((*StringFilter)(nil), "optisam.applications.v1.StringFilter")
+	proto.RegisterType((*ApplicationDomainsRequest)(nil), "optisam.applications.v1.ApplicationDomainsRequest")
+	proto.RegisterType((*ApplicationDomainsResponse)(nil), "optisam.applications.v1.ApplicationDomainsResponse")
+	proto.RegisterType((*DomainCriticityMetaRequest)(nil), "optisam.applications.v1.DomainCriticityMetaRequest")
+	proto.RegisterType((*DomainCriticityMeta)(nil), "optisam.applications.v1.DomainCriticityMeta")
+	proto.RegisterType((*DomainCriticityMetaResponse)(nil), "optisam.applications.v1.DomainCriticityMetaResponse")
+	proto.RegisterType((*MaintenanceCriticityMetaRequest)(nil), "optisam.applications.v1.MaintenanceCriticityMetaRequest")
+	proto.RegisterType((*MaintenanceCriticityMeta)(nil), "optisam.applications.v1.MaintenanceCriticityMeta")
+	proto.RegisterType((*MaintenanceCriticityMetaResponse)(nil), "optisam.applications.v1.MaintenanceCriticityMetaResponse")
+	proto.RegisterType((*RiskMetaRequest)(nil), "optisam.applications.v1.RiskMetaRequest")
+	proto.RegisterType((*RiskMeta)(nil), "optisam.applications.v1.RiskMeta")
+	proto.RegisterType((*RiskMetaResponse)(nil), "optisam.applications.v1.RiskMetaResponse")
+	proto.RegisterType((*DomainCriticityRequest)(nil), "optisam.applications.v1.DomainCriticityRequest")
+	proto.RegisterType((*DomainCriticity)(nil), "optisam.applications.v1.DomainCriticity")
+	proto.RegisterType((*DomainCriticityResponse)(nil), "optisam.applications.v1.DomainCriticityResponse")
+	proto.RegisterType((*PostDomainCriticityRequest)(nil), "optisam.applications.v1.PostDomainCriticityRequest")
+	proto.RegisterType((*PostDomainCriticityResponse)(nil), "optisam.applications.v1.PostDomainCriticityResponse")
+	proto.RegisterType((*MaintenanceCriticityRequest)(nil), "optisam.applications.v1.MaintenanceCriticityRequest")
+	proto.RegisterType((*MaintenanceCriticity)(nil), "optisam.applications.v1.MaintenanceCriticity")
+	proto.RegisterType((*PostMaintenanceCriticityRequest)(nil), "optisam.applications.v1.PostMaintenanceCriticityRequest")
+	proto.RegisterType((*MaintenanceCriticityResponse)(nil), "optisam.applications.v1.MaintenanceCriticityResponse")
+	proto.RegisterType((*PostMaintenanceCriticityResponse)(nil), "optisam.applications.v1.PostMaintenanceCriticityResponse")
+	proto.RegisterType((*RiskMatrixRequest)(nil), "optisam.applications.v1.RiskMatrixRequest")
+	proto.RegisterType((*RiskMatrix)(nil), "optisam.applications.v1.RiskMatrix")
+	proto.RegisterType((*RiskMatrixResponse)(nil), "optisam.applications.v1.RiskMatrixResponse")
+	proto.RegisterType((*PostRiskMatrixRequest)(nil), "optisam.applications.v1.PostRiskMatrixRequest")
+	proto.RegisterType((*PostRiskMatrixResponse)(nil), "optisam.applications.v1.PostRiskMatrixResponse")
 }
 
 func init() { proto.RegisterFile("application.proto", fileDescriptor_fc846aced8fe6ea6) }
 
 var fileDescriptor_fc846aced8fe6ea6 = []byte{
-	// 1478 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4b, 0x73, 0x1b, 0xc5,
-	0x16, 0xd6, 0xe8, 0xad, 0xa3, 0x87, 0xc7, 0x1d, 0x39, 0x56, 0x54, 0xc9, 0x8d, 0x32, 0x37, 0xc9,
-	0x75, 0xb9, 0x62, 0x29, 0x56, 0x72, 0x21, 0x24, 0x40, 0x62, 0x91, 0x00, 0xae, 0x3c, 0x6b, 0x4c,
-	0x2a, 0xc4, 0x1b, 0x31, 0x9e, 0x69, 0x2b, 0x53, 0x91, 0xa6, 0x27, 0xd3, 0x2d, 0x05, 0x27, 0x64,
-	0x93, 0x05, 0x8f, 0x15, 0x54, 0x28, 0x56, 0xd9, 0xb0, 0x85, 0x2a, 0xaa, 0xd8, 0xc1, 0xbf, 0x60,
-	0xc1, 0x82, 0x3f, 0xc0, 0x82, 0x0d, 0x55, 0xac, 0xbd, 0xa2, 0xa6, 0xa7, 0x67, 0x34, 0x92, 0x47,
-	0xb6, 0x65, 0x0a, 0x0a, 0x6f, 0x34, 0xfd, 0x75, 0x9f, 0xd3, 0x5f, 0x9f, 0x3e, 0xe7, 0xeb, 0x6e,
-	0xc3, 0xac, 0x66, 0xdb, 0x5d, 0x53, 0xd7, 0x98, 0x49, 0xac, 0xba, 0xed, 0x10, 0x46, 0xd0, 0x3c,
-	0xb1, 0x99, 0x49, 0xb5, 0x5e, 0x3d, 0xd4, 0x45, 0xeb, 0x83, 0xe5, 0xea, 0xd1, 0x0e, 0x21, 0x9d,
-	0x2e, 0x6e, 0x68, 0xb6, 0xd9, 0xd0, 0x2c, 0x8b, 0x30, 0xd1, 0xc5, 0xcd, 0xaa, 0x67, 0xf8, 0x8f,
-	0xbe, 0xd4, 0xc1, 0xd6, 0x12, 0x7d, 0xac, 0x75, 0x3a, 0xd8, 0x69, 0xb8, 0x9e, 0x88, 0x45, 0x23,
-	0x46, 0xcf, 0x0f, 0xb4, 0xae, 0x69, 0x68, 0x0c, 0x37, 0xfc, 0x0f, 0xaf, 0x43, 0x79, 0x29, 0x41,
-	0xe5, 0xae, 0x4d, 0xb1, 0xc3, 0x56, 0x86, 0xd3, 0xab, 0xf8, 0x51, 0x1f, 0x53, 0x86, 0x4e, 0x41,
-	0x29, 0x44, 0xaa, 0x6d, 0x1a, 0x15, 0xa9, 0x26, 0x2d, 0xe4, 0xd4, 0x62, 0x08, 0x5d, 0x35, 0x10,
-	0x82, 0xa4, 0xa5, 0xf5, 0x70, 0x25, 0xce, 0x3b, 0xf9, 0x37, 0xaa, 0x40, 0x66, 0x80, 0x1d, 0x6a,
-	0x12, 0xab, 0x92, 0xe0, 0xb0, 0xdf, 0x44, 0x65, 0x48, 0x91, 0xc7, 0x16, 0x76, 0x2a, 0x49, 0x8e,
-	0x7b, 0x0d, 0x17, 0xa5, 0x3a, 0xb1, 0x71, 0x25, 0xe5, 0xa1, 0xbc, 0xa1, 0xfc, 0x1f, 0x8e, 0x44,
-	0x90, 0xa3, 0x36, 0xb1, 0x28, 0x9f, 0x82, 0xf6, 0x75, 0x1d, 0x53, 0xca, 0x69, 0x65, 0x55, 0xbf,
-	0xa9, 0xac, 0x40, 0xe5, 0x2a, 0xee, 0x62, 0x86, 0x0f, 0xbc, 0x26, 0x77, 0xe6, 0x08, 0x17, 0x7b,
-	0xce, 0xfc, 0x71, 0x12, 0xe6, 0x3c, 0xc6, 0xab, 0x16, 0x65, 0x9a, 0xa5, 0xe3, 0x29, 0x63, 0x79,
-	0x1c, 0xf2, 0xa6, 0xb0, 0x74, 0xc7, 0x78, 0x21, 0x05, 0x1f, 0x5a, 0x35, 0xd0, 0x7f, 0xa1, 0x18,
-	0x0c, 0xe0, 0x51, 0xf7, 0xc2, 0x5b, 0xf0, 0xc1, 0x5b, 0x6e, 0xf4, 0x55, 0xc8, 0xda, 0x0e, 0x31,
-	0xfa, 0x3a, 0xa3, 0x3c, 0xcc, 0xf9, 0xe6, 0x2b, 0xf5, 0x09, 0x69, 0x56, 0x8f, 0xa4, 0x5b, 0x17,
-	0xe6, 0x6a, 0xe0, 0x07, 0xbd, 0x0f, 0x80, 0x1f, 0xf5, 0x4d, 0xbb, 0x87, 0x2d, 0x46, 0xf9, 0x36,
-	0xe5, 0x9b, 0x17, 0xa6, 0xf4, 0x1a, 0x38, 0x50, 0x43, 0xbe, 0x86, 0x7b, 0x9f, 0x0e, 0xed, 0x7d,
-	0x75, 0x1d, 0x32, 0x62, 0x6e, 0x74, 0x16, 0x72, 0xc4, 0xc6, 0x0e, 0xf7, 0xee, 0x85, 0xad, 0x85,
-	0xb6, 0x5b, 0x33, 0x4e, 0x51, 0x4d, 0x68, 0x86, 0xa1, 0xa6, 0x0d, 0xbe, 0x53, 0xea, 0x70, 0x10,
-	0x3a, 0x06, 0x20, 0x8c, 0xbd, 0x28, 0x26, 0x16, 0x72, 0x6a, 0x4e, 0x20, 0xab, 0x46, 0xf5, 0x03,
-	0xc8, 0x05, 0xf3, 0x1f, 0xc0, 0xfb, 0x09, 0x28, 0x04, 0xe6, 0x43, 0xff, 0xf9, 0x00, 0x5b, 0x35,
-	0x94, 0x26, 0x1c, 0x1e, 0x0f, 0xc1, 0x9e, 0xc9, 0xd3, 0x86, 0x39, 0x2f, 0xe7, 0xfe, 0xa6, 0xdc,
-	0x71, 0x49, 0x8d, 0x4f, 0xb0, 0x27, 0xa9, 0xaf, 0x93, 0x30, 0x7f, 0xc3, 0xa4, 0xe1, 0x0a, 0xa4,
-	0x3e, 0xaf, 0x77, 0x20, 0x6b, 0x6b, 0x1d, 0xdc, 0xb6, 0xfa, 0x3d, 0x6e, 0x96, 0x6a, 0x9d, 0x79,
-	0xb1, 0x72, 0xbc, 0x99, 0xbf, 0xa3, 0x75, 0x70, 0xcd, 0xea, 0xf7, 0x36, 0xb0, 0x73, 0x3f, 0xe6,
-	0xfe, 0x5d, 0xf9, 0xfc, 0x8a, 0xc9, 0x3f, 0x62, 0x7f, 0x5c, 0xde, 0x6e, 0x65, 0xaa, 0x29, 0xf9,
-	0xb7, 0xcc, 0x82, 0xa4, 0x66, 0x5c, 0xeb, 0x5b, 0xfd, 0x1e, 0xba, 0x0e, 0x39, 0xee, 0x88, 0x9a,
-	0x4f, 0x3c, 0x19, 0x49, 0xb5, 0xea, 0x2f, 0x56, 0x94, 0x66, 0x69, 0x95, 0xe1, 0x1e, 0xad, 0xd9,
-	0xd8, 0xa9, 0xb9, 0xfd, 0x9e, 0xb3, 0xd8, 0x7d, 0xdf, 0xd9, 0xc9, 0x2b, 0xdb, 0xad, 0x74, 0x35,
-	0x29, 0x1b, 0x0b, 0xa0, 0x72, 0x26, 0x6b, 0xe6, 0x13, 0x8c, 0xd6, 0x21, 0x43, 0x89, 0xc3, 0xda,
-	0x1b, 0x5b, 0xbc, 0x36, 0x4a, 0xcd, 0x57, 0x27, 0x66, 0xe9, 0x84, 0x85, 0xd5, 0xd7, 0x88, 0xc3,
-	0x5a, 0x5b, 0xad, 0xec, 0x76, 0x2b, 0xf5, 0x5c, 0x8a, 0xcb, 0x92, 0x9a, 0xa6, 0x1c, 0x41, 0xd7,
-	0x01, 0xb8, 0x6f, 0xe2, 0x18, 0x42, 0xc1, 0x4a, 0x4d, 0x65, 0xa2, 0x7b, 0xd7, 0xcd, 0x6d, 0x77,
-	0x64, 0xc8, 0x53, 0x8e, 0xfa, 0x20, 0xba, 0x0b, 0x45, 0x8a, 0x35, 0x47, 0x7f, 0xd0, 0xb6, 0x35,
-	0x47, 0xeb, 0xf9, 0x45, 0x75, 0x76, 0xa2, 0xbf, 0x10, 0xd5, 0x35, 0x6e, 0x78, 0x87, 0xdb, 0xa9,
-	0x05, 0x1a, 0x6a, 0x29, 0x04, 0xd2, 0x1e, 0x7f, 0x94, 0xf5, 0x84, 0x59, 0x8e, 0xa1, 0x9c, 0x10,
-	0x5d, 0x59, 0x42, 0x65, 0x90, 0xad, 0x7e, 0xaf, 0x4d, 0x36, 0xdb, 0x7e, 0x66, 0x50, 0x39, 0x8e,
-	0x0e, 0xc1, 0x8c, 0x40, 0xfd, 0x82, 0x97, 0x13, 0x68, 0x0e, 0x66, 0x05, 0x38, 0xac, 0x56, 0x39,
-	0x89, 0x4a, 0x00, 0x8c, 0x30, 0xad, 0xdb, 0xd6, 0x09, 0x65, 0x72, 0x4a, 0xf9, 0x54, 0x82, 0xca,
-	0xce, 0x48, 0x8a, 0xcc, 0x52, 0xa0, 0xc0, 0x07, 0xab, 0x58, 0x27, 0x8e, 0xe1, 0xa5, 0x57, 0x4a,
-	0x1d, 0xc1, 0xd0, 0xbb, 0x50, 0x08, 0x2f, 0x95, 0xd7, 0x53, 0xbe, 0x79, 0x72, 0x3f, 0x71, 0x50,
-	0x47, 0x2c, 0x95, 0x9f, 0x24, 0xc8, 0x87, 0x7a, 0xff, 0xca, 0x09, 0x16, 0x9c, 0x53, 0x89, 0xf0,
-	0x39, 0xb5, 0xb0, 0x33, 0x7a, 0x3c, 0x0d, 0x52, 0x6a, 0xc9, 0xea, 0xf7, 0x6e, 0x6f, 0xfa, 0x95,
-	0x45, 0xd1, 0xe9, 0x1d, 0x11, 0xe5, 0xfb, 0x9b, 0x52, 0x8b, 0x7c, 0xe0, 0x1d, 0x5f, 0x57, 0x8f,
-	0x85, 0xa3, 0xc9, 0x25, 0x50, 0x52, 0x73, 0x1c, 0x79, 0x8b, 0x50, 0xa6, 0xfc, 0x22, 0xc1, 0xfc,
-	0x84, 0x7d, 0x47, 0xaf, 0x09, 0xda, 0x12, 0xcf, 0x9b, 0x53, 0x93, 0xf3, 0x90, 0x39, 0xa6, 0xd5,
-	0x79, 0xdb, 0xec, 0x32, 0xec, 0x88, 0xd5, 0x5d, 0xf2, 0x57, 0x17, 0x9f, 0xc6, 0x56, 0x04, 0xe1,
-	0xea, 0x88, 0xba, 0x26, 0xa6, 0xf1, 0x30, 0x14, 0x61, 0xe5, 0x12, 0xa0, 0x83, 0x9f, 0xcf, 0x3f,
-	0x48, 0x70, 0x28, 0xea, 0x68, 0x46, 0xa1, 0x90, 0x44, 0xdc, 0x45, 0xe2, 0xa3, 0x77, 0x91, 0x0a,
-	0x64, 0xb0, 0x61, 0xb2, 0xd0, 0x2d, 0x45, 0x34, 0xd1, 0x61, 0x48, 0xbb, 0x9f, 0xc4, 0xbf, 0xa6,
-	0x88, 0x96, 0x8b, 0xf7, 0x30, 0x73, 0x4c, 0x5d, 0x5c, 0x54, 0x44, 0x2b, 0x32, 0x2f, 0xd2, 0x51,
-	0x79, 0xa1, 0x7c, 0x92, 0x84, 0xb2, 0x5b, 0x2d, 0x01, 0xf2, 0xef, 0x56, 0xd3, 0x7b, 0xe3, 0x6a,
-	0x7a, 0x7e, 0x57, 0x35, 0x1d, 0x5f, 0xd5, 0x3f, 0x24, 0xa5, 0x6a, 0xb4, 0x94, 0x2e, 0x4d, 0xf4,
-	0xe7, 0xf3, 0xdc, 0x45, 0x47, 0xdb, 0x81, 0x8e, 0xce, 0x8c, 0x1c, 0xac, 0x72, 0x0c, 0x55, 0xa0,
-	0x1c, 0x00, 0xd8, 0x1a, 0x98, 0x0e, 0xb1, 0x5c, 0x71, 0x94, 0xa5, 0x28, 0x1d, 0x8d, 0x47, 0xeb,
-	0x68, 0x42, 0xf9, 0x56, 0x82, 0x72, 0x14, 0x0f, 0x74, 0x23, 0xb2, 0x06, 0xf6, 0x5d, 0x63, 0x63,
-	0xe2, 0x76, 0x75, 0xec, 0x2e, 0x74, 0xb0, 0x6a, 0xfd, 0x08, 0xe6, 0xc6, 0xf6, 0x77, 0x0a, 0x81,
-	0xbf, 0x0c, 0xb9, 0x61, 0x59, 0x78, 0xea, 0x7e, 0x62, 0xcf, 0xad, 0x51, 0x87, 0x36, 0xca, 0x17,
-	0x12, 0x64, 0x7d, 0x1c, 0x95, 0x20, 0x1e, 0xc8, 0x42, 0xdc, 0x34, 0x50, 0x0d, 0xf2, 0xa1, 0x4d,
-	0x10, 0x35, 0x1e, 0x86, 0xd0, 0x62, 0xc4, 0x06, 0xf0, 0x74, 0x4e, 0xa9, 0x33, 0xbc, 0x3c, 0xaf,
-	0x0d, 0x6f, 0xa3, 0x11, 0xba, 0x9d, 0x8c, 0xd0, 0x6d, 0xe5, 0x7b, 0x09, 0x0a, 0xe1, 0x60, 0xa1,
-	0xd3, 0x50, 0xda, 0xe4, 0x5f, 0xa6, 0xd5, 0xe1, 0x59, 0x29, 0x42, 0x31, 0x86, 0xba, 0x01, 0x0b,
-	0x90, 0x87, 0x78, 0x4b, 0xf0, 0x1d, 0xc1, 0xdc, 0xab, 0x9c, 0xd7, 0x6e, 0xb3, 0x2d, 0xdb, 0xbb,
-	0xe3, 0x67, 0x55, 0xf0, 0xa0, 0xf7, 0xb6, 0x6c, 0x8c, 0xce, 0xc1, 0x5c, 0xd8, 0xa0, 0xdd, 0xeb,
-	0x77, 0x99, 0x69, 0x77, 0x71, 0x25, 0xc9, 0xef, 0xa2, 0xe5, 0x70, 0xe7, 0x4d, 0xd1, 0xb7, 0xf8,
-	0x1f, 0xc8, 0x05, 0x75, 0x84, 0x32, 0x90, 0xd0, 0xa8, 0x2e, 0xc7, 0xdc, 0x5b, 0x82, 0x81, 0xa9,
-	0x2e, 0x4b, 0xcd, 0xdf, 0x33, 0x23, 0x92, 0xbc, 0x86, 0x9d, 0x81, 0xa9, 0x63, 0xf4, 0x52, 0x82,
-	0xd9, 0x1d, 0xcf, 0x30, 0xb4, 0xbc, 0xc7, 0xdd, 0x7f, 0xa7, 0xb6, 0x57, 0x9b, 0xd3, 0x98, 0x78,
-	0xe9, 0xa5, 0x1c, 0x7f, 0xfe, 0xf3, 0xaf, 0x5f, 0xc6, 0x8f, 0x28, 0x65, 0xfe, 0x0e, 0x1e, 0x2c,
-	0x37, 0xc2, 0xa6, 0x17, 0xa5, 0x45, 0xf4, 0x8d, 0x04, 0xb3, 0x3b, 0x9e, 0x6a, 0xbb, 0xb0, 0x9b,
-	0xf4, 0x32, 0xdc, 0x85, 0xdd, 0xc4, 0x97, 0xa0, 0xb2, 0xc4, 0xd9, 0xfd, 0x6f, 0xf1, 0x54, 0x14,
-	0xbb, 0xc6, 0xd3, 0xd1, 0x2a, 0x7e, 0x86, 0xbe, 0x93, 0xa0, 0x34, 0xfa, 0x2c, 0x40, 0xf5, 0xe9,
-	0x9e, 0x50, 0xd5, 0xc6, 0xbe, 0xc7, 0x0b, 0x8a, 0x17, 0x39, 0xc5, 0xf3, 0x4a, 0x63, 0x5f, 0x14,
-	0x1b, 0x41, 0xcd, 0xb9, 0xb1, 0xfd, 0x51, 0x82, 0xd2, 0xe8, 0x8b, 0x61, 0x17, 0xbe, 0x91, 0x6f,
-	0x97, 0x5d, 0xf8, 0x46, 0x3f, 0x45, 0x94, 0x6b, 0x9c, 0xef, 0xe5, 0xc5, 0x37, 0xa6, 0xe4, 0xdb,
-	0x78, 0x1a, 0xd2, 0xe8, 0x67, 0xe8, 0x2b, 0x09, 0xe4, 0xf1, 0x4b, 0x29, 0x3a, 0x3b, 0xed, 0x4b,
-	0xa0, 0xba, 0x3c, 0x85, 0x85, 0x58, 0xc0, 0x51, 0xbe, 0x80, 0xc3, 0x28, 0x32, 0x63, 0xd1, 0x67,
-	0x12, 0x14, 0x47, 0x84, 0x14, 0x2d, 0x4d, 0x75, 0xa0, 0x56, 0xeb, 0xfb, 0x1d, 0x2e, 0xe8, 0x1c,
-	0xe1, 0x74, 0x0e, 0xa1, 0x59, 0x9f, 0x4e, 0x10, 0xb1, 0x96, 0xfd, 0x62, 0xc5, 0x5c, 0xbf, 0x0f,
-	0xf7, 0x20, 0xbd, 0x81, 0x35, 0x07, 0x3b, 0xe8, 0x66, 0x36, 0x8e, 0x2e, 0xac, 0xf4, 0xd9, 0x03,
-	0x6c, 0x31, 0xe1, 0xb9, 0xc6, 0xc8, 0x43, 0x6c, 0x9d, 0xa9, 0xd9, 0x0e, 0xde, 0x34, 0x3f, 0xc4,
-	0x46, 0x6d, 0x63, 0xab, 0xd6, 0xe2, 0xa3, 0x2f, 0x8a, 0xdf, 0xda, 0xeb, 0x7c, 0xc8, 0x9b, 0xd5,
-	0xa2, 0x6b, 0x49, 0x1c, 0xf3, 0x89, 0x67, 0x18, 0xdf, 0x28, 0x00, 0x04, 0xae, 0x63, 0xeb, 0xf1,
-	0xc1, 0xf2, 0x46, 0x9a, 0xff, 0xd7, 0xe9, 0xdc, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x0c, 0x94,
-	0x1b, 0xa2, 0x08, 0x13, 0x00, 0x00,
+	// 2475 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x5a, 0xcd, 0x6f, 0x1b, 0xc7,
+	0x15, 0xd7, 0xf0, 0x9b, 0x4f, 0x12, 0xb5, 0x1a, 0x51, 0x12, 0x4d, 0x39, 0x11, 0xbd, 0xb1, 0x1d,
+	0x59, 0xb6, 0x48, 0x89, 0x72, 0xfc, 0xd5, 0xc4, 0xb6, 0x68, 0xe5, 0x83, 0x88, 0x1d, 0x1b, 0xeb,
+	0x1a, 0xa9, 0xd5, 0xb4, 0xcc, 0x8a, 0x3b, 0x96, 0x17, 0x26, 0x77, 0x99, 0xdd, 0xa5, 0x12, 0xd9,
+	0x75, 0x0b, 0xa4, 0x40, 0x91, 0x9e, 0x5a, 0x28, 0x69, 0x51, 0x20, 0x40, 0x2f, 0x45, 0x0b, 0xb4,
+	0x68, 0x81, 0xf6, 0x50, 0x20, 0x3d, 0xb5, 0xc7, 0xdc, 0xf3, 0x2f, 0xf4, 0x50, 0xf4, 0x94, 0x4b,
+	0x2f, 0x3a, 0x15, 0x3b, 0x3b, 0xbb, 0x1c, 0x92, 0xbb, 0x24, 0x97, 0x76, 0x8a, 0xfa, 0x22, 0xee,
+	0x9b, 0x79, 0x6f, 0x7f, 0xef, 0xcd, 0x6f, 0xde, 0xdb, 0x37, 0x63, 0x98, 0x95, 0x5b, 0xad, 0x86,
+	0x5a, 0x97, 0x2d, 0x55, 0xd7, 0x8a, 0x2d, 0x43, 0xb7, 0x74, 0xbc, 0xa8, 0xb7, 0x2c, 0xd5, 0x94,
+	0x9b, 0x45, 0x6e, 0xc8, 0x2c, 0xee, 0x6f, 0xe4, 0x8f, 0xef, 0xe9, 0xfa, 0x5e, 0x83, 0x94, 0xe4,
+	0x96, 0x5a, 0x92, 0x35, 0x4d, 0xb7, 0xd8, 0x10, 0x55, 0xcb, 0x9f, 0xa3, 0x7f, 0xea, 0x6b, 0x7b,
+	0x44, 0x5b, 0x33, 0x3f, 0x94, 0xf7, 0xf6, 0x88, 0x51, 0xb2, 0x2d, 0xe9, 0x9a, 0xe9, 0x33, 0x7b,
+	0x71, 0x5f, 0x6e, 0xa8, 0x8a, 0x6c, 0x91, 0x92, 0xfb, 0xc3, 0x19, 0x10, 0xbf, 0x44, 0x90, 0xbb,
+	0xd7, 0x32, 0x89, 0x61, 0x6d, 0x75, 0x5e, 0x2f, 0x91, 0x0f, 0xda, 0xc4, 0xb4, 0xf0, 0x29, 0xc8,
+	0x70, 0xa0, 0x6a, 0xaa, 0x92, 0x43, 0x05, 0xb4, 0x92, 0x96, 0xa6, 0x39, 0x69, 0x55, 0xc1, 0x18,
+	0x62, 0x9a, 0xdc, 0x24, 0xb9, 0x08, 0x1d, 0xa4, 0xbf, 0x71, 0x0e, 0x92, 0xfb, 0xc4, 0x30, 0x55,
+	0x5d, 0xcb, 0x45, 0xa9, 0xd8, 0x7d, 0xc4, 0x59, 0x88, 0xeb, 0x1f, 0x6a, 0xc4, 0xc8, 0xc5, 0xa8,
+	0xdc, 0x79, 0xc0, 0x0b, 0x90, 0x50, 0xf4, 0xa6, 0xac, 0x6a, 0xb9, 0x38, 0x15, 0xb3, 0x27, 0x7c,
+	0x06, 0xe2, 0x66, 0x5d, 0x6f, 0x91, 0x5c, 0xc2, 0x16, 0x57, 0xe6, 0x8e, 0x2a, 0x82, 0x91, 0x29,
+	0x4f, 0xbd, 0xb7, 0xfb, 0xdd, 0xad, 0xb5, 0x9d, 0xef, 0x3d, 0xd9, 0x7c, 0xfa, 0xde, 0xae, 0xe4,
+	0xcc, 0x10, 0x5f, 0x81, 0x63, 0x3e, 0x9e, 0x98, 0x2d, 0x5d, 0x33, 0x29, 0x1e, 0xb3, 0x5d, 0xaf,
+	0x13, 0xd3, 0xa4, 0x3e, 0xa4, 0x24, 0xf7, 0x51, 0x7c, 0x13, 0xf2, 0xdb, 0x86, 0xde, 0xe2, 0x94,
+	0xb6, 0x65, 0x4b, 0x76, 0x43, 0xe0, 0xbd, 0x1f, 0x0d, 0x7d, 0xff, 0x45, 0x58, 0xf2, 0x35, 0x34,
+	0x14, 0xc1, 0x16, 0xe4, 0xb6, 0x49, 0x83, 0x58, 0x64, 0xec, 0x25, 0xb0, 0x7d, 0xf7, 0x31, 0x31,
+	0xf4, 0xcd, 0x9f, 0xc7, 0x60, 0xde, 0x89, 0x59, 0x55, 0x33, 0x2d, 0x59, 0xab, 0x93, 0x90, 0x4b,
+	0xbf, 0x0c, 0x93, 0x2a, 0xd3, 0xb4, 0xe7, 0x38, 0x0c, 0x00, 0x57, 0x54, 0x55, 0xf0, 0x4b, 0x30,
+	0xed, 0x4d, 0xa0, 0x24, 0x71, 0xd8, 0x30, 0xe5, 0x0a, 0xdf, 0xb1, 0xc9, 0x22, 0x41, 0xaa, 0x65,
+	0xe8, 0x4a, 0xbb, 0x6e, 0x99, 0x94, 0x15, 0x93, 0xe5, 0x0b, 0xc5, 0x80, 0x5d, 0x51, 0xf4, 0x85,
+	0x5b, 0x64, 0xea, 0x92, 0x67, 0x07, 0x7f, 0x07, 0x80, 0x7c, 0xd0, 0x56, 0x5b, 0x4d, 0xa2, 0x59,
+	0x26, 0x25, 0xd5, 0x64, 0xf9, 0x52, 0x48, 0xab, 0x9e, 0x01, 0x89, 0xb3, 0x15, 0x82, 0x92, 0xf9,
+	0x1d, 0x48, 0x32, 0x40, 0x78, 0x1d, 0xd2, 0x7a, 0x8b, 0x18, 0xf4, 0x95, 0x8c, 0x4c, 0xf8, 0xa8,
+	0x32, 0x63, 0x4c, 0x4b, 0x51, 0x59, 0x51, 0xa4, 0x84, 0x42, 0x97, 0x4f, 0xea, 0x4c, 0xc2, 0x2f,
+	0x00, 0x30, 0x65, 0x27, 0xb4, 0xd1, 0x95, 0xb4, 0x94, 0x66, 0x92, 0xaa, 0x92, 0x7f, 0x1f, 0xd2,
+	0x1e, 0xa8, 0x31, 0xac, 0x9f, 0x80, 0x29, 0x4f, 0xbd, 0x63, 0x7f, 0xd2, 0x93, 0x55, 0x15, 0xb1,
+	0x0c, 0x0b, 0xbd, 0x71, 0x19, 0xca, 0xa8, 0x1a, 0xcc, 0x3b, 0x44, 0xfc, 0x86, 0x08, 0x65, 0x83,
+	0xea, 0x7d, 0xc1, 0x50, 0x50, 0xff, 0x89, 0xc1, 0xe2, 0x4d, 0xd5, 0xe4, 0x13, 0x83, 0xe9, 0xe2,
+	0x7a, 0x13, 0x52, 0x2d, 0x79, 0x8f, 0xd4, 0xb4, 0x76, 0x93, 0xaa, 0xc5, 0x2b, 0xe7, 0x0e, 0xb7,
+	0x96, 0xcb, 0x93, 0x77, 0xe4, 0x3d, 0x52, 0xd0, 0xda, 0xcd, 0x5d, 0x62, 0xdc, 0x9f, 0xb0, 0xff,
+	0x5d, 0xff, 0xd9, 0x75, 0x95, 0xfe, 0x98, 0xf8, 0xfa, 0xda, 0x51, 0x25, 0x99, 0x8f, 0x0b, 0xff,
+	0x4a, 0xae, 0x20, 0x29, 0x69, 0x6b, 0xbf, 0xd3, 0x6e, 0xe2, 0xb7, 0x21, 0x4d, 0x0d, 0x99, 0xea,
+	0x63, 0x27, 0x15, 0xc6, 0x2b, 0xc5, 0xc3, 0x2d, 0xb1, 0x9c, 0xa9, 0x5a, 0xa4, 0x69, 0x16, 0x5a,
+	0xc4, 0x28, 0xd8, 0xe3, 0x8e, 0xb1, 0x89, 0xfb, 0xae, 0xb1, 0x93, 0xd7, 0x8f, 0x2a, 0x89, 0x7c,
+	0x4c, 0x50, 0x56, 0x40, 0xa2, 0x48, 0xee, 0xaa, 0x8f, 0x09, 0xde, 0x81, 0xa4, 0xa9, 0x1b, 0x56,
+	0x6d, 0xf7, 0x80, 0x6e, 0x98, 0x4c, 0xf9, 0x62, 0x20, 0x75, 0x03, 0x1c, 0x2b, 0xde, 0xd5, 0x0d,
+	0xab, 0x72, 0x50, 0x49, 0x1d, 0x55, 0xe2, 0x1f, 0xa3, 0x88, 0x80, 0xa4, 0x84, 0x49, 0x25, 0xf8,
+	0x6d, 0x00, 0x6a, 0x5b, 0x37, 0x14, 0x96, 0x85, 0x33, 0x65, 0x31, 0xd0, 0xbc, 0x6d, 0xe6, 0xb6,
+	0x3d, 0x93, 0xb3, 0x94, 0x36, 0x5d, 0x21, 0xbe, 0x07, 0xd3, 0x26, 0x91, 0x8d, 0xfa, 0xc3, 0x5a,
+	0x4b, 0x36, 0xe4, 0xa6, 0xbb, 0xd3, 0xd6, 0x03, 0xed, 0x71, 0x50, 0xef, 0x52, 0xc5, 0x3b, 0x54,
+	0x4f, 0x9a, 0x32, 0xb9, 0x27, 0x5c, 0x82, 0x04, 0xdd, 0x41, 0x66, 0x2e, 0x61, 0xf3, 0xb2, 0xb2,
+	0x78, 0x54, 0x49, 0x1e, 0xa2, 0x58, 0x0a, 0x09, 0xe8, 0xa8, 0x02, 0x87, 0x28, 0x29, 0xc6, 0x8d,
+	0xe8, 0xaf, 0x50, 0x54, 0x62, 0xd3, 0xc4, 0x43, 0x04, 0x09, 0xc7, 0x63, 0x9c, 0x72, 0xca, 0x91,
+	0x30, 0x81, 0xd3, 0xac, 0xd4, 0x08, 0x08, 0x67, 0x41, 0xd0, 0xda, 0xcd, 0x9a, 0xfe, 0xa0, 0xe6,
+	0x72, 0xc9, 0x14, 0x22, 0x78, 0x0e, 0x66, 0x98, 0xd4, 0xcd, 0x1b, 0x42, 0x14, 0xcf, 0xc3, 0x2c,
+	0x13, 0x76, 0x36, 0xbd, 0x10, 0xc3, 0xe0, 0x56, 0x28, 0x21, 0x8e, 0x33, 0x00, 0x96, 0x6e, 0xc9,
+	0x8d, 0x5a, 0x5d, 0x37, 0x2d, 0x21, 0x61, 0xab, 0xe8, 0xbb, 0xa6, 0xde, 0x20, 0x66, 0x9d, 0xd8,
+	0xcc, 0x35, 0x54, 0xf3, 0x91, 0x90, 0x14, 0x3f, 0x41, 0x90, 0xeb, 0x5f, 0x1e, 0x46, 0x57, 0x11,
+	0xa6, 0xa8, 0x0d, 0x89, 0xd4, 0x75, 0x43, 0x71, 0x38, 0x1b, 0x97, 0xba, 0x64, 0xf8, 0x2d, 0x98,
+	0xe2, 0xe3, 0x47, 0x37, 0xe9, 0x64, 0xf9, 0xe4, 0x28, 0xc1, 0x95, 0xba, 0x34, 0xc5, 0x7f, 0x44,
+	0x60, 0x92, 0x1b, 0x7d, 0x96, 0xd2, 0xee, 0x15, 0xf0, 0x28, 0x5f, 0xc0, 0x57, 0xfa, 0x03, 0x4c,
+	0xb9, 0x15, 0x97, 0x32, 0x5a, 0xbb, 0x79, 0xfb, 0x81, 0xbb, 0x5d, 0x4d, 0x7c, 0xba, 0x2f, 0xe8,
+	0x94, 0x34, 0x71, 0x69, 0x9a, 0x4e, 0xbc, 0xe3, 0x66, 0xf0, 0x17, 0xf8, 0x20, 0xd3, 0x64, 0x8b,
+	0xa4, 0x34, 0x95, 0xdc, 0xd0, 0x4d, 0x8b, 0xfb, 0x62, 0x48, 0x76, 0x7d, 0x31, 0x9c, 0xf5, 0x59,
+	0x8b, 0x5c, 0x8a, 0x4e, 0x11, 0xf8, 0x01, 0x49, 0x35, 0x1f, 0xe1, 0x55, 0x9f, 0xb5, 0xce, 0xa5,
+	0x29, 0x9a, 0x19, 0x8a, 0xe6, 0x75, 0x4f, 0x2c, 0xfe, 0x3b, 0x02, 0x8b, 0x01, 0xec, 0xc5, 0x97,
+	0x59, 0x9c, 0x10, 0x65, 0xff, 0xa9, 0xe0, 0xdd, 0x64, 0x19, 0xaa, 0xb6, 0xf7, 0x86, 0xda, 0xb0,
+	0x88, 0xc1, 0xc2, 0xf9, 0x2d, 0x37, 0x9c, 0x91, 0x30, 0xba, 0x2c, 0xea, 0xdb, 0x5d, 0x35, 0x22,
+	0x1a, 0xc6, 0x42, 0xa7, 0x94, 0xe0, 0xd7, 0xbc, 0x50, 0xc6, 0xc2, 0x58, 0x70, 0x23, 0x2e, 0xf9,
+	0x45, 0x3c, 0x1e, 0xc6, 0x52, 0xdf, 0xc2, 0x88, 0x5f, 0xc4, 0x20, 0x6b, 0x6f, 0x1d, 0x8f, 0x36,
+	0xff, 0xdf, 0xf9, 0xfa, 0xdd, 0xde, 0x7c, 0x7d, 0x7e, 0x60, 0xbe, 0xee, 0xf5, 0xea, 0x7f, 0x94,
+	0xac, 0x25, 0xff, 0x64, 0xbd, 0x16, 0x68, 0xcf, 0xc5, 0xf9, 0x3c, 0x33, 0x75, 0xcd, 0x4b, 0xd4,
+	0x33, 0x5d, 0xb5, 0x5e, 0x98, 0xc0, 0x39, 0xc8, 0x7a, 0x02, 0xa2, 0xed, 0xab, 0x86, 0xae, 0xd9,
+	0x5b, 0x4f, 0x40, 0x7e, 0x89, 0x3a, 0xe2, 0x9f, 0xa8, 0xa3, 0xe2, 0x1f, 0x10, 0x64, 0xfd, 0x80,
+	0xe3, 0x9b, 0xbe, 0x39, 0x6f, 0x64, 0x92, 0xf6, 0xa4, 0xc6, 0xed, 0x9e, 0xcf, 0xb3, 0xb1, 0xb6,
+	0x9e, 0xf8, 0x03, 0x98, 0xef, 0x21, 0x44, 0x88, 0xf2, 0x70, 0x0d, 0xd2, 0x9d, 0x64, 0xeb, 0xd4,
+	0x86, 0x13, 0x43, 0xd7, 0x52, 0xea, 0xe8, 0x88, 0x3f, 0x47, 0x90, 0x72, 0xe5, 0x38, 0x03, 0x11,
+	0xaf, 0x0c, 0x44, 0x54, 0x05, 0x17, 0x60, 0x92, 0x5b, 0x04, 0x56, 0x02, 0x78, 0x91, 0x7f, 0xf6,
+	0x8c, 0xfa, 0x66, 0x4f, 0xbf, 0xac, 0x1f, 0xf3, 0xc9, 0xfa, 0xe2, 0x9f, 0x11, 0x4c, 0xf1, 0xc1,
+	0xc2, 0xa7, 0x21, 0xf3, 0x80, 0xfe, 0x52, 0xb5, 0x3d, 0x4a, 0x63, 0x16, 0x8a, 0x1e, 0xa9, 0x1d,
+	0x30, 0x4f, 0xf2, 0x88, 0x1c, 0x30, 0xbc, 0x5d, 0x32, 0xfb, 0xeb, 0xd2, 0x79, 0xae, 0x59, 0x07,
+	0x2d, 0xa7, 0x17, 0x49, 0x49, 0xe0, 0x88, 0xbe, 0x7d, 0xd0, 0x22, 0x78, 0x13, 0xe6, 0x79, 0x85,
+	0x5a, 0xb3, 0xdd, 0xb0, 0xd4, 0x56, 0x83, 0xe4, 0x62, 0xf4, 0xf3, 0x38, 0xcb, 0x0f, 0xde, 0x62,
+	0x63, 0xe2, 0x1b, 0x70, 0x8c, 0x6f, 0xfa, 0x68, 0x52, 0x34, 0xc7, 0x68, 0x20, 0x2f, 0x40, 0xde,
+	0xcf, 0x4e, 0xe7, 0xf3, 0xd6, 0xc9, 0xb7, 0x36, 0x17, 0x6c, 0x30, 0xee, 0xa3, 0x78, 0x1c, 0xf2,
+	0xce, 0xe4, 0x1b, 0x86, 0x6a, 0xa9, 0x75, 0xd5, 0x3a, 0xb8, 0x45, 0xbc, 0x0e, 0x56, 0x6c, 0xc2,
+	0x9c, 0xcf, 0xa8, 0x5d, 0xaf, 0x1d, 0xfd, 0x5a, 0x9d, 0xca, 0xdd, 0xed, 0x10, 0x97, 0x32, 0x0a,
+	0x37, 0xbd, 0xaa, 0xe0, 0x73, 0x80, 0xbb, 0x67, 0x72, 0x5f, 0x04, 0x02, 0x3f, 0xd7, 0xee, 0xe5,
+	0xc4, 0x1f, 0xc1, 0x92, 0x2f, 0x18, 0xe6, 0xc5, 0xfb, 0x30, 0xdf, 0x65, 0x4c, 0xb5, 0x0e, 0x6a,
+	0x4d, 0x62, 0xc9, 0xd4, 0xa7, 0xc9, 0xf2, 0xb9, 0x40, 0xfa, 0xfa, 0x19, 0x9d, 0x53, 0xfa, 0x85,
+	0xe2, 0x09, 0x58, 0xbe, 0x25, 0xab, 0x9a, 0x45, 0x34, 0x9b, 0xd5, 0xbe, 0x21, 0xf9, 0x09, 0x82,
+	0x5c, 0xd0, 0x1c, 0x5c, 0x86, 0xf9, 0x66, 0x67, 0xac, 0x2f, 0x3a, 0x73, 0xcd, 0x5e, 0xc5, 0xaa,
+	0x82, 0x2f, 0xc0, 0xa2, 0x8f, 0x0e, 0x17, 0xa7, 0xf9, 0x3e, 0x2d, 0x1a, 0xac, 0x4f, 0x11, 0x14,
+	0x82, 0xc1, 0xb2, 0x90, 0xe9, 0x90, 0xef, 0x37, 0xde, 0x13, 0xb7, 0x8d, 0xc0, 0xb8, 0x05, 0x9a,
+	0xcf, 0x35, 0x03, 0x46, 0xc4, 0x59, 0x98, 0xb1, 0x6b, 0x30, 0x1f, 0xb1, 0xeb, 0x90, 0x72, 0x45,
+	0x78, 0x11, 0x92, 0x76, 0x85, 0xef, 0x84, 0x24, 0x61, 0x3f, 0x56, 0x15, 0xbc, 0x04, 0x69, 0x3a,
+	0xc0, 0xf9, 0x9d, 0xb2, 0x05, 0xd4, 0x55, 0x09, 0x84, 0x8e, 0x51, 0xe6, 0xd9, 0x55, 0xa6, 0xc0,
+	0x39, 0x12, 0x9c, 0xbf, 0x3c, 0x6d, 0x6a, 0x93, 0x02, 0xbd, 0x01, 0x0b, 0x3d, 0xb4, 0x18, 0x63,
+	0xd7, 0xfd, 0x18, 0xc1, 0x4c, 0x8f, 0x95, 0x6f, 0x6a, 0x73, 0xf0, 0x7b, 0x38, 0xda, 0xbd, 0x87,
+	0x5b, 0xb0, 0xd8, 0xe7, 0x0a, 0x8b, 0xd2, 0x3d, 0x98, 0x65, 0xb3, 0x3a, 0x6b, 0xcf, 0xa2, 0xb5,
+	0x32, 0xea, 0x76, 0x71, 0xb1, 0x98, 0x9e, 0x44, 0xfc, 0x35, 0x82, 0xfc, 0x1d, 0xdd, 0xb4, 0x9e,
+	0x39, 0x82, 0xfe, 0x00, 0x23, 0xcf, 0x0c, 0xf0, 0x22, 0x2c, 0xf9, 0xe2, 0x1b, 0xda, 0xee, 0xbf,
+	0x05, 0x4b, 0x7e, 0xac, 0x1f, 0x83, 0x1b, 0x5f, 0x23, 0xc8, 0xfa, 0x99, 0x1a, 0x2b, 0x49, 0xac,
+	0x43, 0x96, 0xd7, 0x69, 0x90, 0x7d, 0xd2, 0x70, 0x3f, 0x1d, 0xe2, 0x12, 0xe6, 0xc6, 0x6e, 0xda,
+	0x43, 0x55, 0x05, 0x9f, 0x87, 0x85, 0x7e, 0x0d, 0xee, 0x14, 0x2d, 0xdb, 0xab, 0x43, 0x49, 0xb6,
+	0x0c, 0x93, 0xa6, 0x25, 0x1b, 0x56, 0xad, 0xa9, 0x6b, 0xd6, 0x43, 0x56, 0x65, 0x81, 0x8a, 0x6e,
+	0xd9, 0x12, 0x7b, 0x9f, 0x12, 0x4d, 0x61, 0xc3, 0x4e, 0xeb, 0x95, 0x22, 0x9a, 0x42, 0x07, 0xc5,
+	0x3f, 0x22, 0x58, 0xb6, 0xc3, 0xfe, 0x7c, 0x22, 0x88, 0xbf, 0x0f, 0x73, 0xfd, 0x81, 0x72, 0xd9,
+	0xb1, 0x16, 0x2a, 0x6b, 0x75, 0x85, 0xc8, 0x91, 0x1e, 0x88, 0x3f, 0x84, 0xe3, 0xfe, 0x48, 0x19,
+	0x4b, 0x02, 0xde, 0x8f, 0x9e, 0xd7, 0xfb, 0x5f, 0x85, 0x42, 0x70, 0xb4, 0x86, 0x32, 0xf5, 0x2a,
+	0xcc, 0xd2, 0xb4, 0x26, 0x5b, 0x86, 0xfa, 0xd1, 0x18, 0xfc, 0xfc, 0x4b, 0x04, 0xa0, 0x63, 0x00,
+	0x9f, 0x01, 0xa1, 0xae, 0x6b, 0x0f, 0xd4, 0xbd, 0xb6, 0xd1, 0xf5, 0x89, 0x1b, 0x97, 0x66, 0xba,
+	0xe4, 0x55, 0xc5, 0x37, 0xc3, 0x45, 0x42, 0x64, 0xb8, 0x68, 0x40, 0x86, 0x0b, 0xdc, 0x18, 0xb1,
+	0xb1, 0xaa, 0x67, 0x7c, 0x40, 0xf5, 0xe4, 0x0b, 0x51, 0x22, 0xb8, 0x10, 0x25, 0x7b, 0x0a, 0xd1,
+	0x0e, 0x60, 0x3e, 0xe6, 0x6c, 0x8d, 0xb6, 0x61, 0xd2, 0x29, 0x45, 0x54, 0xcc, 0xf8, 0xf1, 0xd2,
+	0xe0, 0x62, 0xe4, 0x58, 0x00, 0xc3, 0xfb, 0x2d, 0x7e, 0x82, 0x60, 0xde, 0xa6, 0xc3, 0xb3, 0x2c,
+	0x6a, 0x2f, 0x94, 0xc8, 0x78, 0x50, 0xca, 0xb0, 0xd0, 0x8b, 0x64, 0x18, 0x1d, 0x57, 0x5f, 0x84,
+	0xb4, 0xd7, 0x41, 0xe2, 0x24, 0x44, 0x65, 0xb3, 0x2e, 0x4c, 0xe0, 0x14, 0xc4, 0x14, 0x62, 0xd6,
+	0x05, 0x54, 0xfe, 0x6c, 0x11, 0x70, 0xd7, 0x09, 0x88, 0xb1, 0xaf, 0xd6, 0x09, 0xfe, 0x1c, 0xc1,
+	0x6c, 0xdf, 0xcd, 0x0b, 0xde, 0x18, 0x72, 0xd8, 0xde, 0x7f, 0xd9, 0x91, 0x2f, 0x87, 0x51, 0x71,
+	0xbc, 0x11, 0x97, 0x3f, 0xfe, 0xea, 0x9f, 0x9f, 0x46, 0x8e, 0x89, 0x59, 0x7a, 0x4f, 0xb6, 0xbf,
+	0x51, 0xe2, 0x55, 0xaf, 0xa0, 0x55, 0xfc, 0x3b, 0x04, 0x73, 0x3e, 0xf7, 0x32, 0x78, 0x33, 0xb8,
+	0x34, 0x05, 0x5e, 0x07, 0xe5, 0xcf, 0x87, 0x53, 0x62, 0x18, 0x4f, 0x52, 0x8c, 0x2f, 0xae, 0x1e,
+	0xf7, 0xc3, 0x58, 0x7a, 0x42, 0x97, 0xfd, 0x29, 0xfe, 0x3d, 0x82, 0xd9, 0xbe, 0x4b, 0x9c, 0x01,
+	0x61, 0x0c, 0xba, 0x33, 0x1a, 0x10, 0xc6, 0xc0, 0x3b, 0x22, 0x71, 0x8d, 0x42, 0x7c, 0x79, 0xf5,
+	0x94, 0x3f, 0xc4, 0xee, 0xbe, 0xf9, 0x29, 0xfe, 0x13, 0x82, 0x4c, 0xf7, 0xdd, 0x00, 0x2e, 0x86,
+	0xbb, 0x5c, 0xc9, 0x97, 0x46, 0x9e, 0xcf, 0x20, 0x5e, 0xa1, 0x10, 0xcf, 0x8b, 0xa5, 0x91, 0x20,
+	0x96, 0xbc, 0x2e, 0xd7, 0x26, 0xc1, 0x17, 0x08, 0x32, 0xdd, 0xd7, 0x06, 0x03, 0xf0, 0xfa, 0x5e,
+	0x60, 0x0c, 0xc0, 0xeb, 0x7f, 0x1f, 0x21, 0xbe, 0x4e, 0xf1, 0x5e, 0x5b, 0x7d, 0x2d, 0x24, 0xde,
+	0xd2, 0x13, 0xee, 0x54, 0xe4, 0x29, 0xfe, 0x05, 0x02, 0xa1, 0xf7, 0x10, 0x19, 0xaf, 0x87, 0xbd,
+	0x0e, 0xc8, 0x6f, 0x84, 0xd0, 0x60, 0x0e, 0x1c, 0xa7, 0x0e, 0x2c, 0x60, 0xdf, 0xad, 0x85, 0x7f,
+	0x8a, 0x60, 0xba, 0xeb, 0xe8, 0x02, 0xaf, 0x85, 0x3a, 0xf3, 0xca, 0x17, 0x47, 0x9d, 0xce, 0xe0,
+	0x1c, 0xa3, 0x70, 0xe6, 0xf0, 0xac, 0x0b, 0xc7, 0x8b, 0x18, 0xfe, 0x0d, 0xea, 0x4a, 0x4c, 0xac,
+	0x75, 0xc6, 0xe5, 0x51, 0x0e, 0xca, 0xbb, 0xfb, 0xf5, 0xfc, 0x66, 0x28, 0x9d, 0xee, 0x0d, 0x8e,
+	0xfd, 0x37, 0x38, 0xfb, 0xb2, 0xc5, 0x7f, 0x47, 0xb0, 0x7c, 0x9b, 0x3b, 0xe8, 0xf4, 0x6b, 0xcb,
+	0x37, 0x43, 0x35, 0xc0, 0xc3, 0xb3, 0x52, 0x70, 0x2b, 0x2e, 0x6e, 0x50, 0xd0, 0x67, 0xf1, 0x19,
+	0x17, 0x34, 0x8f, 0xad, 0x64, 0xf7, 0x64, 0x0c, 0xb9, 0xf7, 0x51, 0x8f, 0xbf, 0x42, 0x70, 0x92,
+	0x9f, 0x15, 0xd8, 0x44, 0x5f, 0x0a, 0xdf, 0x8f, 0x32, 0x5f, 0x2e, 0x8f, 0xa1, 0xc9, 0x1c, 0xba,
+	0x40, 0x1d, 0x5a, 0xc7, 0xc5, 0x60, 0x87, 0xb8, 0x0f, 0x89, 0x8e, 0x57, 0x9f, 0x21, 0xc8, 0xde,
+	0xee, 0x39, 0x80, 0x76, 0xce, 0x48, 0x86, 0x37, 0xa3, 0x0c, 0xf5, 0x99, 0x11, 0x66, 0x32, 0x94,
+	0x2f, 0x53, 0x94, 0x27, 0xf0, 0x72, 0x30, 0x4a, 0xbb, 0x8c, 0x9b, 0x76, 0xe1, 0x5a, 0x1a, 0x40,
+	0x17, 0x5c, 0x1a, 0xb9, 0xb7, 0x62, 0x20, 0xd7, 0x47, 0x57, 0x08, 0xe2, 0x35, 0x7f, 0x4e, 0xef,
+	0xf1, 0xfa, 0xaf, 0xac, 0x65, 0x18, 0x04, 0x36, 0x98, 0xd7, 0xc1, 0x3d, 0xe8, 0x00, 0x5e, 0x0f,
+	0x68, 0x0c, 0xdd, 0x00, 0x8b, 0x03, 0x41, 0xdb, 0x45, 0xe1, 0x6f, 0x08, 0x0a, 0x1d, 0xcc, 0xa6,
+	0x2f, 0x9b, 0xf1, 0xf9, 0x70, 0x3d, 0x02, 0x43, 0xfe, 0x4a, 0x48, 0x2d, 0x06, 0x7d, 0x85, 0x42,
+	0x17, 0x71, 0xc1, 0x17, 0x3a, 0x47, 0x5e, 0xfc, 0x25, 0x82, 0x93, 0xdd, 0x31, 0x0f, 0xc0, 0x7f,
+	0x69, 0x60, 0x0c, 0x07, 0xf9, 0x70, 0x79, 0x0c, 0x4d, 0xe6, 0xc7, 0x59, 0xea, 0xc7, 0x29, 0x71,
+	0xa8, 0x1f, 0xf6, 0x32, 0xfc, 0x12, 0xc1, 0x02, 0xef, 0x06, 0xd7, 0xd0, 0xac, 0x8e, 0xf2, 0xd5,
+	0xcb, 0xe0, 0x9e, 0x1d, 0x69, 0x2e, 0x03, 0xf8, 0x12, 0x05, 0xf8, 0x02, 0x5e, 0x0a, 0x00, 0x48,
+	0xdf, 0xfe, 0x5b, 0x76, 0x42, 0x12, 0x00, 0xae, 0x38, 0x30, 0x3e, 0xfd, 0x00, 0x4b, 0x23, 0xcf,
+	0x67, 0x20, 0x4f, 0x53, 0x90, 0x05, 0x71, 0x10, 0xc8, 0x2b, 0x68, 0xb5, 0xd2, 0x3a, 0xdc, 0x52,
+	0x77, 0xee, 0xc3, 0xbb, 0x90, 0xd8, 0x25, 0xb2, 0x41, 0x0c, 0x7c, 0x2b, 0x15, 0xc1, 0x97, 0xb6,
+	0xda, 0xd6, 0x43, 0xa2, 0x59, 0xec, 0x3d, 0x05, 0x4b, 0x7f, 0x44, 0xb4, 0x73, 0x85, 0x96, 0x41,
+	0x1e, 0xa8, 0x1f, 0x11, 0xa5, 0xb0, 0x7b, 0x50, 0xa8, 0xd0, 0xd9, 0x57, 0xd8, 0xdf, 0xc2, 0xab,
+	0x74, 0xca, 0xd5, 0xfc, 0xb4, 0xad, 0xa9, 0x1b, 0xea, 0x63, 0x47, 0x31, 0xb2, 0x3b, 0x05, 0xe0,
+	0x99, 0x9e, 0xd8, 0x89, 0xec, 0x6f, 0xec, 0x26, 0xe8, 0x7f, 0x1e, 0xdb, 0xfc, 0x6f, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x05, 0xdd, 0x49, 0x88, 0xcf, 0x26, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1412,11 +2665,23 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ApplicationServiceClient interface {
 	UpsertApplication(ctx context.Context, in *UpsertApplicationRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error)
+	DropApplicationData(ctx context.Context, in *DropApplicationDataRequest, opts ...grpc.CallOption) (*DropApplicationDataResponse, error)
 	DeleteApplication(ctx context.Context, in *DeleteApplicationRequest, opts ...grpc.CallOption) (*DeleteApplicationResponse, error)
 	UpsertInstance(ctx context.Context, in *UpsertInstanceRequest, opts ...grpc.CallOption) (*UpsertInstanceResponse, error)
 	DeleteInstance(ctx context.Context, in *DeleteInstanceRequest, opts ...grpc.CallOption) (*DeleteInstanceResponse, error)
 	ListApplications(ctx context.Context, in *ListApplicationsRequest, opts ...grpc.CallOption) (*ListApplicationsResponse, error)
 	ListInstances(ctx context.Context, in *ListInstancesRequest, opts ...grpc.CallOption) (*ListInstancesResponse, error)
+	// Obsolescense APIs
+	ApplicationDomains(ctx context.Context, in *ApplicationDomainsRequest, opts ...grpc.CallOption) (*ApplicationDomainsResponse, error)
+	ObsolescenceDomainCriticityMeta(ctx context.Context, in *DomainCriticityMetaRequest, opts ...grpc.CallOption) (*DomainCriticityMetaResponse, error)
+	ObsolescenceMaintenanceCriticityMeta(ctx context.Context, in *MaintenanceCriticityMetaRequest, opts ...grpc.CallOption) (*MaintenanceCriticityMetaResponse, error)
+	ObsolescenceRiskMeta(ctx context.Context, in *RiskMetaRequest, opts ...grpc.CallOption) (*RiskMetaResponse, error)
+	ObsolescenceDomainCriticity(ctx context.Context, in *DomainCriticityRequest, opts ...grpc.CallOption) (*DomainCriticityResponse, error)
+	PostObsolescenceDomainCriticity(ctx context.Context, in *PostDomainCriticityRequest, opts ...grpc.CallOption) (*PostDomainCriticityResponse, error)
+	ObsolescenseMaintenanceCriticity(ctx context.Context, in *MaintenanceCriticityRequest, opts ...grpc.CallOption) (*MaintenanceCriticityResponse, error)
+	PostObsolescenseMaintenanceCriticity(ctx context.Context, in *PostMaintenanceCriticityRequest, opts ...grpc.CallOption) (*PostMaintenanceCriticityResponse, error)
+	ObsolescenseRiskMatrix(ctx context.Context, in *RiskMatrixRequest, opts ...grpc.CallOption) (*RiskMatrixResponse, error)
+	PostObsolescenseRiskMatrix(ctx context.Context, in *PostRiskMatrixRequest, opts ...grpc.CallOption) (*PostRiskMatrixResponse, error)
 }
 
 type applicationServiceClient struct {
@@ -1430,6 +2695,15 @@ func NewApplicationServiceClient(cc grpc.ClientConnInterface) ApplicationService
 func (c *applicationServiceClient) UpsertApplication(ctx context.Context, in *UpsertApplicationRequest, opts ...grpc.CallOption) (*UpsertApplicationResponse, error) {
 	out := new(UpsertApplicationResponse)
 	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/UpsertApplication", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) DropApplicationData(ctx context.Context, in *DropApplicationDataRequest, opts ...grpc.CallOption) (*DropApplicationDataResponse, error) {
+	out := new(DropApplicationDataResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/DropApplicationData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1481,14 +2755,116 @@ func (c *applicationServiceClient) ListInstances(ctx context.Context, in *ListIn
 	return out, nil
 }
 
+func (c *applicationServiceClient) ApplicationDomains(ctx context.Context, in *ApplicationDomainsRequest, opts ...grpc.CallOption) (*ApplicationDomainsResponse, error) {
+	out := new(ApplicationDomainsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ApplicationDomains", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenceDomainCriticityMeta(ctx context.Context, in *DomainCriticityMetaRequest, opts ...grpc.CallOption) (*DomainCriticityMetaResponse, error) {
+	out := new(DomainCriticityMetaResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenceDomainCriticityMeta", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenceMaintenanceCriticityMeta(ctx context.Context, in *MaintenanceCriticityMetaRequest, opts ...grpc.CallOption) (*MaintenanceCriticityMetaResponse, error) {
+	out := new(MaintenanceCriticityMetaResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenceMaintenanceCriticityMeta", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenceRiskMeta(ctx context.Context, in *RiskMetaRequest, opts ...grpc.CallOption) (*RiskMetaResponse, error) {
+	out := new(RiskMetaResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenceRiskMeta", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenceDomainCriticity(ctx context.Context, in *DomainCriticityRequest, opts ...grpc.CallOption) (*DomainCriticityResponse, error) {
+	out := new(DomainCriticityResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenceDomainCriticity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) PostObsolescenceDomainCriticity(ctx context.Context, in *PostDomainCriticityRequest, opts ...grpc.CallOption) (*PostDomainCriticityResponse, error) {
+	out := new(PostDomainCriticityResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/PostObsolescenceDomainCriticity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenseMaintenanceCriticity(ctx context.Context, in *MaintenanceCriticityRequest, opts ...grpc.CallOption) (*MaintenanceCriticityResponse, error) {
+	out := new(MaintenanceCriticityResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenseMaintenanceCriticity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) PostObsolescenseMaintenanceCriticity(ctx context.Context, in *PostMaintenanceCriticityRequest, opts ...grpc.CallOption) (*PostMaintenanceCriticityResponse, error) {
+	out := new(PostMaintenanceCriticityResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/PostObsolescenseMaintenanceCriticity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ObsolescenseRiskMatrix(ctx context.Context, in *RiskMatrixRequest, opts ...grpc.CallOption) (*RiskMatrixResponse, error) {
+	out := new(RiskMatrixResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/ObsolescenseRiskMatrix", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) PostObsolescenseRiskMatrix(ctx context.Context, in *PostRiskMatrixRequest, opts ...grpc.CallOption) (*PostRiskMatrixResponse, error) {
+	out := new(PostRiskMatrixResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/PostObsolescenseRiskMatrix", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ApplicationServiceServer is the server API for ApplicationService service.
 type ApplicationServiceServer interface {
 	UpsertApplication(context.Context, *UpsertApplicationRequest) (*UpsertApplicationResponse, error)
+	DropApplicationData(context.Context, *DropApplicationDataRequest) (*DropApplicationDataResponse, error)
 	DeleteApplication(context.Context, *DeleteApplicationRequest) (*DeleteApplicationResponse, error)
 	UpsertInstance(context.Context, *UpsertInstanceRequest) (*UpsertInstanceResponse, error)
 	DeleteInstance(context.Context, *DeleteInstanceRequest) (*DeleteInstanceResponse, error)
 	ListApplications(context.Context, *ListApplicationsRequest) (*ListApplicationsResponse, error)
 	ListInstances(context.Context, *ListInstancesRequest) (*ListInstancesResponse, error)
+	// Obsolescense APIs
+	ApplicationDomains(context.Context, *ApplicationDomainsRequest) (*ApplicationDomainsResponse, error)
+	ObsolescenceDomainCriticityMeta(context.Context, *DomainCriticityMetaRequest) (*DomainCriticityMetaResponse, error)
+	ObsolescenceMaintenanceCriticityMeta(context.Context, *MaintenanceCriticityMetaRequest) (*MaintenanceCriticityMetaResponse, error)
+	ObsolescenceRiskMeta(context.Context, *RiskMetaRequest) (*RiskMetaResponse, error)
+	ObsolescenceDomainCriticity(context.Context, *DomainCriticityRequest) (*DomainCriticityResponse, error)
+	PostObsolescenceDomainCriticity(context.Context, *PostDomainCriticityRequest) (*PostDomainCriticityResponse, error)
+	ObsolescenseMaintenanceCriticity(context.Context, *MaintenanceCriticityRequest) (*MaintenanceCriticityResponse, error)
+	PostObsolescenseMaintenanceCriticity(context.Context, *PostMaintenanceCriticityRequest) (*PostMaintenanceCriticityResponse, error)
+	ObsolescenseRiskMatrix(context.Context, *RiskMatrixRequest) (*RiskMatrixResponse, error)
+	PostObsolescenseRiskMatrix(context.Context, *PostRiskMatrixRequest) (*PostRiskMatrixResponse, error)
 }
 
 // UnimplementedApplicationServiceServer can be embedded to have forward compatible implementations.
@@ -1497,6 +2873,9 @@ type UnimplementedApplicationServiceServer struct {
 
 func (*UnimplementedApplicationServiceServer) UpsertApplication(ctx context.Context, req *UpsertApplicationRequest) (*UpsertApplicationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertApplication not implemented")
+}
+func (*UnimplementedApplicationServiceServer) DropApplicationData(ctx context.Context, req *DropApplicationDataRequest) (*DropApplicationDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropApplicationData not implemented")
 }
 func (*UnimplementedApplicationServiceServer) DeleteApplication(ctx context.Context, req *DeleteApplicationRequest) (*DeleteApplicationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteApplication not implemented")
@@ -1512,6 +2891,36 @@ func (*UnimplementedApplicationServiceServer) ListApplications(ctx context.Conte
 }
 func (*UnimplementedApplicationServiceServer) ListInstances(ctx context.Context, req *ListInstancesRequest) (*ListInstancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ApplicationDomains(ctx context.Context, req *ApplicationDomainsRequest) (*ApplicationDomainsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ApplicationDomains not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenceDomainCriticityMeta(ctx context.Context, req *DomainCriticityMetaRequest) (*DomainCriticityMetaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenceDomainCriticityMeta not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenceMaintenanceCriticityMeta(ctx context.Context, req *MaintenanceCriticityMetaRequest) (*MaintenanceCriticityMetaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenceMaintenanceCriticityMeta not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenceRiskMeta(ctx context.Context, req *RiskMetaRequest) (*RiskMetaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenceRiskMeta not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenceDomainCriticity(ctx context.Context, req *DomainCriticityRequest) (*DomainCriticityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenceDomainCriticity not implemented")
+}
+func (*UnimplementedApplicationServiceServer) PostObsolescenceDomainCriticity(ctx context.Context, req *PostDomainCriticityRequest) (*PostDomainCriticityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostObsolescenceDomainCriticity not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenseMaintenanceCriticity(ctx context.Context, req *MaintenanceCriticityRequest) (*MaintenanceCriticityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenseMaintenanceCriticity not implemented")
+}
+func (*UnimplementedApplicationServiceServer) PostObsolescenseMaintenanceCriticity(ctx context.Context, req *PostMaintenanceCriticityRequest) (*PostMaintenanceCriticityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostObsolescenseMaintenanceCriticity not implemented")
+}
+func (*UnimplementedApplicationServiceServer) ObsolescenseRiskMatrix(ctx context.Context, req *RiskMatrixRequest) (*RiskMatrixResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ObsolescenseRiskMatrix not implemented")
+}
+func (*UnimplementedApplicationServiceServer) PostObsolescenseRiskMatrix(ctx context.Context, req *PostRiskMatrixRequest) (*PostRiskMatrixResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PostObsolescenseRiskMatrix not implemented")
 }
 
 func RegisterApplicationServiceServer(s *grpc.Server, srv ApplicationServiceServer) {
@@ -1532,6 +2941,24 @@ func _ApplicationService_UpsertApplication_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ApplicationServiceServer).UpsertApplication(ctx, req.(*UpsertApplicationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_DropApplicationData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropApplicationDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).DropApplicationData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/DropApplicationData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).DropApplicationData(ctx, req.(*DropApplicationDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1626,6 +3053,186 @@ func _ApplicationService_ListInstances_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ApplicationService_ApplicationDomains_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApplicationDomainsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ApplicationDomains(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ApplicationDomains",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ApplicationDomains(ctx, req.(*ApplicationDomainsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenceDomainCriticityMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DomainCriticityMetaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenceDomainCriticityMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenceDomainCriticityMeta",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenceDomainCriticityMeta(ctx, req.(*DomainCriticityMetaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenceMaintenanceCriticityMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MaintenanceCriticityMetaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenceMaintenanceCriticityMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenceMaintenanceCriticityMeta",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenceMaintenanceCriticityMeta(ctx, req.(*MaintenanceCriticityMetaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenceRiskMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RiskMetaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenceRiskMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenceRiskMeta",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenceRiskMeta(ctx, req.(*RiskMetaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenceDomainCriticity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DomainCriticityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenceDomainCriticity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenceDomainCriticity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenceDomainCriticity(ctx, req.(*DomainCriticityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_PostObsolescenceDomainCriticity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostDomainCriticityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).PostObsolescenceDomainCriticity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/PostObsolescenceDomainCriticity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).PostObsolescenceDomainCriticity(ctx, req.(*PostDomainCriticityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenseMaintenanceCriticity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MaintenanceCriticityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenseMaintenanceCriticity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenseMaintenanceCriticity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenseMaintenanceCriticity(ctx, req.(*MaintenanceCriticityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_PostObsolescenseMaintenanceCriticity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostMaintenanceCriticityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).PostObsolescenseMaintenanceCriticity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/PostObsolescenseMaintenanceCriticity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).PostObsolescenseMaintenanceCriticity(ctx, req.(*PostMaintenanceCriticityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ObsolescenseRiskMatrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RiskMatrixRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ObsolescenseRiskMatrix(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/ObsolescenseRiskMatrix",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ObsolescenseRiskMatrix(ctx, req.(*RiskMatrixRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_PostObsolescenseRiskMatrix_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostRiskMatrixRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).PostObsolescenseRiskMatrix(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/PostObsolescenseRiskMatrix",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).PostObsolescenseRiskMatrix(ctx, req.(*PostRiskMatrixRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ApplicationService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.applications.v1.ApplicationService",
 	HandlerType: (*ApplicationServiceServer)(nil),
@@ -1633,6 +3240,10 @@ var _ApplicationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertApplication",
 			Handler:    _ApplicationService_UpsertApplication_Handler,
+		},
+		{
+			MethodName: "DropApplicationData",
+			Handler:    _ApplicationService_DropApplicationData_Handler,
 		},
 		{
 			MethodName: "DeleteApplication",
@@ -1653,6 +3264,46 @@ var _ApplicationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListInstances",
 			Handler:    _ApplicationService_ListInstances_Handler,
+		},
+		{
+			MethodName: "ApplicationDomains",
+			Handler:    _ApplicationService_ApplicationDomains_Handler,
+		},
+		{
+			MethodName: "ObsolescenceDomainCriticityMeta",
+			Handler:    _ApplicationService_ObsolescenceDomainCriticityMeta_Handler,
+		},
+		{
+			MethodName: "ObsolescenceMaintenanceCriticityMeta",
+			Handler:    _ApplicationService_ObsolescenceMaintenanceCriticityMeta_Handler,
+		},
+		{
+			MethodName: "ObsolescenceRiskMeta",
+			Handler:    _ApplicationService_ObsolescenceRiskMeta_Handler,
+		},
+		{
+			MethodName: "ObsolescenceDomainCriticity",
+			Handler:    _ApplicationService_ObsolescenceDomainCriticity_Handler,
+		},
+		{
+			MethodName: "PostObsolescenceDomainCriticity",
+			Handler:    _ApplicationService_PostObsolescenceDomainCriticity_Handler,
+		},
+		{
+			MethodName: "ObsolescenseMaintenanceCriticity",
+			Handler:    _ApplicationService_ObsolescenseMaintenanceCriticity_Handler,
+		},
+		{
+			MethodName: "PostObsolescenseMaintenanceCriticity",
+			Handler:    _ApplicationService_PostObsolescenseMaintenanceCriticity_Handler,
+		},
+		{
+			MethodName: "ObsolescenseRiskMatrix",
+			Handler:    _ApplicationService_ObsolescenseRiskMatrix_Handler,
+		},
+		{
+			MethodName: "PostObsolescenseRiskMatrix",
+			Handler:    _ApplicationService_PostObsolescenseRiskMatrix_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

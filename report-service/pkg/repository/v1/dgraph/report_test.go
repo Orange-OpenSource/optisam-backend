@@ -19,6 +19,7 @@ func TestReportRepository_EquipmentTypeParents(t *testing.T) {
 	type args struct {
 		ctx       context.Context
 		equipType string
+		scope     string
 	}
 	tests := []struct {
 		name    string
@@ -32,6 +33,7 @@ func TestReportRepository_EquipmentTypeParents(t *testing.T) {
 			args: args{
 				ctx:       context.Background(),
 				equipType: "partition",
+				scope:     "TST",
 			},
 			want: []string{"server", "cluster", "vcenter", "datacenter"},
 		},
@@ -39,7 +41,7 @@ func TestReportRepository_EquipmentTypeParents(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewReportRepository(dgClient)
-			got, err := r.EquipmentTypeParents(tt.args.ctx, tt.args.equipType)
+			got, err := r.EquipmentTypeParents(tt.args.ctx, tt.args.equipType, "TST")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReportRepository.EquipmentTypeParents() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -55,6 +57,7 @@ func TestReportRepository_EquipmentTypeAttrs(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		eqtype string
+		scope  string
 	}
 	tests := []struct {
 		name    string
@@ -68,6 +71,7 @@ func TestReportRepository_EquipmentTypeAttrs(t *testing.T) {
 			args: args{
 				ctx:    context.Background(),
 				eqtype: "partition",
+				scope:  "TST",
 			},
 			want: []*repo.EquipmentAttributes{
 				&repo.EquipmentAttributes{
@@ -96,7 +100,7 @@ func TestReportRepository_EquipmentTypeAttrs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewReportRepository(dgClient)
-			got, err := r.EquipmentTypeAttrs(tt.args.ctx, tt.args.eqtype)
+			got, err := r.EquipmentTypeAttrs(tt.args.ctx, tt.args.eqtype, "TST")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReportRepository.EquipmentTypeAttrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -208,6 +212,7 @@ func TestReportRepository_EquipmentAttributes(t *testing.T) {
 		equipID   string
 		equipType string
 		attrs     []*repo.EquipmentAttributes
+		scope     string
 	}
 	tests := []struct {
 		name    string
@@ -244,6 +249,7 @@ func TestReportRepository_EquipmentAttributes(t *testing.T) {
 				},
 				equipID:   "619625",
 				equipType: "partition",
+				scope:     "TST",
 			},
 			want: []byte(`{"partition_code":"619625","partition_hostname":"optvo01cc04","VirtualCores_VCPU":0.000000}`),
 		},
@@ -251,7 +257,7 @@ func TestReportRepository_EquipmentAttributes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := NewReportRepository(dgClient)
-			got, err := r.EquipmentAttributes(tt.args.ctx, tt.args.equipID, tt.args.equipType, tt.args.attrs)
+			got, err := r.EquipmentAttributes(tt.args.ctx, tt.args.equipID, tt.args.equipType, tt.args.attrs, tt.args.scope)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReportRepository.EquipmentAttributes() error = %v, wantErr %v", err, tt.wantErr)
 				return

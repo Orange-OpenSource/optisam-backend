@@ -130,22 +130,10 @@ func loadDgraphData(badgerDir string) error {
 	config.BatchSize = 1000
 	config.CreateSchema = true
 	config.SchemaFiles = []string{
-		path + "/schema/metadata.schema",
-		path + "/schema/metric_ops.schema",
-		path + "/schema/metric_ips.schema",
-		path + "/schema/metric_sps.schema",
-		path + "/schema/metric_oracle_nup.schema",
-		path + "/schema/metric_acs.schema",
-		path + "/schema/metric_inm.schema",
+		path + "schema/all/all.schema",
 	}
 	config.TypeFiles = []string{
-		path + "/schema/metadata.types",
-		path + "/schema/metric_ops.types",
-		path + "/schema/metric_ips.types",
-		path + "/schema/metric_sps.types",
-		path + "/schema/metric_oracle_nup.types",
-		path + "/schema/metric_acs.types",
-		path + "/schema/metric_inm.types",
+		path + "schema/all/all.types",
 	}
 
 	config.ScopeSkeleten = "skeletonscope"

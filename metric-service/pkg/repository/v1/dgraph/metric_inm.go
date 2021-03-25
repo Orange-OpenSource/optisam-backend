@@ -19,7 +19,7 @@ import (
 )
 
 //CreateMetricInstanceNumberStandard handles INM metric creation
-func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Context, met *v1.MetricINM, scopes []string) (retmet *v1.MetricINM, retErr error) {
+func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Context, met *v1.MetricINM, scope string) (retmet *v1.MetricINM, retErr error) {
 	blankID := blankID(met.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -50,6 +50,11 @@ func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Contex
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricINM"),
+		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
 		},
 	}
 
@@ -86,20 +91,20 @@ func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Contex
 }
 
 // GetMetricConfigINM implements Metric GetMetricConfigINM function
-func (l *MetricRepository) GetMetricConfigINM(ctx context.Context, metName string, scopes []string) (*v1.MetricINMConfig, error) {
+func (l *MetricRepository) GetMetricConfigINM(ctx context.Context, metName string, scope string) (*v1.MetricINM, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			Coefficient: metric.instancenumber.coefficient
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
-		logger.Log.Error("dgraph/GetMetricConfigIPS - query failed", zap.Error(err), zap.String("query", q))
+		logger.Log.Error("dgraph/GetMetricConfigINM - query failed", zap.Error(err), zap.String("query", q))
 		return nil, errors.New("cannot get metrices of type sps")
 	}
 	type Resp struct {
-		Metric []v1.MetricINMConfig `json:"Data"`
+		Metric []v1.MetricINM `json:"Data"`
 	}
 	var data Resp
 	if err := json.Unmarshal(resp.Json, &data); err != nil {

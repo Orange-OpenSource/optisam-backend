@@ -6,7 +6,6 @@
 
 package v1
 
-
 import (
 	"context"
 	"encoding/json"
@@ -17,9 +16,9 @@ import (
 //DgraphReport ...
 type DgraphReport interface {
 	//EquipmentTypeParents fetches the equipmenttype parents
-	EquipmentTypeParents(ctx context.Context, equipType string) ([]string, error)
-	EquipmentTypeAttrs(ctx context.Context, equipType string) ([]*EquipmentAttributes, error)
+	EquipmentTypeParents(ctx context.Context, equipType string, scope string) ([]string, error)
+	EquipmentTypeAttrs(ctx context.Context, equipType string, scope string) ([]*EquipmentAttributes, error)
 	ProductEquipments(ctx context.Context, swidTag string, scope string, eqType string) ([]*ProductEquipment, error)
 	EquipmentParents(ctx context.Context, equipID, equipType string, scope string) ([]*ProductEquipment, error)
-	EquipmentAttributes(ctx context.Context, equipID, equipType string, attrs []*EquipmentAttributes) (json.RawMessage, error)
+	EquipmentAttributes(ctx context.Context, equipID, equipType string, attrs []*EquipmentAttributes, scope string) (json.RawMessage, error)
 }

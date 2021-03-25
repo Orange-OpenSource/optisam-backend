@@ -43,14 +43,14 @@ type Object struct {
 	EquipmentTypes JSONStringArr
 }
 
-func (r *ReportRepository) EquipmentTypeParents(ctx context.Context, equipType string) ([]string, error) {
-	depth, err := r.getRecursionDepth(ctx)
+func (r *ReportRepository) EquipmentTypeParents(ctx context.Context, equipType string, scope string) ([]string, error) {
+	depth, err := r.getRecursionDepth(ctx, scope)
 	if err != nil {
 		return nil, fmt.Errorf("EquipmentTypeParents - cannot fetch recursion depth: %v", err)
 	}
 
 	q := `{
-		Heirarchy(func: eq(metadata.equipment.type,` + equipType + `)) @recurse(depth: ` + strconv.Itoa(depth) + `,loop:false)@normalize  {
+		Heirarchy(func: eq(metadata.equipment.type,` + equipType + `))@filter(eq(scopes,` + scope + `))@recurse(depth: ` + strconv.Itoa(depth) + `,loop:false)@normalize  {
 			EquipmentTypes: metadata.equipment.type
 			metadata.equipment.parent
 		}
@@ -116,9 +116,9 @@ func (o *JSONStringArr) unmarshalMany(b []byte) error {
 }
 
 // EquipmentTypeAttrs implements interface's EquipmentTypeAttrs
-func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string) ([]*repo.EquipmentAttributes, error) {
+func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string, scope string) ([]*repo.EquipmentAttributes, error) {
 	q := `{
-		EqTypeAttr(func: eq(metadata.equipment.type,` + eqtype + `)) {
+		EqTypeAttr(func: eq(metadata.equipment.type,` + eqtype + `))@filter(eq(scopes,"` + scope + `")) {
 		  Attributes: metadata.equipment.attribute{
 		  AttributeName: attribute.name
 		  AttributeIdentifier: attribute.identifier
@@ -226,7 +226,7 @@ type Object1 struct {
 
 //EquipmentParents implements interface's EquipmentParents
 func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipType string, scope string) ([]*repo.ProductEquipment, error) {
-	depth, err := r.getRecursionDepth(ctx)
+	depth, err := r.getRecursionDepth(ctx, scope)
 	if err != nil {
 		return nil, fmt.Errorf("EquipmentParents - cannot fetch recursion depth: %v", err)
 	}
@@ -279,10 +279,10 @@ func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipT
 }
 
 //EquipmentAttributes implements interface's EquipmentAttributes
-func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equipType string, attrs []*repo.EquipmentAttributes) (json.RawMessage, error) {
+func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equipType string, attrs []*repo.EquipmentAttributes, scope string) (json.RawMessage, error) {
 
 	q := `{
-		ID as var(func: eq(equipment.id,"` + equipID + `"))@filter(eq(equipment.type,"` + equipType + `")){}
+		ID as var(func: eq(equipment.id,"` + equipID + `"))@filter(eq(equipment.type,"` + equipType + `") AND eq(scopes,"` + scope + `")){}
 		
 		EquipmentAttributes(func: uid(ID)){
 			` + getAttributes(attrs, equipType) + `
@@ -310,9 +310,9 @@ func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equ
 	return json.RawMessage(d.EquipmentAttributes[0]), nil
 }
 
-func (r *ReportRepository) getRecursionDepth(ctx context.Context) (int, error) {
+func (r *ReportRepository) getRecursionDepth(ctx context.Context, scope string) (int, error) {
 	q := `{
-		var(func: has(metadata.equipment.type)){
+		var(func: has(metadata.equipment.type))@filter(eq(scopes,"` + scope + `")){
 		  t as count(metadata.equipment.type)
 	  }
 		

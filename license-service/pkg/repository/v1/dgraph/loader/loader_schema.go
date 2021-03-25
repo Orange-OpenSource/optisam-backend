@@ -64,10 +64,11 @@ func createSchema(dg *dgo.Dgraph, files, typeFiles []string) error {
 }
 
 func alterSchema(dg *dgo.Dgraph, schema string) error {
-	fmt.Println(schema)
+	//fmt.Println(schema)
 	if err := dg.Alter(context.Background(), &api.Operation{
 		Schema: strings.TrimSpace(schema),
 	}); err != nil {
+		fmt.Println(schema)
 		logger.Log.Error("cannot create schema", zap.String("reasons", err.Error()))
 		return err
 	}

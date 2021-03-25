@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEquipmentRepository_Metadata(t *testing.T) {
+func TestEquipmentRepository_MetadataAllWithType(t *testing.T) {
 	type args struct {
 		ctx    context.Context
 		typ    v1.MetadataType
@@ -34,8 +34,9 @@ func TestEquipmentRepository_Metadata(t *testing.T) {
 		{name: "success",
 			lr: NewEquipmentRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
-				typ: v1.MetadataTypeEquipment,
+				ctx:    context.Background(),
+				typ:    v1.MetadataTypeEquipment,
+				scopes: []string{"scope1"},
 			},
 			setup: func() (func() error, error) {
 				id := blankID("source")
@@ -69,6 +70,11 @@ func TestEquipmentRepository_Metadata(t *testing.T) {
 							ObjectValue: stringObjectValue("col_3"),
 						},
 						&api.NQuad{
+							Subject:     id,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("scope1"),
+						},
+						&api.NQuad{
 							Subject:     id1,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_2.csv"),
@@ -92,6 +98,11 @@ func TestEquipmentRepository_Metadata(t *testing.T) {
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
+						},
+						&api.NQuad{
+							Subject:     id1,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("scope2"),
 						},
 					},
 				}
@@ -119,14 +130,7 @@ func TestEquipmentRepository_Metadata(t *testing.T) {
 						"col_2",
 						"col_3",
 					},
-				},
-				&v1.Metadata{
-					Source: "equip_2.csv",
-					Attributes: []string{
-						"col_1",
-						"col_2",
-						"col_3",
-					},
+					Scope: "scope1",
 				},
 			},
 		},
@@ -183,7 +187,9 @@ func TestEquipmentRepository_MetadataWithID(t *testing.T) {
 		{name: "success",
 			lr: NewEquipmentRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				id:     "source",
+				scopes: []string{"scope1"},
 			},
 			setup: func() (string, func() error, error) {
 				id := blankID("source")
@@ -215,6 +221,11 @@ func TestEquipmentRepository_MetadataWithID(t *testing.T) {
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
 						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("scope1"),
+						},
 					},
 				}
 				res, err := dgClient.NewTxn().Mutate(context.Background(), mu)
@@ -236,6 +247,7 @@ func TestEquipmentRepository_MetadataWithID(t *testing.T) {
 					"col_2",
 					"col_3",
 				},
+				Scope: "scope1",
 			},
 		},
 	}
@@ -283,5 +295,155 @@ func compareMetadata(t *testing.T, name string, exp *v1.Metadata, act *v1.Metada
 		assert.Emptyf(t, act.ID, "%s.ID is expected to be nil", name)
 	}
 	assert.Equalf(t, exp.Source, act.Source, "%s.Source should be same", name)
+	assert.Equalf(t, exp.Scope, act.Scope, "%s.Scope should be same", name)
 	assert.ElementsMatchf(t, exp.Attributes, act.Attributes, "%s.Attributes should be same", name)
+}
+
+func TestEquipmentRepository_UpsertMetadata(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		metadata *v1.Metadata
+	}
+	tests := []struct {
+		name    string
+		lr      *EquipmentRepository
+		setup   func() (func() error, error)
+		args    args
+		wantErr bool
+	}{
+		{name: "success - does not exists",
+			lr: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx: context.Background(),
+				metadata: &v1.Metadata{
+					Type:   v1.MetadataTypeEquipment,
+					Source: "source1",
+					Scope:  "scope1",
+					Attributes: []string{
+						"col_1",
+						"col_2",
+						"col_3",
+					},
+				},
+			},
+			setup: func() (func() error, error) {
+				id := blankID("source")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.source",
+							ObjectValue: stringObjectValue("equip_1.csv"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.type",
+							ObjectValue: stringObjectValue("equipment"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("scope1"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_1"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_2"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_3"),
+						},
+					},
+				}
+				res, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+				id, ok := res.Uids["source"]
+				if !ok {
+					return nil, errors.New("no id can be found for mutation")
+				}
+				return func() error {
+					return deleteNodes(id)
+				}, nil
+			},
+		},
+		{name: "success - exists",
+			lr: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx: context.Background(),
+				metadata: &v1.Metadata{
+					Type:   v1.MetadataTypeEquipment,
+					Source: "source",
+					Scope:  "scope1",
+					Attributes: []string{
+						"col_1",
+						"col_2",
+						"col_3",
+					},
+				},
+			},
+			setup: func() (func() error, error) {
+				id := blankID("source")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.source",
+							ObjectValue: stringObjectValue("equip_1.csv"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.type",
+							ObjectValue: stringObjectValue("equipment"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("scope1"),
+						},
+						&api.NQuad{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_1"),
+						},
+					},
+				}
+				res, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+				id, ok := res.Uids["source"]
+				if !ok {
+					return nil, errors.New("no id can be found for mutation")
+				}
+				return func() error {
+					return deleteNodes(id)
+				}, nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "error is not expected from cleanup")
+			}()
+			if err := tt.lr.UpsertMetadata(tt.args.ctx, tt.args.metadata); (err != nil) != tt.wantErr {
+				t.Errorf("EquipmentRepository.UpsertMetadata() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

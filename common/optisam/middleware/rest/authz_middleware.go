@@ -8,28 +8,29 @@ package rest
 
 import (
 	"net/http"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/opa"
 
 	"github.com/open-policy-agent/opa/rego"
 )
 
+//ValidateAuthZ for RBAC authorization
 func ValidateAuthZ(p *rego.PreparedEvalQuery, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		userClaims, ok := ctxmanage.RetrieveClaims(r.Context())
+		userClaims, ok := RetrieveClaims(r.Context())
 		if !ok {
 			logger.Log.Error("invalid claims")
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
+
 		// Authorize
 		authorized, err := opa.EvalAuthZ(r.Context(), p, opa.AuthzInput{Role: string(userClaims.Role), MethodFullName: r.RequestURI})
 		if err != nil || !authorized {
-			logger.Log.Sugar().Errorf("User Authorized to access %s with Role %s", r.RequestURI, string(userClaims.Role))
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
-		logger.Log.Sugar().Infof("User Authorized to access %s with Role %s", r.RequestURI, string(userClaims.Role))
 		h.ServeHTTP(w, r) //proceed in the middleware chain!
 	})
 }

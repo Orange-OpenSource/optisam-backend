@@ -27,7 +27,7 @@ type metricSPS struct {
 }
 
 // CreateMetricSPS implements Licence CreateMetricSPS function
-func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSPS, scopes []string) (retMat *v1.MetricSPS, retErr error) {
+func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSPS, scope string) (retMat *v1.MetricSPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -64,6 +64,11 @@ func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSP
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricSPS"),
+		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
 		},
 	}
 
@@ -102,9 +107,9 @@ func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSP
 }
 
 // ListMetricSPS implements Licence ListMetricSPS function
-func (l *MetricRepository) ListMetricSPS(ctx context.Context, scopes []string) ([]*v1.MetricSPS, error) {
+func (l *MetricRepository) ListMetricSPS(ctx context.Context, scope string) ([]*v1.MetricSPS, error) {
 	q := `{
-		Data(func: eq(metric.type,sag.processor.standard)){
+		Data(func: eq(metric.type,sag.processor.standard))@filter(eq(scopes,` + scope + `)){
 		 uid
 		 expand(_all_){
 		  uid
@@ -132,9 +137,9 @@ func (l *MetricRepository) ListMetricSPS(ctx context.Context, scopes []string) (
 }
 
 // GetMetricConfigSPS implements Metric GetMetricConfigSPS function
-func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName string, scopes []string) (*v1.MetricSPSConfig, error) {
+func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName string, scope string) (*v1.MetricSPSConfig, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			BaseEqType: metric.sps.base{
 				 metadata.equipment.type

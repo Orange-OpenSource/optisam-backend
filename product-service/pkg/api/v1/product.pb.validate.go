@@ -42,6 +42,388 @@ var (
 // define the regex for a UUID once up-front
 var _product_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on OverviewProductQualityRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *OverviewProductQualityRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_OverviewProductQualityRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return OverviewProductQualityRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// OverviewProductQualityRequestValidationError is the validation error
+// returned by OverviewProductQualityRequest.Validate if the designated
+// constraints aren't met.
+type OverviewProductQualityRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OverviewProductQualityRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OverviewProductQualityRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OverviewProductQualityRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OverviewProductQualityRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OverviewProductQualityRequestValidationError) ErrorName() string {
+	return "OverviewProductQualityRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OverviewProductQualityRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOverviewProductQualityRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OverviewProductQualityRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OverviewProductQualityRequestValidationError{}
+
+var _OverviewProductQualityRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on OverviewProductQualityResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *OverviewProductQualityResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for NotAcquiredProducts
+
+	// no validation rules for NotDeployedProducts
+
+	// no validation rules for NotAcquiredProductsPercentage
+
+	// no validation rules for NotDeployedProductsPercentage
+
+	return nil
+}
+
+// OverviewProductQualityResponseValidationError is the validation error
+// returned by OverviewProductQualityResponse.Validate if the designated
+// constraints aren't met.
+type OverviewProductQualityResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OverviewProductQualityResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OverviewProductQualityResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OverviewProductQualityResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OverviewProductQualityResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OverviewProductQualityResponseValidationError) ErrorName() string {
+	return "OverviewProductQualityResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OverviewProductQualityResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOverviewProductQualityResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OverviewProductQualityResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OverviewProductQualityResponseValidationError{}
+
+// Validate checks the field values on ProductsPerEditorRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductsPerEditorRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ProductsPerEditorRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ProductsPerEditorRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ProductsPerEditorRequestValidationError is the validation error returned by
+// ProductsPerEditorRequest.Validate if the designated constraints aren't met.
+type ProductsPerEditorRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsPerEditorRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsPerEditorRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsPerEditorRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsPerEditorRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsPerEditorRequestValidationError) ErrorName() string {
+	return "ProductsPerEditorRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductsPerEditorRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsPerEditorRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsPerEditorRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsPerEditorRequestValidationError{}
+
+var _ProductsPerEditorRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ProductsPerEditorResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductsPerEditorResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetEditorsProducts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ProductsPerEditorResponseValidationError{
+					field:  fmt.Sprintf("EditorsProducts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ProductsPerEditorResponseValidationError is the validation error returned by
+// ProductsPerEditorResponse.Validate if the designated constraints aren't met.
+type ProductsPerEditorResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsPerEditorResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsPerEditorResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsPerEditorResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsPerEditorResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsPerEditorResponseValidationError) ErrorName() string {
+	return "ProductsPerEditorResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductsPerEditorResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsPerEditorResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsPerEditorResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsPerEditorResponseValidationError{}
+
+// Validate checks the field values on EditorProducts with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *EditorProducts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Editor
+
+	// no validation rules for NumProducts
+
+	return nil
+}
+
+// EditorProductsValidationError is the validation error returned by
+// EditorProducts.Validate if the designated constraints aren't met.
+type EditorProductsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EditorProductsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EditorProductsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EditorProductsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EditorProductsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EditorProductsValidationError) ErrorName() string { return "EditorProductsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EditorProductsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEditorProducts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EditorProductsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EditorProductsValidationError{}
+
 // Validate checks the field values on
 // ProductAggregationProductViewOptionsRequest with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -51,6 +433,25 @@ func (m *ProductAggregationProductViewOptionsRequest) Validate() error {
 	}
 
 	// no validation rules for ID
+
+	if len(m.GetScopes()) != 1 {
+		return ProductAggregationProductViewOptionsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ProductAggregationProductViewOptionsRequest_Scopes_Pattern.MatchString(item) {
+			return ProductAggregationProductViewOptionsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -112,6 +513,8 @@ var _ interface {
 	ErrorName() string
 } = ProductAggregationProductViewOptionsRequestValidationError{}
 
+var _ProductAggregationProductViewOptionsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on
 // ProductAggregationProductViewOptionsResponse with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -125,7 +528,9 @@ func (m *ProductAggregationProductViewOptionsResponse) Validate() error {
 	for idx, item := range m.GetOptioninfo() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ProductAggregationProductViewOptionsResponseValidationError{
 					field:  fmt.Sprintf("Optioninfo[%v]", idx),
@@ -208,6 +613,25 @@ func (m *ProductAggregationProductViewDetailsRequest) Validate() error {
 
 	// no validation rules for ID
 
+	if len(m.GetScopes()) != 1 {
+		return ProductAggregationProductViewDetailsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ProductAggregationProductViewDetailsRequest_Scopes_Pattern.MatchString(item) {
+			return ProductAggregationProductViewDetailsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -267,6 +691,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductAggregationProductViewDetailsRequestValidationError{}
+
+var _ProductAggregationProductViewDetailsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on
 // ProductAggregationProductViewDetailsResponse with the rules defined in the
@@ -385,7 +811,9 @@ func (m *ListProductAggregationViewRequest) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetSearchParams()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetSearchParams()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ListProductAggregationViewRequestValidationError{
 				field:  "SearchParams",
@@ -393,6 +821,25 @@ func (m *ListProductAggregationViewRequest) Validate() error {
 				cause:  err,
 			}
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListProductAggregationViewRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListProductAggregationViewRequest_Scopes_Pattern.MatchString(item) {
+			return ListProductAggregationViewRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
 	}
 
 	return nil
@@ -455,6 +902,8 @@ var _ interface {
 	ErrorName() string
 } = ListProductAggregationViewRequestValidationError{}
 
+var _ListProductAggregationViewRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on
 // ProductAggregationProductViewSearchParams with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -463,7 +912,9 @@ func (m *ProductAggregationProductViewSearchParams) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetSwidTag()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetSwidTag()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductAggregationProductViewSearchParamsValidationError{
 				field:  "SwidTag",
@@ -473,7 +924,9 @@ func (m *ProductAggregationProductViewSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetName()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetName()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductAggregationProductViewSearchParamsValidationError{
 				field:  "Name",
@@ -483,7 +936,9 @@ func (m *ProductAggregationProductViewSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetEditor()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetEditor()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductAggregationProductViewSearchParamsValidationError{
 				field:  "Editor",
@@ -493,7 +948,9 @@ func (m *ProductAggregationProductViewSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetProductName()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetProductName()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductAggregationProductViewSearchParamsValidationError{
 				field:  "ProductName",
@@ -576,7 +1033,9 @@ func (m *ListProductAggregationViewResponse) Validate() error {
 	for idx, item := range m.GetAggregations() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListProductAggregationViewResponseValidationError{
 					field:  fmt.Sprintf("Aggregations[%v]", idx),
@@ -648,10 +1107,10 @@ var _ interface {
 	ErrorName() string
 } = ListProductAggregationViewResponseValidationError{}
 
-// Validate checks the field values on ProductAggregation with the rules
+// Validate checks the field values on ProductAggregationView with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *ProductAggregation) Validate() error {
+func (m *ProductAggregationView) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -671,9 +1130,9 @@ func (m *ProductAggregation) Validate() error {
 	return nil
 }
 
-// ProductAggregationValidationError is the validation error returned by
-// ProductAggregation.Validate if the designated constraints aren't met.
-type ProductAggregationValidationError struct {
+// ProductAggregationViewValidationError is the validation error returned by
+// ProductAggregationView.Validate if the designated constraints aren't met.
+type ProductAggregationViewValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -681,24 +1140,24 @@ type ProductAggregationValidationError struct {
 }
 
 // Field function returns field value.
-func (e ProductAggregationValidationError) Field() string { return e.field }
+func (e ProductAggregationViewValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ProductAggregationValidationError) Reason() string { return e.reason }
+func (e ProductAggregationViewValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ProductAggregationValidationError) Cause() error { return e.cause }
+func (e ProductAggregationViewValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ProductAggregationValidationError) Key() bool { return e.key }
+func (e ProductAggregationViewValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ProductAggregationValidationError) ErrorName() string {
-	return "ProductAggregationValidationError"
+func (e ProductAggregationViewValidationError) ErrorName() string {
+	return "ProductAggregationViewValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ProductAggregationValidationError) Error() string {
+func (e ProductAggregationViewValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -710,14 +1169,14 @@ func (e ProductAggregationValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sProductAggregation.%s: %s%s",
+		"invalid %sProductAggregationView.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ProductAggregationValidationError{}
+var _ error = ProductAggregationViewValidationError{}
 
 var _ interface {
 	Field() string
@@ -725,7 +1184,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ProductAggregationValidationError{}
+} = ProductAggregationViewValidationError{}
 
 // Validate checks the field values on ListProductAggregationProductViewRequest
 // with the rules defined in the proto definition for this message. If any
@@ -736,6 +1195,25 @@ func (m *ListProductAggregationProductViewRequest) Validate() error {
 	}
 
 	// no validation rules for ID
+
+	if len(m.GetScopes()) != 1 {
+		return ListProductAggregationProductViewRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListProductAggregationProductViewRequest_Scopes_Pattern.MatchString(item) {
+			return ListProductAggregationProductViewRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -797,6 +1275,8 @@ var _ interface {
 	ErrorName() string
 } = ListProductAggregationProductViewRequestValidationError{}
 
+var _ListProductAggregationProductViewRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on
 // ListProductAggregationProductViewResponse with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -808,7 +1288,9 @@ func (m *ListProductAggregationProductViewResponse) Validate() error {
 	for idx, item := range m.GetProducts() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListProductAggregationProductViewResponseValidationError{
 					field:  fmt.Sprintf("Products[%v]", idx),
@@ -888,6 +1370,18 @@ func (m *ListEditorsRequest) Validate() error {
 		return nil
 	}
 
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListEditorsRequest_Scopes_Pattern.MatchString(item) {
+			return ListEditorsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -946,6 +1440,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListEditorsRequestValidationError{}
+
+var _ListEditorsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ListEditorsResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1024,6 +1520,18 @@ func (m *ListEditorProductsRequest) Validate() error {
 
 	// no validation rules for Editor
 
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListEditorProductsRequest_Scopes_Pattern.MatchString(item) {
+			return ListEditorProductsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -1083,6 +1591,8 @@ var _ interface {
 	ErrorName() string
 } = ListEditorProductsRequestValidationError{}
 
+var _ListEditorProductsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on ListEditorProductsResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1094,7 +1604,9 @@ func (m *ListEditorProductsResponse) Validate() error {
 	for idx, item := range m.GetProducts() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListEditorProductsResponseValidationError{
 					field:  fmt.Sprintf("Products[%v]", idx),
@@ -1326,7 +1838,9 @@ func (m *ListProductsResponse) Validate() error {
 	for idx, item := range m.GetProducts() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListProductsResponseValidationError{
 					field:  fmt.Sprintf("Products[%v]", idx),
@@ -1422,7 +1936,7 @@ func (m *ListProductsRequest) Validate() error {
 	if _, ok := _ListProductsRequest_SortBy_InLookup[m.GetSortBy()]; !ok {
 		return ListProductsRequestValidationError{
 			field:  "SortBy",
-			reason: "value must be in list [name swidtag version edition editor totalCost numOfApplications numofEquipments]",
+			reason: "value must be in list [name swidtag version edition category editor totalCost numOfApplications numofEquipments]",
 		}
 	}
 
@@ -1433,7 +1947,9 @@ func (m *ListProductsRequest) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetSearchParams()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetSearchParams()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ListProductsRequestValidationError{
 				field:  "SearchParams",
@@ -1441,6 +1957,25 @@ func (m *ListProductsRequest) Validate() error {
 				cause:  err,
 			}
 		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListProductsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListProductsRequest_Scopes_Pattern.MatchString(item) {
+			return ListProductsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
 	}
 
 	return nil
@@ -1507,11 +2042,14 @@ var _ListProductsRequest_SortBy_InLookup = map[string]struct{}{
 	"swidtag":           {},
 	"version":           {},
 	"edition":           {},
+	"category":          {},
 	"editor":            {},
 	"totalCost":         {},
 	"numOfApplications": {},
 	"numofEquipments":   {},
 }
+
+var _ListProductsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ProductSearchParams with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1521,7 +2059,9 @@ func (m *ProductSearchParams) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetSwidTag()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetSwidTag()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "SwidTag",
@@ -1531,7 +2071,9 @@ func (m *ProductSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetName()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetName()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "Name",
@@ -1541,7 +2083,9 @@ func (m *ProductSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetEditor()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetEditor()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "Editor",
@@ -1551,7 +2095,9 @@ func (m *ProductSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetApplicationId()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetApplicationId()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "ApplicationId",
@@ -1561,7 +2107,9 @@ func (m *ProductSearchParams) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetEquipmentId()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetEquipmentId()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "EquipmentId",
@@ -1640,6 +2188,25 @@ func (m *ProductRequest) Validate() error {
 
 	// no validation rules for SwidTag
 
+	if len(m.GetScopes()) != 1 {
+		return ProductRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ProductRequest_Scopes_Pattern.MatchString(item) {
+			return ProductRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -1696,6 +2263,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductRequestValidationError{}
+
+var _ProductRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ProductResponse with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1783,7 +2352,9 @@ func (m *ProductOptionsResponse) Validate() error {
 	for idx, item := range m.GetOptioninfo() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ProductOptionsResponseValidationError{
 					field:  fmt.Sprintf("Optioninfo[%v]", idx),
@@ -2021,14 +2592,16 @@ func (m *UpsertProductRequest) Validate() error {
 
 	// no validation rules for OptionOf
 
-	if l := utf8.RuneCountInString(m.GetScope()); l < 1 || l > 10 {
+	if !_UpsertProductRequest_Scope_Pattern.MatchString(m.GetScope()) {
 		return UpsertProductRequestValidationError{
 			field:  "Scope",
-			reason: "value length must be between 1 and 10 runes, inclusive",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
 	}
 
-	if v, ok := interface{}(m.GetApplications()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetApplications()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return UpsertProductRequestValidationError{
 				field:  "Applications",
@@ -2038,7 +2611,9 @@ func (m *UpsertProductRequest) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetEquipments()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetEquipments()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return UpsertProductRequestValidationError{
 				field:  "Equipments",
@@ -2106,6 +2681,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertProductRequestValidationError{}
+
+var _UpsertProductRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on UpsertProductResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2176,26 +2753,27 @@ var _ interface {
 	ErrorName() string
 } = UpsertProductResponseValidationError{}
 
-// Validate checks the field values on UpsertAggregationRequest with the rules
+// Validate checks the field values on ComplianceAlertRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *UpsertAggregationRequest) Validate() error {
+func (m *ComplianceAlertRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for AggregationId
-
-	// no validation rules for AggregationName
-
-	// no validation rules for ActionType
+	if !_ComplianceAlertRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ComplianceAlertRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
 
-// UpsertAggregationRequestValidationError is the validation error returned by
-// UpsertAggregationRequest.Validate if the designated constraints aren't met.
-type UpsertAggregationRequestValidationError struct {
+// ComplianceAlertRequestValidationError is the validation error returned by
+// ComplianceAlertRequest.Validate if the designated constraints aren't met.
+type ComplianceAlertRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2203,24 +2781,24 @@ type UpsertAggregationRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpsertAggregationRequestValidationError) Field() string { return e.field }
+func (e ComplianceAlertRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpsertAggregationRequestValidationError) Reason() string { return e.reason }
+func (e ComplianceAlertRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpsertAggregationRequestValidationError) Cause() error { return e.cause }
+func (e ComplianceAlertRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpsertAggregationRequestValidationError) Key() bool { return e.key }
+func (e ComplianceAlertRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpsertAggregationRequestValidationError) ErrorName() string {
-	return "UpsertAggregationRequestValidationError"
+func (e ComplianceAlertRequestValidationError) ErrorName() string {
+	return "ComplianceAlertRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpsertAggregationRequestValidationError) Error() string {
+func (e ComplianceAlertRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2232,14 +2810,14 @@ func (e UpsertAggregationRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpsertAggregationRequest.%s: %s%s",
+		"invalid %sComplianceAlertRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpsertAggregationRequestValidationError{}
+var _ error = ComplianceAlertRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2247,12 +2825,1414 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpsertAggregationRequestValidationError{}
+} = ComplianceAlertRequestValidationError{}
 
-// Validate checks the field values on UpsertAggregationResponse with the rules
+var _ComplianceAlertRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ComplianceAlertResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *UpsertAggregationResponse) Validate() error {
+func (m *ComplianceAlertResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for CounterfeitingPercentage
+
+	// no validation rules for OverdeploymentPercentage
+
+	return nil
+}
+
+// ComplianceAlertResponseValidationError is the validation error returned by
+// ComplianceAlertResponse.Validate if the designated constraints aren't met.
+type ComplianceAlertResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ComplianceAlertResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ComplianceAlertResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ComplianceAlertResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ComplianceAlertResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ComplianceAlertResponseValidationError) ErrorName() string {
+	return "ComplianceAlertResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ComplianceAlertResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sComplianceAlertResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ComplianceAlertResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ComplianceAlertResponseValidationError{}
+
+// Validate checks the field values on OverdeployedProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *OverdeployedProductsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_OverdeployedProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return OverdeployedProductsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Editor
+
+	return nil
+}
+
+// OverdeployedProductsRequestValidationError is the validation error returned
+// by OverdeployedProductsRequest.Validate if the designated constraints
+// aren't met.
+type OverdeployedProductsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OverdeployedProductsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OverdeployedProductsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OverdeployedProductsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OverdeployedProductsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OverdeployedProductsRequestValidationError) ErrorName() string {
+	return "OverdeployedProductsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OverdeployedProductsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOverdeployedProductsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OverdeployedProductsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OverdeployedProductsRequestValidationError{}
+
+var _OverdeployedProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on OverdeployedProductsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *OverdeployedProductsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetProductsLicenses() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return OverdeployedProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsLicenses[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetProductsCosts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return OverdeployedProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsCosts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// OverdeployedProductsResponseValidationError is the validation error returned
+// by OverdeployedProductsResponse.Validate if the designated constraints
+// aren't met.
+type OverdeployedProductsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OverdeployedProductsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OverdeployedProductsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OverdeployedProductsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OverdeployedProductsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OverdeployedProductsResponseValidationError) ErrorName() string {
+	return "OverdeployedProductsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e OverdeployedProductsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOverdeployedProductsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OverdeployedProductsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OverdeployedProductsResponseValidationError{}
+
+// Validate checks the field values on DashboardQualityProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DashboardQualityProductsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DashboardQualityProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DashboardQualityProductsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DashboardQualityProductsRequestValidationError is the validation error
+// returned by DashboardQualityProductsRequest.Validate if the designated
+// constraints aren't met.
+type DashboardQualityProductsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DashboardQualityProductsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DashboardQualityProductsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DashboardQualityProductsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DashboardQualityProductsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DashboardQualityProductsRequestValidationError) ErrorName() string {
+	return "DashboardQualityProductsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DashboardQualityProductsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDashboardQualityProductsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DashboardQualityProductsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DashboardQualityProductsRequestValidationError{}
+
+var _DashboardQualityProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DashboardQualityProductsResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *DashboardQualityProductsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetProductsNotDeployed() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return DashboardQualityProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsNotDeployed[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetProductsNotAcquired() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return DashboardQualityProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsNotAcquired[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// DashboardQualityProductsResponseValidationError is the validation error
+// returned by DashboardQualityProductsResponse.Validate if the designated
+// constraints aren't met.
+type DashboardQualityProductsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DashboardQualityProductsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DashboardQualityProductsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DashboardQualityProductsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DashboardQualityProductsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DashboardQualityProductsResponseValidationError) ErrorName() string {
+	return "DashboardQualityProductsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DashboardQualityProductsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDashboardQualityProductsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DashboardQualityProductsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DashboardQualityProductsResponseValidationError{}
+
+// Validate checks the field values on DashboardQualityProducts with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DashboardQualityProducts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for SwidTag
+
+	// no validation rules for ProductName
+
+	return nil
+}
+
+// DashboardQualityProductsValidationError is the validation error returned by
+// DashboardQualityProducts.Validate if the designated constraints aren't met.
+type DashboardQualityProductsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DashboardQualityProductsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DashboardQualityProductsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DashboardQualityProductsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DashboardQualityProductsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DashboardQualityProductsValidationError) ErrorName() string {
+	return "DashboardQualityProductsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DashboardQualityProductsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDashboardQualityProducts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DashboardQualityProductsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DashboardQualityProductsValidationError{}
+
+// Validate checks the field values on ProductsLicenses with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ProductsLicenses) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for SwidTag
+
+	// no validation rules for ProductName
+
+	// no validation rules for NumLicensesAcquired
+
+	// no validation rules for NumLicensesComputed
+
+	// no validation rules for Delta
+
+	return nil
+}
+
+// ProductsLicensesValidationError is the validation error returned by
+// ProductsLicenses.Validate if the designated constraints aren't met.
+type ProductsLicensesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsLicensesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsLicensesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsLicensesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsLicensesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsLicensesValidationError) ErrorName() string { return "ProductsLicensesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ProductsLicensesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsLicenses.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsLicensesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsLicensesValidationError{}
+
+// Validate checks the field values on ProductsCosts with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ProductsCosts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for SwidTag
+
+	// no validation rules for ProductName
+
+	// no validation rules for LicensesAcquiredCost
+
+	// no validation rules for LicensesComputedCost
+
+	// no validation rules for DeltaCost
+
+	return nil
+}
+
+// ProductsCostsValidationError is the validation error returned by
+// ProductsCosts.Validate if the designated constraints aren't met.
+type ProductsCostsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsCostsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsCostsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsCostsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsCostsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsCostsValidationError) ErrorName() string { return "ProductsCostsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ProductsCostsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsCosts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsCostsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsCostsValidationError{}
+
+// Validate checks the field values on FinancialOverdeployedProducts with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *FinancialOverdeployedProducts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// FinancialOverdeployedProductsValidationError is the validation error
+// returned by FinancialOverdeployedProducts.Validate if the designated
+// constraints aren't met.
+type FinancialOverdeployedProductsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FinancialOverdeployedProductsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FinancialOverdeployedProductsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FinancialOverdeployedProductsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FinancialOverdeployedProductsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FinancialOverdeployedProductsValidationError) ErrorName() string {
+	return "FinancialOverdeployedProductsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FinancialOverdeployedProductsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFinancialOverdeployedProducts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FinancialOverdeployedProductsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FinancialOverdeployedProductsValidationError{}
+
+// Validate checks the field values on ProductsPerMetricTypeRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductsPerMetricTypeRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ProductsPerMetricTypeRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ProductsPerMetricTypeRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ProductsPerMetricTypeRequestValidationError is the validation error returned
+// by ProductsPerMetricTypeRequest.Validate if the designated constraints
+// aren't met.
+type ProductsPerMetricTypeRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsPerMetricTypeRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsPerMetricTypeRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsPerMetricTypeRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsPerMetricTypeRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsPerMetricTypeRequestValidationError) ErrorName() string {
+	return "ProductsPerMetricTypeRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductsPerMetricTypeRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsPerMetricTypeRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsPerMetricTypeRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsPerMetricTypeRequestValidationError{}
+
+var _ProductsPerMetricTypeRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on CounterfeitedProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CounterfeitedProductsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_CounterfeitedProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return CounterfeitedProductsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Editor
+
+	return nil
+}
+
+// CounterfeitedProductsRequestValidationError is the validation error returned
+// by CounterfeitedProductsRequest.Validate if the designated constraints
+// aren't met.
+type CounterfeitedProductsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CounterfeitedProductsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CounterfeitedProductsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CounterfeitedProductsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CounterfeitedProductsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CounterfeitedProductsRequestValidationError) ErrorName() string {
+	return "CounterfeitedProductsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CounterfeitedProductsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCounterfeitedProductsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CounterfeitedProductsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CounterfeitedProductsRequestValidationError{}
+
+var _CounterfeitedProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on CounterfeitedProductsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CounterfeitedProductsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetProductsLicenses() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return CounterfeitedProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsLicenses[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetProductsCosts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return CounterfeitedProductsResponseValidationError{
+					field:  fmt.Sprintf("ProductsCosts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// CounterfeitedProductsResponseValidationError is the validation error
+// returned by CounterfeitedProductsResponse.Validate if the designated
+// constraints aren't met.
+type CounterfeitedProductsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CounterfeitedProductsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CounterfeitedProductsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CounterfeitedProductsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CounterfeitedProductsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CounterfeitedProductsResponseValidationError) ErrorName() string {
+	return "CounterfeitedProductsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CounterfeitedProductsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCounterfeitedProductsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CounterfeitedProductsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CounterfeitedProductsResponseValidationError{}
+
+// Validate checks the field values on ProductsPerMetricTypeResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductsPerMetricTypeResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetMetricsProducts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ProductsPerMetricTypeResponseValidationError{
+					field:  fmt.Sprintf("MetricsProducts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ProductsPerMetricTypeResponseValidationError is the validation error
+// returned by ProductsPerMetricTypeResponse.Validate if the designated
+// constraints aren't met.
+type ProductsPerMetricTypeResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductsPerMetricTypeResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductsPerMetricTypeResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductsPerMetricTypeResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductsPerMetricTypeResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductsPerMetricTypeResponseValidationError) ErrorName() string {
+	return "ProductsPerMetricTypeResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductsPerMetricTypeResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductsPerMetricTypeResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductsPerMetricTypeResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductsPerMetricTypeResponseValidationError{}
+
+// Validate checks the field values on MetricProducts with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *MetricProducts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for MetricName
+
+	// no validation rules for NumProducts
+
+	return nil
+}
+
+// MetricProductsValidationError is the validation error returned by
+// MetricProducts.Validate if the designated constraints aren't met.
+type MetricProductsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricProductsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricProductsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricProductsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricProductsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricProductsValidationError) ErrorName() string { return "MetricProductsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricProductsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricProducts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricProductsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricProductsValidationError{}
+
+// Validate checks the field values on DashboardOverviewRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DashboardOverviewRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DashboardOverviewRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DashboardOverviewRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DashboardOverviewRequestValidationError is the validation error returned by
+// DashboardOverviewRequest.Validate if the designated constraints aren't met.
+type DashboardOverviewRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DashboardOverviewRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DashboardOverviewRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DashboardOverviewRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DashboardOverviewRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DashboardOverviewRequestValidationError) ErrorName() string {
+	return "DashboardOverviewRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DashboardOverviewRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDashboardOverviewRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DashboardOverviewRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DashboardOverviewRequestValidationError{}
+
+var _DashboardOverviewRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DashboardOverviewResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DashboardOverviewResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for TotalLicenseCost
+
+	// no validation rules for TotalMaintenanceCost
+
+	// no validation rules for NumEditors
+
+	// no validation rules for NumProducts
+
+	return nil
+}
+
+// DashboardOverviewResponseValidationError is the validation error returned by
+// DashboardOverviewResponse.Validate if the designated constraints aren't met.
+type DashboardOverviewResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DashboardOverviewResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DashboardOverviewResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DashboardOverviewResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DashboardOverviewResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DashboardOverviewResponseValidationError) ErrorName() string {
+	return "DashboardOverviewResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DashboardOverviewResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDashboardOverviewResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DashboardOverviewResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DashboardOverviewResponseValidationError{}
+
+// Validate checks the field values on UpsertAcqRightsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpsertAcqRightsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetSku()) < 1 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "Sku",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSwidtag()) < 1 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "Swidtag",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	// no validation rules for ProductName
+
+	// no validation rules for ProductEditor
+
+	// no validation rules for MetricType
+
+	// no validation rules for NumLicensesAcquired
+
+	// no validation rules for AvgUnitPrice
+
+	// no validation rules for AvgMaintenanceUnitPrice
+
+	// no validation rules for TotalPurchaseCost
+
+	// no validation rules for TotalMaintenanceCost
+
+	// no validation rules for TotalCost
+
+	// no validation rules for Entity
+
+	if utf8.RuneCountInString(m.GetScope()) < 1 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	// no validation rules for StartOfMaintenance
+
+	// no validation rules for EndOfMaintenance
+
+	// no validation rules for NumLicencesMaintainance
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	return nil
+}
+
+// UpsertAcqRightsRequestValidationError is the validation error returned by
+// UpsertAcqRightsRequest.Validate if the designated constraints aren't met.
+type UpsertAcqRightsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertAcqRightsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertAcqRightsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertAcqRightsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertAcqRightsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertAcqRightsRequestValidationError) ErrorName() string {
+	return "UpsertAcqRightsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertAcqRightsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertAcqRightsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertAcqRightsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertAcqRightsRequestValidationError{}
+
+// Validate checks the field values on UpsertAcqRightsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpsertAcqRightsResponse) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -2262,9 +4242,9 @@ func (m *UpsertAggregationResponse) Validate() error {
 	return nil
 }
 
-// UpsertAggregationResponseValidationError is the validation error returned by
-// UpsertAggregationResponse.Validate if the designated constraints aren't met.
-type UpsertAggregationResponseValidationError struct {
+// UpsertAcqRightsResponseValidationError is the validation error returned by
+// UpsertAcqRightsResponse.Validate if the designated constraints aren't met.
+type UpsertAcqRightsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2272,24 +4252,24 @@ type UpsertAggregationResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e UpsertAggregationResponseValidationError) Field() string { return e.field }
+func (e UpsertAcqRightsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e UpsertAggregationResponseValidationError) Reason() string { return e.reason }
+func (e UpsertAcqRightsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e UpsertAggregationResponseValidationError) Cause() error { return e.cause }
+func (e UpsertAcqRightsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e UpsertAggregationResponseValidationError) Key() bool { return e.key }
+func (e UpsertAcqRightsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e UpsertAggregationResponseValidationError) ErrorName() string {
-	return "UpsertAggregationResponseValidationError"
+func (e UpsertAcqRightsResponseValidationError) ErrorName() string {
+	return "UpsertAcqRightsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e UpsertAggregationResponseValidationError) Error() string {
+func (e UpsertAcqRightsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2301,14 +4281,14 @@ func (e UpsertAggregationResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sUpsertAggregationResponse.%s: %s%s",
+		"invalid %sUpsertAcqRightsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = UpsertAggregationResponseValidationError{}
+var _ error = UpsertAcqRightsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2316,7 +4296,2126 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = UpsertAggregationResponseValidationError{}
+} = UpsertAcqRightsResponseValidationError{}
+
+// Validate checks the field values on ListAcqRightsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if val := m.GetPageNum(); val < 1 || val >= 1000 {
+		return ListAcqRightsRequestValidationError{
+			field:  "PageNum",
+			reason: "value must be inside range [1, 1000)",
+		}
+	}
+
+	if val := m.GetPageSize(); val < 10 || val >= 100 {
+		return ListAcqRightsRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be inside range [10, 100)",
+		}
+	}
+
+	if _, ok := ListAcqRightsRequest_SortBy_name[int32(m.GetSortBy())]; !ok {
+		return ListAcqRightsRequestValidationError{
+			field:  "SortBy",
+			reason: "value must be one of the defined enum values",
+		}
+	}
+
+	// no validation rules for SortOrder
+
+	if v, ok := interface{}(m.GetSearchParams()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsRequestValidationError{
+				field:  "SearchParams",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListAcqRightsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListAcqRightsRequest_Scopes_Pattern.MatchString(item) {
+			return ListAcqRightsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsRequestValidationError is the validation error returned by
+// ListAcqRightsRequest.Validate if the designated constraints aren't met.
+type ListAcqRightsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsRequestValidationError) ErrorName() string {
+	return "ListAcqRightsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsRequestValidationError{}
+
+var _ListAcqRightsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on AcqRightsSearchParams with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AcqRightsSearchParams) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetSwidTag()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "SwidTag",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetSKU()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "SKU",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetEditor()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "Editor",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetProductName()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "ProductName",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetMetric()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "Metric",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// AcqRightsSearchParamsValidationError is the validation error returned by
+// AcqRightsSearchParams.Validate if the designated constraints aren't met.
+type AcqRightsSearchParamsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AcqRightsSearchParamsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AcqRightsSearchParamsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AcqRightsSearchParamsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AcqRightsSearchParamsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AcqRightsSearchParamsValidationError) ErrorName() string {
+	return "AcqRightsSearchParamsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AcqRightsSearchParamsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAcqRightsSearchParams.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AcqRightsSearchParamsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AcqRightsSearchParamsValidationError{}
+
+// Validate checks the field values on ListAcqRightsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for TotalRecords
+
+	for idx, item := range m.GetAcquiredRights() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListAcqRightsResponseValidationError{
+					field:  fmt.Sprintf("AcquiredRights[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsResponseValidationError is the validation error returned by
+// ListAcqRightsResponse.Validate if the designated constraints aren't met.
+type ListAcqRightsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsResponseValidationError) ErrorName() string {
+	return "ListAcqRightsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsResponseValidationError{}
+
+// Validate checks the field values on AcqRights with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *AcqRights) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Entity
+
+	// no validation rules for SKU
+
+	// no validation rules for SwidTag
+
+	// no validation rules for ProductName
+
+	// no validation rules for Editor
+
+	// no validation rules for Metric
+
+	// no validation rules for AcquiredLicensesNumber
+
+	// no validation rules for AvgLicenesUnitPrice
+
+	// no validation rules for AvgMaintenanceUnitPrice
+
+	// no validation rules for TotalPurchaseCost
+
+	// no validation rules for TotalMaintenanceCost
+
+	// no validation rules for TotalCost
+
+	if v, ok := interface{}(m.GetStartOfMaintenance()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsValidationError{
+				field:  "StartOfMaintenance",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetEndOfMaintenance()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsValidationError{
+				field:  "EndOfMaintenance",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for LicensesUnderMaintenance
+
+	// no validation rules for LicensesUnderMaintenanceNumber
+
+	// no validation rules for Version
+
+	return nil
+}
+
+// AcqRightsValidationError is the validation error returned by
+// AcqRights.Validate if the designated constraints aren't met.
+type AcqRightsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AcqRightsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AcqRightsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AcqRightsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AcqRightsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AcqRightsValidationError) ErrorName() string { return "AcqRightsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AcqRightsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAcqRights.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AcqRightsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AcqRightsValidationError{}
+
+// Validate checks the field values on ListAcqRightsAggregationRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsAggregationRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if val := m.GetPageNum(); val < 1 || val >= 1000 {
+		return ListAcqRightsAggregationRequestValidationError{
+			field:  "PageNum",
+			reason: "value must be inside range [1, 1000)",
+		}
+	}
+
+	if m.GetPageSize() < 10 {
+		return ListAcqRightsAggregationRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be greater than or equal to 10",
+		}
+	}
+
+	if _, ok := ListAcqRightsAggregationRequest_SortBy_name[int32(m.GetSortBy())]; !ok {
+		return ListAcqRightsAggregationRequestValidationError{
+			field:  "SortBy",
+			reason: "value must be one of the defined enum values",
+		}
+	}
+
+	// no validation rules for SortOrder
+
+	if v, ok := interface{}(m.GetSearchParams()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationRequestValidationError{
+				field:  "SearchParams",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListAcqRightsAggregationRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListAcqRightsAggregationRequest_Scopes_Pattern.MatchString(item) {
+			return ListAcqRightsAggregationRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsAggregationRequestValidationError is the validation error
+// returned by ListAcqRightsAggregationRequest.Validate if the designated
+// constraints aren't met.
+type ListAcqRightsAggregationRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsAggregationRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsAggregationRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsAggregationRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsAggregationRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsAggregationRequestValidationError) ErrorName() string {
+	return "ListAcqRightsAggregationRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsAggregationRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsAggregationRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsAggregationRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsAggregationRequestValidationError{}
+
+var _ListAcqRightsAggregationRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ListAcqRightsAggregationResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *ListAcqRightsAggregationResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for TotalRecords
+
+	for idx, item := range m.GetAggregations() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListAcqRightsAggregationResponseValidationError{
+					field:  fmt.Sprintf("Aggregations[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsAggregationResponseValidationError is the validation error
+// returned by ListAcqRightsAggregationResponse.Validate if the designated
+// constraints aren't met.
+type ListAcqRightsAggregationResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsAggregationResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsAggregationResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsAggregationResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsAggregationResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsAggregationResponseValidationError) ErrorName() string {
+	return "ListAcqRightsAggregationResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsAggregationResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsAggregationResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsAggregationResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsAggregationResponseValidationError{}
+
+// Validate checks the field values on AcqRightsAggregation with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AcqRightsAggregation) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	// no validation rules for Name
+
+	// no validation rules for Scope
+
+	// no validation rules for Editor
+
+	// no validation rules for Metric
+
+	// no validation rules for TotalCost
+
+	return nil
+}
+
+// AcqRightsAggregationValidationError is the validation error returned by
+// AcqRightsAggregation.Validate if the designated constraints aren't met.
+type AcqRightsAggregationValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AcqRightsAggregationValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AcqRightsAggregationValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AcqRightsAggregationValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AcqRightsAggregationValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AcqRightsAggregationValidationError) ErrorName() string {
+	return "AcqRightsAggregationValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AcqRightsAggregationValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAcqRightsAggregation.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AcqRightsAggregationValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AcqRightsAggregationValidationError{}
+
+// Validate checks the field values on ListAcqRightsAggregationSearchParams
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *ListAcqRightsAggregationSearchParams) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetSwidTag()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "SwidTag",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetName()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "Name",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetEditor()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "Editor",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetSKU()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "SKU",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetMetric()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "Metric",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ListAcqRightsAggregationSearchParamsValidationError is the validation error
+// returned by ListAcqRightsAggregationSearchParams.Validate if the designated
+// constraints aren't met.
+type ListAcqRightsAggregationSearchParamsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsAggregationSearchParamsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsAggregationSearchParamsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsAggregationSearchParamsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsAggregationSearchParamsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsAggregationSearchParamsValidationError) ErrorName() string {
+	return "ListAcqRightsAggregationSearchParamsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsAggregationSearchParamsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsAggregationSearchParams.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsAggregationSearchParamsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsAggregationSearchParamsValidationError{}
+
+// Validate checks the field values on ListAcqRightsAggregationRecordsRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *ListAcqRightsAggregationRecordsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for AggregationId
+
+	if len(m.GetScopes()) != 1 {
+		return ListAcqRightsAggregationRecordsRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListAcqRightsAggregationRecordsRequest_Scopes_Pattern.MatchString(item) {
+			return ListAcqRightsAggregationRecordsRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsAggregationRecordsRequestValidationError is the validation
+// error returned by ListAcqRightsAggregationRecordsRequest.Validate if the
+// designated constraints aren't met.
+type ListAcqRightsAggregationRecordsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsAggregationRecordsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsAggregationRecordsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsAggregationRecordsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsAggregationRecordsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsAggregationRecordsRequestValidationError) ErrorName() string {
+	return "ListAcqRightsAggregationRecordsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsAggregationRecordsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsAggregationRecordsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsAggregationRecordsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsAggregationRecordsRequestValidationError{}
+
+var _ListAcqRightsAggregationRecordsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ListAcqRightsAggregationRecordsResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *ListAcqRightsAggregationRecordsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAcquiredRights() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListAcqRightsAggregationRecordsResponseValidationError{
+					field:  fmt.Sprintf("AcquiredRights[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsAggregationRecordsResponseValidationError is the validation
+// error returned by ListAcqRightsAggregationRecordsResponse.Validate if the
+// designated constraints aren't met.
+type ListAcqRightsAggregationRecordsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsAggregationRecordsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsAggregationRecordsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsAggregationRecordsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsAggregationRecordsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsAggregationRecordsResponseValidationError) ErrorName() string {
+	return "ListAcqRightsAggregationRecordsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsAggregationRecordsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsAggregationRecordsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsAggregationRecordsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsAggregationRecordsResponseValidationError{}
+
+// Validate checks the field values on DeleteProductAggregationRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteProductAggregationRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	// no validation rules for Scope
+
+	return nil
+}
+
+// DeleteProductAggregationRequestValidationError is the validation error
+// returned by DeleteProductAggregationRequest.Validate if the designated
+// constraints aren't met.
+type DeleteProductAggregationRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteProductAggregationRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteProductAggregationRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteProductAggregationRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteProductAggregationRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteProductAggregationRequestValidationError) ErrorName() string {
+	return "DeleteProductAggregationRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteProductAggregationRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteProductAggregationRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteProductAggregationRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteProductAggregationRequestValidationError{}
+
+// Validate checks the field values on DeleteProductAggregationResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *DeleteProductAggregationResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DeleteProductAggregationResponseValidationError is the validation error
+// returned by DeleteProductAggregationResponse.Validate if the designated
+// constraints aren't met.
+type DeleteProductAggregationResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteProductAggregationResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteProductAggregationResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteProductAggregationResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteProductAggregationResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteProductAggregationResponseValidationError) ErrorName() string {
+	return "DeleteProductAggregationResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteProductAggregationResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteProductAggregationResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteProductAggregationResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteProductAggregationResponseValidationError{}
+
+// Validate checks the field values on ListProductAggregationResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProductAggregationResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAggregations() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListProductAggregationResponseValidationError{
+					field:  fmt.Sprintf("Aggregations[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListProductAggregationResponseValidationError is the validation error
+// returned by ListProductAggregationResponse.Validate if the designated
+// constraints aren't met.
+type ListProductAggregationResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProductAggregationResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProductAggregationResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProductAggregationResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProductAggregationResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProductAggregationResponseValidationError) ErrorName() string {
+	return "ListProductAggregationResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProductAggregationResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProductAggregationResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProductAggregationResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProductAggregationResponseValidationError{}
+
+// Validate checks the field values on ListProductAggregationRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListProductAggregationRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if len(m.GetScopes()) != 1 {
+		return ListProductAggregationRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain exactly 1 item(s)",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if !_ListProductAggregationRequest_Scopes_Pattern.MatchString(item) {
+			return ListProductAggregationRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListProductAggregationRequestValidationError is the validation error
+// returned by ListProductAggregationRequest.Validate if the designated
+// constraints aren't met.
+type ListProductAggregationRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProductAggregationRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProductAggregationRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProductAggregationRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProductAggregationRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProductAggregationRequestValidationError) ErrorName() string {
+	return "ListProductAggregationRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProductAggregationRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProductAggregationRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProductAggregationRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProductAggregationRequestValidationError{}
+
+var _ListProductAggregationRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ProductAggregationMessage with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductAggregationMessage) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	// no validation rules for Name
+
+	// no validation rules for Editor
+
+	// no validation rules for Metric
+
+	// no validation rules for Scope
+
+	return nil
+}
+
+// ProductAggregationMessageValidationError is the validation error returned by
+// ProductAggregationMessage.Validate if the designated constraints aren't met.
+type ProductAggregationMessageValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductAggregationMessageValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductAggregationMessageValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductAggregationMessageValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductAggregationMessageValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductAggregationMessageValidationError) ErrorName() string {
+	return "ProductAggregationMessageValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductAggregationMessageValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductAggregationMessage.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductAggregationMessageValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductAggregationMessageValidationError{}
+
+// Validate checks the field values on ProductAggregation with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProductAggregation) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	// no validation rules for Name
+
+	// no validation rules for Editor
+
+	// no validation rules for Metric
+
+	// no validation rules for Scope
+
+	return nil
+}
+
+// ProductAggregationValidationError is the validation error returned by
+// ProductAggregation.Validate if the designated constraints aren't met.
+type ProductAggregationValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProductAggregationValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProductAggregationValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProductAggregationValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProductAggregationValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProductAggregationValidationError) ErrorName() string {
+	return "ProductAggregationValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProductAggregationValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProductAggregation.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProductAggregationValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProductAggregationValidationError{}
+
+// Validate checks the field values on ListAcqRightsEditorsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsEditorsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ListAcqRightsEditorsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcqRightsEditorsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ListAcqRightsEditorsRequestValidationError is the validation error returned
+// by ListAcqRightsEditorsRequest.Validate if the designated constraints
+// aren't met.
+type ListAcqRightsEditorsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsEditorsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsEditorsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsEditorsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsEditorsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsEditorsRequestValidationError) ErrorName() string {
+	return "ListAcqRightsEditorsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsEditorsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsEditorsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsEditorsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsEditorsRequestValidationError{}
+
+var _ListAcqRightsEditorsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ListAcqRightsEditorsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsEditorsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ListAcqRightsEditorsResponseValidationError is the validation error returned
+// by ListAcqRightsEditorsResponse.Validate if the designated constraints
+// aren't met.
+type ListAcqRightsEditorsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsEditorsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsEditorsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsEditorsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsEditorsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsEditorsResponseValidationError) ErrorName() string {
+	return "ListAcqRightsEditorsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsEditorsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsEditorsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsEditorsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsEditorsResponseValidationError{}
+
+// Validate checks the field values on ListAcqRightsMetricsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsMetricsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ListAcqRightsMetricsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcqRightsMetricsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ListAcqRightsMetricsRequestValidationError is the validation error returned
+// by ListAcqRightsMetricsRequest.Validate if the designated constraints
+// aren't met.
+type ListAcqRightsMetricsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsMetricsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsMetricsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsMetricsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsMetricsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsMetricsRequestValidationError) ErrorName() string {
+	return "ListAcqRightsMetricsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsMetricsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsMetricsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsMetricsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsMetricsRequestValidationError{}
+
+var _ListAcqRightsMetricsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ListAcqRightsMetricsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsMetricsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// ListAcqRightsMetricsResponseValidationError is the validation error returned
+// by ListAcqRightsMetricsResponse.Validate if the designated constraints
+// aren't met.
+type ListAcqRightsMetricsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsMetricsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsMetricsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsMetricsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsMetricsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsMetricsResponseValidationError) ErrorName() string {
+	return "ListAcqRightsMetricsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsMetricsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsMetricsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsMetricsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsMetricsResponseValidationError{}
+
+// Validate checks the field values on ListAcqRightsProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsProductsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ListAcqRightsProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcqRightsProductsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Editor
+
+	// no validation rules for Metric
+
+	return nil
+}
+
+// ListAcqRightsProductsRequestValidationError is the validation error returned
+// by ListAcqRightsProductsRequest.Validate if the designated constraints
+// aren't met.
+type ListAcqRightsProductsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsProductsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsProductsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsProductsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsProductsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsProductsRequestValidationError) ErrorName() string {
+	return "ListAcqRightsProductsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsProductsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsProductsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsProductsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsProductsRequestValidationError{}
+
+var _ListAcqRightsProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ListAcqRightsProductsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAcqRightsProductsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAcqrightsProducts() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListAcqRightsProductsResponseValidationError{
+					field:  fmt.Sprintf("AcqrightsProducts[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsProductsResponseValidationError is the validation error
+// returned by ListAcqRightsProductsResponse.Validate if the designated
+// constraints aren't met.
+type ListAcqRightsProductsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsProductsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsProductsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsProductsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsProductsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsProductsResponseValidationError) ErrorName() string {
+	return "ListAcqRightsProductsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsProductsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsProductsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsProductsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsProductsResponseValidationError{}
+
+// Validate checks the field values on DropProductDataRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropProductDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DropProductDataRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DropProductDataRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DropProductDataRequestValidationError is the validation error returned by
+// DropProductDataRequest.Validate if the designated constraints aren't met.
+type DropProductDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropProductDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropProductDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropProductDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropProductDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropProductDataRequestValidationError) ErrorName() string {
+	return "DropProductDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropProductDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropProductDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropProductDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropProductDataRequestValidationError{}
+
+var _DropProductDataRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DropProductDataResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropProductDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DropProductDataResponseValidationError is the validation error returned by
+// DropProductDataResponse.Validate if the designated constraints aren't met.
+type DropProductDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropProductDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropProductDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropProductDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropProductDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropProductDataResponseValidationError) ErrorName() string {
+	return "DropProductDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropProductDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropProductDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropProductDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropProductDataResponseValidationError{}
 
 // Validate checks the field values on UpsertProductRequestApplication with the
 // rules defined in the proto definition for this message. If any rules are
@@ -2416,7 +6515,9 @@ func (m *UpsertProductRequestEquipment) Validate() error {
 	for idx, item := range m.GetEquipmentusers() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return UpsertProductRequestEquipmentValidationError{
 					field:  fmt.Sprintf("Equipmentusers[%v]", idx),
@@ -2564,3 +6665,81 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertProductRequestEquipmentEquipmentuserValidationError{}
+
+// Validate checks the field values on
+// ListAcqRightsProductsResponse_AcqRightsProducts with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ListAcqRightsProductsResponse_AcqRightsProducts) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for ProductName
+
+	return nil
+}
+
+// ListAcqRightsProductsResponse_AcqRightsProductsValidationError is the
+// validation error returned by
+// ListAcqRightsProductsResponse_AcqRightsProducts.Validate if the designated
+// constraints aren't met.
+type ListAcqRightsProductsResponse_AcqRightsProductsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) ErrorName() string {
+	return "ListAcqRightsProductsResponse_AcqRightsProductsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsProductsResponse_AcqRightsProductsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsProductsResponse_AcqRightsProducts.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsProductsResponse_AcqRightsProductsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsProductsResponse_AcqRightsProductsValidationError{}

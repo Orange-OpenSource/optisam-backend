@@ -10,17 +10,15 @@ import (
 	"context"
 	"crypto/rsa"
 	"net/http"
+	"net/http/pprof"
 	"optisam-backend/common/optisam/logger"
 	rest_middleware "optisam-backend/common/optisam/middleware/rest"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
-	"optisam-backend/simulation-service/pkg/config"
 	"os"
 	"os/signal"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
@@ -32,38 +30,29 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	m := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithStatsHandler(&ocgrpc.ClientHandler{})}
-	if err := v1.RegisterSimulationServiceHandlerFromEndpoint(ctx, m, "localhost:"+grpcPort, opts); err != nil {
-		logger.Log.Fatal("failed to start HTTP gateway", zap.String("reason", err.Error()))
-	}
-
-	r := mux.NewRouter()
-
-	r.NotFoundHandler = m
-	conn, err := openGrpcConnection(ctx)
+	mux_http := http.NewServeMux()
+	gw, err := newGateway(ctx, grpcPort)
 	if err != nil {
-		logger.Log.Fatal("failed to start internal grpc connection", zap.String("reason", err.Error()))
+		logger.Log.Fatal("failed to register GRPC gateway", zap.String("reason", err.Error()))
+
 	}
-	hdlr := &handler{
-		client: v1.NewSimulationServiceClient(conn),
-	}
-	r.HandleFunc("/api/v1/config", makeHandler(ctx, hdlr.CreateConfigHandler)).MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-		return r.Method == "POST"
-	})
-	r.HandleFunc("/api/v1/config/{config_id}", makeHandler(ctx, hdlr.UpdateConfigHandler)).MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-		return r.Method == "PUT"
-	})
+	mux_http.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux_http.Handle("/", gw)
 
 	srv := &http.Server{
 		Addr: ":" + httpPort,
-		Handler: &ochttp.Handler{
-			Handler: rest_middleware.AddCORS([]string{"*"},
-				rest_middleware.ValidateAuth(verifyKey,
-					rest_middleware.AddLogger(logger.Log, r),
-				),
-			),
+		// Handler: &ochttp.Handler{
+		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
+			// rest_middleware.AddLogger(logger.Log,
+			// 	rest_middleware.ValidateAuth(verifyKey,
+			// 		rest_middleware.ValidateAuthZ(p, mux_http),
+			// rest_middleware.ValidateAuth(verifyKey,
+			// 	rest_middleware.AddLogger(logger.Log, mux_http),
+			mux_http),
+		// )))
+
 		},
+		// },
 	}
 
 	// graceful shutdown
@@ -82,26 +71,19 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 
 	logger.Log.Info("starting HTTP/REST gateway...")
 	return srv.ListenAndServe()
+
 }
 
-func makeHandler(ctx context.Context, myHandler func(ctx context.Context, w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		myHandler(ctx, w, r)
-	}
-}
-
-func openGrpcConnection(ctx context.Context) (*grpc.ClientConn, error) {
-	var cfg config.Config
-	err := viper.Unmarshal(&cfg)
-	if err != nil {
-		logger.Log.Error("failed to unmarshal configuration ", zap.Error(err))
-		return nil, err
-	}
+func newGateway(ctx context.Context, grpcPort string) (http.Handler, error) {
+	mux_gateway := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithStatsHandler(&ocgrpc.ClientHandler{})}
-	conn, err := grpc.Dial("localhost:"+cfg.GRPCPort, opts...)
+	conn, err := grpc.DialContext(ctx, "localhost:"+grpcPort, opts...)
 	if err != nil {
-		logger.Log.Error("failed to start grpc conn ", zap.Error(err))
 		return nil, err
 	}
-	return conn, nil
+
+	if err := v1.RegisterSimulationServiceHandler(ctx, mux_gateway, conn); err != nil {
+		return nil, err
+	}
+	return mux_gateway, err
 }

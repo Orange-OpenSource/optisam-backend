@@ -19,4 +19,5 @@ import (
 type Application interface {
 	gendb.Querier
 	UpsertInstanceTX(ctx context.Context, req *v1.UpsertInstanceRequest) error
+	DropApplicationDataTX(ctx context.Context, scope string) error
 }

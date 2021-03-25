@@ -5,7 +5,6 @@ option go_package = "v1";
 package v1;
 
 import "google/api/annotations.proto";
-import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 
 service MetricService {
@@ -82,6 +81,8 @@ service MetricService {
 
 message GetMetricConfigurationRequest{
   Metric metric_info = 1;
+  repeated string scopes = 2 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  
 }
 
 message GetMetricConfigurationResponse{
@@ -94,6 +95,8 @@ message CreateINM {
   string ID = 1;
   string Name = 2 [(validate.rules).string.min_len = 1];
   float Coefficient = 3 [(validate.rules).float = {not_in: [0.0]}];
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
 }
 
 message CreateMetricIPS {
@@ -103,6 +106,8 @@ message CreateMetricIPS {
   string num_core_attr_id = 3;
   string core_factor_attr_id = 4;  
   string base_eq_type_id = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
 }
 
 message CreateMetricSPS {
@@ -112,6 +117,8 @@ message CreateMetricSPS {
   string num_core_attr_id = 3;
   string core_factor_attr_id = 4;  
   string base_eq_type_id = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
 }
 
 message CreateMetricACS {
@@ -120,11 +127,15 @@ message CreateMetricACS {
   string name = 2;
   string eq_type = 3;
   string attribute_name = 4;
-  string value = 5;   
+  string value = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+   
 }
 
 
-message ListMetricRequest {}
+message ListMetricRequest {
+  repeated string scopes = 1 [(validate.rules).repeated.min_items = 1,(validate.rules).repeated.items.string.len = 3];
+}
 
 message ListMetricResponse {
   repeated Metric metrices = 1;
@@ -136,7 +147,9 @@ message Metric {
   string description = 3;
 }
 
-message ListMetricTypeRequest {}
+message ListMetricTypeRequest {
+  repeated string scopes = 1 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
 
 message ListMetricTypeResponse {
   repeated MetricType types = 1;
@@ -169,6 +182,7 @@ message CreateMetricOPS {
   string base_eq_type_id = 7;
   string aggerateLevel_eq_type_id = 8;
   string end_eq_type_id = 9;
+  repeated string scopes = 10 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message CreateMetricNUP {
@@ -183,6 +197,8 @@ message CreateMetricNUP {
   string aggerateLevel_eq_type_id = 8;
   string end_eq_type_id = 9;
   uint32  number_of_users = 10 [(validate.rules).uint32.gt  = 0];
+  repeated string scopes = 11 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
 }
 
 

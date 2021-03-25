@@ -12,7 +12,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	oauth2_v3 "gopkg.in/oauth2.v3"
+	oauth2 "gopkg.in/oauth2.v3"
 	reflect "reflect"
 )
 
@@ -40,10 +40,10 @@ func (m *MockClientStore) EXPECT() *MockClientStoreMockRecorder {
 }
 
 // GetByID mocks base method
-func (m *MockClientStore) GetByID(arg0 string) (oauth2_v3.ClientInfo, error) {
+func (m *MockClientStore) GetByID(arg0 string) (oauth2.ClientInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", arg0)
-	ret0, _ := ret[0].(oauth2_v3.ClientInfo)
+	ret0, _ := ret[0].(oauth2.ClientInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

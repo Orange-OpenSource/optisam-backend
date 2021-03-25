@@ -17,7 +17,7 @@ import (
 )
 
 // MetricNUPComputedLicenses implements Licence MetricNUPComputedLicenses function
-func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id string, mat *v1.MetricNUPComputed, scopes []string) (uint64, error) {
+func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, error) {
 	templ, ok := l.templates[nupTemplate]
 	if !ok {
 		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
@@ -39,7 +39,7 @@ func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id st
 }
 
 // MetricNUPComputedLicensesAgg implements Licence MetricNUPComputedLicensesAgg function
-func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricNUPComputed, scopes []string) (uint64, error) {
+func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, error) {
 	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))

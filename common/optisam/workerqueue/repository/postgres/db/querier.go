@@ -16,7 +16,9 @@ type Querier interface {
 	CreateJob(ctx context.Context, arg CreateJobParams) (int32, error)
 	GetJob(ctx context.Context, jobID int32) (Job, error)
 	GetJobs(ctx context.Context) ([]Job, error)
+	GetJobsForRetry(ctx context.Context) ([]Job, error)
 	UpdateJobStatusCompleted(ctx context.Context, arg UpdateJobStatusCompletedParams) error
+	UpdateJobStatusFailed(ctx context.Context, arg UpdateJobStatusFailedParams) error
 	UpdateJobStatusRetry(ctx context.Context, arg UpdateJobStatusRetryParams) error
 	UpdateJobStatusRunning(ctx context.Context, arg UpdateJobStatusRunningParams) error
 }

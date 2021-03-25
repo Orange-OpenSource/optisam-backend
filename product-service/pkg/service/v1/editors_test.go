@@ -8,8 +8,8 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	ctx = ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx = grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
 		Socpes: []string{"s1", "s2", "s3"},

@@ -18,8 +18,9 @@ import (
 type DataType string
 
 const (
-	DataTypeDATA     DataType = "DATA"
-	DataTypeMETADATA DataType = "METADATA"
+	DataTypeDATA       DataType = "DATA"
+	DataTypeMETADATA   DataType = "METADATA"
+	DataTypeGLOBALDATA DataType = "GLOBALDATA"
 )
 
 func (e *DataType) Scan(src interface{}) error {
@@ -78,26 +79,27 @@ func (e *UploadStatus) Scan(src interface{}) error {
 }
 
 type Job struct {
-	JobID     int32           `json:"job_id"`
-	Type      string          `json:"type"`
-	Status    JobStatus       `json:"status"`
-	Data      json.RawMessage `json:"data"`
-	Comments  sql.NullString  `json:"comments"`
-	StartTime sql.NullTime    `json:"start_time"`
-	EndTime   sql.NullTime    `json:"end_time"`
-	CreatedAt time.Time       `json:"created_at"`
+	JobID      int32           `json:"job_id"`
+	Type       string          `json:"type"`
+	Status     JobStatus       `json:"status"`
+	Data       json.RawMessage `json:"data"`
+	Comments   sql.NullString  `json:"comments"`
+	StartTime  sql.NullTime    `json:"start_time"`
+	EndTime    sql.NullTime    `json:"end_time"`
+	CreatedAt  time.Time       `json:"created_at"`
+	RetryCount sql.NullInt32   `json:"retry_count"`
 }
 
 type UploadedDataFile struct {
-	UploadID       int32        `json:"upload_id"`
-	Scope          string       `json:"scope"`
-	DataType       DataType     `json:"data_type"`
-	FileName       string       `json:"file_name"`
-	Status         UploadStatus `json:"status"`
-	UploadedBy     string       `json:"uploaded_by"`
-	UploadedOn     time.Time    `json:"uploaded_on"`
-	TotalRecords   int32        `json:"total_records"`
-	SuccessRecords int32        `json:"success_records"`
-	FailedRecords  int32        `json:"failed_records"`
-	InvalidRecords int32        `json:"invalid_records"`
+	UploadID       int32          `json:"upload_id"`
+	Scope          string         `json:"scope"`
+	DataType       DataType       `json:"data_type"`
+	FileName       string         `json:"file_name"`
+	Status         UploadStatus   `json:"status"`
+	UploadedBy     string         `json:"uploaded_by"`
+	UploadedOn     time.Time      `json:"uploaded_on"`
+	TotalRecords   int32          `json:"total_records"`
+	SuccessRecords int32          `json:"success_records"`
+	FailedRecords  int32          `json:"failed_records"`
+	Comments       sql.NullString `json:"comments"`
 }

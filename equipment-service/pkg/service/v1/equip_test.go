@@ -10,7 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
@@ -23,7 +23,7 @@ import (
 )
 
 func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -35,6 +35,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "p1",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:           "1",
@@ -106,6 +107,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 			ID:       "2",
 			SourceID: "s2",
 			ParentID: "p2",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -146,6 +148,34 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 			},
 		},
 	}
+	appFilter := &repo.AggregateFilter{
+		Filters: []repo.Queryable{
+			&repo.Filter{
+				FilterKey:   "id",
+				FilterValue: "app1",
+			},
+		},
+	}
+	queryParamsWithAppPro := queryParams
+	queryParamsWithAppPro.ApplicationFilter = appFilter
+	queryParamsWithAppPro.ProductFilter = &repo.AggregateFilter{
+		Filters: []repo.Queryable{
+			&repo.Filter{
+				FilterKey:   "swidtag",
+				FilterValue: "pro1",
+			},
+		},
+	}
+	queryParamsWithAppIns := queryParams
+	queryParamsWithAppIns.ApplicationFilter = appFilter
+	queryParamsWithAppIns.InstanceFilter = &repo.AggregateFilter{
+		Filters: []repo.Queryable{
+			&repo.Filter{
+				FilterKey:   "id",
+				FilterValue: "ins1",
+			},
+		},
+	}
 	var mockCtrl *gomock.Controller
 	var rep repo.Equipment
 	type args struct {
@@ -169,14 +199,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
-					Filter: &v1.EquipFilter{
-						ApplicationId: &v1.StringFilter{
-							Filteringkey: "app1",
-						},
-						ProductId: &v1.StringFilter{
-							Filteringkey: "pro1",
-						},
-					},
+					Scopes:       []string{"A", "B"},
 				},
 			},
 			setup: func() {
@@ -194,6 +217,78 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 				Equipments:   json.RawMessage(`[{ID:"1"}]`),
 			},
 		},
+		{name: "success - application and product filters",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentsRequest{
+					TypeId:       "1",
+					PageNum:      10,
+					PageSize:     10,
+					SortBy:       "attr1",
+					SortOrder:    v1.SortOrder_DESC,
+					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+					Filter: &v1.EquipFilter{
+						ApplicationId: &v1.StringFilter{
+							Filteringkey: "app1",
+						},
+						ProductId: &v1.StringFilter{
+							Filteringkey: "pro1",
+						},
+					},
+					Scopes: []string{"A"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().Equipments(ctx, eqTypes[0], &productQueryMatcherEquipments{
+					q: queryParamsWithAppPro,
+					t: t,
+				}, []string{"A"}).Times(1).Return(int32(3), json.RawMessage(`[{ID:"1"}]`), nil)
+			},
+			want: &v1.ListEquipmentsResponse{
+				TotalRecords: 3,
+				Equipments:   json.RawMessage(`[{ID:"1"}]`),
+			},
+		},
+		{name: "success - application and instance filters",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentsRequest{
+					TypeId:       "1",
+					PageNum:      10,
+					PageSize:     10,
+					SortBy:       "attr1",
+					SortOrder:    v1.SortOrder_DESC,
+					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+					Filter: &v1.EquipFilter{
+						ApplicationId: &v1.StringFilter{
+							Filteringkey: "app1",
+						},
+						InstanceId: &v1.StringFilter{
+							Filteringkey: "ins1",
+						},
+					},
+					Scopes: []string{"A", "B"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().Equipments(ctx, eqTypes[0], &productQueryMatcherEquipments{
+					q: queryParamsWithAppIns,
+					t: t,
+				}, []string{"A", "B"}).Times(1).Return(int32(3), json.RawMessage(`[{ID:"1"}]`), nil)
+			},
+			want: &v1.ListEquipmentsResponse{
+				TotalRecords: 3,
+				Equipments:   json.RawMessage(`[{ID:"1"}]`),
+			},
+		},
 		{name: "FAILURE - can not retrieve claims",
 			args: args{
 				ctx: context.Background(),
@@ -203,6 +298,23 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					PageSize:     10,
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
+					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - scope is not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentsRequest{
+					TypeId:       "3",
+					PageNum:      10,
+					PageSize:     10,
+					SortBy:       "attr1",
+					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"C"},
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
 				},
 			},
@@ -218,6 +330,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					PageSize:     10,
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
 				},
 			},
@@ -225,7 +338,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -238,6 +351,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					PageSize:     10,
 					SortBy:       "Notfound",
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
 				},
 			},
@@ -245,7 +359,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -259,13 +373,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr6",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -279,13 +394,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=%gh",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -299,13 +415,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "notfound=10",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -319,13 +436,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr6=10",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -339,13 +457,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr7=10",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -358,6 +477,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					PageSize:     10,
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
+					Scopes:       []string{"A"},
 					SearchParams: "attr1=",
 				},
 			},
@@ -365,7 +485,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -379,13 +499,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=hi",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -399,13 +520,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr3=hi",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -419,13 +541,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr4=hi",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -439,13 +562,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr8=hi",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -459,13 +583,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -479,17 +604,18 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
 					SearchParams: "attr1=a11,attr2=a22,attr3=3,attr4=4",
+					Scopes:       []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				mockRepo.EXPECT().Equipments(ctx, eqTypes[0], &productQueryMatcherEquipments{
 					q: queryParams,
 					t: t,
-				}, []string{"A", "B"}).Times(1).Return(int32(3), nil, errors.New("test error"))
+				}, []string{"A"}).Times(1).Return(int32(3), nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -511,7 +637,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -522,6 +648,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:           "1",
@@ -555,6 +682,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 			ID:       "2",
 			SourceID: "s2",
 			//ParentID: "p2",
+			Scopes: []string{"B"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -589,15 +717,16 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A", "B"}).Times(1).Return(json.RawMessage(`[{ID:"1"}]`), nil)
+				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A"}).Times(1).Return(json.RawMessage(`[{ID:"1"}]`), nil)
 			},
 			want: &v1.GetEquipmentResponse{
 				Equipment: string(json.RawMessage(`[{ID:"1"}]`)),
@@ -609,6 +738,19 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - can not retrieve claims",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetEquipmentRequest{
+					TypeId:  "1",
+					EquipId: "e1",
+					Scopes:  []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -620,13 +762,14 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test Error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -636,13 +779,14 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "3",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -652,15 +796,16 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A", "B"}).Times(1).Return(nil, repo.ErrNoData)
+				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A"}).Times(1).Return(nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -670,15 +815,16 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A", "B"}).Times(1).Return(nil, repo.ErrNodeNotFound)
+				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A"}).Times(1).Return(nil, repo.ErrNodeNotFound)
 			},
 			wantErr: true,
 		},
@@ -688,15 +834,16 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				req: &v1.GetEquipmentRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A", "B"}).Times(1).Return(nil, errors.New("Test Error"))
+				mockRepo.EXPECT().Equipment(ctx, eqTypes[0], "e1", []string{"A"}).Times(1).Return(nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -718,7 +865,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -729,6 +876,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:           "1",
@@ -762,6 +910,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 			ID:       "2",
 			SourceID: "s2",
 			//ParentID: "p2",
+			Scopes: []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -780,6 +929,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 			ID:       "3",
 			SourceID: "s3",
 			ParentID: "4",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -818,15 +968,16 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A", "B"}).Times(1).Return(records, json.RawMessage(`[{ID:"1"}]`), nil)
+				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A"}).Times(1).Return(records, json.RawMessage(`[{ID:"1"}]`), nil)
 			},
 			want: &v1.ListEquipmentsResponse{
 				TotalRecords: records,
@@ -839,24 +990,39 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup:   func() {},
 			wantErr: true,
 		},
+		{name: "FAILURE - some claims are not owned by the user",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.ListEquipmentParentsRequest{
+					TypeId:  "1",
+					EquipId: "e1",
+					Scopes:  []string{"C"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+
 		{name: "FAILURE - cannot fetch equipment types",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test Error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -866,13 +1032,14 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "4",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -882,13 +1049,14 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "3",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -898,15 +1066,16 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A", "B"}).Times(1).Return(norecords, nil, repo.ErrNoData)
+				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A"}).Times(1).Return(norecords, nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -916,15 +1085,16 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A", "B"}).Times(1).Return(norecords, nil, repo.ErrNodeNotFound)
+				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A"}).Times(1).Return(norecords, nil, repo.ErrNodeNotFound)
 			},
 			wantErr: true,
 		},
@@ -934,15 +1104,16 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				req: &v1.ListEquipmentParentsRequest{
 					TypeId:  "1",
 					EquipId: "e1",
+					Scopes:  []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 
-				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A", "B"}).Times(1).Return(norecords, nil, errors.New("Test Error"))
+				mockRepo.EXPECT().EquipmentParents(ctx, eqTypes[0], eqTypes[1], "e1", []string{"A"}).Times(1).Return(norecords, nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -964,7 +1135,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 }
 
 func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"A", "B"},
@@ -975,6 +1146,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:           "1",
@@ -1046,6 +1218,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 			ID:       "2",
 			SourceID: "s2",
 			//ParentID: "p2",
+			Scopes: []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -1072,6 +1245,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 			ID:       "3",
 			SourceID: "s3",
 			ParentID: "4",
+			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
 				&repo.Attribute{
 					ID:                 "1",
@@ -1116,13 +1290,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
 					SearchParams:   "attr1=a11,attr2=a22",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				// &repo.QueryEquipments{
 				// 	PageSize:  10,
 				// 	Offset:    0,
@@ -1142,7 +1317,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 				// 	},
 				// }
 
-				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A", "B"}).Times(1).Return(records, json.RawMessage(`[{ID:"1"}]`), nil)
+				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A"}).Times(1).Return(records, json.RawMessage(`[{ID:"1"}]`), nil)
 			},
 			want: &v1.ListEquipmentsResponse{
 				TotalRecords: records,
@@ -1160,6 +1335,24 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - some claims are not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListEquipmentChildrenRequest{
+					TypeId:         "2",
+					EquipId:        "e1",
+					ChildrenTypeId: "1",
+					PageNum:        1,
+					PageSize:       10,
+					SortBy:         "attr1",
+					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"C"},
 				},
 			},
 			setup:   func() {},
@@ -1176,13 +1369,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test Error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -1197,13 +1391,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1218,13 +1413,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1239,13 +1435,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1261,13 +1458,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr1=%gh",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1283,13 +1481,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "notfound=10",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1305,13 +1504,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr6=10",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1327,13 +1527,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr7=10",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1349,13 +1550,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr1=",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1371,13 +1573,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr1=hi",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1393,13 +1596,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr3=hi",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1415,13 +1619,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr4=hi",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1437,13 +1642,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
 					SearchParams:   "attr8=hi",
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -1458,20 +1664,21 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				// &repo.QueryEquipments{
 				// 	PageSize:  10,
 				// 	Offset:    0,
 				// 	SortBy:    "attr1",
 				// 	SortOrder: 0,
 				// }
-				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A", "B"}).Times(1).Return(norecords, nil, repo.ErrNoData)
+				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A"}).Times(1).Return(norecords, nil, repo.ErrNoData)
 			},
 			wantErr: true,
 		},
@@ -1486,20 +1693,21 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				// &repo.QueryEquipments{
 				// 	PageSize:  10,
 				// 	Offset:    0,
 				// 	SortBy:    "attr1",
 				// 	SortOrder: 0,
 				// }
-				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A", "B"}).Times(1).Return(norecords, nil, repo.ErrNodeNotFound)
+				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A"}).Times(1).Return(norecords, nil, repo.ErrNodeNotFound)
 			},
 			wantErr: true,
 		},
@@ -1514,20 +1722,21 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_ASC,
+					Scopes:         []string{"A"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return(eqTypes, nil)
 				// &repo.QueryEquipments{
 				// 	PageSize:  10,
 				// 	Offset:    0,
 				// 	SortBy:    "attr1",
 				// 	SortOrder: 0,
 				// }
-				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A", "B"}).Times(1).Return(norecords, nil, errors.New("Test Error"))
+				mockRepo.EXPECT().EquipmentChildren(ctx, eqTypes[1], eqTypes[0], "e1", gomock.Any(), []string{"A"}).Times(1).Return(norecords, nil, errors.New("Test Error"))
 			},
 			wantErr: true,
 		},
@@ -1583,4 +1792,212 @@ func compareQueryEquipmentProduct(p *queryMatcherEquipmentProduct, exp *repo.Que
 }
 func (p *queryMatcherEquipmentProduct) String() string {
 	return "queryMatcherEquipmentProduct"
+}
+
+func Test_equipmentServiceServer_UpsertMetadata(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Equipment
+	type args struct {
+		ctx context.Context
+		req *v1.UpsertMetadataRequest
+	}
+	tests := []struct {
+		name    string
+		s       *equipmentServiceServer
+		args    args
+		setup   func()
+		want    *v1.UpsertMetadataResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpsertMetadataRequest{
+					MetadataType:       "equipment",
+					MetadataSource:     "equip_1.csv",
+					MetadataAttributes: []string{"col_1", "col_2"},
+					Scope:              "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UpsertMetadata(ctx, &repo.Metadata{
+					MetadataType: "equipment",
+					Source:       "equip_1.csv",
+					Attributes:   []string{"col_1", "col_2"},
+					Scope:        "Scope1",
+				}).Return(nil).Times(1)
+			},
+			want: &v1.UpsertMetadataResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - UpsertMetadata - cannot find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.UpsertMetadataRequest{
+					MetadataType:       "equipment",
+					MetadataSource:     "equip_1.csv",
+					MetadataAttributes: []string{"col_1", "col_2"},
+					Scope:              "Scope1",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpsertMetadata - scope is not owned by user",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpsertMetadataRequest{
+					MetadataType:       "equipment",
+					MetadataSource:     "equip_1.csv",
+					MetadataAttributes: []string{"col_1", "col_2"},
+					Scope:              "Scope3",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - UpsertMetadata - cannot upsert metadata",
+			args: args{
+				ctx: ctx,
+				req: &v1.UpsertMetadataRequest{
+					MetadataType:       "equipment",
+					MetadataSource:     "equip_1.csv",
+					MetadataAttributes: []string{"col_1", "col_2"},
+					Scope:              "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().UpsertMetadata(ctx, &repo.Metadata{
+					MetadataType: "equipment",
+					Source:       "equip_1.csv",
+					Attributes:   []string{"col_1", "col_2"},
+					Scope:        "Scope1",
+				}).Return(errors.New("Internal")).Times(1)
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewEquipmentServiceServer(rep)
+			got, err := s.UpsertMetadata(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("equipmentServiceServer.UpsertMetadata() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				assert.Equalf(t, tt.want.Success, got.Success, "equipmentServiceServer.UpsertMetadata(), response is not same")
+			}
+		})
+	}
+}
+
+func Test_equipmentServiceServer_DropEquipmentData(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Equipment
+	type args struct {
+		ctx context.Context
+		req *v1.DropEquipmentDataRequest
+	}
+	tests := []struct {
+		name    string
+		args    args
+		setup   func()
+		want    *v1.DropEquipmentDataResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropEquipmentDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DeleteEquipments(ctx, "Scope1").Return(nil).Times(1)
+			},
+			want: &v1.DropEquipmentDataResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - DropEquipmentData - ClaimsNotFound",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DropEquipmentDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {},
+			want: &v1.DropEquipmentDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DropEquipmentData - ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropEquipmentDataRequest{
+					Scope: "Scope3",
+				},
+			},
+			setup: func() {},
+			want: &v1.DropEquipmentDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DropEquipmentData - DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropEquipmentDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DeleteEquipments(ctx, "Scope1").Return(errors.New("Internal")).Times(1)
+			},
+			want: &v1.DropEquipmentDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewEquipmentServiceServer(rep)
+			got, err := s.DropEquipmentData(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("equipmentServiceServer.DropEquipmentData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("equipmentServiceServer.DropEquipmentData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

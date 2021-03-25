@@ -32,7 +32,7 @@ type metricOracleNUP struct {
 }
 
 // CreateMetricOracleNUPStandard implements Licence CreateMetricOracleNUPStandard function
-func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, mat *v1.MetricNUPOracle, scopes []string) (retMat *v1.MetricNUPOracle, retErr error) {
+func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, mat *v1.MetricNUPOracle, scope string) (retMat *v1.MetricNUPOracle, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -99,6 +99,11 @@ func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, ma
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricOracleNUP"),
 		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
+		},
 	}
 
 	mu := &api.Mutation{
@@ -136,9 +141,9 @@ func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, ma
 }
 
 // ListMetricNUP implements Licence ListMetricNUP function
-func (l *MetricRepository) ListMetricNUP(ctx context.Context, scopes []string) ([]*v1.MetricNUPOracle, error) {
+func (l *MetricRepository) ListMetricNUP(ctx context.Context, scope string) ([]*v1.MetricNUPOracle, error) {
 	q := `{
-		Data(func: eq(metric.type,oracle.nup.standard)){
+		Data(func: eq(metric.type,oracle.nup.standard))@filter(eq(scopes,` + scope + `)){
 		 uid
 		 expand(_all_){
 		  uid
@@ -166,9 +171,9 @@ func (l *MetricRepository) ListMetricNUP(ctx context.Context, scopes []string) (
 }
 
 // GetMetricConfigNUP implements Metric GetMetricConfigNUP function
-func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName string, scopes []string) (*v1.MetricNUPConfig, error) {
+func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName string, scope string) (*v1.MetricNUPConfig, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			BaseEqType: metric.oracle_nup.base{
 				 metadata.equipment.type

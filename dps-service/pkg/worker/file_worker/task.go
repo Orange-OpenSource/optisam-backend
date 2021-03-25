@@ -9,14 +9,15 @@ package fileworker
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	acq "optisam-backend/acqrights-service/pkg/api/v1"
+
+	//acq "optisam-backend/acqrights-service/pkg/api/v1"
 	application "optisam-backend/application-service/pkg/api/v1"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/workerqueue/job"
 	"optisam-backend/dps-service/pkg/config"
-	errObj "optisam-backend/dps-service/pkg/error"
 	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/dps-service/pkg/worker/constants"
 	"optisam-backend/dps-service/pkg/worker/models"
@@ -28,6 +29,8 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 //getFileTypeFromFileName return FileType in uppercase
@@ -36,55 +39,54 @@ func getFileTypeFromFileName(fileName, scope string) (fileType string, err error
 	fileName = strings.ToUpper(fileName)
 	sep := fmt.Sprintf("%s_", strings.ToUpper(scope))
 	if !strings.Contains(fileName, sep) {
-		err = errObj.GetError("InvalidFileName")
+		err = status.Error(codes.Internal, "InvalidFileName")
 		return
 	}
 	fileType = strings.Split(strings.Split(fileName, sep)[1], constants.FILE_EXTENSION)[0]
 	return
 }
 
-func isFileIsMetadataType(fileName string) bool {
-	if strings.ToUpper(strings.Split(fileName, constants.SCOPE_DELIMETER)[0]) == constants.METADATA {
-		return true
-	}
-	return false
-}
-
 func fileProcessing(jobData gendb.UploadedDataFile) (data models.FileData, err error) {
 	var fileType string
 	var expectedHeaders []string
 	if jobData.FileName == "" {
-		err = errObj.GetError("MissingFileName")
+		err = status.Error(codes.Internal, "MissingFileName")
 		return
 	}
-	if isFileIsMetadataType(jobData.FileName) {
-		data, err = csvFileToSchemaData(jobData.FileName, data.Scope)
+	if strings.Contains(strings.ToUpper(jobData.FileName), constants.METADATA) {
+		data, err = csvFileToSchemaData(jobData.FileName, jobData.Scope)
+		if err != nil {
+			data.FileFailureReason = err.Error()
+			return data, status.Error(codes.Internal, data.FileFailureReason)
+		}
 		data.FileType = constants.METADATA
 		data.TargetServices = constants.SERVICES[data.FileType]
 	} else {
 		fileType, err = getFileTypeFromFileName(jobData.FileName, jobData.Scope)
-		log.Printf("File Type %s", fileType)
 		if err != nil {
-			log.Println("File name doesn't has scope, err ", err)
-			return
+			data.FileFailureReason = err.Error()
+			return data, status.Error(codes.Internal, data.FileFailureReason)
 		}
 		//For equipment, dynamic processing is required
 		if strings.Contains(fileType, "EQUIPMENT_") {
 			data, err = getEquipment(fileType, jobData.FileName)
 			if err != nil {
-				log.Println("This file is not supported, err ", err)
-				return
+				data.FileFailureReason = "InvalidFileName"
+				return data, status.Error(codes.Internal, "InvalidFileName")
 			}
 			data.TargetServices = constants.SERVICES[constants.EQUIPMENTS]
 		} else {
 			expectedHeaders, err = getHeadersForFileType(fileType)
 			if err != nil {
-				log.Println("This file is not supported, err ", err)
-				return
+				data.FileFailureReason = err.Error()
+				return data, status.Error(codes.Internal, "FileNotSupported")
 			}
 			data, err = csvToFileData(fileType, jobData.FileName, expectedHeaders)
 			if err != nil {
 				log.Println("Failed to read data from  file ", jobData.FileName, " with err ", err)
+				if data.FileFailureReason == "" {
+					data.FileFailureReason = "BadFile"
+				}
 				return
 			}
 		}
@@ -95,6 +97,7 @@ func fileProcessing(jobData gendb.UploadedDataFile) (data models.FileData, err e
 	return
 }
 
+//Headers are updated, no No space is allowed in headers and these are case insensitive
 func getHeadersForFileType(fileType string) (headers []string, err error) {
 	headers = []string{}
 	switch fileType {
@@ -102,38 +105,36 @@ func getHeadersForFileType(fileType string) (headers []string, err error) {
 		headers = []string{"swidtag", "version", "category", "editor", "isoptionof", "name", "flag"}
 
 	case constants.APPLICATIONS:
-		headers = []string{"idapplication", "version", "owner", "name", "flag"}
+		headers = []string{"application_id", "version", "owner", "name", "domain", "flag"}
 
 	case constants.APPLICATIONS_INSTANCES:
-		headers = []string{"idapplication", "idInstance", "environment", "flag"}
+		headers = []string{"application_id", "instance_id", "environment", "flag"}
 
 	case constants.APPLICATIONS_PRODUCTS:
-		headers = []string{"idapplication", "swidtag", "flag"}
+		headers = []string{"application_id", "swidtag", "flag"}
 
 	case constants.PRODUCTS_EQUIPMENTS:
-		headers = []string{"IdEquipment", "swidtag", "nbusers", "flag"}
+		headers = []string{"equipment_id", "swidtag", "nbusers", "flag"}
 
 	case constants.INSTANCES_PRODUCTS:
-		headers = []string{"idinstance", "swidtag", "flag"}
+		headers = []string{"instance_id", "swidtag", "flag"}
 
 	case constants.INSTANCES_EQUIPMENTS:
-		headers = []string{"idinstance", "IdEquipment", "flag"}
+		headers = []string{"instance_id", "equipment_id", "flag"}
 
 	case constants.PRODUCTS_ACQUIREDRIGHTS:
-		headers = []string{"entity", "sku", "swidtag", "product name", "editor", "metric", "Acquired licenses number", "Licenses under maintenance number", "Total purchase cost", "Total maintenance cost", "AVG Unit Price", "AVG Maintenant Unit Price", "Total cost", "flag"}
+		headers = []string{"product_version", "entity", "sku", "swidtag", "product_name", "editor", "metric", "acquired_licenses", "total_license_cost", "total_maintenance_cost", "unit_price", "maintenance_unit_price", "total_cost", "flag", "maintenance_start", "maintenance_end", "maintenance_licenses"}
 
 	default:
-		err = errObj.GetError("FileNotSupported")
+		err = status.Error(codes.Internal, "FileNotSupported")
 	}
 	return
 }
 
 func csvFileToSchemaData(fileName, scope string) (data models.FileData, err error) {
 	file := fmt.Sprintf("%s/%s", config.GetConfig().FilesLocation, fileName)
-	log.Println("Looking for schema file >>>>>>>>>> : ", file)
 	csvFile, err := os.Open(file)
 	if err != nil {
-		log.Println("Failed to open the schema file , err :", err)
 		return
 	}
 	defer csvFile.Close()
@@ -149,7 +150,6 @@ func csvFileToSchemaData(fileName, scope string) (data models.FileData, err erro
 		data.Schema = append(data.Schema, val)
 	}
 	data.TotalCount++
-	//log.Println("Schema file data ", data, " type", schemaType)
 	return
 }
 
@@ -163,7 +163,7 @@ func getIndexOfHeaders(firstRow string, expectedHeaders []string) (headers model
 	actualHeaders := strings.Split(firstRow, constants.DELIMETER)
 
 	if len(headers.IndexesOfHeaders) > len(actualHeaders) {
-		err = errObj.GetError("HeadersMissing")
+		err = status.Error(codes.Internal, "HeadersMissing")
 		return
 	}
 
@@ -173,7 +173,7 @@ func getIndexOfHeaders(firstRow string, expectedHeaders []string) (headers model
 	for key, val := range headers.IndexesOfHeaders {
 		if val == -1 {
 			log.Println(" mandatory header field [ ", key, "] is missing ")
-			err = errObj.GetError("HeadersMissing")
+			err = status.Error(codes.Internal, "HeadersMissing")
 			return
 		}
 		if val > headers.MaxIndexVal {
@@ -188,7 +188,7 @@ func getProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp models.File
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.SWIDTAG]]) > 0 {
 			data := models.ProductInfo{}
 			data.Name = list[headers.IndexesOfHeaders[constants.NAME]]
 			data.Version = list[headers.IndexesOfHeaders[constants.VERSION]]
@@ -200,10 +200,13 @@ func getProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp models.File
 			resp.Products[data.SwidTag] = data
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
-	err = s.Err()
+	if s.Err() != nil {
+		err = errors.New("BadFile")
+	}
 	return
 
 }
@@ -213,16 +216,18 @@ func getApplications(s *bufio.Scanner, headers models.HeadersInfo) (resp models.
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.APP_ID]]) > 0 {
 			data := models.ApplicationInfo{}
 			data.ID = list[headers.IndexesOfHeaders[constants.APP_ID]]
 			data.Name = list[headers.IndexesOfHeaders[constants.NAME]]
 			data.Owner = list[headers.IndexesOfHeaders[constants.OWNER]]
 			data.Version = list[headers.IndexesOfHeaders[constants.VERSION]]
+			data.Domain = list[headers.IndexesOfHeaders[constants.DOMAIN]]
 			data.Action = constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			resp.Applications[data.ID] = data
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 
@@ -238,13 +243,14 @@ func getApplicationsAndProducts(s *bufio.Scanner, headers models.HeadersInfo) (r
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.APP_ID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.SWIDTAG]]) > 0 {
 			prodID := list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			appID := list[headers.IndexesOfHeaders[constants.APP_ID]]
 			action := constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			resp.AppProducts[action][prodID] = append(resp.AppProducts[action][prodID], appID)
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -259,13 +265,14 @@ func getInstancesOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp 
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.INST_ID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.SWIDTAG]]) > 0 {
 			instanceID := list[headers.IndexesOfHeaders[constants.INST_ID]]
 			prodId := list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			action := constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			resp.ProdInstances[action][instanceID] = append(resp.ProdInstances[action][instanceID], prodId)
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -278,15 +285,16 @@ func getInstanceOfApplications(s *bufio.Scanner, headers models.HeadersInfo) (re
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.INST_ID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.APP_ID]]) > 0 {
 			data := models.AppInstance{}
-			data.ID = list[headers.IndexesOfHeaders["idinstance"]]
-			appID := list[headers.IndexesOfHeaders["idapplication"]]
-			data.Env = list[headers.IndexesOfHeaders["environment"]]
-			data.Action = constants.ACTION_TYPE[list[headers.IndexesOfHeaders["flag"]]]
+			data.ID = list[headers.IndexesOfHeaders[constants.INST_ID]]
+			appID := list[headers.IndexesOfHeaders[constants.APP_ID]]
+			data.Env = list[headers.IndexesOfHeaders[constants.ENVIRONMENT]]
+			data.Action = constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			resp.AppInstances[appID] = append(resp.AppInstances[appID], data)
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -301,7 +309,7 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.SWIDTAG]]) > 0 && len(list[headers.IndexesOfHeaders[constants.EQUIP_ID]]) > 0 {
 			temp := models.ProdEquipemtInfo{}
 			prodID := list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			temp.EquipID = list[headers.IndexesOfHeaders[constants.EQUIP_ID]]
@@ -310,6 +318,7 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp
 			resp.ProdEquipments[action][prodID] = append(resp.ProdEquipments[action][prodID], temp)
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -324,13 +333,14 @@ func getEquipmentsOnInstances(s *bufio.Scanner, headers models.HeadersInfo) (res
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.EQUIP_ID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.INST_ID]]) > 0 {
 			instanceID := list[headers.IndexesOfHeaders[constants.INST_ID]]
 			equipID := list[headers.IndexesOfHeaders[constants.EQUIP_ID]]
 			action := constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			resp.EquipInstances[action][instanceID] = append(resp.EquipInstances[action][instanceID], equipID)
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -343,8 +353,9 @@ func getAcqRightsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp 
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 {
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.SKU]]) > 0 {
 			temp := models.AcqRightsInfo{}
+			temp.Version = list[headers.IndexesOfHeaders[constants.PRODUCT_VERSION]]
 			temp.SwidTag = list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			temp.Sku = list[headers.IndexesOfHeaders[constants.SKU]]
 			temp.Entity = list[headers.IndexesOfHeaders[constants.ENTITY]]
@@ -359,9 +370,12 @@ func getAcqRightsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp 
 			temp.TotalMaintenanceCost, _ = strconv.ParseFloat(list[headers.IndexesOfHeaders[constants.TOTAL_MAINENANCE_COST]], 64)
 			temp.TotalCost, _ = strconv.ParseFloat(list[headers.IndexesOfHeaders[constants.TOTAL_COST]], 64)
 			temp.Action = constants.ACTION_TYPE[list[headers.IndexesOfHeaders[constants.FLAG]]]
-			resp.AcqRights[temp.SwidTag] = temp
+			temp.StartOfMaintenance = list[headers.IndexesOfHeaders[constants.START_OF_MAINTENANCE]]
+			temp.EndOfMaintenance = list[headers.IndexesOfHeaders[constants.END_OF_MAINTENANCE]]
+			resp.AcqRights[temp.Sku] = temp
 		} else {
 			resp.InvalidCount++
+			resp.InvalidDataRowNum = append(resp.InvalidDataRowNum, int(resp.TotalCount)+1)
 		}
 		resp.TotalCount++
 	}
@@ -372,21 +386,22 @@ func getAcqRightsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp 
 func csvToFileData(fileType, fileName string, expectedHeaders []string) (resp models.FileData, err error) {
 	var headers models.HeadersInfo
 	file := fmt.Sprintf("%s/%s", config.GetConfig().FilesLocation, fileName)
-	log.Println("Looking for file   >>>>>>>>>>>>>>>>> : ", file)
+	log.Println("Looking for file   >>>>>>>>>>>>>>>>>>>>>>>>>>>>> : ", file)
 	csvFile, err := os.Open(file)
 	if err != nil {
-		log.Println("Failed to open the file , err :", err)
-		return
+		resp.FileFailureReason = "BadFile"
+		return resp, status.Error(codes.Internal, "BadFile")
 	}
 	defer csvFile.Close()
 	scanner := bufio.NewScanner(csvFile)
 	if !scanner.Scan() {
 		err = scanner.Err()
+		resp.FileFailureReason = "BadFile"
 		return
 	}
 	headers, err = getIndexOfHeaders(scanner.Text(), expectedHeaders)
 	if err != nil {
-		log.Println("Headers error ", err)
+		resp.FileFailureReason = err.Error()
 		return
 	}
 	switch fileType {
@@ -415,9 +430,17 @@ func csvToFileData(fileType, fileName string, expectedHeaders []string) (resp mo
 		resp, err = getApplicationsAndProducts(scanner, headers)
 
 	default:
-		err = errObj.GetError("UnknownFileType")
+		err = status.Error(codes.Internal, "FileNotSupported")
 		return
 	}
+
+	if resp.TotalCount == 0 {
+		err = status.Error(codes.Internal, "NoDataInFile")
+	}
+	if err != nil {
+		resp.FileFailureReason = err.Error()
+	}
+	log.Println("File ", fileName, " has total records ", resp.TotalCount, " invalid", resp.InvalidCount, " row", resp.InvalidDataRowNum)
 	resp.FileType = fileType
 	resp.FileName = fileName
 	resp.TargetServices = constants.SERVICES[fileType]
@@ -433,14 +456,11 @@ func createAPITypeJobs(data models.FileData) (jobs []job.Job, err error) {
 		case constants.PROD_SERVICE:
 			jobs = createProdServiceJobs(data, targetService)
 
-		case constants.ACQ_SERVICE:
-			jobs = createAcqServiceJob(data, targetService)
-
 		case constants.EQUIP_SERVICE:
 			jobs = createEquipServiceJobs(data, targetService)
 
 		default:
-			err = errObj.GetError("TargetServiceNotSupported")
+			err = status.Error(codes.Internal, "TargetServiceNotSupported")
 		}
 	}
 	return
@@ -451,11 +471,13 @@ func createEquipServiceJobs(data models.FileData, targetService string) (jobs []
 	jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
 	// For  Metadata Processing
 	if len(data.Schema) > 0 {
+		fileAsSource := strings.Split(data.FileName, fmt.Sprintf("%s_", strings.ToUpper(data.Scope)))[1]
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.UploadID)
 		appData := equipment.UpsertMetadataRequest{
 			MetadataType:       "equipment",
-			MetadataSource:     data.FileName,
+			MetadataSource:     fileAsSource,
 			MetadataAttributes: data.Schema,
+			Scope:              data.Scope,
 		}
 
 		envlope.TargetAction = constants.UPSERT
@@ -508,12 +530,13 @@ func createEquipServiceJobs(data models.FileData, targetService string) (jobs []
 	return
 }
 
-func createAcqServiceJob(data models.FileData, targetService string) (jobs []job.Job) {
+func createProdAcqRightsJobs(data models.FileData, targetService string) (jobs []job.Job) {
 	var err error
 	for _, val := range data.AcqRights {
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.UploadID)
 		jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
-		appData := acq.UpsertAcqRightsRequest{
+		appData := product.UpsertAcqRightsRequest{
+			Version:                 val.Version,
 			Sku:                     val.Sku,
 			Swidtag:                 val.SwidTag,
 			ProductName:             val.ProductName,
@@ -521,13 +544,15 @@ func createAcqServiceJob(data models.FileData, targetService string) (jobs []job
 			MetricType:              val.Metric,
 			NumLicensesAcquired:     int32(val.NumOfAcqLic),
 			NumLicencesMaintainance: int32(val.NumOfMaintenanceLic),
-			AvgUnitPrice:            float32(val.AvgPrice),
-			AvgMaintenanceUnitPrice: float32(val.AvgMaintenantPrice),
-			TotalPurchaseCost:       float32(val.TotalPurchasedCost),
-			TotalMaintenanceCost:    float32(val.TotalMaintenanceCost),
-			TotalCost:               float32(val.TotalCost),
+			AvgUnitPrice:            float64(val.AvgPrice),
+			AvgMaintenanceUnitPrice: float64(val.AvgMaintenantPrice),
+			TotalPurchaseCost:       float64(val.TotalPurchasedCost),
+			TotalMaintenanceCost:    float64(val.TotalMaintenanceCost),
+			TotalCost:               float64(val.TotalCost),
 			Entity:                  val.Entity,
 			Scope:                   data.Scope,
+			StartOfMaintenance:      val.StartOfMaintenance,
+			EndOfMaintenance:        val.EndOfMaintenance,
 		}
 		envlope.TargetAction = constants.UPSERT
 		envlope.Data, err = json.Marshal(appData)
@@ -556,6 +581,9 @@ func createProdServiceJobs(data models.FileData, targetService string) (jobs []j
 
 	case constants.PRODUCTS_EQUIPMENTS:
 		jobs = createProdEquipJobs(data, targetService)
+
+	case constants.PRODUCTS_ACQUIREDRIGHTS:
+		jobs = createProdAcqRightsJobs(data, targetService)
 	}
 	return
 }
@@ -799,6 +827,7 @@ func createApplicationJobs(data models.FileData, targetService string) (jobs []j
 				Version:       val.Version,
 				Owner:         val.Owner,
 				Scope:         data.Scope,
+				Domain:        val.Domain,
 			}
 			envlope.TargetAction = constants.UPSERT
 		} else {
@@ -873,6 +902,7 @@ func getDynamicEquipmentFromCsv(file string) (resp []map[string]interface{}, err
 		err = s.Err()
 		return
 	}
+
 	headers := make(map[int]string)
 	for key, val := range strings.Split(s.Text(), constants.DELIMETER) {
 		headers[key] = val
@@ -880,17 +910,19 @@ func getDynamicEquipmentFromCsv(file string) (resp []map[string]interface{}, err
 	hlen := len(headers)
 	for s.Scan() {
 		list := strings.Split(s.Text(), constants.DELIMETER)
+		// TODO should we allow this
 		if len(list) >= hlen {
 			temp := make(map[string]interface{})
 			for index, val := range list {
 				var out interface{}
 				var pErr error
-				out, pErr = strconv.ParseFloat(val, 32)
+				out, pErr = strconv.ParseInt(val, 10, 64)
 				if pErr != nil {
-					out, pErr = strconv.ParseBool(val)
+					out, pErr = strconv.ParseFloat(val, 64)
 					if pErr != nil {
-						out, pErr = strconv.ParseInt(val, 10, 32)
+						out, pErr = strconv.ParseBool(val)
 						if pErr != nil {
+							//the value is string
 							out = val
 						}
 					}

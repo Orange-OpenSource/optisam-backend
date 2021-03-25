@@ -13,13 +13,17 @@ import (
 	"net/http"
 	"net/url"
 	"optisam-backend/application-service/pkg/config"
+	cronJob "optisam-backend/application-service/pkg/cron"
 	"optisam-backend/application-service/pkg/protocol/grpc"
 	"optisam-backend/application-service/pkg/protocol/rest"
 	repo "optisam-backend/application-service/pkg/repository/v1/postgres"
 	v1 "optisam-backend/application-service/pkg/service/v1"
-	"optisam-backend/application-service/pkg/worker"
+	dgWorker "optisam-backend/application-service/pkg/worker/dgraph"
+	riskWorker "optisam-backend/application-service/pkg/worker/risk_calculator"
 	"optisam-backend/common/optisam/buildinfo"
+	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/dgraph"
+	gconn "optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/healthcheck"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
@@ -44,6 +48,13 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
 )
+
+var LastTimeApiCalled time.Time
+
+type applicationServiceServer struct {
+	applicationRepo *repo.ApplicationRepository
+	queue           workerqueue.Workerqueue
+}
 
 // nolint: gochecknoglobals
 var (
@@ -106,7 +117,10 @@ func RunServer() error {
 
 		os.Exit(3)
 	}
-
+	if cfg.MaxApiWorker == 0 {
+		cfg.MaxApiWorker = 25 //Default api worker count
+		logger.Log.Info("max api worker set default : 25 ")
+	}
 	ctx := context.Background()
 
 	// Create Dgraph Connection
@@ -219,18 +233,30 @@ func RunServer() error {
 	go func() {
 		_ = instrumentationServer.ListenAndServe()
 	}()
+	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize GRPC client")
+	}
 
 	//Worker Queue Initialization
 	q, err := workerqueue.NewQueue(ctx, "application-service", db, cfg.WorkerQueue)
 	if err != nil {
 		return fmt.Errorf("failed to create worker queue: %v", err)
 	}
-	lWorker := worker.NewWorker("lw", dg)
+	lWorker := dgWorker.NewWorker("lw", dg)
 	q.RegisterWorker(ctx, lWorker)
 
-	rep := repo.NewApplicationRepository(db)
-	v1API := v1.NewApplicationServiceServer(rep, q)
+	for i := 0; i < cfg.MaxApiWorker; i++ {
 
+		lWorker := dgWorker.NewWorker("lw", dg)
+		q.RegisterWorker(ctx, lWorker)
+	}
+
+	q.IsWorkerRegCompleted = true
+	rep := repo.NewApplicationRepository(db)
+	obWorker := riskWorker.NewWorker("ob", grpcClientMap, rep)
+	q.RegisterWorker(ctx, obWorker)
+	v1API := v1.NewApplicationServiceServer(rep, q)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
@@ -243,10 +269,19 @@ func RunServer() error {
 		logger.Log.Fatal("Failed to Load RBAC policies", zap.Error(err))
 	}
 
+	//This is one time
+	cron.CronConfigInit(cfg.Cron)
+
+	// cron Job
+	cronJob.CronJobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HttpServers.Address["auth"]))
+	// Below command will trigger the cron job as soon as the service starts
+	cronJob.Job()
+	cron.AddCronJob(cronJob.Job)
+
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
 	go func() {
-		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
+		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey, authZPolicies)
 	}()
 	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey, authZPolicies, cfg.IAM.APIKey)
 }

@@ -10,8 +10,8 @@ import (
 	"context"
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repo "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
 	"optisam-backend/common/optisam/token/claims"
 	"strings"
@@ -23,11 +23,10 @@ import (
 
 // ListGroups list all the groups owned by admin user.
 func (s *accountServiceServer) ListGroups(ctx context.Context, req *v1.ListGroupsRequest) (*v1.ListGroupsResponse, error) {
-	claims, ok := ctxmanage.RetrieveClaims(ctx)
+	claims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	logger.Log.Info("user id", zap.String("user_id", claims.UserID))
 	userID := claims.UserID // get userID from context
 	totalGrps, groups, err := s.accountRepo.UserOwnedGroups(ctx, userID, nil)
 	if err != nil {
@@ -50,7 +49,7 @@ func (s *accountServiceServer) ListGroups(ctx context.Context, req *v1.ListGroup
 
 // CreateGroup implemntsv1.AccountServiceServer CreateGroup function
 func (s *accountServiceServer) CreateGroup(ctx context.Context, req *v1.Group) (*v1.Group, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -99,13 +98,12 @@ func (s *accountServiceServer) CreateGroup(ctx context.Context, req *v1.Group) (
 		}
 		return convertRepoGroupToSrvGroup(group), nil
 	default:
-		logger.Log.Info("user role", zap.String("user_role", string(userClaims.Role)))
 		return nil, status.Error(codes.Unknown, "unknown error")
 	}
 }
 
 func (s *accountServiceServer) UpdateGroup(ctx context.Context, req *v1.UpdateGroupRequest) (*v1.Group, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -122,13 +120,12 @@ func (s *accountServiceServer) UpdateGroup(ctx context.Context, req *v1.UpdateGr
 	case claims.RoleSuperAdmin:
 		return s.updateGroupName(ctx, req)
 	default:
-		logger.Log.Info("user role", zap.String("user_role", string(userClaims.Role)))
 		return nil, status.Error(codes.Unknown, "unknown error")
 	}
 }
 
 func (s *accountServiceServer) DeleteGroup(ctx context.Context, req *v1.DeleteGroupRequest) (*v1.DeleteGroupResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -143,17 +140,15 @@ func (s *accountServiceServer) DeleteGroup(ctx context.Context, req *v1.DeleteGr
 	case claims.RoleSuperAdmin:
 		return s.deleteGroup(ctx, req.GroupId)
 	default:
-		logger.Log.Info("user role", zap.String("user_role", string(userClaims.Role)))
 		return nil, status.Error(codes.Unknown, "unknown error")
 	}
 }
 
 func (s *accountServiceServer) ListChildGroups(ctx context.Context, req *v1.ListChildGroupsRequest) (*v1.ListGroupsResponse, error) {
-	claims, ok := ctxmanage.RetrieveClaims(ctx)
+	claims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	logger.Log.Info("user id", zap.String("user_id", claims.UserID))
 	userID := claims.UserID // get userID from context
 	group, err := s.accountRepo.GroupInfo(ctx, req.GroupId)
 	if err != nil {
@@ -187,11 +182,10 @@ func (s *accountServiceServer) ListChildGroups(ctx context.Context, req *v1.List
 }
 
 func (s *accountServiceServer) ListUserGroups(ctx context.Context, req *v1.ListGroupsRequest) (*v1.ListGroupsResponse, error) {
-	claims, ok := ctxmanage.RetrieveClaims(ctx)
+	claims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	logger.Log.Info("user id", zap.String("user_id", claims.UserID))
 	userID := claims.UserID // get userID from context
 	groups, err := s.accountRepo.UserOwnedGroupsDirect(ctx, userID, nil)
 	if err != nil {

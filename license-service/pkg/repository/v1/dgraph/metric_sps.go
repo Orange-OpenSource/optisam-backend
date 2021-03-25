@@ -25,8 +25,8 @@ type metricSPS struct {
 }
 
 // ListMetricSPS implements Licence ListMetricSPS function
-func (l *LicenseRepository) ListMetricSPS(ctx context.Context, scopes []string) ([]*v1.MetricSPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricSPSSagProcessorStandard, scopes)
+func (l *LicenseRepository) ListMetricSPS(ctx context.Context, scopes ...string) ([]*v1.MetricSPS, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricSPSSagProcessorStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricSPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err

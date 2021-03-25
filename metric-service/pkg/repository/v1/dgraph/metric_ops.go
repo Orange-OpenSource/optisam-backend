@@ -55,7 +55,7 @@ type metricInfo struct {
 }
 
 // CreateMetricOPS implements Licence CreateMetricOPS function
-func (l *MetricRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scopes []string) (retMat *v1.MetricOPS, retErr error) {
+func (l *MetricRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scope string) (retMat *v1.MetricOPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
 		&api.NQuad{
@@ -113,6 +113,11 @@ func (l *MetricRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOP
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricOracleOPS"),
 		},
+		&api.NQuad{
+			Subject:     blankID,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
+		},
 	}
 
 	mu := &api.Mutation{
@@ -150,9 +155,9 @@ func (l *MetricRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOP
 }
 
 // ListMetricOPS implements Licence ListMetricOPS function
-func (l *MetricRepository) ListMetricOPS(ctx context.Context, scopes []string) ([]*v1.MetricOPS, error) {
+func (l *MetricRepository) ListMetricOPS(ctx context.Context, scope string) ([]*v1.MetricOPS, error) {
 	q := `{
-		Data(func: eq(metric.type,oracle.processor.standard)){
+		Data(func: eq(metric.type,oracle.processor.standard)) @filter(eq(scopes,` + scope + `)){
 		 uid
 		 expand(_all_){
 		  uid
@@ -180,9 +185,9 @@ func (l *MetricRepository) ListMetricOPS(ctx context.Context, scopes []string) (
 }
 
 // GetMetricConfigOPS implements Metric GetMetricOPS function
-func (l *MetricRepository) GetMetricConfigOPS(ctx context.Context, metName string, scopes []string) (*v1.MetricOPSConfig, error) {
+func (l *MetricRepository) GetMetricConfigOPS(ctx context.Context, metName string, scope string) (*v1.MetricOPSConfig, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			BaseEqType: metric.ops.base{
 				 metadata.equipment.type

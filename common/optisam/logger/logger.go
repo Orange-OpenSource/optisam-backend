@@ -19,6 +19,9 @@ var (
 	// Log is global logger
 	Log *zap.Logger
 
+	//GlobalLevel is the logging level
+	GlobalLevel zapcore.Level
+
 	// timeFormat is custom Time Format
 	customTimeFormat string
 
@@ -37,7 +40,7 @@ func Init(lvl int, timeFormat string) error {
 	var err error
 	onceInit.Do(func() {
 		// First, define our level-handling logic.
-		globalLevel := zapcore.Level(lvl)
+		GlobalLevel = zapcore.Level(lvl)
 		// High-priority output should also go to standard error, and low-priority
 		// output should also go to standard out.
 		// It is usefull for Kubernetes deployment.
@@ -47,7 +50,7 @@ func Init(lvl int, timeFormat string) error {
 			return lvl >= zapcore.ErrorLevel
 		})
 		lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-			return lvl >= globalLevel && lvl < zapcore.ErrorLevel
+			return lvl >= GlobalLevel && lvl < zapcore.ErrorLevel
 		})
 		consoleInfos := zapcore.Lock(os.Stdout)
 		consoleErrors := zapcore.Lock(os.Stderr)

@@ -19,7 +19,7 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		swidTag string
-		scopes  []string
+		scopes  string
 	}
 	tests := []struct {
 		name    string
@@ -34,7 +34,7 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				swidTag: "ORAC003",
-				scopes:  []string{"scope1", "scope2"},
+				scopes:  "scope1",
 			},
 			want1: []*v1.ProductAcquiredRight{
 				&v1.ProductAcquiredRight{
@@ -51,7 +51,7 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				swidTag: "WIN3",
-				scopes:  []string{"scope3"},
+				scopes:  "scope3",
 			},
 			want1: []*v1.ProductAcquiredRight{
 				&v1.ProductAcquiredRight{

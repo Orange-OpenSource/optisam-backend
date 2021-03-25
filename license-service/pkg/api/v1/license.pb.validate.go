@@ -39,6 +39,175 @@ var (
 	_ = ptypes.DynamicAny{}
 )
 
+// define the regex for a UUID once up-front
+var _license_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
+// Validate checks the field values on
+// ListAcqRightsForApplicationsProductRequest with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ListAcqRightsForApplicationsProductRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for AppId
+
+	// no validation rules for ProdId
+
+	if !_ListAcqRightsForApplicationsProductRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcqRightsForApplicationsProductRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ListAcqRightsForApplicationsProductRequestValidationError is the validation
+// error returned by ListAcqRightsForApplicationsProductRequest.Validate if
+// the designated constraints aren't met.
+type ListAcqRightsForApplicationsProductRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsForApplicationsProductRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsForApplicationsProductRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsForApplicationsProductRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsForApplicationsProductRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsForApplicationsProductRequestValidationError) ErrorName() string {
+	return "ListAcqRightsForApplicationsProductRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsForApplicationsProductRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsForApplicationsProductRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsForApplicationsProductRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsForApplicationsProductRequestValidationError{}
+
+var _ListAcqRightsForApplicationsProductRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on
+// ListAcqRightsForApplicationsProductResponse with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *ListAcqRightsForApplicationsProductResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAcqRights() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListAcqRightsForApplicationsProductResponseValidationError{
+					field:  fmt.Sprintf("AcqRights[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListAcqRightsForApplicationsProductResponseValidationError is the validation
+// error returned by ListAcqRightsForApplicationsProductResponse.Validate if
+// the designated constraints aren't met.
+type ListAcqRightsForApplicationsProductResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAcqRightsForApplicationsProductResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAcqRightsForApplicationsProductResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAcqRightsForApplicationsProductResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAcqRightsForApplicationsProductResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAcqRightsForApplicationsProductResponseValidationError) ErrorName() string {
+	return "ListAcqRightsForApplicationsProductResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAcqRightsForApplicationsProductResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAcqRightsForApplicationsProductResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAcqRightsForApplicationsProductResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAcqRightsForApplicationsProductResponseValidationError{}
+
 // Validate checks the field values on LicensesForEquipAndMetricRequest with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, an error is returned.
@@ -58,7 +227,9 @@ func (m *LicensesForEquipAndMetricRequest) Validate() error {
 	for idx, item := range m.GetAttributes() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return LicensesForEquipAndMetricRequestValidationError{
 					field:  fmt.Sprintf("Attributes[%v]", idx),
@@ -68,6 +239,13 @@ func (m *LicensesForEquipAndMetricRequest) Validate() error {
 			}
 		}
 
+	}
+
+	if !_LicensesForEquipAndMetricRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return LicensesForEquipAndMetricRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
 	}
 
 	return nil
@@ -130,6 +308,8 @@ var _ interface {
 	ErrorName() string
 } = LicensesForEquipAndMetricRequestValidationError{}
 
+var _LicensesForEquipAndMetricRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on LicensesForEquipAndMetricResponse with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, an error is returned.
@@ -141,7 +321,9 @@ func (m *LicensesForEquipAndMetricResponse) Validate() error {
 	for idx, item := range m.GetLicenses() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return LicensesForEquipAndMetricResponseValidationError{
 					field:  fmt.Sprintf("Licenses[%v]", idx),
@@ -229,7 +411,9 @@ func (m *ProductLicenseForEquipAndMetric) Validate() error {
 
 	// no validation rules for Delta
 
-	if v, ok := interface{}(m.GetProduct()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetProduct()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return ProductLicenseForEquipAndMetricValidationError{
 				field:  "Product",
@@ -299,75 +483,6 @@ var _ interface {
 	ErrorName() string
 } = ProductLicenseForEquipAndMetricValidationError{}
 
-// Validate checks the field values on MetricesForEqTypeRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *MetricesForEqTypeRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Type
-
-	return nil
-}
-
-// MetricesForEqTypeRequestValidationError is the validation error returned by
-// MetricesForEqTypeRequest.Validate if the designated constraints aren't met.
-type MetricesForEqTypeRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e MetricesForEqTypeRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e MetricesForEqTypeRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e MetricesForEqTypeRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e MetricesForEqTypeRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e MetricesForEqTypeRequestValidationError) ErrorName() string {
-	return "MetricesForEqTypeRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e MetricesForEqTypeRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sMetricesForEqTypeRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = MetricesForEqTypeRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = MetricesForEqTypeRequestValidationError{}
-
 // Validate checks the field values on ProductLicensesForMetricRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -381,6 +496,13 @@ func (m *ProductLicensesForMetricRequest) Validate() error {
 	// no validation rules for MetricName
 
 	// no validation rules for UnitCost
+
+	if !_ProductLicensesForMetricRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ProductLicensesForMetricRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
@@ -441,6 +563,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductLicensesForMetricRequestValidationError{}
+
+var _ProductLicensesForMetricRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ProductLicensesForMetricResponse with
 // the rules defined in the proto definition for this message. If any rules
@@ -526,6 +650,13 @@ func (m *ListAcqRightsForProductAggregationRequest) Validate() error {
 
 	// no validation rules for ID
 
+	if !_ListAcqRightsForProductAggregationRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcqRightsForProductAggregationRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -586,6 +717,8 @@ var _ interface {
 	ErrorName() string
 } = ListAcqRightsForProductAggregationRequestValidationError{}
 
+var _ListAcqRightsForProductAggregationRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on
 // ListAcqRightsForProductAggregationResponse with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -597,7 +730,9 @@ func (m *ListAcqRightsForProductAggregationResponse) Validate() error {
 	for idx, item := range m.GetAcqRights() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListAcqRightsForProductAggregationResponseValidationError{
 					field:  fmt.Sprintf("AcqRights[%v]", idx),
@@ -679,7 +814,9 @@ func (m *UpdateProductAggregationRequest) Validate() error {
 
 	// no validation rules for Name
 
-	if v, ok := interface{}(m.GetAggregation()).(interface{ Validate() error }); ok {
+	if v, ok := interface{}(m.GetAggregation()).(interface {
+		Validate() error
+	}); ok {
 		if err := v.Validate(); err != nil {
 			return UpdateProductAggregationRequestValidationError{
 				field:  "Aggregation",
@@ -899,7 +1036,9 @@ func (m *ListProductAggregationResponse) Validate() error {
 	for idx, item := range m.GetAggregations() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListProductAggregationResponseValidationError{
 					field:  fmt.Sprintf("Aggregations[%v]", idx),
@@ -990,7 +1129,9 @@ func (m *ProductAggregation) Validate() error {
 	for idx, item := range m.GetProductsFull() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ProductAggregationValidationError{
 					field:  fmt.Sprintf("ProductsFull[%v]", idx),
@@ -1072,7 +1213,9 @@ func (m *ListMetricResponse) Validate() error {
 	for idx, item := range m.GetMetrices() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListMetricResponseValidationError{
 					field:  fmt.Sprintf("Metrices[%v]", idx),
@@ -1223,6 +1366,13 @@ func (m *ListAcquiredRightsForProductRequest) Validate() error {
 
 	// no validation rules for SwidTag
 
+	if !_ListAcquiredRightsForProductRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAcquiredRightsForProductRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -1283,6 +1433,8 @@ var _ interface {
 	ErrorName() string
 } = ListAcquiredRightsForProductRequestValidationError{}
 
+var _ListAcquiredRightsForProductRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on ListAcquiredRightsForProductResponse
 // with the rules defined in the proto definition for this message. If any
 // rules are violated, an error is returned.
@@ -1294,7 +1446,9 @@ func (m *ListAcquiredRightsForProductResponse) Validate() error {
 	for idx, item := range m.GetAcqRights() {
 		_, _ = idx, item
 
-		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
 			if err := v.Validate(); err != nil {
 				return ListAcquiredRightsForProductResponseValidationError{
 					field:  fmt.Sprintf("AcqRights[%v]", idx),
@@ -1627,9 +1781,19 @@ func (m *Attribute) Validate() error {
 
 	// no validation rules for ID
 
-	// no validation rules for Name
+	if !_Attribute_Name_Pattern.MatchString(m.GetName()) {
+		return AttributeValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[-_A-Za-z0-9]+$\"",
+		}
+	}
 
-	// no validation rules for DataType
+	if _, ok := _Attribute_DataType_InLookup[m.GetDataType()]; !ok {
+		return AttributeValidationError{
+			field:  "DataType",
+			reason: "value must be in list [1 2 3]",
+		}
+	}
 
 	// no validation rules for PrimaryKey
 
@@ -1725,3 +1889,11 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AttributeValidationError{}
+
+var _Attribute_Name_Pattern = regexp.MustCompile("^[-_A-Za-z0-9]+$")
+
+var _Attribute_DataType_InLookup = map[DataTypes]struct{}{
+	1: {},
+	2: {},
+	3: {},
+}

@@ -65,23 +65,34 @@
         ]
       }
     },
-    "/api/v1/equipments/types/{type}/metric": {
+    "/api/v1/licenses/applications/{app_id}/products/{prod_id}": {
       "get": {
-        "summary": "TODO: Should be in metric services",
-        "operationId": "MetricesForEqType",
+        "operationId": "ListAcqRightsForApplicationsProduct",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1ListMetricResponse"
+              "$ref": "#/definitions/v1ListAcqRightsForApplicationsProductResponse"
             }
           }
         },
         "parameters": [
           {
-            "name": "type",
+            "name": "app_id",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "prod_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -106,6 +117,12 @@
             "name": "swid_tag",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -195,63 +212,12 @@
             "in": "path",
             "required": true,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/products/aggregations/{ID}": {
-      "delete": {
-        "operationId": "DeleteProductAggregation",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListProductAggregationResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/products/aggregations/{name}": {
-      "put": {
-        "summary": "update product aggregation",
-        "operationId": "UpdateProductAggregation",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ProductAggregation"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
           },
           {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpdateProductAggregationRequest"
-            }
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -351,11 +317,8 @@
             "$ref": "#/definitions/v1Attribute"
           }
         },
-        "scopes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "scope": {
+          "type": "string"
         }
       }
     },
@@ -366,6 +329,17 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ProductLicenseForEquipAndMetric"
+          }
+        }
+      }
+    },
+    "v1ListAcqRightsForApplicationsProductResponse": {
+      "type": "object",
+      "properties": {
+        "acq_rights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductAcquiredRights"
           }
         }
       }
@@ -389,42 +363,6 @@
           "items": {
             "$ref": "#/definitions/v1ProductAcquiredRights"
           }
-        }
-      }
-    },
-    "v1ListMetricResponse": {
-      "type": "object",
-      "properties": {
-        "metrices": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Metric"
-          }
-        }
-      }
-    },
-    "v1ListProductAggregationResponse": {
-      "type": "object",
-      "properties": {
-        "aggregations": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1ProductAggregation"
-          }
-        }
-      }
-    },
-    "v1Metric": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
         }
       }
     },
@@ -587,6 +525,9 @@
         "unit_cost": {
           "type": "number",
           "format": "double"
+        },
+        "scope": {
+          "type": "string"
         }
       }
     },
@@ -603,43 +544,6 @@
         },
         "metric_name": {
           "type": "string"
-        }
-      }
-    },
-    "v1UpdateAggregation": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "added_products": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "removed_products": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "product_names": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "v1UpdateProductAggregationRequest": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "aggregation": {
-          "$ref": "#/definitions/v1UpdateAggregation"
         }
       }
     }

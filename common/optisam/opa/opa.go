@@ -25,7 +25,6 @@ type AuthzInput struct {
 
 func NewOPA(ctx context.Context, regoFile string) (*rego.PreparedEvalQuery, error) {
 	regoPaths := []string{regoFile}
-	logger.Log.Info("regpopath:", zap.String("regopath", regoPaths[0]))
 	r, err := rego.New(rego.Query("data.rbac.allow"), rego.Load(regoPaths, nil)).PrepareForEval(ctx)
 	if err != nil {
 		logger.Log.Error("Failed to Load OPA Policies", zap.Error(err))

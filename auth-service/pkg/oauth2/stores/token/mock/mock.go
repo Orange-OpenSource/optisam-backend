@@ -12,7 +12,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	oauth2_v3 "gopkg.in/oauth2.v3"
+	oauth2 "gopkg.in/oauth2.v3"
 	reflect "reflect"
 )
 
@@ -40,7 +40,7 @@ func (m *MockTokenStore) EXPECT() *MockTokenStoreMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockTokenStore) Create(arg0 oauth2_v3.TokenInfo) error {
+func (m *MockTokenStore) Create(arg0 oauth2.TokenInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0)
 	ret0, _ := ret[0].(error)
@@ -54,10 +54,10 @@ func (mr *MockTokenStoreMockRecorder) Create(arg0 interface{}) *gomock.Call {
 }
 
 // GetByAccess mocks base method
-func (m *MockTokenStore) GetByAccess(arg0 string) (oauth2_v3.TokenInfo, error) {
+func (m *MockTokenStore) GetByAccess(arg0 string) (oauth2.TokenInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByAccess", arg0)
-	ret0, _ := ret[0].(oauth2_v3.TokenInfo)
+	ret0, _ := ret[0].(oauth2.TokenInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -69,10 +69,10 @@ func (mr *MockTokenStoreMockRecorder) GetByAccess(arg0 interface{}) *gomock.Call
 }
 
 // GetByCode mocks base method
-func (m *MockTokenStore) GetByCode(arg0 string) (oauth2_v3.TokenInfo, error) {
+func (m *MockTokenStore) GetByCode(arg0 string) (oauth2.TokenInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByCode", arg0)
-	ret0, _ := ret[0].(oauth2_v3.TokenInfo)
+	ret0, _ := ret[0].(oauth2.TokenInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -84,10 +84,10 @@ func (mr *MockTokenStoreMockRecorder) GetByCode(arg0 interface{}) *gomock.Call {
 }
 
 // GetByRefresh mocks base method
-func (m *MockTokenStore) GetByRefresh(arg0 string) (oauth2_v3.TokenInfo, error) {
+func (m *MockTokenStore) GetByRefresh(arg0 string) (oauth2.TokenInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByRefresh", arg0)
-	ret0, _ := ret[0].(oauth2_v3.TokenInfo)
+	ret0, _ := ret[0].(oauth2.TokenInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

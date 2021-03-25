@@ -21,7 +21,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 		ctx    context.Context
 		id     string
 		mat    *v1.MetricNUPComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {
@@ -345,7 +345,7 @@ func TestLicenseRepository_MetricNUPComputedLicensesAgg(t *testing.T) {
 		ctx    context.Context
 		id     string
 		mat    *v1.MetricNUPComputed
-		scopes []string
+		scopes string
 	}
 	cleanup, err := setup()
 	if !assert.Empty(t, err, "error is not expected in setup") {

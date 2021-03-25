@@ -9,7 +9,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
 	repo "optisam-backend/simulation-service/pkg/repository/v1"
@@ -62,7 +62,7 @@ func (d *masterdataMatcher) String() string {
 }
 
 func TestSimulationService_CreateConfig(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -390,7 +390,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 		},
 		{name: "FAILURE - CreateConfig - user does not have access to create config data",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -439,7 +439,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 		},
 		{name: "FAILURE - CreateConfig - unknown role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "abc",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -563,7 +563,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 }
 
 func TestSimulationService_UpdateConfig(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1046,7 +1046,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateConfig - user does not have access to update config data",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1095,7 +1095,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 		},
 		{name: "FAILURE - UpdateConfig - unknown role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "abc",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1219,7 +1219,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 }
 
 func TestSimulationService_DeleteConfig(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1312,7 +1312,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 		},
 		{name: "FAILURE - Delete Config - user does not have access to delete config data",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "User",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1326,7 +1326,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 		},
 		{name: "FAILURE - deleteConfig - unknown role",
 			args: args{
-				ctx: ctxmanage.AddClaims(context.Background(), &claims.Claims{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "abc",
 					Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1356,7 +1356,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 }
 
 func TestSimulationService_ListConfig(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
@@ -1591,7 +1591,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 }
 
 func TestSimulationService_GetConfigData(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},

@@ -57,6 +57,7 @@ message SimulationByHardwareRequest {
   string equip_id  = 2;
   repeated EquipAttribute attributes = 3;
   repeated SimMetricDetails metric_details = 4;
+  string scope = 5 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 
 }
 message SimulationByHardwareResponse {
@@ -125,6 +126,7 @@ enum DataTypes {
 message SimulationByMetricRequest {
   string swid_tag = 1;
   repeated MetricSimDetails metric_details = 2;
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message MetricSimDetails {

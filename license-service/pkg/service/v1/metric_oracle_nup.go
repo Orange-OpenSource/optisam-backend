@@ -9,7 +9,6 @@ package v1
 import (
 	"context"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -19,16 +18,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes []*repo.EquipmentType, met string, cal func(mat *repo.MetricNUPComputed) (uint64, error)) (uint64, error) {
-	// TODO pass claims here
-	userClaims, _ := ctxmanage.RetrieveClaims(ctx)
-	metrics, err := s.licenseRepo.ListMetricNUP(ctx, userClaims.Socpes)
+func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+	scope, _ := input[SCOPES].([]string)
+	metrics, err := s.licenseRepo.ListMetricNUP(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		return 0, status.Error(codes.Internal, "cannot fetch metric OPS")
 
 	}
 	ind := 0
-	if ind = metricNameExistsNUP(metrics, met); ind == -1 {
+	if ind = metricNameExistsNUP(metrics, input[METRIC_NAME].(string)); ind == -1 {
 		return 0, status.Error(codes.Internal, "metric name doesnot exists")
 	}
 	parTree, err := parentHierarchy(eqTypes, metrics[ind].StartEqTypeID)
@@ -76,12 +74,16 @@ func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes 
 		CoreFactorAttr: coreFactor,
 		NumOfUsers:     metrics[ind].NumberOfUsers,
 	}
-	computedLicenses, err := cal(mat)
+	computedLicenses := uint64(0)
+	if input[IS_AGG].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	} else {
+		computedLicenses, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+	}
 	if err != nil {
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")
 
 	}
-
 	return computedLicenses, nil
 }
 

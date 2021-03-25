@@ -9,7 +9,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -21,10 +21,10 @@ import (
 )
 
 func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"A", "B"},
+		Socpes: []string{"Scope1", "Scope2"},
 	})
 	var mockCtrl *gomock.Controller
 	var rep repo.Metric
@@ -52,6 +52,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -59,7 +60,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -68,7 +69,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -109,7 +110,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeID: "e3",
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e4",
-				}, []string{"A", "B"}).Times(1).Return(&repo.MetricOPS{
+				}, "Scope1").Times(1).Return(&repo.MetricOPS{
 					ID:                    "m1",
 					Name:                  "OPS",
 					NumCoreAttrID:         "a1",
@@ -145,6 +146,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e2",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e2",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -152,7 +154,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -161,7 +163,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -202,7 +204,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeID: "e2",
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e2",
-				}, []string{"A", "B"}).Times(1).Return(&repo.MetricOPS{
+				}, "Scope1").Times(1).Return(&repo.MetricOPS{
 					ID:                    "m1",
 					Name:                  "OPS",
 					NumCoreAttrID:         "a1",
@@ -238,6 +240,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup:   func() {},
@@ -254,6 +257,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -275,13 +279,14 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					StartEqTypeId:         "e1",
 					AggerateLevelEqTypeId: "e3",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -289,7 +294,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -335,13 +340,14 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					StartEqTypeId:    "e1",
 					BaseEqTypeId:     "e2",
 					EndEqTypeId:      "e4",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -349,7 +355,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -394,13 +400,14 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					StartEqTypeId:         "e1",
 					BaseEqTypeId:          "e2",
 					AggerateLevelEqTypeId: "e3",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -408,7 +415,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -455,6 +462,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -462,7 +470,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return(nil, errors.New("test error"))
 
 			},
 			wantErr: true,
@@ -479,6 +487,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -486,7 +495,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "OPS",
 					},
@@ -510,6 +519,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -517,7 +527,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "OPS",
 					},
@@ -541,6 +551,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -548,7 +559,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -556,7 +567,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(nil, errors.New("test error"))
 
 			},
 
@@ -574,6 +585,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -581,7 +593,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -590,7 +602,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -624,6 +636,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e22",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -631,7 +644,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -640,7 +653,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -674,6 +687,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e33",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -681,7 +695,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -690,7 +704,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -724,6 +738,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e44",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -731,7 +746,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -740,7 +755,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -774,6 +789,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -781,7 +797,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -790,7 +806,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -824,6 +840,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -831,7 +848,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -840,7 +857,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -877,6 +894,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e2",
 					BaseEqTypeId:          "e3",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -884,7 +902,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -893,7 +911,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -927,6 +945,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e5",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -934,7 +953,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -943,7 +962,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -980,6 +999,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -987,7 +1007,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -996,7 +1016,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1030,6 +1050,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1037,7 +1058,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1046,7 +1067,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1093,6 +1114,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1100,7 +1122,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1109,7 +1131,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1156,6 +1178,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1163,7 +1186,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1172,7 +1195,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1219,6 +1242,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1226,7 +1250,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1235,7 +1259,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1282,6 +1306,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1289,7 +1314,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1298,7 +1323,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1345,6 +1370,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1352,7 +1378,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1361,7 +1387,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1408,6 +1434,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeId: "e3",
 					BaseEqTypeId:          "e2",
 					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
 				},
 			},
 			setup: func() {
@@ -1415,7 +1442,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -1424,7 +1451,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					},
 				}, nil)
 
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -1465,7 +1492,7 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 					AggerateLevelEqTypeID: "e3",
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e4",
-				}, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				}, "Scope1").Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},

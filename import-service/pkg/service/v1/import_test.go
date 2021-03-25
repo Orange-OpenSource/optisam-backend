@@ -13,8 +13,10 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+
+	rest_middleware "optisam-backend/common/optisam/middleware/rest"
+
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/dps-service/pkg/api/v1"
 	"optisam-backend/import-service/pkg/config"
@@ -193,7 +195,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
 			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data", MetaDatafileAllowedRegex: []string{`^metadata_[a-zA-Z]*\.csv$`}}}},
 			setup: func() {
-				request, err = newfileUploadRequest("/api/v1/import/metadata", "", "files", []string{"testdata/metadata_laptop.csv"})
+				request, err = newfileUploadRequest("/api/v1/import/metadata", "France", "files", []string{"testdata/metadata_laptop.csv"})
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
@@ -202,7 +204,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 				dpsClient = mockDPSClient
 				// Gotcha Need to check
 				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
-					Scope: "", Files: []string{"metadata_laptop.csv"}, Type: "metadata", UploadedBy: "TestUser",
+					Scope: "France", Files: []string{"metadata_laptop.csv"}, Type: "metadata", UploadedBy: "TestUser",
 				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
 			},
 			cleanup: func() {
@@ -219,7 +221,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
 			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data", MetaDatafileAllowedRegex: []string{`^metadata_[a-zA-Z]*\.csv$`}}}},
 			setup: func() {
-				request, err = newfileUploadRequest("/api/v1/import/metadata", "", "files", []string{"testdata/metadata_laptop1.csv"})
+				request, err = newfileUploadRequest("/api/v1/import/metadata", "France", "files", []string{"testdata/metadata_laptop1.csv"})
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
@@ -228,7 +230,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 				dpsClient = mockDPSClient
 				// Gotcha Need to check
 				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
-					Scope: "", Files: []string{"metadata_laptop1.csv"}, Type: "metadata", UploadedBy: "TestUser",
+					Scope: "France", Files: []string{"metadata_laptop1.csv"}, Type: "metadata", UploadedBy: "TestUser",
 				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
 			},
 			cleanup: func() {
@@ -245,7 +247,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
 			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data", MetaDatafileAllowedRegex: []string{`^metadata_[a-zA-Z]*\.csv$`}}}},
 			setup: func() {
-				request, err = newfileUploadRequest("/api/v1/import/metadata", "", "files", []string{"testdata/metadata_laptop.csv", "testdata/metadata_desktop.csv"})
+				request, err = newfileUploadRequest("/api/v1/import/metadata", "France", "files", []string{"testdata/metadata_laptop.csv", "testdata/metadata_desktop.csv"})
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
@@ -254,7 +256,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 				dpsClient = mockDPSClient
 				// Gotcha Need to check
 				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
-					Scope: "", Files: []string{"metadata_laptop.csv", "metadata_desktop.csv"}, Type: "metadata", UploadedBy: "TestUser",
+					Scope: "France", Files: []string{"metadata_laptop.csv", "metadata_desktop.csv"}, Type: "metadata", UploadedBy: "TestUser",
 				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
 			},
 			cleanup: func() {
@@ -271,7 +273,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
 			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data", MetaDatafileAllowedRegex: []string{`^metadata_[a-zA-Z]*\.csv$`}}}},
 			setup: func() {
-				request, err = newfileUploadRequest("/api/v1/import/metadata", "", "files", []string{"testdata/metadata_laptop.csv", "testdata/metadata_desktop1.csv"})
+				request, err = newfileUploadRequest("/api/v1/import/metadata", "France", "files", []string{"testdata/metadata_laptop.csv", "testdata/metadata_desktop1.csv"})
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
@@ -280,7 +282,7 @@ func Test_importServiceServer_UploadMetaDataHandler(t *testing.T) {
 				dpsClient = mockDPSClient
 				// Gotcha Need to check
 				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
-					Scope: "", Files: []string{"metadata_laptop.csv", "metadata_desktop1.csv"}, Type: "metadata", UploadedBy: "TestUser",
+					Scope: "France", Files: []string{"metadata_laptop.csv", "metadata_desktop1.csv"}, Type: "metadata", UploadedBy: "TestUser",
 				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
 			},
 			cleanup: func() {
@@ -338,7 +340,100 @@ func newfileUploadRequest(uri string, scope string, paramName string, files []st
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	//Add Context for User Information
 	ctx := req.Context()
-	ctx = ctxmanage.AddClaims(ctx, &claims.Claims{UserID: "TestUser"})
+	ctx = rest_middleware.AddClaims(ctx, &claims.Claims{UserID: "TestUser", Role: "Admin"})
 	req = req.WithContext(ctx)
 	return req, err
+}
+
+func Test_UploadGlobalDataHandler(t *testing.T) {
+	var dpsClient v1.DpsServiceClient
+	var request *http.Request
+	var err error
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	type fields struct {
+		config *config.Config
+	}
+
+	tests := []struct {
+		name   string
+		fields fields
+		setup  func()
+		code   int
+	}{
+		{
+			name: "SUCCESS - CorrectDataFileWithInventoryDeletionFlag",
+			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
+			fields: fields{&config.Config{Upload: config.UploadConfig{RawDataUploadDir: "data"}}},
+			setup: func() {
+				request, err = newfileUploadRequest("/api/v1/import/globaldata", "Scope1", "files", []string{"testdata/temp.csv"})
+				if err != nil {
+					logger.Log.Error("Failed creating request", zap.Error(err))
+					t.Fatal(err)
+				}
+				mockDPSClient := mock.NewMockDpsServiceClient(mockCtrl)
+				dpsClient = mockDPSClient
+				// Gotcha Need to check
+				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
+					Scope: "France", Files: []string{"France_temp.csv"}, Type: "globaldata", UploadedBy: "TestUser", IsDeleteOldInventory: true,
+				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
+			},
+			code: 200,
+		},
+		{
+			name: "FAILURE - CorrectFileWithInventoryDeletionFlagUnset",
+			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
+			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data"}}},
+			setup: func() {
+				request, err = newfileUploadRequest("/api/v1/import/globaldata", "Scope1", "files", []string{"testdata/temp.csv"})
+				if err != nil {
+					logger.Log.Error("Failed creating request", zap.Error(err))
+					t.Fatal(err)
+				}
+				mockDPSClient := mock.NewMockDpsServiceClient(mockCtrl)
+				dpsClient = mockDPSClient
+				// Gotcha Need to check
+				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
+					Scope: "France", Files: []string{"France_products.xlsx"}, Type: "data", UploadedBy: "TestUser", IsDeleteOldInventory: false,
+				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
+			},
+			code: 200,
+		},
+		{
+			name: "FAILURE - IncorrectFileExtenison",
+			// args:   args{res: httptest.NewRecorder(), req: request, param: httprouter.Params{}},
+			fields: fields{&config.Config{Upload: config.UploadConfig{UploadDir: "data"}}},
+			setup: func() {
+				request, err = newfileUploadRequest("/api/v1/import/globaldata", "Scope1", "files", []string{"testdata/temp.xls"})
+				if err != nil {
+					logger.Log.Error("Failed creating request", zap.Error(err))
+					t.Fatal(err)
+				}
+			},
+			code: 400,
+		},
+	}
+	defer func() {
+		err = os.RemoveAll("data")
+		if err != nil {
+			fmt.Println(err)
+			t.Fatal(err)
+		}
+	}()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+
+			i := &importServiceServer{
+				config:    tt.fields.config,
+				dpsClient: dpsClient,
+			}
+			rec := httptest.NewRecorder()
+			i.UploadGlobalDataHandler(rec, request, httprouter.Params{})
+			if rec.Code != tt.code {
+				t.Errorf("Failed = got %v, want %v", rec.Code, tt.code)
+			}
+		})
+	}
 }

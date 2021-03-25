@@ -11,10 +11,181 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/lib/pq"
 )
+
+const getDataFileRecords = `-- name: GetDataFileRecords :one
+select coalesce(sum(total_records),0)::BIGINT as total_records, coalesce(sum(failed_records),0) ::BIGINT as failed_records from  uploaded_data_files where  date(uploaded_on) >= make_date($1,$2,$3)   and scope = $4  and  file_name SIMILAR TO $5
+`
+
+type GetDataFileRecordsParams struct {
+	Year          int32  `json:"year"`
+	Month         int32  `json:"month"`
+	Day           int32  `json:"day"`
+	Scope         string `json:"scope"`
+	SimilarEscape string `json:"similar_escape"`
+}
+
+type GetDataFileRecordsRow struct {
+	TotalRecords  int64 `json:"total_records"`
+	FailedRecords int64 `json:"failed_records"`
+}
+
+func (q *Queries) GetDataFileRecords(ctx context.Context, arg GetDataFileRecordsParams) (GetDataFileRecordsRow, error) {
+	row := q.db.QueryRowContext(ctx, getDataFileRecords,
+		arg.Year,
+		arg.Month,
+		arg.Day,
+		arg.Scope,
+		arg.SimilarEscape,
+	)
+	var i GetDataFileRecordsRow
+	err := row.Scan(&i.TotalRecords, &i.FailedRecords)
+	return i, err
+}
+
+const getEntityMonthWise = `-- name: GetEntityMonthWise :many
+select sum(success_records), lower(file_name) as filename, EXTRACT(month from uploaded_on) as month, EXTRACT(year from uploaded_on) as year from  uploaded_data_files where  DATE(uploaded_on)  < make_date($1,$2,1) and  uploaded_on >= make_date($3,$4,1)  and scope = $5  and status = 'COMPLETED'  and  file_name SIMILAR TO $6
+group by ( 2,3,4)  order by 3 desc , 4 DESC
+`
+
+type GetEntityMonthWiseParams struct {
+	Year          int32  `json:"year"`
+	Month         int32  `json:"month"`
+	Year_2        int32  `json:"year_2"`
+	Month_2       int32  `json:"month_2"`
+	Scope         string `json:"scope"`
+	SimilarEscape string `json:"similar_escape"`
+}
+
+type GetEntityMonthWiseRow struct {
+	Sum      int64   `json:"sum"`
+	Filename string  `json:"filename"`
+	Month    float64 `json:"month"`
+	Year     float64 `json:"year"`
+}
+
+func (q *Queries) GetEntityMonthWise(ctx context.Context, arg GetEntityMonthWiseParams) ([]GetEntityMonthWiseRow, error) {
+	rows, err := q.db.QueryContext(ctx, getEntityMonthWise,
+		arg.Year,
+		arg.Month,
+		arg.Year_2,
+		arg.Month_2,
+		arg.Scope,
+		arg.SimilarEscape,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEntityMonthWiseRow
+	for rows.Next() {
+		var i GetEntityMonthWiseRow
+		if err := rows.Scan(
+			&i.Sum,
+			&i.Filename,
+			&i.Month,
+			&i.Year,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFailedRecord = `-- name: GetFailedRecord :many
+SELECT count(*) OVER() AS totalRecords, comments, data -> 'Data' as record from jobs where status = 'FAILED' and data -> 'UploadID' = $1 and type = 'API_WORKER' limit $2 offset $3
+`
+
+type GetFailedRecordParams struct {
+	Data   json.RawMessage `json:"data"`
+	Limit  int32           `json:"limit"`
+	Offset int32           `json:"offset"`
+}
+
+type GetFailedRecordRow struct {
+	Totalrecords int64          `json:"totalrecords"`
+	Comments     sql.NullString `json:"comments"`
+	Record       interface{}    `json:"record"`
+}
+
+func (q *Queries) GetFailedRecord(ctx context.Context, arg GetFailedRecordParams) ([]GetFailedRecordRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFailedRecord, arg.Data, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFailedRecordRow
+	for rows.Next() {
+		var i GetFailedRecordRow
+		if err := rows.Scan(&i.Totalrecords, &i.Comments, &i.Record); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getFailureReasons = `-- name: GetFailureReasons :many
+select count(TYPE) as failed_records,comments from jobs where status = 'FAILED' and type in ('FILE_WORKER', 'API_WORKER') and end_time >= make_date($1,$2,$3) and (data -> 'Data' ->> 'scope'  = $4 or data ->> 'scope' = $4 ) and data -> 'Data' -> 'metadata_type' is NULL group by (2)
+`
+
+type GetFailureReasonsParams struct {
+	Year  int32           `json:"year"`
+	Month int32           `json:"month"`
+	Day   int32           `json:"day"`
+	Data  json.RawMessage `json:"data"`
+}
+
+type GetFailureReasonsRow struct {
+	FailedRecords int64          `json:"failed_records"`
+	Comments      sql.NullString `json:"comments"`
+}
+
+func (q *Queries) GetFailureReasons(ctx context.Context, arg GetFailureReasonsParams) ([]GetFailureReasonsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFailureReasons,
+		arg.Year,
+		arg.Month,
+		arg.Day,
+		arg.Data,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFailureReasonsRow
+	for rows.Next() {
+		var i GetFailureReasonsRow
+		if err := rows.Scan(&i.FailedRecords, &i.Comments); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getFileStatus = `-- name: GetFileStatus :one
 SELECT status FROM uploaded_data_files WHERE upload_id = $1 AND file_name = $2
@@ -34,7 +205,7 @@ func (q *Queries) GetFileStatus(ctx context.Context, arg GetFileStatusParams) (U
 
 const insertUploadedData = `-- name: InsertUploadedData :one
 INSERT INTO uploaded_data_files (scope,data_type,file_name,uploaded_by)
-VALUES($1,$2,$3,$4) returning upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, invalid_records
+VALUES($1,$2,$3,$4) returning upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, comments
 `
 
 type InsertUploadedDataParams struct {
@@ -63,14 +234,14 @@ func (q *Queries) InsertUploadedData(ctx context.Context, arg InsertUploadedData
 		&i.TotalRecords,
 		&i.SuccessRecords,
 		&i.FailedRecords,
-		&i.InvalidRecords,
+		&i.Comments,
 	)
 	return i, err
 }
 
 const insertUploadedMetaData = `-- name: InsertUploadedMetaData :one
 INSERT INTO uploaded_data_files (file_name,uploaded_by)
-VALUES($1,$2) returning upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, invalid_records
+VALUES($1,$2) returning upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, comments
 `
 
 type InsertUploadedMetaDataParams struct {
@@ -92,13 +263,13 @@ func (q *Queries) InsertUploadedMetaData(ctx context.Context, arg InsertUploaded
 		&i.TotalRecords,
 		&i.SuccessRecords,
 		&i.FailedRecords,
-		&i.InvalidRecords,
+		&i.Comments,
 	)
 	return i, err
 }
 
 const listUploadedDataFiles = `-- name: ListUploadedDataFiles :many
-SELECT count(*) OVER() AS totalRecords,upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, invalid_records from 
+SELECT count(*) OVER() AS totalRecords,upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, comments from 
 uploaded_data_files
 WHERE 
     scope = ANY($1::TEXT[])
@@ -138,18 +309,18 @@ type ListUploadedDataFilesParams struct {
 }
 
 type ListUploadedDataFilesRow struct {
-	Totalrecords   int64        `json:"totalrecords"`
-	UploadID       int32        `json:"upload_id"`
-	Scope          string       `json:"scope"`
-	DataType       DataType     `json:"data_type"`
-	FileName       string       `json:"file_name"`
-	Status         UploadStatus `json:"status"`
-	UploadedBy     string       `json:"uploaded_by"`
-	UploadedOn     time.Time    `json:"uploaded_on"`
-	TotalRecords   int32        `json:"total_records"`
-	SuccessRecords int32        `json:"success_records"`
-	FailedRecords  int32        `json:"failed_records"`
-	InvalidRecords int32        `json:"invalid_records"`
+	Totalrecords   int64          `json:"totalrecords"`
+	UploadID       int32          `json:"upload_id"`
+	Scope          string         `json:"scope"`
+	DataType       DataType       `json:"data_type"`
+	FileName       string         `json:"file_name"`
+	Status         UploadStatus   `json:"status"`
+	UploadedBy     string         `json:"uploaded_by"`
+	UploadedOn     time.Time      `json:"uploaded_on"`
+	TotalRecords   int32          `json:"total_records"`
+	SuccessRecords int32          `json:"success_records"`
+	FailedRecords  int32          `json:"failed_records"`
+	Comments       sql.NullString `json:"comments"`
 }
 
 func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDataFilesParams) ([]ListUploadedDataFilesRow, error) {
@@ -189,7 +360,114 @@ func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDat
 			&i.TotalRecords,
 			&i.SuccessRecords,
 			&i.FailedRecords,
-			&i.InvalidRecords,
+			&i.Comments,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUploadedGlobalDataFiles = `-- name: ListUploadedGlobalDataFiles :many
+SELECT count(*) OVER() AS totalRecords,upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, comments from 
+uploaded_data_files
+WHERE 
+  scope = ANY($1::TEXT[])
+  AND data_type = 'GLOBALDATA'
+ORDER BY
+  CASE WHEN $2::bool THEN upload_id END asc,
+  CASE WHEN $3::bool THEN upload_id END desc,
+  CASE WHEN $4::bool THEN scope END asc,
+  CASE WHEN $5::bool THEN scope END desc,
+  CASE WHEN $6::bool THEN file_name END asc,
+  CASE WHEN $7::bool THEN file_name END desc,
+  CASE WHEN $8::bool THEN status END asc,
+  CASE WHEN $9::bool THEN status END desc,  
+  CASE WHEN $10::bool THEN uploaded_by END asc,
+  CASE WHEN $11::bool THEN uploaded_by END desc,
+  CASE WHEN $12::bool THEN uploaded_on END asc,
+  CASE WHEN $13::bool THEN uploaded_on END desc
+  LIMIT $15 OFFSET $14
+`
+
+type ListUploadedGlobalDataFilesParams struct {
+	Scope          []string `json:"scope"`
+	UploadIDAsc    bool     `json:"upload_id_asc"`
+	UploadIDDesc   bool     `json:"upload_id_desc"`
+	ScopeAsc       bool     `json:"scope_asc"`
+	ScopeDesc      bool     `json:"scope_desc"`
+	FileNameAsc    bool     `json:"file_name_asc"`
+	FileNameDesc   bool     `json:"file_name_desc"`
+	StatusAsc      bool     `json:"status_asc"`
+	StatusDesc     bool     `json:"status_desc"`
+	UploadedByAsc  bool     `json:"uploaded_by_asc"`
+	UploadedByDesc bool     `json:"uploaded_by_desc"`
+	UploadedOnAsc  bool     `json:"uploaded_on_asc"`
+	UploadedOnDesc bool     `json:"uploaded_on_desc"`
+	PageNum        int32    `json:"page_num"`
+	PageSize       int32    `json:"page_size"`
+}
+
+type ListUploadedGlobalDataFilesRow struct {
+	Totalrecords   int64          `json:"totalrecords"`
+	UploadID       int32          `json:"upload_id"`
+	Scope          string         `json:"scope"`
+	DataType       DataType       `json:"data_type"`
+	FileName       string         `json:"file_name"`
+	Status         UploadStatus   `json:"status"`
+	UploadedBy     string         `json:"uploaded_by"`
+	UploadedOn     time.Time      `json:"uploaded_on"`
+	TotalRecords   int32          `json:"total_records"`
+	SuccessRecords int32          `json:"success_records"`
+	FailedRecords  int32          `json:"failed_records"`
+	Comments       sql.NullString `json:"comments"`
+}
+
+func (q *Queries) ListUploadedGlobalDataFiles(ctx context.Context, arg ListUploadedGlobalDataFilesParams) ([]ListUploadedGlobalDataFilesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUploadedGlobalDataFiles,
+		pq.Array(arg.Scope),
+		arg.UploadIDAsc,
+		arg.UploadIDDesc,
+		arg.ScopeAsc,
+		arg.ScopeDesc,
+		arg.FileNameAsc,
+		arg.FileNameDesc,
+		arg.StatusAsc,
+		arg.StatusDesc,
+		arg.UploadedByAsc,
+		arg.UploadedByDesc,
+		arg.UploadedOnAsc,
+		arg.UploadedOnDesc,
+		arg.PageNum,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUploadedGlobalDataFilesRow
+	for rows.Next() {
+		var i ListUploadedGlobalDataFilesRow
+		if err := rows.Scan(
+			&i.Totalrecords,
+			&i.UploadID,
+			&i.Scope,
+			&i.DataType,
+			&i.FileName,
+			&i.Status,
+			&i.UploadedBy,
+			&i.UploadedOn,
+			&i.TotalRecords,
+			&i.SuccessRecords,
+			&i.FailedRecords,
+			&i.Comments,
 		); err != nil {
 			return nil, err
 		}
@@ -205,59 +483,63 @@ func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDat
 }
 
 const listUploadedMetaDataFiles = `-- name: ListUploadedMetaDataFiles :many
-SELECT count(*) OVER() AS totalRecords,upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, invalid_records from 
+SELECT count(*) OVER() AS totalRecords,upload_id, scope, data_type, file_name, status, uploaded_by, uploaded_on, total_records, success_records, failed_records, comments from 
 uploaded_data_files
-WHERE data_type = 'METADATA'
+WHERE 
+  scope = ANY($1::TEXT[])
+  AND data_type = 'METADATA'
 ORDER BY
-  CASE WHEN $1::bool THEN upload_id END asc,
-  CASE WHEN $2::bool THEN upload_id END desc,
-  CASE WHEN $3::bool THEN scope END asc,
-  CASE WHEN $4::bool THEN scope END desc,
-  CASE WHEN $5::bool THEN file_name END asc,
-  CASE WHEN $6::bool THEN file_name END desc,
-  CASE WHEN $7::bool THEN status END asc,
-  CASE WHEN $8::bool THEN status END desc,  
-  CASE WHEN $9::bool THEN uploaded_by END asc,
-  CASE WHEN $10::bool THEN uploaded_by END desc,
-  CASE WHEN $11::bool THEN uploaded_on END asc,
-  CASE WHEN $12::bool THEN uploaded_on END desc
-  LIMIT $14 OFFSET $13
+  CASE WHEN $2::bool THEN upload_id END asc,
+  CASE WHEN $3::bool THEN upload_id END desc,
+  CASE WHEN $4::bool THEN scope END asc,
+  CASE WHEN $5::bool THEN scope END desc,
+  CASE WHEN $6::bool THEN file_name END asc,
+  CASE WHEN $7::bool THEN file_name END desc,
+  CASE WHEN $8::bool THEN status END asc,
+  CASE WHEN $9::bool THEN status END desc,  
+  CASE WHEN $10::bool THEN uploaded_by END asc,
+  CASE WHEN $11::bool THEN uploaded_by END desc,
+  CASE WHEN $12::bool THEN uploaded_on END asc,
+  CASE WHEN $13::bool THEN uploaded_on END desc
+  LIMIT $15 OFFSET $14
 `
 
 type ListUploadedMetaDataFilesParams struct {
-	UploadIDAsc    bool  `json:"upload_id_asc"`
-	UploadIDDesc   bool  `json:"upload_id_desc"`
-	ScopeAsc       bool  `json:"scope_asc"`
-	ScopeDesc      bool  `json:"scope_desc"`
-	FileNameAsc    bool  `json:"file_name_asc"`
-	FileNameDesc   bool  `json:"file_name_desc"`
-	StatusAsc      bool  `json:"status_asc"`
-	StatusDesc     bool  `json:"status_desc"`
-	UploadedByAsc  bool  `json:"uploaded_by_asc"`
-	UploadedByDesc bool  `json:"uploaded_by_desc"`
-	UploadedOnAsc  bool  `json:"uploaded_on_asc"`
-	UploadedOnDesc bool  `json:"uploaded_on_desc"`
-	PageNum        int32 `json:"page_num"`
-	PageSize       int32 `json:"page_size"`
+	Scope          []string `json:"scope"`
+	UploadIDAsc    bool     `json:"upload_id_asc"`
+	UploadIDDesc   bool     `json:"upload_id_desc"`
+	ScopeAsc       bool     `json:"scope_asc"`
+	ScopeDesc      bool     `json:"scope_desc"`
+	FileNameAsc    bool     `json:"file_name_asc"`
+	FileNameDesc   bool     `json:"file_name_desc"`
+	StatusAsc      bool     `json:"status_asc"`
+	StatusDesc     bool     `json:"status_desc"`
+	UploadedByAsc  bool     `json:"uploaded_by_asc"`
+	UploadedByDesc bool     `json:"uploaded_by_desc"`
+	UploadedOnAsc  bool     `json:"uploaded_on_asc"`
+	UploadedOnDesc bool     `json:"uploaded_on_desc"`
+	PageNum        int32    `json:"page_num"`
+	PageSize       int32    `json:"page_size"`
 }
 
 type ListUploadedMetaDataFilesRow struct {
-	Totalrecords   int64        `json:"totalrecords"`
-	UploadID       int32        `json:"upload_id"`
-	Scope          string       `json:"scope"`
-	DataType       DataType     `json:"data_type"`
-	FileName       string       `json:"file_name"`
-	Status         UploadStatus `json:"status"`
-	UploadedBy     string       `json:"uploaded_by"`
-	UploadedOn     time.Time    `json:"uploaded_on"`
-	TotalRecords   int32        `json:"total_records"`
-	SuccessRecords int32        `json:"success_records"`
-	FailedRecords  int32        `json:"failed_records"`
-	InvalidRecords int32        `json:"invalid_records"`
+	Totalrecords   int64          `json:"totalrecords"`
+	UploadID       int32          `json:"upload_id"`
+	Scope          string         `json:"scope"`
+	DataType       DataType       `json:"data_type"`
+	FileName       string         `json:"file_name"`
+	Status         UploadStatus   `json:"status"`
+	UploadedBy     string         `json:"uploaded_by"`
+	UploadedOn     time.Time      `json:"uploaded_on"`
+	TotalRecords   int32          `json:"total_records"`
+	SuccessRecords int32          `json:"success_records"`
+	FailedRecords  int32          `json:"failed_records"`
+	Comments       sql.NullString `json:"comments"`
 }
 
 func (q *Queries) ListUploadedMetaDataFiles(ctx context.Context, arg ListUploadedMetaDataFilesParams) ([]ListUploadedMetaDataFilesRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUploadedMetaDataFiles,
+		pq.Array(arg.Scope),
 		arg.UploadIDAsc,
 		arg.UploadIDDesc,
 		arg.ScopeAsc,
@@ -292,7 +574,7 @@ func (q *Queries) ListUploadedMetaDataFiles(ctx context.Context, arg ListUploade
 			&i.TotalRecords,
 			&i.SuccessRecords,
 			&i.FailedRecords,
-			&i.InvalidRecords,
+			&i.Comments,
 		); err != nil {
 			return nil, err
 		}
@@ -319,6 +601,27 @@ type UpdateFileFailedRecordParams struct {
 
 func (q *Queries) UpdateFileFailedRecord(ctx context.Context, arg UpdateFileFailedRecordParams) error {
 	_, err := q.db.ExecContext(ctx, updateFileFailedRecord, arg.UploadID, arg.FileName, arg.FailedRecords)
+	return err
+}
+
+const updateFileFailure = `-- name: UpdateFileFailure :exec
+UPDATE uploaded_data_files SET status = $1 , comments = $2 where upload_id = $3 AND file_name = $4
+`
+
+type UpdateFileFailureParams struct {
+	Status   UploadStatus   `json:"status"`
+	Comments sql.NullString `json:"comments"`
+	UploadID int32          `json:"upload_id"`
+	FileName string         `json:"file_name"`
+}
+
+func (q *Queries) UpdateFileFailure(ctx context.Context, arg UpdateFileFailureParams) error {
+	_, err := q.db.ExecContext(ctx, updateFileFailure,
+		arg.Status,
+		arg.Comments,
+		arg.UploadID,
+		arg.FileName,
+	)
 	return err
 }
 
@@ -353,16 +656,22 @@ func (q *Queries) UpdateFileSuccessRecord(ctx context.Context, arg UpdateFileSuc
 }
 
 const updateFileTotalRecord = `-- name: UpdateFileTotalRecord :exec
-UPDATE uploaded_data_files SET total_records = $1 where upload_id = $2 AND file_name = $3
+UPDATE uploaded_data_files SET total_records = $1 , failed_records = $2  where upload_id = $3 AND file_name = $4
 `
 
 type UpdateFileTotalRecordParams struct {
-	TotalRecords int32  `json:"total_records"`
-	UploadID     int32  `json:"upload_id"`
-	FileName     string `json:"file_name"`
+	TotalRecords  int32  `json:"total_records"`
+	FailedRecords int32  `json:"failed_records"`
+	UploadID      int32  `json:"upload_id"`
+	FileName      string `json:"file_name"`
 }
 
 func (q *Queries) UpdateFileTotalRecord(ctx context.Context, arg UpdateFileTotalRecordParams) error {
-	_, err := q.db.ExecContext(ctx, updateFileTotalRecord, arg.TotalRecords, arg.UploadID, arg.FileName)
+	_, err := q.db.ExecContext(ctx, updateFileTotalRecord,
+		arg.TotalRecords,
+		arg.FailedRecords,
+		arg.UploadID,
+		arg.FileName,
+	)
 	return err
 }

@@ -59,6 +59,7 @@ type UploadConfig struct {
 	UploadDir                string `toml:"upload_dir"`
 	DataFileAllowedRegex     []string
 	MetaDatafileAllowedRegex []string
+	RawDataUploadDir         string `toml:"raw_data_upload_dir"`
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -156,6 +157,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Dgraph configuration
 	_ = v.BindEnv("dgraph.host")
 
-	// App Params Configuration
+	// Database Password configuration
+	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 
 }

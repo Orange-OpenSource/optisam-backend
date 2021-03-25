@@ -24,8 +24,8 @@ type metricINM struct {
 }
 
 // ListMetricINM implements Licence ListMetricINM function
-func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes []string) ([]*v1.MetricINM, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricInstanceNumberStandard, scopes)
+func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes ...string) ([]*v1.MetricINM, error) {
+	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricInstanceNumberStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricINM - listMetricWithMetricType", zap.Error(err))
 		return nil, err

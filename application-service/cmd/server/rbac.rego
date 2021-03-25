@@ -14,4 +14,4 @@ allow {
 }
 
 roles := {"Admin":{"SuperAdmin","Admin"},"Normal":{"User"}}
-user_apis := {"/v1.ApplicationService/ListApplications","/v1.ApplicationService/ListInstances"}
+user_apis := {"/optisam.applications.v1.ApplicationService/ListApplications","/optisam.applications.v1.ApplicationService/ListInstances"}

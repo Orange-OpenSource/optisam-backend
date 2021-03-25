@@ -11,10 +11,75 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/lib/pq"
 )
+
+const addApplicationbsolescenceRisk = `-- name: AddApplicationbsolescenceRisk :exec
+UPDATE 
+  applications
+SET obsolescence_risk = $1
+WHERE application_id = $2
+AND scope = $3
+`
+
+type AddApplicationbsolescenceRiskParams struct {
+	Riskvalue     sql.NullString `json:"riskvalue"`
+	Applicationid string         `json:"applicationid"`
+	Scope         string         `json:"scope"`
+}
+
+func (q *Queries) AddApplicationbsolescenceRisk(ctx context.Context, arg AddApplicationbsolescenceRiskParams) error {
+	_, err := q.db.ExecContext(ctx, addApplicationbsolescenceRisk, arg.Riskvalue, arg.Applicationid, arg.Scope)
+	return err
+}
+
+const deleteApplicationsByScope = `-- name: DeleteApplicationsByScope :exec
+DELETE FROM applications WHERE scope = $1
+`
+
+func (q *Queries) DeleteApplicationsByScope(ctx context.Context, scope string) error {
+	_, err := q.db.ExecContext(ctx, deleteApplicationsByScope, scope)
+	return err
+}
+
+const deleteInstancesByScope = `-- name: DeleteInstancesByScope :exec
+DELETE FROM applications_instances WHERE scope = $1
+`
+
+func (q *Queries) DeleteInstancesByScope(ctx context.Context, scope string) error {
+	_, err := q.db.ExecContext(ctx, deleteInstancesByScope, scope)
+	return err
+}
+
+const getApplicationDomains = `-- name: GetApplicationDomains :many
+SELECT distinct a.application_domain from applications a where a.scope = $1
+`
+
+func (q *Queries) GetApplicationDomains(ctx context.Context, scope string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getApplicationDomains, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var application_domain string
+		if err := rows.Scan(&application_domain); err != nil {
+			return nil, err
+		}
+		items = append(items, application_domain)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getApplicationInstance = `-- name: GetApplicationInstance :one
 SELECT application_id, instance_id, instance_environment, products, equipments, scope from applications_instances
@@ -35,9 +100,109 @@ func (q *Queries) GetApplicationInstance(ctx context.Context, instanceID string)
 	return i, err
 }
 
+const getApplicationInstances = `-- name: GetApplicationInstances :many
+SELECT application_id, instance_id, instance_environment, products, equipments, scope from applications_instances
+WHERE application_id = $1
+AND scope = $2
+`
+
+type GetApplicationInstancesParams struct {
+	ApplicationID string `json:"application_id"`
+	Scope         string `json:"scope"`
+}
+
+func (q *Queries) GetApplicationInstances(ctx context.Context, arg GetApplicationInstancesParams) ([]ApplicationsInstance, error) {
+	rows, err := q.db.QueryContext(ctx, getApplicationInstances, arg.ApplicationID, arg.Scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ApplicationsInstance
+	for rows.Next() {
+		var i ApplicationsInstance
+		if err := rows.Scan(
+			&i.ApplicationID,
+			&i.InstanceID,
+			&i.InstanceEnvironment,
+			pq.Array(&i.Products),
+			pq.Array(&i.Equipments),
+			&i.Scope,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getApplicationsDetails = `-- name: GetApplicationsDetails :many
+SELECT 
+  application_id,
+  application_name,
+  application_version,
+  application_owner,
+  application_domain,
+  scope
+FROM 
+  applications
+GROUP BY 
+  application_id,
+  application_name,
+  application_version,
+  application_owner,
+  application_domain,
+  scope
+`
+
+type GetApplicationsDetailsRow struct {
+	ApplicationID      string `json:"application_id"`
+	ApplicationName    string `json:"application_name"`
+	ApplicationVersion string `json:"application_version"`
+	ApplicationOwner   string `json:"application_owner"`
+	ApplicationDomain  string `json:"application_domain"`
+	Scope              string `json:"scope"`
+}
+
+func (q *Queries) GetApplicationsDetails(ctx context.Context) ([]GetApplicationsDetailsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getApplicationsDetails)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetApplicationsDetailsRow
+	for rows.Next() {
+		var i GetApplicationsDetailsRow
+		if err := rows.Scan(
+			&i.ApplicationID,
+			&i.ApplicationName,
+			&i.ApplicationVersion,
+			&i.ApplicationOwner,
+			&i.ApplicationDomain,
+			&i.Scope,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getApplicationsView = `-- name: GetApplicationsView :many
-SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner ,COUNT(ai.instance_id)::INTEGER as num_of_instances,COUNT(DISTINCT(ai.product))::INTEGER as num_of_products,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments, 0::INTEGER as cost 
-FROM applications a LEFT JOIN (select application_id,instance_id, products, UNNEST(products) as product,UNNEST(equipments) as equipment FROM applications_instances) ai
+SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner,a.application_domain ,a.obsolescence_risk,COUNT(DISTINCT(ai.instance_id))::INTEGER as num_of_instances,COUNT(DISTINCT(ai.product))::INTEGER as num_of_products,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments
+FROM applications a LEFT JOIN 
+(select application_id,instance_id, products, UNNEST(coalesce(products,'{null}')) as product,UNNEST(coalesce(equipments,'{null}')) as equipment FROM applications_instances WHERE  scope = ANY($1::TEXT[])) ai
 ON a.application_id = ai.application_id
 WHERE 
   a.scope = ANY($1::TEXT[])
@@ -46,62 +211,77 @@ WHERE
   AND (CASE WHEN $5::bool THEN lower(a.application_owner) LIKE '%' || lower($6::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN $7::bool THEN lower(a.application_owner) = lower($6) ELSE TRUE END)
   AND (CASE WHEN $8::bool THEN $9::TEXT = ANY(ai.products) ELSE TRUE END)
-  GROUP BY a.application_id
+  AND (CASE WHEN $10::bool THEN lower(a.application_domain) LIKE '%' || lower($11::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $12::bool THEN lower(a.application_domain) = lower($11) ELSE TRUE END)
+  AND (CASE WHEN $13::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower($14::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $15::bool THEN lower(a.obsolescence_risk) = lower($14) ELSE TRUE END)
+  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk
   ORDER BY
-  CASE WHEN $10::bool THEN a.application_id END asc,
-  CASE WHEN $11::bool THEN a.application_id END desc,
-  CASE WHEN $12::bool THEN application_name END asc,
-  CASE WHEN $13::bool THEN application_name END desc,
-  CASE WHEN $14::bool THEN application_owner END asc,
-  CASE WHEN $15::bool THEN application_owner END desc,
-  CASE WHEN $16::bool THEN 4 END asc,
-  CASE WHEN $17::bool THEN 4 END desc,
-  CASE WHEN $18::bool THEN 5 END asc,
-  CASE WHEN $19::bool THEN 5 END desc,
-  CASE WHEN $20::bool THEN 6 END asc,
-  CASE WHEN $21::bool THEN 6 END desc,
-  CASE WHEN $22::bool THEN 7 END asc,
-  CASE WHEN $23::bool THEN 7 END desc
-  LIMIT $25 OFFSET $24
+  CASE WHEN $16::bool THEN a.application_id END asc,
+  CASE WHEN $17::bool THEN a.application_id END desc,
+  CASE WHEN $18::bool THEN application_name END asc,
+  CASE WHEN $19::bool THEN application_name END desc,
+  CASE WHEN $20::bool THEN application_owner END asc,
+  CASE WHEN $21::bool THEN application_owner END desc,
+  CASE WHEN $22::bool THEN application_domain END desc,
+  CASE WHEN $23::bool THEN application_domain END asc,
+  CASE WHEN $24::bool THEN obsolescence_risk END desc,
+  CASE WHEN $25::bool THEN obsolescence_risk END asc,
+  CASE WHEN $26::bool THEN count(ai.instance_id) END asc,
+  CASE WHEN $27::bool THEN count(ai.instance_id) END desc,
+  CASE WHEN $28::bool THEN COUNT(DISTINCT(ai.product)) END asc,
+  CASE WHEN $29::bool THEN COUNT(DISTINCT(ai.product)) END desc,
+  CASE WHEN $30::bool THEN COUNT(DISTINCT(ai.equipment)) END asc,
+  CASE WHEN $31::bool THEN COUNT(DISTINCT(ai.equipment)) END desc
+  LIMIT $33 OFFSET $32
 `
 
 type GetApplicationsViewParams struct {
-	Scope                []string `json:"scope"`
-	LkApplicationName    bool     `json:"lk_application_name"`
-	ApplicationName      string   `json:"application_name"`
-	IsApplicationName    bool     `json:"is_application_name"`
-	LkApplicationOwner   bool     `json:"lk_application_owner"`
-	ApplicationOwner     string   `json:"application_owner"`
-	IsApplicationOwner   bool     `json:"is_application_owner"`
-	IsProductID          bool     `json:"is_product_id"`
-	ProductID            string   `json:"product_id"`
-	ApplicationIDAsc     bool     `json:"application_id_asc"`
-	ApplicationIDDesc    bool     `json:"application_id_desc"`
-	ApplicationNameAsc   bool     `json:"application_name_asc"`
-	ApplicationNameDesc  bool     `json:"application_name_desc"`
-	ApplicationOwnerAsc  bool     `json:"application_owner_asc"`
-	ApplicationOwnerDesc bool     `json:"application_owner_desc"`
-	NumOfInstancesAsc    bool     `json:"num_of_instances_asc"`
-	NumOfInstancesDesc   bool     `json:"num_of_instances_desc"`
-	NumOfProductsAsc     bool     `json:"num_of_products_asc"`
-	NumOfProductsDesc    bool     `json:"num_of_products_desc"`
-	NumOfEquipmentsAsc   bool     `json:"num_of_equipments_asc"`
-	NumOfEquipmentsDesc  bool     `json:"num_of_equipments_desc"`
-	CostAsc              bool     `json:"cost_asc"`
-	CostDesc             bool     `json:"cost_desc"`
-	PageNum              int32    `json:"page_num"`
-	PageSize             int32    `json:"page_size"`
+	Scope                 []string `json:"scope"`
+	LkApplicationName     bool     `json:"lk_application_name"`
+	ApplicationName       string   `json:"application_name"`
+	IsApplicationName     bool     `json:"is_application_name"`
+	LkApplicationOwner    bool     `json:"lk_application_owner"`
+	ApplicationOwner      string   `json:"application_owner"`
+	IsApplicationOwner    bool     `json:"is_application_owner"`
+	IsProductID           bool     `json:"is_product_id"`
+	ProductID             string   `json:"product_id"`
+	LkApplicationDomain   bool     `json:"lk_application_domain"`
+	ApplicationDomain     string   `json:"application_domain"`
+	IsApplicationDomain   bool     `json:"is_application_domain"`
+	LkObsolescenceRisk    bool     `json:"lk_obsolescence_risk"`
+	ObsolescenceRisk      string   `json:"obsolescence_risk"`
+	IsObsolescenceRisk    bool     `json:"is_obsolescence_risk"`
+	ApplicationIDAsc      bool     `json:"application_id_asc"`
+	ApplicationIDDesc     bool     `json:"application_id_desc"`
+	ApplicationNameAsc    bool     `json:"application_name_asc"`
+	ApplicationNameDesc   bool     `json:"application_name_desc"`
+	ApplicationOwnerAsc   bool     `json:"application_owner_asc"`
+	ApplicationOwnerDesc  bool     `json:"application_owner_desc"`
+	ApplicationDomainDesc bool     `json:"application_domain_desc"`
+	ApplicationDomainAsc  bool     `json:"application_domain_asc"`
+	ObsolescenceRiskDesc  bool     `json:"obsolescence_risk_desc"`
+	ObsolescenceRiskAsc   bool     `json:"obsolescence_risk_asc"`
+	NumOfInstancesAsc     bool     `json:"num_of_instances_asc"`
+	NumOfInstancesDesc    bool     `json:"num_of_instances_desc"`
+	NumOfProductsAsc      bool     `json:"num_of_products_asc"`
+	NumOfProductsDesc     bool     `json:"num_of_products_desc"`
+	NumOfEquipmentsAsc    bool     `json:"num_of_equipments_asc"`
+	NumOfEquipmentsDesc   bool     `json:"num_of_equipments_desc"`
+	PageNum               int32    `json:"page_num"`
+	PageSize              int32    `json:"page_size"`
 }
 
 type GetApplicationsViewRow struct {
-	Totalrecords     int64  `json:"totalrecords"`
-	ApplicationID    string `json:"application_id"`
-	ApplicationName  string `json:"application_name"`
-	ApplicationOwner string `json:"application_owner"`
-	NumOfInstances   int32  `json:"num_of_instances"`
-	NumOfProducts    int32  `json:"num_of_products"`
-	NumOfEquipments  int32  `json:"num_of_equipments"`
-	Cost             int32  `json:"cost"`
+	Totalrecords      int64          `json:"totalrecords"`
+	ApplicationID     string         `json:"application_id"`
+	ApplicationName   string         `json:"application_name"`
+	ApplicationOwner  string         `json:"application_owner"`
+	ApplicationDomain string         `json:"application_domain"`
+	ObsolescenceRisk  sql.NullString `json:"obsolescence_risk"`
+	NumOfInstances    int32          `json:"num_of_instances"`
+	NumOfProducts     int32          `json:"num_of_products"`
+	NumOfEquipments   int32          `json:"num_of_equipments"`
 }
 
 func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsViewParams) ([]GetApplicationsViewRow, error) {
@@ -115,20 +295,28 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 		arg.IsApplicationOwner,
 		arg.IsProductID,
 		arg.ProductID,
+		arg.LkApplicationDomain,
+		arg.ApplicationDomain,
+		arg.IsApplicationDomain,
+		arg.LkObsolescenceRisk,
+		arg.ObsolescenceRisk,
+		arg.IsObsolescenceRisk,
 		arg.ApplicationIDAsc,
 		arg.ApplicationIDDesc,
 		arg.ApplicationNameAsc,
 		arg.ApplicationNameDesc,
 		arg.ApplicationOwnerAsc,
 		arg.ApplicationOwnerDesc,
+		arg.ApplicationDomainDesc,
+		arg.ApplicationDomainAsc,
+		arg.ObsolescenceRiskDesc,
+		arg.ObsolescenceRiskAsc,
 		arg.NumOfInstancesAsc,
 		arg.NumOfInstancesDesc,
 		arg.NumOfProductsAsc,
 		arg.NumOfProductsDesc,
 		arg.NumOfEquipmentsAsc,
 		arg.NumOfEquipmentsDesc,
-		arg.CostAsc,
-		arg.CostDesc,
 		arg.PageNum,
 		arg.PageSize,
 	)
@@ -144,10 +332,11 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 			&i.ApplicationID,
 			&i.ApplicationName,
 			&i.ApplicationOwner,
+			&i.ApplicationDomain,
+			&i.ObsolescenceRisk,
 			&i.NumOfInstances,
 			&i.NumOfProducts,
 			&i.NumOfEquipments,
-			&i.Cost,
 		); err != nil {
 			return nil, err
 		}
@@ -162,8 +351,118 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 	return items, nil
 }
 
+const getDomainCriticity = `-- name: GetDomainCriticity :many
+SELECT domain_critic_id,domains from domain_criticity where scope = $1
+`
+
+type GetDomainCriticityRow struct {
+	DomainCriticID int32    `json:"domain_critic_id"`
+	Domains        []string `json:"domains"`
+}
+
+func (q *Queries) GetDomainCriticity(ctx context.Context, scope string) ([]GetDomainCriticityRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDomainCriticity, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDomainCriticityRow
+	for rows.Next() {
+		var i GetDomainCriticityRow
+		if err := rows.Scan(&i.DomainCriticID, pq.Array(&i.Domains)); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDomainCriticityByDomain = `-- name: GetDomainCriticityByDomain :one
+SELECT 
+  domain_criticity_meta.domain_critic_id,
+  domain_criticity_meta.domain_critic_name
+FROM
+  domain_criticity_meta
+  INNER JOIN domain_criticity ON domain_criticity_meta.domain_critic_id = domain_criticity.domain_critic_id
+WHERE 
+  $1 :: TEXT = ANY(domain_criticity.domains)
+  AND domain_criticity.scope = $2
+`
+
+type GetDomainCriticityByDomainParams struct {
+	Applicationdomain string `json:"applicationdomain"`
+	Scope             string `json:"scope"`
+}
+
+func (q *Queries) GetDomainCriticityByDomain(ctx context.Context, arg GetDomainCriticityByDomainParams) (DomainCriticityMetum, error) {
+	row := q.db.QueryRowContext(ctx, getDomainCriticityByDomain, arg.Applicationdomain, arg.Scope)
+	var i DomainCriticityMetum
+	err := row.Scan(&i.DomainCriticID, &i.DomainCriticName)
+	return i, err
+}
+
+const getDomainCriticityMeta = `-- name: GetDomainCriticityMeta :many
+SELECT domain_critic_id, domain_critic_name from domain_criticity_meta
+`
+
+func (q *Queries) GetDomainCriticityMeta(ctx context.Context) ([]DomainCriticityMetum, error) {
+	rows, err := q.db.QueryContext(ctx, getDomainCriticityMeta)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DomainCriticityMetum
+	for rows.Next() {
+		var i DomainCriticityMetum
+		if err := rows.Scan(&i.DomainCriticID, &i.DomainCriticName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDomainCriticityMetaIDs = `-- name: GetDomainCriticityMetaIDs :many
+SELECT domain_critic_id from domain_criticity_meta
+`
+
+func (q *Queries) GetDomainCriticityMetaIDs(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getDomainCriticityMetaIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var domain_critic_id int32
+		if err := rows.Scan(&domain_critic_id); err != nil {
+			return nil, err
+		}
+		items = append(items, domain_critic_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getInstancesView = `-- name: GetInstancesView :many
-SELECT count(*) OVER() AS totalRecords,ai.instance_id,ai.instance_environment,CARDINALITY(ai.products)::INTEGER as num_of_products,CARDINALITY(ai.equipments)::INTEGER as num_of_equipments 
+SELECT count(*) OVER() AS totalRecords,ai.instance_id,ai.instance_environment,CARDINALITY(coalesce(ai.products,'{}'))::INTEGER as num_of_products,CARDINALITY(coalesce(ai.equipments,'{}'))::INTEGER as num_of_equipments 
 FROM applications_instances ai
 WHERE 
   ai.scope = ANY($1::TEXT[])
@@ -172,12 +471,12 @@ WHERE
   ORDER BY
   CASE WHEN $6::bool THEN ai.instance_id END asc,
   CASE WHEN $7::bool THEN ai.instance_id END desc,
-  CASE WHEN $8::bool THEN instance_environment END asc,
-  CASE WHEN $9::bool THEN instance_environment END desc,
-  CASE WHEN $10::bool THEN 3 END asc,
-  CASE WHEN $11::bool THEN 3 END desc,
-  CASE WHEN $12::bool THEN 4 END asc,
-  CASE WHEN $13::bool THEN 4 END desc
+  CASE WHEN $8::bool THEN ai.instance_environment END asc,
+  CASE WHEN $9::bool THEN ai.instance_environment END desc,
+  CASE WHEN $10::bool THEN CARDINALITY(ai.products) END asc,
+  CASE WHEN $11::bool THEN CARDINALITY(ai.products) END desc,
+  CASE WHEN $12::bool THEN CARDINALITY(ai.equipments) END asc,
+  CASE WHEN $13::bool THEN CARDINALITY(ai.equipments) END desc
   LIMIT $15 OFFSET $14
 `
 
@@ -252,12 +551,401 @@ func (q *Queries) GetInstancesView(ctx context.Context, arg GetInstancesViewPara
 	return items, nil
 }
 
-const upsertApplication = `-- name: UpsertApplication :exec
-INSERT INTO applications (application_id, application_name, application_version, application_owner, scope, created_on)
-VALUES ($1,$2,$3,$4,$5,$6)
-ON CONFLICT (application_id)
+const getMaintenanceCricityMeta = `-- name: GetMaintenanceCricityMeta :many
+SELECT maintenance_level_id, maintenance_level_name from maintenance_level_meta
+`
+
+func (q *Queries) GetMaintenanceCricityMeta(ctx context.Context) ([]MaintenanceLevelMetum, error) {
+	rows, err := q.db.QueryContext(ctx, getMaintenanceCricityMeta)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MaintenanceLevelMetum
+	for rows.Next() {
+		var i MaintenanceLevelMetum
+		if err := rows.Scan(&i.MaintenanceLevelID, &i.MaintenanceLevelName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMaintenanceCricityMetaIDs = `-- name: GetMaintenanceCricityMetaIDs :many
+SELECT maintenance_level_id from maintenance_level_meta
+`
+
+func (q *Queries) GetMaintenanceCricityMetaIDs(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getMaintenanceCricityMetaIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var maintenance_level_id int32
+		if err := rows.Scan(&maintenance_level_id); err != nil {
+			return nil, err
+		}
+		items = append(items, maintenance_level_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMaintenanceLevelByMonth = `-- name: GetMaintenanceLevelByMonth :one
+SELECT
+  maintenance_level_meta.maintenance_level_id,
+  maintenance_level_meta.maintenance_level_name
+FROM
+  maintenance_level_meta
+  INNER JOIN maintenance_time_criticity ON maintenance_level_meta.maintenance_level_id = maintenance_time_criticity.level_id
+WHERE
+  maintenance_time_criticity.start_month <= $1
+  AND $1 <= maintenance_time_criticity.end_month
+  AND maintenance_time_criticity.scope = $2
+`
+
+type GetMaintenanceLevelByMonthParams struct {
+	Calmonth int32  `json:"calmonth"`
+	Scope    string `json:"scope"`
+}
+
+func (q *Queries) GetMaintenanceLevelByMonth(ctx context.Context, arg GetMaintenanceLevelByMonthParams) (MaintenanceLevelMetum, error) {
+	row := q.db.QueryRowContext(ctx, getMaintenanceLevelByMonth, arg.Calmonth, arg.Scope)
+	var i MaintenanceLevelMetum
+	err := row.Scan(&i.MaintenanceLevelID, &i.MaintenanceLevelName)
+	return i, err
+}
+
+const getMaintenanceLevelByMonthByName = `-- name: GetMaintenanceLevelByMonthByName :one
+SELECT 
+  maintenance_level_id,
+  maintenance_level_name
+FROM
+  maintenance_level_meta
+WHERE maintenance_level_name = $1
+`
+
+func (q *Queries) GetMaintenanceLevelByMonthByName(ctx context.Context, levelname string) (MaintenanceLevelMetum, error) {
+	row := q.db.QueryRowContext(ctx, getMaintenanceLevelByMonthByName, levelname)
+	var i MaintenanceLevelMetum
+	err := row.Scan(&i.MaintenanceLevelID, &i.MaintenanceLevelName)
+	return i, err
+}
+
+const getMaintenanceTimeCriticity = `-- name: GetMaintenanceTimeCriticity :many
+SELECT maintenance_critic_id, scope, level_id, start_month, end_month, created_by, created_on from maintenance_time_criticity where scope = $1
+`
+
+func (q *Queries) GetMaintenanceTimeCriticity(ctx context.Context, scope string) ([]MaintenanceTimeCriticity, error) {
+	rows, err := q.db.QueryContext(ctx, getMaintenanceTimeCriticity, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MaintenanceTimeCriticity
+	for rows.Next() {
+		var i MaintenanceTimeCriticity
+		if err := rows.Scan(
+			&i.MaintenanceCriticID,
+			&i.Scope,
+			&i.LevelID,
+			&i.StartMonth,
+			&i.EndMonth,
+			&i.CreatedBy,
+			&i.CreatedOn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getObsolescenceRiskForApplication = `-- name: GetObsolescenceRiskForApplication :one
+SELECT 
+  risk_meta.risk_name
+FROM 
+  risk_meta
+  INNER JOIN risk_matrix_config ON risk_meta.risk_id = risk_matrix_config.risk_id
+  INNER JOIN risk_matrix ON risk_matrix_config.configuration_id = risk_matrix.configuration_id
+WHERE risk_matrix_config.domain_critic_id = $1
+AND risk_matrix_config.maintenance_level_id = $2
+AND risk_matrix.scope = $3
+`
+
+type GetObsolescenceRiskForApplicationParams struct {
+	Domaincriticid     int32  `json:"domaincriticid"`
+	Maintenancelevelid int32  `json:"maintenancelevelid"`
+	Scope              string `json:"scope"`
+}
+
+func (q *Queries) GetObsolescenceRiskForApplication(ctx context.Context, arg GetObsolescenceRiskForApplicationParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, getObsolescenceRiskForApplication, arg.Domaincriticid, arg.Maintenancelevelid, arg.Scope)
+	var risk_name string
+	err := row.Scan(&risk_name)
+	return risk_name, err
+}
+
+const getRiskLevelMetaIDs = `-- name: GetRiskLevelMetaIDs :many
+SELECT risk_id from risk_meta
+`
+
+func (q *Queries) GetRiskLevelMetaIDs(ctx context.Context) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, getRiskLevelMetaIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var risk_id int32
+		if err := rows.Scan(&risk_id); err != nil {
+			return nil, err
+		}
+		items = append(items, risk_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRiskMatrix = `-- name: GetRiskMatrix :many
+SELECT configuration_id, scope, created_by, created_on from risk_matrix
+`
+
+func (q *Queries) GetRiskMatrix(ctx context.Context) ([]RiskMatrix, error) {
+	rows, err := q.db.QueryContext(ctx, getRiskMatrix)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RiskMatrix
+	for rows.Next() {
+		var i RiskMatrix
+		if err := rows.Scan(
+			&i.ConfigurationID,
+			&i.Scope,
+			&i.CreatedBy,
+			&i.CreatedOn,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRiskMatrixConfig = `-- name: GetRiskMatrixConfig :many
+SELECT rmc.configuration_id,rmc.domain_critic_id,dcm.domain_critic_name,rmc.maintenance_level_id, mlm.maintenance_level_name,rmc.risk_id, rme.risk_name 
+FROM risk_matrix_config rmc, risk_matrix rm,domain_criticity_meta dcm,maintenance_level_meta mlm, risk_meta rme
+WHERE rmc.configuration_id = rm.configuration_id
+AND rmc.maintenance_level_id = mlm.maintenance_level_id
+AND rmc.domain_critic_id = dcm.domain_critic_id
+AND rmc.risk_id = rme.risk_id
+AND rm.scope = $1
+`
+
+type GetRiskMatrixConfigRow struct {
+	ConfigurationID      int32  `json:"configuration_id"`
+	DomainCriticID       int32  `json:"domain_critic_id"`
+	DomainCriticName     string `json:"domain_critic_name"`
+	MaintenanceLevelID   int32  `json:"maintenance_level_id"`
+	MaintenanceLevelName string `json:"maintenance_level_name"`
+	RiskID               int32  `json:"risk_id"`
+	RiskName             string `json:"risk_name"`
+}
+
+func (q *Queries) GetRiskMatrixConfig(ctx context.Context, scope string) ([]GetRiskMatrixConfigRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRiskMatrixConfig, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRiskMatrixConfigRow
+	for rows.Next() {
+		var i GetRiskMatrixConfigRow
+		if err := rows.Scan(
+			&i.ConfigurationID,
+			&i.DomainCriticID,
+			&i.DomainCriticName,
+			&i.MaintenanceLevelID,
+			&i.MaintenanceLevelName,
+			&i.RiskID,
+			&i.RiskName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRiskMeta = `-- name: GetRiskMeta :many
+SELECT risk_id, risk_name from risk_meta
+`
+
+func (q *Queries) GetRiskMeta(ctx context.Context) ([]RiskMetum, error) {
+	rows, err := q.db.QueryContext(ctx, getRiskMeta)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RiskMetum
+	for rows.Next() {
+		var i RiskMetum
+		if err := rows.Scan(&i.RiskID, &i.RiskName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertDomainCriticity = `-- name: InsertDomainCriticity :exec
+INSERT INTO domain_criticity(scope,domain_critic_id,domains,created_by)
+VALUES ($1,$2,$3,$4)
+ON CONFLICT(scope,domain_critic_id)
 DO
- UPDATE SET application_name = $2, application_version = $3, application_owner = $4
+UPDATE SET domains = $3
+`
+
+type InsertDomainCriticityParams struct {
+	Scope          string   `json:"scope"`
+	DomainCriticID int32    `json:"domain_critic_id"`
+	Domains        []string `json:"domains"`
+	CreatedBy      string   `json:"created_by"`
+}
+
+func (q *Queries) InsertDomainCriticity(ctx context.Context, arg InsertDomainCriticityParams) error {
+	_, err := q.db.ExecContext(ctx, insertDomainCriticity,
+		arg.Scope,
+		arg.DomainCriticID,
+		pq.Array(arg.Domains),
+		arg.CreatedBy,
+	)
+	return err
+}
+
+const insertMaintenanceTimeCriticity = `-- name: InsertMaintenanceTimeCriticity :exec
+INSERT INTO maintenance_time_criticity(scope,level_id,start_month,end_month,created_by)
+VALUES ($1,$2,$3,$4,$5)
+ON CONFLICT(scope,level_id)
+DO
+UPDATE SET start_month=$3,end_month=$4
+`
+
+type InsertMaintenanceTimeCriticityParams struct {
+	Scope      string `json:"scope"`
+	LevelID    int32  `json:"level_id"`
+	StartMonth int32  `json:"start_month"`
+	EndMonth   int32  `json:"end_month"`
+	CreatedBy  string `json:"created_by"`
+}
+
+func (q *Queries) InsertMaintenanceTimeCriticity(ctx context.Context, arg InsertMaintenanceTimeCriticityParams) error {
+	_, err := q.db.ExecContext(ctx, insertMaintenanceTimeCriticity,
+		arg.Scope,
+		arg.LevelID,
+		arg.StartMonth,
+		arg.EndMonth,
+		arg.CreatedBy,
+	)
+	return err
+}
+
+const insertRiskMatrix = `-- name: InsertRiskMatrix :one
+INSERT INTO risk_matrix(scope,created_by) VALUES ($1,$2) 
+ON CONFLICT(scope)
+DO
+UPDATE SET scope=$1
+returning configuration_id
+`
+
+type InsertRiskMatrixParams struct {
+	Scope     string `json:"scope"`
+	CreatedBy string `json:"created_by"`
+}
+
+func (q *Queries) InsertRiskMatrix(ctx context.Context, arg InsertRiskMatrixParams) (int32, error) {
+	row := q.db.QueryRowContext(ctx, insertRiskMatrix, arg.Scope, arg.CreatedBy)
+	var configuration_id int32
+	err := row.Scan(&configuration_id)
+	return configuration_id, err
+}
+
+const insertRiskMatrixConfig = `-- name: InsertRiskMatrixConfig :exec
+INSERT INTO risk_matrix_config(configuration_id,domain_critic_id,maintenance_level_id,risk_id)
+VALUES ($1,$2,$3,$4)
+ON CONFLICT(configuration_id,domain_critic_id,maintenance_level_id)
+DO 
+UPDATE SET risk_id=$4
+`
+
+type InsertRiskMatrixConfigParams struct {
+	ConfigurationID    int32 `json:"configuration_id"`
+	DomainCriticID     int32 `json:"domain_critic_id"`
+	MaintenanceLevelID int32 `json:"maintenance_level_id"`
+	RiskID             int32 `json:"risk_id"`
+}
+
+func (q *Queries) InsertRiskMatrixConfig(ctx context.Context, arg InsertRiskMatrixConfigParams) error {
+	_, err := q.db.ExecContext(ctx, insertRiskMatrixConfig,
+		arg.ConfigurationID,
+		arg.DomainCriticID,
+		arg.MaintenanceLevelID,
+		arg.RiskID,
+	)
+	return err
+}
+
+const upsertApplication = `-- name: UpsertApplication :exec
+INSERT INTO applications (application_id, application_name, application_version, application_owner,application_domain, scope, created_on)
+VALUES ($1,$2,$3,$4,$5,$6,$7)
+ON CONFLICT (application_id ,scope)
+DO
+ UPDATE SET application_name = $2, application_version = $3, application_owner = $4,application_domain = $5
 `
 
 type UpsertApplicationParams struct {
@@ -265,6 +953,7 @@ type UpsertApplicationParams struct {
 	ApplicationName    string    `json:"application_name"`
 	ApplicationVersion string    `json:"application_version"`
 	ApplicationOwner   string    `json:"application_owner"`
+	ApplicationDomain  string    `json:"application_domain"`
 	Scope              string    `json:"scope"`
 	CreatedOn          time.Time `json:"created_on"`
 }
@@ -275,6 +964,7 @@ func (q *Queries) UpsertApplication(ctx context.Context, arg UpsertApplicationPa
 		arg.ApplicationName,
 		arg.ApplicationVersion,
 		arg.ApplicationOwner,
+		arg.ApplicationDomain,
 		arg.Scope,
 		arg.CreatedOn,
 	)
@@ -284,7 +974,7 @@ func (q *Queries) UpsertApplication(ctx context.Context, arg UpsertApplicationPa
 const upsertApplicationInstance = `-- name: UpsertApplicationInstance :exec
 INSERT INTO applications_instances (application_id, instance_id, instance_environment, products, equipments,scope)
 VALUES ($1,$2,$3,$4,$5,$6)
-ON CONFLICT (instance_id)
+ON CONFLICT (instance_id,scope)
 DO
  UPDATE SET instance_environment = $3, products = $4,equipments = $5
 `
@@ -298,6 +988,7 @@ type UpsertApplicationInstanceParams struct {
 	Scope               string   `json:"scope"`
 }
 
+// SCOPE BASED CHANGE
 func (q *Queries) UpsertApplicationInstance(ctx context.Context, arg UpsertApplicationInstanceParams) error {
 	_, err := q.db.ExecContext(ctx, upsertApplicationInstance,
 		arg.ApplicationID,

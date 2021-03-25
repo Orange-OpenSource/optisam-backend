@@ -9,7 +9,7 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -24,10 +24,10 @@ import (
 func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repo.Metric
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"A", "B"},
+		Socpes: []string{"Scope1", "Scope2"},
 	})
 
 	eqTypes := []*repo.EquipmentType{
@@ -70,13 +70,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -84,13 +85,13 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 				mockRepo.EXPECT().CreateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
-				}, []string{"A", "B"}).Times(1).Return(&repo.MetricSPS{
+				}, "Scope1").Times(1).Return(&repo.MetricSPS{
 					ID:               "SPS",
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
@@ -114,6 +115,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup:   func() {},
@@ -127,13 +129,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test error"))
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return(nil, errors.New("Test error"))
 			},
 			wantErr: true,
 		},
@@ -145,13 +148,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -159,7 +163,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test error"))
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(nil, errors.New("Test error"))
 			},
 			wantErr: true,
 		},
@@ -171,13 +175,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -185,13 +190,13 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 				mockRepo.EXPECT().CreateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
-				}, []string{"A", "B"}).Times(1).Return(nil, errors.New("Test error"))
+				}, "Scope1").Times(1).Return(nil, errors.New("Test error"))
 			},
 			wantErr: true,
 		},
@@ -203,13 +208,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "SPS",
 					},
@@ -228,13 +234,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "SPS",
 					},
@@ -253,13 +260,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -267,7 +275,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e1",
 						ParentID: "e2",
@@ -292,13 +300,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -306,7 +315,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -318,13 +327,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -332,7 +342,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -344,13 +354,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a4",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -358,7 +369,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -370,13 +381,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -384,7 +396,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e2",
 						ParentID: "e3",
@@ -415,13 +427,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a4",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -429,7 +442,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return(eqTypes, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
 			},
 			wantErr: true,
 		},
@@ -441,13 +454,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 					NumCoreAttrId:    "a1",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "ONS",
 					},
@@ -455,7 +469,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 						Name: "WS",
 					},
 				}, nil)
-				mockRepo.EXPECT().EquipmentTypes(ctx, []string{"A", "B"}).Times(1).Return([]*repo.EquipmentType{
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
 					&repo.EquipmentType{
 						ID:       "e2",
 						ParentID: "e3",

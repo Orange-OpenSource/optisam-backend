@@ -18,8 +18,8 @@ import (
 )
 
 // MetricOPSComputedLicenses implements Licence MetricOPSComputedLicenses function
-func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricOPSComputed, scopes []string) (uint64, error) {
-	q := queryBuilder(mat, id)
+func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
+	q := queryBuilder(mat, scopes, id)
 	fmt.Println(q)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
@@ -30,8 +30,21 @@ func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id st
 	return licenses, nil
 }
 
+// MetricOPSComputedLicensesForAppProduct implements Licence MetricOPSComputedLicensesForAppProduct function
+func (l *LicenseRepository) MetricOPSComputedLicensesForAppProduct(ctx context.Context, prodID, appID string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
+	q := queryBuilderForAppProduct(mat, appID, scopes, prodID)
+	fmt.Println(q)
+	licenses, err := l.licensesForQuery(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/MetricOPSComputedLicensesForAppProduct - query failed", zap.Error(err), zap.String("query", q))
+		return 0, errors.New("dgraph/MetricOPSComputedLicensesForAppProduct - query failed")
+	}
+
+	return licenses, nil
+}
+
 // MetricOPSComputedLicensesAgg implements Licence MetricOPSComputedLicensesAgg function
-func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, name, metirc string, mat *v1.MetricOPSComputed, scopes []string) (uint64, error) {
+func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, name, metirc string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
 	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metirc)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
@@ -40,7 +53,7 @@ func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, na
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	q := queryBuilder(mat, ids...)
+	q := queryBuilder(mat, scopes, ids...)
 	fmt.Println(q)
 	fmt.Println("we will sleep now")
 	// time.Sleep(1 * time.Minute)

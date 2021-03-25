@@ -9,8 +9,9 @@ package v1
 import (
 	"context"
 
-	"optisam-backend/common/optisam/ctxmanage"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -21,11 +22,14 @@ import (
 )
 
 func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Context, req *v1.CreateMetricACS) (*v1.CreateMetricACS, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	metrics, err := s.metricRepo.ListMetrices(ctx, userClaims.Socpes)
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 -CreateMetricAttrCounterStandard - ListMetrices", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
@@ -34,7 +38,7 @@ func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Contex
 	if metricNameExistsAll(metrics, req.Name) != -1 {
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
-	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, userClaims.Socpes)
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 -CreateMetricAttrCounterStandard - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
@@ -51,7 +55,7 @@ func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Contex
 	if err != nil {
 		return nil, err
 	}
-	met, err := s.metricRepo.CreateMetricACS(ctx, serverToRepoMetricACS(req), attr, userClaims.Socpes)
+	met, err := s.metricRepo.CreateMetricACS(ctx, serverToRepoMetricACS(req), attr, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateMetricAttrCounterStandard - CreateMetricACS", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot create metric acs")

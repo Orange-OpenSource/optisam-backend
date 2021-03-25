@@ -10,7 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
@@ -22,10 +22,10 @@ import (
 )
 
 func Test_metricServiceServer_ListMetricType(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"A", "B"},
+		Socpes: []string{"Scope1", "Scope2"},
 	})
 
 	var mockCtrl *gomock.Controller
@@ -46,12 +46,15 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricTypeRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(repo.MetricTypes, nil)
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(repo.MetricTypes, nil)
 			},
 			want: &v1.ListMetricTypeResponse{
 				Types: []*v1.MetricType{
@@ -97,6 +100,9 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 		{name: "FAILURE - cannot retrieve claims",
 			args: args{
 				ctx: context.Background(),
+				req: &v1.ListMetricTypeRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup:   func() {},
 			wantErr: true,
@@ -104,12 +110,15 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 		{name: "FAILURE - cannot fetch metric types info",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricTypeRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("FAILURE - cannot fetch metric types info"))
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(nil, errors.New("FAILURE - cannot fetch metric types info"))
 			},
 			wantErr: true,
 		},
@@ -131,10 +140,10 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 
 }
 func Test_metricServiceServer_ListMetrices(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"A", "B"},
+		Socpes: []string{"Scope1", "Scope2"},
 	})
 
 	var mockCtrl *gomock.Controller
@@ -154,13 +163,16 @@ func Test_metricServiceServer_ListMetrices(t *testing.T) {
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(repo.MetricTypes, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(repo.MetricTypes, nil)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "Oracle Type1",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -190,6 +202,9 @@ func Test_metricServiceServer_ListMetrices(t *testing.T) {
 		{name: "FAILURE - cannot retrieve claims",
 			args: args{
 				ctx: context.Background(),
+				req: &v1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup:   func() {},
 			wantErr: true,
@@ -197,13 +212,16 @@ func Test_metricServiceServer_ListMetrices(t *testing.T) {
 		{name: "SUCCESS - description not found",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(repo.MetricTypes, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(repo.MetricTypes, nil)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					&repo.MetricInfo{
 						Name: "Oracle Type1",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -232,26 +250,32 @@ func Test_metricServiceServer_ListMetrices(t *testing.T) {
 		{name: "FAILURE - cannot fetch metric types info",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
 		{name: "FAILURE - cannot fetch metrices",
 			args: args{
 				ctx: ctx,
+				req: &v1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 
-				mockRepo.EXPECT().ListMetricTypeInfo(ctx, []string{"A", "B"}).Times(1).Return(repo.MetricTypes, nil)
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"A", "B"}).Times(1).Return(nil, errors.New("test error"))
+				mockRepo.EXPECT().ListMetricTypeInfo(ctx, "Scope1").Times(1).Return(repo.MetricTypes, nil)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return(nil, errors.New("test error"))
 			},
 			wantErr: true,
 		},
@@ -273,7 +297,7 @@ func Test_metricServiceServer_ListMetrices(t *testing.T) {
 }
 
 func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2"},
@@ -300,13 +324,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "OPS1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -323,7 +348,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricOracleNUPStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS1", []string{"Scope1", "Scope2"}).Return(&repo.MetricOPSConfig{
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS1", "Scope1").Return(&repo.MetricOPSConfig{
 					ID:                  "OPS1Id",
 					Name:                "OPS1",
 					NumCPUAttr:          "cpuattr",
@@ -357,13 +382,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.nup.standard",
 						Name: "NUP1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -380,7 +406,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricOracleNUPStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP1", []string{"Scope1", "Scope2"}).Return(&repo.MetricNUPConfig{
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP1", "Scope1").Return(&repo.MetricNUPConfig{
 					ID:                  "NUP1ID",
 					Name:                "NUP1",
 					NumCPUAttr:          "cpuattr",
@@ -416,13 +442,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "sag.processor.standard",
 						Name: "SPS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -439,7 +466,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", []string{"Scope1", "Scope2"}).Return(&repo.MetricSPSConfig{
+				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					ID:             "SPSID",
 					Name:           "SPS",
 					NumCoreAttr:    "coreattr",
@@ -465,13 +492,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "ibm.pvu.standard",
 						Name: "IPS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -488,7 +516,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigIPS(ctx, "IPS", []string{"Scope1", "Scope2"}).Return(&repo.MetricIPSConfig{
+				mockRepo.EXPECT().GetMetricConfigIPS(ctx, "IPS", "Scope1").Return(&repo.MetricIPSConfig{
 					ID:             "IPSID",
 					Name:           "IPS",
 					NumCoreAttr:    "coreattr",
@@ -514,13 +542,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "attribute.counter.standard",
 						Name: "ACS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -537,7 +566,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricAttrCounterStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigACS(ctx, "ACS", []string{"Scope1", "Scope2"}).Return(&repo.MetricACS{
+				mockRepo.EXPECT().GetMetricConfigACS(ctx, "ACS", "Scope1").Return(&repo.MetricACS{
 					ID:            "ACSID",
 					Name:          "ACS",
 					AttributeName: "corefactor",
@@ -563,13 +592,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "instance.number.standard",
 						Name: "INM",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -586,7 +616,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricInstanceNumberStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigINM(ctx, "INM", []string{"Scope1", "Scope2"}).Return(&repo.MetricINMConfig{
+				mockRepo.EXPECT().GetMetricConfigINM(ctx, "INM", "Scope1").Return(&repo.MetricINM{
 					ID:          "INMID",
 					Name:        "INM",
 					Coefficient: 10,
@@ -608,6 +638,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "OPS1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup:   func() {},
@@ -621,6 +652,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup:   func() {},
@@ -634,13 +666,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "OPS1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -652,13 +685,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "OPS5",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -686,13 +720,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "attribute.counter.standard",
 						Name: "OPS1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -720,13 +755,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.processor.standard",
 						Name: "OPS1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -743,7 +779,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricOracleNUPStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS1", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS1", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -755,13 +791,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "oracle.nup.standard",
 						Name: "NUP1",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -778,7 +815,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricOracleNUPStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP1", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP1", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -790,13 +827,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "sag.processor.standard",
 						Name: "SPS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -813,7 +851,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -825,13 +863,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "ibm.pvu.standard",
 						Name: "IPS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -848,7 +887,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigIPS(ctx, "IPS", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigIPS(ctx, "IPS", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -860,13 +899,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "attribute.counter.standard",
 						Name: "ACS",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -883,7 +923,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricAttrCounterStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigACS(ctx, "ACS", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigACS(ctx, "ACS", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -895,13 +935,14 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: "instance.number.standard",
 						Name: "INM",
 					},
+					Scopes: []string{"Scope1"},
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2"}).Return([]*repo.MetricInfo{
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
 					{
 						ID:   "OPS1Id",
 						Name: "OPS1",
@@ -918,7 +959,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 						Type: repo.MetricInstanceNumberStandard,
 					},
 				}, nil).Times(1)
-				mockRepo.EXPECT().GetMetricConfigINM(ctx, "INM", []string{"Scope1", "Scope2"}).Return(nil, errors.New("Internal")).Times(1)
+				mockRepo.EXPECT().GetMetricConfigINM(ctx, "INM", "Scope1").Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},

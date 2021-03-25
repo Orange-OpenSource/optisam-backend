@@ -10,8 +10,8 @@ import (
 	"context"
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repo "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 
 	pTypes "github.com/golang/protobuf/ptypes"
@@ -23,7 +23,7 @@ import (
 )
 
 func (s *accountServiceServer) CreateScope(ctx context.Context, req *v1.CreateScopeRequest) (*v1.CreateScopeResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
@@ -55,7 +55,7 @@ func (s *accountServiceServer) CreateScope(ctx context.Context, req *v1.CreateSc
 }
 
 func (s *accountServiceServer) ListScopes(ctx context.Context, req *v1.ListScopesRequest) (*v1.ListScopesResponse, error) {
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}

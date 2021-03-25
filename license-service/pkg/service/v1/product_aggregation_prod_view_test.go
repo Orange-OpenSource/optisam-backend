@@ -10,7 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
@@ -22,10 +22,10 @@ import (
 )
 
 func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) {
-	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "SuperAdmin",
-		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+		Socpes: []string{"Scope1"},
 	})
 
 	var mockCtrl *gomock.Controller
@@ -47,14 +47,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -97,7 +98,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -140,7 +141,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricOPSComputed{
 					EqTypeTree:     []*repo.EquipmentType{start, base, agg, end},
 					BaseType:       base,
@@ -149,8 +150,8 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricOPS{
+				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
 					&repo.MetricOPS{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
@@ -196,14 +197,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -246,7 +248,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -289,14 +291,14 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricSPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(12), uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricSPS{
+				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(12), uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -334,14 +336,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -384,7 +387,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -427,14 +430,14 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricSPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(8), uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricSPS{
+				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(8), uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricSPS{
 					&repo.MetricSPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -472,14 +475,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -522,7 +526,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -566,15 +570,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricACSComputed{
 					Name:      "acs1",
 					BaseType:  base,
 					Attribute: corefactor,
 					Value:     "2",
 				}
-				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricACS{
+				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricACS{
 					&repo.MetricACS{
 						Name:          "acs1",
 						EqType:        "Server",
@@ -609,14 +613,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -659,7 +664,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -702,14 +707,14 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricIPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricIPS{
+				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricIPS{
 					&repo.MetricIPS{
 						Name:             "OPS",
 						NumCoreAttrID:    "cores",
@@ -747,14 +752,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -797,7 +803,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -825,14 +831,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForProductAggregationRequest{
-					ID: "proAggID1",
+					ID:    "proAggID1",
+					Scope: "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -875,7 +882,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -920,7 +927,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New(("Internal"))).Times(1)
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(nil, errors.New(("Internal"))).Times(1)
 			},
 			wantErr: true,
 		},
@@ -935,7 +942,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -978,7 +985,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Internal")).Times(1)
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -993,7 +1000,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1036,7 +1043,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1046,7 +1053,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Internal")).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -1061,7 +1068,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1104,7 +1111,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1147,7 +1154,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricOPSComputed{
 					EqTypeTree:     []*repo.EquipmentType{start, base, agg, end},
 					BaseType:       base,
@@ -1156,8 +1163,8 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return(nil, errors.New("Internal"))
+				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -1172,7 +1179,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1215,7 +1222,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1258,14 +1265,14 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricSPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(12), uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return(nil, errors.New("Internal"))
+				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(12), uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -1280,7 +1287,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1323,7 +1330,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1366,14 +1373,14 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricIPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return(nil, errors.New("Internal"))
+				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -1388,7 +1395,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1431,7 +1438,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
@@ -1475,15 +1482,15 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 				mat := &repo.MetricACSComputed{
 					Name:      "acs1",
 					BaseType:  base,
 					Attribute: corefactor,
 					Value:     "2",
 				}
-				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(10), nil).Times(1)
-				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return(nil, errors.New("Internal"))
+				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -1498,7 +1505,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1", "Scope2", "Scope3"}).Return(&repo.ProductAggregation{
+				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
 					ID:                "proAggID1",
 					Name:              "pro1",
 					Editor:            "e1",
@@ -1541,7 +1548,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 						},
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
 					&repo.Metric{
 						Name: "OPS",
 						Type: "abc",
@@ -1584,7 +1591,7 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
 			},
 			wantErr: true,
 		},
@@ -1600,6 +1607,8 @@ func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) 
 			}
 			if !tt.wantErr {
 				compareAcqRightforProAggResponse(t, "ListAcqRightsForProductAggregation", got, tt.want)
+			} else {
+				fmt.Println("test case passed : [", tt.name, "]")
 			}
 		})
 	}

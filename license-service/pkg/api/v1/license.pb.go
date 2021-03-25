@@ -10,21 +10,15 @@
 package v1
 
 import (
+	context "context"
 	fmt "fmt"
-
-	proto "github.com/golang/protobuf/proto"
-
-	math "math"
-
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-
-	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
-
+	proto "github.com/golang/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
-
-	context "golang.org/x/net/context"
-
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -36,7 +30,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type DataTypes int32
 
@@ -53,6 +47,7 @@ var DataTypes_name = map[int32]string{
 	2: "INT",
 	3: "FLOAT",
 }
+
 var DataTypes_value = map[string]int32{
 	"UNKNOWN": 0,
 	"STRING":  1,
@@ -63,8 +58,111 @@ var DataTypes_value = map[string]int32{
 func (x DataTypes) String() string {
 	return proto.EnumName(DataTypes_name, int32(x))
 }
+
 func (DataTypes) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{0}
+	return fileDescriptor_090c1f856632b222, []int{0}
+}
+
+type ListAcqRightsForApplicationsProductRequest struct {
+	AppId                string   `protobuf:"bytes,1,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	ProdId               string   `protobuf:"bytes,2,opt,name=prod_id,json=prodId,proto3" json:"prod_id,omitempty"`
+	Scope                string   `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ListAcqRightsForApplicationsProductRequest) Reset() {
+	*m = ListAcqRightsForApplicationsProductRequest{}
+}
+func (m *ListAcqRightsForApplicationsProductRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ListAcqRightsForApplicationsProductRequest) ProtoMessage() {}
+func (*ListAcqRightsForApplicationsProductRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_090c1f856632b222, []int{0}
+}
+
+func (m *ListAcqRightsForApplicationsProductRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductRequest.Unmarshal(m, b)
+}
+func (m *ListAcqRightsForApplicationsProductRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductRequest.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsForApplicationsProductRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsForApplicationsProductRequest.Merge(m, src)
+}
+func (m *ListAcqRightsForApplicationsProductRequest) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductRequest.Size(m)
+}
+func (m *ListAcqRightsForApplicationsProductRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsForApplicationsProductRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsForApplicationsProductRequest proto.InternalMessageInfo
+
+func (m *ListAcqRightsForApplicationsProductRequest) GetAppId() string {
+	if m != nil {
+		return m.AppId
+	}
+	return ""
+}
+
+func (m *ListAcqRightsForApplicationsProductRequest) GetProdId() string {
+	if m != nil {
+		return m.ProdId
+	}
+	return ""
+}
+
+func (m *ListAcqRightsForApplicationsProductRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+type ListAcqRightsForApplicationsProductResponse struct {
+	AcqRights            []*ProductAcquiredRights `protobuf:"bytes,1,rep,name=acq_rights,json=acqRights,proto3" json:"acq_rights,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
+}
+
+func (m *ListAcqRightsForApplicationsProductResponse) Reset() {
+	*m = ListAcqRightsForApplicationsProductResponse{}
+}
+func (m *ListAcqRightsForApplicationsProductResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ListAcqRightsForApplicationsProductResponse) ProtoMessage() {}
+func (*ListAcqRightsForApplicationsProductResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_090c1f856632b222, []int{1}
+}
+
+func (m *ListAcqRightsForApplicationsProductResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductResponse.Unmarshal(m, b)
+}
+func (m *ListAcqRightsForApplicationsProductResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductResponse.Marshal(b, m, deterministic)
+}
+func (m *ListAcqRightsForApplicationsProductResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsForApplicationsProductResponse.Merge(m, src)
+}
+func (m *ListAcqRightsForApplicationsProductResponse) XXX_Size() int {
+	return xxx_messageInfo_ListAcqRightsForApplicationsProductResponse.Size(m)
+}
+func (m *ListAcqRightsForApplicationsProductResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListAcqRightsForApplicationsProductResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ListAcqRightsForApplicationsProductResponse proto.InternalMessageInfo
+
+func (m *ListAcqRightsForApplicationsProductResponse) GetAcqRights() []*ProductAcquiredRights {
+	if m != nil {
+		return m.AcqRights
+	}
+	return nil
 }
 
 type LicensesForEquipAndMetricRequest struct {
@@ -73,7 +171,7 @@ type LicensesForEquipAndMetricRequest struct {
 	MetricType           string       `protobuf:"bytes,3,opt,name=metric_type,json=metricType,proto3" json:"metric_type,omitempty"`
 	MetricName           string       `protobuf:"bytes,4,opt,name=metric_name,json=metricName,proto3" json:"metric_name,omitempty"`
 	Attributes           []*Attribute `protobuf:"bytes,5,rep,name=attributes,proto3" json:"attributes,omitempty"`
-	Scopes               []string     `protobuf:"bytes,6,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	Scope                string       `protobuf:"bytes,6,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`
@@ -83,16 +181,17 @@ func (m *LicensesForEquipAndMetricRequest) Reset()         { *m = LicensesForEqu
 func (m *LicensesForEquipAndMetricRequest) String() string { return proto.CompactTextString(m) }
 func (*LicensesForEquipAndMetricRequest) ProtoMessage()    {}
 func (*LicensesForEquipAndMetricRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{0}
+	return fileDescriptor_090c1f856632b222, []int{2}
 }
+
 func (m *LicensesForEquipAndMetricRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LicensesForEquipAndMetricRequest.Unmarshal(m, b)
 }
 func (m *LicensesForEquipAndMetricRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_LicensesForEquipAndMetricRequest.Marshal(b, m, deterministic)
 }
-func (dst *LicensesForEquipAndMetricRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LicensesForEquipAndMetricRequest.Merge(dst, src)
+func (m *LicensesForEquipAndMetricRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LicensesForEquipAndMetricRequest.Merge(m, src)
 }
 func (m *LicensesForEquipAndMetricRequest) XXX_Size() int {
 	return xxx_messageInfo_LicensesForEquipAndMetricRequest.Size(m)
@@ -138,11 +237,11 @@ func (m *LicensesForEquipAndMetricRequest) GetAttributes() []*Attribute {
 	return nil
 }
 
-func (m *LicensesForEquipAndMetricRequest) GetScopes() []string {
+func (m *LicensesForEquipAndMetricRequest) GetScope() string {
 	if m != nil {
-		return m.Scopes
+		return m.Scope
 	}
-	return nil
+	return ""
 }
 
 type LicensesForEquipAndMetricResponse struct {
@@ -156,16 +255,17 @@ func (m *LicensesForEquipAndMetricResponse) Reset()         { *m = LicensesForEq
 func (m *LicensesForEquipAndMetricResponse) String() string { return proto.CompactTextString(m) }
 func (*LicensesForEquipAndMetricResponse) ProtoMessage()    {}
 func (*LicensesForEquipAndMetricResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{1}
+	return fileDescriptor_090c1f856632b222, []int{3}
 }
+
 func (m *LicensesForEquipAndMetricResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LicensesForEquipAndMetricResponse.Unmarshal(m, b)
 }
 func (m *LicensesForEquipAndMetricResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_LicensesForEquipAndMetricResponse.Marshal(b, m, deterministic)
 }
-func (dst *LicensesForEquipAndMetricResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LicensesForEquipAndMetricResponse.Merge(dst, src)
+func (m *LicensesForEquipAndMetricResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LicensesForEquipAndMetricResponse.Merge(m, src)
 }
 func (m *LicensesForEquipAndMetricResponse) XXX_Size() int {
 	return xxx_messageInfo_LicensesForEquipAndMetricResponse.Size(m)
@@ -198,16 +298,17 @@ func (m *ProductLicenseForEquipAndMetric) Reset()         { *m = ProductLicenseF
 func (m *ProductLicenseForEquipAndMetric) String() string { return proto.CompactTextString(m) }
 func (*ProductLicenseForEquipAndMetric) ProtoMessage()    {}
 func (*ProductLicenseForEquipAndMetric) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{2}
+	return fileDescriptor_090c1f856632b222, []int{4}
 }
+
 func (m *ProductLicenseForEquipAndMetric) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProductLicenseForEquipAndMetric.Unmarshal(m, b)
 }
 func (m *ProductLicenseForEquipAndMetric) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ProductLicenseForEquipAndMetric.Marshal(b, m, deterministic)
 }
-func (dst *ProductLicenseForEquipAndMetric) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductLicenseForEquipAndMetric.Merge(dst, src)
+func (m *ProductLicenseForEquipAndMetric) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductLicenseForEquipAndMetric.Merge(m, src)
 }
 func (m *ProductLicenseForEquipAndMetric) XXX_Size() int {
 	return xxx_messageInfo_ProductLicenseForEquipAndMetric.Size(m)
@@ -253,48 +354,11 @@ func (m *ProductLicenseForEquipAndMetric) GetProduct() *Product {
 	return nil
 }
 
-type MetricesForEqTypeRequest struct {
-	Type                 string   `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *MetricesForEqTypeRequest) Reset()         { *m = MetricesForEqTypeRequest{} }
-func (m *MetricesForEqTypeRequest) String() string { return proto.CompactTextString(m) }
-func (*MetricesForEqTypeRequest) ProtoMessage()    {}
-func (*MetricesForEqTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{3}
-}
-func (m *MetricesForEqTypeRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_MetricesForEqTypeRequest.Unmarshal(m, b)
-}
-func (m *MetricesForEqTypeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_MetricesForEqTypeRequest.Marshal(b, m, deterministic)
-}
-func (dst *MetricesForEqTypeRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MetricesForEqTypeRequest.Merge(dst, src)
-}
-func (m *MetricesForEqTypeRequest) XXX_Size() int {
-	return xxx_messageInfo_MetricesForEqTypeRequest.Size(m)
-}
-func (m *MetricesForEqTypeRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MetricesForEqTypeRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MetricesForEqTypeRequest proto.InternalMessageInfo
-
-func (m *MetricesForEqTypeRequest) GetType() string {
-	if m != nil {
-		return m.Type
-	}
-	return ""
-}
-
 type ProductLicensesForMetricRequest struct {
 	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
 	MetricName           string   `protobuf:"bytes,2,opt,name=metric_name,json=metricName,proto3" json:"metric_name,omitempty"`
 	UnitCost             float64  `protobuf:"fixed64,3,opt,name=unit_cost,json=unitCost,proto3" json:"unit_cost,omitempty"`
+	Scope                string   `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -304,16 +368,17 @@ func (m *ProductLicensesForMetricRequest) Reset()         { *m = ProductLicenses
 func (m *ProductLicensesForMetricRequest) String() string { return proto.CompactTextString(m) }
 func (*ProductLicensesForMetricRequest) ProtoMessage()    {}
 func (*ProductLicensesForMetricRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{4}
+	return fileDescriptor_090c1f856632b222, []int{5}
 }
+
 func (m *ProductLicensesForMetricRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProductLicensesForMetricRequest.Unmarshal(m, b)
 }
 func (m *ProductLicensesForMetricRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ProductLicensesForMetricRequest.Marshal(b, m, deterministic)
 }
-func (dst *ProductLicensesForMetricRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductLicensesForMetricRequest.Merge(dst, src)
+func (m *ProductLicensesForMetricRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductLicensesForMetricRequest.Merge(m, src)
 }
 func (m *ProductLicensesForMetricRequest) XXX_Size() int {
 	return xxx_messageInfo_ProductLicensesForMetricRequest.Size(m)
@@ -345,6 +410,13 @@ func (m *ProductLicensesForMetricRequest) GetUnitCost() float64 {
 	return 0
 }
 
+func (m *ProductLicensesForMetricRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
 type ProductLicensesForMetricResponse struct {
 	NumCptLicences       uint64   `protobuf:"varint,1,opt,name=numCptLicences,proto3" json:"numCptLicences,omitempty"`
 	TotalCost            float64  `protobuf:"fixed64,2,opt,name=total_cost,json=totalCost,proto3" json:"total_cost,omitempty"`
@@ -358,16 +430,17 @@ func (m *ProductLicensesForMetricResponse) Reset()         { *m = ProductLicense
 func (m *ProductLicensesForMetricResponse) String() string { return proto.CompactTextString(m) }
 func (*ProductLicensesForMetricResponse) ProtoMessage()    {}
 func (*ProductLicensesForMetricResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{5}
+	return fileDescriptor_090c1f856632b222, []int{6}
 }
+
 func (m *ProductLicensesForMetricResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProductLicensesForMetricResponse.Unmarshal(m, b)
 }
 func (m *ProductLicensesForMetricResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ProductLicensesForMetricResponse.Marshal(b, m, deterministic)
 }
-func (dst *ProductLicensesForMetricResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductLicensesForMetricResponse.Merge(dst, src)
+func (m *ProductLicensesForMetricResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductLicensesForMetricResponse.Merge(m, src)
 }
 func (m *ProductLicensesForMetricResponse) XXX_Size() int {
 	return xxx_messageInfo_ProductLicensesForMetricResponse.Size(m)
@@ -401,6 +474,7 @@ func (m *ProductLicensesForMetricResponse) GetMetricName() string {
 
 type ListAcqRightsForProductAggregationRequest struct {
 	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Scope                string   `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -414,16 +488,17 @@ func (m *ListAcqRightsForProductAggregationRequest) String() string {
 }
 func (*ListAcqRightsForProductAggregationRequest) ProtoMessage() {}
 func (*ListAcqRightsForProductAggregationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{6}
+	return fileDescriptor_090c1f856632b222, []int{7}
 }
+
 func (m *ListAcqRightsForProductAggregationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationRequest.Unmarshal(m, b)
 }
 func (m *ListAcqRightsForProductAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationRequest.Marshal(b, m, deterministic)
 }
-func (dst *ListAcqRightsForProductAggregationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListAcqRightsForProductAggregationRequest.Merge(dst, src)
+func (m *ListAcqRightsForProductAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsForProductAggregationRequest.Merge(m, src)
 }
 func (m *ListAcqRightsForProductAggregationRequest) XXX_Size() int {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationRequest.Size(m)
@@ -437,6 +512,13 @@ var xxx_messageInfo_ListAcqRightsForProductAggregationRequest proto.InternalMess
 func (m *ListAcqRightsForProductAggregationRequest) GetID() string {
 	if m != nil {
 		return m.ID
+	}
+	return ""
+}
+
+func (m *ListAcqRightsForProductAggregationRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
 	}
 	return ""
 }
@@ -456,16 +538,17 @@ func (m *ListAcqRightsForProductAggregationResponse) String() string {
 }
 func (*ListAcqRightsForProductAggregationResponse) ProtoMessage() {}
 func (*ListAcqRightsForProductAggregationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{7}
+	return fileDescriptor_090c1f856632b222, []int{8}
 }
+
 func (m *ListAcqRightsForProductAggregationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationResponse.Unmarshal(m, b)
 }
 func (m *ListAcqRightsForProductAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationResponse.Marshal(b, m, deterministic)
 }
-func (dst *ListAcqRightsForProductAggregationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListAcqRightsForProductAggregationResponse.Merge(dst, src)
+func (m *ListAcqRightsForProductAggregationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcqRightsForProductAggregationResponse.Merge(m, src)
 }
 func (m *ListAcqRightsForProductAggregationResponse) XXX_Size() int {
 	return xxx_messageInfo_ListAcqRightsForProductAggregationResponse.Size(m)
@@ -495,16 +578,17 @@ func (m *UpdateProductAggregationRequest) Reset()         { *m = UpdateProductAg
 func (m *UpdateProductAggregationRequest) String() string { return proto.CompactTextString(m) }
 func (*UpdateProductAggregationRequest) ProtoMessage()    {}
 func (*UpdateProductAggregationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{8}
+	return fileDescriptor_090c1f856632b222, []int{9}
 }
+
 func (m *UpdateProductAggregationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpdateProductAggregationRequest.Unmarshal(m, b)
 }
 func (m *UpdateProductAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UpdateProductAggregationRequest.Marshal(b, m, deterministic)
 }
-func (dst *UpdateProductAggregationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateProductAggregationRequest.Merge(dst, src)
+func (m *UpdateProductAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateProductAggregationRequest.Merge(m, src)
 }
 func (m *UpdateProductAggregationRequest) XXX_Size() int {
 	return xxx_messageInfo_UpdateProductAggregationRequest.Size(m)
@@ -543,16 +627,17 @@ func (m *UpdateAggregation) Reset()         { *m = UpdateAggregation{} }
 func (m *UpdateAggregation) String() string { return proto.CompactTextString(m) }
 func (*UpdateAggregation) ProtoMessage()    {}
 func (*UpdateAggregation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{9}
+	return fileDescriptor_090c1f856632b222, []int{10}
 }
+
 func (m *UpdateAggregation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UpdateAggregation.Unmarshal(m, b)
 }
 func (m *UpdateAggregation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UpdateAggregation.Marshal(b, m, deterministic)
 }
-func (dst *UpdateAggregation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UpdateAggregation.Merge(dst, src)
+func (m *UpdateAggregation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateAggregation.Merge(m, src)
 }
 func (m *UpdateAggregation) XXX_Size() int {
 	return xxx_messageInfo_UpdateAggregation.Size(m)
@@ -602,16 +687,17 @@ func (m *DeleteProductAggregationRequest) Reset()         { *m = DeleteProductAg
 func (m *DeleteProductAggregationRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteProductAggregationRequest) ProtoMessage()    {}
 func (*DeleteProductAggregationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{10}
+	return fileDescriptor_090c1f856632b222, []int{11}
 }
+
 func (m *DeleteProductAggregationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DeleteProductAggregationRequest.Unmarshal(m, b)
 }
 func (m *DeleteProductAggregationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_DeleteProductAggregationRequest.Marshal(b, m, deterministic)
 }
-func (dst *DeleteProductAggregationRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeleteProductAggregationRequest.Merge(dst, src)
+func (m *DeleteProductAggregationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteProductAggregationRequest.Merge(m, src)
 }
 func (m *DeleteProductAggregationRequest) XXX_Size() int {
 	return xxx_messageInfo_DeleteProductAggregationRequest.Size(m)
@@ -640,16 +726,17 @@ func (m *ListProductAggregationResponse) Reset()         { *m = ListProductAggre
 func (m *ListProductAggregationResponse) String() string { return proto.CompactTextString(m) }
 func (*ListProductAggregationResponse) ProtoMessage()    {}
 func (*ListProductAggregationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{11}
+	return fileDescriptor_090c1f856632b222, []int{12}
 }
+
 func (m *ListProductAggregationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListProductAggregationResponse.Unmarshal(m, b)
 }
 func (m *ListProductAggregationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListProductAggregationResponse.Marshal(b, m, deterministic)
 }
-func (dst *ListProductAggregationResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListProductAggregationResponse.Merge(dst, src)
+func (m *ListProductAggregationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListProductAggregationResponse.Merge(m, src)
 }
 func (m *ListProductAggregationResponse) XXX_Size() int {
 	return xxx_messageInfo_ListProductAggregationResponse.Size(m)
@@ -684,16 +771,17 @@ func (m *ProductAggregation) Reset()         { *m = ProductAggregation{} }
 func (m *ProductAggregation) String() string { return proto.CompactTextString(m) }
 func (*ProductAggregation) ProtoMessage()    {}
 func (*ProductAggregation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{12}
+	return fileDescriptor_090c1f856632b222, []int{13}
 }
+
 func (m *ProductAggregation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProductAggregation.Unmarshal(m, b)
 }
 func (m *ProductAggregation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ProductAggregation.Marshal(b, m, deterministic)
 }
-func (dst *ProductAggregation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductAggregation.Merge(dst, src)
+func (m *ProductAggregation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductAggregation.Merge(m, src)
 }
 func (m *ProductAggregation) XXX_Size() int {
 	return xxx_messageInfo_ProductAggregation.Size(m)
@@ -764,16 +852,17 @@ func (m *ListMetricResponse) Reset()         { *m = ListMetricResponse{} }
 func (m *ListMetricResponse) String() string { return proto.CompactTextString(m) }
 func (*ListMetricResponse) ProtoMessage()    {}
 func (*ListMetricResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{13}
+	return fileDescriptor_090c1f856632b222, []int{14}
 }
+
 func (m *ListMetricResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListMetricResponse.Unmarshal(m, b)
 }
 func (m *ListMetricResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListMetricResponse.Marshal(b, m, deterministic)
 }
-func (dst *ListMetricResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListMetricResponse.Merge(dst, src)
+func (m *ListMetricResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListMetricResponse.Merge(m, src)
 }
 func (m *ListMetricResponse) XXX_Size() int {
 	return xxx_messageInfo_ListMetricResponse.Size(m)
@@ -804,16 +893,17 @@ func (m *Metric) Reset()         { *m = Metric{} }
 func (m *Metric) String() string { return proto.CompactTextString(m) }
 func (*Metric) ProtoMessage()    {}
 func (*Metric) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{14}
+	return fileDescriptor_090c1f856632b222, []int{15}
 }
+
 func (m *Metric) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Metric.Unmarshal(m, b)
 }
 func (m *Metric) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Metric.Marshal(b, m, deterministic)
 }
-func (dst *Metric) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Metric.Merge(dst, src)
+func (m *Metric) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Metric.Merge(m, src)
 }
 func (m *Metric) XXX_Size() int {
 	return xxx_messageInfo_Metric.Size(m)
@@ -847,6 +937,7 @@ func (m *Metric) GetDescription() string {
 
 type ListAcquiredRightsForProductRequest struct {
 	SwidTag              string   `protobuf:"bytes,1,opt,name=swid_tag,json=swidTag,proto3" json:"swid_tag,omitempty"`
+	Scope                string   `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -856,16 +947,17 @@ func (m *ListAcquiredRightsForProductRequest) Reset()         { *m = ListAcquire
 func (m *ListAcquiredRightsForProductRequest) String() string { return proto.CompactTextString(m) }
 func (*ListAcquiredRightsForProductRequest) ProtoMessage()    {}
 func (*ListAcquiredRightsForProductRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{15}
+	return fileDescriptor_090c1f856632b222, []int{16}
 }
+
 func (m *ListAcquiredRightsForProductRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListAcquiredRightsForProductRequest.Unmarshal(m, b)
 }
 func (m *ListAcquiredRightsForProductRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListAcquiredRightsForProductRequest.Marshal(b, m, deterministic)
 }
-func (dst *ListAcquiredRightsForProductRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListAcquiredRightsForProductRequest.Merge(dst, src)
+func (m *ListAcquiredRightsForProductRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcquiredRightsForProductRequest.Merge(m, src)
 }
 func (m *ListAcquiredRightsForProductRequest) XXX_Size() int {
 	return xxx_messageInfo_ListAcquiredRightsForProductRequest.Size(m)
@@ -883,6 +975,13 @@ func (m *ListAcquiredRightsForProductRequest) GetSwidTag() string {
 	return ""
 }
 
+func (m *ListAcquiredRightsForProductRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
 type ListAcquiredRightsForProductResponse struct {
 	AcqRights            []*ProductAcquiredRights `protobuf:"bytes,1,rep,name=acq_rights,json=acqRights,proto3" json:"acq_rights,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
@@ -894,16 +993,17 @@ func (m *ListAcquiredRightsForProductResponse) Reset()         { *m = ListAcquir
 func (m *ListAcquiredRightsForProductResponse) String() string { return proto.CompactTextString(m) }
 func (*ListAcquiredRightsForProductResponse) ProtoMessage()    {}
 func (*ListAcquiredRightsForProductResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{16}
+	return fileDescriptor_090c1f856632b222, []int{17}
 }
+
 func (m *ListAcquiredRightsForProductResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListAcquiredRightsForProductResponse.Unmarshal(m, b)
 }
 func (m *ListAcquiredRightsForProductResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListAcquiredRightsForProductResponse.Marshal(b, m, deterministic)
 }
-func (dst *ListAcquiredRightsForProductResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListAcquiredRightsForProductResponse.Merge(dst, src)
+func (m *ListAcquiredRightsForProductResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListAcquiredRightsForProductResponse.Merge(m, src)
 }
 func (m *ListAcquiredRightsForProductResponse) XXX_Size() int {
 	return xxx_messageInfo_ListAcquiredRightsForProductResponse.Size(m)
@@ -944,16 +1044,17 @@ func (m *Product) Reset()         { *m = Product{} }
 func (m *Product) String() string { return proto.CompactTextString(m) }
 func (*Product) ProtoMessage()    {}
 func (*Product) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{17}
+	return fileDescriptor_090c1f856632b222, []int{18}
 }
+
 func (m *Product) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Product.Unmarshal(m, b)
 }
 func (m *Product) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Product.Marshal(b, m, deterministic)
 }
-func (dst *Product) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Product.Merge(dst, src)
+func (m *Product) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Product.Merge(m, src)
 }
 func (m *Product) XXX_Size() int {
 	return xxx_messageInfo_Product.Size(m)
@@ -1071,16 +1172,17 @@ func (m *Application) Reset()         { *m = Application{} }
 func (m *Application) String() string { return proto.CompactTextString(m) }
 func (*Application) ProtoMessage()    {}
 func (*Application) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{18}
+	return fileDescriptor_090c1f856632b222, []int{19}
 }
+
 func (m *Application) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Application.Unmarshal(m, b)
 }
 func (m *Application) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Application.Marshal(b, m, deterministic)
 }
-func (dst *Application) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Application.Merge(dst, src)
+func (m *Application) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Application.Merge(m, src)
 }
 func (m *Application) XXX_Size() int {
 	return xxx_messageInfo_Application.Size(m)
@@ -1152,16 +1254,17 @@ func (m *ProductAcquiredRights) Reset()         { *m = ProductAcquiredRights{} }
 func (m *ProductAcquiredRights) String() string { return proto.CompactTextString(m) }
 func (*ProductAcquiredRights) ProtoMessage()    {}
 func (*ProductAcquiredRights) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{19}
+	return fileDescriptor_090c1f856632b222, []int{20}
 }
+
 func (m *ProductAcquiredRights) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProductAcquiredRights.Unmarshal(m, b)
 }
 func (m *ProductAcquiredRights) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ProductAcquiredRights.Marshal(b, m, deterministic)
 }
-func (dst *ProductAcquiredRights) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProductAcquiredRights.Merge(dst, src)
+func (m *ProductAcquiredRights) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProductAcquiredRights.Merge(m, src)
 }
 func (m *ProductAcquiredRights) XXX_Size() int {
 	return xxx_messageInfo_ProductAcquiredRights.Size(m)
@@ -1264,16 +1367,17 @@ func (m *Attribute) Reset()         { *m = Attribute{} }
 func (m *Attribute) String() string { return proto.CompactTextString(m) }
 func (*Attribute) ProtoMessage()    {}
 func (*Attribute) Descriptor() ([]byte, []int) {
-	return fileDescriptor_license_929192c929500bc1, []int{20}
+	return fileDescriptor_090c1f856632b222, []int{21}
 }
+
 func (m *Attribute) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Attribute.Unmarshal(m, b)
 }
 func (m *Attribute) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Attribute.Marshal(b, m, deterministic)
 }
-func (dst *Attribute) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Attribute.Merge(dst, src)
+func (m *Attribute) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Attribute.Merge(m, src)
 }
 func (m *Attribute) XXX_Size() int {
 	return xxx_messageInfo_Attribute.Size(m)
@@ -1447,9 +1551,9 @@ func (m *Attribute) GetStringValOld() string {
 	return ""
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*Attribute) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Attribute_OneofMarshaler, _Attribute_OneofUnmarshaler, _Attribute_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Attribute) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*Attribute_IntVal)(nil),
 		(*Attribute_FloatVal)(nil),
 		(*Attribute_StringVal)(nil),
@@ -1459,133 +1563,13 @@ func (*Attribute) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) err
 	}
 }
 
-func _Attribute_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Attribute)
-	// val
-	switch x := m.Val.(type) {
-	case *Attribute_IntVal:
-		b.EncodeVarint(10<<3 | proto.WireVarint)
-		b.EncodeVarint(uint64(x.IntVal))
-	case *Attribute_FloatVal:
-		b.EncodeVarint(11<<3 | proto.WireFixed32)
-		b.EncodeFixed32(uint64(math.Float32bits(x.FloatVal)))
-	case *Attribute_StringVal:
-		b.EncodeVarint(12<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.StringVal)
-	case nil:
-	default:
-		return fmt.Errorf("Attribute.Val has unexpected type %T", x)
-	}
-	// old_val
-	switch x := m.OldVal.(type) {
-	case *Attribute_IntValOld:
-		b.EncodeVarint(13<<3 | proto.WireVarint)
-		b.EncodeVarint(uint64(x.IntValOld))
-	case *Attribute_FloatValOld:
-		b.EncodeVarint(14<<3 | proto.WireFixed32)
-		b.EncodeFixed32(uint64(math.Float32bits(x.FloatValOld)))
-	case *Attribute_StringValOld:
-		b.EncodeVarint(15<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.StringValOld)
-	case nil:
-	default:
-		return fmt.Errorf("Attribute.OldVal has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _Attribute_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Attribute)
-	switch tag {
-	case 10: // val.int_val
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Val = &Attribute_IntVal{int32(x)}
-		return true, err
-	case 11: // val.float_val
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.Val = &Attribute_FloatVal{math.Float32frombits(uint32(x))}
-		return true, err
-	case 12: // val.string_val
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.Val = &Attribute_StringVal{x}
-		return true, err
-	case 13: // old_val.int_val_old
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.OldVal = &Attribute_IntValOld{int32(x)}
-		return true, err
-	case 14: // old_val.float_val_old
-		if wire != proto.WireFixed32 {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeFixed32()
-		m.OldVal = &Attribute_FloatValOld{math.Float32frombits(uint32(x))}
-		return true, err
-	case 15: // old_val.string_val_old
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.OldVal = &Attribute_StringValOld{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _Attribute_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Attribute)
-	// val
-	switch x := m.Val.(type) {
-	case *Attribute_IntVal:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.IntVal))
-	case *Attribute_FloatVal:
-		n += 1 // tag and wire
-		n += 4
-	case *Attribute_StringVal:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.StringVal)))
-		n += len(x.StringVal)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	// old_val
-	switch x := m.OldVal.(type) {
-	case *Attribute_IntValOld:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.IntValOld))
-	case *Attribute_FloatValOld:
-		n += 1 // tag and wire
-		n += 4
-	case *Attribute_StringValOld:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.StringValOld)))
-		n += len(x.StringValOld)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
 func init() {
+	proto.RegisterEnum("v1.DataTypes", DataTypes_name, DataTypes_value)
+	proto.RegisterType((*ListAcqRightsForApplicationsProductRequest)(nil), "v1.ListAcqRightsForApplicationsProductRequest")
+	proto.RegisterType((*ListAcqRightsForApplicationsProductResponse)(nil), "v1.ListAcqRightsForApplicationsProductResponse")
 	proto.RegisterType((*LicensesForEquipAndMetricRequest)(nil), "v1.LicensesForEquipAndMetricRequest")
 	proto.RegisterType((*LicensesForEquipAndMetricResponse)(nil), "v1.LicensesForEquipAndMetricResponse")
 	proto.RegisterType((*ProductLicenseForEquipAndMetric)(nil), "v1.ProductLicenseForEquipAndMetric")
-	proto.RegisterType((*MetricesForEqTypeRequest)(nil), "v1.MetricesForEqTypeRequest")
 	proto.RegisterType((*ProductLicensesForMetricRequest)(nil), "v1.ProductLicensesForMetricRequest")
 	proto.RegisterType((*ProductLicensesForMetricResponse)(nil), "v1.ProductLicensesForMetricResponse")
 	proto.RegisterType((*ListAcqRightsForProductAggregationRequest)(nil), "v1.ListAcqRightsForProductAggregationRequest")
@@ -1603,45 +1587,168 @@ func init() {
 	proto.RegisterType((*Application)(nil), "v1.Application")
 	proto.RegisterType((*ProductAcquiredRights)(nil), "v1.ProductAcquiredRights")
 	proto.RegisterType((*Attribute)(nil), "v1.Attribute")
-	proto.RegisterEnum("v1.DataTypes", DataTypes_name, DataTypes_value)
+}
+
+func init() {
+	proto.RegisterFile("license.proto", fileDescriptor_090c1f856632b222)
+}
+
+var fileDescriptor_090c1f856632b222 = []byte{
+	// 1784 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x58, 0xcd, 0x73, 0xdc, 0x48,
+	0x15, 0x8f, 0xe6, 0x53, 0x7a, 0x63, 0x3b, 0x93, 0x66, 0xb3, 0x91, 0x87, 0xcd, 0xda, 0xab, 0x38,
+	0x8b, 0x13, 0x63, 0xcf, 0xda, 0x4b, 0x15, 0xd9, 0x00, 0xb5, 0x35, 0x13, 0x6f, 0xc8, 0x54, 0x82,
+	0xbd, 0xa5, 0xd8, 0x50, 0x64, 0xb3, 0x2b, 0xda, 0x52, 0x7b, 0x56, 0xb5, 0x1a, 0x49, 0x96, 0x7a,
+	0xc6, 0x65, 0x5c, 0xbe, 0xec, 0x85, 0x2a, 0xae, 0xdc, 0xa1, 0x28, 0x0a, 0x6e, 0x5c, 0xf9, 0x0f,
+	0x38, 0xc0, 0x81, 0x0b, 0x47, 0x2e, 0x1c, 0xf8, 0x23, 0xa8, 0x9c, 0xa8, 0xfe, 0xd0, 0xc7, 0x8c,
+	0xc6, 0x33, 0x43, 0xed, 0x4d, 0xfd, 0xeb, 0x5f, 0x77, 0xbf, 0xf7, 0xeb, 0xd7, 0xaf, 0x5f, 0x0b,
+	0x96, 0x3d, 0xd7, 0x26, 0x7e, 0x4c, 0x76, 0xc2, 0x28, 0xa0, 0x01, 0x2a, 0x8d, 0x76, 0x5b, 0xef,
+	0xf4, 0x83, 0xa0, 0xef, 0x91, 0x36, 0x0e, 0xdd, 0x36, 0xf6, 0xfd, 0x80, 0x62, 0xea, 0x06, 0x7e,
+	0x2c, 0x18, 0xad, 0x3b, 0x23, 0xec, 0xb9, 0x0e, 0xa6, 0xa4, 0x9d, 0x7c, 0x88, 0x0e, 0xe3, 0x57,
+	0x0a, 0x3c, 0x7c, 0xe1, 0xc6, 0xb4, 0x63, 0x9f, 0x99, 0x6e, 0xff, 0x4b, 0x1a, 0x3f, 0x0d, 0xa2,
+	0x4e, 0x18, 0x7a, 0xae, 0x2d, 0xc6, 0x7f, 0x1a, 0x05, 0xce, 0xd0, 0xa6, 0x26, 0x39, 0x1b, 0x92,
+	0x98, 0xa2, 0xdb, 0x50, 0xc3, 0x61, 0x68, 0xb9, 0x8e, 0xae, 0xac, 0x2b, 0x9b, 0x9a, 0x59, 0xc5,
+	0x61, 0xd8, 0x73, 0xd0, 0x1d, 0xa8, 0x87, 0x51, 0xe0, 0x30, 0xbc, 0xc4, 0xf1, 0x1a, 0x6b, 0xf6,
+	0x1c, 0xf4, 0x00, 0xaa, 0xb1, 0x1d, 0x84, 0x44, 0x2f, 0x33, 0xb8, 0xfb, 0xad, 0x37, 0xdd, 0x66,
+	0xb4, 0xb2, 0xb7, 0xf4, 0xfa, 0xe4, 0xb3, 0xce, 0xf6, 0xab, 0xcf, 0x2f, 0x3f, 0xbc, 0x7a, 0x7d,
+	0x62, 0x0a, 0x86, 0xd1, 0x87, 0xad, 0x85, 0x0c, 0x89, 0xc3, 0xc0, 0x8f, 0x09, 0x7a, 0x04, 0x80,
+	0xed, 0x33, 0x2b, 0xe2, 0x5c, 0x5d, 0x59, 0x2f, 0x6f, 0x36, 0xf6, 0x56, 0x77, 0x46, 0xbb, 0x3b,
+	0x92, 0xd8, 0xb1, 0xcf, 0x86, 0x6e, 0x44, 0x1c, 0x31, 0x99, 0xa9, 0xe1, 0x64, 0x5e, 0xe3, 0xbf,
+	0x0a, 0xac, 0xbf, 0x10, 0xfa, 0xb1, 0x45, 0x3e, 0x39, 0x1b, 0xba, 0x61, 0xc7, 0x77, 0x7e, 0x42,
+	0x68, 0xe4, 0xda, 0x89, 0xa3, 0x77, 0x01, 0x08, 0xeb, 0xb0, 0xe8, 0x45, 0x48, 0xa4, 0xb3, 0x1a,
+	0x47, 0x8e, 0x2e, 0x42, 0x82, 0x56, 0x41, 0x15, 0xdd, 0xa9, 0xc7, 0x75, 0xde, 0xee, 0x39, 0x68,
+	0x0d, 0x1a, 0x03, 0x3e, 0x95, 0x18, 0xca, 0x1d, 0x37, 0x41, 0x40, 0x7c, 0x6c, 0x46, 0xf0, 0xf1,
+	0x80, 0xe8, 0x95, 0x3c, 0xe1, 0x00, 0x0f, 0x08, 0xda, 0x06, 0xc0, 0x94, 0x46, 0xee, 0xc9, 0x90,
+	0x92, 0x58, 0xaf, 0x72, 0xd7, 0x96, 0x99, 0x6b, 0x9d, 0x04, 0x35, 0x73, 0x84, 0x4c, 0xe3, 0xda,
+	0x5c, 0x8d, 0x1d, 0x78, 0x6f, 0x86, 0xe7, 0x52, 0xd9, 0x8f, 0x41, 0x95, 0xe1, 0x95, 0xe8, 0x7a,
+	0x2f, 0xa7, 0xab, 0x1c, 0x5f, 0x1c, 0x9e, 0x0e, 0x32, 0xfe, 0xaa, 0xc0, 0xda, 0x1c, 0xf6, 0xa4,
+	0x08, 0x4a, 0x41, 0x84, 0xf7, 0x60, 0x29, 0xf0, 0x1c, 0x8b, 0x4f, 0x6a, 0x93, 0x98, 0xab, 0x5c,
+	0x36, 0x1b, 0x81, 0xe7, 0xbc, 0x90, 0x10, 0xa3, 0xf8, 0xe4, 0xdc, 0x4a, 0x8d, 0x2d, 0x0b, 0x8a,
+	0x4f, 0xce, 0x13, 0x27, 0xd1, 0x5b, 0x50, 0x75, 0x88, 0x47, 0x31, 0x57, 0xb9, 0x6c, 0x8a, 0x06,
+	0xba, 0x2f, 0xc2, 0x75, 0x68, 0x53, 0xbd, 0xba, 0xae, 0x6c, 0x36, 0xf6, 0x1a, 0x39, 0x07, 0xcd,
+	0xa4, 0xcf, 0xf8, 0x63, 0xc1, 0x0f, 0xa6, 0xda, 0x78, 0x9c, 0xac, 0x82, 0x1a, 0x9f, 0xbb, 0x8e,
+	0x45, 0x71, 0x5f, 0x3a, 0x51, 0x67, 0xed, 0x23, 0xdc, 0x9f, 0x74, 0xb1, 0x54, 0x70, 0xf1, 0xdb,
+	0xa0, 0x0d, 0x7d, 0x97, 0x5a, 0x76, 0x10, 0x53, 0x6e, 0xbc, 0x62, 0xaa, 0x0c, 0x78, 0x12, 0xc4,
+	0x34, 0xdb, 0xd5, 0xca, 0xdc, 0x5d, 0xfd, 0xb5, 0x02, 0xeb, 0xd7, 0xdb, 0x29, 0x77, 0xf5, 0x7d,
+	0x58, 0xf1, 0x87, 0x83, 0x27, 0x21, 0x4d, 0xe4, 0xe3, 0xe6, 0x56, 0xcc, 0x09, 0x94, 0x05, 0x3e,
+	0x0d, 0x28, 0xf6, 0x84, 0x55, 0x25, 0x6e, 0x95, 0xc6, 0x11, 0x6e, 0xd6, 0x84, 0x53, 0xe5, 0x49,
+	0xa7, 0x8c, 0x53, 0x78, 0x30, 0x79, 0x8c, 0x93, 0x13, 0xd9, 0xef, 0x47, 0xa4, 0xcf, 0x4f, 0x73,
+	0xa2, 0xde, 0x0a, 0x94, 0x7a, 0xfb, 0x52, 0xb7, 0x52, 0x6f, 0x3f, 0x73, 0xba, 0x34, 0xd7, 0xe9,
+	0xd3, 0x62, 0xde, 0x9a, 0xb6, 0xce, 0x37, 0xce, 0x16, 0x3e, 0xac, 0x1d, 0x87, 0x2c, 0x61, 0x5e,
+	0xef, 0x05, 0x82, 0x4a, 0x2e, 0x88, 0xf9, 0x37, 0xfa, 0x3e, 0x34, 0x70, 0xc6, 0xe4, 0xfe, 0x34,
+	0xf6, 0x6e, 0xb3, 0x15, 0xc5, 0x6c, 0xf9, 0x69, 0xf2, 0x4c, 0xe3, 0xb7, 0x0a, 0xdc, 0x2a, 0x50,
+	0xa6, 0x2e, 0x71, 0x1f, 0x56, 0xb0, 0xe3, 0x10, 0xc7, 0x92, 0xf1, 0xca, 0xce, 0x48, 0x79, 0x53,
+	0x33, 0x97, 0x39, 0x2a, 0xcd, 0x65, 0xe9, 0xa1, 0x19, 0x91, 0x41, 0x30, 0xca, 0x13, 0xcb, 0x9c,
+	0x78, 0x53, 0xe2, 0x29, 0xf5, 0x1e, 0x2c, 0x4b, 0x0a, 0xdf, 0xdd, 0x58, 0xaf, 0x70, 0xde, 0x92,
+	0x04, 0xd9, 0xfe, 0xc6, 0xc6, 0x2e, 0xac, 0xed, 0x13, 0x8f, 0xcc, 0x12, 0x64, 0x62, 0x5b, 0x8d,
+	0xd7, 0xf0, 0x2e, 0xdb, 0xab, 0x19, 0xfb, 0xf3, 0x18, 0x96, 0x72, 0x22, 0x24, 0x3b, 0xf4, 0x76,
+	0x7e, 0x87, 0x72, 0xa3, 0xc6, 0xb8, 0xc6, 0xbf, 0x14, 0x40, 0x45, 0x52, 0x21, 0xb6, 0x12, 0x09,
+	0x4b, 0x39, 0x09, 0xdf, 0x86, 0x1a, 0x71, 0x5c, 0x1a, 0x44, 0x32, 0x90, 0x65, 0x6b, 0x21, 0x21,
+	0xd8, 0x60, 0x11, 0xf7, 0x3c, 0x89, 0x68, 0xa6, 0x6c, 0xa1, 0x16, 0xa8, 0xa9, 0xd0, 0x35, 0x3e,
+	0x2e, 0x6d, 0xa3, 0x0f, 0xd2, 0x89, 0x63, 0xeb, 0x74, 0xe8, 0x79, 0x7a, 0x9d, 0x3b, 0x3a, 0x96,
+	0x7f, 0x92, 0x55, 0xe2, 0xa7, 0x43, 0xcf, 0x33, 0x7e, 0x08, 0x88, 0x69, 0x57, 0x38, 0xcd, 0xaa,
+	0x58, 0x2d, 0xcd, 0xd1, 0xc0, 0xa6, 0x48, 0x52, 0x71, 0xd2, 0x67, 0x98, 0x50, 0x93, 0x09, 0x17,
+	0x41, 0x25, 0x77, 0x95, 0xf1, 0xef, 0xa9, 0x92, 0xac, 0x43, 0xc3, 0x21, 0xb1, 0x1d, 0xb9, 0x21,
+	0x0f, 0x5c, 0xa1, 0x4b, 0x1e, 0x32, 0xbe, 0x82, 0x7b, 0xf2, 0xe4, 0xe5, 0x8e, 0x4c, 0x76, 0xfc,
+	0x16, 0xc8, 0x8c, 0xff, 0xc7, 0x31, 0xff, 0x05, 0x6c, 0xcc, 0x5e, 0xec, 0x1b, 0x1f, 0xf0, 0x3f,
+	0x94, 0xa1, 0x2e, 0x49, 0x48, 0x87, 0xc4, 0xc6, 0x49, 0x93, 0xa7, 0x49, 0xa5, 0x43, 0x7d, 0x44,
+	0xa2, 0x38, 0x93, 0x29, 0x69, 0xb2, 0x10, 0xb0, 0x31, 0x25, 0xfd, 0x20, 0xba, 0x90, 0xf7, 0x7b,
+	0xda, 0xce, 0xc5, 0x5c, 0x75, 0x2c, 0xe6, 0xb2, 0x70, 0xaa, 0x8d, 0x85, 0x53, 0x31, 0x71, 0xd7,
+	0xd7, 0x95, 0xcd, 0x6a, 0x21, 0x71, 0x0b, 0x5e, 0xc7, 0x3e, 0x4b, 0x79, 0x6a, 0xca, 0xcb, 0xa1,
+	0xe8, 0x1d, 0xc8, 0xd2, 0xb9, 0xae, 0x4d, 0xe6, 0x77, 0xbe, 0xfd, 0x1e, 0xc5, 0x07, 0xc3, 0xc1,
+	0x09, 0x89, 0x74, 0xe0, 0x53, 0xe4, 0x21, 0x36, 0x9e, 0x37, 0xf9, 0xf8, 0x86, 0x18, 0x9f, 0x02,
+	0xe8, 0xbb, 0x70, 0xcb, 0x1f, 0x0e, 0x0e, 0x4f, 0xf3, 0xa5, 0x9b, 0xbe, 0xc4, 0x67, 0x29, 0x76,
+	0xa0, 0x4d, 0xb8, 0xe9, 0x0f, 0x07, 0xc1, 0x29, 0x2f, 0x0e, 0x06, 0xc4, 0xa7, 0xb1, 0xbe, 0xcc,
+	0xb9, 0x93, 0xb0, 0xf1, 0x6f, 0x05, 0x1a, 0xb9, 0xa1, 0x68, 0x03, 0x96, 0x71, 0xd6, 0xec, 0x25,
+	0xf5, 0xe8, 0x38, 0x38, 0x75, 0xd7, 0xb6, 0xe0, 0x56, 0x8e, 0x64, 0x05, 0xe7, 0x3e, 0x49, 0x8e,
+	0x7f, 0x33, 0xd7, 0x71, 0xc8, 0x70, 0x29, 0xea, 0xe1, 0x69, 0xcf, 0x8f, 0x29, 0xe6, 0xa2, 0x56,
+	0x52, 0x51, 0x73, 0x28, 0x33, 0x87, 0x5b, 0x9c, 0xa4, 0x52, 0xbe, 0xb7, 0x55, 0x73, 0x1c, 0x1c,
+	0x97, 0xbe, 0x36, 0x21, 0xbd, 0xf1, 0xe7, 0x12, 0xdc, 0x9e, 0x1a, 0xad, 0xa8, 0x09, 0xe5, 0x97,
+	0xcf, 0x8f, 0xa5, 0x8b, 0xec, 0x33, 0x1f, 0xa8, 0xa5, 0xf1, 0x40, 0xcd, 0xc2, 0xa8, 0x3c, 0x27,
+	0x8c, 0x2a, 0x0b, 0x86, 0x51, 0x75, 0x7e, 0x18, 0xd5, 0xe6, 0x84, 0x51, 0x7d, 0x4e, 0x18, 0xa9,
+	0x93, 0x61, 0x64, 0xc0, 0x12, 0x1e, 0xf5, 0x8f, 0x7d, 0x97, 0x7e, 0xca, 0x12, 0x99, 0x8c, 0xd3,
+	0x31, 0xcc, 0xf8, 0x53, 0x05, 0xb4, 0xb4, 0x22, 0x2e, 0xa4, 0xfb, 0xad, 0xfc, 0xd6, 0x77, 0xef,
+	0xbc, 0xe9, 0xbe, 0x15, 0xa1, 0xbd, 0xe6, 0x17, 0x9f, 0x6d, 0x5b, 0x9d, 0xed, 0x57, 0x78, 0xfb,
+	0x97, 0x1f, 0x6c, 0x7f, 0xf4, 0xf9, 0xd6, 0x86, 0x8c, 0x89, 0x47, 0xa0, 0x39, 0x98, 0xe2, 0xac,
+	0x62, 0x5f, 0x11, 0x05, 0xf7, 0x3e, 0xa6, 0x98, 0xd5, 0xec, 0x71, 0x77, 0xe9, 0x4d, 0x57, 0xfb,
+	0x5a, 0xa9, 0xe9, 0x8a, 0x5e, 0xd2, 0xcb, 0xa6, 0xea, 0xc8, 0x0e, 0x56, 0x0f, 0x85, 0x91, 0x3b,
+	0xc0, 0xd1, 0x85, 0xf5, 0x15, 0x11, 0x87, 0x5d, 0x35, 0x41, 0x42, 0xcf, 0xc9, 0x05, 0xf7, 0xd3,
+	0x8d, 0x43, 0x0f, 0x5f, 0x10, 0x87, 0x4b, 0xa9, 0x9a, 0x19, 0x80, 0xde, 0x05, 0x88, 0x09, 0x8e,
+	0xec, 0x2f, 0xf1, 0x89, 0x27, 0x0a, 0x78, 0xd5, 0xcc, 0x21, 0x2c, 0x58, 0x43, 0x1c, 0x11, 0x9f,
+	0x5a, 0xae, 0x43, 0x7c, 0xea, 0x9e, 0xba, 0x52, 0x4d, 0xd5, 0x6c, 0x8a, 0x8e, 0x5e, 0x8a, 0xb3,
+	0x7a, 0x72, 0x80, 0xc3, 0x90, 0x38, 0x16, 0x0d, 0xb8, 0xa4, 0x9a, 0xa9, 0x0a, 0xe0, 0x28, 0x60,
+	0x76, 0xc4, 0xee, 0x60, 0xe8, 0x61, 0x4a, 0x1c, 0x2e, 0xa7, 0x6a, 0x66, 0x00, 0x5a, 0x85, 0xba,
+	0xeb, 0x53, 0x6b, 0x84, 0x3d, 0x71, 0xe4, 0x9f, 0xdd, 0x30, 0x6b, 0xae, 0x4f, 0x7f, 0x8a, 0x3d,
+	0x74, 0x17, 0xb4, 0x53, 0x2f, 0xc0, 0xa2, 0x93, 0x9d, 0xf7, 0xd2, 0xb3, 0x1b, 0xa6, 0xca, 0x21,
+	0xd6, 0xbd, 0x06, 0x10, 0xd3, 0xc8, 0xf5, 0xfb, 0xbc, 0x9f, 0x9d, 0x74, 0xed, 0xd9, 0x0d, 0x53,
+	0x13, 0x18, 0x23, 0xac, 0x43, 0x43, 0x4e, 0x6d, 0x05, 0x9e, 0x23, 0xce, 0xf7, 0x33, 0xc5, 0xd4,
+	0xc4, 0xf4, 0x87, 0x9e, 0xc3, 0x0e, 0x4f, 0xba, 0x02, 0xe7, 0xac, 0xf0, 0x55, 0x14, 0xb3, 0x91,
+	0xac, 0xc2, 0x58, 0xef, 0xc3, 0x4a, 0xb6, 0x10, 0xa7, 0xdd, 0xe4, 0x8b, 0x29, 0xe6, 0x52, 0xba,
+	0xd8, 0xa1, 0xe7, 0x74, 0xab, 0x50, 0x1e, 0x61, 0xaf, 0xab, 0x41, 0x9d, 0xbd, 0x1f, 0x46, 0xd8,
+	0x7b, 0xf8, 0x08, 0xb4, 0x74, 0x23, 0x51, 0x03, 0xea, 0xc7, 0x07, 0xcf, 0x0f, 0x0e, 0x7f, 0x76,
+	0xd0, 0xbc, 0x81, 0x00, 0x6a, 0x2f, 0x8f, 0xcc, 0xde, 0xc1, 0x8f, 0x9b, 0x0a, 0xaa, 0x43, 0xb9,
+	0x77, 0x70, 0xd4, 0x2c, 0x21, 0x0d, 0xaa, 0x4f, 0x5f, 0x1c, 0x76, 0x8e, 0x9a, 0xe5, 0xbd, 0xbf,
+	0xa8, 0xb0, 0x22, 0x4b, 0xea, 0x97, 0x24, 0x1a, 0xb9, 0x36, 0x41, 0xbf, 0x53, 0xe0, 0xce, 0x35,
+	0x85, 0x27, 0xfa, 0x0e, 0x8b, 0x99, 0x05, 0xee, 0xc6, 0xd6, 0xe6, 0x7c, 0xa2, 0xb8, 0xd7, 0x8c,
+	0xdd, 0xaf, 0xff, 0xf9, 0x9f, 0xdf, 0x94, 0xb6, 0xd0, 0x03, 0xfe, 0xb0, 0x1f, 0xed, 0xb6, 0x65,
+	0x71, 0xd0, 0xbe, 0x4c, 0x2e, 0xd7, 0xab, 0x36, 0x96, 0x93, 0x88, 0xcb, 0x0f, 0xfd, 0x4d, 0x49,
+	0x2f, 0xe8, 0x59, 0x2f, 0x69, 0xb4, 0x93, 0x33, 0x62, 0x81, 0xb7, 0x7f, 0xab, 0xbd, 0x30, 0x5f,
+	0xda, 0xde, 0xe1, 0xb6, 0xff, 0x00, 0x7d, 0x94, 0xd8, 0x9e, 0xbc, 0xd4, 0xda, 0xb9, 0x3c, 0x1b,
+	0xb7, 0x2f, 0xc5, 0x1f, 0x85, 0xab, 0xc4, 0xb5, 0xb8, 0x7d, 0x29, 0x7f, 0x26, 0x5c, 0x21, 0x0a,
+	0xfa, 0x93, 0x88, 0x4c, 0xad, 0xbe, 0xd1, 0x35, 0xd5, 0x61, 0xeb, 0x1a, 0xdc, 0xd8, 0xe4, 0xe6,
+	0x18, 0xc6, 0xdd, 0x09, 0x29, 0xe3, 0x76, 0xbe, 0x9c, 0x7c, 0xac, 0x3c, 0x44, 0x7f, 0x57, 0xc0,
+	0x98, 0xff, 0xb8, 0x40, 0xdb, 0xd3, 0x04, 0xb9, 0xb6, 0x2a, 0x6e, 0xed, 0x2c, 0x4a, 0x97, 0xf2,
+	0x7d, 0xc2, 0xed, 0xfd, 0x18, 0xfd, 0x68, 0xa6, 0xbd, 0x09, 0x3a, 0x72, 0xc9, 0x79, 0xfb, 0xb2,
+	0xb7, 0x5f, 0x08, 0x87, 0xdf, 0x2b, 0xa0, 0x5f, 0xf7, 0x3a, 0x44, 0x53, 0x5e, 0xf6, 0x85, 0x37,
+	0x6e, 0x6b, 0x63, 0x36, 0x49, 0x9a, 0xfb, 0x98, 0x9b, 0xfb, 0x3d, 0xa3, 0x3d, 0x23, 0x52, 0xc5,
+	0x5d, 0xd4, 0xbe, 0xcc, 0x3d, 0x21, 0xaf, 0x98, 0xe0, 0xff, 0x50, 0x60, 0xf5, 0xda, 0x1f, 0x13,
+	0x68, 0x43, 0x08, 0x37, 0xfb, 0x8f, 0x4d, 0xeb, 0xfe, 0x1c, 0x96, 0x34, 0xd3, 0xe1, 0x66, 0x7e,
+	0x61, 0xfc, 0x3c, 0x31, 0x93, 0xa4, 0x45, 0x46, 0x9b, 0xa5, 0xff, 0xb8, 0x7d, 0x99, 0xfd, 0xf8,
+	0xb9, 0x4a, 0x1a, 0x2c, 0x3c, 0xa5, 0xf1, 0x92, 0x94, 0xfb, 0xc7, 0x73, 0x55, 0x70, 0xa8, 0x5b,
+	0x79, 0x55, 0x1a, 0xed, 0x9e, 0xd4, 0xf8, 0x3f, 0xb6, 0x0f, 0xff, 0x17, 0x00, 0x00, 0xff, 0xff,
+	0x9a, 0x2c, 0xf2, 0x61, 0xaf, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // LicenseServiceClient is the client API for LicenseService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-////go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/license-service/pkg/api/v1 LicenseServiceClient
 type LicenseServiceClient interface {
 	ListAcqRightsForProduct(ctx context.Context, in *ListAcquiredRightsForProductRequest, opts ...grpc.CallOption) (*ListAcquiredRightsForProductResponse, error)
+	ListAcqRightsForApplicationsProduct(ctx context.Context, in *ListAcqRightsForApplicationsProductRequest, opts ...grpc.CallOption) (*ListAcqRightsForApplicationsProductResponse, error)
 	CreateProductAggregation(ctx context.Context, in *ProductAggregation, opts ...grpc.CallOption) (*ProductAggregation, error)
-	// update product aggregation
-	UpdateProductAggregation(ctx context.Context, in *UpdateProductAggregationRequest, opts ...grpc.CallOption) (*ProductAggregation, error)
 	ListAcqRightsForProductAggregation(ctx context.Context, in *ListAcqRightsForProductAggregationRequest, opts ...grpc.CallOption) (*ListAcqRightsForProductAggregationResponse, error)
-	DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*ListProductAggregationResponse, error)
 	ProductLicensesForMetric(ctx context.Context, in *ProductLicensesForMetricRequest, opts ...grpc.CallOption) (*ProductLicensesForMetricResponse, error)
-	// TODO: Should be in metric services
-	MetricesForEqType(ctx context.Context, in *MetricesForEqTypeRequest, opts ...grpc.CallOption) (*ListMetricResponse, error)
 	LicensesForEquipAndMetric(ctx context.Context, in *LicensesForEquipAndMetricRequest, opts ...grpc.CallOption) (*LicensesForEquipAndMetricResponse, error)
 }
 
 type licenseServiceClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewLicenseServiceClient(cc *grpc.ClientConn) LicenseServiceClient {
+func NewLicenseServiceClient(cc grpc.ClientConnInterface) LicenseServiceClient {
 	return &licenseServiceClient{cc}
 }
 
 func (c *licenseServiceClient) ListAcqRightsForProduct(ctx context.Context, in *ListAcquiredRightsForProductRequest, opts ...grpc.CallOption) (*ListAcquiredRightsForProductResponse, error) {
 	out := new(ListAcquiredRightsForProductResponse)
 	err := c.cc.Invoke(ctx, "/v1.LicenseService/ListAcqRightsForProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *licenseServiceClient) ListAcqRightsForApplicationsProduct(ctx context.Context, in *ListAcqRightsForApplicationsProductRequest, opts ...grpc.CallOption) (*ListAcqRightsForApplicationsProductResponse, error) {
+	out := new(ListAcqRightsForApplicationsProductResponse)
+	err := c.cc.Invoke(ctx, "/v1.LicenseService/ListAcqRightsForApplicationsProduct", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1657,15 +1764,6 @@ func (c *licenseServiceClient) CreateProductAggregation(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *licenseServiceClient) UpdateProductAggregation(ctx context.Context, in *UpdateProductAggregationRequest, opts ...grpc.CallOption) (*ProductAggregation, error) {
-	out := new(ProductAggregation)
-	err := c.cc.Invoke(ctx, "/v1.LicenseService/UpdateProductAggregation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *licenseServiceClient) ListAcqRightsForProductAggregation(ctx context.Context, in *ListAcqRightsForProductAggregationRequest, opts ...grpc.CallOption) (*ListAcqRightsForProductAggregationResponse, error) {
 	out := new(ListAcqRightsForProductAggregationResponse)
 	err := c.cc.Invoke(ctx, "/v1.LicenseService/ListAcqRightsForProductAggregation", in, out, opts...)
@@ -1675,27 +1773,9 @@ func (c *licenseServiceClient) ListAcqRightsForProductAggregation(ctx context.Co
 	return out, nil
 }
 
-func (c *licenseServiceClient) DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*ListProductAggregationResponse, error) {
-	out := new(ListProductAggregationResponse)
-	err := c.cc.Invoke(ctx, "/v1.LicenseService/DeleteProductAggregation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *licenseServiceClient) ProductLicensesForMetric(ctx context.Context, in *ProductLicensesForMetricRequest, opts ...grpc.CallOption) (*ProductLicensesForMetricResponse, error) {
 	out := new(ProductLicensesForMetricResponse)
 	err := c.cc.Invoke(ctx, "/v1.LicenseService/ProductLicensesForMetric", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *licenseServiceClient) MetricesForEqType(ctx context.Context, in *MetricesForEqTypeRequest, opts ...grpc.CallOption) (*ListMetricResponse, error) {
-	out := new(ListMetricResponse)
-	err := c.cc.Invoke(ctx, "/v1.LicenseService/MetricesForEqType", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1714,15 +1794,34 @@ func (c *licenseServiceClient) LicensesForEquipAndMetric(ctx context.Context, in
 // LicenseServiceServer is the server API for LicenseService service.
 type LicenseServiceServer interface {
 	ListAcqRightsForProduct(context.Context, *ListAcquiredRightsForProductRequest) (*ListAcquiredRightsForProductResponse, error)
+	ListAcqRightsForApplicationsProduct(context.Context, *ListAcqRightsForApplicationsProductRequest) (*ListAcqRightsForApplicationsProductResponse, error)
 	CreateProductAggregation(context.Context, *ProductAggregation) (*ProductAggregation, error)
-	// update product aggregation
-	UpdateProductAggregation(context.Context, *UpdateProductAggregationRequest) (*ProductAggregation, error)
 	ListAcqRightsForProductAggregation(context.Context, *ListAcqRightsForProductAggregationRequest) (*ListAcqRightsForProductAggregationResponse, error)
-	DeleteProductAggregation(context.Context, *DeleteProductAggregationRequest) (*ListProductAggregationResponse, error)
 	ProductLicensesForMetric(context.Context, *ProductLicensesForMetricRequest) (*ProductLicensesForMetricResponse, error)
-	// TODO: Should be in metric services
-	MetricesForEqType(context.Context, *MetricesForEqTypeRequest) (*ListMetricResponse, error)
 	LicensesForEquipAndMetric(context.Context, *LicensesForEquipAndMetricRequest) (*LicensesForEquipAndMetricResponse, error)
+}
+
+// UnimplementedLicenseServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedLicenseServiceServer struct {
+}
+
+func (*UnimplementedLicenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req *ListAcquiredRightsForProductRequest) (*ListAcquiredRightsForProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsForProduct not implemented")
+}
+func (*UnimplementedLicenseServiceServer) ListAcqRightsForApplicationsProduct(ctx context.Context, req *ListAcqRightsForApplicationsProductRequest) (*ListAcqRightsForApplicationsProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsForApplicationsProduct not implemented")
+}
+func (*UnimplementedLicenseServiceServer) CreateProductAggregation(ctx context.Context, req *ProductAggregation) (*ProductAggregation, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProductAggregation not implemented")
+}
+func (*UnimplementedLicenseServiceServer) ListAcqRightsForProductAggregation(ctx context.Context, req *ListAcqRightsForProductAggregationRequest) (*ListAcqRightsForProductAggregationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsForProductAggregation not implemented")
+}
+func (*UnimplementedLicenseServiceServer) ProductLicensesForMetric(ctx context.Context, req *ProductLicensesForMetricRequest) (*ProductLicensesForMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductLicensesForMetric not implemented")
+}
+func (*UnimplementedLicenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, req *LicensesForEquipAndMetricRequest) (*LicensesForEquipAndMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LicensesForEquipAndMetric not implemented")
 }
 
 func RegisterLicenseServiceServer(s *grpc.Server, srv LicenseServiceServer) {
@@ -1747,6 +1846,24 @@ func _LicenseService_ListAcqRightsForProduct_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LicenseService_ListAcqRightsForApplicationsProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAcqRightsForApplicationsProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LicenseServiceServer).ListAcqRightsForApplicationsProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v1.LicenseService/ListAcqRightsForApplicationsProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LicenseServiceServer).ListAcqRightsForApplicationsProduct(ctx, req.(*ListAcqRightsForApplicationsProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _LicenseService_CreateProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProductAggregation)
 	if err := dec(in); err != nil {
@@ -1761,24 +1878,6 @@ func _LicenseService_CreateProductAggregation_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LicenseServiceServer).CreateProductAggregation(ctx, req.(*ProductAggregation))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _LicenseService_UpdateProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateProductAggregationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LicenseServiceServer).UpdateProductAggregation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/v1.LicenseService/UpdateProductAggregation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LicenseServiceServer).UpdateProductAggregation(ctx, req.(*UpdateProductAggregationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1801,24 +1900,6 @@ func _LicenseService_ListAcqRightsForProductAggregation_Handler(srv interface{},
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LicenseService_DeleteProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteProductAggregationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LicenseServiceServer).DeleteProductAggregation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/v1.LicenseService/DeleteProductAggregation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LicenseServiceServer).DeleteProductAggregation(ctx, req.(*DeleteProductAggregationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _LicenseService_ProductLicensesForMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProductLicensesForMetricRequest)
 	if err := dec(in); err != nil {
@@ -1833,24 +1914,6 @@ func _LicenseService_ProductLicensesForMetric_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(LicenseServiceServer).ProductLicensesForMetric(ctx, req.(*ProductLicensesForMetricRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _LicenseService_MetricesForEqType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MetricesForEqTypeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(LicenseServiceServer).MetricesForEqType(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/v1.LicenseService/MetricesForEqType",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LicenseServiceServer).MetricesForEqType(ctx, req.(*MetricesForEqTypeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1882,28 +1945,20 @@ var _LicenseService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _LicenseService_ListAcqRightsForProduct_Handler,
 		},
 		{
-			MethodName: "CreateProductAggregation",
-			Handler:    _LicenseService_CreateProductAggregation_Handler,
+			MethodName: "ListAcqRightsForApplicationsProduct",
+			Handler:    _LicenseService_ListAcqRightsForApplicationsProduct_Handler,
 		},
 		{
-			MethodName: "UpdateProductAggregation",
-			Handler:    _LicenseService_UpdateProductAggregation_Handler,
+			MethodName: "CreateProductAggregation",
+			Handler:    _LicenseService_CreateProductAggregation_Handler,
 		},
 		{
 			MethodName: "ListAcqRightsForProductAggregation",
 			Handler:    _LicenseService_ListAcqRightsForProductAggregation_Handler,
 		},
 		{
-			MethodName: "DeleteProductAggregation",
-			Handler:    _LicenseService_DeleteProductAggregation_Handler,
-		},
-		{
 			MethodName: "ProductLicensesForMetric",
 			Handler:    _LicenseService_ProductLicensesForMetric_Handler,
-		},
-		{
-			MethodName: "MetricesForEqType",
-			Handler:    _LicenseService_MetricesForEqType_Handler,
 		},
 		{
 			MethodName: "LicensesForEquipAndMetric",
@@ -1912,121 +1967,4 @@ var _LicenseService_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "license.proto",
-}
-
-func init() { proto.RegisterFile("license.proto", fileDescriptor_license_929192c929500bc1) }
-
-var fileDescriptor_license_929192c929500bc1 = []byte{
-	// 1769 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x58, 0xcd, 0x73, 0x1b, 0x49,
-	0x15, 0xcf, 0xe8, 0x73, 0xe6, 0xc9, 0x76, 0x94, 0xae, 0xdd, 0x64, 0x2c, 0x92, 0xb5, 0x76, 0xe2,
-	0x04, 0xc5, 0x59, 0x59, 0x6b, 0x43, 0x15, 0x21, 0x40, 0x2d, 0x72, 0xbc, 0x21, 0xaa, 0x04, 0x7b,
-	0x6b, 0xe2, 0x40, 0xb1, 0xc0, 0x8a, 0xce, 0x4c, 0x5b, 0x3b, 0xc5, 0x68, 0x66, 0x3c, 0xdd, 0x92,
-	0xcb, 0xeb, 0xf2, 0x25, 0x27, 0x8a, 0x0b, 0x07, 0xee, 0x50, 0x14, 0x55, 0xdc, 0xf8, 0x33, 0xb8,
-	0x70, 0xe0, 0xc2, 0x91, 0x0b, 0x07, 0xf8, 0x27, 0xf6, 0x44, 0xf5, 0xc7, 0x8c, 0x46, 0x1a, 0x7d,
-	0xb8, 0x8a, 0x93, 0xd4, 0xaf, 0x7f, 0xdd, 0xef, 0xf5, 0xef, 0x7d, 0xf4, 0xeb, 0x81, 0x75, 0xdf,
-	0x73, 0x48, 0x40, 0xc9, 0x6e, 0x14, 0x87, 0x2c, 0x44, 0x85, 0xf1, 0x5e, 0xe3, 0xee, 0x20, 0x0c,
-	0x07, 0x3e, 0xe9, 0xe0, 0xc8, 0xeb, 0xe0, 0x20, 0x08, 0x19, 0x66, 0x5e, 0x18, 0x50, 0x89, 0x68,
-	0x7c, 0x24, 0x7e, 0x9c, 0xf6, 0x80, 0x04, 0x6d, 0x7a, 0x8e, 0x07, 0x03, 0x12, 0x77, 0xc2, 0x48,
-	0x20, 0xe6, 0xa0, 0xef, 0x8c, 0xb1, 0xef, 0xb9, 0x98, 0x91, 0x4e, 0xf2, 0x47, 0x4e, 0x58, 0xff,
-	0xd5, 0xa0, 0xf9, 0x4a, 0xaa, 0xa6, 0xcf, 0xc3, 0xf8, 0xd3, 0xb3, 0x91, 0x17, 0x75, 0x03, 0xf7,
-	0xc7, 0x84, 0xc5, 0x9e, 0x63, 0x93, 0xb3, 0x11, 0xa1, 0x0c, 0xdd, 0x03, 0x20, 0x7c, 0xa2, 0xcf,
-	0x2e, 0x22, 0x62, 0x6a, 0x4d, 0xad, 0x65, 0xd8, 0x86, 0x90, 0x9c, 0x5c, 0x44, 0x04, 0x6d, 0x82,
-	0x2e, 0xa7, 0x3d, 0xd7, 0x2c, 0x88, 0xc9, 0xaa, 0x18, 0xf7, 0x5c, 0xb4, 0x05, 0xb5, 0xa1, 0xd8,
-	0x4a, 0x2e, 0x2d, 0x8a, 0x59, 0x90, 0x22, 0xb1, 0x76, 0x02, 0x08, 0xf0, 0x90, 0x98, 0xa5, 0x2c,
-	0xe0, 0x08, 0x0f, 0x09, 0x6a, 0x03, 0x60, 0xc6, 0x62, 0xef, 0xed, 0x88, 0x11, 0x6a, 0x96, 0x9b,
-	0xc5, 0x56, 0x6d, 0x7f, 0x7d, 0x77, 0xbc, 0xb7, 0xdb, 0x4d, 0xa4, 0x76, 0x06, 0x80, 0x6e, 0x43,
-	0x85, 0x3a, 0x61, 0x44, 0xa8, 0x59, 0x69, 0x16, 0x5b, 0x86, 0xad, 0x46, 0x96, 0x0b, 0x1f, 0x2e,
-	0x39, 0x26, 0x8d, 0xc2, 0x80, 0x12, 0xf4, 0x09, 0xe8, 0xca, 0x0d, 0xd4, 0xd4, 0x84, 0xa6, 0xfb,
-	0x5c, 0xd3, 0x67, 0x71, 0xe8, 0x8e, 0x1c, 0xa6, 0xd6, 0xe7, 0x97, 0xa7, 0x8b, 0xac, 0xbf, 0x69,
-	0xb0, 0xb5, 0x02, 0x3d, 0x7b, 0x62, 0x2d, 0x77, 0xe2, 0x0f, 0x61, 0x2d, 0xf4, 0xdd, 0xbe, 0xd8,
-	0xd4, 0x21, 0x54, 0x50, 0x5a, 0xb4, 0x6b, 0xa1, 0xef, 0xbe, 0x52, 0x22, 0x0e, 0x09, 0xc8, 0x79,
-	0x3f, 0x35, 0xb6, 0x28, 0x21, 0x01, 0x39, 0x4f, 0x0e, 0x89, 0xde, 0x83, 0xb2, 0x4b, 0x7c, 0x86,
-	0x05, 0xa5, 0x45, 0x5b, 0x0e, 0xd0, 0x03, 0xa8, 0x46, 0xd2, 0x3e, 0xb3, 0xdc, 0xd4, 0x5a, 0xb5,
-	0xfd, 0x5a, 0xe6, 0x80, 0x76, 0x32, 0x67, 0xed, 0x82, 0x29, 0xad, 0x55, 0x6c, 0x71, 0x57, 0x25,
-	0xc1, 0x80, 0xa0, 0x94, 0x09, 0x03, 0xf1, 0xdf, 0xfa, 0x6a, 0xf6, 0xd8, 0x7c, 0xd9, 0x74, 0x0c,
-	0x6d, 0x82, 0x4e, 0xcf, 0x3d, 0xb7, 0xcf, 0xf0, 0x40, 0x2d, 0xad, 0xf2, 0xf1, 0x09, 0x1e, 0xcc,
-	0x32, 0x52, 0xc8, 0x31, 0xf2, 0x0d, 0x30, 0x46, 0x81, 0xc7, 0xfa, 0x4e, 0x48, 0x99, 0x38, 0xab,
-	0x66, 0xeb, 0x5c, 0xf0, 0x2c, 0xa4, 0xcc, 0xfa, 0xad, 0x06, 0xcd, 0xc5, 0xca, 0x95, 0x67, 0x1f,
-	0xc2, 0x46, 0x30, 0x1a, 0x3e, 0x8b, 0x58, 0x42, 0xa1, 0xb0, 0xa1, 0x64, 0xcf, 0x48, 0x79, 0xa4,
-	0xb3, 0x90, 0x61, 0x5f, 0xaa, 0x2a, 0x08, 0x55, 0x86, 0x90, 0x70, 0x5d, 0xb3, 0x96, 0x16, 0x67,
-	0x2d, 0xb5, 0xbe, 0x07, 0x8f, 0x5e, 0x79, 0x94, 0x75, 0x9d, 0x33, 0xdb, 0x1b, 0x7c, 0xc9, 0xb8,
-	0x25, 0xca, 0xb6, 0xee, 0x60, 0x10, 0x93, 0x81, 0x48, 0xca, 0x84, 0x92, 0x0d, 0x28, 0xf4, 0x0e,
-	0x15, 0x19, 0x85, 0xde, 0xa1, 0x75, 0x0a, 0x3b, 0xd7, 0x59, 0xac, 0x8e, 0xf4, 0x04, 0x00, 0x3b,
-	0x67, 0xfd, 0x58, 0x40, 0x55, 0xb8, 0x6e, 0x66, 0xbc, 0xd9, 0x75, 0xce, 0x46, 0x5e, 0x4c, 0x5c,
-	0xb9, 0x97, 0x6d, 0xe0, 0x64, 0x5b, 0x2b, 0x80, 0xad, 0x37, 0x11, 0xaf, 0x01, 0x8b, 0x4d, 0x43,
-	0x50, 0xca, 0x44, 0xa7, 0xf8, 0x8f, 0xbe, 0x03, 0x35, 0x3c, 0x41, 0x0a, 0x72, 0x6a, 0xfb, 0xef,
-	0x73, 0x8d, 0x72, 0xb7, 0xec, 0x36, 0x59, 0xa4, 0xf5, 0x07, 0x0d, 0x6e, 0xe5, 0x20, 0x73, 0x55,
-	0x3c, 0x80, 0x0d, 0xec, 0xba, 0xc4, 0xed, 0xab, 0x40, 0xe4, 0xc1, 0xcf, 0xb3, 0x78, 0x5d, 0x48,
-	0x95, 0xb9, 0x14, 0x3d, 0x82, 0x7a, 0x4c, 0x86, 0xe1, 0x38, 0x0b, 0x2c, 0x0a, 0xe0, 0x4d, 0x25,
-	0x4f, 0xa1, 0xf7, 0x61, 0x5d, 0x41, 0x84, 0xcb, 0xa8, 0x59, 0x12, 0xb8, 0x35, 0x25, 0xe4, 0x4e,
-	0xa3, 0xd6, 0x1e, 0x6c, 0x1d, 0x12, 0x9f, 0x2c, 0x23, 0x64, 0xd6, 0x57, 0xbf, 0x80, 0x0f, 0xb8,
-	0xaf, 0x96, 0xf8, 0xe7, 0x29, 0xac, 0x65, 0x48, 0x48, 0x3c, 0x74, 0x3b, 0xeb, 0xa1, 0xcc, 0xaa,
-	0x29, 0xac, 0xf5, 0x2f, 0x0d, 0x50, 0x1e, 0x34, 0x6b, 0x44, 0x4a, 0x61, 0x21, 0x43, 0xe1, 0x6d,
-	0xa8, 0x10, 0xd7, 0x63, 0x61, 0xac, 0xa2, 0x53, 0x8d, 0xae, 0x45, 0x04, 0x5f, 0x2c, 0x83, 0x59,
-	0x54, 0x07, 0xc3, 0x56, 0x23, 0xd4, 0x00, 0x3d, 0x25, 0x5a, 0xd6, 0xd5, 0x74, 0x8c, 0x3e, 0x4e,
-	0x37, 0xa6, 0xfd, 0xd3, 0x91, 0xef, 0x9b, 0x55, 0x71, 0xd0, 0xa9, 0xc2, 0x92, 0x68, 0xa1, 0xcf,
-	0x47, 0xbe, 0x6f, 0x7d, 0x1f, 0x10, 0xe7, 0x2e, 0x97, 0xa2, 0xfa, 0x50, 0xd5, 0x1c, 0xc5, 0x15,
-	0xf0, 0x2d, 0x92, 0x1a, 0x9b, 0xcc, 0x59, 0x36, 0x54, 0x54, 0x25, 0x9d, 0x53, 0x89, 0xe6, 0x52,
-	0xd2, 0x84, 0x9a, 0x4b, 0xa8, 0x13, 0x7b, 0xe2, 0x7a, 0x54, 0xbc, 0x64, 0x45, 0xd6, 0x0f, 0xe1,
-	0xbe, 0xca, 0xbc, 0x4c, 0xca, 0x4c, 0xd2, 0x6f, 0x75, 0x0d, 0xb3, 0x7e, 0x05, 0xdb, 0xcb, 0x77,
-	0xf8, 0xbf, 0xb3, 0xf6, 0xcf, 0x45, 0xa8, 0x2a, 0x10, 0x32, 0x21, 0x51, 0x3c, 0x5b, 0x4b, 0xe7,
-	0x9d, 0xdf, 0x84, 0xea, 0x98, 0xc4, 0x74, 0x72, 0xf6, 0x64, 0xc8, 0xfd, 0xea, 0x60, 0x46, 0x06,
-	0x61, 0x7c, 0xa1, 0xae, 0xde, 0x74, 0x9c, 0x09, 0xa4, 0xf2, 0x54, 0x20, 0x4d, 0x62, 0xa4, 0x32,
-	0x15, 0x23, 0xf9, 0x12, 0x5b, 0x6d, 0x6a, 0xad, 0x72, 0xae, 0xc4, 0x4a, 0x5c, 0xd7, 0x39, 0x4b,
-	0x71, 0x7a, 0x8a, 0xcb, 0x48, 0xd1, 0x5d, 0x98, 0x14, 0x5e, 0xd3, 0x98, 0xad, 0xc4, 0xc2, 0xa7,
-	0x3e, 0xc3, 0x47, 0xa3, 0xe1, 0x5b, 0x12, 0x9b, 0x20, 0xb6, 0xc8, 0x8a, 0xf8, 0x7a, 0x31, 0x14,
-	0xeb, 0x6b, 0x72, 0x7d, 0x2a, 0x40, 0x1f, 0xc1, 0xad, 0x60, 0x34, 0x3c, 0x3e, 0xed, 0x46, 0x91,
-	0xef, 0x39, 0x2a, 0x45, 0xd7, 0xc4, 0x2e, 0xf9, 0x09, 0xd4, 0x82, 0x9b, 0xc1, 0x68, 0x18, 0x9e,
-	0x8a, 0xab, 0x7c, 0x48, 0x02, 0x46, 0xcd, 0x75, 0x81, 0x9d, 0x15, 0x5b, 0xff, 0xd6, 0xa0, 0x96,
-	0x59, 0x8a, 0xb6, 0x61, 0x1d, 0x4f, 0x86, 0x3d, 0x57, 0xf9, 0x6b, 0x5a, 0x38, 0xd7, 0x6b, 0x8f,
-	0xe1, 0x56, 0x06, 0xd4, 0x0f, 0xcf, 0x03, 0x92, 0xe4, 0x74, 0x3d, 0x33, 0x71, 0xcc, 0xe5, 0x8a,
-	0xd4, 0xe3, 0xd3, 0x5e, 0x40, 0x19, 0x16, 0xa4, 0x96, 0x52, 0x52, 0x33, 0x52, 0x6e, 0x8e, 0xb0,
-	0x38, 0xa9, 0x8f, 0xc2, 0xb7, 0x65, 0x7b, 0x5a, 0x38, 0x4d, 0x7d, 0x65, 0x86, 0x7a, 0xeb, 0xaf,
-	0x05, 0x78, 0x7f, 0x6e, 0xb4, 0xa2, 0x3a, 0x14, 0x5f, 0xbf, 0x7c, 0xa3, 0x8e, 0xc8, 0xff, 0x66,
-	0x03, 0xb5, 0x30, 0x1d, 0xa8, 0x93, 0x30, 0x2a, 0xae, 0x08, 0xa3, 0xd2, 0x35, 0xc3, 0xa8, 0xbc,
-	0x3a, 0x8c, 0x2a, 0x2b, 0xc2, 0xa8, 0xba, 0x22, 0x8c, 0xf4, 0xd9, 0x30, 0xb2, 0x60, 0x0d, 0x8f,
-	0x07, 0x6f, 0x02, 0x8f, 0x7d, 0xc6, 0xab, 0x93, 0x8a, 0xd3, 0x29, 0x99, 0xf5, 0x97, 0x12, 0x18,
-	0x69, 0xb3, 0x9a, 0xab, 0xe1, 0x8f, 0xb3, 0xae, 0x3f, 0xb8, 0xf3, 0xf5, 0xc1, 0x7b, 0x31, 0xda,
-	0xaf, 0x7f, 0xf1, 0xf3, 0x76, 0xbf, 0xdb, 0xfe, 0x1c, 0xb7, 0xbf, 0xfa, 0xb8, 0xfd, 0xdd, 0x5f,
-	0x3e, 0xde, 0x56, 0x31, 0xf1, 0x04, 0x0c, 0x17, 0x33, 0x3c, 0x69, 0xa6, 0x37, 0x64, 0x2f, 0x7c,
-	0x88, 0x19, 0xe6, 0x3d, 0x1a, 0x3d, 0x58, 0xfb, 0xfa, 0xc0, 0x78, 0xa7, 0x55, 0x4c, 0xcd, 0x2c,
-	0x98, 0x45, 0x5b, 0x77, 0xd5, 0x04, 0xef, 0x5c, 0xa2, 0xd8, 0x1b, 0xe2, 0xf8, 0xa2, 0xff, 0x6b,
-	0x22, 0x93, 0x5d, 0xb7, 0x41, 0x89, 0x5e, 0x92, 0x0b, 0x71, 0x4e, 0x8f, 0x46, 0x3e, 0xbe, 0x20,
-	0xae, 0xa0, 0x52, 0xb7, 0x27, 0x02, 0xf4, 0x01, 0x00, 0x25, 0x38, 0x76, 0xbe, 0xc4, 0x6f, 0x7d,
-	0x22, 0x68, 0xd4, 0xed, 0x8c, 0x84, 0x07, 0x6b, 0x84, 0x63, 0x12, 0xb0, 0xbe, 0xe7, 0x92, 0x80,
-	0x79, 0xa7, 0x9e, 0x62, 0x53, 0xb7, 0xeb, 0x72, 0xa2, 0x97, 0xca, 0x79, 0x3b, 0x37, 0xc4, 0x51,
-	0x44, 0xdc, 0x3e, 0x0b, 0x05, 0xa5, 0x86, 0xad, 0x4b, 0xc1, 0x49, 0xc8, 0xed, 0xa0, 0xde, 0x70,
-	0xe4, 0x63, 0x46, 0x5c, 0x41, 0xa7, 0x6e, 0x4f, 0x04, 0x68, 0x13, 0xaa, 0x5e, 0xc0, 0xfa, 0x63,
-	0xec, 0xcb, 0x94, 0x7f, 0x71, 0xc3, 0xae, 0x78, 0x01, 0xfb, 0x09, 0xf6, 0xd1, 0x3d, 0x30, 0x4e,
-	0xfd, 0x10, 0xcb, 0x49, 0x9e, 0xef, 0x85, 0x17, 0x37, 0x6c, 0x5d, 0x88, 0xf8, 0xf4, 0x16, 0x00,
-	0x65, 0xb1, 0x17, 0x0c, 0xc4, 0x3c, 0xcf, 0x74, 0xe3, 0xc5, 0x0d, 0xdb, 0x90, 0x32, 0x0e, 0x68,
-	0x42, 0x4d, 0x6d, 0xdd, 0x0f, 0x7d, 0x57, 0xe6, 0xf7, 0x0b, 0xcd, 0x36, 0xe4, 0xf6, 0xc7, 0xbe,
-	0xcb, 0x93, 0x27, 0xd5, 0x20, 0x30, 0x1b, 0x42, 0x8b, 0x66, 0xd7, 0x12, 0x2d, 0x1c, 0xf5, 0x10,
-	0x36, 0x26, 0x8a, 0x04, 0xec, 0xa6, 0x50, 0xa6, 0xd9, 0x6b, 0xa9, 0xb2, 0x63, 0xdf, 0x3d, 0x28,
-	0x43, 0x71, 0x8c, 0xfd, 0x03, 0x03, 0xaa, 0xbc, 0xdb, 0x1f, 0x63, 0x7f, 0xe7, 0x09, 0x18, 0xa9,
-	0x23, 0x51, 0x0d, 0xaa, 0x6f, 0x8e, 0x5e, 0x1e, 0x1d, 0xff, 0xf4, 0xa8, 0x7e, 0x03, 0x01, 0x54,
-	0x5e, 0x9f, 0xd8, 0xbd, 0xa3, 0x1f, 0xd5, 0x35, 0x54, 0x85, 0x62, 0xef, 0xe8, 0xa4, 0x5e, 0x40,
-	0x06, 0x94, 0x9f, 0xbf, 0x3a, 0xee, 0x9e, 0xd4, 0x8b, 0xfb, 0xef, 0x00, 0x36, 0x54, 0xf3, 0xfb,
-	0x9a, 0xc4, 0x63, 0xcf, 0x21, 0xe8, 0x8f, 0x1a, 0xdc, 0x59, 0xd0, 0x4d, 0xa2, 0x6f, 0xf2, 0x98,
-	0xb9, 0xc6, 0x85, 0xd7, 0x68, 0xad, 0x06, 0xca, 0x7b, 0xcd, 0xda, 0x7b, 0xf7, 0xcf, 0xff, 0xfc,
-	0xbe, 0xf0, 0x18, 0x3d, 0x12, 0xcf, 0xd5, 0xf1, 0x5e, 0x47, 0xdd, 0xf8, 0x9d, 0xcb, 0xe4, 0xc6,
-	0xbc, 0xea, 0x60, 0xb5, 0x89, 0xbc, 0xfc, 0x10, 0x03, 0xf3, 0x59, 0x4c, 0xe6, 0xb6, 0xa1, 0x68,
-	0x41, 0x9b, 0xd4, 0x58, 0x20, 0xb7, 0x5a, 0x42, 0xbd, 0x65, 0xdd, 0x9b, 0x51, 0x4f, 0x3b, 0xd9,
-	0xbe, 0xea, 0xa9, 0xb6, 0x83, 0x7e, 0xa3, 0x81, 0xb9, 0xa8, 0xfb, 0x45, 0xf7, 0x27, 0xdd, 0xec,
-	0xc2, 0x56, 0x70, 0xa1, 0x0d, 0x1d, 0x61, 0xc3, 0xa3, 0xc6, 0xf6, 0x52, 0x1b, 0x3a, 0x97, 0x3c,
-	0x93, 0xaf, 0xb8, 0x29, 0x7f, 0xd7, 0xc0, 0x5a, 0xdd, 0xf0, 0xa3, 0x76, 0xc6, 0x09, 0xab, 0x5f,
-	0x15, 0x8d, 0xdd, 0xeb, 0xc2, 0x95, 0xe7, 0x3e, 0x15, 0x66, 0x7f, 0x82, 0x7e, 0xb0, 0xdc, 0x6c,
-	0x25, 0x1d, 0x7b, 0xe4, 0xbc, 0x73, 0xd9, 0x3b, 0xcc, 0x79, 0xf3, 0x77, 0x1a, 0x98, 0x8b, 0x9a,
-	0x68, 0xc9, 0xeb, 0x8a, 0x16, 0xbb, 0x61, 0x25, 0x86, 0x2f, 0x31, 0x76, 0x47, 0x18, 0xbb, 0xbd,
-	0x63, 0xad, 0xe0, 0xb8, 0x77, 0x78, 0x85, 0xfe, 0xa4, 0x81, 0xb9, 0xe8, 0x61, 0x88, 0xe6, 0x3c,
-	0xec, 0x73, 0x6f, 0xd6, 0xc6, 0xf6, 0x72, 0x90, 0xb2, 0xe9, 0xa9, 0xb0, 0xe9, 0xdb, 0x56, 0x67,
-	0x49, 0xe8, 0xcb, 0xcb, 0xad, 0x73, 0x99, 0x79, 0x3d, 0x8a, 0x10, 0xb8, 0x80, 0x5b, 0xb9, 0x87,
-	0x36, 0xba, 0x3b, 0xe9, 0x7b, 0xf3, 0xef, 0x6f, 0x19, 0x7e, 0xf9, 0xfe, 0xd9, 0xda, 0x15, 0x66,
-	0xb4, 0xd0, 0xc3, 0xc4, 0x0c, 0x92, 0x76, 0x25, 0x1d, 0x7e, 0x5f, 0xd0, 0xce, 0x25, 0xff, 0x49,
-	0x6c, 0x41, 0xff, 0xd0, 0x60, 0x73, 0xe1, 0x27, 0x11, 0xb4, 0x2d, 0xb5, 0x2c, 0xff, 0x30, 0xd4,
-	0x78, 0xb0, 0x02, 0xa5, 0x4c, 0x73, 0x85, 0x69, 0x5f, 0x58, 0x3f, 0x5b, 0x6c, 0xda, 0xe4, 0xfb,
-	0xd2, 0x55, 0x32, 0xf0, 0xdc, 0x94, 0x37, 0x05, 0xca, 0x7c, 0x4a, 0xba, 0xca, 0x71, 0x79, 0x50,
-	0xfa, 0xbc, 0x30, 0xde, 0x7b, 0x5b, 0x11, 0xdf, 0xb5, 0xbe, 0xf5, 0xbf, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xd4, 0xf2, 0xf7, 0xdb, 0x51, 0x13, 0x00, 0x00,
 }

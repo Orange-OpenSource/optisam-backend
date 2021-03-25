@@ -15,6 +15,7 @@ import (
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
 
 	dgo "github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v2/protos/api"
 
 	"go.uber.org/zap"
 )
@@ -31,15 +32,15 @@ const (
 )
 
 // ListMetricTypeInfo implements Licence ListMetricTypeInfo function
-func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopes []string) ([]*v1.MetricTypeInfo, error) {
+func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopes string) ([]*v1.MetricTypeInfo, error) {
 	return v1.MetricTypes, nil
 }
 
 // ListMetrices implements Licence ListMetrices function
-func (l *MetricRepository) ListMetrices(ctx context.Context, scopes []string) ([]*v1.MetricInfo, error) {
+func (l *MetricRepository) ListMetrices(ctx context.Context, scope string) ([]*v1.MetricInfo, error) {
 
 	q := `   {
-             Metrics(func:eq(type_name,"metric")){
+             Metrics(func:eq(type_name,"metric"))@filter(eq(scopes,` + scope + `)){
 			   ID  : uid
 			   Name: metric.name
 			   Type: metric.type
@@ -82,9 +83,9 @@ func NewMetricRepositoryWithTemplates(dg *dgo.Dgraph) (*MetricRepository, error)
 	return NewMetricRepository(dg), nil
 }
 
-func (l *MetricRepository) listMetricWithMetricType(ctx context.Context, metType v1.MetricType, scopes []string) (json.RawMessage, error) {
+func (l *MetricRepository) listMetricWithMetricType(ctx context.Context, metType v1.MetricType, scope string) (json.RawMessage, error) {
 	q := `{
-		Data(func: eq(metric.type,` + metType.String() + `)){
+		Data(func: eq(metric.type,` + metType.String() + `)) @filter(eq(scopes,` + scope + `)){
 		 uid
 		 expand(_all_){
 		  uid
@@ -97,4 +98,22 @@ func (l *MetricRepository) listMetricWithMetricType(ctx context.Context, metType
 		return nil, errors.New(fmt.Sprintf("cannot get metrices of %s", metType.String()))
 	}
 	return resp.Json, nil
+}
+
+func scopesNquad(scp []string, blankID string) []*api.NQuad {
+	nquads := []*api.NQuad{}
+	for _, sID := range scp {
+		nquads = append(nquads, scopeNquad(sID, blankID)...)
+	}
+	return nquads
+}
+
+func scopeNquad(scope, uid string) []*api.NQuad {
+	return []*api.NQuad{
+		&api.NQuad{
+			Subject:     uid,
+			Predicate:   "scopes",
+			ObjectValue: stringObjectValue(scope),
+		},
+	}
 }

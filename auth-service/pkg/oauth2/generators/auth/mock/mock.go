@@ -12,7 +12,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	oauth2_v3 "gopkg.in/oauth2.v3"
+	oauth2 "gopkg.in/oauth2.v3"
 	reflect "reflect"
 )
 
@@ -40,7 +40,7 @@ func (m *MockAuthorizeGenerate) EXPECT() *MockAuthorizeGenerateMockRecorder {
 }
 
 // Token mocks base method
-func (m *MockAuthorizeGenerate) Token(arg0 *oauth2_v3.GenerateBasic) (string, error) {
+func (m *MockAuthorizeGenerate) Token(arg0 *oauth2.GenerateBasic) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Token", arg0)
 	ret0, _ := ret[0].(string)

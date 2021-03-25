@@ -101,30 +101,130 @@ func TestAppendIfNotExists(t *testing.T) {
 	}
 }
 
-func TestContains(t *testing.T) {
+func TestRegexContains(t *testing.T) {
 	type args struct {
 		slice []string
-		val   string
+		vals  []string
 	}
 	tests := []struct {
 		name string
 		args args
 		want bool
 	}{
-		{name: "SUCCESS - string match regex",
-			args: args{slice: []string{`^products\.csv$`, `^applications\.csv$`},
-				val: "products.csv"},
+		{
+			name: "SUCCESS-SingleElementSourceSlice-NoTargetParmeter",
+			args: args{slice: []string{"A"}, vals: []string{}},
 			want: true,
 		},
-		{name: "SUCCESS - string does not match regex",
-			args: args{slice: []string{`^products\.csv$`, `^applications\.csv$`},
-				val: "products1.csv"},
+		{
+			name: "SUCCESS-SingleElementSourceSlice-SingleTargetParmeter",
+			args: args{slice: []string{"A"}, vals: []string{"A"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-MultiElementSourceSlice-SingleTargetParmeter",
+			args: args{slice: []string{"A", "B"}, vals: []string{"A"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-MultiElementSourceSlice-MultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"A", "B"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-EmptySourceSlice-EmptyTargetParmeter",
+			args: args{slice: []string{}, vals: []string{}},
+			want: true,
+		},
+		{
+			name: "Failed-EmptySourceSlice-MultiTargetParmeter",
+			args: args{slice: []string{}, vals: []string{"A", "B"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-NoMatchSingleTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-NoMatchMultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D", "E"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-SomeMatchMultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"C", "D"}},
 			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.args.slice, tt.args.val); got != tt.want {
+			if got := RegexContains(tt.args.slice, tt.args.val); got != tt.want {
+				t.Errorf("Contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestContains(t *testing.T) {
+	type args struct {
+		slice []string
+		vals  []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "SUCCESS-SingleElementSourceSlice-NoTargetParmeter",
+			args: args{slice: []string{"A"}, vals: []string{}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-SingleElementSourceSlice-SingleTargetParmeter",
+			args: args{slice: []string{"A"}, vals: []string{"A"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-MultiElementSourceSlice-SingleTargetParmeter",
+			args: args{slice: []string{"A", "B"}, vals: []string{"A"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-MultiElementSourceSlice-MultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"A", "B"}},
+			want: true,
+		},
+		{
+			name: "SUCCESS-EmptySourceSlice-EmptyTargetParmeter",
+			args: args{slice: []string{}, vals: []string{}},
+			want: true,
+		},
+		{
+			name: "Failed-EmptySourceSlice-MultiTargetParmeter",
+			args: args{slice: []string{}, vals: []string{"A", "B"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-NoMatchSingleTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-NoMatchMultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D", "E"}},
+			want: false,
+		},
+		{
+			name: "Failed-MultiElementSourceSlice-SomeMatchMultiTargetParmeter",
+			args: args{slice: []string{"A", "B", "C"}, vals: []string{"C", "D"}},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Contains(tt.args.slice, tt.args.vals...); got != tt.want {
 				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})
