@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -104,7 +98,7 @@ func filterTypeRepo(filterType v1.StringFilter_Type) repo.Filtertype {
 	}
 }
 
-func addFilter(priority int32, key string, value interface{}, values []string, filterType v1.StringFilter_Type) *repo.Filter {
+func addFilter(priority int32, key string, value interface{}, values []string, filterType v1.StringFilter_Type) *repo.Filter { //nolint:unparam
 	return &repo.Filter{
 		FilteringPriority:   priority,
 		FilterKey:           key,
@@ -120,24 +114,4 @@ func stringToInterface(vals []string) []interface{} {
 		interfaceSlice[i] = vals[i]
 	}
 	return interfaceSlice
-}
-
-func scopesIsSubSlice(scopes []string, claimsScopes []string) bool {
-	if len(scopes) > len(claimsScopes) {
-		return false
-	}
-	for _, e := range scopes {
-		if contains(claimsScopes, e) == -1 {
-			return false
-		}
-	}
-	return true
-}
-func contains(s []string, e string) int {
-	for i, a := range s {
-		if a == e {
-			return i
-		}
-	}
-	return -1
 }

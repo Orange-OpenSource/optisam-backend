@@ -1,27 +1,175 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repv1 "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/mock"
 	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
+	application "optisam-backend/application-service/pkg/api/v1"
+	appMock "optisam-backend/application-service/pkg/api/v1/mock"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
+	dpsv1 "optisam-backend/dps-service/pkg/api/v1"
+	dpsMock "optisam-backend/dps-service/pkg/api/v1/mock"
+	equipment "optisam-backend/equipment-service/pkg/api/v1"
+	equipmentMock "optisam-backend/equipment-service/pkg/api/v1/mock"
+	metricv1 "optisam-backend/metric-service/pkg/api/v1"
+	metricMock "optisam-backend/metric-service/pkg/api/v1/mock"
+	product "optisam-backend/product-service/pkg/api/v1"
+	prodMock "optisam-backend/product-service/pkg/api/v1/mock"
+	reportv1 "optisam-backend/report-service/pkg/api/v1"
+	reportMock "optisam-backend/report-service/pkg/api/v1/mock"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_DeleteResourceByScope(t *testing.T) {
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+	var prod product.ProductServiceClient
+	var app application.ApplicationServiceClient
+	var report reportv1.ReportServiceClient
+	var metric metricv1.MetricServiceClient
+	var equip equipment.EquipmentServiceClient
+	var dps dpsv1.DpsServiceClient
+
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@test.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"s1", "s2"},
+	})
+	tests := []struct {
+		name    string
+		input   *v1.DropScopeDataRequest
+		setup   func()
+		ctx     context.Context
+		wantErr bool
+	}{
+		{
+			name:    "ScopeValidationFailure case",
+			input:   &v1.DropScopeDataRequest{Scope: "s3"},
+			ctx:     ctx,
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name:    "claimsNotFound case",
+			input:   &v1.DropScopeDataRequest{Scope: "s1"},
+			ctx:     context.Background(),
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name:  "DB Failure case",
+			input: &v1.DropScopeDataRequest{Scope: "s1"},
+			ctx:   context.Background(),
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(errors.New("DBError")).Times(1)
+				mockAppClient := appMock.NewMockApplicationServiceClient(mockCtrl)
+				app = mockAppClient
+				mockAppClient.EXPECT().DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: "s1"}).Return(&application.DropApplicationDataResponse{Success: true}, nil).Times(1)
+				mockAppClient.EXPECT().DropObscolenscenceData(ctx, &application.DropObscolenscenceDataRequest{Scope: "s1"}).Return(&application.DropObscolenscenceDataResponse{Success: true}, nil).Times(1)
+
+				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1", DeletionType: product.DropProductDataRequest_FULL}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
+
+				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
+				equip = mockEquipClient
+				ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
+				defer cancel()
+				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).Times(1)
+				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)
+
+				mockDpsClient := dpsMock.NewMockDpsServiceClient(mockCtrl)
+				dps = mockDpsClient
+				mockDpsClient.EXPECT().DropUploadedFileData(ctx, &dpsv1.DropUploadedFileDataRequest{Scope: "s1"}).Return(&dpsv1.DropUploadedFileDataResponse{Success: true}, nil).Times(1)
+
+				mockMetricClient := metricMock.NewMockMetricServiceClient(mockCtrl)
+				metric = mockMetricClient
+				mockMetricClient.EXPECT().DropMetricData(ctx, &metricv1.DropMetricDataRequest{Scope: "s1"}).Return(&metricv1.DropMetricDataResponse{Success: true}, nil).Times(1)
+
+				mockReportClient := reportMock.NewMockReportServiceClient(mockCtrl)
+				report = mockReportClient
+				mockReportClient.EXPECT().DropReportData(ctx, &reportv1.DropReportDataRequest{Scope: "s1"}).Return(&reportv1.DropReportDataResponse{Success: true}, nil).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{
+			name:  "Success Deletion",
+			input: &v1.DropScopeDataRequest{Scope: "s1"},
+			ctx:   context.Background(),
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(nil).Times(1)
+
+				mockAppClient := appMock.NewMockApplicationServiceClient(mockCtrl)
+				app = mockAppClient
+				mockAppClient.EXPECT().DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: "s1"}).Return(&application.DropApplicationDataResponse{Success: true}, nil).Times(1)
+				mockAppClient.EXPECT().DropObscolenscenceData(ctx, &application.DropObscolenscenceDataRequest{Scope: "s1"}).Return(&application.DropObscolenscenceDataResponse{Success: true}, nil).Times(1)
+
+				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
+
+				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
+				equip = mockEquipClient
+				ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
+				defer cancel()
+				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).Times(1)
+				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)
+
+				mockDpsClient := dpsMock.NewMockDpsServiceClient(mockCtrl)
+				dps = mockDpsClient
+				mockDpsClient.EXPECT().DropUploadedFileData(ctx, &dpsv1.DropUploadedFileDataRequest{Scope: "s1"}).Return(&dpsv1.DropUploadedFileDataResponse{Success: true}, nil).Times(1)
+
+				mockMetricClient := metricMock.NewMockMetricServiceClient(mockCtrl)
+				metric = mockMetricClient
+				mockMetricClient.EXPECT().DropMetricData(ctx, &metricv1.DropMetricDataRequest{Scope: "s1"}).Return(&metricv1.DropMetricDataResponse{Success: true}, nil).Times(1)
+
+				mockReportClient := reportMock.NewMockReportServiceClient(mockCtrl)
+				report = mockReportClient
+				mockReportClient.EXPECT().DropReportData(ctx, &reportv1.DropReportDataRequest{Scope: "s1"}).Return(&reportv1.DropReportDataResponse{Success: true}, nil).Times(1)
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			obj := &accountServiceServer{
+				accountRepo: rep,
+				application: app,
+				product:     prod,
+				metric:      metric,
+				equipment:   equip,
+				report:      report,
+				dps:         dps,
+			}
+			_, err := obj.DropScopeData(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.DropScopeData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			} else {
+				log.Println(tt.name, " passed")
+			}
+		})
+	}
+}
 
 func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 	var mockCtrl *gomock.Controller
@@ -64,7 +212,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:     "admin@test.com",
+					UserID:     "admin@test.com",
 					FirstName:  "admin2",
 					LastName:   "user",
 					Locale:     "fr",
@@ -108,7 +256,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -146,7 +294,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin3@test.com",
+					UserID:    "admin3@test.com",
 					FirstName: "admin3",
 					LastName:  "user",
 					Locale:    "fr",
@@ -264,7 +412,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:     "admin@test.com",
+					UserID:     "admin@test.com",
 					FirstName:  "admin1",
 					LastName:   "user",
 					Locale:     "fr",
@@ -309,7 +457,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "User",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -345,7 +493,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -381,7 +529,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -417,7 +565,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -453,7 +601,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "admin",
 					LastName:  "user",
 					Locale:    "fr",
@@ -492,7 +640,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin3@test.com",
+					UserID:    "admin3@test.com",
 					FirstName: "admin3",
 					LastName:  "user",
 					Locale:    "fr",
@@ -529,7 +677,7 @@ func Test_accountServiceServer_UpdateAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:    "admin3@test.com",
+					UserID:    "admin3@test.com",
 					FirstName: "admin3",
 					LastName:  "user",
 					Locale:    "fr",
@@ -602,7 +750,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleAdmin,
@@ -643,7 +791,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleUser,
@@ -728,7 +876,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleUser,
@@ -754,7 +902,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().AccountInfo(ctx, "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleUser,
@@ -786,7 +934,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleUser,
@@ -830,7 +978,7 @@ func Test_accountServiceServer_DeleteAccount(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "SuperAdmin",
 				}), "admin1@test.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:          "admin1@test.com",
+					UserID:          "admin1@test.com",
 					FirstName:       "admin1",
 					LastName:        "test",
 					Role:            repv1.RoleUser,
@@ -908,7 +1056,7 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 				mockRepo.EXPECT().AccountInfo(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 				}), "admin@superuser.com").Times(1).Return(&repv1.AccountInfo{
-					UserId:     "admin@superuser.com",
+					UserID:     "admin@superuser.com",
 					FirstName:  "first",
 					LastName:   "last",
 					Role:       repv1.Role(1),
@@ -1015,49 +1163,49 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
 					}, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(2), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
 					}, nil),
 					mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", gomock.Any()).Return(4, []*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 2,
 						},
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
 					}, nil),
 					mockRepo.EXPECT().CreateAccount(ctx, &repv1.AccountInfo{
-						UserId:    "user@test.com",
+						UserID:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
 						Password:  defaultPassHash,
@@ -1316,24 +1464,24 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
 					}, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(2), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
 					}, nil),
@@ -1363,32 +1511,32 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
 					}, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(2), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
 					}, nil),
 					mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", gomock.Any()).Return(4, []*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 1,
 						},
-						&repv1.Group{
+						{
 							ID: 7,
 						},
 					}, nil),
@@ -1417,49 +1565,49 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 				gomock.InOrder(
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(6), gomock.Any()).Return(nil, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(3), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
 					}, nil),
 					mockRepo.EXPECT().ChildGroupsAll(ctx, int64(2), gomock.Any()).Return([]*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
 					}, nil),
 					mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", gomock.Any()).Return(4, []*repv1.Group{
-						&repv1.Group{
+						{
 							ID: 2,
 						},
-						&repv1.Group{
+						{
 							ID: 4,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 5,
 						},
-						&repv1.Group{
+						{
 							ID: 6,
 						},
-						&repv1.Group{
+						{
 							ID: 3,
 						},
 					}, nil),
 					mockRepo.EXPECT().CreateAccount(ctx, &repv1.AccountInfo{
-						UserId:    "user@test.com",
+						UserID:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
 						Password:  defaultPassHash,
@@ -1475,7 +1623,9 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			tt.s = NewAccountServiceServer(rep).(*accountServiceServer)
+			tt.s = &accountServiceServer{
+				accountRepo: rep,
+			}
 			got, err := tt.s.CreateAccount(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("accountServiceServer.CreateAccount() error = %v, wantErr %v", err, tt.wantErr)
@@ -1522,22 +1672,22 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UsersAll(ctx, "admin@test.com").Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -1547,21 +1697,21 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u3",
 						FirstName: "first",
 						LastName:  "last",
@@ -1585,22 +1735,22 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UsersAll(ctx, "admin@test.com").Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -1610,21 +1760,21 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u3",
 						FirstName: "first",
 						LastName:  "last",
@@ -1654,24 +1804,24 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 					UserID: "admin@test.com",
 					Role:   "Admin",
 				}), "admin@test.com", &repv1.UserQueryParams{}).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "admin1@test.com",
+					{
+						UserID:    "admin1@test.com",
 						FirstName: "admin1",
 						LastName:  "user",
 						Locale:    "en",
 						GroupName: []string{"A"},
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "admin2@test.com",
+					{
+						UserID:    "admin2@test.com",
 						FirstName: "admin2",
 						LastName:  "user",
 						Locale:    "en",
 						GroupName: []string{"A", "B"},
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "admin3@test.com",
+					{
+						UserID:    "admin3@test.com",
 						FirstName: "admin3",
 						LastName:  "user",
 						Locale:    "en",
@@ -1682,7 +1832,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "admin1@test.com",
 						FirstName: "admin1",
 						LastName:  "user",
@@ -1690,7 +1840,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 						Groups:    []string{"A"},
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "admin2@test.com",
 						FirstName: "admin2",
 						LastName:  "user",
@@ -1698,7 +1848,7 @@ func Test_accountServiceServer_GetUsers(t *testing.T) {
 						Groups:    []string{"A", "B"},
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "admin3@test.com",
 						FirstName: "admin3",
 						LastName:  "user",
@@ -1815,14 +1965,14 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
-					&repv1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repv1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -1834,22 +1984,22 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(2)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -1859,21 +2009,21 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u3",
 						FirstName: "first",
 						LastName:  "last",
@@ -1929,14 +2079,14 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
-					&repv1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repv1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -1965,14 +2115,14 @@ func Test_accountServiceServer_GetGroupUsers(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), "admin@superuser.com", nil).Return(2, []*repv1.Group{
-					&repv1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repv1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -2065,22 +2215,22 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2090,21 +2240,21 @@ func Test_accountServiceServer_AddGroupUser(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u3",
 						FirstName: "first",
 						LastName:  "last",
@@ -2351,36 +2501,36 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u5",
+					{
+						UserID:    "u5",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2402,22 +2552,22 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2427,21 +2577,21 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 			},
 			want: &v1.ListUsersResponse{
 				Users: []*v1.User{
-					&v1.User{
+					{
 						UserId:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      v1.ROLE_ADMIN,
 					},
-					&v1.User{
+					{
 						UserId:    "u3",
 						FirstName: "first",
 						LastName:  "last",
@@ -2564,29 +2714,29 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2621,36 +2771,36 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u5",
+					{
+						UserID:    "u5",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2690,36 +2840,36 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u5",
+					{
+						UserID:    "u5",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2759,36 +2909,36 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u5",
+					{
+						UserID:    "u5",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
@@ -2832,36 +2982,36 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
 				}), int64(1)).Return([]*repv1.AccountInfo{
-					&repv1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "fr",
 						Role:      repv1.RoleAdmin,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u4",
+					{
+						UserID:    "u4",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",
 						Role:      repv1.RoleUser,
 					},
-					&repv1.AccountInfo{
-						UserId:    "u5",
+					{
+						UserID:    "u5",
 						FirstName: "first",
 						LastName:  "last",
 						Locale:    "en",

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -13,6 +7,7 @@ import (
 	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
+	"sync"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -20,20 +15,41 @@ import (
 	"go.uber.org/zap"
 )
 
-type predMetric string
-
-// String implements string.Stringer
-func (p predMetric) String() string {
-	return string(p)
+// ListMetricTypeInfo implements Licence ListMetricTypeInfo function
+func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopetype v1.ScopeType, scope string) ([]*v1.MetricTypeInfo, error) {
+	return scopetype.ListMetricTypes(), nil
 }
 
-const (
-	predMetricName predMetric = "metric.name"
-)
+// DropMetrics deletes all metrics in a scope
+func (l *MetricRepository) DropMetrics(ctx context.Context, scope string) error {
+	query := `query {
+		 var(func: eq(type_name,metric)) @filter(eq(scopes,` + scope + `)){
+			 metricId as uid
+		}
+		`
+	delete := `
+			uid(metricId) * * .
+	`
+	set := `
+			uid(metricId) <Recycle> "true" .
 
-// ListMetricTypeInfo implements Licence ListMetricTypeInfo function
-func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopes string) ([]*v1.MetricTypeInfo, error) {
-	return v1.MetricTypes, nil
+	`
+	query += `
+	}`
+	muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+	logger.Log.Info(query)
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{muDelete},
+		CommitNow: true,
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("DropMetrics - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return fmt.Errorf(" DropMetrics - cannot complete query transaction")
+	}
+	return nil
 }
 
 // ListMetrices implements Licence ListMetrices function
@@ -51,7 +67,7 @@ func (l *MetricRepository) ListMetrices(ctx context.Context, scope string) ([]*v
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ListMetrices - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListMetrices - cannot complete query transaction")
+		return nil, errors.New("listMetrices - cannot complete query transaction")
 	}
 
 	type Data struct {
@@ -60,27 +76,111 @@ func (l *MetricRepository) ListMetrices(ctx context.Context, scope string) ([]*v
 	var metricList Data
 	if err := json.Unmarshal(resp.GetJson(), &metricList); err != nil {
 		logger.Log.Error("ListMetrices - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListMetrices - cannot unmarshal Json object")
+		return nil, errors.New("listMetrices - cannot unmarshal Json object")
 	}
 
 	return metricList.Metrics, nil
 }
 
-//MetricRepository for Dgraph
+// MetricRepository for Dgraph
 type MetricRepository struct {
 	dg *dgo.Dgraph
+	mu sync.Mutex
 }
 
-//NewMetricRepository creates new Repository
+// NewMetricRepository creates new Repository
 func NewMetricRepository(dg *dgo.Dgraph) *MetricRepository {
 	return &MetricRepository{
 		dg: dg,
 	}
 }
 
-//NewMetricRepositoryWithTemplates creates new Repository with templates
+// NewMetricRepositoryWithTemplates creates new Repository with templates
 func NewMetricRepositoryWithTemplates(dg *dgo.Dgraph) (*MetricRepository, error) {
 	return NewMetricRepository(dg), nil
+}
+
+func (l *MetricRepository) MetricInfoWithAcqAndAgg(ctx context.Context, metricName, scope string) (*v1.MetricInfoFull, error) {
+	q := `{ 
+			Metric(func:eq(metric.name,"` + metricName + `")) @filter(eq(scopes,"` + scope + `")){
+				ID  : uid
+				Name: metric.name
+				Type: metric.type
+		 	}
+   			var(func:eq(aggregation.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
+	 			tagg as count(aggregation.name)
+		 	}
+	   		var(func:eq(acqRights.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
+				tacq as count(acqRights.SKU)
+		 	}
+   		  	AggregationCount(){
+				TotalAggregations: sum(val(tagg))
+ 			}
+			AcqrightCount(){
+				TotalAcqRights: sum(val(tacq))
+			}
+   		}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Debug("GetMetric - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, errors.New("getMetric - cannot complete query transaction")
+	}
+	type metricAggcount struct {
+		TotalAggregations float64
+	}
+	type metricAcqCount struct {
+		TotalAcqRights float64
+	}
+	type Data struct {
+		Metric           []*v1.MetricInfo
+		AggregationCount []*metricAggcount
+		AcqrightCount    []*metricAcqCount
+	}
+	var metricInfo Data
+	if err := json.Unmarshal(resp.GetJson(), &metricInfo); err != nil {
+		logger.Log.Debug("GetMetric - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, errors.New("getMetric - cannot unmarshal Json object")
+	}
+	retMetric := &v1.MetricInfoFull{}
+	if len(metricInfo.Metric) != 0 {
+		retMetric.ID = metricInfo.Metric[0].ID
+		retMetric.Name = metricInfo.Metric[0].Name
+		retMetric.Type = metricInfo.Metric[0].Type
+	}
+	if len(metricInfo.AggregationCount) != 0 {
+		retMetric.TotalAggregations = int32(metricInfo.AggregationCount[0].TotalAggregations)
+	}
+	if len(metricInfo.AcqrightCount) != 0 {
+		retMetric.TotalAcqRights = int32(metricInfo.AcqrightCount[0].TotalAcqRights)
+	}
+	return retMetric, nil
+}
+
+func (l *MetricRepository) DeleteMetric(ctx context.Context, metricName, scope string) error {
+	query := `query {
+		var(func: eq(metric.name,"` + metricName + `"))@filter(eq(scopes,"` + scope + `")){
+			metric as metric.name
+		}
+		`
+	delete := `
+			uid(metric) * * .
+	`
+	set := `
+			uid(metric) <Recycle> "true" .
+	`
+	query += `
+	}`
+	muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{muDelete},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("DeleteMetric - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return fmt.Errorf("deleteMetric - cannot complete query transaction")
+	}
+	return nil
 }
 
 func (l *MetricRepository) listMetricWithMetricType(ctx context.Context, metType v1.MetricType, scope string) (json.RawMessage, error) {
@@ -95,25 +195,7 @@ func (l *MetricRepository) listMetricWithMetricType(ctx context.Context, metType
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/listMetricWithMetricType - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New(fmt.Sprintf("cannot get metrices of %s", metType.String()))
+		return nil, fmt.Errorf("cannot get metrics of %s", metType.String())
 	}
 	return resp.Json, nil
-}
-
-func scopesNquad(scp []string, blankID string) []*api.NQuad {
-	nquads := []*api.NQuad{}
-	for _, sID := range scp {
-		nquads = append(nquads, scopeNquad(sID, blankID)...)
-	}
-	return nquads
-}
-
-func scopeNquad(scope, uid string) []*api.NQuad {
-	return []*api.NQuad{
-		&api.NQuad{
-			Subject:     uid,
-			Predicate:   "scopes",
-			ObjectValue: stringObjectValue(scope),
-		},
-	}
 }

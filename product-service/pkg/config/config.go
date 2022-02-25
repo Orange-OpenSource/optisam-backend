@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
@@ -47,14 +41,17 @@ type Config struct {
 	// Dgraph connection information
 	Dgraph *dgraph.Config
 
-	//WorkerQueue holds queue config
+	// WorkerQueue holds queue config
 	WorkerQueue workerqueue.QueueConfig
 
-	//Handles cron config
+	// DashboardTimeZone tells zonal time , eg: UTC, CET etc, bydefault CET time is taken. Europe/Paris
+	DashboardTimeZone string
+
+	// Handles cron config
 	Cron cron.Config
 
-	//MaxApiWorker to handle concurrent processing of jobs
-	MaxApiWorker int
+	// MaxAPIWorker to handle concurrent processing of jobs
+	MaxAPIWorker int
 
 	// Database connection information
 	Database postgres.Config
@@ -67,13 +64,13 @@ type Config struct {
 
 	AppParams AppParameters
 
-	//IAM Configuration
+	// IAM Configuration
 	IAM iam.Config
 
 	GrpcServers grpc.Config
 
-	//For interservice http calls(non grpc server)["ip:port"]
-	HttpServers httpConfg
+	// For interservice http calls(non grpc server)["ip:port"]
+	HTTPServers httpConfg
 }
 
 type httpConfg struct {
@@ -154,7 +151,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// v.AutomaticEnv()
 
 	// Application constants
-	v.Set("serviceName", "productservice")
+	v.Set("serviceName", "product-service")
 
 	// Global configuration
 	v.SetDefault("environment", "production")

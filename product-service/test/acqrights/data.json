@@ -1,0 +1,114 @@
+{
+    "schema_acq": {
+        "SKU": "#string",
+        "swid_tag": "#string",
+        "product_name": "##string",
+        "editor": "#string",
+        "metric": "#string",
+        "acquired_licenses_number": "##number",
+        "licenses_under_maintenance_number": "##number",
+        "end_of_maintenance": "##string",
+        "start_of_maintenance": "##string",
+        "licenses_under_maintenance": "##string",
+        "avg_licenes_unit_price": "##number",
+        "avg_maintenance_unit_price": "##number",
+        "total_purchase_cost": "##number",
+        "total_maintenance_cost": "##number",
+        "total_cost": "##number",
+        "version": "#string",
+        "comment" : "#string"
+    },
+    "getAcqrights": {
+        "SKU": "ibm_websphere_1_pvu",
+        "swid_tag": "ibm_websphere_1",
+        "product_name": "IBM Websphere 9",
+        "editor": "IBM",
+        "metric": "ibm_pvu",
+        "acquired_licenses_number": 100,
+        "end_of_maintenance": "##string",
+        "start_of_maintenance": "##string",
+        "licenses_under_maintenance": "#string",
+        "licenses_under_maintenance_number": 0,
+        "version": "11.1.7",
+        "avg_licenes_unit_price": 10,
+        "avg_maintenance_unit_price": 0,
+        "total_maintenance_cost": 0,
+        "total_purchase_cost": 1000,
+        "total_cost": 1000,
+        "comment": ""
+    },
+    "createAcqrights": {
+        "sku": "API_Sku",
+        "product_name": "APIProduct",
+        "version":"0.2.8",
+        "product_editor":"Oracle",
+        "metric_name":"Test_instance",
+        "num_licenses_acquired":10,
+        "avg_unit_price":10,
+        "start_of_maintenance":null,
+        "end_of_maintenance":null,
+        "num_licences_maintainance":0,
+        "avg_maintenance_unit_price":0,
+        "scope":"AUT",
+        "comment":"abd"
+    },
+    
+    "overview": {
+        "total_license_cost": 113900,
+        "total_maintenance_cost": 400
+    },
+    "schema_overview": {
+        "total_license_cost": "#number",
+        "total_maintenance_cost": "#number"
+    },
+    "metrics_products": {
+        "metric_name": "ibm_pvu",
+        "num_products": 2
+    },
+    "counterfeit_products_licenses": {
+        "swid_tag": "ibm_cognos_1",
+        "product_name": "IBM Cognos Analytics 11",
+        "num_licenses_acquired": "100",
+        "num_licenses_computed": "580",
+        "delta": "-480"
+    },
+    "counterfeit_products_costs": {
+        "swid_tag": "ibm_cognos_1",
+        "product_name": "IBM Cognos Analytics 11",
+        "licenses_acquired_cost": 1000,
+        "licenses_computed_cost": 5800,
+        "delta_cost": -4800
+    },
+    "overdeployed_products_licenses": {
+        "swid_tag": "hpud_2",
+        "product_name": "Micro Focus HPUD 2",
+        "num_licenses_acquired": "100",
+        "num_licenses_computed": "3",
+        "delta": "97"
+    },
+    "overdeployed_products_costs": {
+        "swid_tag": "hpud_2",
+        "product_name": "Micro Focus HPUD 2",
+        "licenses_acquired_cost": 1000,
+        "licenses_computed_cost": 30,
+        "delta_cost": 970
+    },
+
+    "createAcqrightswithmaintenance": {
+        "sku": "API_SkuMain",
+        "product_name": "APIProductMain",
+        "version":"0.2.8",
+        "product_editor":"Oracle",
+        "metric_name":"Test_instance",
+        "num_licenses_acquired":10,
+        "avg_unit_price":10,
+        "start_of_maintenance": "2021-07-31T18:30:00.000Z",
+        "end_of_maintenance": "2028-01-25T18:30:00.000Z",
+        "num_licences_maintainance": 1,
+        "avg_maintenance_unit_price": 1,
+        "scope":"AUT",
+        "comment":"abd"
+    }
+    
+
+}

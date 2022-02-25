@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -14,6 +8,8 @@ import (
 	"optisam-backend/account-service/pkg/repository/v1/mock"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
+	equipment "optisam-backend/equipment-service/pkg/api/v1"
+	equipmentMock "optisam-backend/equipment-service/pkg/api/v1/mock"
 	"reflect"
 	"testing"
 	"time"
@@ -25,6 +21,7 @@ import (
 func Test_accountServiceServer_CreateScope(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
+	var equip equipment.EquipmentServiceClient
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@test.com",
 		Role:   "SuperAdmin",
@@ -48,6 +45,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 				req: &v1.CreateScopeRequest{
 					ScopeCode: "OFR",
 					ScopeName: "France",
+					ScopeType: v1.ScopeType_GENERIC,
 				},
 			},
 			setup: func() {
@@ -55,9 +53,31 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ScopeByCode(ctx, "OFR").Times(1).Return(nil, repv1.ErrNoData)
-				mockRepo.EXPECT().CreateScope(ctx, "France", "OFR", "admin@test.com").Times(1).Return(nil)
+				mockRepo.EXPECT().CreateScope(ctx, "France", "OFR", "admin@test.com", "GENERIC").Times(1).Return(nil)
+				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
+				equip = mockEquipClient
+				mockEquipClient.EXPECT().CreateGenericScopeEquipmentTypes(ctx, &equipment.CreateGenericScopeEquipmentTypesRequest{Scope: "OFR"}).Return(&equipment.CreateGenericScopeEquipmentTypesResponse{Success: true}, nil).Times(1)
 			},
-			want: &v1.CreateScopeResponse{},
+			want: &v1.CreateScopeResponse{Success: true},
+		},
+		{
+			name: "Success Non generic scope",
+			args: args{
+				ctx: ctx,
+				req: &v1.CreateScopeRequest{
+					ScopeCode: "OFR",
+					ScopeName: "France",
+					ScopeType: v1.ScopeType_SPECIFIC,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ScopeByCode(ctx, "OFR").Times(1).Return(nil, repv1.ErrNoData)
+				mockRepo.EXPECT().CreateScope(ctx, "France", "OFR", "admin@test.com", "SPECIFIC").Times(1).Return(nil)
+			},
+			want: &v1.CreateScopeResponse{Success: true},
 		},
 		{
 			name: "Failure - Scope already exists",
@@ -103,6 +123,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 				req: &v1.CreateScopeRequest{
 					ScopeCode: "OFR",
 					ScopeName: "France",
+					ScopeType: v1.ScopeType_GENERIC,
 				},
 			},
 			setup: func() {
@@ -110,7 +131,7 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ScopeByCode(ctx, "OFR").Times(1).Return(nil, repv1.ErrNoData)
-				mockRepo.EXPECT().CreateScope(ctx, "France", "OFR", "admin@test.com").Times(1).Return(errors.New("Internal"))
+				mockRepo.EXPECT().CreateScope(ctx, "France", "OFR", "admin@test.com", "GENERIC").Times(1).Return(errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -160,7 +181,10 @@ func Test_accountServiceServer_CreateScope(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewAccountServiceServer(rep)
+			s := &accountServiceServer{
+				accountRepo: rep,
+				equipment:   equip,
+			}
 			got, err := s.CreateScope(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("accountServiceServer.CreateScope() error = %v, wantErr %v", err, tt.wantErr)
@@ -204,14 +228,14 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ListScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{
-					&repv1.Scope{
+					{
 						ScopeCode:  "O1",
 						ScopeName:  "India",
 						CreatedBy:  "admin@test.com",
 						CreatedOn:  time.Unix(10, 0),
 						GroupNames: []string{"ROOT"},
 					},
-					&repv1.Scope{
+					{
 						ScopeCode:  "O2",
 						ScopeName:  "France",
 						CreatedBy:  "admin@test.com",
@@ -222,14 +246,14 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 			},
 			want: &v1.ListScopesResponse{
 				Scopes: []*v1.Scope{
-					&v1.Scope{
+					{
 						ScopeCode:  "O1",
 						ScopeName:  "India",
 						CreatedBy:  "admin@test.com",
 						CreatedOn:  &tspb.Timestamp{Seconds: 10},
 						GroupNames: []string{"ROOT"},
 					},
-					&v1.Scope{
+					{
 						ScopeCode:  "O2",
 						ScopeName:  "France",
 						CreatedBy:  "admin@test.com",
@@ -250,13 +274,13 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ListScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{
-					&repv1.Scope{
+					{
 						ScopeCode: "O1",
 						ScopeName: "India",
 						CreatedBy: "admin@test.com",
 						CreatedOn: time.Unix(10, 0),
 					},
-					&repv1.Scope{
+					{
 						ScopeCode: "O2",
 						ScopeName: "France",
 						CreatedBy: "admin@test.com",
@@ -266,13 +290,13 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 			},
 			want: &v1.ListScopesResponse{
 				Scopes: []*v1.Scope{
-					&v1.Scope{
+					{
 						ScopeCode: "O1",
 						ScopeName: "India",
 						CreatedBy: "admin@test.com",
 						CreatedOn: &tspb.Timestamp{Seconds: 10},
 					},
-					&v1.Scope{
+					{
 						ScopeCode: "O2",
 						ScopeName: "France",
 						CreatedBy: "admin@test.com",
@@ -335,7 +359,9 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewAccountServiceServer(rep)
+			s := &accountServiceServer{
+				accountRepo: rep,
+			}
 			got, err := s.ListScopes(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("accountServiceServer.ListScopes() error = %v, wantErr %v", err, tt.wantErr)
@@ -343,6 +369,128 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("accountServiceServer.ListScopes() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_accountServiceServer_GetScope(t *testing.T) {
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@test.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"scope1", "scope2"},
+	})
+	type args struct {
+		ctx context.Context
+		req *v1.GetScopeRequest
+	}
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.Scope
+		wantErr bool
+	}{
+		{
+			name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ScopeByCode(ctx, "scope1").Times(1).Return(&repv1.Scope{
+					ScopeCode:  "scope1",
+					ScopeName:  "India",
+					CreatedBy:  "admin@test.com",
+					CreatedOn:  time.Unix(10, 0),
+					GroupNames: []string{"ROOT"},
+				}, nil)
+			},
+			want: &v1.Scope{
+				ScopeCode:  "scope1",
+				ScopeName:  "India",
+				CreatedBy:  "admin@test.com",
+				CreatedOn:  &tspb.Timestamp{Seconds: 10},
+				GroupNames: []string{"ROOT"},
+			},
+		},
+		{
+			name: "FAILURE - ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetScopeRequest{
+					Scope: "scope3",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - scope does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ScopeByCode(ctx, "scope1").Times(1).Return(nil, repv1.ErrNoData)
+			},
+			want:    &v1.Scope{},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - unable to fetch scope info",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ScopeByCode(ctx, "scope1").Times(1).Return(nil, errors.New("internal"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &accountServiceServer{
+				accountRepo: rep,
+			}
+			got, err := tt.s.GetScope(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.GetScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("accountServiceServer.GetScope() = %v, want %v", got, tt.want)
 			}
 		})
 	}

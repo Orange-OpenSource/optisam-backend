@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package workerqueue
 
 import (
@@ -26,10 +20,10 @@ func TestQueue_RegisterWorker(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	existingmockworker := workermock.NewMockWorker(mockCtrl)
 
-	//Mock worker
+	// Mock worker
 	var w worker.Worker
 
-	//Mock Repo
+	// Mock Repo
 	var r repository.Workerqueue
 
 	notifier := make(chan JobChan, 100)
@@ -139,7 +133,7 @@ func TestQueue_RegisterWorker(t *testing.T) {
 				workers:   make(map[string][]worker.Worker),
 			},
 			setup: func() {
-				notifier <- JobChan{jobId: 1, workerName: "t"}
+				notifier <- JobChan{jobID: 1, workerName: "t"}
 				mockCtrl = gomock.NewController(t)
 				mockworker := workermock.NewMockWorker(mockCtrl)
 				w = mockworker
@@ -162,18 +156,14 @@ func TestQueue_RegisterWorker(t *testing.T) {
 				ID:        tt.fields.ID,
 				queueSize: tt.fields.queueSize,
 				repo:      r,
-				notifier:  notifier,
 				workers:   tt.fields.workers,
 				wg:        tt.fields.wg,
 				PollRate:  tt.fields.PollRate,
 			}
 			fmt.Printf("Queue ID:%s Worker ID:%s\n", q.ID, w.ID())
-			//TODO assert on logs maybe
+			// TODO assert on logs maybe
 			q.RegisterWorker(tt.args.ctx, w)
 			if len(q.workers) != tt.wantCountWorker {
-				t.Errorf("Failed = got %v, want %v", len(q.workers), tt.wantCountWorker)
-			}
-			if len(q.notifier) != tt.wantJobChanLength {
 				t.Errorf("Failed = got %v, want %v", len(q.workers), tt.wantCountWorker)
 			}
 		})

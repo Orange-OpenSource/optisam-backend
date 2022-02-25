@@ -1,15 +1,10 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
@@ -17,82 +12,76 @@ import (
 )
 
 // MetricNUPComputedLicenses implements Licence MetricNUPComputedLicenses function
-func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, error) {
-	templ, ok := l.templates[nupTemplate]
-	if !ok {
-		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
-	}
-
-	q, err := queryBuilderNUP(mat, templ, id)
+func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, uint64, error) {
+	// templ, ok := l.templates[nupTemplate]
+	// if !ok {
+	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
+	// }
+	opsq := queryBuilderOPSForNUP(mat, scopes, id)
+	usersq := buildQueryUsersForNUP(scopes, id)
+	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - queryBuilderNUP", zap.Error(err))
-		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - query cannot be built")
+		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", opsq))
+		return 0, 0, errors.New("dgraph/MetricNUPComputedLicenses - query failed")
 	}
-	//fmt.Println(q)
-	licenses, err := l.licensesForQueryNUP(ctx, q)
+	userLicenses, err := l.userLicenesForQueryNUP(ctx, usersq)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", q))
-		return 0, errors.New("dgraph/MetricNUPComputedLicenses - query failed")
+		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", usersq))
+		return 0, 0, errors.New("dgraph/MetricNUPComputedLicenses - query failed")
 	}
-
-	return licenses, nil
+	maxLicenses := math.Max(opsLicenses.Licenses*float64(mat.NumOfUsers), float64(userLicenses))
+	return uint64(maxLicenses), userLicenses, nil
 }
 
 // MetricNUPComputedLicensesAgg implements Licence MetricNUPComputedLicensesAgg function
-func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, error) {
+func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, uint64, error) {
 	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
-		return 0, errors.New("getProductUIDsForAggAndMetric query failed")
+		return 0, 0, errors.New("getProductUIDsForAggAndMetric query failed")
 	}
 	if len(ids) == 0 {
-		return 0, nil
+		return 0, 0, nil
 	}
-
-	templ, ok := l.templates[nupTemplate]
-	if !ok {
-		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
-	}
-
-	q, err := queryBuilderNUP(mat, templ, ids...)
+	// templ, ok := l.templates[nupTemplate]
+	// if !ok {
+	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
+	// }
+	opsq := queryBuilderOPSForNUP(mat, scopes, ids...)
+	usersq := buildQueryUsersForNUP(scopes, ids...)
+	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - queryBuilderNUP", zap.Error(err))
-		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - query cannot be built")
+		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - query failed", zap.Error(err), zap.String("query", opsq))
+		return 0, 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - query failed")
 	}
-
-	licenses, err := l.licensesForQueryNUP(ctx, q)
+	userLicenses, err := l.userLicenesForQueryNUP(ctx, usersq)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - licensesForQuery", zap.Error(err))
-		return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - query failed")
+		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - query failed", zap.Error(err), zap.String("query", usersq))
+		return 0, 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - query failed")
 	}
-	return licenses, nil
+	maxLicenses := math.Max(opsLicenses.Licenses*float64(mat.NumOfUsers), float64(userLicenses))
+	return uint64(maxLicenses), userLicenses, nil
 }
 
-func (l *LicenseRepository) licensesForQueryNUP(ctx context.Context, q string) (uint64, error) {
-	resp, err := l.dg.NewTxn().Query(ctx, q)
+func (l *LicenseRepository) userLicenesForQueryNUP(ctx context.Context, userq string) (uint64, error) {
+	usersresp, err := l.dg.NewTxn().Query(ctx, userq)
 	if err != nil {
-		//	logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", q))
+		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("users nup query", userq))
 		return 0, err
 	}
-
-	type licenses struct {
-		Licenses float64
+	type users struct {
+		TotalUserCount int32
 	}
-
-	type totalLicenses struct {
-		Licenses []*licenses
+	type totalUsers struct {
+		Users []*users
 	}
-
-	data := &totalLicenses{}
-
-	if err := json.Unmarshal(resp.Json, data); err != nil {
-		//	logger.Log.Error("dgraph/MetricNUPComputedLicenses - Unmarshal failed", zap.Error(err), zap.String("query", q))
+	data := &totalUsers{}
+	if err := json.Unmarshal(usersresp.Json, data); err != nil {
+		logger.Log.Error("dgraph/MetricNUPComputedLicenses - Unmarshal failed", zap.Error(err), zap.String("users nup query", userq))
 		return 0, errors.New("unmarshal failed")
 	}
-
-	if len(data.Licenses) == 0 {
+	if len(data.Users) == 0 {
 		return 0, nil
 	}
-
-	return uint64(data.Licenses[0].Licenses), nil
+	return uint64(data.Users[0].TotalUserCount), nil
 }

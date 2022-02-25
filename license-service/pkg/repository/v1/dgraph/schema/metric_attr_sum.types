@@ -1,0 +1,11 @@
+type MetricAttrSum {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.attr_sum.equipment_type      
+    metric.attr_sum.attr_name           
+    metric.attr_sum.reference_value                           
+}

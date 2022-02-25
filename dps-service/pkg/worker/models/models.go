@@ -1,16 +1,10 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package models
 
 import (
 	"encoding/json"
 )
 
-//ProductInfo will carry prod.csv file content
+// ProductInfo will carry prod.csv file content
 type ProductInfo struct {
 	Name       string
 	Version    string
@@ -26,7 +20,7 @@ type ProdEquipemtInfo struct {
 	NbUsers string
 }
 
-//ApplicationInfo will carry application.csv file data
+// ApplicationInfo will carry application.csv file data
 type ApplicationInfo struct {
 	ID      string
 	Name    string
@@ -36,18 +30,17 @@ type ApplicationInfo struct {
 	Action  string // This tells whether this info need to upsert or delete
 }
 
-//AppInstance for App-instance relation
+// AppInstance for App-instance relation
 type AppInstance struct {
 	ID     string
 	Env    string
 	Action string
 }
 
-//Acqright
+// Acqright
 type AcqRightsInfo struct {
 	Version              string
 	SwidTag              string
-	Entity               string
 	Sku                  string
 	ProductName          string
 	Editor               string
@@ -64,27 +57,30 @@ type AcqRightsInfo struct {
 	Action               string
 }
 
-//FileData will carry combine information of whole file scope
+// FileData will carry combine information of whole file scope
 type FileData struct {
-	Products          map[string]ProductInfo
-	Equipments        map[string][]map[string]interface{}
-	Applications      map[string]ApplicationInfo
-	AppInstances      map[string][]AppInstance
-	ProdInstances     map[string]map[string][]string
-	EquipInstances    map[string]map[string][]string
-	AppProducts       map[string]map[string][]string
-	ProdEquipments    map[string]map[string][]ProdEquipemtInfo
-	AcqRights         map[string]AcqRightsInfo
-	Schema            []string // map[type]{schema names}, eg: [cluster]{name, parent}
-	TotalCount        int32
-	InvalidCount      int32
-	TargetServices    []string //tells send data to how many services
-	FileType          string
-	Scope             string
-	FileName          string
-	UploadID          int32
-	FileFailureReason string
-	InvalidDataRowNum []int
+	Products            map[string]ProductInfo
+	Equipments          map[string][]map[string]interface{}
+	Applications        map[string]ApplicationInfo
+	AppInstances        map[string][]AppInstance
+	ProdInstances       map[string]map[string][]string
+	EquipInstances      map[string]map[string][]string
+	AppProducts         map[string]map[string][]string
+	ProdEquipments      map[string]map[string][]ProdEquipemtInfo
+	AcqRights           map[string]AcqRightsInfo
+	Schema              []string // map[type]{schema names}, eg: [cluster]{name, parent}
+	TotalCount          int32
+	InvalidCount        int32
+	TargetServices      []string
+	FileType            string
+	Scope               string
+	FileName            string
+	TransfromedFileName string
+	UploadID            int32
+	GlobalID            int32 `json:"gid"`
+	FileFailureReason   string
+	InvalidDataRowNum   []int
+	DuplicateRecords    []interface{}
 }
 
 type HeadersInfo struct {
@@ -93,16 +89,50 @@ type HeadersInfo struct {
 }
 
 type Envlope struct {
-	TargetService string          //tells target service
-	Data          json.RawMessage // tells data will be sent to that target
-	TargetAction  string          //tells what action to do on service
-	TargetRPC     string          //tell this action to do on which rpc
-	UploadID      int32
-	FileName      string
+	Data                json.RawMessage // tells data will be sent to that target
+	TargetService       string          // tells target service
+	TargetAction        string          // tells what action to do on service
+	TargetRPC           string          // tell this action to do on which rpc
+	FileName            string
+	TransfromedFileName string
+	UploadID            int32
+	GlobalFileID        int32
 }
 
 type EquipmentRequest struct {
 	Scope  string          `json:"scope,omitempty"`
 	EqType string          `json:"eq_type,omitempty"`
 	EqData json.RawMessage `json:"eq_data,omitempty"`
+}
+
+type ProdApplink struct {
+	ProdID string `json:"productId"`
+	AppID  string `json:"applicationID"`
+	Action string `json:"action"`
+}
+
+type ProdInstancelink struct {
+	ProdID     string `json:"productId"`
+	InstanceID string `json:"instanceId"`
+	Action     string `json:"action"`
+}
+
+type AppInstanceLink struct {
+	AppID      string `json:"applicationId"`
+	InstanceID string `json:"instanceId"`
+	Env        string `json:"env"`
+	Action     string `json:"action"`
+}
+
+type ProductEquipmentLink struct {
+	ProdID  string `json:"prodId"`
+	EquipID string `json:"equipmentId"`
+	NbUser  string `json:"nbUser"`
+	Action  string `json:"action"`
+}
+
+type EquipmentInstanceLink struct {
+	InstanceID string `json:"intanceId"`
+	EquipID    string `json:"equipmentId"`
+	Action     string `json:"action"`
 }

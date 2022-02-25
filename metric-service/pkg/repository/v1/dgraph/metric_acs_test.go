@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -56,7 +50,7 @@ func TestMetricRepository_CreateMetricACS(t *testing.T) {
 				Value:         "attrvalue",
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType1.attr1",
 					Type:      "string",
 					Index:     true,
@@ -186,6 +180,7 @@ func TestMetricRepository_GetMetricConfigACS(t *testing.T) {
 			args: args{
 				ctx:     context.Background(),
 				metName: "acs",
+				scopes:  "scope1",
 			},
 			setup: func(l *MetricRepository) (func() error, error) {
 				gotRetmet1, err := l.CreateMetricACS(context.Background(), &v1.MetricACS{
@@ -237,6 +232,95 @@ func TestMetricRepository_GetMetricConfigACS(t *testing.T) {
 	}
 }
 
+func TestMetricRepository_UpdateMetricACS(t *testing.T) {
+	type args struct {
+		ctx   context.Context
+		met   *v1.MetricACS
+		scope string
+	}
+	tests := []struct {
+		name     string
+		l        *MetricRepository
+		args     args
+		setup    func(l *MetricRepository) (func() error, error)
+		checking func(l *MetricRepository) (*v1.MetricACS, error)
+		want     *v1.MetricACS
+		wantErr  bool
+	}{
+		{
+			name: "testname__",
+			l:    NewMetricRepository(dgClient),
+			args: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+				met: &v1.MetricACS{
+					Name:          "acs",
+					EqType:        "zyx",
+					AttributeName: "A2",
+					Value:         "8",
+				},
+			},
+			setup: func(l *MetricRepository) (func() error, error) {
+				met, err := l.CreateMetricACS(context.Background(), &v1.MetricACS{
+					Name:          "acs",
+					EqType:        "abc",
+					AttributeName: "A1",
+					Value:         "5",
+				}, &v1.Attribute{
+					Name:         "A1",
+					Type:         v1.DataTypeFloat,
+					IsSearchable: true,
+				}, "scope1")
+				if err != nil {
+					return func() error {
+						return nil
+					}, errors.New("error while creating metric acs")
+				}
+				return func() error {
+					assert.Empty(t, deleteNode(met.ID), "error not expected in deleting metric type")
+					return nil
+				}, nil
+			},
+			checking: func(l *MetricRepository) (*v1.MetricACS, error) {
+				actmet, err := l.GetMetricConfigACS(context.Background(), "acs", "scope1")
+				if err != nil {
+					return nil, err
+				}
+
+				return actmet, nil
+			},
+			want: &v1.MetricACS{
+				Name:          "acs",
+				EqType:        "zyx",
+				AttributeName: "A2",
+				Value:         "8",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup(tt.l)
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "not expecting error in setup")
+			}()
+			err = tt.l.UpdateMetricACS(tt.args.ctx, tt.args.met, tt.args.scope)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.UpdateMetricACS() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				got, err := tt.checking(tt.l)
+				if !assert.Empty(t, err, "not expecting error from checking") {
+					return
+				}
+				compareMetricACS(t, "MetricRepository.UpdateMetricACS", tt.want, got)
+			}
+		})
+	}
+}
 func compareMetricACSAll(t *testing.T, name string, act, exp []*v1.MetricACS) {
 	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {
 		return

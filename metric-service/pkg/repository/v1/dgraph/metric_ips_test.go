@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -45,18 +39,18 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 					CommitNow: true,
 					Set: []*api.NQuad{
 
-						&api.NQuad{
+						{
 							Subject:     blankID(baseID),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metadata"),
 						},
 
-						&api.NQuad{
+						{
 							Subject:     blankID(coreFactorAttrID),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metadata"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID(numOfCoresAttrID),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metadata"),
@@ -201,67 +195,218 @@ func TestMetricRepository_GetMetricConfigIPS(t *testing.T) {
 	}
 }
 
+func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
+	baseID := "base"
+	coreFactorAttrID := "coreFactor"
+	numOfCoresAttrID := "cores"
+	coreFactorAttrID1 := "corefactor1"
+
+	mu := &api.Mutation{
+		CommitNow: true,
+		Set: []*api.NQuad{
+
+			{
+				Subject:     blankID(baseID),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+
+			{
+				Subject:     blankID(coreFactorAttrID),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+			{
+				Subject:     blankID(numOfCoresAttrID),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+			{
+				Subject:     blankID(coreFactorAttrID1),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+		},
+	}
+	assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+	if err != nil {
+		t.Log(err)
+		return
+	}
+
+	baseID, ok := assigned.Uids[baseID]
+	if !ok {
+		t.Log(errors.New("baseID is not found in assigned map"))
+		if err := deleteNode(baseID); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+
+	coreFactorAttrID, ok = assigned.Uids[coreFactorAttrID]
+	if !ok {
+		t.Log(errors.New("coreFactorAttrID is not found in assigned map"))
+		if err := deleteNode(coreFactorAttrID); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+
+	numOfCoresAttrID, ok = assigned.Uids[numOfCoresAttrID]
+	if !ok {
+		t.Log(errors.New("numOfCoresAttrID is not found in assigned map"))
+		if err := deleteNode(numOfCoresAttrID); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+
+	coreFactorAttrID1, ok = assigned.Uids[coreFactorAttrID1]
+	if !ok {
+		t.Log(errors.New("coreFactorAttrID1 is not found in assigned map"))
+		if err := deleteNode(coreFactorAttrID1); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+	type args struct {
+		ctx    context.Context
+		met    *v1.MetricIPS
+		scopes string
+	}
+	tests := []struct {
+		name  string
+		l     *MetricRepository
+		args  args
+		setup func(l *MetricRepository) (func() error, error)
+		//checking func(l *MetricRepository) (*v1.MetricIPSConfig, error)
+		wantErr bool
+	}{
+		{name: "sucess",
+			l: NewMetricRepository(dgClient),
+			args: args{
+				ctx:    context.Background(),
+				scopes: "scope1",
+				met: &v1.MetricIPS{
+					Name:             "ips",
+					BaseEqTypeID:     baseID,
+					CoreFactorAttrID: coreFactorAttrID1,
+					NumCoreAttrID:    numOfCoresAttrID,
+				},
+			},
+			setup: func(l *MetricRepository) (cleanup func() error, retErr error) {
+				_, err := l.CreateMetricIPS(context.Background(), &v1.MetricIPS{
+					Name:             "ips",
+					BaseEqTypeID:     baseID,
+					CoreFactorAttrID: coreFactorAttrID,
+					NumCoreAttrID:    numOfCoresAttrID,
+				}, "scope1")
+				if err != nil {
+					return func() error {
+						return nil
+					}, errors.New("error while creating metric ips")
+				}
+				return func() error {
+					return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID)
+				}, nil
+			},
+			// checking: func(l *MetricRepository) (*v1.MetricIPSConfig, error) {
+			// 	actmet, err := l.GetMetricConfigIPS(context.Background(), "ips", "scope1")
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
+
+			// 	return actmet, nil
+			// },
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup(tt.l)
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "not expecting error in setup")
+			}()
+			err = tt.l.UpdateMetricIPS(tt.args.ctx, tt.args.met, tt.args.scopes)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.UpdateMetricIPS() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			// if !tt.wantErr {
+			// 	got, err := tt.checking(tt.l)
+			// 	if !assert.Empty(t, err, "not expecting error from checking") {
+			// 		return
+			// 	}
+			// 	compareMetricIPS(t, "MetricRepository.UpdateMetricIPS", tt.args.met, )
+			// }
+		})
+	}
+}
+
 func addMetricIPSConfig(metName string, scope string) (ids map[string]string, err error) {
 
 	mu := &api.Mutation{
 		CommitNow: true,
 		Set: []*api.NQuad{
-			&api.NQuad{
+			{
 				Subject:     blankID("metric"),
 				Predicate:   "metric.name",
 				ObjectValue: stringObjectValue(metName),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("metric"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("Metric"),
 			},
-			&api.NQuad{
+			{
 				Subject:   blankID("metric"),
 				Predicate: "metric.ips.base",
 				ObjectId:  "_:metadata1",
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("metadata1"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("metadata1"),
 				Predicate:   "metadata.equipment.type",
 				ObjectValue: stringObjectValue("server"),
 			},
-			&api.NQuad{
+			{
 				Subject:   blankID("metric"),
 				Predicate: "metric.ips.attr_core_factor",
 				ObjectId:  "_:attribute1",
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("attribute1"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("attr"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("attribute1"),
 				Predicate:   "attribute.name",
 				ObjectValue: stringObjectValue("ips_corefactor"),
 			},
-			&api.NQuad{
+			{
 				Subject:   blankID("metric"),
 				Predicate: "metric.ips.attr_num_cores",
 				ObjectId:  "_:attribute3",
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("attribute3"),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("attr"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("attribute3"),
 				Predicate:   "attribute.name",
 				ObjectValue: stringObjectValue("ips_cores"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("metric"),
 				Predicate:   "scopes",
 				ObjectValue: stringObjectValue(scope),

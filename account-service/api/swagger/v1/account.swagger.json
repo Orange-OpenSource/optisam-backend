@@ -4,9 +4,10 @@
     "title": "account.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
+  "tags": [
+    {
+      "name": "AccountService"
+    }
   ],
   "consumes": [
     "application/json"
@@ -15,200 +16,21 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/account/changepassword": {
-      "put": {
-        "operationId": "ChangePassword",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ChangePasswordResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1ChangePasswordRequest"
-            }
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      }
-    },
-    "/api/v1/accounts": {
-      "get": {
-        "summary": "GetUsers list all the users present",
-        "operationId": "GetUsers",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListUsersResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "user_filter.all_users",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      },
-      "post": {
-        "operationId": "CreateAccount",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1Account"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1Account"
-            }
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      }
-    },
-    "/api/v1/accounts/{account.user_id}": {
-      "put": {
-        "operationId": "UpdateAccount",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateAccountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "account.user_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpdateAccount"
-            }
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      },
-      "patch": {
-        "operationId": "UpdateAccount2",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpdateAccountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "account.user_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpdateAccount"
-            }
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      }
-    },
-    "/api/v1/accounts/{user_id}": {
-      "get": {
-        "operationId": "GetAccount",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetAccountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "user_id",
-            "description": "TODO : remove this we can now get userid from token\nThis is being ignored now.Will be removed in future",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      },
-      "delete": {
-        "operationId": "DeleteAccount",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DeleteAccountResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      }
-    },
-    "/api/v1/admin/direct_groups": {
+    "/api/v1/account/admin/direct_groups": {
       "get": {
         "summary": "ListUserGroups list all the groups which belongs to user.",
-        "operationId": "ListUserGroups",
+        "operationId": "AccountService_ListUserGroups",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListGroupsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -217,15 +39,21 @@
         ]
       }
     },
-    "/api/v1/admin/groups": {
+    "/api/v1/account/admin/groups": {
       "get": {
         "summary": "ListGroups list all the groups owned by user.",
-        "operationId": "ListGroups",
+        "operationId": "AccountService_ListGroups",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListGroupsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -235,12 +63,18 @@
       },
       "post": {
         "summary": "Group Creates a group.",
-        "operationId": "CreateGroup",
+        "operationId": "AccountService_CreateGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1Group"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -259,14 +93,20 @@
         ]
       }
     },
-    "/api/v1/admin/groups/{group_id}": {
+    "/api/v1/account/admin/groups/{group_id}": {
       "delete": {
-        "operationId": "DeleteGroup",
+        "operationId": "AccountService_DeleteGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1DeleteGroupResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -284,12 +124,18 @@
         ]
       },
       "put": {
-        "operationId": "UpdateGroup",
+        "operationId": "AccountService_UpdateGroup",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1Group"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -315,40 +161,20 @@
         ]
       }
     },
-    "/api/v1/admin/groups/{group_id}/groups": {
+    "/api/v1/account/admin/groups/{group_id}/groups": {
       "get": {
-        "operationId": "ListChildGroups",
+        "operationId": "AccountService_ListChildGroups",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListGroupsResponse"
             }
-          }
-        },
-        "parameters": [
-          {
-            "name": "group_id",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          }
-        ],
-        "tags": [
-          "AccountService"
-        ]
-      }
-    },
-    "/api/v1/admin/groups/{group_id}/users": {
-      "get": {
-        "summary": "GetGroupUsers list all the users present in the group",
-        "operationId": "GetGroupUsers",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
+          },
+          "default": {
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/v1ListUsersResponse"
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -366,15 +192,53 @@
         ]
       }
     },
-    "/api/v1/admin/groups/{group_id}/users/add": {
-      "put": {
-        "summary": "AddGroupUser adds user to the group",
-        "operationId": "AddGroupUser",
+    "/api/v1/account/admin/groups/{group_id}/users": {
+      "get": {
+        "summary": "GetGroupUsers list all the users present in the group",
+        "operationId": "AccountService_GetGroupUsers",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "group_id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/admin/groups/{group_id}/users/add": {
+      "put": {
+        "summary": "AddGroupUser adds user to the group",
+        "operationId": "AccountService_AddGroupUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -400,15 +264,21 @@
         ]
       }
     },
-    "/api/v1/admin/groups/{group_id}/users/delete": {
+    "/api/v1/account/admin/groups/{group_id}/users/delete": {
       "put": {
         "summary": "DeleteGroupUser deletes users from the group",
-        "operationId": "DeleteGroupUser",
+        "operationId": "AccountService_DeleteGroupUser",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -434,15 +304,84 @@
         ]
       }
     },
-    "/api/v1/scopes": {
+    "/api/v1/account/changepassword": {
+      "put": {
+        "operationId": "AccountService_ChangePassword",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ChangePasswordRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/scope/{scope}": {
+      "delete": {
+        "summary": "DropScopeData delete all resource/data of a scope in service",
+        "operationId": "AccountService_DropScopeData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DropScopeDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/scopes": {
       "get": {
         "summary": "ListScopes returns list of available scopes in system",
-        "operationId": "ListScopes",
+        "operationId": "AccountService_ListScopes",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListScopesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -452,12 +391,18 @@
       },
       "post": {
         "summary": "CreateScope creates a new scope and add it into root group",
-        "operationId": "CreateScope",
+        "operationId": "AccountService_CreateScope",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1CreateScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -475,9 +420,266 @@
           "AccountService"
         ]
       }
+    },
+    "/api/v1/account/scopes/{scope}": {
+      "get": {
+        "summary": "GetScope returns scope details for a particular scope",
+        "operationId": "AccountService_GetScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Scope"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/user": {
+      "post": {
+        "operationId": "AccountService_CreateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Account"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Account"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/users": {
+      "get": {
+        "summary": "GetUsers list all the users present",
+        "operationId": "AccountService_GetUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_filter.all_users",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/{account.user_id}": {
+      "put": {
+        "operationId": "AccountService_UpdateAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account.user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccount"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "patch": {
+        "operationId": "AccountService_UpdateAccount2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "account.user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAccount"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/{user_id}": {
+      "get": {
+        "operationId": "AccountService_GetAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "description": "TODO : remove this we can now get userid from token\nThis is being ignored now.Will be removed in future",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      },
+      "delete": {
+        "operationId": "AccountService_DeleteAccount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteAccountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
     }
   },
   "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
     "v1Account": {
       "type": "object",
       "properties": {
@@ -535,8 +737,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -548,18 +749,25 @@
         },
         "scope_name": {
           "type": "string"
+        },
+        "scope_type": {
+          "$ref": "#/definitions/v1ScopeType"
         }
       }
     },
     "v1CreateScopeResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
     },
     "v1DeleteAccountResponse": {
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -567,8 +775,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -584,6 +791,14 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1DropScopeDataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -609,8 +824,7 @@
           "type": "string"
         },
         "first_login": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -723,8 +937,19 @@
           "items": {
             "type": "string"
           }
+        },
+        "scope_type": {
+          "type": "string"
         }
       }
+    },
+    "v1ScopeType": {
+      "type": "string",
+      "enum": [
+        "GENERIC",
+        "SPECIFIC"
+      ],
+      "default": "GENERIC"
     },
     "v1UpdateAccount": {
       "type": "object",
@@ -753,8 +978,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -808,8 +1032,7 @@
       "type": "object",
       "properties": {
         "all_users": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     }

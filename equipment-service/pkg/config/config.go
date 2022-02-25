@@ -1,13 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
 	"optisam-backend/common/optisam/dgraph"
+	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
@@ -51,8 +46,12 @@ type Config struct {
 
 	AppParams AppParameters
 
-	//IAM Configuration
+	// IAM Configuration
 	IAM iam.Config
+
+	DelBatchSize string
+
+	GrpcServers grpc.Config
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -127,12 +126,13 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// v.AutomaticEnv()
 
 	// Application constants
-	v.Set("serviceName", "equipmentservice")
+	v.Set("serviceName", "equipment-service")
 
 	// Global configuration
 	v.SetDefault("environment", "production")
 	v.SetDefault("debug", false)
 	v.SetDefault("shutdownTimeout", 15*time.Second)
+	v.SetDefault("delBatchSize", "25000")
 
 	// Log configuration
 	v.SetDefault("log.LogLevel", -1)
@@ -159,7 +159,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 
 	// App Params Configuration
 
-	// PKI configuraiton
+	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")
 
 }

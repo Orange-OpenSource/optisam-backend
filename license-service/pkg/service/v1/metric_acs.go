@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -25,7 +19,7 @@ func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes 
 		logger.Log.Error("service/v1 computedLicensesACS", zap.Error(err))
 		return 0, status.Error(codes.Internal, "cannot fetch metric ACS")
 	}
-	ind := metricNameExistsACS(metrics, input[METRIC_NAME].(string))
+	ind := metricNameExistsACS(metrics, input[MetricName].(string))
 	if ind == -1 {
 		return 0, status.Error(codes.NotFound, "cannot find metric name")
 	}
@@ -35,10 +29,10 @@ func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes 
 		return 0, err
 	}
 	computedLicenses := uint64(0)
-	if input[IS_AGG].(bool) {
-		computedLicenses, err = s.licenseRepo.MetricACSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	if input[IsAgg].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricACSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricACSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricACSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesACS - ", zap.String("reason", err.Error()))
@@ -66,17 +60,6 @@ func computedMetricACS(met *repo.MetricACS, eqTypes []*repo.EquipmentType) (*rep
 		Attribute: attr,
 		Value:     met.Value,
 	}, nil
-}
-
-func validateAttributeACSMetric(attributes []*repo.Attribute, attrName string) (*repo.Attribute, error) {
-	if attrName == "" {
-		return nil, status.Error(codes.InvalidArgument, "attribute name is empty")
-	}
-	attr, err := attributeExistsByName(attributes, attrName)
-	if err != nil {
-		return nil, err
-	}
-	return attr, nil
 }
 
 func attributeExistsByName(attributes []*repo.Attribute, attrName string) (*repo.Attribute, error) {

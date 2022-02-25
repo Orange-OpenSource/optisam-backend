@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -13,6 +7,7 @@ import (
 	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
+	"strconv"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
@@ -35,57 +30,57 @@ type metricOracleNUP struct {
 func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, mat *v1.MetricNUPOracle, scope string) (retMat *v1.MetricNUPOracle, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricOracleNUPStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(mat.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.bottom",
 			ObjectId:  mat.StartEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.base",
 			ObjectId:  mat.BaseEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.aggregate",
 			ObjectId:  mat.AggerateLevelEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.top",
 			ObjectId:  mat.EndEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.attr_num_cpu",
 			ObjectId:  mat.NumCPUAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.oracle_nup.num_users",
 			ObjectValue: &api.Value{
@@ -94,12 +89,12 @@ func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, ma
 				},
 			},
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricOracleNUP"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -153,7 +148,7 @@ func (l *MetricRepository) ListMetricNUP(ctx context.Context, scope string) ([]*
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricNUP - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type oracle.nup.standard")
+		return nil, errors.New("cannot get metrics of type oracle.nup.standard")
 	}
 	type Resp struct {
 		Data []*metricOracleNUP
@@ -202,7 +197,7 @@ func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/GetMetricConfigNUP - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type nup")
+		return nil, errors.New("cannot get metrics of type nup")
 	}
 	type Resp struct {
 		Metric []metricInfo `json:"Data"`
@@ -219,18 +214,122 @@ func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName strin
 	if len(data.Metric) == 0 {
 		return nil, v1.ErrNoData
 	}
-	return &v1.MetricNUPConfig{
-		ID:                  data.Metric[0].ID,
-		Name:                data.Metric[0].Name,
-		NumCPUAttr:          data.Metric[0].NumCPUAttr[0].AttributeName,
-		NumCoreAttr:         data.Metric[0].NumCoreAttr[0].AttributeName,
-		CoreFactorAttr:      data.Metric[0].CoreFactorAttr[0].AttributeName,
-		StartEqType:         data.Metric[0].BottomEqType[0].MetadtaEquipmentType,
-		BaseEqType:          data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
-		EndEqType:           data.Metric[0].TopEqType[0].MetadtaEquipmentType,
-		AggerateLevelEqType: data.Metric[0].AggregateLevelEqType[0].MetadtaEquipmentType,
-		NumberOfUsers:       data.Metric[0].NumOfUsers,
-	}, nil
+	respmet := &v1.MetricNUPConfig{
+		ID:   data.Metric[0].ID,
+		Name: data.Metric[0].Name,
+		// NumCPUAttr:          data.Metric[0].NumCPUAttr[0].AttributeName,
+		// NumCoreAttr:         data.Metric[0].NumCoreAttr[0].AttributeName,
+		// CoreFactorAttr:      data.Metric[0].CoreFactorAttr[0].AttributeName,
+		// StartEqType:         data.Metric[0].BottomEqType[0].MetadtaEquipmentType,
+		// BaseEqType:          data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
+		// EndEqType:           data.Metric[0].TopEqType[0].MetadtaEquipmentType,
+		// AggerateLevelEqType: data.Metric[0].AggregateLevelEqType[0].MetadtaEquipmentType,
+		NumberOfUsers: data.Metric[0].NumOfUsers,
+	}
+	if len(data.Metric[0].NumCoreAttr) != 0 {
+		respmet.NumCoreAttr = data.Metric[0].NumCoreAttr[0].AttributeName
+	}
+	if len(data.Metric[0].NumCPUAttr) != 0 {
+		respmet.NumCPUAttr = data.Metric[0].NumCPUAttr[0].AttributeName
+	}
+	if len(data.Metric[0].CoreFactorAttr) != 0 {
+		respmet.CoreFactorAttr = data.Metric[0].CoreFactorAttr[0].AttributeName
+	}
+	if len(data.Metric[0].BottomEqType) != 0 {
+		respmet.StartEqType = data.Metric[0].BottomEqType[0].MetadtaEquipmentType
+	}
+	if len(data.Metric[0].BaseEqType) != 0 {
+		respmet.BaseEqType = data.Metric[0].BaseEqType[0].MetadtaEquipmentType
+	}
+	if len(data.Metric[0].TopEqType) != 0 {
+		respmet.EndEqType = data.Metric[0].TopEqType[0].MetadtaEquipmentType
+	}
+	if len(data.Metric[0].AggregateLevelEqType) != 0 {
+		respmet.AggerateLevelEqType = data.Metric[0].AggregateLevelEqType[0].MetadtaEquipmentType
+	}
+	return respmet, nil
+}
+
+func (l *MetricRepository) GetMetricConfigNUPID(ctx context.Context, metName string, scope string) (*v1.MetricNUPOracle, error) {
+	q := `{
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scope + `)){
+			 uid
+			 metric.name
+			 metric.oracle_nup.base{uid}
+			 metric.oracle_nup.top{uid}
+			 metric.oracle_nup.bottom{uid}
+			 metric.oracle_nup.aggregate{uid}
+			 metric.oracle_nup.attr_core_factor{uid}
+			 metric.oracle_nup.attr_num_cores{uid}
+		     metric.oracle_nup.attr_num_cpu{uid}
+			 metric.oracle_nup.num_users
+		} 
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/GetMetricConfigNUP - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type nup")
+	}
+	type Resp struct {
+		Metric []metricOracleNUP `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/GetMetricConfigNUP - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetricNUP(&data.Metric[0])
+}
+
+func (l *MetricRepository) UpdateMetricNUP(ctx context.Context, met *v1.MetricNUPOracle, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,"` + met.Name + `"))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	del := `
+	uid(ID) <metric.oracle_nup.bottom> * .
+	uid(ID) <metric.oracle_nup.base> * .
+	uid(ID) <metric.oracle_nup.aggregate> * .
+	uid(ID) <metric.oracle_nup.top> * .
+	uid(ID) <metric.oracle_nup.attr_core_factor> * .
+	uid(ID) <metric.oracle_nup.attr_num_cores> * .
+	uid(ID) <metric.oracle_nup.attr_num_cpu> * .	
+`
+	set := `
+	    uid(ID) <metric.oracle_nup.bottom> <` + met.StartEqTypeID + `> .
+		uid(ID) <metric.oracle_nup.base> <` + met.BaseEqTypeID + `> .
+		uid(ID) <metric.oracle_nup.aggregate> <` + met.AggerateLevelEqTypeID + `> .
+		uid(ID) <metric.oracle_nup.top> <` + met.EndEqTypeID + `> .
+		uid(ID) <metric.oracle_nup.attr_core_factor> <` + met.CoreFactorAttrID + `> .
+		uid(ID) <metric.oracle_nup.attr_num_cores> <` + met.NumCoreAttrID + `> .
+	    uid(ID) <metric.oracle_nup.attr_num_cpu> <` + met.NumCPUAttrID + `> .	
+		uid(ID) <metric.oracle_nup.num_users> "` + strconv.FormatUint(uint64(met.NumberOfUsers), 10) + `" .	
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				DelNquads: []byte(del),
+			},
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricNUP - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }
 
 func converMetricToModelMetricNUPAll(mts []*metricOracleNUP) ([]*v1.MetricNUPOracle, error) {

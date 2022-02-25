@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -109,24 +103,24 @@ const (
 	}`
 )
 
-type opsMatrix struct {
-	EqTypeTree     []*v1.EquipmentType
-	BaseType       *v1.EquipmentType
-	AggregateLevel *v1.EquipmentType
-	CPU            *v1.Attribute
-	Cores          *v1.Attribute
-	CoreFactor     *v1.Attribute
-}
+// type opsMatrix struct {
+// 	EqTypeTree     []*v1.EquipmentType
+// 	BaseType       *v1.EquipmentType
+// 	AggregateLevel *v1.EquipmentType
+// 	CPU            *v1.Attribute
+// 	Cores          *v1.Attribute
+// 	CoreFactor     *v1.Attribute
+// }
 
 func replacer(q string, params map[string]string) string {
 	for key, val := range params {
-		q = strings.Replace(q, key, val, -1)
+		q = strings.Replace(q, key, val, -1) // nolint: gocritic
 	}
 	return q
 }
 
 func queryBuilder(ops *v1.MetricOPSComputed, scopes []string, id ...string) string {
-	//q := ""
+	// q := ""
 	index := -1
 	aggregateIndex := -1
 	for i := range ops.EqTypeTree {
@@ -162,7 +156,7 @@ func queryBuilderForAppProduct(ops *v1.MetricOPSComputed, appID string, scopes [
 
 	return "{\n\t" + replacer(strings.Join([]string{
 		getAppProduct(appID),
-		getToBaseForAppProduct(ops.EqTypeTree[:index+1], appID),
+		getToBaseForAppProduct(ops.EqTypeTree[:index+1]),
 		getToTop(ops.EqTypeTree[index:], index > 0),
 		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
@@ -174,7 +168,7 @@ func getAppProduct(appID string) string {
 		"$appID": appID,
 	})
 }
-func getToBaseForAppProduct(eqTypes []*v1.EquipmentType, appID string) string {
+func getToBaseForAppProduct(eqTypes []*v1.EquipmentType) string {
 	queries := []string{}
 	for i := range eqTypes {
 		if i == 0 {

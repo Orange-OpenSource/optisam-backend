@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package grpc
 
 import (
@@ -74,13 +68,27 @@ func authHandler(verifyKey *rsa.PublicKey, apiKey string) func(ctx context.Conte
 				zap.String("user-role", string(customClaims.Role)))
 			return AddClaims(ctx, customClaims), nil
 		}
-		if xApiKey, ok := md["x-api-key"]; ok {
-			if xApiKey[0] != apiKey {
+		if xAPIKey, ok := md["x-api-key"]; ok {
+			if xAPIKey[0] != apiKey {
 				return nil, status.Error(codes.Unauthenticated, "InvalidAPIKeyError")
 			}
-			//TODO service to service call should manage scopes
-			//return AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"OFR", "OSP", "DEM", "TST", "AUT"}}), nil
-			return AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"ABC"}}), nil
+			var userID, userScopes, userRole []string
+			if userID, ok = md["user-id"]; !ok {
+				return nil, status.Error(codes.Unauthenticated, "InvalidUserId")
+			}
+			if userScopes, ok = md["user-scopes"]; !ok {
+				return nil, status.Error(codes.Unauthenticated, "InvalidUserScopes")
+			}
+			if userRole, ok = md["user-role"]; !ok {
+				return nil, status.Error(codes.Unauthenticated, "InvalidUserRole")
+			}
+			roles, ok := claims.ReturnRole(userRole[0])
+			if !ok {
+				return nil, status.Error(codes.Unauthenticated, "InvalidUserRole")
+			}
+			// TODO service to service call should manage scopes
+			// return AddClaims(ctx, &claims.Claims{UserID: "System", Role: claims.RoleSuperAdmin, Socpes: []string{"OFR", "OSP", "DEM", "TST", "AUT"}}), nil
+			return AddClaims(ctx, &claims.Claims{UserID: userID[0], Role: roles, Socpes: userScopes}), nil
 		}
 		return nil, status.Error(codes.Unauthenticated, "NoAuthNError")
 	}

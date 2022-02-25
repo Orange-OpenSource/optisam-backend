@@ -1,0 +1,29 @@
+{
+  "copyright": "Copyright © Orange 2021",
+  "release_notes": [
+    "Update feature on acquired right aggregations",
+    "Metrics edit feature in order to modify the parameters",
+    "Computing one global compliance for oracle products licensed by NUP and Processor metrics",
+    "Not showing single compliance when a swidtag is present in aggregation",
+    "Showing an aggregation based on installed products and on acquired rights",
+    "Metric description with the values is now visible in the metric table",
+    "Aggregation compliance is now getting populated for multiple metrics",
+    "Fix for instance metric creation",
+    "The expanded view is fixed for aggregation",
+    "Metric type user.sum.standard is now available for only generic scope type",
+    "The + sign is visible only for more than one metric in the details of compliance"
+  ],
+  "future_2022": [
+    "Give the choice to use simplified data injection for a scope",
+    "Unified product catalog",
+    "Manage multiple parents for one equipment type",
+    "Migrate the platform to DIOD",
+    "Oracle core factor detection",
+    "Oracle processor metric improvements for vm environments (management of vcenter version)",
+    "Oracle processor metric improvements for hard partitioning",
+    "Simulate Oracle license allocation for NUP/processor licensing : to optimize oracle park",
+    "Email generation at account creation",
+    "Email notifications (alerting)",
+    "New products and metrics"
+  ]
+}

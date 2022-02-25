@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -25,6 +19,79 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+func Test_DropReportData(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repv1.Report
+	var queue workerqueue.Workerqueue
+
+	tests := []struct {
+		name    string
+		r       *ReportServiceServer
+		ctx     context.Context
+		setup   func()
+		input   *v1.DropReportDataRequest
+		wantErr bool
+	}{
+		{
+			name:    "ScopeNotFound",
+			ctx:     ctx,
+			setup:   func() {},
+			input:   &v1.DropReportDataRequest{Scope: "Scope6"},
+			wantErr: true,
+		},
+		{
+			name:    "ClaimsNotFound",
+			ctx:     context.Background(),
+			setup:   func() {},
+			input:   &v1.DropReportDataRequest{Scope: "Scope1"},
+			wantErr: true,
+		},
+		{
+			name: "DBError",
+			ctx:  ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockReport(mockCtrl)
+				mockworkerqueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockworkerqueue
+				mockRepo.EXPECT().DeleteReportsByScope(ctx, "Scope1").Return(errors.New("DBError")).Times(1)
+			},
+			input:   &v1.DropReportDataRequest{Scope: "Scope1"},
+			wantErr: true,
+		},
+		{
+			name: "SuccessFullyReportDeleted",
+			ctx:  ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockReport(mockCtrl)
+				mockworkerqueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockworkerqueue
+				mockRepo.EXPECT().DeleteReportsByScope(ctx, "Scope1").Return(nil).Times(1)
+			},
+			input:   &v1.DropReportDataRequest{Scope: "Scope1"},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			r := NewReportServiceServer(rep, queue)
+			_, err := r.DropReportData(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReportServiceServer.DropReportData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
 func TestReportServiceServer_SubmitReport(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",

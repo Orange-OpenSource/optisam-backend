@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -244,13 +238,13 @@ func (s *applicationServiceServer) PostObsolescenseMaintenanceCriticity(ctx cont
 		}
 	}
 
-	for _, maintance := range req.MaintenanceCriticy {
+	for _, maintenance := range req.MaintenanceCriticy {
 		err := s.applicationRepo.InsertMaintenanceTimeCriticity(ctx, db.InsertMaintenanceTimeCriticityParams{
 			Scope:      req.GetScope(),
 			CreatedBy:  userClaims.UserID,
-			LevelID:    maintance.MaintenanceLevelId,
-			StartMonth: maintance.StartMonth,
-			EndMonth:   maintance.EndMonth,
+			LevelID:    maintenance.MaintenanceLevelId,
+			StartMonth: maintenance.StartMonth,
+			EndMonth:   maintenance.EndMonth,
 		})
 		if err != nil {
 			logger.Log.Error("service/v1 - PostObsolescenseMaintenanceCriticity - InsertMaintenanceTimeCriticity", zap.String("reason", err.Error()))

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -12,57 +6,58 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
 	repo "optisam-backend/license-service/pkg/repository/v1"
+	"strconv"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
 	metrics, err := s.licenseRepo.ListMetricNUP(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
-		return 0, status.Error(codes.Internal, "cannot fetch metric OPS")
+		return 0, "", status.Error(codes.Internal, "cannot fetch metric NUP")
 
 	}
 	ind := 0
-	if ind = metricNameExistsNUP(metrics, input[METRIC_NAME].(string)); ind == -1 {
-		return 0, status.Error(codes.Internal, "metric name doesnot exists")
+	if ind = metricNameExistsNUP(metrics, input[MetricName].(string)); ind == -1 {
+		return 0, "", status.Error(codes.Internal, "metric name doesnot exists")
 	}
 	parTree, err := parentHierarchy(eqTypes, metrics[ind].StartEqTypeID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot fetch equipment types")
+		return 0, "", status.Error(codes.Internal, "cannot fetch equipment types")
 
 	}
 
 	baseLevelIdx, err := validateLevelsNew(parTree, 0, metrics[ind].BaseEqTypeID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
+		return 0, "", status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
 	}
 
 	aggLevelIdx, err := validateLevelsNew(parTree, baseLevelIdx, metrics[ind].AggerateLevelEqTypeID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
+		return 0, "", status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
 	}
 
 	endLevelIdx, err := validateLevelsNew(parTree, aggLevelIdx, metrics[ind].EndEqTypeID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
+		return 0, "", status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
 	}
 
 	numOfCores, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].NumCoreAttrID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "numofcores attribute doesnt exits")
+		return 0, "", status.Error(codes.Internal, "numofcores attribute doesnt exits")
 
 	}
 	numOfCPU, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].NumCPUAttrID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "numofcpu attribute doesnt exits")
+		return 0, "", status.Error(codes.Internal, "numofcpu attribute doesnt exits")
 
 	}
 	coreFactor, err := attributeExists(parTree[baseLevelIdx].Attributes, metrics[ind].CoreFactorAttrID)
 	if err != nil {
-		return 0, status.Error(codes.Internal, "coreFactor attribute doesnt exits")
+		return 0, "", status.Error(codes.Internal, "coreFactor attribute doesnt exits")
 
 	}
 	mat := &repo.MetricNUPComputed{
@@ -75,16 +70,17 @@ func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes 
 		NumOfUsers:     metrics[ind].NumberOfUsers,
 	}
 	computedLicenses := uint64(0)
-	if input[IS_AGG].(bool) {
-		computedLicenses, err = s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	computedDetails := uint64(0)
+	if input[IsAgg].(bool) {
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
-		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")
+		return 0, "", status.Error(codes.Internal, "cannot compute licenses for metric OPS")
 
 	}
-	return computedLicenses, nil
+	return computedLicenses, "Total users: " + strconv.FormatUint(computedDetails, 10), nil
 }
 
 func metricNameExistsNUP(metrics []*repo.MetricNUPOracle, name string) int {

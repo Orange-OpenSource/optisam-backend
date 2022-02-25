@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // ProductSearchKey ...
@@ -40,11 +34,12 @@ type ProductAdditionalData struct {
 
 // ProductAcquiredRight represents product acquired rights.
 type ProductAcquiredRight struct {
-	SKU          string
-	Metric       string
-	AcqLicenses  uint64
-	TotalCost    float64
-	AvgUnitPrice float64
+	SKU               string
+	Metric            string
+	AcqLicenses       uint64
+	TotalCost         float64
+	TotalPurchaseCost float64
+	AvgUnitPrice      float64
 }
 
 // ProductAdditionalInfo ...
@@ -163,10 +158,10 @@ const (
 // Filter has filtering key and value
 type Filter struct {
 	FilteringPriority   int32
+	FilterMatchingType  Filtertype
 	FilterKey           string      // Key of filter
 	FilterValue         interface{} // Search value for filter
 	FilterValueMultiple []interface{}
-	FilterMatchingType  Filtertype
 }
 
 // Key Queryable key method.

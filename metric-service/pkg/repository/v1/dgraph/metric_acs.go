@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -30,42 +24,42 @@ type metricACS struct {
 func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricACS, attribute *v1.Attribute, scope string) (retmet *v1.MetricACS, retErr error) {
 	blankID := blankID(met.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricAttrCounterStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(met.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.acs.equipment_type",
 			ObjectValue: stringObjectValue(met.EqType),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.acs.attr_name",
 			ObjectValue: stringObjectValue(met.AttributeName),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.acs.attr_value",
 			ObjectValue: stringObjectValue(met.Value),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricACS"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -117,7 +111,7 @@ func (l *MetricRepository) CreateMetricACS(ctx context.Context, met *v1.MetricAC
 
 // ListMetricACS implements Licence ListMetricIPS function
 func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes string) ([]*v1.MetricACS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricAttrCounterStandard, scopes)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricAttrCounterStandard, scopes)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricACS - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -126,8 +120,7 @@ func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes string) ([]
 		Data []*metricACS
 	}
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
-		//fmt.Println(string(resp.Json))
+	if err := json.Unmarshal(respJSON, &data); err != nil {
 		logger.Log.Error("dgraph/ListMetricACS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}
@@ -140,7 +133,7 @@ func (l *MetricRepository) ListMetricACS(ctx context.Context, scopes string) ([]
 // GetMetricConfigACS implements Metric GetMetricConfigACS function
 func (l *MetricRepository) GetMetricConfigACS(ctx context.Context, metName string, scopes string) (*v1.MetricACS, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `)){
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scopes + `)){
 			Name: metric.name
 			EqType: metric.acs.equipment_type
 			AttributeName: metric.acs.attr_name
@@ -150,7 +143,7 @@ func (l *MetricRepository) GetMetricConfigACS(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/GetMetricConfigIPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type sps")
+		return nil, errors.New("cannot get metrics of type sps")
 	}
 	type Resp struct {
 		Metric []v1.MetricACS `json:"Data"`
@@ -168,6 +161,33 @@ func (l *MetricRepository) GetMetricConfigACS(ctx context.Context, metName strin
 		return nil, v1.ErrNoData
 	}
 	return &data.Metric[0], nil
+}
+
+func (l *MetricRepository) UpdateMetricACS(ctx context.Context, met *v1.MetricACS, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,` + met.Name + `))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	set := `
+	    uid(ID) <metric.acs.equipment_type> "` + met.EqType + `" .
+	    uid(ID) <metric.acs.attr_name> "` + met.AttributeName + `" .
+		uid(ID) <metric.acs.attr_value> "` + met.Value + `" .	
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricACS - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }
 
 func converMetricToModelMetricAllACS(mets []*metricACS) ([]*v1.MetricACS, error) {

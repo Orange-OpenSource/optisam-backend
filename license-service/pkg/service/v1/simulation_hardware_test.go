@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -77,19 +71,19 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 		ParentID: "4",
 	}
 	eqTypeTree := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			ID:       "1",
 			Type:     "Partition",
 			ParentID: "2",
 		},
 		serverEquipment,
 		clusterEquipment,
-		&repo.EquipmentType{
+		{
 			ID:       "4",
 			Type:     "Vcenter",
 			ParentID: "5",
 		},
-		&repo.EquipmentType{
+		{
 			ID:   "5",
 			Type: "Datacenter",
 		},
@@ -122,7 +116,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -134,7 +128,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -146,7 +140,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -168,7 +162,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -208,13 +202,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCoresAttr:   coresAttr,
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil)
@@ -241,7 +235,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -250,7 +244,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -259,7 +253,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle2",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -280,7 +274,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -292,7 +286,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -304,7 +298,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: false,
@@ -326,7 +320,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -366,13 +360,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCoresAttr:   coresAttr,
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil)
@@ -399,7 +393,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -408,7 +402,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -417,7 +411,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle2",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
@@ -438,7 +432,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -447,7 +441,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -456,7 +450,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -475,7 +469,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -499,7 +493,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -508,7 +502,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -517,7 +511,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -548,7 +542,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "windows.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -557,7 +551,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -566,7 +560,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -585,7 +579,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -609,7 +603,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -618,7 +612,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -627,7 +621,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -646,7 +640,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -670,7 +664,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -679,7 +673,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -688,7 +682,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -707,7 +701,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -732,7 +726,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -741,7 +735,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -750,7 +744,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -769,7 +763,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -795,7 +789,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -804,7 +798,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -813,7 +807,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -832,7 +826,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -857,7 +851,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -866,7 +860,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -875,7 +869,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -894,7 +888,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -946,7 +940,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -955,7 +949,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -964,7 +958,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -983,7 +977,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -1035,7 +1029,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1044,7 +1038,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1053,7 +1047,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1072,7 +1066,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -1112,13 +1106,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCoresAttr:   coresAttr,
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil)
@@ -1146,7 +1140,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1155,7 +1149,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1164,7 +1158,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1183,7 +1177,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.processor.standard",
 						NumCoreAttrID:         "1A",
@@ -1223,13 +1217,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCoresAttr:   coresAttr,
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil)
@@ -1267,7 +1261,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: "NoNameMetric",
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1276,7 +1270,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1285,7 +1279,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1315,7 +1309,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1327,7 +1321,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1339,7 +1333,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1361,7 +1355,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -1403,11 +1397,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -1441,12 +1435,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttrSim,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "1",
 							UserID:    "U1",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "2",
 							UserID:    "U2",
 							UserCount: int64(200000),
@@ -1462,12 +1456,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttrSim,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "3",
 							UserID:    "U3",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "4",
 							UserID:    "U4",
 							UserCount: int64(200000),
@@ -1477,7 +1471,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
@@ -1487,7 +1481,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							SwidTag: "O1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
@@ -1509,7 +1503,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1521,7 +1515,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1533,7 +1527,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: false,
@@ -1552,7 +1546,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -1594,11 +1588,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -1645,12 +1639,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						},
 						NumOfUsers: 100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "1",
 							UserID:    "U1",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "2",
 							UserID:    "U2",
 							UserCount: int64(200000),
@@ -1679,12 +1673,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						},
 						NumOfUsers: 100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "3",
 							UserID:    "U3",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "4",
 							UserID:    "U4",
 							UserCount: int64(200000),
@@ -1694,7 +1688,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
@@ -1704,7 +1698,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							SwidTag: "O1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
@@ -1726,7 +1720,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1738,7 +1732,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1750,7 +1744,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1772,7 +1766,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -1814,11 +1808,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -1852,12 +1846,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttrSim,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "1",
 							UserID:    "U1",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "2",
 							UserID:    "U2",
 							UserCount: int64(200000),
@@ -1877,7 +1871,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: 400000,
 						NewLicenses: 400200,
@@ -1887,7 +1881,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							SwidTag: "O1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: 200000,
 						NewLicenses: 200100,
@@ -1936,7 +1930,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard_xyz",
 						NumCoreAttrID:         "1A",
@@ -1961,7 +1955,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -1970,7 +1964,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -1979,7 +1973,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -1998,7 +1992,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2023,7 +2017,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2032,7 +2026,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2041,7 +2035,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2060,7 +2054,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2093,7 +2087,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2127,7 +2121,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2161,7 +2155,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2195,7 +2189,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2257,7 +2251,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2311,7 +2305,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2320,7 +2314,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2329,7 +2323,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2348,7 +2342,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2390,11 +2384,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -2420,7 +2414,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2432,7 +2426,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2444,7 +2438,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2466,7 +2460,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2508,11 +2502,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -2547,7 +2541,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOracleNUPStandard.String(),
 					MetricName: "oracle.nup.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2559,7 +2553,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2571,7 +2565,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 1,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2593,7 +2587,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						ID:                    "1M",
 						Name:                  "oracle.nup.standard",
 						NumCoreAttrID:         "1A",
@@ -2635,11 +2629,11 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name:    "Oracle1",
 						Swidtag: "O1",
 					},
-					&repo.ProductData{
+					{
 						Name:    "Oracle2",
 						Swidtag: "O2",
 					},
@@ -2673,12 +2667,12 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttrSim,
 						NumOfUsers:     100,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.User{
-						&repo.User{
+						{
 							ID:        "1",
 							UserID:    "U1",
 							UserCount: int64(100000),
 						},
-						&repo.User{
+						{
 							ID:        "2",
 							UserID:    "U2",
 							UserCount: int64(200000),
@@ -2707,7 +2701,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2716,7 +2710,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2725,7 +2719,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2750,7 +2744,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2759,7 +2753,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2768,7 +2762,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2793,7 +2787,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2802,7 +2796,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2811,7 +2805,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2841,7 +2835,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricOPSOracleProcessorStandard.String(),
 					MetricName: "oracle.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2850,7 +2844,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatVal: 0.25,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1B",
 							Name:      "numCPU",
 							Simulated: true,
@@ -2859,7 +2853,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntVal: 2,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2889,7 +2883,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -2901,7 +2895,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2923,7 +2917,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -2951,20 +2945,20 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						Name:        "numCores",
 					},
 				}, []string{"Scope1"}).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil).Times(1)
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -2973,7 +2967,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -2982,7 +2976,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle2",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -3003,7 +2997,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3015,7 +3009,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3049,7 +3043,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "abc",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3061,7 +3055,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3083,7 +3077,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -3103,7 +3097,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3115,7 +3109,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3137,7 +3131,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -3157,7 +3151,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3169,7 +3163,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3191,7 +3185,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -3211,7 +3205,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3223,7 +3217,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3245,7 +3239,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -3285,7 +3279,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricIPSIbmPvuStandard.String(),
 					MetricName: "ibm.pvu.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3297,7 +3291,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3319,7 +3313,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
@@ -3359,7 +3353,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3371,7 +3365,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3393,7 +3387,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
@@ -3421,20 +3415,20 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						Name:        "numCores",
 					},
 				}, []string{"Scope1"}).Return([]*repo.ProductData{
-					&repo.ProductData{
+					{
 						Name: "Oracle1",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle2",
 					},
-					&repo.ProductData{
+					{
 						Name: "Oracle3",
 					},
 				}, nil).Times(1)
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{
 				Licenses: []*v1.ProductLicenseForEquipAndMetric{
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -3443,7 +3437,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle1",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -3452,7 +3446,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							Name: "Oracle2",
 						},
 					},
-					&v1.ProductLicenseForEquipAndMetric{
+					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
@@ -3473,7 +3467,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3485,7 +3479,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3519,7 +3513,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "abc",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3531,7 +3525,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3553,7 +3547,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
@@ -3573,7 +3567,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3585,7 +3579,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3607,7 +3601,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
@@ -3627,7 +3621,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3639,7 +3633,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3661,7 +3655,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
@@ -3681,7 +3675,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3693,7 +3687,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3715,7 +3709,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
@@ -3755,7 +3749,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					MetricType: repo.MetricSPSSagProcessorStandard.String(),
 					MetricName: "sag.processor.standard",
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							ID:        "1C",
 							Name:      "coreFactor",
 							Simulated: true,
@@ -3767,7 +3761,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								FloatValOld: 1.5,
 							},
 						},
-						&v1.Attribute{
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3789,7 +3783,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",

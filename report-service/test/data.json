@@ -1,0 +1,24 @@
+{
+    "acqrights_report": {
+        "scope": "AUT",
+        "report_type_id": 1,
+        "acqrights_report": {
+            "editor": "IBM",
+            "swidtag": [
+                "ibm_cognos_1"
+            ]
+        }
+    },
+    "product_equipments_report": {
+        "scope": "AUT",
+        "report_type_id": 2,
+        "product_equipments_report": {
+            "editor": "Micro Focus",
+            "swidtag": [
+                "hpud_1",
+                "hpud_2"
+            ],
+            "equipType": "server"
+        }
+    }
+}

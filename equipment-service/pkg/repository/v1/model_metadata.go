@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // MetadataType of metadata
@@ -34,21 +28,21 @@ type Metadata struct {
 
 // Attribute for attribute of data
 type Attribute struct {
-	ID                 string
-	Name               string
 	Type               DataType
 	IsIdentifier       bool
 	IsDisplayed        bool
 	IsSearchable       bool
 	IsParentIdentifier bool
-	MappedTo           string
 	IsSimulated        bool
 	IntVal             int
-	StringVal          string
-	FloatVal           float32
 	IntValOld          int
-	StringValOld       string
+	FloatVal           float32
 	FloatValOld        float32
+	ID                 string
+	Name               string
+	MappedTo           string
+	StringVal          string
+	StringValOld       string
 }
 
 func (a *Attribute) Val() interface{} {
@@ -62,4 +56,41 @@ func (a *Attribute) Val() interface{} {
 	default:
 		return a.StringVal
 	}
+}
+
+func GetGenericScopeMetadata(scope string) []Metadata {
+	resp := []Metadata{
+		{
+			MetadataType: "equipment",
+			Source:       "metadata_vcenter.csv",
+			Attributes:   []string{"vcenter_name", "vcenter_version"},
+			Scope:        scope,
+		},
+		{
+			MetadataType: "equipment",
+			Source:       "metadata_cluster.csv",
+			Attributes:   []string{"cluster_name", "parent_id"},
+			Scope:        scope,
+		},
+		{
+			MetadataType: "equipment",
+			Source:       "metadata_server.csv",
+			Attributes:   []string{"hyperthreading", "datacenter_name", "server_id", "server_name", "cores_per_processor", "oracle_core_factor", "cpu_manufacturer", "ibm_pvu", "sag_uvu", "server_type", "parent_id", "cpu_model", "server_os", "server_processors_numbers"},
+			Scope:        scope,
+		},
+		{
+			MetadataType: "equipment",
+			Source:       "metadata_softpartition.csv",
+			Attributes:   []string{"softpartition_id", "softpartition_name", "parent_id"},
+			Scope:        scope,
+		},
+		// {
+		// 	MetadataType: "equipment",
+		// 	Source:       "metadata_hardpartition.csv",
+		// 	Attributes:   []string{"aix_entitlement", "sparc_cap", "aix_lpm", "aix_sharingmode", "sparc_livemigration", "aix_sharedpool_cpus", "aix_onlinevirtualcores", "aix_processormode", "parent_id", "hardpartition_id"},
+		// 	Scope:        scope,
+		// },
+	}
+
+	return resp
 }

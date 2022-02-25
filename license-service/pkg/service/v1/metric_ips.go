@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -18,8 +12,8 @@ import (
 )
 
 func init() {
-	//admin rights are required for this function
-	adminRpcMap["/v1.LicenseService/CreateMetricIBMPvuStandard"] = struct{}{}
+	// admin rights are required for this function
+	adminRPCMap["/v1.LicenseService/CreateMetricIBMPvuStandard"] = struct{}{}
 }
 
 func metricNameExistsIPS(metrics []*repo.MetricIPS, name string) int {
@@ -39,7 +33,7 @@ func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes 
 		return 0, status.Error(codes.Internal, "cannot fetch metric IPS")
 	}
 	ind := 0
-	if ind = metricNameExistsIPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
+	if ind = metricNameExistsIPS(metrics, input[MetricName].(string)); ind == -1 {
 		return 0, status.Error(codes.Internal, "cannot find metric name")
 	}
 
@@ -49,10 +43,10 @@ func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes 
 		return 0, err
 	}
 	computedLicenses := uint64(0)
-	if input[IS_AGG].(bool) {
-		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	if input[IsAgg].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesIPS - ", zap.String("reason", err.Error()))

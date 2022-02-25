@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // MetricSPS is a representation of sag.processor.standard
@@ -23,7 +17,7 @@ type MetricSPSComputed struct {
 	NumCoresAttr   *Attribute
 }
 
-//MetricSPSConfig is a representation of sag.processor.standard metric configuration
+// MetricSPSConfig is a representation of sag.processor.standard metric configuration
 type MetricSPSConfig struct {
 	ID             string
 	Name           string

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cmd
 
 import (
@@ -40,7 +34,6 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
-	//postgres library
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
@@ -62,11 +55,12 @@ func init() {
 }
 
 // RunServer runs gRPC server and HTTP gateway
+// nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
-	if os.Getenv("ENV") == "prod" {
+	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
 	} else if os.Getenv("ENV") == "pprod" {
 		viper.SetConfigName("config-pprod")
@@ -100,7 +94,7 @@ func RunServer() error {
 	instrumentationRouter.Handle("/healthz", healthcheck.Handler(healthChecker))
 
 	// initialize logger
-	if err := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
+	if err = logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
 		return fmt.Errorf("failed to initialize logger: %v", err)
 	}
 
@@ -111,8 +105,8 @@ func RunServer() error {
 		os.Exit(3)
 	}
 
-	if cfg.MaxApiWorker == 0 {
-		cfg.MaxApiWorker = 25
+	if cfg.MaxAPIWorker == 0 {
+		cfg.MaxAPIWorker = 25
 		logger.Log.Info("default max api worker set to 25 ")
 	}
 	ctx := context.Background()
@@ -132,11 +126,11 @@ func RunServer() error {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
 	// Verify connection.
-	if err := db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", err.Error())
 	}
 	logger.Log.Info("Postgres connection verified to", zap.Any("", cfg.Database.Host))
-	//defer db.Close()
+	// defer db.Close()
 	defer func() {
 		db.Close()
 		// Wait to 4 seconds so that the traces can be exported
@@ -157,18 +151,18 @@ func RunServer() error {
 
 	// Register http health check
 	{
-		check, err := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
-		if err != nil {
-			return fmt.Errorf("failed to create health checker: %v", err.Error())
+		check, error := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
+		if error != nil {
+			return fmt.Errorf("failed to create health checker: %v", error.Error())
 		}
-		err = healthChecker.AddCheck(&health.Config{
+		error = healthChecker.AddCheck(&health.Config{
 			Name:     "Http Server",
 			Checker:  check,
 			Interval: time.Duration(3) * time.Second,
 			Fatal:    true,
 		})
-		if err != nil {
-			return fmt.Errorf("failed to add health checker: %v", err.Error())
+		if error != nil {
+			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
 
@@ -176,8 +170,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Prometheus.Enabled {
 		logger.Log.Info("prometheus exporter enabled")
 
-		exporter, err := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
-		if err != nil {
+		exporter, error := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
+		if error != nil {
 			logger.Log.Fatal("Prometheus Exporter Error")
 		}
 		view.RegisterExporter(exporter)
@@ -185,7 +179,7 @@ func RunServer() error {
 	}
 
 	// Trace everything in development environment or when debugging is enabled
-	if cfg.Environment == "development" || cfg.Environment == "INTEGRATION" || cfg.Debug {
+	if cfg.Environment == "DEVELOPMENT" || cfg.Environment == "INTEGRATION" || cfg.Debug {
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 
@@ -193,8 +187,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Jaeger.Enabled {
 		logger.Log.Info("jaeger exporter enabled")
 
-		exporter, err := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
-		if err != nil {
+		exporter, error := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
+		if error != nil {
 			logger.Log.Fatal("Jaeger Exporter Error")
 		}
 		trace.RegisterExporter(exporter)
@@ -229,31 +223,31 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	//GRPC Connections
+	// GRPC Connections
 	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize GRPC client")
 	}
 	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 
-	//Worker Queue Initialization
+	// Worker Queue Initialization
 	q, err := workerqueue.NewQueue(ctx, "product-service", db, cfg.WorkerQueue)
 	if err != nil {
 		return fmt.Errorf("failed to create worker queue: %v", err)
 	}
 	defer q.Close(ctx)
-	for i := 0; i < cfg.MaxApiWorker; i++ {
+	for i := 0; i < cfg.MaxAPIWorker; i++ {
 		lWorker := dgworker.NewWorker("aw", dg)
 		q.RegisterWorker(ctx, lWorker)
 	}
 
 	rep := repo.NewProductRepository(db)
-	licenseWorker := licenseworker.NewWorker("lcalw", grpcClientMap, rep)
+	licenseWorker := licenseworker.NewWorker("lcalw", grpcClientMap, rep, cfg.Cron.Time)
 	q.RegisterWorker(ctx, licenseWorker)
 
 	q.IsWorkerRegCompleted = true
 
-	v1API := v1.NewProductServiceServer(rep, q)
+	v1API := v1.NewProductServiceServer(rep, q, grpcClientMap, cfg.DashboardTimeZone)
 
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
@@ -266,13 +260,12 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to Load RBAC policies", zap.Error(err))
 	}
-
-	//This is one time
-	cron.CronConfigInit(cfg.Cron)
+	// This is one time
+	cron.ConfigInit(cfg.Cron)
 	// cron Job
-	cronJob.CronJobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HttpServers.Address["auth"]))
-	//Run once the service is up and then once in 12~ hours
-	cronJob.Job() //not cron job just push job for worker
+	cronJob.JobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), verifyKey, cfg.IAM.APIKey)
+	// Run once the service is up and then once in 12~ hours
+	cronJob.Job()
 	cron.AddCronJob(cronJob.Job)
 
 	// run HTTP gateway

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -44,62 +38,62 @@ func TestEquipmentRepository_MetadataAllWithType(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_1.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("scope1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_2.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("scope2"),
@@ -123,7 +117,7 @@ func TestEquipmentRepository_MetadataAllWithType(t *testing.T) {
 				}, nil
 			},
 			want: []*v1.Metadata{
-				&v1.Metadata{
+				{
 					Source: "equip_1.csv",
 					Attributes: []string{
 						"col_1",
@@ -196,32 +190,32 @@ func TestEquipmentRepository_MetadataWithID(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_3.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("scope1"),
@@ -331,32 +325,32 @@ func TestEquipmentRepository_UpsertMetadata(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_1.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("scope1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
@@ -396,22 +390,22 @@ func TestEquipmentRepository_UpsertMetadata(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_1.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("scope1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
@@ -441,7 +435,7 @@ func TestEquipmentRepository_UpsertMetadata(t *testing.T) {
 			defer func() {
 				assert.Empty(t, cleanup(), "error is not expected from cleanup")
 			}()
-			if err := tt.lr.UpsertMetadata(tt.args.ctx, tt.args.metadata); (err != nil) != tt.wantErr {
+			if _, err := tt.lr.UpsertMetadata(tt.args.ctx, tt.args.metadata); (err != nil) != tt.wantErr {
 				t.Errorf("EquipmentRepository.UpsertMetadata() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

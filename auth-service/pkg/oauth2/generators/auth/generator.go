@@ -1,13 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package auth
 
 import (
 	"errors"
+
 	"gopkg.in/oauth2.v3"
 )
 
@@ -21,5 +16,5 @@ func NewGenerator() oauth2.AuthorizeGenerate {
 
 // Token implements oauth2.AuthorizeGenerate Token function.
 func (g *generator) Token(data *oauth2.GenerateBasic) (code string, err error) {
-	return "", errors.New("Not implemented")
+	return "", errors.New("not implemented")
 }

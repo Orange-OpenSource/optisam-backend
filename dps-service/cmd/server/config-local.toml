@@ -3,8 +3,10 @@ grpcport = "10000"
 httpport = "10001"
 fileslocation = "testdata"
 archivelocation = "history"
+rawdatalocation = "testdata"
 maxfileworker = 5
 maxapiworker = 100
+waitlimitcount = 3
 
 
 #crontime will be either in 2 formats 
@@ -12,14 +14,14 @@ maxapiworker = 100
 #format-2 : "s m h d M W" as cron standard "sec min hour day Mon Week" -> "0 0 0 1 * 0" for 1sday of every month for more details follow 
 #https://pkg.go.dev/github.com/robfig/cron
 [cron]
-time = "@every 1m"
+time = "@every 100000s"
 
 [httpservers.Address]
 auth = "localhost:9093"
 
 [workerqueue]
 Qsize = 10000
-retries = 5
+retries = 0
 basedelay = 2000
 ismultiqueue = true
 
@@ -34,6 +36,7 @@ product = "localhost:12090"
 application = "localhost:11090"
 #acqright = "localhost:13090"
 equipment = "localhost:14090"
+account = "localhost:20000"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -45,7 +48,7 @@ addr = ":8081"
 
 [instrumentation.prometheus]
 enabled = false
-namespace = "dpsservice"
+
 
 [instrumentation.jaeger]
 enabled = false
@@ -56,7 +59,7 @@ agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
 # password = ""
 
 [postgres]
-host = "localhost"
+host = "127.0.0.1"
 port = 5432
 user = "optisam"
 pass = "optisam"
@@ -72,3 +75,4 @@ sortBy = "name"
 publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
+

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -92,7 +86,7 @@ type MetadataFiles struct {
 // NewDefaultConfig ...
 func NewDefaultConfig() *Config {
 	return &Config{
-		Alpha: []string{"localhost:9080"}, //":9084",
+		Alpha: []string{"127.0.0.1:9080"}, //":9084",
 
 		MetadataFiles: new(MetadataFiles),
 		BatchSize:     1000,
@@ -235,10 +229,11 @@ func (al *AggregateLoader) Load() (retErr error) {
 	})
 	dgCl = dg
 	if err != nil {
+		logger.Log.Error("Error in creating new dg connection ", zap.String("Reason", err.Error()))
 		return err
 	}
 
-	//api.NewDgraphClient(server1),
+	// api.NewDgraphClient(server1),
 
 	// Drop schema and all the data present in database
 	if config.DropSchema {
@@ -299,7 +294,7 @@ func (al *AggregateLoader) Load() (retErr error) {
 	// load equipments using equiments types
 	// Preconditions: equipment types must have been created
 	if config.LoadEquipments {
-		eqTypes, err := config.Repository.EquipmentTypes(context.Background(), []string{})
+		eqTypes, err := config.Repository.EquipmentTypes(context.Background(), config.Scopes)
 		if err != nil {
 			return err
 		}
@@ -430,11 +425,11 @@ func (al *AggregateLoader) Load() (retErr error) {
 					log.Println(err)
 					continue
 				}
-				//fmt.Printf("%+v\n", resp)
+				// fmt.Printf("%+v\n", resp)
 				// atomic.Add
 				atomic.AddUint32(&mutations, 1)
 				atomic.AddUint64(&nquads, uint64(len(mu.Mutations[0].Set)))
-				//mutations++
+				// mutations++
 				//	nquads += len(mu.Set)
 				fmt.Printf("time elapsed[%v],completed mutations: %v,aborted: %v edges_total:%v,edges this mutation: %v \n", time.Now().Sub(t), mutations, ac.Count(), nquads, len(mu.Mutations[0].Set))
 				// log.Println(ass.GetUids())
@@ -536,7 +531,7 @@ func loadFile(l Loader, ch chan<- *api.Request, masterDir, scope, version string
 		return updatedOn, err
 	}
 	mu := &api.Mutation{
-		//CommitNow: true,
+		// CommitNow: true,
 	}
 	maxUpdated := time.Time{}
 	defer func() {
@@ -575,7 +570,7 @@ func loadFile(l Loader, ch chan<- *api.Request, masterDir, scope, version string
 			maxUpdated = t
 		}
 
-		//shouldProceed := isRowCreated
+		// shouldProceed := isRowCreated
 		nqs, uids, upserts, uid, scopeNquadsNeeded := nquadFunc(columns, scope, row, index)
 		for i := range uids {
 			upsertsMap[uids[i]] = upserts[i]
@@ -643,7 +638,7 @@ func defaultObjectValue(val string) *api.Value {
 
 func scopeNquad(scope, uid string) []*api.NQuad {
 	return []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     uid,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(filepath.Base(scope)),
@@ -685,7 +680,7 @@ var genRDF bool
 
 func uidForXIDForType(xid, objType, pkPredName, pkPredVal string, types ...dgraphType) (string, []*api.NQuad, string) {
 
-	//xid = regexp.QuoteMeta(xid)
+	// xid = regexp.QuoteMeta(xid)
 	var uid string
 	if genRDF {
 		switch pkPredName {

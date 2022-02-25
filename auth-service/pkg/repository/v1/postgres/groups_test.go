@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -59,26 +53,26 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 		userID string
 	}
 	grps := []*group{
-		&group{
+		{
 			name: "SUPERROOT",
 			fqn:  "SUPERROOT",
 		},
-		&group{
+		{
 			name:   "A",
 			fqn:    "SUPERROOT.A",
 			scopes: []string{"Orange", "France"},
 		},
-		&group{
+		{
 			name:   "B",
 			fqn:    "SUPERROOT.A.B",
 			scopes: []string{"Orange", "France"},
 		},
-		&group{
+		{
 			name:   "C",
 			fqn:    "SUPERROOT.A.C",
 			scopes: []string{"Asia", "Pacific"},
 		},
-		&group{
+		{
 			name:   "D",
 			fqn:    "SUPERROOT.A.B.D",
 			scopes: []string{"Apple"},
@@ -101,7 +95,7 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 			d: NewRepository(db),
 			setup: func() ([]*v1.Group, cleanUpFunc, error) {
 				return []*v1.Group{
-						&v1.Group{
+						{
 							ID: 1,
 						},
 					}, func() error {
@@ -140,21 +134,21 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 				}
 
 				return []*v1.Group{
-						&v1.Group{
+						{
 							ID: grps[2].id,
 							Scopes: []string{
 								"Orange",
 								"France",
 							},
 						},
-						&v1.Group{
+						{
 							ID: grps[3].id,
 							Scopes: []string{
 								"Asia",
 								"Pacific",
 							},
 						},
-						&v1.Group{
+						{
 							ID: grps[4].id,
 							Scopes: []string{
 								"Apple",

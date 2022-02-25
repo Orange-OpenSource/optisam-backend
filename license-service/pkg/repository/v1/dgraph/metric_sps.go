@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -26,7 +20,7 @@ type metricSPS struct {
 
 // ListMetricSPS implements Licence ListMetricSPS function
 func (l *LicenseRepository) ListMetricSPS(ctx context.Context, scopes ...string) ([]*v1.MetricSPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricSPSSagProcessorStandard, scopes...)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricSPSSagProcessorStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricSPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -35,7 +29,7 @@ func (l *LicenseRepository) ListMetricSPS(ctx context.Context, scopes ...string)
 		Data []*metricSPS
 	}
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
+	if err := json.Unmarshal(respJSON, &data); err != nil {
 		logger.Log.Error("dgraph/ListMetricSPS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}

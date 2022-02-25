@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -147,7 +141,7 @@ func (s *ScopeLoader) Load(masterDir string) error {
 	s.lock.Lock()
 	for _, fl := range s.Loaders {
 		wg.Add(1)
-	  go func(f *FileLoader) {
+		go func(f *FileLoader) {
 			f.Load(versionDirs)
 			wg.Done()
 		}(fl)
@@ -204,7 +198,7 @@ type FileLoader struct {
 	Updated     time.Time
 }
 
-// SetLoaderFunc sets the loader fucntion
+// SetLoaderFunc sets the loader function
 func (l *FileLoader) SetLoaderFunc(load func(version string) (time.Time, error)) {
 	l.load = load
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // ApplicationData gives the details os an application
@@ -89,13 +83,13 @@ func (appAggKey ApplicationSearchKey) String() string {
 	return string(appAggKey)
 }
 
-//InstanceSearchKey for search filter by instance fields
+// InstanceSearchKey for search filter by instance fields
 type InstanceSearchKey string
 
 const (
-	//InstanceSearchKeyID is InstanceSearchKey by instance id
+	// InstanceSearchKeyID is InstanceSearchKey by instance id
 	InstanceSearchKeyID InstanceSearchKey = "id"
-	//InstanceSearchKeyEnv is InstanceSearchKey by instance environment
+	// InstanceSearchKeyEnv is InstanceSearchKey by instance environment
 	InstanceSearchKeyEnv InstanceSearchKey = "environment"
 )
 

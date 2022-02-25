@@ -1,18 +1,16 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package job
 
 import (
 	"database/sql"
 	"encoding/json"
+	"optisam-backend/common/optisam/logger"
 	dbgen "optisam-backend/common/optisam/workerqueue/repository/postgres/db"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc/metadata"
 )
 
-type JobStatus string
+type JobStatus string // nolint: golint
 
 const (
 	JobStatusPENDING   JobStatus = "PENDING"
@@ -27,20 +25,21 @@ func (e *JobStatus) Scan(src interface{}) error {
 	return nil
 }
 
-//Job shows data model for queue
+// Job shows data model for queue
 type Job struct {
 	JobID      int32           `json:"job_id"`
 	Type       sql.NullString  `json:"type"`
 	Status     JobStatus       `json:"status"`
-	Data       json.RawMessage `json:"data"` //this is byte data
+	Data       json.RawMessage `json:"data"`
 	Comments   sql.NullString  `json:"comments"`
 	StartTime  sql.NullTime    `json:"start_time"`
 	EndTime    sql.NullTime    `json:"end_time"`
 	CreatedAt  sql.NullTime    `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
+	MetaData   metadata.MD     `json:"meta_data"`
 }
 
-//ToRepoJob handles data modelling from queue job to repo job
+// ToRepoJob handles data modelling from queue job to repo job
 func ToRepoJob(j *Job) *dbgen.Job {
 	return &dbgen.Job{JobID: j.JobID,
 		Type:       j.Type.String,
@@ -54,8 +53,13 @@ func ToRepoJob(j *Job) *dbgen.Job {
 	}
 }
 
-//FromRepoJob handles data modelling from repo job to queue job
+// FromRepoJob handles data modelling from repo job to queue job
 func FromRepoJob(j *dbgen.Job) *Job {
+	md := metadata.MD{}
+	err := json.Unmarshal(j.MetaData, &md)
+	if err != nil {
+		logger.Log.Error("Error unmarshling meta data %s", zap.Error(err))
+	}
 	return &Job{JobID: j.JobID,
 		Type:       sql.NullString{String: j.Type},
 		Comments:   j.Comments,
@@ -65,5 +69,6 @@ func FromRepoJob(j *dbgen.Job) *Job {
 		StartTime:  j.StartTime,
 		EndTime:    j.EndTime,
 		RetryCount: j.RetryCount,
+		MetaData:   md,
 	}
 }

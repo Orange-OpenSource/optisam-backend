@@ -1,14 +1,9 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"testing"
 
@@ -39,7 +34,7 @@ func TestMetricRepository_GetMetricConfigINM(t *testing.T) {
 			setup: func(l *MetricRepository) (func() error, error) {
 				met1, err := l.CreateMetricInstanceNumberStandard(context.Background(), &v1.MetricINM{
 					Name:        "inm",
-					Coefficient: 5.6,
+					Coefficient: 5,
 				}, "scope1")
 				if err != nil {
 					return func() error {
@@ -53,7 +48,7 @@ func TestMetricRepository_GetMetricConfigINM(t *testing.T) {
 			},
 			want: &v1.MetricINM{
 				Name:        "inm",
-				Coefficient: 5.6,
+				Coefficient: 5,
 			},
 		},
 	}
@@ -117,17 +112,17 @@ func TestMetricRepository_CreateMetricInstanceNumberStandard(t *testing.T) {
 				scope: "scope1",
 				met: &v1.MetricINM{
 					Name:        "instance.number.standard",
-					Coefficient: 1.0,
+					Coefficient: 1,
 				},
 			},
 			wantRetmet: &v1.MetricINM{
 				Name:        "instance.number.standard",
-				Coefficient: 1.0,
+				Coefficient: 1,
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "metric.instancenumber.coefficient",
-					Type:      "float",
+					Type:      "int",
 					Index:     false,
 					Tokenizer: []string{},
 				},
@@ -154,6 +149,73 @@ func TestMetricRepository_CreateMetricInstanceNumberStandard(t *testing.T) {
 					return
 				}
 				compareSchemaNodeAll(t, "schemaNodes", tt.wantSchemaNodes, sns)
+			}
+		})
+	}
+}
+
+func TestMetricRepository_UpdateMetricINM(t *testing.T) {
+	myoldcoeff := int32(1)
+	type args struct {
+		ctx   context.Context
+		met   *v1.MetricINM
+		scope string
+	}
+	tests := []struct {
+		name     string
+		l        *MetricRepository
+		args     args
+		setup    func(l *MetricRepository) error
+		checking func(l *MetricRepository) bool
+	}{
+		{
+			name: "testname__",
+			l:    NewMetricRepository(dgClient),
+			args: args{
+				ctx:   context.Background(),
+				scope: "scope1",
+				met: &v1.MetricINM{
+					Name:        "inm",
+					Coefficient: 2,
+				},
+			},
+			setup: func(l *MetricRepository) error {
+				_, err := l.CreateMetricInstanceNumberStandard(context.Background(), &v1.MetricINM{
+					Name:        "inm",
+					Coefficient: myoldcoeff,
+				}, "scope1")
+				if err != nil {
+					return errors.New("error while creating metric")
+				}
+				return nil
+			},
+			checking: func(l *MetricRepository) bool {
+				met, err := l.GetMetricConfigINM(context.Background(), "inm", "scope1")
+				if err != nil {
+					return false
+				}
+				if met.Coefficient == 2 {
+					return true
+				}
+				return false
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.setup(tt.l)
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			err = tt.l.UpdateMetricINM(tt.args.ctx, tt.args.met, tt.args.scope)
+			if err != nil {
+				//test case fail(db error)
+				t.Errorf("MetricRepository.UpdateMetricINM() error = %v", err)
+				return
+			}
+			if !tt.checking(tt.l) {
+				//not updated
+				fmt.Println("Metric not updated")
 			}
 		})
 	}

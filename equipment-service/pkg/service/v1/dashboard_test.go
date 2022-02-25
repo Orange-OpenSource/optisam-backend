@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -54,7 +48,7 @@ func Test_equipmentServiceServer_EquipmentsPerEquipmentType(t *testing.T) {
 				mockRepository := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepository
 				mockRepository.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						Type: "Server",
 					},
 				}, nil)
@@ -66,7 +60,7 @@ func Test_equipmentServiceServer_EquipmentsPerEquipmentType(t *testing.T) {
 			},
 			want: &v1.EquipmentsPerEquipmentTypeResponse{
 				TypesEquipments: []*v1.TypeEquipments{
-					&v1.TypeEquipments{
+					{
 						EquipType:     "Server",
 						NumEquipments: int32(10),
 					},
@@ -102,7 +96,7 @@ func Test_equipmentServiceServer_EquipmentsPerEquipmentType(t *testing.T) {
 				mockRepository := mock.NewMockEquipment(mockCtrl)
 				rep = mockRepository
 				mockRepository.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						Type: "Server",
 					},
 				}, nil)
@@ -140,7 +134,7 @@ func Test_equipmentServiceServer_EquipmentsPerEquipmentType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.EquipmentsPerEquipmentType(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.EquipmentsPerEquipmentType() error = %v, wantErr %v", err, tt.wantErr)

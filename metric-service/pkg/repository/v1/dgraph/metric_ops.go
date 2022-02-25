@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -58,62 +52,62 @@ type metricInfo struct {
 func (l *MetricRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scope string) (retMat *v1.MetricOPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricOPSOracleProcessorStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(mat.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.bottom",
 			ObjectId:  mat.StartEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.base",
 			ObjectId:  mat.BaseEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.aggregate",
 			ObjectId:  mat.AggerateLevelEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.top",
 			ObjectId:  mat.EndEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_num_cpu",
 			ObjectId:  mat.NumCPUAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricOracleOPS"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -167,7 +161,7 @@ func (l *MetricRepository) ListMetricOPS(ctx context.Context, scope string) ([]*
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricOPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type oracle.processor.standard")
+		return nil, errors.New("cannot get metrics of type oracle.processor.standard")
 	}
 	type Resp struct {
 		Data []*metric
@@ -215,7 +209,7 @@ func (l *MetricRepository) GetMetricConfigOPS(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricOPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type oracle.processor.standard")
+		return nil, errors.New("cannot get metrics of type oracle.processor.standard")
 	}
 	type Resp struct {
 		Metric []metricInfo `json:"Data"`
@@ -243,6 +237,87 @@ func (l *MetricRepository) GetMetricConfigOPS(ctx context.Context, metName strin
 		EndEqType:           data.Metric[0].TopEqType[0].MetadtaEquipmentType,
 		AggerateLevelEqType: data.Metric[0].AggregateLevelEqType[0].MetadtaEquipmentType,
 	}, nil
+}
+
+// GetMetricConfigOPS implements Metric GetMetricOPS function
+func (l *MetricRepository) GetMetricConfigOPSID(ctx context.Context, metName string, scope string) (*v1.MetricOPS, error) {
+	q := `{
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scope + `)){
+			uid
+			 metric.name
+			metric.ops.base{uid}
+			metric.ops.top{uid}
+			 metric.ops.bottom{uid}
+			 metric.ops.aggregate{uid}
+			 metric.ops.attr_core_factor{uid}
+			 metric.ops.attr_num_cores{uid}
+			 metric.ops.attr_num_cpu{uid}
+		} 
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/ListMetricOPS - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type oracle.processor.standard")
+	}
+	type Resp struct {
+		Metric []*metric `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/ListMetricOPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetric(data.Metric[0])
+}
+
+func (l *MetricRepository) UpdateMetricOPS(ctx context.Context, met *v1.MetricOPS, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,"` + met.Name + `"))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	del := `
+	uid(ID) <metric.ops.bottom> * .
+	uid(ID) <metric.ops.base> * .
+	uid(ID) <metric.ops.aggregate> * .
+	uid(ID) <metric.ops.top> * .
+	uid(ID) <metric.ops.attr_core_factor> * .
+	uid(ID) <metric.ops.attr_num_cores> * .
+	uid(ID) <metric.ops.attr_num_cpu> * .	
+`
+	set := `
+	    uid(ID) <metric.ops.bottom> <` + met.StartEqTypeID + `> .
+		uid(ID) <metric.ops.base> <` + met.BaseEqTypeID + `> .
+		uid(ID) <metric.ops.aggregate> <` + met.AggerateLevelEqTypeID + `> .
+		uid(ID) <metric.ops.top> <` + met.EndEqTypeID + `> .
+		uid(ID) <metric.ops.attr_core_factor> <` + met.CoreFactorAttrID + `> .
+		uid(ID) <metric.ops.attr_num_cores> <` + met.NumCoreAttrID + `> .
+	    uid(ID) <metric.ops.attr_num_cpu> <` + met.NumCPUAttrID + `> .	
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				DelNquads: []byte(del),
+			},
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricOPS - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }
 
 func converMetricToModelMetricAll(mts []*metric) ([]*v1.MetricOPS, error) {

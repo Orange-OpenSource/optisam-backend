@@ -1,0 +1,91 @@
+{
+  "schema_users": {
+    "role": "#string",
+    "user_id": "#string",
+    "first_name": "#string",
+    "last_name": "##string",
+    "locale": "#string",
+    "groups": "##[]"
+  },
+  "testuser": {
+    "user_id": "testuser@test.com",
+    "first_name": "Test",
+    "last_name": "User",
+    "locale": "en",
+    "groups": [
+      "Test"
+    ],
+    "role": "USER"
+  },
+  "testadmin": {
+    "user_id": "testadmin@test.com",
+    "first_name": "Test",
+    "last_name": "Admin",
+    "locale": "en",
+    "groups": ["CLR", "AUT"],
+    "role": "ADMIN"
+  },
+  "createUserAccount": {
+    "user_id": "dummyuser@test.com",
+    "first_name": "dummy",
+    "last_name": "Userrole",
+    "locale": "en",
+    "groups": [
+      "4"
+    ],
+    "role": "USER"
+  },
+  "createAdminAccount": {
+    "user_id": "dummyadminUser@test.com",
+    "first_name": "dummy",
+    "last_name": "Admin",
+    "locale": "en",
+    "groups": [
+      "8"
+    ],
+    "role": "ADMIN"
+  },
+  "schema_grp": {
+    "ID": "#notnull",
+    "name": "#string",
+    "fully_qualified_name": "#string",
+    "scopes": "#[] #string",
+    "parent_id": "##string",
+    "num_of_child_groups": "##number",
+    "num_of_users": "##number"
+  },
+  "group" : {
+      "ID": "#notnull",
+      "name": "AUT",
+      "fully_qualified_name": "ROOT.AUT",
+      "scopes": [
+        "AUT"
+      ],
+      "parent_id": "1",
+      "num_of_child_groups": "##number",
+      "num_of_users": "##number"
+  },
+  "createGroup": {
+    "name": "API_dummy",
+    "scopes": [
+      "AUT"
+    ],
+    "parent_id": "1"
+  },
+  "change_password": {
+    "old": "password",
+    "new": "Admin@123"
+  },
+  "scopeSchema": {
+    "scope_code": "#string",
+    "scope_name": "#string",
+    "created_by": "#string",
+    "created_on": "##string",
+    "group_names": "##[]",
+    "scope_type": "#string"
+  },
+  "createScope": {
+    "scope_code": "DUM",
+    "scope_name": "DummyScope"
+  }
+}

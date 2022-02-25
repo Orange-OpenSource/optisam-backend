@@ -1,16 +1,9 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
@@ -20,7 +13,7 @@ import (
 // MetricOPSComputedLicenses implements Licence MetricOPSComputedLicenses function
 func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
 	q := queryBuilder(mat, scopes, id)
-	fmt.Println(q)
+	// fmt.Println(q)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicenses - query failed", zap.Error(err), zap.String("query", q))
@@ -33,7 +26,7 @@ func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id st
 // MetricOPSComputedLicensesForAppProduct implements Licence MetricOPSComputedLicensesForAppProduct function
 func (l *LicenseRepository) MetricOPSComputedLicensesForAppProduct(ctx context.Context, prodID, appID string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
 	q := queryBuilderForAppProduct(mat, appID, scopes, prodID)
-	fmt.Println(q)
+	// fmt.Println(q)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicensesForAppProduct - query failed", zap.Error(err), zap.String("query", q))
@@ -54,8 +47,8 @@ func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, na
 		return 0, nil
 	}
 	q := queryBuilder(mat, scopes, ids...)
-	fmt.Println(q)
-	fmt.Println("we will sleep now")
+	// fmt.Println(q)
+	// fmt.Println("we will sleep now")
 	// time.Sleep(1 * time.Minute)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {

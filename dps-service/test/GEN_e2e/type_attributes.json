@@ -1,0 +1,246 @@
+{
+    "vcenter": [
+        {
+            "name": "vcenter_name",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_name"
+        },
+        {
+            "name": "vcenter_version",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_version"
+        }
+    ],
+    "cluster": [
+        {
+            "name": "cluster_name",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cluster_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "server": [
+        {
+            "name": "server_id",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_id"
+        },
+        {
+            "name": "cpu_model",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cpu_model"
+        },
+        {
+            "name": "server_os",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_os"
+        },
+        {
+            "name": "server_processors_numbers",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_processors_numbers"
+        },
+        {
+            "name": "cores",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cores"
+        },
+        {
+            "name": "core_factor",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "core_factor"
+        },
+        {
+            "name": "server_type",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_type"
+        },
+        {
+            "name": "hyperthreading",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "hyperthreading"
+        },
+        {
+            "name": "datacenter_name",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "datacenter_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "softpartition": [
+        {
+            "name": "softpartition_id",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "softpartition_id"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "hardpartition": [
+        {
+            "name": "hardpartition_id",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "hardpartition_id"
+        },
+        {
+            "name": "aix_entitlement",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_entitlement"
+        },
+        {
+            "name": "aix_sharedpool_cpus",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_sharedpool_cpus"
+        },
+        {
+            "name": "sparc_cap",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "sparc_cap"
+        },
+        {
+            "name": "aix_onlinevirtualcores",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_onlinevirtualcores"
+        },
+        {
+            "name": "aix_processormode",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_processormode"
+        },
+        {
+            "name": "aix_lpm",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_lpm"
+        },
+        {
+            "name": "aix_sharingmode",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "aix_sharingmode"
+        },
+        {
+            "name": "sparc_livemigration",
+            "data_type": "INT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "sparc_livemigration"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ]
+}

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -31,7 +25,7 @@ func TestLicenseRepository_MetricACSComputedLicenses(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC099")
+	ID, err := getUIDForProductXID("ORAC099", []string{"scope1"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
@@ -92,21 +86,21 @@ func TestLicenseRepository_MetricACSComputedLicensesAgg(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC098")
+	ID, err := getUIDForProductXID("ORAC098", []string{"scope2"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
-	ID2, err := getUIDForProductXID("ORAC099")
+	ID2, err := getUIDForProductXID("ORAC099", []string{"scope2"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
 	metric := "abc"
 	aggName := "xyz"
-	aggCleanup1, err := aggSetup(metric, ID, aggName)
+	aggCleanup1, err := aggSetup(metric, ID, aggName, "scope2")
 	if !assert.Empty(t, err, "error is not expected in agg setup") {
 		return
 	}
-	aggCleanup2, err := aggSetup(metric, ID2, aggName)
+	aggCleanup2, err := aggSetup(metric, ID2, aggName, "scope2")
 	if !assert.Empty(t, err, "error is not expected in agg setup") {
 		return
 	}

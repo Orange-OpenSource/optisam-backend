@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -38,57 +32,57 @@ type metric struct {
 func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricOPS, scopes ...string) (retMat *v1.MetricOPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricOPSOracleProcessorStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(mat.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.bottom",
 			ObjectId:  mat.StartEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.base",
 			ObjectId:  mat.BaseEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.aggregate",
 			ObjectId:  mat.AggerateLevelEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.top",
 			ObjectId:  mat.EndEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ops.attr_num_cpu",
 			ObjectId:  mat.NumCPUAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricOPS"),
@@ -131,7 +125,7 @@ func (l *LicenseRepository) CreateMetricOPS(ctx context.Context, mat *v1.MetricO
 
 // ListMetricOPS implements Licence ListMetricOPS function
 func (l *LicenseRepository) ListMetricOPS(ctx context.Context, scopes ...string) ([]*v1.MetricOPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOPSOracleProcessorStandard, scopes...)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricOPSOracleProcessorStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricOPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -140,7 +134,7 @@ func (l *LicenseRepository) ListMetricOPS(ctx context.Context, scopes ...string)
 		Data []*metric
 	}
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
+	if err := json.Unmarshal(respJSON, &data); err != nil {
 		logger.Log.Error("dgraph/ListMetricOPS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}

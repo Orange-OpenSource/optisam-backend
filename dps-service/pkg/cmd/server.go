@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cmd
 
 import (
@@ -26,12 +20,11 @@ import (
 	"optisam-backend/dps-service/pkg/protocol/rest"
 	repo "optisam-backend/dps-service/pkg/repository/v1/postgres"
 
-	//query "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
 	gconn "optisam-backend/common/optisam/grpc"
 	v1 "optisam-backend/dps-service/pkg/service/v1"
 	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
 	constants "optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/defer_worker"
+	deferworker "optisam-backend/dps-service/pkg/worker/defer_worker"
 	fileworker "optisam-backend/dps-service/pkg/worker/file_worker"
 	"os"
 	"time"
@@ -42,7 +35,6 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
-	//worker library
 	"optisam-backend/common/optisam/workerqueue"
 
 	"github.com/spf13/pflag"
@@ -67,11 +59,12 @@ func init() {
 }
 
 // RunServer runs gRPC server and HTTP gateway
+// nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
-	if os.Getenv("ENV") == "prod" {
+	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
 	} else if os.Getenv("ENV") == "pprod" {
 		viper.SetConfigName("config-pprod")
@@ -95,7 +88,7 @@ func RunServer() error {
 		log.Fatalf("failed to unmarshal configuration: %v", err)
 	}
 
-	//if Dir not exist then creates the archive directory
+	// if Dir not exist then creates the archive directory
 	if _, err = os.Stat(cfg.ArchiveLocation); os.IsNotExist(err) {
 		err = os.Mkdir(cfg.ArchiveLocation, os.ModePerm)
 		if err != nil {
@@ -114,8 +107,8 @@ func RunServer() error {
 	instrumentationRouter.Handle("/healthz", healthcheck.Handler(healthChecker))
 
 	// initialize logger
-	if err := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
-		return fmt.Errorf("failed to initialize logger: %v", err)
+	if error := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); error != nil {
+		return fmt.Errorf("failed to initialize logger: %v", error)
 	}
 
 	err = cfg.Validate()
@@ -125,17 +118,17 @@ func RunServer() error {
 	}
 
 	ctx := context.Background()
-
-	if cfg.MaxApiWorker == 0 {
-		cfg.MaxApiWorker = 25 //Default api worker count
+	config.SetConfig(*cfg)
+	if cfg.MaxAPIWorker == 0 {
+		cfg.MaxAPIWorker = 25 // Default api worker count
 		logger.Log.Info("max api worker set default : 25 ")
 	}
 	if cfg.MaxFileWorker == 0 {
-		cfg.MaxFileWorker = 5 //Default api worker count
+		cfg.MaxFileWorker = 5 // Default api worker count
 		logger.Log.Info("max MaxFileWorker set default :  5 ")
 	}
 	if cfg.MaxDeferWorker == 0 {
-		cfg.MaxDeferWorker = 10 //Default api worker count
+		cfg.MaxDeferWorker = 10 // Default api worker count
 		logger.Log.Info("max MaxDeferWorker set default : 10 ")
 	}
 
@@ -154,29 +147,24 @@ func RunServer() error {
 	}
 
 	repo.SetDpsRepository(db)
-	dbObj, err := repo.GetDpsRepository()
-	if err != nil {
-		log.Println("Failed to get db client", err)
-		return err
-	}
+	dbObj := repo.GetDpsRepository()
 
 	// Verify connection.
-	if err := db.Ping(); err != nil {
-		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", err.Error())
+	if error := db.Ping(); error != nil {
+		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", error.Error())
 	}
-	fmt.Printf("Postgres connection verified to %+v \n\n", cfg.Postgres)
+	fmt.Printf("Postgres connection verified to %+v \n\n", cfg.Postgres.Host)
 
-	//GRPC Connections
+	// GRPC Connections
 	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize GRPC client")
 	}
-	//log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 	for _, conn := range grpcClientMap {
 		defer conn.Close()
 	}
 
-	//Worker Queue
+	// Worker Queue
 	Queue, err = workerqueue.NewQueue(ctx, constants.DPSQUEUE, db, cfg.WorkerQueue)
 	if err != nil {
 		return fmt.Errorf("failed to create worker queue: %v", err)
@@ -187,33 +175,34 @@ func RunServer() error {
 		Queue.RegisterWorker(ctx, w)
 	}
 
-	for i := 0; i < cfg.MaxApiWorker; i++ {
-		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap, cfg.GrpcServers.Timeout)
+	for i := 0; i < cfg.MaxAPIWorker; i++ {
+		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap, cfg.GrpcServers.Timeout, cfg.FilesLocation, cfg.ArchiveLocation)
 		Queue.RegisterWorker(ctx, w)
 	}
 
 	for i := 0; i < cfg.MaxDeferWorker; i++ {
-		w := defer_worker.NewWorker(constants.DEFERWORKER, Queue, db)
+		w := deferworker.NewWorker(constants.DEFERWORKER, Queue, db, grpcClientMap)
 		Queue.RegisterWorker(ctx, w)
 	}
 
-	//All worker will wait till all registration will completed , to avoid concurrent map read write errors
+	logger.Log.Error("total Worker started", zap.Any("fileWorker", cfg.MaxFileWorker), zap.Any("apiWorker", cfg.MaxAPIWorker), zap.Any("deferWorker", cfg.MaxDeferWorker))
+	// All worker will wait till all registration will completed , to avoid concurrent map read write errors
 	Queue.IsWorkerRegCompleted = true
 
 	// Register http health check
 	{
-		check, err := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
-		if err != nil {
-			return fmt.Errorf("failed to create health checker: %v", err.Error())
+		check, error := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
+		if error != nil {
+			return fmt.Errorf("failed to create health checker: %v", error.Error())
 		}
-		err = healthChecker.AddCheck(&health.Config{
+		error = healthChecker.AddCheck(&health.Config{
 			Name:     "Http Server",
 			Checker:  check,
 			Interval: time.Duration(3) * time.Second,
 			Fatal:    true,
 		})
-		if err != nil {
-			return fmt.Errorf("failed to add health checker: %v", err.Error())
+		if error != nil {
+			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
 
@@ -221,8 +210,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Prometheus.Enabled {
 		logger.Log.Info("prometheus exporter enabled")
 
-		exporter, err := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
-		if err != nil {
+		exporter, error := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
+		if error != nil {
 			logger.Log.Fatal("Prometheus Exporter Error")
 		}
 		view.RegisterExporter(exporter)
@@ -230,7 +219,7 @@ func RunServer() error {
 	}
 
 	// Trace everything in development environment or when debugging is enabled
-	if cfg.Environment == "development" || cfg.Environment == "INTEGRATION" || cfg.Debug {
+	if cfg.Environment == "DEVELOPMENT" || cfg.Environment == "INTEGRATION" || cfg.Debug {
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 
@@ -238,8 +227,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Jaeger.Enabled {
 		logger.Log.Info("jaeger exporter enabled")
 
-		exporter, err := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
-		if err != nil {
+		exporter, error := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
+		if error != nil {
 			logger.Log.Fatal("Jaeger Exporter Error")
 		}
 		trace.RegisterExporter(exporter)
@@ -274,18 +263,18 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	v1API := v1.NewDpsServiceServer(dbObj.Queries, *Queue, grpcClientMap)
+	v1API := v1.NewDpsServiceServer(dbObj, Queue, grpcClientMap)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
 		logger.Log.Fatal("Failed to get verify key")
 	}
 
-	//This is one time
-	cron.CronConfigInit(cfg.Cron)
+	// This is one time
+	cron.ConfigInit(cfg.Cron)
 
 	// cron Job
-	cronJob.Init(*Queue, fmt.Sprintf("http://%s/api/v1/token", cfg.HttpServers.Address["auth"]), cfg.FilesLocation, v1API, verifyKey)
+	cronJob.Init(*Queue, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), cfg.FilesLocation, cfg.ArchiveLocation, cfg.RawdataLocation, v1API, verifyKey, cfg.IAM.APIKey, dbObj, cfg.WaitLimitCount)
 
 	// Below command will trigger the cron job as soon as the service starts
 	cronJob.Job()
@@ -296,8 +285,6 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to Load RBAC policies", zap.Error(err))
 	}
-
-	config.SetConfig(*cfg)
 
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)

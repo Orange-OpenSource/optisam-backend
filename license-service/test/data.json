@@ -1,0 +1,129 @@
+{
+    "license_schema": {
+        "SKU": "#string",
+        "swidTag": "#string",
+        "metric": "#string",
+        "numCptLicences": "#number",
+        "numAcqLicences": "##number",
+        "totalCost": "##number",
+        "deltaNumber": "##number",
+        "deltaCost": "##number",
+        "avgUnitPrice": "#number"
+    },
+    "ops_server_license": {
+        "SKU": "oracle_mysql_1_ops",
+        "swidTag": "oracle_mysql_1",
+        "metric": "oracle.processor.standard",
+        "numCptLicences": 2,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 98,
+        "deltaCost": 980,
+        "avgUnitPrice": 10
+    },
+    "ops_partition_license": {
+        "SKU": "oracle_micros__1_ops",
+        "swidTag": "oracle_micros_1",
+        "metric": "ops_partition",
+        "numCptLicences": 2,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 98,
+        "deltaCost": 980,
+        "avgUnitPrice": 10
+    },
+    "nup_server_license": {
+
+        "SKU": "oracle_wl_1_nup",
+        "avgUnitPrice": 100,
+        "computedDetails": "Total users: 190",
+        "deltaCost": -104900,
+        "deltaNumber": -1050,
+        "metric": "oracle.nup.standard",
+        "metricNotDefined": false,
+        "numAcqLicences": 100,
+        "numCptLicences": 1150,
+        "swidTag": "oracle_wl_1",
+        "totalCost": 10100
+        
+    },
+    "nup_partition_license": {
+        "SKU": "oracle_micros__2_ops",
+        "swidTag": "oracle_micros_2",
+        "metric": "ops_partition",
+        "numCptLicences": 2,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 98,
+        "deltaCost": 980,
+        "avgUnitPrice": 10
+    },
+    "inm_license": {
+        "SKU": "redhat_rhel_1_instance",
+        "swidTag": "redhat_rhel_1",
+        "metric": "os_instance",
+        "numCptLicences": 1,
+        "numAcqLicences": 100,
+        "totalCost": 600,
+        "deltaNumber": 99,
+        "deltaCost": 595,
+        "avgUnitPrice": 5
+    },
+    "sag_license": {
+        "SKU": "sag_aris_1",
+        "swidTag": "sag_aris_1",
+        "metric": "sag",
+        "numCptLicences": 14,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 86,
+        "deltaCost": 860,
+        "avgUnitPrice": 10
+    },
+    "ibm_pvu_license": {
+        "SKU": "ibm_websphere_1_pvu",
+        "swidTag": "ibm_websphere_1",
+        "metric": "ibm_pvu",
+        "numCptLicences": 200,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": -100,
+        "deltaCost": -1000,
+        "avgUnitPrice": 10
+    },
+    "acs_license": {
+        "SKU": "hpud_2",
+        "swidTag": "hpud_2",
+        "metric": "attribute_counter_core",
+        "numCptLicences": 3,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 97,
+        "deltaCost": 970,
+        "avgUnitPrice": 10
+    },
+    "app_license": {
+        "app_id": "App_6",
+        "SKU": "oracle_micros__1_ops",
+        "swidTag": "oracle_micros_1",
+        "metric": "ops_partition",
+        "numCptLicences": 2,
+        "numAcqLicences": 100,
+        "totalCost": 1000,
+        "deltaNumber": 98,
+        "deltaCost": 980,
+        "avgUnitPrice": 10
+    },
+    "agg_license": {
+        "aggName": "apitest_agg_oracleWL",
+        "SKU": "oracle_wl_2_ops,oracle_wl_1_ops",
+        "swidTag": "oracle_wl_2,oracle_wl_1",
+        "metric": "oracle.processor.standard",
+        "numCptLicences": 46,
+        "numAcqLicences": 600,
+        "totalCost": 60200,
+        "deltaNumber": 554,
+        "deltaCost": 55600,
+        "avgUnitPrice": 100
+    }
+}

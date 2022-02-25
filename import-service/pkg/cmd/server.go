@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cmd
 
 import (
@@ -49,11 +43,12 @@ func init() {
 }
 
 // RunServer runs gRPC server and HTTP gateway
+// nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
-	if os.Getenv("ENV") == "prod" {
+	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
 	} else if os.Getenv("ENV") == "pprod" {
 		viper.SetConfigName("config-pprod")
@@ -131,7 +126,7 @@ func RunServer() error {
 	}
 
 	// Trace everything in development environment or when debugging is enabled
-	if cfg.Environment == "development" || cfg.Environment == "INTEGRATION" || cfg.Debug {
+	if cfg.Environment == "DEVELOPMENT" || cfg.Environment == "INTEGRATION" || cfg.Debug {
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 

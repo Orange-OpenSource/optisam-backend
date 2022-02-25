@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS groups (
     name VARCHAR NOT NULL,
     fully_qualified_name ltree,
     scopes TEXT [],
-    parent_id INTEGER REFERENCES groups (id),
+    parent_id INTEGER REFERENCES groups (id) ON DELETE CASCADE,
     created_by VARCHAR REFERENCES users (username),
     created_on TIMESTAMP DEFAULT NOW()
 );
@@ -82,9 +82,12 @@ DELETE FROM group_ownership;
 
 INSERT INTO group_ownership(group_id,user_id) VALUES(1,'admin@test.com');
 
+create type scope_types as enum('GENERIC','SPECIFIC');
+
 CREATE TABLE IF NOT EXISTS scopes (
   scope_code VARCHAR PRIMARY KEY NOT NULL,
   scope_name VARCHAR NOT NULL,
+  scope_type scope_types NOT NULL DEFAULT 'GENERIC',
   created_on TIMESTAMP DEFAULT NOW(),
   created_by VARCHAR REFERENCES users (username)
 );

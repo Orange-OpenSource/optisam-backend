@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package rest
 
 import (
@@ -49,6 +43,12 @@ func (lrw *loggingResponseWriter) Write(p []byte) (int, error) {
 func (lrw *loggingResponseWriter) WriteHeader(code int) {
 	lrw.statusCode = code
 	lrw.ResponseWriter.WriteHeader(code)
+}
+
+func AddLogCtxKey(ctx context.Context) context.Context {
+	var uDetails LoggerUserDetails
+	nctx := context.WithValue(ctx, LoggerKey{}, &uDetails)
+	return nctx
 }
 
 // AddLogger logs request/response pair
@@ -99,7 +99,7 @@ func AddLogger(logger *zap.Logger, h http.Handler) http.Handler {
 		sc := trace.FromContext(ctx).SpanContext()
 		userDetails, ok := ctx.Value(LoggerKey{}).(*LoggerUserDetails)
 		if !ok {
-			//TODO: Do we need to handle this
+			// TODO: Do we need to handle this
 		}
 		if userDetails == nil {
 			userDetails = &LoggerUserDetails{UserID: "", Role: ""}

@@ -1,15 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
@@ -22,6 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
+/*
 func TestListProductAggregationView(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
@@ -44,22 +38,18 @@ func TestListProductAggregationView(t *testing.T) {
 			output: &v1.ListProductAggregationViewResponse{
 				TotalRecords: int32(2),
 				Aggregations: []*v1.ProductAggregationView{
-					&v1.ProductAggregationView{
-						ID:              int32(100),
-						Name:            "agg1",
+					{
+						AggregationName: "agg1",
 						Editor:          "e1",
 						NumApplications: int32(5),
 						NumEquipments:   int32(5),
-						TotalCost:       float64(25),
 						Swidtags:        []string{"p1", "p2"},
 					},
-					&v1.ProductAggregationView{
-						ID:              int32(101),
-						Name:            "agg2",
+					{
+						AggregationName: "agg2",
 						Editor:          "e2",
 						NumApplications: int32(10),
 						NumEquipments:   int32(10),
-						TotalCost:       float64(100),
 						Swidtags:        []string{"p3", "p4"},
 					},
 				},
@@ -67,29 +57,25 @@ func TestListProductAggregationView(t *testing.T) {
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ListProductAggregationViewRequest) {
-				dbObj.EXPECT().ListAggregationsView(ctx, db.ListAggregationsViewParams{
-					Scope:    input.Scopes,
+				dbObj.EXPECT().ListProductAggregation(ctx, db.ListProductAggregationParams{
+					Scope:    input.GetScopes()[0],
 					PageNum:  input.PageSize * (input.PageNum - 1),
-					PageSize: input.PageSize}).Return([]db.ListAggregationsViewRow{
+					PageSize: input.PageSize}).Return([]db.ListProductAggregationRow{
 					{
 						Totalrecords:      int64(2),
-						AggregationID:     int32(100),
 						AggregationName:   "agg1",
 						ProductEditor:     "e1",
 						Swidtags:          []string{"p1", "p2"},
-						NumOfApplications: int32(5),
-						NumOfEquipments:   int32(5),
-						TotalCost:         float64(25),
+						NumOfApplications: int64(5),
+						NumOfEquipments:   int64(5),
 					},
 					{
 						Totalrecords:      int64(2),
-						AggregationID:     int32(101),
 						AggregationName:   "agg2",
 						ProductEditor:     "e2",
 						Swidtags:          []string{"p3", "p4"},
-						NumOfApplications: int32(10),
-						NumOfEquipments:   int32(10),
-						TotalCost:         float64(100),
+						NumOfApplications: int64(10),
+						NumOfEquipments:   int64(10),
 					},
 				}, nil).Times(1)
 			},
@@ -145,7 +131,7 @@ func TestListProductAggregationView(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.ListProductAggregationView(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -160,35 +146,33 @@ func TestListProductAggregationView(t *testing.T) {
 	}
 }
 
-func TestProductAggregationProductViewOptions(t *testing.T) {
+func TestGetAggregationProductsExpandedView(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
 	testSet := []struct {
 		name   string
-		input  *v1.ProductAggregationProductViewOptionsRequest
-		output *v1.ProductAggregationProductViewOptionsResponse
-		mock   func(*v1.ProductAggregationProductViewOptionsRequest)
+		input  *v1.GetAggregationProductsExpandedViewRequest
+		output *v1.GetAggregationProductsExpandedViewResponse
+		mock   func(*v1.GetAggregationProductsExpandedViewRequest)
 		ctx    context.Context
 		outErr bool
 	}{
 		{
 			name:  "ProductAggregationProductViewOptionswitCorrectData",
-			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
-			output: &v1.ProductAggregationProductViewOptionsResponse{
-				NumOfOptions: int32(2),
-				Optioninfo: []*v1.OptionInfo{
+			input: &v1.GetAggregationProductsExpandedViewRequest{AggregationName: "agg1", Scope: "s1"},
+			output: &v1.GetAggregationProductsExpandedViewResponse{
+				TotalRecords: int32(2),
+				Products: []*v1.ProductExpand{
 					{
 						SwidTag: "p1",
 						Name:    "pname1",
-						Edition: "ed1",
 						Editor:  "e1",
 						Version: "v1",
 					},
 					{
 						SwidTag: "p2",
 						Name:    "pname2",
-						Edition: "ed2",
 						Editor:  "e2",
 						Version: "v2",
 					},
@@ -196,23 +180,27 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 			},
 			outErr: false,
 			ctx:    ctx,
-			mock: func(input *v1.ProductAggregationProductViewOptionsRequest) {
-				dbObj.EXPECT().ProductAggregationChildOptions(ctx, db.ProductAggregationChildOptionsParams{
-					AggregationID: input.ID,
-					Scope:         input.Scopes,
-				}).Return([]db.ProductAggregationChildOptionsRow{
+			mock: func(input *v1.GetAggregationProductsExpandedViewRequest) {
+				dbObj.EXPECT().GetAggregationByName(ctx, db.GetAggregationByNameParams{
+					Scope:           input.Scope,
+					AggregationName: input.AggregationName,
+				}).Return(db.AggregatedRight{
+					Swidtags: []string{"p1", "p2"},
+				}, nil).Times(1)
+				dbObj.EXPECT().GetProductBySwidtags(ctx, db.GetProductBySwidtagsParams{
+					Scope:   input.Scope,
+					Swidtag: []string{"p1", "p2"},
+				}).Return([]db.GetProductBySwidtagsRow{
 					{
 						Swidtag:        "p1",
 						ProductName:    "pname1",
 						ProductEditor:  "e1",
-						ProductEdition: "ed1",
 						ProductVersion: "v1",
 					},
 					{
 						Swidtag:        "p2",
 						ProductName:    "pname2",
 						ProductEditor:  "e2",
-						ProductEdition: "ed2",
 						ProductVersion: "v2",
 					},
 				}, nil).Times(1)
@@ -220,36 +208,36 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 		},
 		{
 			name:   "ProductAggregationProductViewOptionswithoutContext",
-			input:  &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
+			input:  &v1.GetAggregationProductsExpandedViewRequest{AggregationName: "agg1", Scope: "s1"},
 			ctx:    context.Background(),
 			outErr: true,
-			mock:   func(input *v1.ProductAggregationProductViewOptionsRequest) {},
+			mock:   func(input *v1.GetAggregationProductsExpandedViewRequest) {},
 		},
 		{
 			name:   "FAILURE - No access to Scopes",
-			input:  &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s4"}},
+			input:  &v1.GetAggregationProductsExpandedViewRequest{AggregationName: "agg1", Scope: "s4"},
 			ctx:    ctx,
 			outErr: true,
-			mock:   func(input *v1.ProductAggregationProductViewOptionsRequest) {},
+			mock:   func(input *v1.GetAggregationProductsExpandedViewRequest) {},
 		},
 
 		{
 			name:  "ProductAggregationProductViewOptionswithNoResult",
-			input: &v1.ProductAggregationProductViewOptionsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
+			input: &v1.GetAggregationProductsExpandedViewRequest{AggregationName: "agg1", Scope: "s1"},
 			ctx:   context.Background(),
-			output: &v1.ProductAggregationProductViewOptionsResponse{
-				NumOfOptions: int32(0),
-				Optioninfo:   []*v1.OptionInfo{},
+			output: &v1.GetAggregationProductsExpandedViewResponse{
+				TotalRecords: int32(0),
+				Products:     []*v1.ProductExpand{},
 			},
 			outErr: true,
-			mock:   func(input *v1.ProductAggregationProductViewOptionsRequest) {},
+			mock:   func(input *v1.GetAggregationProductsExpandedViewRequest) {},
 		},
 	}
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ProductAggregationProductViewOptions(test.ctx, test.input)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			got, err := s.GetAggregationProductsExpandedView(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
 				return
@@ -262,125 +250,122 @@ func TestProductAggregationProductViewOptions(t *testing.T) {
 		})
 	}
 }
+*/
 
-func TestListProductAggregationProductView(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ListProductAggregationProductViewRequest
-		output *v1.ListProductAggregationProductViewResponse
-		mock   func(*v1.ListProductAggregationProductViewRequest)
-		ctx    context.Context
-		outErr bool
-	}{
-		{
-			name:  "ListProductAggregationProductViewWithCorrectData",
-			input: &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
-			output: &v1.ListProductAggregationProductViewResponse{
-				Products: []*v1.Product{
-					&v1.Product{
-						SwidTag:           "p1",
-						Name:              "pname1",
-						Version:           "v1",
-						Edition:           "ed1",
-						Editor:            "e1",
-						TotalCost:         float64(100.00),
-						NumOfApplications: int32(5),
-						NumofEquipments:   int32(5),
-					},
-					&v1.Product{
-						SwidTag:           "p2",
-						Name:              "pname2",
-						Version:           "v2",
-						Edition:           "ed2",
-						Editor:            "e2",
-						TotalCost:         float64(200.00),
-						NumOfApplications: int32(10),
-						NumofEquipments:   int32(10),
-					},
-				},
-			},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListProductAggregationProductViewRequest) {
-				dbObj.EXPECT().ListAggregationProductsView(ctx, db.ListAggregationProductsViewParams{
-					AggregationID: input.ID,
-					Scope:         input.Scopes}).Return([]db.ListAggregationProductsViewRow{
-					{
-						Swidtag:           "p1",
-						ProductName:       "pname1",
-						ProductVersion:    "v1",
-						ProductCategory:   "c1",
-						ProductEditor:     "e1",
-						ProductEdition:    "ed1",
-						NumOfApplications: int32(5),
-						NumOfEquipments:   int32(5),
-						Cost:              float64(100.0),
-					},
-					{
-						Swidtag:           "p2",
-						ProductName:       "pname2",
-						ProductVersion:    "v2",
-						ProductCategory:   "c2",
-						ProductEditor:     "e2",
-						ProductEdition:    "ed2",
-						NumOfApplications: int32(10),
-						NumOfEquipments:   int32(10),
-						Cost:              float64(200.0),
-					},
-				}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListProductAggregationProductViewWithoutContext",
-			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ListProductAggregationProductViewRequest) {},
-		},
-		{
-			name:   "FAILURE: No access to Scopes",
-			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s4"}},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListProductAggregationProductViewRequest) {},
-		},
-		{
-			name:   "ListProductAggregationProductViewWithnoResultSEt",
-			input:  &v1.ListProductAggregationProductViewRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
-			output: &v1.ListProductAggregationProductViewResponse{Products: []*v1.Product{}},
-			outErr: true,
-			ctx:    context.Background(),
-			mock: func(input *v1.ListProductAggregationProductViewRequest) {
-				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("cannot find claims in context")
-				}
-				dbObj.EXPECT().ListAggregationProductsView(ctx, db.ListAggregationProductsViewParams{
-					AggregationID: input.ID,
-					Scope:         userClaims.Socpes}).Return([]db.ListAggregationProductsViewRow{}, nil).Times(1)
-			},
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ListProductAggregationProductView(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
+// func TestListProductAggregationRecords(t *testing.T) {
+// 	mockCtrl := gomock.NewController(t)
+// 	dbObj := dbmock.NewMockProduct(mockCtrl)
+// 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+// 	testSet := []struct {
+// 		name   string
+// 		input  *v1.ListProductAggregationRecordsRequest
+// 		output *v1.ListProductAggregationRecordsResponse
+// 		mock   func(*v1.ListProductAggregationRecordsRequest)
+// 		ctx    context.Context
+// 		outErr bool
+// 	}{
+// 		{
+// 			name:  "ListProductAggregationRecordsWithCorrectData",
+// 			input: &v1.ListProductAggregationRecordsRequest{AggregationId: int32(1), Scopes: []string{"s1", "s2"}},
+// 			output: &v1.ListProductAggregationRecordsResponse{
+// 				ProdAggRecord: []*v1.ProductAggRecord{
+// 					{
+// 						SwidTag:         "p1",
+// 						Name:            "pname1",
+// 						Version:         "v1",
+// 						Edition:         "ed1",
+// 						Editor:          "e1",
+// 						NumApplications: int32(5),
+// 						NumEquipments:   int32(5),
+// 					},
+// 					{
+// 						SwidTag:         "p2",
+// 						Name:            "pname2",
+// 						Version:         "v2",
+// 						Edition:         "ed2",
+// 						Editor:          "e2",
+// 						NumApplications: int32(10),
+// 						NumEquipments:   int32(10),
+// 					},
+// 				},
+// 			},
+// 			outErr: false,
+// 			ctx:    ctx,
+// 			mock: func(input *v1.ListProductAggregationRecordsRequest) {
+// 				dbObj.EXPECT().ListProductsAggregationIndividual(ctx, db.ListProductsAggregationIndividualParams{
+// 					AggregationName: input.AggregationName,
+// 					Scope:           input.Scopes}).Return([]db.ListProductsAggregationIndividualRow{
+// 					{
+// 						Swidtag:           "p1",
+// 						ProductName:       "pname1",
+// 						ProductVersion:    "v1",
+// 						ProductCategory:   "c1",
+// 						ProductEditor:     "e1",
+// 						ProductEdition:    "ed1",
+// 						NumOfApplications: int64(5),
+// 						NumOfEquipments:   int64(5),
+// 					},
+// 					{
+// 						Swidtag:           "p2",
+// 						ProductName:       "pname2",
+// 						ProductVersion:    "v2",
+// 						ProductCategory:   "c2",
+// 						ProductEditor:     "e2",
+// 						ProductEdition:    "ed2",
+// 						NumOfApplications: int64(10),
+// 						NumOfEquipments:   int64(10),
+// 					},
+// 				}, nil).Times(1)
+// 			},
+// 		},
+// 		{
+// 			name:   "ListProductAggregationRecordsWithoutContext",
+// 			input:  &v1.ListProductAggregationRecordsRequest{AggregationId: int32(1), Scopes: []string{"s1", "s2"}},
+// 			outErr: true,
+// 			ctx:    context.Background(),
+// 			mock:   func(input *v1.ListProductAggregationRecordsRequest) {},
+// 		},
+// 		{
+// 			name:   "FAILURE: No access to Scopes",
+// 			input:  &v1.ListProductAggregationRecordsRequest{AggregationId: int32(1), Scopes: []string{"s4"}},
+// 			outErr: true,
+// 			ctx:    ctx,
+// 			mock:   func(input *v1.ListProductAggregationRecordsRequest) {},
+// 		},
+// 		{
+// 			name:   "ListProductAggregationRecordsWithnoResultSEt",
+// 			input:  &v1.ListProductAggregationRecordsRequest{AggregationId: int32(1), Scopes: []string{"s1", "s2"}},
+// 			output: &v1.ListProductAggregationRecordsResponse{ProdAggRecord: []*v1.ProductAggRecord{}},
+// 			outErr: true,
+// 			ctx:    context.Background(),
+// 			mock: func(input *v1.ListProductAggregationRecordsRequest) {
+// 				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+// 				if !ok {
+// 					t.Errorf("cannot find claims in context")
+// 				}
+// 				dbObj.EXPECT().ListAggregationProductsView(ctx, db.ListAggregationProductsViewParams{
+// 					AggregationID: input.AggregationId,
+// 					Scope:         userClaims.Socpes}).Return([]db.ListAggregationProductsViewRow{}, nil).Times(1)
+// 			},
+// 		},
+// 	}
+// 	for _, test := range testSet {
+// 		t.Run("", func(t *testing.T) {
+// 			test.mock(test.input)
+// 			s := NewProductServiceServer(dbObj, qObj, nil, "")
+// 			got, err := s.ListProductAggregationRecords(test.ctx, test.input)
+// 			if (err != nil) != test.outErr {
+// 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
+// 				return
+// 			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
+// 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
 
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
+// 			} else {
+// 				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+// 			}
+// 		})
+// 	}
+// }
 
 func TestProductAggregationProductViewDetails(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -396,7 +381,7 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 	}{
 		{
 			name:  "ProductAggregationProductViewDetailsWithCorrectData",
-			input: &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
+			input: &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s1"},
 			output: &v1.ProductAggregationProductViewDetailsResponse{
 				ID:              int32(1),
 				Name:            "agg",
@@ -404,35 +389,37 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 				NumApplications: int32(5),
 				NumEquipments:   int32(5),
 				Products:        []string{"p1", "p2", "p3"},
-				Editions:        []string{"ed1", "ed2", "ed3"},
+				Versions:        []string{"v1", "v2", "v3"},
+				ProductNames:    []string{"pn1", "pn2"},
 			},
 			outErr: false,
 			ctx:    ctx,
 			mock: func(input *v1.ProductAggregationProductViewDetailsRequest) {
 				dbObj.EXPECT().ProductAggregationDetails(ctx, db.ProductAggregationDetailsParams{
 					AggregationID: input.ID,
-					Scope:         input.Scopes,
+					Scope:         input.Scope,
 				}).Return(db.ProductAggregationDetailsRow{
 					AggregationID:     int32(1),
 					AggregationName:   "agg",
-					ProductEditor:     "e",
-					Swidtags:          []string{"p1", "p2", "p3"},
-					Editions:          []string{"ed1", "ed2", "ed3"},
+					Editor:            "e",
+					ProductSwidtags:   []string{"p1", "p2", "p3"},
+					ProductVersions:   []string{"v1", "v2", "v3"},
 					NumOfApplications: int32(5),
 					NumOfEquipments:   int32(5),
+					ProductNames:      []string{"pn1", "pn2"},
 				}, nil).Times(1)
 			},
 		},
 		{
 			name:   "ProductAggregationProductViewDetailsWithOutContext",
-			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s1", "s2"}},
+			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s1"},
 			ctx:    context.Background(),
 			outErr: true,
 			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
 		},
 		{
 			name:   "FAILURE: No access to Scopes",
-			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scopes: []string{"s4"}},
+			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s4"},
 			ctx:    ctx,
 			outErr: true,
 			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
@@ -441,7 +428,7 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.ProductAggregationProductViewDetails(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)

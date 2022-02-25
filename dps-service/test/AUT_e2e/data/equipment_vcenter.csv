@@ -1,0 +1,7 @@
+vcenter_code;vcenter_name;parent_id;flag
+VC01;VC_DC1 East Zone;DC01;1
+VC02;VC_DC2 West Zone;DC02;1
+VC03;VC_DC1 North Zone;DC01;1
+VC04;VC_DC2 South Zone;DC02;1
+VC05;VC Standalone 1;;1
+VC06;VC Standalone 2;;1

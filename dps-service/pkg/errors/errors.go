@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package errors
 
 import (
@@ -12,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
 
@@ -76,7 +69,7 @@ func getError(value string) *customError {
 func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
 	if err != nil {
 		const fallback = `{"code": 13, "message": "failed to marshal error message"}`
-		cError := getError(grpc.ErrorDesc(err))
+		cError := getError(status.Convert(err).Message())
 		if cError == nil {
 			s := status.Convert(err)
 			pb := s.Proto()
@@ -85,7 +78,7 @@ func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime
 			w.Header().Set("Content-Type", contentType)
 			st := runtime.HTTPStatusFromCode(s.Code())
 			w.WriteHeader(st)
-			w.Write(buf)
+			w.Write(buf) // nolint: errcheck
 		} else {
 			w.Header().Set("Content-type", marshaler.ContentType())
 			w.WriteHeader(cError.HTTPStatusCode)
@@ -96,7 +89,7 @@ func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime
 				cError.HTTPStatusCode,
 			})
 			if jErr != nil {
-				w.Write([]byte(fallback))
+				w.Write([]byte(fallback)) // nolint: errcheck
 			}
 		}
 	}

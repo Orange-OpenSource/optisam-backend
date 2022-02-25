@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -38,17 +32,17 @@ func (role Role) RoleToRoleString() string {
 
 // AccountInfo ...
 type AccountInfo struct {
-	UserId          string
+	FirstLogin      bool
+	Role            Role
+	ContFailedLogin int16
+	UserID          string
 	FirstName       string
 	LastName        string
 	Locale          string
 	Password        string
-	Role            Role
 	ProfilePic      []byte
 	LastLogin       sql.NullTime
-	ContFailedLogin int16
 	CreatedOn       time.Time
-	FirstLogin      bool
 	Group           []int64
 	GroupName       []string
 }

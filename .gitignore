@@ -1,6 +1,5 @@
 # Binaries for programs and plugins
-**/server
-!**/server/
+**/server/server
 *.exe
 *.exe~
 *.dll
@@ -10,7 +9,11 @@ gomock_*
 badger
 mapping_badger
 study
-test
+
+# sensitive info 
+# **/cert.pem
+# **/key.pem
+
 
 # Test binary, built with `go test -c`
 *.test
@@ -21,32 +24,20 @@ test
 
 # VSCode
 .vscode/*
+.vs/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Test Data files
-**/*.zip
+# VSCode
+.idea/*
 
-# Docker files
-Dockerfile
-Dockerfile*
-docker-compose.yml
+graphql
 
-# Deployment files
-**/.gitlab-ci.yml
-**/.golangci.yml
-**/*-service.yml
-**/sonar-project.properties
+# Karate
+**/target/*
+*karate.jar*
+*karate-0.9.6.jar*
+# *karate-config.js*
 
-# Configuraiton files
-**/config-*.toml
-!**/config-local.toml
-karate-config.js
-
-# sql DB scripts
-1_optisam_db.sql
-
-# nifi-service
-nifi-service/**/*

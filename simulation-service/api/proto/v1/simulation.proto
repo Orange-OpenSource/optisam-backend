@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "v1";
+option go_package = "optisam-backend/simulation-service/pkg/api/v1";
 
 package optisam.simulation.v1;
 
@@ -13,7 +13,7 @@ service SimulationService {
 
   rpc DeleteConfig (DeleteConfigRequest) returns (DeleteConfigResponse){
     option (google.api.http) = {
-      delete : "/api/v1/config/{config_id}"
+      delete : "/api/v1/simulation/config/{config_id}"
     };
   }
 
@@ -27,13 +27,13 @@ service SimulationService {
 
   rpc ListConfig (ListConfigRequest) returns (ListConfigResponse) {
     option (google.api.http) = {
-      get : "/api/v1/config"
+      get : "/api/v1/simulation/config"
     };
   }
 
   rpc GetConfigData (GetConfigDataRequest) returns (GetConfigDataResponse) {
     option (google.api.http) = {
-      get : "/api/v1/config/{config_id}/{metadata_id}"
+      get : "/api/v1/simulation/config/{config_id}/{metadata_id}"
     };
   }
 
@@ -51,6 +51,8 @@ service SimulationService {
     };
   }
 }
+
+
 
 message SimulationByHardwareRequest {
   string equip_type = 1;

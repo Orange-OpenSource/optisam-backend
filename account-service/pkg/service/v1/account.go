@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -12,26 +6,162 @@ import (
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repo "optisam-backend/account-service/pkg/repository/v1"
 	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"time"
 	"unicode"
+
+	application "optisam-backend/application-service/pkg/api/v1"
+	dps "optisam-backend/dps-service/pkg/api/v1"
+	equipment "optisam-backend/equipment-service/pkg/api/v1"
+	metric "optisam-backend/metric-service/pkg/api/v1"
+	product "optisam-backend/product-service/pkg/api/v1"
+	report "optisam-backend/report-service/pkg/api/v1"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/sync/errgroup"
 
 	"optisam-backend/common/optisam/token/claims"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type accountServiceServer struct {
 	accountRepo repo.Account
+	application application.ApplicationServiceClient
+	product     product.ProductServiceClient
+	report      report.ReportServiceClient
+	metric      metric.MetricServiceClient
+	equipment   equipment.EquipmentServiceClient
+	dps         dps.DpsServiceClient
 }
 
 // NewAccountServiceServer creates Auth service
-func NewAccountServiceServer(accountRepo repo.Account) v1.AccountServiceServer {
-	return &accountServiceServer{accountRepo: accountRepo}
+func NewAccountServiceServer(accountRepo repo.Account, grpcConnections map[string]*grpc.ClientConn) v1.AccountServiceServer {
+	return &accountServiceServer{
+		accountRepo: accountRepo,
+		application: application.NewApplicationServiceClient(grpcConnections["application"]),
+		product:     product.NewProductServiceClient(grpcConnections["product"]),
+		metric:      metric.NewMetricServiceClient(grpcConnections["metric"]),
+		dps:         dps.NewDpsServiceClient(grpcConnections["dps"]),
+		report:      report.NewReportServiceClient(grpcConnections["report"]),
+		equipment:   equipment.NewEquipmentServiceClient(grpcConnections["equipment"]),
+	}
+}
+
+func (s *accountServiceServer) DropScopeData(ctx context.Context, req *v1.DropScopeDataRequest) (*v1.DropScopeDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DropScopeDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsValidationFailed")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return &v1.DropScopeDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return &v1.DropScopeDataResponse{Success: false}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	var g errgroup.Group
+	// Delete application data
+	g.Go(func() error {
+		if _, err := s.application.DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in application service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("Application Resource deleted successfully")
+		return nil
+	})
+
+	// Delete obscolenscene data
+	g.Go(func() error {
+		if _, err := s.application.DropObscolenscenceData(ctx, &application.DropObscolenscenceDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in application service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("obscolenscene Resource deleted successfully")
+		return nil
+	})
+
+	// Delete Product & AcquiredRights resource
+	g.Go(func() error {
+		if _, err := s.product.DropProductData(ctx, &product.DropProductDataRequest{Scope: req.Scope, DeletionType: product.DropProductDataRequest_FULL}); err != nil {
+			logger.Log.Error("Failed to delete resources in account service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("Application Resource deleted successfully")
+		return nil
+	})
+
+	// Delete Equipment & metadata
+	g.Go(func() error {
+		ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
+		defer cancel()
+		if _, err := s.equipment.DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in equipment service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("equipment Resource deleted successfully")
+		return nil
+	})
+
+	// Delete Equipment & metadata
+	g.Go(func() error {
+		if _, err := s.equipment.DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in equipment service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("metadata Resource deleted successfully")
+		return nil
+	})
+
+	// Delete uploaded  files records
+	g.Go(func() error {
+		if _, err := s.dps.DropUploadedFileData(ctx, &dps.DropUploadedFileDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in dps service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("uploaded files records deleted successfully")
+		return nil
+	})
+
+	// Delete metrics
+	g.Go(func() error {
+		if _, err := s.metric.DropMetricData(ctx, &metric.DropMetricDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in metric service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("metric deleted successfully")
+		return nil
+	})
+
+	// Delete reports
+	g.Go(func() error {
+		if _, err := s.report.DropReportData(ctx, &report.DropReportDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete resources in report service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("reports deleted successfully")
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return &v1.DropScopeDataResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "InternalError")
+	}
+
+	err := s.accountRepo.DropScopeTX(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("Failed to delete resources in account service", zap.Error(err))
+		return &v1.DropScopeDataResponse{Success: false}, err
+	}
+
+	return &v1.DropScopeDataResponse{Success: true}, nil
 }
 
 func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.UpdateAccountRequest) (*v1.UpdateAccountResponse, error) {
@@ -41,7 +171,7 @@ func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.Update
 			Success: false,
 		}, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	//To check if the account exists or not
+	// To check if the account exists or not
 	ai, err := s.accountRepo.AccountInfo(ctx, req.Account.UserId)
 	if err != nil {
 		if err == repo.ErrNoData {
@@ -55,11 +185,11 @@ func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.Update
 			Success: false,
 		}, status.Error(codes.Internal, "failed to get Account info")
 	}
-	//When user want to update personal information
+	// When user want to update personal information
 	if userClaims.UserID == req.Account.UserId {
 		updateAcc := s.updateAccFieldChk(req.Account, ai)
-		if err := s.accountRepo.UpdateAccount(ctx, ai.UserId, updateAcc); err != nil {
-			logger.Log.Error("service/v1 - UpdateAccount - UpdateAccount", zap.Error(err))
+		if error := s.accountRepo.UpdateAccount(ctx, ai.UserID, updateAcc); error != nil {
+			logger.Log.Error("service/v1 - UpdateAccount - UpdateAccount", zap.Error(error))
 			return &v1.UpdateAccountResponse{
 				Success: false,
 			}, status.Error(codes.Internal, "failed to update account")
@@ -68,23 +198,23 @@ func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.Update
 			Success: true,
 		}, nil
 	}
-	//Admin and SuperAdmin can update user's role
+	// Admin and SuperAdmin can update user's role
 	switch userClaims.Role {
 	case claims.RoleUser:
 		return &v1.UpdateAccountResponse{
 			Success: false,
 		}, status.Error(codes.PermissionDenied, "user does not have the access to update other users")
-	//User should belong to the group owned by admin
+	// User should belong to the group owned by admin
 	case claims.RoleAdmin:
-		//does user belongs to groups owned by admin and their child groups
-		isGroupUser, err := s.accountRepo.UserBelongsToAdminGroup(ctx, userClaims.UserID, req.Account.UserId)
-		if err != nil {
-			logger.Log.Error("service/v1 - UpdateAccount - UserBelongsToAdminGroup", zap.Error(err))
+		// does user belongs to groups owned by admin and their child groups
+		isGroupUser, error := s.accountRepo.UserBelongsToAdminGroup(ctx, userClaims.UserID, req.Account.UserId)
+		if error != nil {
+			logger.Log.Error("service/v1 - UpdateAccount - UserBelongsToAdminGroup", zap.Error(error))
 			return &v1.UpdateAccountResponse{
 				Success: false,
 			}, status.Error(codes.Internal, "failed to check if user belongs to the admin groups")
 		}
-		//if not then admin does not have the permission to update role of the user
+		// if not then admin does not have the permission to update role of the user
 		if !isGroupUser {
 			return &v1.UpdateAccountResponse{
 				Success: false,
@@ -98,7 +228,7 @@ func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.Update
 			Success: false,
 		}, status.Error(codes.InvalidArgument, "failed to validate update account request")
 	}
-	if err := s.accountRepo.UpdateUserAccount(ctx, ai.UserId, updateAcc); err != nil {
+	if err := s.accountRepo.UpdateUserAccount(ctx, ai.UserID, updateAcc); err != nil {
 		logger.Log.Error("service/v1 - UpdateAccount - UpdateUserAccount", zap.Error(err))
 		return &v1.UpdateAccountResponse{
 			Success: false,
@@ -110,8 +240,8 @@ func (s *accountServiceServer) UpdateAccount(ctx context.Context, req *v1.Update
 }
 
 func init() {
-	//admin rights are required for this function
-	adminRpcMap["/v1.AccountService/DeleteAccount"] = struct{}{}
+	// admin rights are required for this function
+	adminRPCMap["/v1.AccountService/DeleteAccount"] = struct{}{}
 }
 
 // DeleteAccount update an account to be inactive if
@@ -124,7 +254,7 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 	if !ok {
 		return &v1.DeleteAccountResponse{Success: false}, status.Error(codes.Internal, "cannot find claims in context")
 	}
-	//To check if the account exists or not
+	// To check if the account exists or not
 	ai, err := s.accountRepo.AccountInfo(ctx, req.UserId)
 	if err != nil {
 		if err == repo.ErrNoData {
@@ -138,9 +268,9 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 			Success: false,
 		}, status.Error(codes.Internal, "failed to get Account info")
 	}
-	//Admin can delete user belong to one of his groups
+	// Admin can delete user belong to one of his groups
 	if userClaims.Role == claims.RoleAdmin {
-		//does user belongs to groups owned by admin and their child groups
+		// does user belongs to groups owned by admin and their child groups
 		isGroupUser, err := s.accountRepo.UserBelongsToAdminGroup(ctx, userClaims.UserID, req.UserId)
 		if err != nil {
 			logger.Log.Error("service/v1 - DeleteAccount - UserBelongsToAdminGroup", zap.Error(err))
@@ -148,7 +278,7 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 				Success: false,
 			}, status.Error(codes.Internal, "failed to check if user belongs to the admin groups")
 		}
-		//if not then admin does not have the permission to update role of the user
+		// if not then admin does not have the permission to update role of the user
 		if !isGroupUser {
 			return &v1.DeleteAccountResponse{
 				Success: false,
@@ -156,7 +286,7 @@ func (s *accountServiceServer) DeleteAccount(ctx context.Context, req *v1.Delete
 		}
 	}
 	if err := s.accountRepo.InsertUserAudit(ctx, db.InsertUserAuditParams{
-		Username:        ai.UserId,
+		Username:        ai.UserID,
 		FirstName:       ai.FirstName,
 		LastName:        ai.LastName,
 		Locale:          ai.Locale,
@@ -188,7 +318,7 @@ func (s *accountServiceServer) GetAccount(ctx context.Context, req *v1.GetAccoun
 		return nil, status.Error(codes.Internal, "failed to get Account info")
 	}
 	return &v1.GetAccountResponse{
-		UserId:     ai.UserId,
+		UserId:     ai.UserID,
 		FirstName:  ai.FirstName,
 		LastName:   ai.LastName,
 		Role:       v1.ROLE(ai.Role),
@@ -272,8 +402,8 @@ func (s *accountServiceServer) CreateAccount(ctx context.Context, req *v1.Accoun
 	return req, nil
 }
 func init() {
-	//admin rights are required for this function
-	adminRpcMap["/v1.AccountService/GetUsers"] = struct{}{}
+	// admin rights are required for this function
+	adminRPCMap["/v1.AccountService/GetUsers"] = struct{}{}
 }
 
 // GetUsers list all the users present
@@ -356,9 +486,9 @@ func (s *accountServiceServer) AddGroupUser(ctx context.Context, req *v1.AddGrou
 
 	userIDS := []string{}
 	for _, userID := range req.UserId {
-		isUserOwnsGrp, err := s.accountRepo.UserOwnsGroupByID(ctx, userID, req.GroupId)
-		if err != nil {
-			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(err))
+		isUserOwnsGrp, error := s.accountRepo.UserOwnsGroupByID(ctx, userID, req.GroupId)
+		if error != nil {
+			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(error))
 			return nil, status.Error(codes.Internal, "service/v1 - AddGroupUser - failed to get UserOwnsGroupByID for user - "+userID)
 		}
 		if isUserOwnsGrp {
@@ -367,8 +497,8 @@ func (s *accountServiceServer) AddGroupUser(ctx context.Context, req *v1.AddGrou
 		userIDS = append(userIDS, userID)
 	}
 	if len(userIDS) > 0 {
-		if err := s.accountRepo.AddGroupUsers(ctx, req.GroupId, userIDS); err != nil {
-			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(err))
+		if error := s.accountRepo.AddGroupUsers(ctx, req.GroupId, userIDS); error != nil {
+			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(error))
 			return nil, status.Error(codes.Internal, "service/v1 - AddGroupUser - failed to add user")
 		}
 	}
@@ -413,7 +543,7 @@ func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.Dele
 	admins := make(map[string]struct{})
 	for _, user := range users {
 		if user.Role == repo.RoleAdmin || user.Role == repo.RoleSuperAdmin {
-			admins[user.UserId] = struct{}{}
+			admins[user.UserID] = struct{}{}
 		}
 	}
 
@@ -426,9 +556,9 @@ func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.Dele
 
 	if len(admins) == 0 {
 
-		isGroupRoot, err := s.accountRepo.IsGroupRoot(ctx, req.GroupId)
-		if err != nil {
-			logger.Log.Error("service/v1 - DeleteGroupUser - IsGroupRoot ", zap.Error(err))
+		isGroupRoot, error := s.accountRepo.IsGroupRoot(ctx, req.GroupId)
+		if error != nil {
+			logger.Log.Error("service/v1 - DeleteGroupUser - IsGroupRoot ", zap.Error(error))
 			return nil, status.Error(codes.Internal, "failed to get IsGroupRoot info")
 		}
 
@@ -438,8 +568,8 @@ func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.Dele
 	}
 
 	if len(req.UserId) > 0 {
-		if err := s.accountRepo.DeleteGroupUsers(ctx, req.GroupId, req.UserId); err != nil {
-			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(err))
+		if error := s.accountRepo.DeleteGroupUsers(ctx, req.GroupId, req.UserId); error != nil {
+			logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(error))
 			return nil, status.Error(codes.Internal, "service/v1 - AddGroupUser - failed to add user")
 		}
 	}
@@ -456,7 +586,7 @@ func (s *accountServiceServer) DeleteGroupUser(ctx context.Context, req *v1.Dele
 
 }
 
-//ChangePassword changes user's current password
+// ChangePassword changes user's current password
 func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -465,10 +595,10 @@ func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.Chang
 	userInfo, err := s.accountRepo.AccountInfo(ctx, userClaims.UserID)
 	if err != nil {
 		logger.Log.Error("service - AccountInfo", zap.Error(err))
-		return nil, status.Error(codes.Internal, "unknown error occured")
+		return nil, status.Error(codes.Internal, "unknown error occurred")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(req.Old)); err != nil {
+	if error := bcrypt.CompareHashAndPassword([]byte(userInfo.Password), []byte(req.Old)); error != nil {
 		return nil, status.Error(codes.InvalidArgument, "Old password is wrong")
 
 	}
@@ -482,7 +612,7 @@ func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.Chang
 	newPass, err := bcrypt.GenerateFromPassword([]byte(req.New), 11)
 	if err != nil {
 		logger.Log.Error("service -CheckPassword - GenerateFromPassword", zap.Error(err))
-		return nil, status.Error(codes.Internal, "unkown error")
+		return nil, status.Error(codes.Internal, "unknown error")
 	}
 	if err := s.accountRepo.ChangePassword(ctx, userClaims.UserID, string(newPass)); err != nil {
 		logger.Log.Error("service/v1 - ChangePassword - ChangePassword", zap.Error(err))
@@ -508,11 +638,11 @@ func groupExists(groupID int64, groups []*repo.Group) bool {
 	return false
 }
 
-const defaultPassHash = "$2a$11$Lypq8GAINiClykvfHDu2QeRzl973Xx0wrnWTy1d67vetJ.WwlMsUK"
+const defaultPassHash = "$2a$11$Lypq8GAINiClykvfHDu2QeRzl973Xx0wrnWTy1d67vetJ.WwlMsUK" // nolint: gosec
 
 func serviceAccountToRepoAccount(acc *v1.Account) *repo.AccountInfo {
 	return &repo.AccountInfo{
-		UserId:    acc.UserId,
+		UserID:    acc.UserId,
 		FirstName: acc.FirstName,
 		LastName:  acc.LastName,
 		Locale:    acc.Locale,
@@ -567,7 +697,7 @@ func (s *accountServiceServer) convertRepoUserToSrvUserAll(users []*repo.Account
 
 func (s *accountServiceServer) convertRepoUserToSrvUser(user *repo.AccountInfo) *v1.User {
 	return &v1.User{
-		UserId:    user.UserId,
+		UserId:    user.UserID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Locale:    user.Locale,
@@ -578,7 +708,7 @@ func (s *accountServiceServer) convertRepoUserToSrvUser(user *repo.AccountInfo) 
 
 func userExistsInGroup(userID string, users []*repo.AccountInfo) bool {
 	for _, user := range users {
-		if userID == user.UserId {
+		if userID == user.UserID {
 			return true
 		}
 	}
@@ -632,7 +762,7 @@ func (s *accountServiceServer) updateAccFieldChk(reqAcc *v1.UpdateAccount, acc *
 		Locale:    reqAcc.Locale,
 	}
 	if reqAcc.ProfilePic == "" {
-		updateAcc.ProfilePic = []byte(acc.ProfilePic)
+		updateAcc.ProfilePic = acc.ProfilePic
 	} else {
 		updateAcc.ProfilePic = []byte(reqAcc.ProfilePic)
 	}

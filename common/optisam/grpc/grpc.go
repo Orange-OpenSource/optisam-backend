@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package grpc
 
 import (
@@ -12,6 +6,7 @@ import (
 	middleware "optisam-backend/common/optisam/middleware/grpc"
 	"time"
 
+	"go.opencensus.io/plugin/ocgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -23,10 +18,11 @@ func GetGRPCConnections(ctx context.Context, c Config) (map[string]*grpc.ClientC
 	}
 	for key, val := range c.Address {
 		var conn *grpc.ClientConn
-		conn, err := grpc.Dial(val, grpc.WithInsecure(),
+		opts := []grpc.DialOption{grpc.WithInsecure(),
 			grpc.WithConnectParams(grpc.ConnectParams{MinConnectTimeout: c.Timeout * time.Millisecond * 10}),
-			grpc.WithChainUnaryInterceptor(middleware.AddContextSharingInterceptor()),
-		)
+			grpc.WithChainUnaryInterceptor(middleware.AddAuthNClientInterceptor(c.APIKey)),
+			grpc.WithStatsHandler(&ocgrpc.ClientHandler{})}
+		conn, err := grpc.Dial(val, opts...)
 		if err != nil {
 			logger.Log.Error("did not connect:", zap.String(key, val), zap.Error(err))
 			return nil, err

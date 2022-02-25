@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -42,9 +36,9 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *v1.LoginRequest) (*v
 	}
 
 	// check if user is blocked
-	if ui.FailedLogins >= 3 {
-		return nil, errors.ErrLoginBlockedAccount
-	}
+	// if ui.FailedLogins >= 3 {
+	// 	return nil, errors.ErrLoginBlockedAccount
+	// }
 
 	// Check if password is correct or not
 
@@ -54,9 +48,9 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *v1.LoginRequest) (*v
 			return nil, fmt.Errorf("service/v1 login failed to increase unsuccessful login count: %v", err)
 		}
 		// check if user is blocked
-		if ui.FailedLogins == 2 {
-			return nil, errors.ErrAccountBlocked
-		}
+		// if ui.FailedLogins == 2 {
+		// 	return nil, errors.ErrAccountBlocked
+		// }
 		return nil, errors.ErrInvalidCredentials
 	}
 

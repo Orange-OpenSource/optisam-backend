@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package helper
 
 import (
@@ -96,71 +90,6 @@ func TestAppendIfNotExists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := AppendElementsIfNotExists(tt.args.slice, tt.args.addElementSlice); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AppendIfNotExists() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestRegexContains(t *testing.T) {
-	type args struct {
-		slice []string
-		vals  []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "SUCCESS-SingleElementSourceSlice-NoTargetParmeter",
-			args: args{slice: []string{"A"}, vals: []string{}},
-			want: true,
-		},
-		{
-			name: "SUCCESS-SingleElementSourceSlice-SingleTargetParmeter",
-			args: args{slice: []string{"A"}, vals: []string{"A"}},
-			want: true,
-		},
-		{
-			name: "SUCCESS-MultiElementSourceSlice-SingleTargetParmeter",
-			args: args{slice: []string{"A", "B"}, vals: []string{"A"}},
-			want: true,
-		},
-		{
-			name: "SUCCESS-MultiElementSourceSlice-MultiTargetParmeter",
-			args: args{slice: []string{"A", "B", "C"}, vals: []string{"A", "B"}},
-			want: true,
-		},
-		{
-			name: "SUCCESS-EmptySourceSlice-EmptyTargetParmeter",
-			args: args{slice: []string{}, vals: []string{}},
-			want: true,
-		},
-		{
-			name: "Failed-EmptySourceSlice-MultiTargetParmeter",
-			args: args{slice: []string{}, vals: []string{"A", "B"}},
-			want: false,
-		},
-		{
-			name: "Failed-MultiElementSourceSlice-NoMatchSingleTargetParmeter",
-			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D"}},
-			want: false,
-		},
-		{
-			name: "Failed-MultiElementSourceSlice-NoMatchMultiTargetParmeter",
-			args: args{slice: []string{"A", "B", "C"}, vals: []string{"D", "E"}},
-			want: false,
-		},
-		{
-			name: "Failed-MultiElementSourceSlice-SomeMatchMultiTargetParmeter",
-			args: args{slice: []string{"A", "B", "C"}, vals: []string{"C", "D"}},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := RegexContains(tt.args.slice, tt.args.val); got != tt.want {
-				t.Errorf("Contains() = %v, want %v", got, tt.want)
 			}
 		})
 	}

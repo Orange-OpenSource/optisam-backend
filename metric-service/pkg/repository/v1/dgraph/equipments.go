@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -90,7 +84,7 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 }
 
 // EquipmentTypes implements Licence EquipmentTypes function
-func (lr *MetricRepository) EquipmentTypes(ctx context.Context, scope string) ([]*v1.EquipmentType, error) {
+func (l *MetricRepository) EquipmentTypes(ctx context.Context, scope string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
 		EqTypes(func:has(metadata.equipment.type))@filter(eq(scopes,` + scope + `)){
@@ -98,7 +92,7 @@ func (lr *MetricRepository) EquipmentTypes(ctx context.Context, scope string) ([
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
@@ -149,5 +143,5 @@ func schemaForAttribute(name string, attr *v1.Attribute) string {
 }
 
 func replaceSpaces(mappedTo string) string {
-	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1)
+	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1) // nolint: gocritic
 }

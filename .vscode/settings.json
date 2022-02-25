@@ -4,6 +4,7 @@
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
           "source.organizeImports": true,
+          "source.fixAll": true,
       },
       // Optional: Disable snippets, as they conflict with completion ranking.
       "editor.snippetSuggestions": "none",
@@ -28,5 +29,6 @@
     "-count=1",
     "-v"
 ],
-"karateRunner.tests.activityBarDisplayType": "Deep"
+"karateRunner.tests.activityBarDisplayType": "Deep",
+"workbench.editor.wrapTabs": true
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -26,7 +20,7 @@ const (
 	Cluster   = "Cluster"
 	Vcenter   = "Vcenter"
 	Partition = "Partition"
-	//DataCenter="Datacenter"
+	// DataCenter="Datacenter"
 )
 
 var (
@@ -76,7 +70,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_serialNumber",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerDateInstallation",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -84,7 +78,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_DateInstallation",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerProprietaryEntity",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -92,7 +86,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_proprietaryEntity",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerHostingEntity",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -100,7 +94,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_hostingEntity",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerUserEntity",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -108,7 +102,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_userEntity",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerSite",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -116,7 +110,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_Site",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerCPU",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -124,7 +118,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_cpu",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerProcessorsNumber",
 				Type:               v1.DataTypeInt,
 				IsDisplayed:        true,
@@ -132,7 +126,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_processorsNumber",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ServerCoresNumber",
 				Type:               v1.DataTypeInt,
 				IsDisplayed:        true,
@@ -140,28 +134,28 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "server_coresNumber",
 			},
-			&v1.Attribute{
+			{
 				Name:               "Parent",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
 				IsParentIdentifier: true,
 				MappedTo:           "parent_id",
 			},
-			&v1.Attribute{
+			{
 				Name:         "OracleCoreFactor",
 				Type:         v1.DataTypeFloat,
 				IsDisplayed:  true,
 				IsSearchable: true,
 				MappedTo:     "corefactor_oracle",
 			},
-			&v1.Attribute{
+			{
 				Name:         "SAG",
 				Type:         v1.DataTypeFloat,
 				IsDisplayed:  true,
 				IsSearchable: true,
 				MappedTo:     "sag",
 			},
-			&v1.Attribute{
+			{
 				Name:         "PVU",
 				Type:         v1.DataTypeInt,
 				IsDisplayed:  true,
@@ -175,7 +169,7 @@ var (
 		Type:       Cluster,
 		SourceName: "equipment_cluster.csv",
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:               "ClusterName",
 				Type:               v1.DataTypeString,
 				IsIdentifier:       true,
@@ -184,7 +178,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "cluster_name",
 			},
-			&v1.Attribute{
+			{
 				Name:               "Parent",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -198,7 +192,7 @@ var (
 		Type:       Vcenter,
 		SourceName: "equipment_vcenter.csv",
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:               "VcenterName",
 				Type:               v1.DataTypeString,
 				IsIdentifier:       true,
@@ -207,7 +201,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "vcenter_name",
 			},
-			&v1.Attribute{
+			{
 				Name:               "Parent",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -221,7 +215,7 @@ var (
 		Type:       Partition,
 		SourceName: "equipment_partition.csv",
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:               "HostName",
 				Type:               v1.DataTypeString,
 				IsIdentifier:       true,
@@ -230,7 +224,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_hostname",
 			},
-			&v1.Attribute{
+			{
 				Name:               "PartitionCode",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -238,7 +232,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_code",
 			},
-			&v1.Attribute{
+			{
 				Name:               "PartitionRole",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -246,7 +240,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_role",
 			},
-			&v1.Attribute{
+			{
 				Name:               "Environment",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -254,7 +248,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_environment",
 			},
-			&v1.Attribute{
+			{
 				Name:               "PartitionShortOs",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -262,7 +256,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_shortOS",
 			},
-			&v1.Attribute{
+			{
 				Name:               "PartitionNormalizedOs",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -270,7 +264,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_normalizedOS",
 			},
-			&v1.Attribute{
+			{
 				Name:               "CPU",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -278,7 +272,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_cpu",
 			},
-			&v1.Attribute{
+			{
 				Name:               "ProcessorNumber",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -286,7 +280,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_processorsNumber",
 			},
-			&v1.Attribute{
+			{
 				Name:               "CoresNumber",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -294,7 +288,7 @@ var (
 				IsParentIdentifier: false,
 				MappedTo:           "partition_coresNumber",
 			},
-			&v1.Attribute{
+			{
 				Name:               "Parent",
 				Type:               v1.DataTypeString,
 				IsDisplayed:        true,
@@ -308,7 +302,7 @@ var (
 		Type:       "Datacenter",
 		SourceName: "equipment_datacenter.csv",
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:               "Name",
 				Type:               v1.DataTypeString,
 				IsIdentifier:       true,
@@ -402,17 +396,17 @@ func loadEquipmentMetadata(ch chan<- *api.Request, doneChan <-chan struct{}, fil
 		return nqs
 	}
 	nqs := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     uid,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metadata"),
 		},
-		&api.NQuad{
+		{
 			Subject:     uid,
 			Predicate:   "metadata.type",
 			ObjectValue: stringObjectValue("equipment"),
 		},
-		&api.NQuad{
+		{
 			Subject:     uid,
 			Predicate:   "metadata.source",
 			ObjectValue: stringObjectValue(filepath.Base(filename)),
@@ -424,7 +418,7 @@ func loadEquipmentMetadata(ch chan<- *api.Request, doneChan <-chan struct{}, fil
 		return
 	case ch <- &api.Request{
 		Mutations: []*api.Mutation{
-			&api.Mutation{
+			{
 				CommitNow: true,
 				Set:       nqs,
 			},

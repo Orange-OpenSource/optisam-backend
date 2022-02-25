@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import "errors"
@@ -108,7 +102,7 @@ func (e *EquipmentType) PrimaryKeyAttribute() (*Attribute, error) {
 			return attr, nil
 		}
 	}
-	return nil, errors.New("Primary key attribute is not found")
+	return nil, errors.New("primary key attribute is not found")
 }
 
 // ParentKeyAttribute returns primary key attribute of equipment type
@@ -118,7 +112,7 @@ func (e *EquipmentType) ParentKeyAttribute() (*Attribute, error) {
 			return attr, nil
 		}
 	}
-	return nil, errors.New("Primary key attribute is not found")
+	return nil, errors.New("primary key attribute is not found")
 }
 
 // QueryEquipments has parameters for query

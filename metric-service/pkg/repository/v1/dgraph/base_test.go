@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -123,10 +117,10 @@ func TestMain(m *testing.M) {
 func loadDgraphData(badgerDir string) error {
 	path := "../../../../../license-service/pkg/repository/v1/dgraph/"
 	config := loader.NewDefaultConfig()
-	//hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
-	//zero := fmt.Sprintf("%s:5080", hosts[0])
-	//config.Zero = zero
-	//config.Alpha = cfg.Dgraph.Hosts
+	// hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
+	// zero := fmt.Sprintf("%s:5080", hosts[0])
+	// config.Zero = zero
+	// config.Alpha = cfg.Dgraph.Hosts
 	config.BatchSize = 1000
 	config.CreateSchema = true
 	config.SchemaFiles = []string{

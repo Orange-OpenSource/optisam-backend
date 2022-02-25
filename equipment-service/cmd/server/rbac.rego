@@ -15,6 +15,6 @@ allow {
 
 roles := {"Admin":{"SuperAdmin","Admin"},"Normal":{"User"}}
 
-user_apis := {"/v1.EquipmentService/EquipmentsTypes","/v1.EquipmentService/ListEquipments",
-"/v1.EquipmentService/GetEquipment","/v1.EquipmentService/ListEquipmentParents",
-"/v1.EquipmentService/ListEquipmentChildren","/v1.EquipmentService/ListEquipmentsForProductAggregation","/v1.EquipmentService/EquipmentsPerEquipmentType"}
+user_apis := {"/optisam.equipment.v1.EquipmentService/EquipmentsTypes","/optisam.equipment.v1.EquipmentService/ListEquipments",
+"/optisam.equipment.v1.EquipmentService/GetEquipment","/optisam.equipment.v1.EquipmentService/ListEquipmentParents",
+"/optisam.equipment.v1.EquipmentService/ListEquipmentChildren","/optisam.equipment.v1.EquipmentService/ListEquipmentsForProductAggregation","/optisam.equipment.v1.EquipmentService/EquipmentsPerEquipmentType"}

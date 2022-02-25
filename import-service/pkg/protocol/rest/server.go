@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package rest
 
 import (
@@ -46,9 +40,11 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	// TODO add a import handler here
 	router.POST("/api/v1/import/data", h.UploadDataHandler)
 	router.POST("/api/v1/import/metadata", h.UploadMetaDataHandler)
-	router.POST("/api/v1/config", h.CreateConfigHandler)
-	router.PUT("/api/v1/config/:config_id", h.UpdateConfigHandler)
+	router.POST("/api/v1/import/config", h.CreateConfigHandler)
+	router.PUT("/api/v1/import/config/:config_id", h.UpdateConfigHandler)
 	router.POST("/api/v1/import/globaldata", h.UploadGlobalDataHandler)
+	router.GET("/api/v1/import/download", h.DownloadFile)
+	router.POST("/api/v1/import/upload", h.UploadFiles)
 
 	srv := &http.Server{
 		Addr: ":" + config.HTTPPort,

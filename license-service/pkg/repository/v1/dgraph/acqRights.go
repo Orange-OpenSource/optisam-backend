@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -24,24 +18,12 @@ func (p predAcqRights) String() string {
 }
 
 const (
-	predAcqRightsEntity                         predAcqRights = "acqRights.entity"
-	predAcqRightsSKU                            predAcqRights = "acqRights.SKU"
-	predAcqRightsSwidTag                        predAcqRights = "acqRights.swidtag"
-	predAcqRightsProductName                    predAcqRights = "acqRights.productName"
-	predAcqRightsEditor                         predAcqRights = "acqRights.editor"
-	predAcqRightsMetric                         predAcqRights = "acqRights.metric"
-	predAcqRightsAcquiredLicensesNumber         predAcqRights = "acqRights.numOfAcqLicences"
-	predAcqRightsLicensesUnderMaintenanceNumber predAcqRights = "acqRights.numOfLicencesUnderMaintenance"
-	predAcqRightsAvgLicenesUnitPrice            predAcqRights = "acqRights.averageUnitPrice"
-	predAcqRightsAvgMaintenanceUnitPrice        predAcqRights = "acqRights.averageMaintenantUnitPrice"
-	predAcqRightsTotalPurchaseCost              predAcqRights = "acqRights.totalPurchaseCost"
-	predAcqRightsTotalMaintenanceCost           predAcqRights = "acqRights.totalMaintenanceCost"
-	predAcqRightsTotalCost                      predAcqRights = "acqRights.totalCost"
+	predAcqRightsSKU         predAcqRights = "acqRights.SKU"
+	predAcqRightsSwidTag     predAcqRights = "acqRights.swidtag"
+	predAcqRightsProductName predAcqRights = "acqRights.productName"
+	predAcqRightsEditor      predAcqRights = "acqRights.editor"
+	predAcqRightsMetric      predAcqRights = "acqRights.metric"
 )
-
-type totalRecords struct {
-	TotalCount int32
-}
 
 func scopeFilters(scopes []string) []string {
 	return []string{

@@ -1,1 +1,1 @@
-metric.instancenumber.coefficient       : float .
+metric.instancenumber.coefficient       : int .

@@ -12,7 +12,8 @@ CREATE TABLE jobs (
   start_time TIMESTAMP,
   end_time TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  retry_count INTEGER DEFAULT 0
+  retry_count INTEGER DEFAULT 0,
+  meta_data JSONB NOT NULL
 );
 
 CREATE INDEX status_index ON jobs (status);

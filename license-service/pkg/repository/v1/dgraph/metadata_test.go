@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -43,52 +37,52 @@ func TestLicenseRepository_Metadata(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_1.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.source",
 							ObjectValue: stringObjectValue("equip_2.csv"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.type",
 							ObjectValue: stringObjectValue("equipment"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     id1,
 							Predicate:   "metadata.attributes",
 							ObjectValue: stringObjectValue("col_3"),
@@ -112,7 +106,7 @@ func TestLicenseRepository_Metadata(t *testing.T) {
 				}, nil
 			},
 			want: []*v1.Metadata{
-				&v1.Metadata{
+				{
 					Source: "equip_1.csv",
 					Attributes: []string{
 						"col_1",
@@ -120,7 +114,7 @@ func TestLicenseRepository_Metadata(t *testing.T) {
 						"col_3",
 					},
 				},
-				&v1.Metadata{
+				{
 					Source: "equip_2.csv",
 					Attributes: []string{
 						"col_1",

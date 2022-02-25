@@ -1,18 +1,17 @@
 syntax = "proto3";
 
-option go_package = "v1";
+option go_package = "optisam-backend/license-service/pkg/api/v1";
 
-package v1;
+package optisam.license.v1;
 
 import "google/api/annotations.proto";
 import "validate/validate.proto";
 
 service LicenseService {
 
-  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest)
-      returns (ListAcquiredRightsForProductResponse) {
+  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest)returns (ListAcquiredRightsForProductResponse) {
     option (google.api.http) = {
-      get : "/api/v1/product/{swid_tag}/acquiredrights"
+      get : "/api/v1/license/product/{swid_tag}/acquiredrights"
     };
   }
 
@@ -20,31 +19,25 @@ service LicenseService {
       ListAcqRightsForApplicationsProductRequest)
       returns (ListAcqRightsForApplicationsProductResponse) {
     option (google.api.http) = {
-      get : "/api/v1/licenses/applications/{app_id}/products/{prod_id}"
+      get : "/api/v1/license/applications/{app_id}/products/{prod_id}"
+    };
+  }
+  // ListComputationDetails
+  rpc ListComputationDetails(ListComputationDetailsRequest) returns (ListComputationDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/product/{swid_tag}/computationdetails"
     };
   }
 
-  rpc CreateProductAggregation(ProductAggregation)
-      returns (ProductAggregation) {
+  rpc ListAcqRightsForAggregation(ListAcqRightsForAggregationRequest)returns (ListAcqRightsForAggregationResponse) {
     option (google.api.http) = {
-      post : "/api/v1/products/aggregations"
-      body : "*"
+      get : "/api/v1/license/aggregation/{name}/acquiredrights"
     };
   }
 
-
-  rpc ListAcqRightsForProductAggregation(
-      ListAcqRightsForProductAggregationRequest)
-      returns (ListAcqRightsForProductAggregationResponse) {
+  rpc ProductLicensesForMetric(ProductLicensesForMetricRequest)returns (ProductLicensesForMetricResponse) {
     option (google.api.http) = {
-      get : "/api/v1/products/aggregations/productview/{ID}/acquiredrights"
-    };
-  }
-
-  rpc ProductLicensesForMetric(ProductLicensesForMetricRequest)
-      returns (ProductLicensesForMetricResponse) {
-    option (google.api.http) = {
-      post : "/api/v1/product/{swid_tag}/metric/{metric_name}"
+      post : "/api/v1/license/product/{swid_tag}/metric/{metric_name}"
       body : "*"
     };
   }
@@ -52,11 +45,30 @@ service LicenseService {
   rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)
       returns (LicensesForEquipAndMetricResponse) {
     option (google.api.http) = {
-      post : "/api/v1/equipments/types/{equip_type}/{equip_id}/metric/types/"
-             "{metric_type}/{metric_name}"
+      post : "/api/v1/license/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}"
       body : "*"
     };
   }
+}
+
+message ListComputationDetailsRequest {
+  string swid_tag = 1;
+  //repeated string metric_name = 2 [(validate.rules).repeated = {min_items: 1}];
+  string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$"];
+  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message ListComputationDetailsResponse {
+  repeated ComputedDetails computed_details = 1;
+}
+
+message ComputedDetails {
+  string metric_name = 1;
+  int32 numCptLicences = 2;
+  string computedDetails = 3;
+  int32 numAcqLicences = 4;
+  int32 deltaNumber = 5;
+  double deltaCost = 6;
 }
 
 message ListAcqRightsForApplicationsProductRequest {
@@ -103,42 +115,16 @@ message ProductLicensesForMetricResponse {
   string metric_name = 3;
 }
 
-message ListAcqRightsForProductAggregationRequest {
-  string ID = 1;
+message ListAcqRightsForAggregationRequest {
+  string name = 1;
   string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
-message ListAcqRightsForProductAggregationResponse {
-  repeated ProductAcquiredRights acq_rights = 1;
+message ListAcqRightsForAggregationResponse {
+  repeated AggregationAcquiredRights acq_rights = 1;
 }
 
-message UpdateProductAggregationRequest {
-  string name = 1;
-  UpdateAggregation aggregation = 2;
-}
-
-message UpdateAggregation {
-  string name = 1;
-  repeated string added_products = 2;
-  repeated string removed_products = 3;
-  repeated string product_names = 4;
-}
-
-message DeleteProductAggregationRequest { string ID = 1; }
-
-message ListProductAggregationResponse {
-  repeated ProductAggregation aggregations = 1;
-}
-
-message ProductAggregation {
-  string ID = 1;
-  string name = 2;
-  string editor = 3;
-  repeated string product_names = 4;
-  string metric = 5;
-  repeated string products = 6;
-  repeated Product products_full = 7;
-}
+message DeleteAggregationRequest { string ID = 1; }
 
 message ListMetricResponse { repeated Metric metrices = 1; }
 
@@ -155,6 +141,7 @@ message ListAcquiredRightsForProductRequest {
 
 message ListAcquiredRightsForProductResponse {
   repeated ProductAcquiredRights acq_rights = 1;
+  string aggregation_name = 2;
 }
 
 message Product {
@@ -192,6 +179,23 @@ message ProductAcquiredRights {
   int32 deltaNumber = 7;
   double deltaCost = 8;
   double avgUnitPrice = 9;
+  string computedDetails = 10;
+  bool metricNotDefined = 11;
+}
+
+message AggregationAcquiredRights {
+  string SKU = 1;
+  string aggregationName = 2;
+  string swidTags = 3;
+  string metric = 4;
+  int32 numCptLicences = 5;
+  int32 numAcqLicences = 6;
+  double totalCost = 7;
+  int32 deltaNumber = 8;
+  double deltaCost = 9;
+  double avgUnitPrice = 10;
+  string computedDetails = 11;
+  bool metricNotDefined = 12;
 }
 
 message Attribute {

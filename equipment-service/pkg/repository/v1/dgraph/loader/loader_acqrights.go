@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -74,7 +68,7 @@ func acquiredNquadsForRow(cols []string, scope string, row []string, xidIDX int)
 			uids = append(uids, uid)
 			upserts = append(upserts, upsert)
 			nquads = append(nquads, nqs...)
-			//log.Println(row[xidIDX], row[i], prodUID, uid)
+			// log.Println(row[xidIDX], row[i], prodUID, uid)
 			// link both nodes
 			nquads = append(nquads, &api.NQuad{
 				Subject:     acqRightUID,
@@ -87,7 +81,7 @@ func acquiredNquadsForRow(cols []string, scope string, row []string, xidIDX int)
 				ObjectId:  acqRightUID,
 			})
 		default:
-			//log.Println(predicate)
+			// log.Println(predicate)
 			val, err := schNode.dataConv.convert(row[i])
 			if err != nil {
 				log.Printf("acquiredNquadsForRow - failed to convert data for SKU: %s, data: %s, error: %v", row[xidIDX], row[i], err)

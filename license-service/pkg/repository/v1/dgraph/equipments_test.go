@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -25,213 +19,213 @@ import (
 // 	},
 // }
 
-func TestLicenseRepository_CreateEquipmentType(t *testing.T) {
-	type args struct {
-		ctx    context.Context
-		eqType *v1.EquipmentType
-		scopes []string
-	}
-	tests := []struct {
-		name            string
-		lr              *LicenseRepository
-		args            args
-		setup           func() (*v1.EquipmentType, func() error, error)
-		veryfy          func(repo *LicenseRepository) (*v1.EquipmentType, error)
-		wantSchemaNodes []*SchemaNode
-		predicates      []string
-		wantErr         bool
-	}{
-		{name: "success",
-			lr: NewLicenseRepository(dgClient),
-			args: args{
-				ctx: context.Background(),
-			},
-			setup: func() (*v1.EquipmentType, func() error, error) {
-				// TODO create two nodes for parent type and data source
-				mu := &api.Mutation{
-					CommitNow: true,
-					Set: []*api.NQuad{
-						&api.NQuad{
-							Subject:     blankID("parent"),
-							Predicate:   "metadata_parent",
-							ObjectValue: stringObjectValue("eq_type_1"),
-						},
-						&api.NQuad{
-							Subject:     blankID("data_source"),
-							Predicate:   "metadata_source",
-							ObjectValue: stringObjectValue("eq_type_1"),
-						},
-					},
-				}
+// func TestLicenseRepository_CreateEquipmentType(t *testing.T) {
+// 	type args struct {
+// 		ctx    context.Context
+// 		eqType *v1.EquipmentType
+// 		scopes []string
+// 	}
+// 	tests := []struct {
+// 		name            string
+// 		lr              *LicenseRepository
+// 		args            args
+// 		setup           func() (*v1.EquipmentType, func() error, error)
+// 		veryfy          func(repo *LicenseRepository) (*v1.EquipmentType, error)
+// 		wantSchemaNodes []*SchemaNode
+// 		predicates      []string
+// 		wantErr         bool
+// 	}{
+// 		{name: "success",
+// 			lr: NewLicenseRepository(dgClient),
+// 			args: args{
+// 				ctx: context.Background(),
+// 			},
+// 			setup: func() (*v1.EquipmentType, func() error, error) {
+// 				// TODO create two nodes for parent type and data source
+// 				mu := &api.Mutation{
+// 					CommitNow: true,
+// 					Set: []*api.NQuad{
+// 						&api.NQuad{
+// 							Subject:     blankID("parent"),
+// 							Predicate:   "metadata_parent",
+// 							ObjectValue: stringObjectValue("eq_type_1"),
+// 						},
+// 						&api.NQuad{
+// 							Subject:     blankID("data_source"),
+// 							Predicate:   "metadata_source",
+// 							ObjectValue: stringObjectValue("eq_type_1"),
+// 						},
+// 					},
+// 				}
 
-				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
-				if err != nil {
-					return nil, nil, err
-				}
+// 				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+// 				if err != nil {
+// 					return nil, nil, err
+// 				}
 
-				parentID, ok := assigned.Uids["parent"]
-				if !ok {
-					return nil, nil, errors.New("cannot find parent id after mutation in setup")
-				}
+// 				parentID, ok := assigned.Uids["parent"]
+// 				if !ok {
+// 					return nil, nil, errors.New("cannot find parent id after mutation in setup")
+// 				}
 
-				sourceID, ok := assigned.Uids["data_source"]
-				if !ok {
-					return nil, nil, errors.New("cannot find source id after mutation in setup")
-				}
-				eqType := &v1.EquipmentType{
-					Type:     "MyType",
-					SourceID: sourceID,
-					ParentID: parentID,
-					Attributes: []*v1.Attribute{
-						&v1.Attribute{
-							Name:         "attr1",
-							Type:         v1.DataTypeString,
-							IsSearchable: true,
-							IsIdentifier: true,
-							IsDisplayed:  true,
-							MappedTo:     "mapping_1",
-						},
-						&v1.Attribute{
-							Name:         "attr2",
-							Type:         v1.DataTypeInt,
-							IsSearchable: true,
-							MappedTo:     "mapping_2",
-						},
-						&v1.Attribute{
-							Name:     "attr2.1",
-							Type:     v1.DataTypeInt,
-							MappedTo: "mapping_2.1",
-						},
-						&v1.Attribute{
-							Name:         "attr3",
-							Type:         v1.DataTypeFloat,
-							IsSearchable: true,
-							MappedTo:     "mapping_3",
-						},
-						&v1.Attribute{
-							Name:     "attr3.1",
-							Type:     v1.DataTypeFloat,
-							MappedTo: "mapping_3.1",
-						},
-						&v1.Attribute{
-							Name:               "attr4",
-							Type:               v1.DataTypeString,
-							IsParentIdentifier: true,
-							IsDisplayed:        true,
-							MappedTo:           "mapping_4",
-						},
-						&v1.Attribute{
-							Name:         "attr4.1",
-							Type:         v1.DataTypeString,
-							IsSearchable: true,
-							IsDisplayed:  true,
-							MappedTo:     "mapping_4.1",
-						},
-						&v1.Attribute{
-							Name:        "attr4.2",
-							Type:        v1.DataTypeString,
-							IsDisplayed: true,
-							MappedTo:    "mapping_4.2",
-						},
-					},
-				}
-				return eqType, func() error {
-					if err := deleteNode(parentID); err != nil {
-						return err
-					}
-					if err := deleteNode(sourceID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			veryfy: func(repo *LicenseRepository) (*v1.EquipmentType, error) {
-				eqType, err := repo.equipmentTypeByType(context.Background(), "MyType")
-				if err != nil {
-					return nil, err
-				}
-				return eqType, nil
-			},
-			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr2",
-					Type:      "int",
-					Index:     true,
-					Tokenizer: []string{"int"},
-				},
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr2.1",
-					Type:      "int",
-				},
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr3",
-					Type:      "float",
-					Index:     true,
-					Tokenizer: []string{"float"},
-				},
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr3.1",
-					Type:      "float",
-				},
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr4.1",
-					Type:      "string",
-					Index:     true,
-					Tokenizer: []string{"trigram"},
-				},
-				&SchemaNode{
-					Predicate: "equipment.MyType.attr4.2",
-					Type:      "string",
-				},
-			},
-			predicates: []string{
-				"equipment.MyType.attr2",
-				"equipment.MyType.attr2.1",
-				"equipment.MyType.attr3",
-				"equipment.MyType.attr3.1",
-				"equipment.MyType.attr4.1",
-				"equipment.MyType.attr4.2",
-			},
-		},
-	}
+// 				sourceID, ok := assigned.Uids["data_source"]
+// 				if !ok {
+// 					return nil, nil, errors.New("cannot find source id after mutation in setup")
+// 				}
+// 				eqType := &v1.EquipmentType{
+// 					Type:     "MyType",
+// 					SourceID: sourceID,
+// 					ParentID: parentID,
+// 					Attributes: []*v1.Attribute{
+// 						&v1.Attribute{
+// 							Name:         "attr1",
+// 							Type:         v1.DataTypeString,
+// 							IsSearchable: true,
+// 							IsIdentifier: true,
+// 							IsDisplayed:  true,
+// 							MappedTo:     "mapping_1",
+// 						},
+// 						&v1.Attribute{
+// 							Name:         "attr2",
+// 							Type:         v1.DataTypeInt,
+// 							IsSearchable: true,
+// 							MappedTo:     "mapping_2",
+// 						},
+// 						&v1.Attribute{
+// 							Name:     "attr2.1",
+// 							Type:     v1.DataTypeInt,
+// 							MappedTo: "mapping_2.1",
+// 						},
+// 						&v1.Attribute{
+// 							Name:         "attr3",
+// 							Type:         v1.DataTypeFloat,
+// 							IsSearchable: true,
+// 							MappedTo:     "mapping_3",
+// 						},
+// 						&v1.Attribute{
+// 							Name:     "attr3.1",
+// 							Type:     v1.DataTypeFloat,
+// 							MappedTo: "mapping_3.1",
+// 						},
+// 						&v1.Attribute{
+// 							Name:               "attr4",
+// 							Type:               v1.DataTypeString,
+// 							IsParentIdentifier: true,
+// 							IsDisplayed:        true,
+// 							MappedTo:           "mapping_4",
+// 						},
+// 						&v1.Attribute{
+// 							Name:         "attr4.1",
+// 							Type:         v1.DataTypeString,
+// 							IsSearchable: true,
+// 							IsDisplayed:  true,
+// 							MappedTo:     "mapping_4.1",
+// 						},
+// 						&v1.Attribute{
+// 							Name:        "attr4.2",
+// 							Type:        v1.DataTypeString,
+// 							IsDisplayed: true,
+// 							MappedTo:    "mapping_4.2",
+// 						},
+// 					},
+// 				}
+// 				return eqType, func() error {
+// 					if err := deleteNode(parentID); err != nil {
+// 						return err
+// 					}
+// 					if err := deleteNode(sourceID); err != nil {
+// 						return err
+// 					}
+// 					return nil
+// 				}, nil
+// 			},
+// 			veryfy: func(repo *LicenseRepository) (*v1.EquipmentType, error) {
+// 				eqType, err := repo.equipmentTypeByType(context.Background(), "MyType")
+// 				if err != nil {
+// 					return nil, err
+// 				}
+// 				return eqType, nil
+// 			},
+// 			wantSchemaNodes: []*SchemaNode{
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr2",
+// 					Type:      "int",
+// 					Index:     true,
+// 					Tokenizer: []string{"int"},
+// 				},
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr2.1",
+// 					Type:      "int",
+// 				},
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr3",
+// 					Type:      "float",
+// 					Index:     true,
+// 					Tokenizer: []string{"float"},
+// 				},
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr3.1",
+// 					Type:      "float",
+// 				},
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr4.1",
+// 					Type:      "string",
+// 					Index:     true,
+// 					Tokenizer: []string{"trigram"},
+// 				},
+// 				&SchemaNode{
+// 					Predicate: "equipment.MyType.attr4.2",
+// 					Type:      "string",
+// 				},
+// 			},
+// 			predicates: []string{
+// 				"equipment.MyType.attr2",
+// 				"equipment.MyType.attr2.1",
+// 				"equipment.MyType.attr3",
+// 				"equipment.MyType.attr3.1",
+// 				"equipment.MyType.attr4.1",
+// 				"equipment.MyType.attr4.2",
+// 			},
+// 		},
+// 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			eqType, cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "error is not expect in setup") {
-				return
-			}
-			defer func() {
-				err := cleanup()
-				assert.Empty(t, err, "error is not expect in cleanup")
-			}()
-			got, err := tt.lr.CreateEquipmentType(tt.args.ctx, eqType, tt.args.scopes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.CreateEquipmentType() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			eqType, cleanup, err := tt.setup()
+// 			if !assert.Empty(t, err, "error is not expect in setup") {
+// 				return
+// 			}
+// 			defer func() {
+// 				err := cleanup()
+// 				assert.Empty(t, err, "error is not expect in cleanup")
+// 			}()
+// 			got, err := tt.lr.CreateEquipmentType(tt.args.ctx, eqType, tt.args.scopes)
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("LicenseRepository.CreateEquipmentType() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
 
-			defer func() {
-				err := deleteNode(got.ID)
-				assert.Empty(t, err, "error is not expect in deleteNode")
-			}()
+// 			defer func() {
+// 				err := deleteNode(got.ID)
+// 				assert.Empty(t, err, "error is not expect in deleteNode")
+// 			}()
 
-			want, err := tt.veryfy(tt.lr)
-			if !assert.Empty(t, err, "error is not expect in verify") {
-				return
-			}
+// 			want, err := tt.veryfy(tt.lr)
+// 			if !assert.Empty(t, err, "error is not expect in verify") {
+// 				return
+// 			}
 
-			if !tt.wantErr {
-				compareEquipmentType(t, "EquipmentType", want, got)
-				sns, err := querySchema(tt.predicates...)
-				if !assert.Emptyf(t, err, "error is not expect while quering schema for predicates: %v", tt.predicates) {
-					return
-				}
-				compareSchemaNodeAll(t, "schemaNodes", tt.wantSchemaNodes, sns)
-			}
-		})
-	}
-}
+// 			if !tt.wantErr {
+// 				compareEquipmentType(t, "EquipmentType", want, got)
+// 				sns, err := querySchema(tt.predicates...)
+// 				if !assert.Emptyf(t, err, "error is not expect while quering schema for predicates: %v", tt.predicates) {
+// 					return
+// 				}
+// 				compareSchemaNodeAll(t, "schemaNodes", tt.wantSchemaNodes, sns)
+// 			}
+// 		})
+// 	}
+// }
 
 func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 	type args struct {
@@ -255,12 +249,12 @@ func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -284,12 +278,12 @@ func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 				}
 
 				eqTypes := []*v1.EquipmentType{
-					&v1.EquipmentType{
+					{
 						Type:     "MyType1",
 						SourceID: sourceID,
 						ParentID: parentID,
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:         "attr1",
 								Type:         v1.DataTypeString,
 								IsSearchable: true,
@@ -297,7 +291,7 @@ func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 								IsDisplayed:  true,
 								MappedTo:     "mapping_1",
 							},
-							&v1.Attribute{
+							{
 								Name:               "attr2",
 								Type:               v1.DataTypeString,
 								IsSearchable:       false,
@@ -307,12 +301,12 @@ func TestLicenseRepository_EquipmentTypes(t *testing.T) {
 							},
 						},
 					},
-					&v1.EquipmentType{
+					{
 						Type:     "MyType2",
 						SourceID: sourceID,
 						ParentID: parentID,
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:         "attr1",
 								Type:         v1.DataTypeString,
 								IsSearchable: true,

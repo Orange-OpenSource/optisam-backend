@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -11,16 +5,17 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
+	"strconv"
+	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context, req *v1.CreateMetricNUP) (*v1.CreateMetricNUP, error) {
+func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context, req *v1.MetricNUP) (*v1.MetricNUP, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -67,8 +62,8 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 		return nil, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
 	}
 
-	if err := validateAttributesOracleNUP(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); err != nil {
-		return nil, err
+	if error := validateAttributesOracleNUP(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); error != nil {
+		return nil, error
 	}
 
 	met, err := s.metricRepo.CreateMetricOracleNUPStandard(ctx, serverToRepoMetricOracleNUP(req), req.GetScopes()[0])
@@ -81,8 +76,74 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 
 }
 
+func (s *metricServiceServer) UpdateMetricOracleNUPStandard(ctx context.Context, req *v1.MetricNUP) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	if req.StartEqTypeId == "" {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "start level is empty")
+	}
+	_, err := s.metricRepo.GetMetricConfigNUP(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricOracleNUPStandard - repo/GetMetricConfigNUP", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric nup")
+	}
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricOracleNUPStandard - repo/EquipmentTypes - fetching equipments", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	parAncestors, err := parentHierarchy(eqTypes, req.StartEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "parent hierarchy doesnt exists")
+	}
+
+	baseLevelIdx, err := validateLevelsNew(parAncestors, 0, req.BaseEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
+	}
+	aggLevelIdx, err := validateLevelsNew(parAncestors, baseLevelIdx, req.AggerateLevelEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
+	}
+	_, err = validateLevelsNew(parAncestors, aggLevelIdx, req.EndEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
+	}
+
+	if e := validateAttributesOracleNUP(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); e != nil {
+		return &v1.UpdateMetricResponse{}, e
+	}
+	err = s.metricRepo.UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
+		Name:                  req.Name,
+		NumCoreAttrID:         req.NumCoreAttrId,
+		NumCPUAttrID:          req.NumCPUAttrId,
+		StartEqTypeID:         req.StartEqTypeId,
+		BaseEqTypeID:          req.BaseEqTypeId,
+		CoreFactorAttrID:      req.CoreFactorAttrId,
+		AggerateLevelEqTypeID: req.AggerateLevelEqTypeId,
+		EndEqTypeID:           req.EndEqTypeId,
+		NumberOfUsers:         req.NumberOfUsers,
+	}, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricOracleNUPStandard - repo/UpdateMetricNUP", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric nup")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
+}
+
 func validateAttributesOracleNUP(attr []*repo.Attribute, numCoreAttr string, numCPUAttr string, coreFactorAttr string) error {
-	//TODO : remove duplicacy (duplicate with validateAttributesOPS)
+	// TODO : remove duplicacy (duplicate with validateAttributesOPS)
 	if numCoreAttr == "" {
 		return status.Error(codes.InvalidArgument, "num of cores attribute is empty")
 	}
@@ -123,7 +184,7 @@ func validateAttributesOracleNUP(attr []*repo.Attribute, numCoreAttr string, num
 	return nil
 }
 
-func serverToRepoMetricOracleNUP(met *v1.CreateMetricNUP) *repo.MetricNUPOracle {
+func serverToRepoMetricOracleNUP(met *v1.MetricNUP) *repo.MetricNUPOracle {
 	return &repo.MetricNUPOracle{
 		ID:                    met.ID,
 		Name:                  met.Name,
@@ -138,8 +199,8 @@ func serverToRepoMetricOracleNUP(met *v1.CreateMetricNUP) *repo.MetricNUPOracle 
 	}
 }
 
-func repoToServerMetricOracleNUP(met *repo.MetricNUPOracle) *v1.CreateMetricNUP {
-	return &v1.CreateMetricNUP{
+func repoToServerMetricOracleNUP(met *repo.MetricNUPOracle) *v1.MetricNUP {
+	return &v1.MetricNUP{
 		ID:                    met.ID,
 		Name:                  met.Name,
 		NumCoreAttrId:         met.NumCoreAttrID,
@@ -153,11 +214,13 @@ func repoToServerMetricOracleNUP(met *repo.MetricNUPOracle) *v1.CreateMetricNUP 
 	}
 }
 
-func metricNameExistsNUP(metrics []*repo.MetricNUPOracle, name string) int {
-	for i, met := range metrics {
-		if strcomp.CompareStrings(met.Name, name) {
-			return i
-		}
+func (s *metricServiceServer) getDescriptionNUP(ctx context.Context, name, scope string) (string, error) {
+
+	metric, err := s.metricRepo.GetMetricConfigNUP(ctx, name, scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricNUP", zap.String("reason", err.Error()))
+		return "", status.Error(codes.Internal, "cannot fetch metric nup")
 	}
-	return -1
+	des := repo.MetricDescriptionOracleNUPStandard.String()
+	return strings.Replace(des, "given_users", strconv.FormatUint(uint64(metric.NumberOfUsers), 10), 1), nil
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -49,18 +43,16 @@ func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, na
 	return prod, nonProd, nil
 }
 
+// nolint: unparam
 func (l *LicenseRepository) getProductUIDsForAggAndMetric(ctx context.Context, name, metric string) ([]string, error) {
-	q := `
-	 {
-		Products (func:eq(product_aggregation.name,"` + name + `"))@Normalize@cascade{
-			product_aggregation.products{
+	q := `{
+		Products (func:eq(aggregation.name,"` + name + `"))@Normalize@cascade{
+			aggregation.products{
 			   ID: uid
-			   product.acqRights@filter(eq(acqRights.metric,"` + metric + `"))
 			}
 		}
-  
 	  }
-	 `
+	`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		//	logger.Log.Error("dgraph/MetricSPSComputedLicenses - query failed", zap.Error(err), zap.String("query", q))

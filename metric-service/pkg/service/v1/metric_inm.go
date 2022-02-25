@@ -1,13 +1,9 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
+	"strconv"
+	"strings"
 
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
@@ -20,7 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *metricServiceServer) CreateMetricInstanceNumberStandard(ctx context.Context, req *v1.CreateINM) (*v1.CreateINM, error) {
+func (s *metricServiceServer) CreateMetricInstanceNumberStandard(ctx context.Context, req *v1.MetricINM) (*v1.MetricINM, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -32,7 +28,6 @@ func (s *metricServiceServer) CreateMetricInstanceNumberStandard(ctx context.Con
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 -CreateMetricInstanceNumberStandard - ListMetrices", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
-
 	}
 	if metricNameExistsAll(metrics, req.Name) != -1 {
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
@@ -47,15 +42,61 @@ func (s *metricServiceServer) CreateMetricInstanceNumberStandard(ctx context.Con
 	return repoToServerINM(met), nil
 }
 
-func serverToRepoINM(met *v1.CreateINM) *repo.MetricINM {
-	return &repo.MetricINM{
-		Name:        met.Name,
-		Coefficient: met.Coefficient}
+func (s *metricServiceServer) UpdateMetricInstanceNumberStandard(ctx context.Context, req *v1.MetricINM) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	_, err := s.metricRepo.GetMetricConfigINM(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricInstanceNumberStandard - repo/GetMetricConfigINM", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric inm")
+	}
+	err = s.metricRepo.UpdateMetricINM(ctx, &repo.MetricINM{
+		Name:        req.Name,
+		Coefficient: req.NumOfDeployments,
+	}, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricInstanceNumberStandard - repo/UpdateMetricINM", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric inm")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
 }
 
-func repoToServerINM(met *repo.MetricINM) *v1.CreateINM {
-	return &v1.CreateINM{
+func serverToRepoINM(met *v1.MetricINM) *repo.MetricINM {
+	// des := repo.MetricDescriptionInstanceNumberStandard
+	// v := strings.Replace(des, "number_of_deployments_authorized_licenses", met.NumOfDeployments)
+
+	return &repo.MetricINM{
 		Name:        met.Name,
-		ID:          met.ID,
-		Coefficient: met.Coefficient}
+		Coefficient: met.NumOfDeployments,
+		//	Description: v,
+	}
+}
+
+func repoToServerINM(met *repo.MetricINM) *v1.MetricINM {
+	return &v1.MetricINM{
+		Name:             met.Name,
+		ID:               met.ID,
+		NumOfDeployments: met.Coefficient,
+	}
+}
+
+func (s *metricServiceServer) getDescriptionINM(ctx context.Context, name, scope string) (string, error) {
+	metric, err := s.metricRepo.GetMetricConfigINM(ctx, name, scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricINM", zap.String("reason", err.Error()))
+		return "", status.Error(codes.Internal, "cannot fetch metric inm")
+	}
+	des := repo.MetricDescriptionInstanceNumberStandard.String()
+	return strings.Replace(des, "number_of_deployments_authorized_licenses", strconv.Itoa(int(metric.Coefficient)), 1), nil
 }

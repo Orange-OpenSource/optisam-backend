@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -21,6 +15,7 @@ func TestAccountRepository_CreateScope(t *testing.T) {
 		scopeName string
 		scopeCode string
 		userID    string
+		scopeType string
 	}
 	tests := []struct {
 		name    string
@@ -37,6 +32,7 @@ func TestAccountRepository_CreateScope(t *testing.T) {
 				scopeName: "France",
 				scopeCode: "O1",
 				userID:    "admin@test.com",
+				scopeType: "GENERIC",
 			},
 			verify: func(a *AccountRepository) error {
 				// Get scope table and match the Scope
@@ -51,6 +47,7 @@ func TestAccountRepository_CreateScope(t *testing.T) {
 					ScopeCode: "O1",
 					ScopeName: "France",
 					CreatedBy: "admin@test.com",
+					ScopeType: "GENERIC",
 				}
 
 				compareScopesData(t, "CreateScope", &expectedScope, scope)
@@ -74,7 +71,7 @@ func TestAccountRepository_CreateScope(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			defer deleteScopes(context.Background(), []string{"O1"})
-			if err := tt.r.CreateScope(tt.args.ctx, tt.args.scopeName, tt.args.scopeCode, tt.args.userID); (err != nil) != tt.wantErr {
+			if err := tt.r.CreateScope(tt.args.ctx, tt.args.scopeName, tt.args.scopeCode, tt.args.userID, tt.args.scopeType); (err != nil) != tt.wantErr {
 				t.Errorf("AccountRepository.CreateScope() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -91,21 +88,25 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 		ScopeCode: "O1",
 		ScopeName: "France",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	scope2 := &v1.Scope{
 		ScopeCode: "O2",
 		ScopeName: "India",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	scope3 := &v1.Scope{
 		ScopeCode: "O3",
 		ScopeName: "England",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	scope4 := &v1.Scope{
 		ScopeCode: "O4",
 		ScopeName: "SriLanka",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	type args struct {
 		ctx        context.Context
@@ -127,12 +128,12 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				scopeCodes: []string{"O1", "O2"},
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy, scope2.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -162,15 +163,17 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				}, nil
 			},
 			want: []*v1.Scope{
-				&v1.Scope{
+				{
 					ScopeCode:  "O1",
 					ScopeName:  "France",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT"},
+					ScopeType: "GENERIC",
 				},
-				&v1.Scope{
+				{
 					ScopeCode:  "O2",
 					ScopeName:  "India",
+					ScopeType: "GENERIC",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT", "India"},
 				},
@@ -184,12 +187,12 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				scopeCodes: []string{"O3"},
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy ,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -232,12 +235,12 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				if err != nil {
 					return nil, err
 				}
-				err = a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy)
+				err = a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -267,27 +270,31 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				}, nil
 			},
 			want: []*v1.Scope{
-				&v1.Scope{
+				{
 					ScopeCode:  "O1",
 					ScopeName:  "France",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT"},
+					ScopeType: "GENERIC",
 				},
-				&v1.Scope{
+				{
 					ScopeCode:  "O2",
 					ScopeName:  "India",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT", "India"},
+					ScopeType: "GENERIC",
 				},
-				&v1.Scope{
+				{
 					ScopeCode: "O3",
 					ScopeName: "England",
 					CreatedBy: "admin@test.com",
+					ScopeType: "GENERIC",
 				},
-				&v1.Scope{
+				{
 					ScopeCode: "O4",
 					ScopeName: "SriLanka",
 					CreatedBy: "admin@test.com",
+					ScopeType: "GENERIC",
 				},
 			},
 		},
@@ -321,11 +328,13 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 		ScopeCode: "O1",
 		ScopeName: "France",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	scope2 := &v1.Scope{
 		ScopeCode: "O2",
 		ScopeName: "India",
 		CreatedBy: "admin@test.com",
+		ScopeType: "GENERIC",
 	}
 	type args struct {
 		ctx       context.Context
@@ -347,12 +356,12 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 				scopeCode: "O1",
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -371,12 +380,12 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 				scopeCode: "O3",
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}

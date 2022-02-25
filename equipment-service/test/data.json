@@ -1,0 +1,66 @@
+{
+    "equiptype_schema": {
+        "ID": "#string",
+        "type": "#string",
+        "parent_id": "##string",
+        "parent_type": "##string",
+        "metadata_id": "#string",
+        "metadata_source": "#string",
+        "attributes": "#[]",
+        "scopes": [
+            "AUT"
+        ]
+    },
+    "equiptype_server": {
+        "ID": "#string",
+        "type": "server",
+        "parent_id": "#string",
+        "parent_type": "cluster",
+        "metadata_id": "#string",
+        "metadata_source": "metadata_server.csv",
+        "attributes": "#[]",
+        "scopes": [
+            "AUT"
+        ]
+    },
+    "metadata_schema": {
+        "ID": "#string",
+        "name": "#string",
+        "attributes": "#[] #string",
+        "scopes": "#[1]"
+    },
+    "getMetadata": {
+        "ID": "0x50a1b",
+        "name": "metadata_datacenterr.csv",
+        "attributes": "#[]",
+        "scopes": [
+            "AUT"
+        ]
+    },
+    "server": {
+        "server_id": "#string",
+        "server_parent_id": "#string",
+        "server_child_id": "#string",
+        "server_code": "SERV_01",
+        "server_code_id": "0x334ed0",
+        "swid_tag": "ibm_websphere_1",
+        "agg_name": "Aggregation"
+    },
+    "overview": {
+        "equip_type": "vcenter",
+        "num_equipments": 6
+    },
+    "schema_overview": {
+        "equip_type": "#string",
+        "num_equipments": "##number"
+    },
+
+    "equipmentID":
+    { "server_id" : "0x334e54",
+        "cluster_id" :"0x334e50",
+        "vcenter_id" : "0x334e4e"
+
+
+    }
+
+}

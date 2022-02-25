@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package main
 
 import (
@@ -18,7 +12,7 @@ import (
 )
 
 func main() {
-	//appendCoreFactor("equipment_server.csv")
+	// appendCoreFactor("equipment_server.csv")
 	correctSAG("equipment_server.csv")
 }
 
@@ -52,7 +46,7 @@ func appendCoreFactor(filePath string) {
 		}
 		coreFactor := float32(rand.Intn(4)+1) * 0.25
 		s := fmt.Sprintf("%f", coreFactor)
-		//fmt.Println(s)
+		// fmt.Println(s)
 		// record = record[:len(record)-1]
 		record = append(record, s)
 		w.Write(record)

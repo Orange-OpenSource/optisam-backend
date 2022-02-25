@@ -1,26 +1,79 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/workerqueue/job"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
+	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func (s *productServiceServer) CreateDashboardUpdateJob(ctx context.Context, req *v1.CreateDashboardUpdateJobRequest) (*v1.CreateDashboardUpdateJobResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	jobID, err := s.queue.PushJob(ctx, job.Job{
+		Type:   sql.NullString{String: "lcalw"},
+		Status: job.JobStatusPENDING,
+		Data:   json.RawMessage(fmt.Sprintf(`{"updatedBy":"data_update" , "scope" :"%s"}`, req.Scope)),
+	}, "lcalw")
+
+	if err != nil {
+		logger.Log.Info("Error in push job in CreateDashboardUpdateJob", zap.Error(err), zap.Any("Scope", req.Scope))
+		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.Internal, "PushJobFailure")
+	}
+	logger.Log.Info("Successfully pushed job by CreateDashboardUpdateJob", zap.Int32("jobId", jobID), zap.Any("Scope", req.Scope))
+	return &v1.CreateDashboardUpdateJobResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerRequest) (*v1.GetBannerResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	resp := &v1.GetBannerResponse{}
+	dbresp, err := s.productRepo.GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
+		Scope:   req.GetScope(),
+		Column2: req.GetTimeZone(),
+	})
+	if err != nil {
+		logger.Log.Error("Failed to get dashboard audit info", zap.Error(err), zap.Any("Scope", req.Scope))
+		if err == sql.ErrNoRows {
+			return nil, status.Error(codes.Internal, "NotFound")
+		}
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	resp.UpdatedAt, resp.NextUpdateAt = dbresp.UpdatedAt.(time.Time).Format("2006-01-02 15:04"), dbresp.NextUpdateAt.(time.Time).Format("2006-01-02 15:04")
+	return resp, nil
+}
 
 func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *v1.OverviewProductQualityRequest) (*v1.OverviewProductQualityResponse, error) {
 	// Finding Claims of User
@@ -29,7 +82,7 @@ func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
@@ -37,15 +90,10 @@ func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *
 	dbresp, err := s.productRepo.GetProductQualityOverview(ctx, req.Scope)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, status.Error(codes.Internal, "NoDataFound")
-		} else {
-			logger.Log.Error("service/v1 - OverviewProductQuality - db/GetDataQaulityOverview", zap.Error(err))
-			return nil, status.Error(codes.Internal, "DBError")
+			return &v1.OverviewProductQualityResponse{}, nil
 		}
-	}
-
-	if dbresp.TotalRecords == 0 || (dbresp.NotDeployed == 0 && dbresp.NotAcquired == 0) {
-		return nil, status.Error(codes.Internal, "NoDataFound")
+		logger.Log.Error("service/v1 - OverviewProductQuality - db/GetDataQaulityOverview", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
 	}
 	notAcqPercentage, _ := dbresp.NotDeployedPercentage.Float64()
 	notDeployedPercent, _ := dbresp.NotAcquiredPercentage.Float64()
@@ -64,7 +112,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
@@ -76,7 +124,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 
 	resp := &v1.DashboardOverviewResponse{}
 
-	//Find Total Number of Products in the System and in this scope
+	// Find Total Number of Products in the System and in this scope
 	products, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
 		Scope:    scopes,
 		PageNum:  0,
@@ -90,7 +138,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 		resp.NumProducts = int32(products[0].Totalrecords)
 	}
 
-	//Find Total Number of Editors in the system and in this scope
+	// Find Total Number of Editors in the system and in this scope
 	editors, err := s.productRepo.ListEditors(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - DashboardOverview - db/ListEditors", zap.Error(err))
@@ -110,7 +158,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 		resp.TotalMaintenanceCost, _ = costs.TotalMaintenanceCost.Float64()
 	}
 
-	//Return Results
+	// Return Results
 	return resp, nil
 }
 
@@ -121,7 +169,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
@@ -130,7 +178,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 	var scopes []string
 	scopes = append(scopes, req.Scope)
 
-	//Find Total Number of Editors in the system and in this scope
+	// Find Total Number of Editors in the system and in this scope
 	editors, err := s.productRepo.ListEditors(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ProductsPerEditor - db/ListEditors", zap.Error(err))
@@ -141,9 +189,9 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 		return &v1.ProductsPerEditorResponse{}, nil
 	}
 
-	var editorProducts []*v1.EditorProducts
+	editorProducts := make([]*v1.EditorProducts, 0)
 
-	//Find Number of Products per Editor and Scopes
+	// Find Number of Products per Editor and Scopes
 	for _, editor := range editors {
 		products, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: editor, Scopes: scopes})
 		if err != nil {
@@ -156,7 +204,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 		})
 	}
 
-	//Return Results
+	// Return Results
 	return &v1.ProductsPerEditorResponse{
 		EditorsProducts: editorProducts,
 	}, nil
@@ -170,7 +218,7 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
@@ -179,7 +227,7 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 	var scopes []string
 	scopes = append(scopes, req.Scope)
 
-	//Find Products Per Metric
+	// Find Products Per Metric
 	productsPerMetric, err := s.productRepo.ProductsPerMetric(ctx, scopes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -189,7 +237,7 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	servProductsPerMetric := dbToServProductsPerMetric(productsPerMetric)
-	//Return Results
+	// Return Results
 	return &v1.ProductsPerMetricTypeResponse{
 		MetricsProducts: servProductsPerMetric,
 	}, nil
@@ -202,7 +250,7 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
@@ -252,7 +300,7 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
@@ -302,14 +350,28 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	//Find CounterfietCosts
-	cfRow, err := s.productRepo.CounterfeitPercent(ctx, req.Scope)
+	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
+		Scopes: []string{req.Scope},
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - ComplianceAlert - ListMetrices", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "MetricServiceError")
+	}
+	if metrics == nil || len(metrics.Metrices) == 0 {
+		logger.Log.Error("service/v1 - ComplianceAlert - ListMetrices - metrics are not defined")
+		return &v1.ComplianceAlertResponse{}, status.Error(codes.NotFound, "MetricsNotFound")
+	}
+	metricNames := getMetricNames(metrics.Metrices)
+	cfRow, err := s.productRepo.CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+		Metrics: metricNames,
+		Scope:   req.Scope,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -318,14 +380,17 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
-	//check if the purchaseCost is not zero
-	cfTpc, _ := cfRow.Tpc.Float64()
-	if cfTpc == 0 {
-		return nil, status.Error(codes.NotFound, "NoDataFound")
+	// check if the acqrights are not zero
+	cfAcq, _ := cfRow.Acq.Float64()
+	if cfAcq == 0 {
+		return &v1.ComplianceAlertResponse{}, nil
 	}
-	cfDeltaCost, _ := cfRow.DeltaCost.Float64()
+	cfDeltaRights, _ := cfRow.DeltaRights.Float64()
 
-	odRow, err := s.productRepo.OverdeployPercent(ctx, req.Scope)
+	odRow, err := s.productRepo.OverdeployPercent(ctx, db.OverdeployPercentParams{
+		Metrics: metricNames,
+		Scope:   req.Scope,
+	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -334,15 +399,15 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
-	//Check if the purchase cost is not zero
-	odTpc, _ := odRow.Tpc.Float64()
-	if odTpc == 0 {
-		return nil, status.Error(codes.NotFound, "NoDataFound")
+	// Check if the acqrights are not zero
+	odAcq, _ := odRow.Acq.Float64()
+	if odAcq == 0 {
+		return &v1.ComplianceAlertResponse{}, nil
 	}
-	odDeltaCost, _ := odRow.DeltaCost.Float64()
+	odDeltaRights, _ := odRow.DeltaRights.Float64()
 
-	cfPer := (cfDeltaCost / cfTpc) * 100
-	odPer := (odDeltaCost / odTpc) * 100
+	cfPer := (cfDeltaRights / cfAcq) * 100
+	odPer := (odDeltaRights / odAcq) * 100
 
 	cfPercent := toFixed(cfPer, 2)
 	odPercent := toFixed(odPer, 2)
@@ -389,7 +454,7 @@ func toFixed(num float64, precision int) float64 {
 }
 
 func dbToServOverDeployedProductsCosts(dbLic []db.OverDeployedProductsCostsRow) []*v1.ProductsCosts {
-	var res []*v1.ProductsCosts
+	res := make([]*v1.ProductsCosts, 0)
 
 	for _, productCost := range dbLic {
 		tpc, _ := productCost.TotalPurchaseCost.Float64()
@@ -408,15 +473,15 @@ func dbToServOverDeployedProductsCosts(dbLic []db.OverDeployedProductsCostsRow) 
 }
 
 func dbToServOverDeployedProductsLicenses(dbLic []db.OverDeployedProductsLicencesRow) []*v1.ProductsLicenses {
-	var res []*v1.ProductsLicenses
+	res := make([]*v1.ProductsLicenses, 0)
 
 	for _, productLic := range dbLic {
 		res = append(res, &v1.ProductsLicenses{
 			SwidTag:             productLic.SwidTag,
 			ProductName:         productLic.ProductName,
 			NumLicensesAcquired: productLic.NumLicensesAcquired,
-			NumLicensesComputed: productLic.NumLicencesComputed,
-			Delta:               productLic.Delta,
+			NumLicensesComputed: int64(productLic.NumLicencesComputed),
+			Delta:               int64(productLic.Delta),
 		})
 	}
 
@@ -424,7 +489,7 @@ func dbToServOverDeployedProductsLicenses(dbLic []db.OverDeployedProductsLicence
 }
 
 func dbToServCounterfeitedProductsCosts(dbLic []db.CounterFeitedProductsCostsRow) []*v1.ProductsCosts {
-	var res []*v1.ProductsCosts
+	res := make([]*v1.ProductsCosts, 0)
 
 	for _, productCost := range dbLic {
 		tpc, _ := productCost.TotalPurchaseCost.Float64()
@@ -443,15 +508,15 @@ func dbToServCounterfeitedProductsCosts(dbLic []db.CounterFeitedProductsCostsRow
 }
 
 func dbToServCounterfeitedProductsLicenses(dbLic []db.CounterFeitedProductsLicencesRow) []*v1.ProductsLicenses {
-	var res []*v1.ProductsLicenses
+	res := make([]*v1.ProductsLicenses, 0)
 
 	for _, productLic := range dbLic {
 		res = append(res, &v1.ProductsLicenses{
 			SwidTag:             productLic.SwidTag,
 			ProductName:         productLic.ProductName,
 			NumLicensesAcquired: productLic.NumLicensesAcquired,
-			NumLicensesComputed: productLic.NumLicencesComputed,
-			Delta:               productLic.Delta,
+			NumLicensesComputed: int64(productLic.NumLicencesComputed),
+			Delta:               int64(productLic.Delta),
 		})
 	}
 
@@ -459,7 +524,7 @@ func dbToServCounterfeitedProductsLicenses(dbLic []db.CounterFeitedProductsLicen
 }
 
 func dbToServProductsPerMetric(prodPerMetric []db.ProductsPerMetricRow) []*v1.MetricProducts {
-	var res []*v1.MetricProducts
+	var res []*v1.MetricProducts // nolint: prealloc
 
 	for _, p := range prodPerMetric {
 		res = append(res, &v1.MetricProducts{
@@ -472,23 +537,35 @@ func dbToServProductsPerMetric(prodPerMetric []db.ProductsPerMetricRow) []*v1.Me
 }
 
 func dbToServProductsNotDeployed(prodNotDeployed []db.ProductsNotDeployedRow) []*v1.DashboardQualityProducts {
-	var res []*v1.DashboardQualityProducts
+	res := make([]*v1.DashboardQualityProducts, 0)
 	for _, p := range prodNotDeployed {
 		res = append(res, &v1.DashboardQualityProducts{
 			SwidTag:     p.Swidtag,
 			ProductName: p.ProductName,
+			Editor:      p.ProductEditor,
+			Version:     p.Version,
 		})
 	}
 	return res
 }
 
 func dbToServProductsNotAcquired(prodNotAcquried []db.ProductsNotAcquiredRow) []*v1.DashboardQualityProducts {
-	var res []*v1.DashboardQualityProducts
+	res := make([]*v1.DashboardQualityProducts, 0)
 	for _, p := range prodNotAcquried {
 		res = append(res, &v1.DashboardQualityProducts{
 			SwidTag:     p.Swidtag,
 			ProductName: p.ProductName,
+			Editor:      p.ProductEditor,
+			Version:     p.ProductVersion,
 		})
 	}
 	return res
+}
+
+func getMetricNames(met []*metv1.Metric) []string {
+	metNames := []string{}
+	for _, m := range met {
+		metNames = append(metNames, m.Name)
+	}
+	return metNames
 }

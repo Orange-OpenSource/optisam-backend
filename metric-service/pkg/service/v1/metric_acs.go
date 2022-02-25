@@ -1,18 +1,12 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
+	"strings"
 
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 
@@ -21,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Context, req *v1.CreateMetricACS) (*v1.CreateMetricACS, error) {
+func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Context, req *v1.MetricACS) (*v1.MetricACS, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -64,6 +58,55 @@ func (s *metricServiceServer) CreateMetricAttrCounterStandard(ctx context.Contex
 	return repoToServerMetricACS(met), nil
 }
 
+func (s *metricServiceServer) UpdateMetricAttrCounterStandard(ctx context.Context, req *v1.MetricACS) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	_, err := s.metricRepo.GetMetricConfigACS(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricACS - repo/GetMetricConfigACS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric attrcounter")
+	}
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricACS - fetching equipments", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	idx := equipmentTypeExistsByType(req.EqType, eqTypes)
+	if idx == -1 {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.NotFound, "cannot find equipment type")
+	}
+	attr, err := validateAttributeACSMetric(eqTypes[idx].Attributes, req.AttributeName)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, err
+	}
+	err = attr.ValidateAttrValFromString(req.Value)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, err
+	}
+	err = s.metricRepo.UpdateMetricACS(ctx, &repo.MetricACS{
+		Name:          req.Name,
+		EqType:        req.EqType,
+		AttributeName: req.AttributeName,
+		Value:         req.Value,
+	}, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricAttributeSum - repo/UpdateMetricAttrSum", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric attrsum")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
+}
+
 func validateAttributeACSMetric(attributes []*repo.Attribute, attrName string) (*repo.Attribute, error) {
 	if attrName == "" {
 		return nil, status.Error(codes.InvalidArgument, "attribute name is empty")
@@ -84,16 +127,7 @@ func attributeExistsByName(attributes []*repo.Attribute, attrName string) (*repo
 	return nil, status.Error(codes.InvalidArgument, "attribute does not exists")
 }
 
-func metricNameExistsACS(metrics []*repo.MetricACS, name string) int {
-	for i, met := range metrics {
-		if strcomp.CompareStrings(met.Name, name) {
-			return i
-		}
-	}
-	return -1
-}
-
-func serverToRepoMetricACS(met *v1.CreateMetricACS) *repo.MetricACS {
+func serverToRepoMetricACS(met *v1.MetricACS) *repo.MetricACS {
 	return &repo.MetricACS{
 		Name:          met.Name,
 		EqType:        met.EqType,
@@ -102,8 +136,8 @@ func serverToRepoMetricACS(met *v1.CreateMetricACS) *repo.MetricACS {
 	}
 }
 
-func repoToServerMetricACS(met *repo.MetricACS) *v1.CreateMetricACS {
-	return &v1.CreateMetricACS{
+func repoToServerMetricACS(met *repo.MetricACS) *v1.MetricACS {
+	return &v1.MetricACS{
 		ID:            met.ID,
 		Name:          met.Name,
 		EqType:        met.EqType,
@@ -119,4 +153,17 @@ func equipmentTypeExistsByType(eqType string, eqTypes []*repo.EquipmentType) int
 		}
 	}
 	return -1
+}
+
+func (s *metricServiceServer) getDescriptionACS(ctx context.Context, name, scope string) (string, error) {
+	metric, err := s.metricRepo.GetMetricConfigACS(ctx, name, scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricACS", zap.String("reason", err.Error()))
+		return "", status.Error(codes.Internal, "cannot fetch metric acs")
+	}
+	des := repo.MetricDescriptionAttrCounterStandard.String()
+	v := strings.Replace(des, "specific_type", metric.EqType, 1)
+	v = strings.Replace(v, "specific_attribute", metric.AttributeName, 1)
+	v = strings.Replace(v, "value", metric.Value, 1)
+	return v, nil
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -35,7 +29,7 @@ func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes 
 
 	}
 	ind := 0
-	if ind = metricNameExistsSPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
+	if ind = metricNameExistsSPS(metrics, input[MetricName].(string)); ind == -1 {
 		return 0, 0, status.Error(codes.Internal, "cannot find metric name")
 	}
 
@@ -45,10 +39,10 @@ func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes 
 		return 0, 0, err
 	}
 	computedLicensesProd, computedLicensesNonProd := uint64(0), uint64(0)
-	if input[IS_AGG].(bool) {
-		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	if input[IsAgg].(bool) {
+		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesSPS - ", zap.String("reason", err.Error()))

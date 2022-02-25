@@ -3,7 +3,7 @@ acqRights.SKU:                           string @index(exact,trigram) @upsert .
 acqRights.swidtag:                       string @index(trigram) .
 acqRights.productName:                   string @index(trigram) .
 acqRights.editor:                        string @index(trigram) .
-acqRights.metric:                        string @index(trigram,exact) .
+acqRights.metric:                        [string] @index(trigram,exact) .
 acqRights.numOfAcqLicences:              int .
 acqRights.numOfLicencesUnderMaintenance: int .
 acqRights.averageUnitPrice:              float .

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -27,7 +21,7 @@ func (s *equipmentServiceServer) EquipmentsPerEquipmentType(ctx context.Context,
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
 
-	//Checking if user has the permission to see this scope
+	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "User do not have access to the scope")
 	}
@@ -36,16 +30,16 @@ func (s *equipmentServiceServer) EquipmentsPerEquipmentType(ctx context.Context,
 	var scopes []string
 	scopes = append(scopes, req.Scope)
 
-	//Find all equipment types in the scope
+	// Find all equipment types in the scope
 	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - EquipmentsPerEquipmentType - db/EquipmentTypes", zap.Error(err))
 		return nil, status.Error(codes.Internal, "Internal Server Error")
 	}
 
-	var typeEquipments []*v1.TypeEquipments
+	typeEquipments := make([]*v1.TypeEquipments, 0)
 
-	//Find Equipments by Equipment Type
+	// Find Equipments by Equipment Type
 	for _, eqType := range eqTypes {
 		numEquipments, _, err := s.equipmentRepo.Equipments(ctx, eqType, &repo.QueryEquipments{}, scopes)
 		if err != nil {
@@ -56,7 +50,7 @@ func (s *equipmentServiceServer) EquipmentsPerEquipmentType(ctx context.Context,
 		}
 		typeEquipments = append(typeEquipments, &v1.TypeEquipments{
 			EquipType:     eqType.Type,
-			NumEquipments: int32(numEquipments),
+			NumEquipments: numEquipments,
 		})
 	}
 

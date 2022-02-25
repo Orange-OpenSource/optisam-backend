@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -14,6 +8,7 @@ import (
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 	"optisam-backend/metric-service/pkg/repository/v1/mock"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -30,20 +25,20 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 	var rep repo.Metric
 	type args struct {
 		ctx context.Context
-		req *v1.CreateMetricNUP
+		req *v1.MetricNUP
 	}
 	tests := []struct {
 		name    string
 		s       *metricServiceServer
 		args    args
 		setup   func()
-		want    *v1.CreateMetricNUP
+		want    *v1.MetricNUP
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -62,42 +57,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -125,7 +120,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					NumberOfUsers:         2,
 				}, nil)
 			},
-			want: &v1.CreateMetricNUP{
+			want: &v1.MetricNUP{
 				ID:                    "m1",
 				Name:                  "NUP",
 				NumCoreAttrId:         "a1",
@@ -141,7 +136,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "SUCCESS - only one level present",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -160,42 +155,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -223,7 +218,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					NumberOfUsers:         2,
 				}, nil)
 			},
-			want: &v1.CreateMetricNUP{
+			want: &v1.MetricNUP{
 				ID:                    "m1",
 				Name:                  "NUP",
 				NumCoreAttrId:         "a1",
@@ -239,7 +234,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - can not retrieve claims",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -258,7 +253,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - starttype id is not given",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -281,7 +276,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - basetype id is not given",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -298,41 +293,41 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -343,7 +338,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - aggtype id is not given",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:             "NUP",
 					NumCoreAttrId:    "server.cores.number",
 					NumCPUAttrId:     "server.processors.number",
@@ -360,41 +355,41 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -404,7 +399,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - endtype id is not given",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -421,41 +416,41 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				mockRepo := mock.NewMockMetric(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -466,7 +461,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - cannot fetch metrics",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -492,7 +487,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - metric name already exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -511,10 +506,10 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "NUP",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
@@ -525,7 +520,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - metric name already exists - case insensitive",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "nup",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -543,10 +538,10 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "NUP",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
@@ -557,8 +552,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - cannot fetch equipment types",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
-					Name:                  "OPS",
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
 					CoreFactorAttrId:      "server.corefactor",
@@ -576,10 +571,10 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
@@ -592,7 +587,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - start type eq doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -611,28 +606,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -644,7 +639,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - base type eq doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -663,28 +658,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -696,7 +691,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - agg type eq doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -715,28 +710,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -748,7 +743,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - end type eq doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -766,28 +761,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -799,7 +794,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - parent hierachy not found",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -818,28 +813,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e33",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -851,7 +846,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - end level is not ancestor of start level",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -870,31 +865,31 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e33",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e33",
 					},
 				}, nil)
@@ -906,7 +901,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - agg level is not ancestor of base level",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -925,28 +920,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -958,7 +953,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - end level is not ancestor of agg level",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "server.cores.number",
 					NumCPUAttrId:          "server.processors.number",
@@ -977,32 +972,32 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e4",
 						ParentID: "e5",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e5",
 					},
 				}, nil)
@@ -1014,7 +1009,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - empty attribute NumCoreAttrId",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCPUAttrId:          "server.processors.number",
 					CoreFactorAttrId:      "server.corefactor",
@@ -1032,28 +1027,28 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1065,7 +1060,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - empty attribute NumCPUAttrId",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					CoreFactorAttrId:      "a3",
@@ -1083,42 +1078,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1129,7 +1124,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - empty attribute CoreFactorAttrId",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1147,42 +1142,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1193,7 +1188,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr1 doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a11",
 					NumCPUAttrId:          "a2",
@@ -1212,42 +1207,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1258,7 +1253,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr1 data type is not int",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1277,42 +1272,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeString,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1323,7 +1318,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr2 doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a22",
@@ -1342,42 +1337,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1388,7 +1383,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr2 data type is not int",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1407,42 +1402,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeString,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1453,7 +1448,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr3 doesnt exists",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1472,42 +1467,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1518,7 +1513,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - attr3 data type is not int/float",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1537,42 +1532,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeString,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1583,7 +1578,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 		{name: "FAILURE - cannot create metric",
 			args: args{
 				ctx: ctx,
-				req: &v1.CreateMetricNUP{
+				req: &v1.MetricNUP{
 					Name:                  "NUP",
 					NumCoreAttrId:         "a1",
 					NumCPUAttrId:          "a2",
@@ -1602,42 +1597,42 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				rep = mockRepo
 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
-					&repo.MetricInfo{
+					{
 						Name: "ONS",
 					},
-					&repo.MetricInfo{
+					{
 						Name: "WS",
 					},
 				}, nil)
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						ID:       "e1",
 						ParentID: "e2",
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e2",
 						ParentID: "e3",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:   "a1",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a2",
 								Type: repo.DataTypeInt,
 							},
-							&repo.Attribute{
+							{
 								ID:   "a3",
 								Type: repo.DataTypeInt,
 							},
 						},
 					},
-					&repo.EquipmentType{
+					{
 						ID:       "e3",
 						ParentID: "e4",
 					},
-					&repo.EquipmentType{
+					{
 						ID: "e4",
 					},
 				}, nil)
@@ -1660,7 +1655,7 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewMetricServiceServer(rep)
+			s := NewMetricServiceServer(rep, nil)
 			got, err := s.CreateMetricOracleNUPStandard(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("metricServiceServer.CreateMetricOracleNUPStandard() error = %v, wantErr %v", err, tt.wantErr)
@@ -1676,7 +1671,1622 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 	}
 }
 
-func compareMetricOracleNUPdata(t *testing.T, name string, exp *v1.CreateMetricNUP, act *v1.CreateMetricNUP) {
+func Test_metricServiceServer_UpdateMetricNUP(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Metric
+	type args struct {
+		ctx context.Context
+		req *v1.MetricNUP
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *v1.UpdateMetricResponse
+		setup   func()
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e3",
+					AggerateLevelEqType: "e1",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
+					Name:                  "NUP",
+					NumCoreAttrID:         "a1",
+					NumCPUAttrID:          "a2",
+					CoreFactorAttrID:      "a3",
+					StartEqTypeID:         "e1",
+					AggerateLevelEqTypeID: "e3",
+					BaseEqTypeID:          "e2",
+					EndEqTypeID:           "e4",
+					NumberOfUsers:         2,
+				}, "Scope1").Return(nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: true,
+			},
+		},
+		{name: "SUCCESS - only one level present",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e2",
+					AggerateLevelEqTypeId: "e2",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e2",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e2",
+					BaseEqType:          "e2",
+					EndEqType:           "e2",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
+					Name:                  "NUP",
+					NumCoreAttrID:         "a1",
+					NumCPUAttrID:          "a2",
+					CoreFactorAttrID:      "a3",
+					StartEqTypeID:         "e2",
+					AggerateLevelEqTypeID: "e2",
+					BaseEqTypeID:          "e2",
+					EndEqTypeID:           "e2",
+					NumberOfUsers:         2,
+				}, "Scope1").Return(nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE - can not retrieve claims",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - starttype id is not given",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - basetype id is not given",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - aggtype id is not given",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:             "NUP",
+					NumCoreAttrId:    "server.cores.number",
+					NumCPUAttrId:     "server.processors.number",
+					CoreFactorAttrId: "server.corefactor",
+					StartEqTypeId:    "e1",
+					BaseEqTypeId:     "e2",
+					EndEqTypeId:      "e4",
+					NumberOfUsers:    2,
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - endtype id is not given",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					BaseEqTypeId:          "e2",
+					AggerateLevelEqTypeId: "e3",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot fetch metrics",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(nil, errors.New("test error")).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - metric name does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(nil, repo.ErrNoData).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot fetch equipment types",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return(nil, errors.New("test error")).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+
+			wantErr: true,
+		},
+		{name: "FAILURE - start type eq doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e11",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - base type eq doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e22",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+
+			wantErr: true,
+		},
+		{name: "FAILURE - agg type eq doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e33",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - end type eq doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e44",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - parent hierachy not found",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e33",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - end level is not ancestor of start level",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e33",
+					},
+					{
+						ID: "e4",
+					},
+					{
+						ID: "e33",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - agg level is not ancestor of base level",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e2",
+					BaseEqTypeId:          "e3",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - end level is not ancestor of agg level",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "server.cores.number",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e5",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID:       "e4",
+						ParentID: "e5",
+					},
+					{
+						ID: "e5",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - empty attribute",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCPUAttrId:          "server.processors.number",
+					CoreFactorAttrId:      "server.corefactor",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr1 doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a11",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr1 data type is not int",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeString,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr2 doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a22",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr2 data type is not int",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeString,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr3 doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a33",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - attr3 data type is not int/float",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e4",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeString,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - cannot update metric",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e1",
+					AggerateLevelEqType: "e3",
+					BaseEqType:          "e2",
+					EndEqType:           "e2",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+
+				mockRepo.EXPECT().UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
+					Name:                  "NUP",
+					NumCoreAttrID:         "a1",
+					NumCPUAttrID:          "a2",
+					CoreFactorAttrID:      "a3",
+					StartEqTypeID:         "e1",
+					AggerateLevelEqTypeID: "e3",
+					BaseEqTypeID:          "e2",
+					EndEqTypeID:           "e4",
+					NumberOfUsers:         2,
+				}, "Scope1").Return(errors.New("test error")).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewMetricServiceServer(rep, nil)
+			got, err := s.UpdateMetricOracleNUPStandard(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("metricServiceServer.UpdateMetricOracleNUPStandard() error = %v", err)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("metricServiceServer.UpdateMetricOracleNUPStandard() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func compareMetricOracleNUPdata(t *testing.T, name string, exp *v1.MetricNUP, act *v1.MetricNUP) {
 	if exp == nil && act == nil {
 		return
 	}

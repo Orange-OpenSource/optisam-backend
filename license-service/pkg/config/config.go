@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
@@ -51,7 +45,7 @@ type Config struct {
 
 	AppParams AppParameters
 
-	//IAM Configuration
+	// IAM Configuration
 	IAM iam.Config
 }
 
@@ -131,7 +125,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// v.AutomaticEnv()
 
 	// Application constants
-	v.Set("serviceName", "licenseservice")
+	v.Set("serviceName", "license-service")
 
 	// Global configuration
 	v.SetDefault("environment", "production")
@@ -163,7 +157,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 
 	// App Params Configuration
 
-	// PKI configuraiton
+	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")
 
 }

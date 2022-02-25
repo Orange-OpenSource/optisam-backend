@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -21,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// nolint: funlen, gocyclo
 func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, req *v1.LicensesForEquipAndMetricRequest) (*v1.LicensesForEquipAndMetricResponse, error) {
 	// Retrieving Claims
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
@@ -70,13 +65,13 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricOPS", zap.Error(err))
 			return nil, status.Error(codes.InvalidArgument, "cannot simulate OPS metric for types other than base type")
 		}
-		//finding the position of the base equipment in eqTypeTree
+		// finding the position of the base equipment in eqTypeTree
 		baseIndex := baseIndexInMetricEqTypeTreeOPS(computedMetric)
 
 		// Finding the depth
 		equipmentRecursionDepth := len(computedMetric.EqTypeTree) - baseIndex
 
-		// Find the parent heirarchy of the equipment
+		// Find the parent hierarchy of the equipment
 		equipment, err := s.licenseRepo.ParentsHirerachyForEquipment(ctx, req.EquipId, req.EquipType, uint8(equipmentRecursionDepth), req.GetScope())
 		if err != nil && err == repo.ErrNodeNotFound {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ParentsHirerachyForEquipment", zap.String("reason", err.Error()))
@@ -86,12 +81,12 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 			return nil, status.Error(codes.Internal, "can not fetch equipment")
 		}
 
-		//Finding the top equipment
+		// Finding the top equipment
 		topEquipment := topEquipmentInEquipmentLinkList(equipment)
-		//Index of top equipment in EqTypeTree
+		// Index of top equipment in EqTypeTree
 		indexTopEquipment := topEquipmentInEquipmentTypeTreeOPS(computedMetric, topEquipment)
 
-		//finding the products for the top equipment
+		// finding the products for the top equipment
 		products, err := s.licenseRepo.ProductsForEquipmentForMetricOracleProcessorStandard(ctx, topEquipment.EquipID, topEquipment.Type, uint8(indexTopEquipment+1), computedMetric, req.GetScope())
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricOracleProcessorStandard", zap.String("reason", err.Error()))
@@ -163,7 +158,7 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 		// Finding the depth
 		equipmentRecursionDepth := len(computedMetric.EqTypeTree) - baseIndex
 
-		// Find the parent heirarchy of the equipment
+		// Find the parent hierarchy of the equipment
 		equipment, err := s.licenseRepo.ParentsHirerachyForEquipment(ctx, req.EquipId, req.EquipType, uint8(equipmentRecursionDepth), req.GetScope())
 		if err != nil && err == repo.ErrNodeNotFound {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ParentsHirerachyForEquipment", zap.String("reason", err.Error()))
@@ -173,13 +168,13 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 			return nil, status.Error(codes.Internal, "can not fetch equipment")
 		}
 
-		//Finding the top equipment
+		// Finding the top equipment
 		topEquipment := topEquipmentInEquipmentLinkList(equipment)
 
-		//Index of top equipment in EqTypeTree
+		// Index of top equipment in EqTypeTree
 		indexTopEquipment := topEquipmentInEquipmentTypeTreeNUP(computedMetric, topEquipment)
 
-		//finding the products for the top equipment
+		// finding the products for the top equipment
 		products, err := s.licenseRepo.ProductsForEquipmentForMetricOracleNUPStandard(ctx, topEquipment.EquipID, topEquipment.Type, uint8(indexTopEquipment+1), computedMetric, req.GetScope())
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricOracleNUPStandard", zap.String("reason", err.Error()))
@@ -206,8 +201,8 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 
 		newLicenses := oldLicenses - oldLicensesAgg + int64(math.Ceil(unceiledLicensesAgg))
 
-		oldLicenses = oldLicenses * int64(computedMetric.NumOfUsers)
-		newLicenses = newLicenses * int64(computedMetric.NumOfUsers)
+		oldLicenses *= int64(computedMetric.NumOfUsers)
+		newLicenses *= int64(computedMetric.NumOfUsers)
 		var licenses []*v1.ProductLicenseForEquipAndMetric
 		for _, product := range products {
 			// get user nodes in the system
@@ -269,7 +264,7 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 
 		metric = getMetricWithNewValuesIPS(metric, req.Attributes)
 
-		//finding the products for the equipment
+		// finding the products for the equipment
 		products, err := s.licenseRepo.ProductsForEquipmentForMetricIPSStandard(ctx, req.EquipId, req.EquipType, uint8(1), metric, req.GetScope())
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricIPSStandard", zap.String("reason", err.Error()))
@@ -319,7 +314,7 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 
 		metric = getMetricWithNewValuesSPS(metric, req.Attributes)
 
-		//finding the products for the equipment
+		// finding the products for the equipment
 		products, err := s.licenseRepo.ProductsForEquipmentForMetricSAGStandard(ctx, req.EquipId, req.EquipType, uint8(1), metric, req.GetScope())
 		if err != nil && err != repo.ErrNoData {
 			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricSAGStandard", zap.String("reason", err.Error()))

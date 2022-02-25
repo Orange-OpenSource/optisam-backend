@@ -46,3 +46,6 @@ WHERE report_id = @report_id;
 UPDATE report
 SET report_status = @report_status
 WHERE report_id = @report_id;
+
+-- name: DeleteReportsByScope :exec
+Delete from report where scope = $1;

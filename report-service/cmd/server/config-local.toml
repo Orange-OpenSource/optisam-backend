@@ -1,7 +1,7 @@
 environment = "development"
 debug = false
-grpcport = 9090
-httpport = 9091
+grpcport = 19090
+httpport = 19091
 #maxapiworker = 10
 
 [log]
@@ -22,9 +22,9 @@ agentEndpoint = "192.168.99.100:6831"
 [database]
 host = "localhost"
 port = 5432
-user = "postgres"
-pass = "postgres"
-name = "postgres"
+user = "optisam"
+pass = "optisam"
+name = "optisam"
 
 [grpcservers]
 apikey = "12345678"
@@ -35,7 +35,8 @@ license = "localhost:8090"
 
 [dgraph]
 hosts = [
-    "10.171.44.163:9081"
+#    "10.171.44.163:9081"
+"localhost:9080"
 ]
 
 [iam]

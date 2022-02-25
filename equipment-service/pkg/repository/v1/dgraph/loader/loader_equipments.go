@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -104,7 +98,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, versi
 	}
 
 	mu := &api.Mutation{
-		//CommitNow: true,
+		// CommitNow: true,
 		Set: make([]*api.NQuad, 0, 8000),
 	}
 
@@ -161,21 +155,26 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, versi
 		mu.Set = append(mu.Set, nqs...)
 		mu.Set = append(mu.Set, scopeNquad(scope, uid)...)
 		mu.Set = append(mu.Set,
-			// &api.NQuad{
-			// 	Subject:     uid,
-			// 	Predicate:   "equipment.id",
-			// 	ObjectValue: stringObjectValue(row[index]),
-			// },
+			&api.NQuad{
+				Subject:     uid,
+				Predicate:   "equipment.id",
+				ObjectValue: stringObjectValue(row[index]),
+			},
 			&api.NQuad{
 				Subject:     uid,
 				Predicate:   "equipment.type",
 				ObjectValue: stringObjectValue(eqType.Type),
 			},
-			// &api.NQuad{
-			// 	Subject:     uid,
-			// 	Predicate:   "type_name",
-			// 	ObjectValue: stringObjectValue("equipment"),
-			// },
+			&api.NQuad{
+				Subject:     uid,
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("equipment"),
+			},
+			&api.NQuad{
+				Subject:     uid,
+				Predicate:   "dgraph,type",
+				ObjectValue: stringObjectValue("Equipment"),
+			},
 		)
 
 		for idx := range row {
@@ -186,7 +185,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, versi
 
 			attr, ok := attrMap[idx]
 			if !ok {
-				//log.Println(columns[idx])
+				// log.Println(columns[idx])
 				continue // this is not mapped
 			}
 
@@ -288,7 +287,7 @@ func loadEquipmentFile(l Loader, ch chan<- *api.Request, masterDir, scope, versi
 		}
 		upserts = make(map[string]string)
 		mu = &api.Mutation{
-			//CommitNow: true,
+			// CommitNow: true,
 		}
 
 	}

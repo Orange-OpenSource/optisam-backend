@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -17,13 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
-//ProductRepository ...
+// ProductRepository ...
 type ProductRepository struct {
 	*gendb.Queries
 	db *sql.DB
 }
 
-//NewProductRepository creates new Repository
+// NewProductRepository creates new Repository
 func NewProductRepository(db *sql.DB) *ProductRepository {
 	return &ProductRepository{
 		Queries: gendb.New(db),
@@ -31,13 +25,13 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 	}
 }
 
-//ProductRepositoryTx ...
+// ProductRepositoryTx ...
 type ProductRepositoryTx struct {
 	*gendb.Queries
 	db *sql.Tx
 }
 
-//NewProductRepositoryTx ...
+// NewProductRepositoryTx ...
 func NewProductRepositoryTx(db *sql.Tx) *ProductRepositoryTx {
 	return &ProductRepositoryTx{
 		Queries: gendb.New(db),
@@ -45,13 +39,13 @@ func NewProductRepositoryTx(db *sql.Tx) *ProductRepositoryTx {
 	}
 }
 
-//UpsertProductTx upserts products/ linking data
+// UpsertProductTx upserts products/ linking data
 func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertProductRequest, user string) error {
 	var addApplications, deleteApplications, deleteEquipment []string
 	var addEquipments []*v1.UpsertProductRequestEquipmentEquipmentuser
 	var upsertPartialFlag bool
 
-	//Create Transaction
+	// Create Transaction
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("Failed to start Transaction", zap.Error(err))
@@ -77,7 +71,7 @@ func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertP
 		}
 	}
 
-	//Upsert Product Master
+	// Upsert Product Master
 	if upsertPartialFlag {
 		err = pt.UpsertProductPartial(ctx, gendb.UpsertProductPartialParams{Scope: req.GetScope(), Swidtag: req.GetSwidTag(), CreatedBy: user})
 	} else {
@@ -97,33 +91,33 @@ func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertP
 		})
 	}
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback() // nolint: errcheck
 		logger.Log.Error("failed to upsert product", zap.Error(err))
 		return err
 	}
 
 	for _, app := range addApplications {
-		err := pt.UpsertProductApplications(ctx, gendb.UpsertProductApplicationsParams{
+		error := pt.UpsertProductApplications(ctx, gendb.UpsertProductApplicationsParams{
 			Swidtag:       req.GetSwidTag(),
 			ApplicationID: app,
 			Scope:         req.GetScope()})
-		if err != nil {
-			tx.Rollback()
-			logger.Log.Error("Failed to execute UpsertProductApplications", zap.Error(err))
-			return err
+		if error != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("Failed to execute UpsertProductApplications", zap.Error(error))
+			return error
 		}
 	}
 
 	for _, equip := range addEquipments {
-		err := pt.UpsertProductEquipments(ctx, gendb.UpsertProductEquipmentsParams{
+		error := pt.UpsertProductEquipments(ctx, gendb.UpsertProductEquipmentsParams{
 			Swidtag:     req.GetSwidTag(),
 			EquipmentID: equip.EquipmentId,
 			NumOfUsers:  sql.NullInt32{Int32: equip.NumUser, Valid: true},
 			Scope:       req.GetScope()})
-		if err != nil {
-			tx.Rollback()
-			logger.Log.Error("Failed to execute UpsertProductEquipments", zap.Error(err))
-			return err
+		if error != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("Failed to execute UpsertProductEquipments", zap.Error(error))
+			return error
 		}
 	}
 
@@ -134,8 +128,8 @@ func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertP
 			Scope:         req.GetScope(),
 		})
 		if err != nil {
-			tx.Rollback()
-			logger.Log.Error("failed to delete product-applicaiton", zap.Error(err))
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("failed to delete product-application", zap.Error(err))
 			return err
 		}
 	}
@@ -144,43 +138,48 @@ func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertP
 		err = pt.DeleteProductEquipments(ctx, gendb.DeleteProductEquipmentsParams{
 			ProductID:   req.GetSwidTag(),
 			EquipmentID: deleteEquipment,
-			//SCOPE BASED CHANGE
+			// SCOPE BASED CHANGE
 			Scope: req.GetScope(),
 		})
 		if err != nil {
-			tx.Rollback()
+			tx.Rollback() // nolint: errcheck
 			logger.Log.Error("failed to delete product-equipments", zap.Error(err))
 			return err
 		}
 	}
 
-	tx.Commit()
+	tx.Commit() // nolint: errcheck
 	return nil
 }
 
-//DropProductDataTx drops all the products data/ and linking in a particular scope
-func (p *ProductRepository) DropProductDataTx(ctx context.Context, scope string) error {
+// DropProductDataTx drops all the products data/ and linking in a particular scope
+func (p *ProductRepository) DropProductDataTx(ctx context.Context, scope string, deletionType v1.DropProductDataRequestDeletionTypes) error {
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("Failed to start Transaction", zap.Error(err))
 		return err
 	}
 	pt := NewProductRepositoryTx(tx)
-	if err := pt.DeleteProductsByScope(ctx, scope); err != nil {
-		tx.Rollback()
-		logger.Log.Error("failed to delete products data", zap.Error(err))
-		return err
+
+	if deletionType == v1.DropProductDataRequest_ACQRIGHTS || deletionType == v1.DropProductDataRequest_FULL {
+		if err := pt.DeleteAcqrightsByScope(ctx, scope); err != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("failed to delete acqrights data", zap.Error(err))
+			return err
+		}
 	}
-	if err := pt.DeleteAcqrightsByScope(ctx, scope); err != nil {
-		tx.Rollback()
-		logger.Log.Error("failed to delete acqrights data", zap.Error(err))
-		return err
+	if deletionType == v1.DropProductDataRequest_PARK || deletionType == v1.DropProductDataRequest_FULL {
+		if err := pt.DeleteProductsByScope(ctx, scope); err != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("failed to delete products data", zap.Error(err))
+			return err
+		}
+		if err := pt.DeleteProductAggregationByScope(ctx, scope); err != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("failed to delete product aggregations data", zap.Error(err))
+			return err
+		}
 	}
-	if err := pt.DeleteProductAggregationByScope(ctx, scope); err != nil {
-		tx.Rollback()
-		logger.Log.Error("failed to delete product aggregations data", zap.Error(err))
-		return err
-	}
-	tx.Commit()
+	tx.Commit() // nolint: errcheck
 	return nil
 }

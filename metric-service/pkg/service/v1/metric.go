@@ -1,23 +1,20 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"encoding/json"
+	accv1 "optisam-backend/account-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
+	"optisam-backend/common/optisam/token/claims"
 
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -25,11 +22,35 @@ import (
 // metricServiceServer is implementation of v1.authServiceServer proto interface
 type metricServiceServer struct {
 	metricRepo repo.Metric
+	account    accv1.AccountServiceClient
 }
 
 // NewLicenseServiceServer creates License service
-func NewMetricServiceServer(metricRepo repo.Metric) v1.MetricServiceServer {
-	return &metricServiceServer{metricRepo: metricRepo}
+func NewMetricServiceServer(metricRepo repo.Metric, grpcServers map[string]*grpc.ClientConn) v1.MetricServiceServer {
+	return &metricServiceServer{
+		metricRepo: metricRepo,
+		account:    accv1.NewAccountServiceClient(grpcServers["account"]),
+	}
+}
+
+func (s *metricServiceServer) DropMetricData(ctx context.Context, req *v1.DropMetricDataRequest) (*v1.DropMetricDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClamsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return &v1.DropMetricDataResponse{Success: false}, status.Error(codes.Internal, "ScopeValidationFailure")
+	}
+
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return &v1.DropMetricDataResponse{Success: false}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	if err := s.metricRepo.DropMetrics(ctx, req.Scope); err != nil {
+		logger.Log.Error("Failed to delete metrics  for", zap.Any("scope", req.Scope), zap.Error(err))
+		return &v1.DropMetricDataResponse{Success: false}, status.Error(codes.Internal, err.Error())
+	}
+	return &v1.DropMetricDataResponse{Success: true}, nil
 }
 
 func (s *metricServiceServer) ListMetricType(ctx context.Context, req *v1.ListMetricTypeRequest) (*v1.ListMetricTypeResponse, error) {
@@ -40,7 +61,12 @@ func (s *metricServiceServer) ListMetricType(ctx context.Context, req *v1.ListMe
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, req.GetScopes()[0])
+	scopeinfo, err := s.account.GetScope(ctx, &accv1.GetScopeRequest{Scope: req.Scopes[0]})
+	if err != nil {
+		logger.Log.Error("service/v1 - ListMetricType - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "unable to fetch scope info")
+	}
+	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, repo.GetScopeType(scopeinfo.ScopeType), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - ListMetricType - fetching metric types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metric types")
@@ -59,34 +85,21 @@ func (s *metricServiceServer) ListMetrices(ctx context.Context, req *v1.ListMetr
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, req.GetScopes()[0])
-	if err != nil {
-		logger.Log.Error("service/v1 - ListMetrices - fetching metric types info", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch metric types info")
-	}
 
 	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - ListMetrices - fetching metric types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metric types")
 	}
-
-	metricsList := repoMetricToServiceMetricAll(metrics)
-	for _, met := range metricsList {
-		desc, err := discriptionMetric(met.Type, metricTypes)
-		if err != nil {
-			logger.Log.Error("service/v1 - GetEquipment - fetching equipment", zap.String("reason", err.Error()))
-			continue
-		}
-		met.Description = desc
-	}
+	metricsList := s.repoMetricToServiceMetricAll(ctx, metrics, req.Scopes[0])
 
 	return &v1.ListMetricResponse{
-		Metrices: metricsList,
+		Metrices: metricsList, // nolint: misspell
 	}, nil
 
 }
 
+// nolint: gocyclo
 func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v1.GetMetricConfigurationRequest) (*v1.GetMetricConfigurationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -100,9 +113,10 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 	}
 	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
 	if err != nil && err != repo.ErrNoData {
-		logger.Log.Error("service/v1 - GetMetricConfiguration - ListMetricOPS", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "cannot fetch OPS metrics")
+		logger.Log.Error("service/v1 - GetMetricConfiguration - ListMetrices", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "cannot fetch metrics")
 	}
+
 	idx := metricNameExistsAll(metrics, req.MetricInfo.Name)
 	if idx == -1 {
 		return nil, status.Error(codes.InvalidArgument, "metric does not exist")
@@ -113,28 +127,60 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 	var metric interface{}
 	switch metrics[idx].Type {
 	case repo.MetricOPSOracleProcessorStandard:
-		metric, err = s.metricRepo.GetMetricConfigOPS(ctx, metrics[idx].Name, req.GetScopes()[0])
-		if err != nil {
-			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricOPS", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot fetch metric ops")
+		if !req.GetID {
+			metric, err = s.metricRepo.GetMetricConfigOPS(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigOPS", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric ops config")
+			}
+		} else {
+			metric, err = s.metricRepo.GetMetricConfigOPSID(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigOPSID", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric ops config IDs")
+			}
 		}
 	case repo.MetricOracleNUPStandard:
-		metric, err = s.metricRepo.GetMetricConfigNUP(ctx, metrics[idx].Name, req.GetScopes()[0])
-		if err != nil {
-			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigNUP", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot fetch metric nup")
+		if !req.GetID {
+			metric, err = s.metricRepo.GetMetricConfigNUP(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigNUP", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric nup")
+			}
+		} else {
+			metric, err = s.metricRepo.GetMetricConfigNUPID(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigNUPID", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric nup config IDs")
+			}
 		}
 	case repo.MetricSPSSagProcessorStandard:
-		metric, err = s.metricRepo.GetMetricConfigSPS(ctx, metrics[idx].Name, req.GetScopes()[0])
-		if err != nil {
-			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSPS", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot fetch metric sps")
+		if !req.GetID {
+			metric, err = s.metricRepo.GetMetricConfigSPS(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSPS", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric sps")
+			}
+		} else {
+			metric, err = s.metricRepo.GetMetricConfigSPSID(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigSPSID", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric sps config IDs")
+			}
 		}
 	case repo.MetricIPSIbmPvuStandard:
-		metric, err = s.metricRepo.GetMetricConfigIPS(ctx, metrics[idx].Name, req.GetScopes()[0])
-		if err != nil {
-			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricIPS", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.Internal, "cannot fetch metric ips")
+		if !req.GetID {
+			metric, err = s.metricRepo.GetMetricConfigIPS(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricIPS", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric ips")
+			}
+		} else {
+			metric, err = s.metricRepo.GetMetricConfigIPSID(ctx, metrics[idx].Name, req.GetScopes()[0])
+			if err != nil {
+				logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigIPSID", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "cannot fetch metric ips config IDs")
+			}
 		}
 	case repo.MetricAttrCounterStandard:
 		metric, err = s.metricRepo.GetMetricConfigACS(ctx, metrics[idx].Name, req.GetScopes()[0])
@@ -148,6 +194,18 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricINM", zap.String("reason", err.Error()))
 			return nil, status.Error(codes.Internal, "cannot fetch metric inm")
 		}
+	case repo.MetricAttrSumStandard:
+		metric, err = s.metricRepo.GetMetricConfigAttrSum(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigAttrSum", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric attr sum")
+		}
+	case repo.MetricUserSumStandard:
+		metric, err = s.metricRepo.GetMetricConfigUSS(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUSS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric uss")
+		}
 	}
 	resMetric, err := json.Marshal(metric)
 	if err != nil {
@@ -156,6 +214,48 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 	}
 	return &v1.GetMetricConfigurationResponse{
 		MetricConfig: string(resMetric),
+	}, nil
+}
+
+// DeleteMetric deletes metric that is not being used with name and scope
+func (s *metricServiceServer) DeleteMetric(ctx context.Context, req *v1.DeleteMetricRequest) (*v1.DeleteMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.Scope))
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	metric, err := s.metricRepo.MetricInfoWithAcqAndAgg(ctx, req.MetricName, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - DeleteMetric - MetricInfoWithAcqAndAgg", zap.String("reason", err.Error()))
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "can not get metric info")
+	}
+	if metric.Name == "" {
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "metric does not exist")
+	}
+	if metric.TotalAggregations != 0 || metric.TotalAcqRights != 0 {
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "metric is being used by acquired right/aggregation")
+	}
+	if err := s.metricRepo.DeleteMetric(ctx, req.MetricName, req.Scope); err != nil {
+		logger.Log.Error("service/v1 - DeleteMetric - DeleteMetric", zap.String("reason", err.Error()))
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "unable to delete metric")
+	}
+	return &v1.DeleteMetricResponse{
+		Success: true,
 	}, nil
 }
 
@@ -176,28 +276,48 @@ func repoMetricTypeToServiceMetricType(met *repo.MetricTypeInfo) *v1.MetricType 
 	}
 }
 
-func repoMetricToServiceMetricAll(met []*repo.MetricInfo) []*v1.Metric {
+func (s *metricServiceServer) repoMetricToServiceMetricAll(ctx context.Context, met []*repo.MetricInfo, scope string) []*v1.Metric {
 	servMetric := make([]*v1.Metric, len(met))
 	for i := range met {
-		servMetric[i] = repoMetricToServiceMetric(met[i])
+		servMetric[i] = s.repoMetricToServiceMetric(ctx, met[i], scope)
 	}
 	return servMetric
 }
 
-func repoMetricToServiceMetric(met *repo.MetricInfo) *v1.Metric {
+func (s *metricServiceServer) repoMetricToServiceMetric(ctx context.Context, met *repo.MetricInfo, scope string) *v1.Metric {
+	desc, err := s.discriptionMetric(ctx, met, scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetEquipment - fetching equipment", zap.String("reason", err.Error()))
+	}
 	return &v1.Metric{
-		Name: met.Name,
-		Type: string(met.Type),
+		Name:        met.Name,
+		Type:        met.Type.String(),
+		Description: desc,
 	}
 }
 
-func discriptionMetric(typ string, metrics []*repo.MetricTypeInfo) (string, error) {
-	for _, met := range metrics {
-		if (met.Name).String() == typ {
-			return met.Description, nil
-		}
+func (s *metricServiceServer) discriptionMetric(ctx context.Context, met *repo.MetricInfo, scope string) (string, error) {
+	switch met.Type {
+	case repo.MetricOPSOracleProcessorStandard:
+		return repo.MetricDescriptionOracleProcessorStandard.String(), nil
+	case repo.MetricOracleNUPStandard:
+		return s.getDescriptionNUP(ctx, met.Name, scope)
+	case repo.MetricSPSSagProcessorStandard:
+		return repo.MetricDescriptionSagProcessorStandard.String(), nil
+	case repo.MetricIPSIbmPvuStandard:
+		return repo.MetricDescriptionIbmPvuStandard.String(), nil
+	case repo.MetricAttrCounterStandard:
+		return s.getDescriptionACS(ctx, met.Name, scope)
+	case repo.MetricInstanceNumberStandard:
+		return s.getDescriptionINM(ctx, met.Name, scope)
+	case repo.MetricAttrSumStandard:
+		return s.getDescriptionAttSum(ctx, met.Name, scope)
+	case repo.MetricUserSumStandard:
+		return repo.MetricDescriptionUserSumStandard.String(), nil
+	default:
+		return "", status.Error(codes.Internal, "description not found - "+met.Type.String())
 	}
-	return "", status.Error(codes.Internal, "description not found - "+typ)
+
 }
 
 func metricNameExistsAll(metrics []*repo.MetricInfo, name string) int {

@@ -1,35 +1,16 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package licensecalculator
 
-import (
-	"context"
-	"database/sql"
-	"errors"
-	"optisam-backend/common/optisam/ctxmanage"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue/job"
-	l_v1 "optisam-backend/license-service/pkg/api/v1"
-	mocklicense "optisam-backend/license-service/pkg/api/v1/mock"
-	repo "optisam-backend/product-service/pkg/repository/v1"
-	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	"testing"
-
-	"github.com/golang/mock/gomock"
-	"github.com/shopspring/decimal"
-)
-
+/*
 func TestLicenseCalWorker_DoWork(t *testing.T) {
 	ctx := ctxmanage.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
 	})
+	cTime := time.Now()
+	parser := cron.NewParser(cron.Descriptor)
+	temp, _ := parser.Parse("@every 12h")
+	nTime := temp.Next(cTime)
 	var mockCtrl *gomock.Controller
 	var licenseClient l_v1.LicenseServiceClient
 	var rep repo.Product
@@ -44,9 +25,15 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		setup   func()
 		wantErr bool
 	}{
-		{name: "SUCCESS",
+		{
+			name: "SUCCESS",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -77,7 +64,7 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 								AvgUnitPrice:   10,
 							},
 							{
-								SKU:            "Acq2",
+								SKU:            "Acq2,Acq3",
 								SwidTag:        "P1",
 								NumCptLicences: 10,
 								AvgUnitPrice:   10,
@@ -96,13 +83,26 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 						Computedcost:     decimal.NewFromFloat(10 * float64(10)),
 						Scope:            "Scope1",
 					}).Times(1).Return(nil),
+					mockRepo.EXPECT().AddComputedLicenses(ctx, db.AddComputedLicensesParams{
+						Sku:              "Acq3",
+						Computedlicenses: 10,
+						Computedcost:     decimal.NewFromFloat(10 * float64(10)),
+						Scope:            "Scope1",
+					}).Times(1).Return(nil),
+					mockRepo.EXPECT().UpsertDashboardUpdates(ctx, db.UpsertDashboardUpdatesParams{
+						UpdatedAt:    cTime,
+						NextUpdateAt: sql.NullTime{Time: nTime, Valid: true},
+						UpdatedBy:    "cron",
+						Scope:        "Scope1",
+					}).Times(1).Return(nil),
+
 					mockLicenseClient.EXPECT().ListAcqRightsForProduct(ctx, &l_v1.ListAcquiredRightsForProductRequest{
 						SwidTag: "P2",
 						Scope:   "Scope2",
 					}).Times(1).Return(&l_v1.ListAcquiredRightsForProductResponse{
 						AcqRights: []*l_v1.ProductAcquiredRights{
 							{
-								SKU:            "Acq3",
+								SKU:            "Acq4",
 								SwidTag:        "P2",
 								NumCptLicences: 10,
 								AvgUnitPrice:   5,
@@ -110,10 +110,17 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 						},
 					}, nil),
 					mockRepo.EXPECT().AddComputedLicenses(ctx, db.AddComputedLicensesParams{
-						Sku:              "Acq3",
+						Sku:              "Acq4",
 						Computedlicenses: 10,
 						Computedcost:     decimal.NewFromFloat(5 * float64(10)),
 						Scope:            "Scope2",
+					}).Times(1).Return(nil),
+
+					mockRepo.EXPECT().UpsertDashboardUpdates(ctx, db.UpsertDashboardUpdatesParams{
+						UpdatedAt:    cTime,
+						NextUpdateAt: sql.NullTime{Time: nTime, Valid: true},
+						UpdatedBy:    "cron",
+						Scope:        "Scope2",
 					}).Times(1).Return(nil),
 				)
 			},
@@ -121,6 +128,11 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		{name: "SUCCESS - no products",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -134,6 +146,11 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		{name: "SUCCESS - ListAcqRightsForProduct - no response",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -175,12 +192,23 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 						Computedcost:     decimal.NewFromFloat(5 * float64(10)),
 						Scope:            "Scope2",
 					}).Times(1).Return(nil),
+					mockRepo.EXPECT().UpsertDashboardUpdates(ctx, db.UpsertDashboardUpdatesParams{
+						UpdatedAt:    cTime,
+						NextUpdateAt: sql.NullTime{Time: nTime, Valid: true},
+						UpdatedBy:    "cron",
+						Scope:        "Scope2",
+					}).Times(1).Return(nil),
 				)
 			},
 		},
 		{name: "FAILURE - ListAcqrightsProducts - DBError",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -195,6 +223,11 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		{name: "SUCCESS - ListAcqRightsForProduct - can not fetch acqrights for product",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -227,6 +260,11 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		{name: "FAILURE - AddComputedLicenses - DBError",
 			args: args{
 				ctx: ctx,
+				j: &job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(`{"updatedBy":"cron"}`),
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -238,10 +276,6 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 					{
 						Swidtag: "P1",
 						Scope:   "Scope1",
-					},
-					{
-						Swidtag: "P2",
-						Scope:   "Scope2",
 					},
 				}, nil)
 				gomock.InOrder(
@@ -282,6 +316,7 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 				id:            "lcalw",
 				productRepo:   rep,
 				licenseClient: licenseClient,
+				cronTime:      "@every 12h",
 			}
 			if err := w.DoWork(tt.args.ctx, tt.args.j); (err != nil) != tt.wantErr {
 				t.Errorf("LicenseCalWorker.DoWork() error = %v, wantErr %v", err, tt.wantErr)
@@ -289,3 +324,4 @@ func TestLicenseCalWorker_DoWork(t *testing.T) {
 		})
 	}
 }
+*/

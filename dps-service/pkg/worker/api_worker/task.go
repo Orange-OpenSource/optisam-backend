@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package apiworker
 
 import (
@@ -30,13 +24,13 @@ var (
 
 func init() {
 	dataToRPCMappings[constants.APPLICATIONS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.APPLICATIONS_INSTANCES] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.INSTANCES_PRODUCTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.INSTANCES_EQUIPMENTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.ApplicationsInstances] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.InstancesProducts] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.InstancesEquipments] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.PRODUCTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.APPLICATIONS_PRODUCTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.PRODUCTS_EQUIPMENTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.PRODUCTS_ACQUIREDRIGHTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.ApplicationsProducts] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.ProductsEquipments] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.ProductsAcquiredRights] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.METADATA] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.EQUIPMENTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 
@@ -46,20 +40,20 @@ func init() {
 	dataToRPCMappings[constants.APPLICATIONS][constants.UPSERT] = sendUpsertApplicationReq
 	dataToRPCMappings[constants.APPLICATIONS][constants.DELETE] = sendDeleteApplicationReq
 	dataToRPCMappings[constants.APPLICATIONS][constants.DROP] = sendDropApplicationDataReq
-	dataToRPCMappings[constants.APPLICATIONS_INSTANCES][constants.UPSERT] = sendUpsertInstanceReq
-	dataToRPCMappings[constants.APPLICATIONS_INSTANCES][constants.DELETE] = sendDeleteInstanceReq
-	dataToRPCMappings[constants.INSTANCES_PRODUCTS][constants.UPSERT] = sendUpsertInstanceReq
-	dataToRPCMappings[constants.INSTANCES_EQUIPMENTS][constants.UPSERT] = sendUpsertInstanceReq
+	dataToRPCMappings[constants.ApplicationsInstances][constants.UPSERT] = sendUpsertInstanceReq
+	dataToRPCMappings[constants.ApplicationsInstances][constants.DELETE] = sendDeleteInstanceReq
+	dataToRPCMappings[constants.InstancesProducts][constants.UPSERT] = sendUpsertInstanceReq
+	dataToRPCMappings[constants.InstancesEquipments][constants.UPSERT] = sendUpsertInstanceReq
 	dataToRPCMappings[constants.PRODUCTS][constants.UPSERT] = sendUpsertProductReq
 	dataToRPCMappings[constants.PRODUCTS][constants.DROP] = sendDropProductDataReq
-	dataToRPCMappings[constants.APPLICATIONS_PRODUCTS][constants.UPSERT] = sendUpsertProductReq
-	dataToRPCMappings[constants.PRODUCTS_EQUIPMENTS][constants.UPSERT] = sendUpsertProductReq
-	dataToRPCMappings[constants.PRODUCTS_ACQUIREDRIGHTS][constants.UPSERT] = sendUpsertAcqRightsReq
+	dataToRPCMappings[constants.ApplicationsProducts][constants.UPSERT] = sendUpsertProductReq
+	dataToRPCMappings[constants.ProductsEquipments][constants.UPSERT] = sendUpsertProductReq
+	dataToRPCMappings[constants.ProductsAcquiredRights][constants.UPSERT] = sendUpsertAcqRightsReq
 }
 
 var rpcTimeOut time.Duration
 
-//setRpcTimeOut sets rpctimeout default  3000 milisecond ()
+// setRpcTimeOut sets rpctimeout default  3000 milisecond ()
 func setRpcTimeOut(t time.Duration) {
 	rpcTimeOut = 3000
 	if t > 0 {
@@ -67,11 +61,11 @@ func setRpcTimeOut(t time.Duration) {
 	}
 }
 
-//GetDataCountInPayload ...
+// GetDataCountInPayload ...
 func GetDataCountInPayload(data []byte, fileType string) int32 {
 	var count int32
 	switch fileType {
-	case constants.APPLICATIONS_PRODUCTS:
+	case constants.ApplicationsProducts:
 		var temp product.UpsertProductRequest
 		err := json.Unmarshal(data, &temp)
 		if err != nil {
@@ -80,7 +74,7 @@ func GetDataCountInPayload(data []byte, fileType string) int32 {
 		}
 		count = int32(len(temp.Applications.ApplicationId))
 
-	case constants.PRODUCTS_EQUIPMENTS:
+	case constants.ProductsEquipments:
 		var temp product.UpsertProductRequest
 		err := json.Unmarshal(data, &temp)
 		if err != nil {
@@ -89,7 +83,7 @@ func GetDataCountInPayload(data []byte, fileType string) int32 {
 		}
 
 		count = int32(len(temp.Equipments.Equipmentusers))
-	case constants.INSTANCES_PRODUCTS:
+	case constants.InstancesProducts:
 		var temp application.UpsertInstanceRequest
 		err := json.Unmarshal(data, &temp)
 		if err != nil {
@@ -98,7 +92,7 @@ func GetDataCountInPayload(data []byte, fileType string) int32 {
 		}
 		count = int32(len(temp.Products.ProductId))
 
-	case constants.INSTANCES_EQUIPMENTS:
+	case constants.InstancesEquipments:
 		var temp application.UpsertInstanceRequest
 		err := json.Unmarshal(data, &temp)
 		if err != nil {
@@ -125,10 +119,9 @@ func sendUpsertEqDataReq(ctx context.Context, data models.Envlope, cc grpc.Clien
 		log.Println("Failed to marshal data ")
 		return
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := equipment.NewEquipmentServiceClient(cc).UpsertEquipment(ctx, &appData)
 	if err != nil {
-		log.Println("FAILED sendUpsertMetaDataReq err :", err, " for data ", appData)
+		log.Println("FAILED sendUpsertEqDataReq err :", err, " for data ", appData)
 		return err
 	}
 	if resp.Success == false {
@@ -146,7 +139,6 @@ func sendUpsertMetaDataReq(ctx context.Context, data models.Envlope, cc grpc.Cli
 		log.Println("Failed to marshal data ")
 		return
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := equipment.NewEquipmentServiceClient(cc).UpsertMetadata(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertMetaDataReq err :", err, " for data ", appData)
@@ -168,7 +160,6 @@ func sendUpsertAcqRightsReq(ctx context.Context, data models.Envlope, cc grpc.Cl
 		log.Println("Failed to marshal data ")
 		return
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := product.NewProductServiceClient(cc).UpsertAcqRights(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertAcqRightsReq err :", err, " for data ", appData)
@@ -190,7 +181,6 @@ func sendUpsertProductReq(ctx context.Context, data models.Envlope, cc grpc.Clie
 		log.Println("Failed to marshal data ")
 		return
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v] ,  and %+v", data.TargetService, appData, cc)
 	resp, err := product.NewProductServiceClient(cc).UpsertProduct(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertProductReq err :", err, " for data ", appData)
@@ -212,7 +202,6 @@ func sendUpsertApplicationReq(ctx context.Context, data models.Envlope, cc grpc.
 		log.Println("Failed to marshal data ")
 		return status.Error(codes.Internal, "ParsingError")
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := application.NewApplicationServiceClient(cc).UpsertApplication(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertApplicationReq err :", err, " for data ", appData)
@@ -234,7 +223,7 @@ func sendDeleteApplicationReq(ctx context.Context, data models.Envlope, cc grpc.
 	if err != nil {
 		return
 	}
-	// log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
+	//log.Println("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := application.NewApplicationServiceClient(cc).DeleteApplication(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendDeleteApplicationReq err :", err, " for data ", appData)
@@ -297,7 +286,6 @@ func sendUpsertInstanceReq(ctx context.Context, data models.Envlope, cc grpc.Cli
 	if err != nil {
 		return
 	}
-	log.Printf("DEBUG sending data  to service %s  is [%+v]", data.TargetService, appData)
 	resp, err := application.NewApplicationServiceClient(cc).UpsertInstance(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertInstanceReq :", err, " for data ", appData)

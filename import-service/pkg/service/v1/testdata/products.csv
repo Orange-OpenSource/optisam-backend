@@ -1,0 +1,8 @@
+Name;Version;Category;Editor;SWIDTag;IsOptionOf;flag
+Oracle Database 11g Enterprise Edition;11.2.0.4.0;Other;ORACLE;Oracle_Database_11g_Enterprise_Edition_11.2.0.4.0;1
+Oracle Real Application Testing;12.1.0.1.0;Other;ORACLE;Oracle_Real_Application_Testing_12.1.0.1.0;Real_Application_Testing_12.1.0.1.0;1
+IBM Cognos Mobile;10.1.1;Other;IBM;IBM_Cognos_Mobile_10.1.1;;1
+Redhat Release Server;7.1;Other;REDHAT;Redhat_Release_Server_7.1;1
+Oracle Database 11g Enterprise Edition;10.3;Other;ORACLE;Oracle_Database_11g_Enterprise_Edition_10.3;Oracle_Database_11g_Enterprise_Edition_11.2.0.4.0;1
+Real Application Testing;12.1.0.1.0;Other;ORACLE;Real_Application_Testing_12.1.0.1.0;;1
+HPUD;1;Discovery;MICRO FOCUS;HPUD_1;;1

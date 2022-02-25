@@ -10,12 +10,12 @@ instance.environment: string @index(exact) .
 instance.product    : [uid] @count @reverse .
 instance.equipment  : [uid] @count @reverse .
 
-acqRights.entity:                        string @index(exact) .
+
 acqRights.SKU:                           string @index(exact,trigram) .
-acqRights.swidtag:                       string @index(trigram) .
+acqRights.swidtag:                       string @index(exact,trigram) .
 acqRights.productName:                   string @index(trigram) .
 acqRights.editor:                        string @index(trigram) .
-acqRights.metric:                        string @index(trigram,exact) .
+acqRights.metric:                        [string] @index(trigram,exact) .
 acqRights.numOfAcqLicences:              int .
 acqRights.numOfLicencesUnderMaintenance: int .
 acqRights.averageUnitPrice:              float .
@@ -40,12 +40,23 @@ product.users    :  [uid] @reverse .
 editor.name: string @index(exact,trigram) @upsert .
 editor.product: [uid] @reverse .
 
-product_aggregation.id          : int @index(int) .
-product_aggregation.name        : string @index(trigram,exact) .
-product_aggregation.editor      : string @index(trigram,exact) .
-product_aggregation.product_name: string @index(trigram,exact) .
-product_aggregation.metric      : uid @reverse .
-product_aggregation.products    : [uid] @count @reverse .
+aggregation.id                            : int @index(int) .
+aggregation.name                          : string @index(trigram,exact) .
+aggregation.SKU                           : string @index(exact,trigram) .
+aggregation.editor                        : string @index(trigram,exact) .
+aggregation.product_names                 : string @index(trigram,exact) .
+aggregation.swidtags                      : [string] @index(trigram,exact) .
+aggregation.metric                        : [string] @index(trigram,exact) .
+aggregation.products                      : [uid] @count @reverse .
+aggregation.numOfAcqLicences              : int .
+aggregation.numOfLicencesUnderMaintenance : int .
+aggregation.averageUnitPrice              : float .
+aggregation.averageMaintenanceUnitPrice   : float .
+aggregation.totalPurchaseCost             : float .
+aggregation.totalMaintenanceCost          : float .
+aggregation.totalCost                     : float .
+aggregation.startOfMaintenance            : string .
+aggregation.endOfMaintenance              : string . 
 
 type_name: string @index(exact) .
 updated  : string .
@@ -109,4 +120,8 @@ metric.acs.equipment_type       : string .
 metric.acs.attr_name            : string .
 metric.acs.attr_value           : string .
 
-metric.instancenumber.coefficient       : float .
+metric.instancenumber.coefficient       : int .
+
+metric.attr_sum.equipment_type       : string .
+metric.attr_sum.attr_name            : string .
+metric.attr_sum.reference_value      : float .

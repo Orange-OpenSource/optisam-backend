@@ -1,322 +1,314 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
-	"context"
 	"fmt"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"testing"
 
-	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
-	type args struct {
-		ctx    context.Context
-		id     string
-		params *v1.QueryProducts
-		scopes string
-	}
-	tests := []struct {
-		name    string
-		r       *LicenseRepository
-		args    args
-		setup   func() (func() error, error)
-		want    string
-		wantErr bool
-	}{
-		{name: "SUCCESS",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx:    context.Background(),
-				id:     "ORAC001",
-				params: &v1.QueryProducts{},
-				scopes: "scope1",
-			},
-			setup: func() (func() error, error) {
-				return func() error {
-					return nil
-				}, nil
-			},
-			want: "Not Null",
-		},
-		{name: "SUCCESS - acqRights filter - node found",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx: context.Background(),
-				id:  "P001",
-				params: &v1.QueryProducts{
-					AcqFilter: &v1.AggregateFilter{
-						Filters: []v1.Queryable{
-							&v1.Filter{
-								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
-								FilterValue: "xyz",
-							},
-						},
-					},
-				},
-				scopes: "scope1",
-			},
-			setup: func() (func() error, error) {
-				prod := "P1"
-				acq := "A1"
-				prodblankID := blankID(prod)
-				acqblankID := blankID(acq)
-				nquads := []*api.NQuad{
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "product.swidtag",
-						ObjectValue: stringObjectValue("P001"),
-					},
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "scopes",
-						ObjectValue: stringObjectValue("scope1"),
-					},
-					&api.NQuad{
-						Subject:   prodblankID,
-						Predicate: "product.acqRights",
-						ObjectId:  acqblankID,
-					},
-					&api.NQuad{
-						Subject:     acqblankID,
-						Predicate:   "acqRights.metric",
-						ObjectValue: stringObjectValue("xyz"),
-					},
-				}
-				r := NewLicenseRepository(dgClient)
-				mu := &api.Mutation{
-					Set:       nquads,
-					CommitNow: true,
-				}
-				txn := r.dg.NewTxn()
-				assigned, err := txn.Mutate(context.Background(), mu)
-				if err != nil {
-					return nil, nil
-				}
-				prodID, ok := assigned.Uids[prod]
-				if !ok {
-					return nil, nil
-				}
-				acqID, ok := assigned.Uids[acq]
-				if !ok {
-					return nil, nil
-				}
-				return func() error {
-					if err := deleteNodes(prodID, acqID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			want: "Not null",
-		},
-		{name: "SUCCESS - acqRights filter - node not found",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx: context.Background(),
-				id:  "P001",
-				params: &v1.QueryProducts{
-					AcqFilter: &v1.AggregateFilter{
-						Filters: []v1.Queryable{
-							&v1.Filter{
-								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
-								FilterValue: "abc",
-							},
-						},
-					},
-				},
-				scopes: "scope1",
-			},
-			setup: func() (func() error, error) {
-				prod := "P1"
-				acq := "A1"
-				prodblankID := blankID(prod)
-				acqblankID := blankID(acq)
-				nquads := []*api.NQuad{
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "product.swidtag",
-						ObjectValue: stringObjectValue("P001"),
-					},
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "scopes",
-						ObjectValue: stringObjectValue("scope1"),
-					},
-					&api.NQuad{
-						Subject:   prodblankID,
-						Predicate: "product.acqRights",
-						ObjectId:  acqblankID,
-					},
-					&api.NQuad{
-						Subject:     acqblankID,
-						Predicate:   "acqRights.metric",
-						ObjectValue: stringObjectValue("xyz"),
-					},
-				}
-				r := NewLicenseRepository(dgClient)
-				mu := &api.Mutation{
-					Set:       nquads,
-					CommitNow: true,
-				}
-				txn := r.dg.NewTxn()
-				assigned, err := txn.Mutate(context.Background(), mu)
-				if err != nil {
-					return nil, nil
-				}
-				prodID, ok := assigned.Uids[prod]
-				if !ok {
-					return nil, nil
-				}
-				acqID, ok := assigned.Uids[acq]
-				if !ok {
-					return nil, nil
-				}
-				return func() error {
-					if err := deleteNodes(prodID, acqID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-			wantErr: true,
-		},
-		{name: "SUCCESS - acqRights filter - agg filter - node found",
-			r: NewLicenseRepository(dgClient),
-			args: args{
-				ctx: context.Background(),
-				id:  "P001",
-				params: &v1.QueryProducts{
-					AcqFilter: &v1.AggregateFilter{
-						Filters: []v1.Queryable{
-							&v1.Filter{
-								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
-								FilterValue: "xyz",
-							},
-						},
-					},
-					AggFilter: &v1.AggregateFilter{
-						Filters: []v1.Queryable{
-							&v1.Filter{
-								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
-								FilterValue: "abc",
-							},
-						},
-					},
-				},
-				scopes: "scope1",
-			},
-			setup: func() (func() error, error) {
-				prod := "P1"
-				acq := "A1"
-				met := "M1"
-				prodAgg := "PAG1"
-				prodblankID := blankID(prod)
-				acqblankID := blankID(acq)
-				metblankID := blankID(met)
-				prodAggblankID := blankID(prodAgg)
-				nquads := []*api.NQuad{
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "product.swidtag",
-						ObjectValue: stringObjectValue("P001"),
-					},
-					&api.NQuad{
-						Subject:     prodblankID,
-						Predicate:   "scopes",
-						ObjectValue: stringObjectValue("scope1"),
-					},
-					&api.NQuad{
-						Subject:   prodblankID,
-						Predicate: "product.acqRights",
-						ObjectId:  acqblankID,
-					},
-					&api.NQuad{
-						Subject:     acqblankID,
-						Predicate:   "acqRights.metric",
-						ObjectValue: stringObjectValue("xyz"),
-					},
-					&api.NQuad{
-						Subject:   prodAggblankID,
-						Predicate: "product_aggregation.products",
-						ObjectId:  prodblankID,
-					},
-					&api.NQuad{
-						Subject:   prodAggblankID,
-						Predicate: "product_aggregation.metric",
-						ObjectId:  metblankID,
-					},
-					&api.NQuad{
-						Subject:     metblankID,
-						Predicate:   "metric.name",
-						ObjectValue: stringObjectValue("xyz"),
-					},
-				}
-				r := NewLicenseRepository(dgClient)
-				mu := &api.Mutation{
-					Set:       nquads,
-					CommitNow: true,
-				}
-				txn := r.dg.NewTxn()
-				assigned, err := txn.Mutate(context.Background(), mu)
-				if err != nil {
-					return nil, nil
-				}
-				prodID, ok := assigned.Uids[prod]
-				if !ok {
-					return nil, nil
-				}
-				acqID, ok := assigned.Uids[acq]
-				if !ok {
-					return nil, nil
-				}
-				metID, ok := assigned.Uids[met]
-				if !ok {
-					return nil, nil
-				}
-				aggID, ok := assigned.Uids[prodAgg]
-				if !ok {
-					return nil, nil
-				}
-				return func() error {
-					if err := deleteNodes(prodID, acqID, metID, aggID); err != nil {
-						return err
-					}
-					return nil
-				}, nil
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cleanup, err := tt.setup()
-			if !assert.Empty(t, err, "error is not expected in setup") {
-				return
-			}
-			defer func() {
-				err := cleanup()
-				assert.Empty(t, err, "error is not expected in cleanup")
-			}()
-			got, err := tt.r.ProductIDForSwidtag(tt.args.ctx, tt.args.id, tt.args.params, tt.args.scopes)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LicenseRepository.ProductIDForSwidtag() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if tt.want != "" {
-				if got == "" {
-					t.Errorf("LicenseRepository.ProductIDForSwidtag() = %v ", got)
-				}
-			}
-		})
-	}
-}
+// func TestLicenseRepository_ProductIDForSwidtag(t *testing.T) {
+// 	type args struct {
+// 		ctx    context.Context
+// 		id     string
+// 		params *v1.QueryProducts
+// 		scopes string
+// 	}
+// 	tests := []struct {
+// 		name    string
+// 		r       *LicenseRepository
+// 		args    args
+// 		setup   func() (func() error, error)
+// 		want    string
+// 		wantErr bool
+// 	}{
+// 		{name: "SUCCESS",
+// 			r: NewLicenseRepository(dgClient),
+// 			args: args{
+// 				ctx:    context.Background(),
+// 				id:     "ORAC001",
+// 				params: &v1.QueryProducts{},
+// 				scopes: "scope1",
+// 			},
+// 			setup: func() (func() error, error) {
+// 				return func() error {
+// 					return nil
+// 				}, nil
+// 			},
+// 			want: "Not Null",
+// 		},
+// 		{name: "SUCCESS - acqRights filter - node found",
+// 			r: NewLicenseRepository(dgClient),
+// 			args: args{
+// 				ctx: context.Background(),
+// 				id:  "P001",
+// 				params: &v1.QueryProducts{
+// 					AcqFilter: &v1.AggregateFilter{
+// 						Filters: []v1.Queryable{
+// 							&v1.Filter{
+// 								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
+// 								FilterValue: "xyz",
+// 							},
+// 						},
+// 					},
+// 				},
+// 				scopes: "scope1",
+// 			},
+// 			setup: func() (func() error, error) {
+// 				prod := "P1"
+// 				acq := "A1"
+// 				prodblankID := blankID(prod)
+// 				acqblankID := blankID(acq)
+// 				nquads := []*api.NQuad{
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "product.swidtag",
+// 						ObjectValue: stringObjectValue("P001"),
+// 					},
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "scopes",
+// 						ObjectValue: stringObjectValue("scope1"),
+// 					},
+// 					{
+// 						Subject:   prodblankID,
+// 						Predicate: "product.acqRights",
+// 						ObjectId:  acqblankID,
+// 					},
+// 					{
+// 						Subject:     acqblankID,
+// 						Predicate:   "acqRights.metric",
+// 						ObjectValue: stringObjectValue("xyz"),
+// 					},
+// 				}
+// 				r := NewLicenseRepository(dgClient)
+// 				mu := &api.Mutation{
+// 					Set:       nquads,
+// 					CommitNow: true,
+// 				}
+// 				txn := r.dg.NewTxn()
+// 				assigned, err := txn.Mutate(context.Background(), mu)
+// 				if err != nil {
+// 					return nil, nil
+// 				}
+// 				prodID, ok := assigned.Uids[prod]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				acqID, ok := assigned.Uids[acq]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				return func() error {
+// 					if err := deleteNodes(prodID, acqID); err != nil {
+// 						return err
+// 					}
+// 					return nil
+// 				}, nil
+// 			},
+// 			want: "Not null",
+// 		},
+// 		{name: "SUCCESS - acqRights filter - node not found",
+// 			r: NewLicenseRepository(dgClient),
+// 			args: args{
+// 				ctx: context.Background(),
+// 				id:  "P001",
+// 				params: &v1.QueryProducts{
+// 					AcqFilter: &v1.AggregateFilter{
+// 						Filters: []v1.Queryable{
+// 							&v1.Filter{
+// 								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
+// 								FilterValue: "abc",
+// 							},
+// 						},
+// 					},
+// 				},
+// 				scopes: "scope1",
+// 			},
+// 			setup: func() (func() error, error) {
+// 				prod := "P1"
+// 				acq := "A1"
+// 				prodblankID := blankID(prod)
+// 				acqblankID := blankID(acq)
+// 				nquads := []*api.NQuad{
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "product.swidtag",
+// 						ObjectValue: stringObjectValue("P001"),
+// 					},
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "scopes",
+// 						ObjectValue: stringObjectValue("scope1"),
+// 					},
+// 					{
+// 						Subject:   prodblankID,
+// 						Predicate: "product.acqRights",
+// 						ObjectId:  acqblankID,
+// 					},
+// 					{
+// 						Subject:     acqblankID,
+// 						Predicate:   "acqRights.metric",
+// 						ObjectValue: stringObjectValue("xyz"),
+// 					},
+// 				}
+// 				r := NewLicenseRepository(dgClient)
+// 				mu := &api.Mutation{
+// 					Set:       nquads,
+// 					CommitNow: true,
+// 				}
+// 				txn := r.dg.NewTxn()
+// 				assigned, err := txn.Mutate(context.Background(), mu)
+// 				if err != nil {
+// 					return nil, nil
+// 				}
+// 				prodID, ok := assigned.Uids[prod]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				acqID, ok := assigned.Uids[acq]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				return func() error {
+// 					if err := deleteNodes(prodID, acqID); err != nil {
+// 						return err
+// 					}
+// 					return nil
+// 				}, nil
+// 			},
+// 			wantErr: true,
+// 		},
+// 		{name: "SUCCESS - acqRights filter - agg filter - node found",
+// 			r: NewLicenseRepository(dgClient),
+// 			args: args{
+// 				ctx: context.Background(),
+// 				id:  "P001",
+// 				params: &v1.QueryProducts{
+// 					AcqFilter: &v1.AggregateFilter{
+// 						Filters: []v1.Queryable{
+// 							&v1.Filter{
+// 								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
+// 								FilterValue: "xyz",
+// 							},
+// 						},
+// 					},
+// 					AggFilter: &v1.AggregateFilter{
+// 						Filters: []v1.Queryable{
+// 							&v1.Filter{
+// 								FilterKey:   v1.AcquiredRightsSearchKeyMetric.String(),
+// 								FilterValue: "abc",
+// 							},
+// 						},
+// 					},
+// 				},
+// 				scopes: "scope1",
+// 			},
+// 			setup: func() (func() error, error) {
+// 				prod := "P1"
+// 				acq := "A1"
+// 				met := "M1"
+// 				prodAgg := "PAG1"
+// 				prodblankID := blankID(prod)
+// 				acqblankID := blankID(acq)
+// 				metblankID := blankID(met)
+// 				prodAggblankID := blankID(prodAgg)
+// 				nquads := []*api.NQuad{
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "product.swidtag",
+// 						ObjectValue: stringObjectValue("P001"),
+// 					},
+// 					{
+// 						Subject:     prodblankID,
+// 						Predicate:   "scopes",
+// 						ObjectValue: stringObjectValue("scope1"),
+// 					},
+// 					{
+// 						Subject:   prodblankID,
+// 						Predicate: "product.acqRights",
+// 						ObjectId:  acqblankID,
+// 					},
+// 					{
+// 						Subject:     acqblankID,
+// 						Predicate:   "acqRights.metric",
+// 						ObjectValue: stringObjectValue("xyz"),
+// 					},
+// 					{
+// 						Subject:   prodAggblankID,
+// 						Predicate: "product_aggregation.products",
+// 						ObjectId:  prodblankID,
+// 					},
+// 					{
+// 						Subject:   prodAggblankID,
+// 						Predicate: "product_aggregation.metric",
+// 						ObjectId:  metblankID,
+// 					},
+// 					{
+// 						Subject:     metblankID,
+// 						Predicate:   "metric.name",
+// 						ObjectValue: stringObjectValue("xyz"),
+// 					},
+// 				}
+// 				r := NewLicenseRepository(dgClient)
+// 				mu := &api.Mutation{
+// 					Set:       nquads,
+// 					CommitNow: true,
+// 				}
+// 				txn := r.dg.NewTxn()
+// 				assigned, err := txn.Mutate(context.Background(), mu)
+// 				if err != nil {
+// 					return nil, nil
+// 				}
+// 				prodID, ok := assigned.Uids[prod]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				acqID, ok := assigned.Uids[acq]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				metID, ok := assigned.Uids[met]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				aggID, ok := assigned.Uids[prodAgg]
+// 				if !ok {
+// 					return nil, nil
+// 				}
+// 				return func() error {
+// 					if err := deleteNodes(prodID, acqID, metID, aggID); err != nil {
+// 						return err
+// 					}
+// 					return nil
+// 				}, nil
+// 			},
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			cleanup, err := tt.setup()
+// 			if !assert.Empty(t, err, "error is not expected in setup") {
+// 				return
+// 			}
+// 			defer func() {
+// 				err := cleanup()
+// 				assert.Empty(t, err, "error is not expected in cleanup")
+// 			}()
+// 			got, err := tt.r.ProductIDForSwidtag(tt.args.ctx, tt.args.id, tt.args.params, tt.args.scopes)
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("LicenseRepository.ProductIDForSwidtag() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
+// 			if tt.want != "" {
+// 				if got == "" {
+// 					t.Errorf("LicenseRepository.ProductIDForSwidtag() = %v ", got)
+// 				}
+// 			}
+// 		})
+// 	}
+// }
 
 func compareProductAggregationAll(t *testing.T, name string, exp []*v1.ProductAggregation, act []*v1.ProductAggregation) {
 	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {

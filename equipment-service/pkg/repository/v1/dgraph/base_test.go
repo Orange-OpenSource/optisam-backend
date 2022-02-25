@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -89,7 +83,6 @@ func TestMain(m *testing.M) {
 	if err = os.RemoveAll(badgerDir); err != nil {
 		log.Println("Failed tp remove old badger dir...., err : ", err)
 	}
-
 	defer cleanup(dockers)
 	if cfg.Environment == "local" || cfg.Environment == "" {
 		dockers, err = docker.Start(cfg.Dockers)
@@ -98,7 +91,6 @@ func TestMain(m *testing.M) {
 			return
 		}
 		time.Sleep(cfg.INITWAITTIME * time.Second)
-
 	}
 	conn, err := dgraph.NewDgraphConnection(cfg.Dgraph)
 	if err != nil {
@@ -115,18 +107,18 @@ func TestMain(m *testing.M) {
 
 	log.Println("LOADED ...")
 	code := m.Run()
-	cleanup(dockers)
 	os.Exit(code)
 
 }
 
 func loadDgraphData(badgerDir string) error {
+	if err := dgClient.Alter(context.Background(), &api.Operation{DropAll: true}); err != nil {
+		logger.Log.Error("Can not alter dg", zap.String("reason", err.Error()))
+		return err
+	}
 	config := loader.NewDefaultConfig()
-	//hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
-	//zero := fmt.Sprintf("%s:5080", hosts[0])
-	//config.Zero = zero
-	//config.Alpha = cfg.Dgraph.Hosts
 	config.BatchSize = 1000
+	config.StateConfig = "loader/state.json"
 	config.CreateSchema = true
 	config.LoadMetadata = true
 	config.LoadStaticData = true
@@ -156,7 +148,6 @@ func loadDgraphData(badgerDir string) error {
 		"scope1",
 		"scope2",
 		"scope3",
-		"scope4",
 	}
 	config.ProductFiles = []string{
 		"prod.csv",
@@ -164,6 +155,7 @@ func loadDgraphData(badgerDir string) error {
 	}
 	config.ProductEquipmentFiles = []string{
 		"products_equipments.csv",
+		"products_equipments_users.csv",
 	}
 	config.AppFiles = []string{
 		"applications.csv",
@@ -186,29 +178,19 @@ func loadDgraphData(badgerDir string) error {
 	config.UsersFiles = []string{
 		"products_equipments_users.csv",
 	}
+	log.Printf("ddddd %+v", config)
 	return loader.Load(config)
 }
 
 func loadEquipments(badgerDir, masterDir string, scopes []string, filenames ...string) error {
 	config := loader.NewDefaultConfig()
-	//hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
-	//zero := fmt.Sprintf("%s:5080", hosts[0])
-	//config.Zero = zero
-	//config.Alpha = cfg.Dgraph.Hosts
 	config.MasterDir = masterDir
 	config.EquipmentFiles = filenames
 	config.Scopes = scopes
 	config.LoadEquipments = true
 	config.IgnoreNew = true
-	dg, err := dgraph.NewDgraphConnection(&dgraph.Config{
-		Hosts: config.Alpha,
-	})
-	if err != nil {
-		log.Println("Failed to get dgclient err", err)
-		return err
-	}
-	config.Repository = NewEquipmentRepository(dg)
-
+	config.Repository = NewEquipmentRepository(dgClient)
+	config.StateConfig = "loader/state.json"
 	return loader.Load(config)
 }
 

@@ -1,0 +1,26 @@
+server_code;server_manufacturer;server_hostname;server_hostingEntity;server_cpu;corefactor_oracle;pvu;sag;server_processorsNumber;server_coresNumber;parent_id;flag
+SERV_01;HEWLETT-PACKARD;10.10.10.1;/Orange/Test;Intel(R) Xeon(R) CPU E5-2640 v2 @ 2.00GHz;0.25;25;0.25;2;4;CL01;1
+SERV_02;HEWLETT-PACKARD;10.10.10.2;/Orange/Test;Intel(R) Xeon(R) CPU E5-2640 v2 @ 2.00GHz;0.5;50;0.5;1;2;CL01;1
+SERV_03;Dell Inc.;10.10.10.3;/Orange/Test;Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz;0.75;75;0.0.625;2;1;CL02;1
+SERV_04;Dell Inc.;10.10.10.4;/Orange/Test;Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz;1;100;1;2;2;CL03;1
+SERV_05;Dell Inc.;10.10.10.5;/Orange/Test;AMD Opteron(tm) Processor 6328;0.25;120;1.5;2;4;CL04;1
+SERV_06;Dell Inc.;10.10.10.6;/Orange/Test;AMD Opteron(tm) Processor 6328;0.5;25;0.625;4;4;CL04;1
+SERV_07;Dell Inc.;10.10.10.7;/Orange/Test;AMD Opteron(tm) Processor 6328;0.75;50;1;2;4;CL05;1
+SERV_08;Dell Inc.;10.10.10.8;/Orange/Test;AMD Opteron(tm) Processor 6328;1;75;1.5;4;8;CL05;1
+SERV_09;Dell Inc.;10.10.10.9;/Orange/Test;AMD Opteron(tm) Processor 6328;0.5;120;0.625;2;16;CL06;1
+SERV_10;Dell Inc.;10.10.10.10;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL06;1
+SERV_11;HEWLETT-PACKARD;10.10.10.11;/Orange/Test;AMD Opteron(tm) Processor 6328;1;75;0.5;4;8;CL07;1
+SERV_12;HEWLETT-PACKARD;10.10.10.12;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;0.625;1;1;CL07;1
+SERV_13;Dell Inc.;10.10.10.13;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL08;1
+SERV_14;Dell Inc.;10.10.10.14;/Orange/Test;AMD Opteron(tm) Processor 6328;0.5;120;1.5;4;8;CL08;1
+SERV_15;Dell Inc.;10.10.10.15;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL09;1
+SERV_16;Dell Inc.;10.10.10.16;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL10;1
+SERV_17;Dell Inc.;10.10.10.17;/Orange/Test;AMD Opteron(tm) Processor 6328;0.5;100;1;2;8;CL10;1
+SERV_18;Dell Inc.;10.10.10.18;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL11;1
+SERV_19;Dell Inc.;10.10.10.19;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL12;1
+SERV_20;Dell Inc.;10.10.10.20;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;4;CL13;1
+SERV_21;Dell Inc.;10.10.10.21;/Orange/Test;AMD Opteron(tm) Processor 6328;0.75;120;0.625;4;8;CL14;1
+SERV_22;Dell Inc.;10.10.10.22;/Orange/Test;AMD Opteron(tm) Processor 6328;1;100;1;1;1;CL14;1
+SERV_23;Dell Inc.;10.10.10.23;/Orange/Test;AMD Opteron(tm) Processor 6328;0.5;100;0.5;2;2;;1
+SERV_24;HEWLETT-PACKARD;10.10.10.24;/Orange/Test;AMD Opteron(tm) Processor 6128 HE;0.5;100;0.5;1;8;;1
+SERV_25;HEWLETT-PACKARD;10.10.10.25;/Orange/Test;AMD Opteron(tm) Processor 6128 HE;1;100;1;1;1;;1

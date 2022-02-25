@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -87,11 +81,12 @@ const templ = `
 		{{- if eq $.Mat.BaseType.Type $CL.Type}}
 		equipment.users @filter(uid(user_{{$CL.Type}}_{{$PL.Type}})){
 			c_{{$CL.Type}}_{{$PL.Type}} as users.count
-			{{$CL.Type}}_t_{{$PL.Type}}_users as math(max(v_{{$PL.Type}},c_{{$CL.Type}}_{{$PL.Type}}))
+			##{{$CL.Type}}_t_{{$PL.Type}}_users as math(max(v_{{$PL.Type}},c_{{$CL.Type}}_{{$PL.Type}}))
 		    }
+			{{$CL.Type}}_t_{{$PL.Type}}_users as sum(val(c_{{$CL.Type}}_{{$PL.Type}}))
 			{{- if gt $.Current 0 }}
 				{{- template "getChildNUP" getCalLevels $.Mat $.Parent (dec $.Current) }}
-			{{- end}}
+			{{- end}}	
 		{{else }}
 			{{- template "getChildNUP" getCalLevels $.Mat $.Parent (dec $.Current) }}
 		{{- end}}
@@ -106,8 +101,9 @@ const templ = `
 		{{- if le $.Current $baseIDX}}
 		equipment.users @filter(uid(user_{{$CL.Type}}_{{$PL.Type}})){
 			c_{{$CL.Type}}_{{$PL.Type}} as users.count
-			{{$CL.Type}}_t_{{$PL.Type}}_users as math(max(v_{{$PL.Type}},c_{{$CL.Type}}_{{$PL.Type}}))
+			##{{$CL.Type}}_t_{{$PL.Type}}_users as math(max(v_{{$PL.Type}},c_{{$CL.Type}}_{{$PL.Type}}))
 		}
+		{{$CL.Type}}_t_{{$PL.Type}}_users as sum(val(c_{{$CL.Type}}_{{$PL.Type}}))
 			{{- if gt $.Current 0 }}
 			{{- template "getChildNUP" getCalLevels $.Mat $.Parent (dec $.Current) }}
 			{{- end}}
@@ -162,7 +158,6 @@ func templateNup() (*template.Template, error) {
 			return result
 		},
 		"seq": func(i int) []int {
-			//fmt.Println(i)
 			return make([]int, i)
 		},
 		"getFilter":            getFilter,
@@ -201,16 +196,23 @@ func getLicensesSum(mat *v1.MetricNUPComputed) string {
 	}
 	comps := []string{}
 	totals := []string{}
+	opstotals := []string{}
 	for i := 0; i <= idx; i++ {
 		for j := idx; j < len(mat.EqTypeTree); j++ {
 			totals = append(totals, "l_"+mat.EqTypeTree[i].Type+"_"+mat.EqTypeTree[j].Type)
 			comps = append(comps, "l_"+mat.EqTypeTree[i].Type+"_"+mat.EqTypeTree[j].Type+" as sum(val("+mat.EqTypeTree[i].Type+"_t_"+mat.EqTypeTree[j].Type+"_users))")
 		}
 	}
+	for k := idx; k < len(mat.EqTypeTree); k++ {
+		opstotals = append(opstotals, "t_v_"+mat.EqTypeTree[k].Type)
+		comps = append(comps, "t_v_"+mat.EqTypeTree[k].Type+" as sum(val(v_"+mat.EqTypeTree[k].Type+"))")
+	}
 	if len(comps) == 0 {
 		return ""
 	}
-	comps = append(comps, "Licenses:math("+strings.Join(totals, "+")+")")
+	comps = append(comps, "NUPLicenses as math("+strings.Join(totals, "+")+")")
+	comps = append(comps, "OPSLicenses as math("+strings.Join(opstotals, "+")+")")
+	comps = append(comps, "Licenses: math(max(NUPLicenses,OPSLicenses))")
 	return strings.Join(comps, "\n")
 }
 

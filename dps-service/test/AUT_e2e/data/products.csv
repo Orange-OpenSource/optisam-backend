@@ -1,0 +1,29 @@
+SWIDTag;Name;Version;Category;Editor;IsOptionOf;flag
+oracle_wl_1;Oracle Weblogic Server 12;12.1.1;Enterprise;Oracle;;1
+oracle_wl_1_opt;Oracle Weblogic Server 12 Plugin;12.1.1.2;Enterprise;Oracle;oracle_db_1;1
+oracle_wl_2;Oracle Weblogic Server 10;10.1.1;Standard;Oracle;;1
+oracle_mysql_1;Oracle Mysql 10;10.1.1;Standard;Oracle;;1
+oracle_mysql_1_opt;Oracle Mysql 10 Plugin;10.1.1.2;Enterprise;Oracle;oracle_mysql_1;1
+oracle_mysql_2;Oracle Mysql 10;10.1.3;Standard;Oracle;;1
+oracle_mysql_3;Oracle Mysql 11;11.1.1;Enterprise;Oracle;;1
+oracle_micros_1;Oracle Micros;6.1;Standard;Oracle;;1
+oracle_micros_notdeployed;Oracle Micros;1;;Oracle;;1
+ibm_cognos_1;IBM Cognos Analytics 11;11.1.7;Enterprise;IBM;;1
+ibm_websphere_1;IBM Websphere 9;9.0.5;Standard;IBM;;1
+ibm_websphere_2;IBM Websphere 8;8.1.1;Enterprise;IBM;;1
+ibm_db2_1_notacquired;IBM DB2 11;11.5;Community;IBM;;1
+redhat_rhel_1;Redhat Enterprise Linux Server 7;7.7;Enterprise;Redhat;;1
+redhat_rhel_2;Redhat Enterprise Linux Server 6;6.5;Enterprise;Redhat;;1
+redhat_openshift_1;Redhat Openshift Platform 3;3;Enterprise;Redhat;;1
+redhat_openshift_2;Redhat Openshift Platform 4;4.1;Enterprise;Redhat;;1
+sag_aris_1;Software AG ARIS 1;1.1;Standard;Software AG;;1
+sag_aris_2;Software AG ARIS 2;2.1;Standard;Software AG;;1
+sag_aris_1_opt;Software AG ARIS plugin;1.1.2;Standard;Software AG;sag_aris_1;1
+sag_apama_1;Software AG APAMA;1.1;Standard;Software AG;;1
+hpud_1;Micro Focus HPUD 1;1.1;Discovery;Micro Focus;;1
+hpud_2;Micro Focus HPUD 2;1.1;Discovery;Micro Focus;;1
+random_prod_1;Random product 1;x.y.z;Random;Random;;1
+random_prod_2;Random product 2;x.y.z;Random;Random;;1
+without_app_1;Without application prod 1;;;;;1
+without_equip_1;Without equipment prod 1;;;;;1
+without_inst_1;Without instance prod 1;;;;;1

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -11,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/equipment-service/pkg/repository/v1"
 
@@ -32,8 +25,8 @@ const (
 	metadataTypeUnsupported metadataType = "unsupported"
 )
 
-//UpsertMetadata ...
-func (lr *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.Metadata) error {
+// UpsertMetadata ...
+func (r *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.Metadata) (string, error) {
 
 	q := `query {
 		var(func: eq(metadata.source,"` + metadata.Source + `"))  @filter(eq(type_name, "metadata") AND eq(scopes,"` + metadata.Scope + `")){
@@ -57,21 +50,22 @@ func (lr *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.
 		SetNquads: []byte(set),
 		//	CommitNow: true,
 	}
-	log.Printf("MU %+v", mu)
-	_, err := lr.dg.NewTxn().Do(ctx, &api.Request{
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	resp, err := r.dg.NewTxn().Do(ctx, &api.Request{
 		CommitNow: true,
 		Query:     q,
 		Mutations: []*api.Mutation{mu}},
 	)
 	if err != nil {
 		logger.Log.Error("dgraph/UpsertMetadata - failed to mutate", zap.String("reason", err.Error()))
-		return fmt.Errorf("dgraph/UpsertMetadata - failed to mutuate")
+		return "", fmt.Errorf("dgraph/UpsertMetadata - failed to mutuate")
 	}
-	return nil
+	return resp.Uids["uid(metadata)"], nil
 }
 
 // MetadataAllWithType implements Licence MetadataAllWithType function
-func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes []string) ([]*v1.Metadata, error) {
+func (r *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes []string) ([]*v1.Metadata, error) {
 	id, err := convertMetadataTypeDGType(typ)
 	if err != nil {
 		return nil, err
@@ -84,7 +78,7 @@ func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.M
 		   Scopes: 	   scopes
 		}
 	  }`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/Metadata - cannot complete query")
@@ -104,7 +98,7 @@ func (lr *EquipmentRepository) MetadataAllWithType(ctx context.Context, typ v1.M
 }
 
 // MetadataWithID implements Licence MetadataWithID function
-func (lr *EquipmentRepository) MetadataWithID(ctx context.Context, id string, scopes []string) (*v1.Metadata, error) {
+func (r *EquipmentRepository) MetadataWithID(ctx context.Context, id string, scopes []string) (*v1.Metadata, error) {
 	q := `{
 		Metadatas(func: uid(` + id + `))  ` + agregateFilters(scopeFilters(scopes)) + `@cascade{
 		   ID:         uid
@@ -114,7 +108,7 @@ func (lr *EquipmentRepository) MetadataWithID(ctx context.Context, id string, sc
 		}
 	  }`
 
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/Metadata - cannot complete query")

@@ -1,0 +1,199 @@
+{
+    "vcenter": [
+        {
+            "name": "vcenter_name",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_name"
+        },
+        {
+            "name": "vcenter_version",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_version"
+        }
+    ],
+    "cluster": [
+        {
+            "name": "cluster_name",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cluster_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "server": [
+        {
+            "name": "server_id",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_id"
+        },
+        {
+            "name": "cpu_model",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cpu_model"
+        },
+        {
+            "name": "server_model",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_model"
+        },
+        {
+            "name": "used_processor_sockets",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "used_processor_sockets"
+        },
+        {
+            "name": "core_per_processor",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "core_per_processor"
+        },
+        {
+            "name": "core_factor",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "core_factor"
+        },
+        {
+            "name": "server_hostname",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_hostname"
+        },
+        {
+            "name": "hyperthreading",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "hyperthreading"
+        },
+        {
+            "name": "exploitation",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "exploitation"
+        },
+        {
+            "name": "server_localization",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_localization"
+        },
+        {
+            "name": "datacenter_name",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "datacenter_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "partition": [
+        {
+            "name": "partition_id",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "partition_id"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        },
+        {
+            "name": "partition_hostname",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "partition_hostname"
+        },
+        {
+            "name": "logical_cores",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "logical_cores"
+        },
+        {
+            "name": "logical_cpu",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "logical_cpu"
+        }
+    ]
+}

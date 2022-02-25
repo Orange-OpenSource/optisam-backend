@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -49,22 +43,22 @@ func (s *licenseServiceServer) ProductLicensesForMetric(ctx context.Context, req
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
-	input[PROD_ID] = proID
-	input[METRIC_NAME] = metricInfo.Name
+	input[ProdID] = proID
+	input[MetricName] = metricInfo.Name
 	input[SCOPES] = []string{req.GetScope()}
-	input[IS_AGG] = false
+	input[IsAgg] = false
 	if _, ok := MetricCalculation[metricInfo.Type]; !ok {
 		logger.Log.Error("service/v1 - Failed ProductLicensesForMetric for  - ", zap.String("metric :", metricInfo.Name), zap.Any("metricType", metricInfo.Type))
 		return nil, status.Error(codes.Internal, "this metricType is not supported")
 	}
-	resp, err := MetricCalculation[metricInfo.Type](s, ctx, eqTypes, input)
+	resp, err := MetricCalculation[metricInfo.Type](ctx, s, eqTypes, input)
 	if err != nil {
 		logger.Log.Error("service/v1 - Failed ProductLicensesForMetric for  - ", zap.String("metric :", metricInfo.Name), zap.Any("metricType", metricInfo.Type), zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot compute licenses")
 	}
 	return &v1.ProductLicensesForMetricResponse{
 		MetricName:     req.MetricName,
-		NumCptLicences: resp[COMPUTED_LICENCES].(uint64),
-		TotalCost:      float64(resp[COMPUTED_LICENCES].(uint64)) * req.UnitCost,
+		NumCptLicences: resp[ComputedLicenses].(uint64),
+		TotalCost:      float64(resp[ComputedLicenses].(uint64)) * req.UnitCost,
 	}, nil
 }

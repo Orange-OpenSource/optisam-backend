@@ -1,24 +1,96 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"testing"
 
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
+
+func Test_IsProductPurchasedInAggregation(t *testing.T) {
+	type args struct {
+		ctx     context.Context
+		swidTag string
+		scope   string
+	}
+	tests := []struct {
+		name    string
+		r       *LicenseRepository
+		args    args
+		setup   func(context.Context)
+		want    string
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			r: NewLicenseRepository(dgClient),
+			args: args{
+				ctx:     context.Background(),
+				swidTag: "ORAC003",
+				scope:   "scope1",
+			},
+			want: "agg1",
+			setup: func(ctx context.Context) {
+				type AggAcq struct {
+					Uid      string   `json:"uid,omitempty"`
+					AggName  string   `json:"aggregation.name,omitempty"`
+					Swidtags []string `json:"aggregation.swidtag,omitempty"`
+					Products []string `json:"aggregation.product_names,omitempty"`
+					Scope    []string `json:"scope,omitempty"`
+					Dtype    []string `json:"dgraph.type,omitempty"`
+				}
+				data := AggAcq{
+					Uid:      "_:aggId",
+					AggName:  "agg1",
+					Scope:    []string{"scope1"},
+					Swidtags: []string{"sw1", "sw2"},
+					Products: []string{"p1", "p2"},
+					Dtype:    []string{"Aggregation"},
+				}
+				mu := &api.Mutation{
+					CommitNow: true,
+				}
+				pb, err := json.Marshal(data)
+				if err != nil {
+					logger.Log.Error("Failed to marshal aggAcq", zap.Error(err))
+					t.Errorf("SetupFailure")
+				}
+				mu.SetJson = pb
+				obj := NewLicenseRepository(dgClient)
+				_, er := obj.dg.NewTxn().Mutate(ctx, mu)
+				if er != nil {
+					logger.Log.Error("Failed to setup aggAcq dummy data", zap.Error(err))
+					t.Errorf("SetupFailure")
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.args.ctx)
+			got, err := tt.r.IsProductPurchasedInAggregation(tt.args.ctx, tt.args.swidTag, tt.args.scope)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LicenseRepository.IsProductPurchasedInAggregation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("LicenseRepository.IsProductPurchasedInAggregation() got = %v, want %v", got, tt.want)
+				return
+			}
+		})
+	}
+}
 
 func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		swidTag string
+		metrics []*v1.Metric
 		scopes  string
 	}
 	tests := []struct {
@@ -35,9 +107,15 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 				ctx:     context.Background(),
 				swidTag: "ORAC003",
 				scopes:  "scope1",
+				metrics: []*v1.Metric{
+					{
+						Name: "oracle.processor.standard",
+						Type: v1.MetricOPSOracleProcessorStandard,
+					},
+				},
 			},
 			want1: []*v1.ProductAcquiredRight{
-				&v1.ProductAcquiredRight{
+				{
 					SKU:          "ORAC003PROC",
 					Metric:       "oracle.processor.standard",
 					AcqLicenses:  967,
@@ -52,9 +130,18 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 				ctx:     context.Background(),
 				swidTag: "WIN3",
 				scopes:  "scope3",
+				metrics: []*v1.Metric{
+					{
+						Name: "Windows.processor.standard",
+					},
+					{
+						Name: "oracle.processor.standard",
+						Type: v1.MetricOPSOracleProcessorStandard,
+					},
+				},
 			},
 			want1: []*v1.ProductAcquiredRight{
-				&v1.ProductAcquiredRight{
+				{
 					SKU:          "WIN3PROC",
 					Metric:       "Windows.processor.standard",
 					AcqLicenses:  967,
@@ -66,7 +153,7 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := tt.r.ProductAcquiredRights(tt.args.ctx, tt.args.swidTag, tt.args.scopes)
+			got, got1, err := tt.r.ProductAcquiredRights(tt.args.ctx, tt.args.swidTag, tt.args.metrics, tt.args.scopes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LicenseRepository.ProductAcquiredRights() error = %v, wantErr %v", err, tt.wantErr)
 				return

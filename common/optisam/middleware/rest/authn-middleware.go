@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package rest
 
 import (
@@ -45,29 +39,27 @@ func ValidateAuth(verifyKey *rsa.PublicKey, h http.Handler) http.Handler {
 		if authorizationHeader != "" {
 			bearerToken := strings.TrimPrefix(authorizationHeader, "Bearer")
 			bearerToken = strings.TrimSpace(bearerToken)
-			//tokenPart := bearerToken[1] //Grab the token part, what we are truly interested in
+			// tokenPart := bearerToken[1] //Grab the token part, what we are truly interested in
 			customClaims := &claims.Claims{}
 
 			token, err := jwt.ParseWithClaims(bearerToken, customClaims, func(token *jwt.Token) (interface{}, error) {
 				return verifyKey, nil
 			})
 
-			if err != nil { //Malformed token, returns with http code 403 as usual
+			if err != nil { // Malformed token, returns with http code 403 as usual
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
 
-			if !token.Valid { //Token is invalid, maybe not signed on this server
+			if !token.Valid {
 				w.WriteHeader(http.StatusForbidden)
 
 				return
 			}
 			ctx := r.Context()
-			//Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
+			// Everything went well, proceed with the request and set the caller to the user retrieved from the parsed token
 			r = r.WithContext(AddClaims(ctx, customClaims))
-			h.ServeHTTP(w, r) //proceed in the middleware chain!
-
-			//fmt.Println(len(bearerToken))
+			h.ServeHTTP(w, r) // proceed in the middleware chain!
 		} else {
 			json.NewEncoder(w).Encode("Invalid Authorization Token")
 		}

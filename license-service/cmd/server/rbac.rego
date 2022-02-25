@@ -15,4 +15,4 @@ allow {
 
 # roles := {"Admin":{"SuperAdmin","Admin"},"Normal":{"User"}}
 
-user_apis := {"/v1.LicenseService/ListAcqRightsForProductAggregation","/v1.LicenseService/ListAcqRightsForApplicationsProduct","/v1.LicenseService/ProductLicensesForMetric","/v1.LicenseService/LicensesForEquipAndMetric","/v1.LicenseService/ListAcqRightsForProduct"}
+user_apis := {"/optisam.license.v1.LicenseService/ListAcqRightsForProductAggregation","/optisam.license.v1.LicenseService/ListAcqRightsForApplicationsProduct","/optisam.license.v1.LicenseService/ProductLicensesForMetric","/optisam.license.v1.LicenseService/LicensesForEquipAndMetric","/optisam.license.v1.LicenseService/ListAcqRightsForProduct"}

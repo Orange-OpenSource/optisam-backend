@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -124,7 +118,7 @@ const (
 	SELECT 
 	count(*) AS total_records 
 	FROM users 
-	WHERE username=$1
+	WHERE LOWER(username)=LOWER($1)
 	`
 	existsGroupForUser = `SELECT 
 	count(*) AS total_records 
@@ -143,7 +137,7 @@ const (
 	// WHERE username= $1
 	// AND password = crypt($2,password)
 	// `
-	changePasswordQuery = "UPDATE users SET password = $2 where username =$1"
+	changePasswordQuery = "UPDATE users SET password = $2 where username =$1" // nolint: gosec
 
 	userBelongsToAdminGroup = `
 	SELECT
@@ -165,13 +159,13 @@ const (
 	`
 )
 
-//AccountRepository for Dgraph
+// AccountRepository for Dgraph
 type AccountRepository struct {
 	*repo.Queries
 	db *sql.DB
 }
 
-//NewAccountRepository creates new Repository
+// NewAccountRepository creates new Repository
 func NewAccountRepository(db *sql.DB) *AccountRepository {
 	return &AccountRepository{
 		Queries: repo.New(db),
@@ -179,7 +173,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 	}
 }
 
-//UpdateAccount allows user to update their personal information
+// UpdateAccount allows user to update their personal information
 func (r *AccountRepository) UpdateAccount(ctx context.Context, userID string, req *v1.UpdateAccount) error {
 	result, err := r.db.ExecContext(ctx, updateAccountQuery, req.FirstName, req.LastName, req.Locale, req.ProfilePic, userID)
 	if err != nil {
@@ -198,14 +192,14 @@ func (r *AccountRepository) UpdateAccount(ctx context.Context, userID string, re
 	return nil
 }
 
-//UpdateUserAccount allows admin to update the role of user
+// UpdateUserAccount allows admin to update the role of user
 func (r *AccountRepository) UpdateUserAccount(ctx context.Context, userID string, req *v1.UpdateUserAccount) error {
-	roleUser, err := dbRoleToPostGresRole(req.Role)
+	rUser, err := dbRoleToPostGresRole(req.Role)
 	if err != nil {
 		logger.Log.Error("repo/postgres - UpdateUserAccount - dbRoleToPostGresRole", zap.String("reason", err.Error()))
 		return err
 	}
-	result, err := r.db.ExecContext(ctx, updateUserAccountQuery, roleUser, userID)
+	result, err := r.db.ExecContext(ctx, updateUserAccountQuery, rUser, userID)
 	if err != nil {
 		logger.Log.Error("repo/postgres - UpdateUserAccount - failed to execute query", zap.String("reason", err.Error()))
 		return err
@@ -224,24 +218,24 @@ func (r *AccountRepository) UpdateUserAccount(ctx context.Context, userID string
 // AccountInfo implements v1.Account's AccountInfo function.
 func (r *AccountRepository) AccountInfo(ctx context.Context, userID string) (*v1.AccountInfo, error) {
 	ai := &v1.AccountInfo{}
-	var roleUser role
+	var rUser role
 	err := r.db.QueryRowContext(ctx, selectAccountInfo, userID).
-		Scan(&ai.UserId, &ai.Password, &ai.FirstName, &ai.LastName, &ai.Locale, &roleUser, &ai.ProfilePic, &ai.ContFailedLogin, &ai.CreatedOn, &ai.FirstLogin)
+		Scan(&ai.UserID, &ai.Password, &ai.FirstName, &ai.LastName, &ai.Locale, &rUser, &ai.ProfilePic, &ai.ContFailedLogin, &ai.CreatedOn, &ai.FirstLogin)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, v1.ErrNoData
 		}
 		return nil, err
 	}
-	roleUserDb, err := postgresRoleToDbRole(roleUser)
+	roleUserDB, err := postgresRoleToDBRole(rUser)
 	if err != nil {
 		return nil, err
 	}
-	ai.Role = roleUserDb
+	ai.Role = roleUserDB
 	return ai, nil
 }
 
-//ChangeUserFirstLogin implements Account ChangeUserFirstLogin function
+// ChangeUserFirstLogin implements Account ChangeUserFirstLogin function
 func (r *AccountRepository) ChangeUserFirstLogin(ctx context.Context, userID string) error {
 	result, err := r.db.ExecContext(ctx, changeUserFirstLoginQuery, userID)
 	if err != nil {
@@ -262,10 +256,7 @@ func (r *AccountRepository) ChangeUserFirstLogin(ctx context.Context, userID str
 
 // CreateAccount implements Account CreateAccount function
 func (r *AccountRepository) CreateAccount(ctx context.Context, acc *v1.AccountInfo) (retErr error) {
-	txn, err := r.db.BeginTx(ctx, &sql.TxOptions{})
-	if err != nil {
-
-	}
+	txn, _ := r.db.BeginTx(ctx, &sql.TxOptions{})
 	defer func() {
 		if retErr != nil {
 			if err := txn.Rollback(); err != nil {
@@ -279,11 +270,11 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, acc *v1.AccountIn
 			retErr = fmt.Errorf(" CreateAccount - cannot commit txn")
 		}
 	}()
-	roleUser, err := dbRoleToPostGresRole(acc.Role)
+	rUser, err := dbRoleToPostGresRole(acc.Role)
 	if err != nil {
 		return err
 	}
-	result, err := txn.ExecContext(ctx, createAccountQuery, acc.UserId, acc.Password, acc.FirstName, acc.LastName, roleUser, acc.Locale)
+	result, err := txn.ExecContext(ctx, createAccountQuery, acc.UserID, acc.Password, acc.FirstName, acc.LastName, rUser, acc.Locale)
 	if err != nil {
 		return err
 	}
@@ -299,7 +290,7 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, acc *v1.AccountIn
 	if len(acc.Group) == 0 {
 		return nil
 	}
-	args, queryInsertGrpOwnership := queryInsertIntoGroupOwnership(acc.UserId, acc.Group)
+	args, queryInsertGrpOwnership := queryInsertIntoGroupOwnership(acc.UserID, acc.Group)
 	result, err = txn.ExecContext(ctx, queryInsertGrpOwnership, args...)
 	if err != nil {
 		return err
@@ -316,7 +307,7 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, acc *v1.AccountIn
 	return nil
 }
 
-//UserExistsByID implements Account UserExistsByID function
+// UserExistsByID implements Account UserExistsByID function
 func (r *AccountRepository) UserExistsByID(ctx context.Context, userID string) (bool, error) {
 	totalRecords := 0
 	err := r.db.QueryRowContext(ctx, existsUserbyID, userID).Scan(&totalRecords)
@@ -326,7 +317,7 @@ func (r *AccountRepository) UserExistsByID(ctx context.Context, userID string) (
 	return totalRecords != 0, nil
 }
 
-//UsersAll implements Account UsersAll function
+// UsersAll implements Account UsersAll function
 func (r *AccountRepository) UsersAll(ctx context.Context, userID string) ([]*v1.AccountInfo, error) {
 	rows, err := r.db.QueryContext(ctx, selectAccountWithGroupInfo, userID)
 	if err != nil {
@@ -341,7 +332,7 @@ func (r *AccountRepository) UsersAll(ctx context.Context, userID string) ([]*v1.
 	return users, nil
 }
 
-//UsersWithUserSearchParams implements Account UsersAll function
+// UsersWithUserSearchParams implements Account UsersAll function
 func (r *AccountRepository) UsersWithUserSearchParams(ctx context.Context, userID string, params *v1.UserQueryParams) ([]*v1.AccountInfo, error) {
 	rows, err := r.db.QueryContext(ctx, selectAccountWithQueryParams, userID)
 	if err != nil {
@@ -366,7 +357,7 @@ func (r *AccountRepository) UserOwnsGroupByID(ctx context.Context, userID string
 	return totalRecords != 0, nil
 }
 
-//GroupUsers implements Account GroupUsers function
+// GroupUsers implements Account GroupUsers function
 func (r *AccountRepository) GroupUsers(ctx context.Context, groupID int64) ([]*v1.AccountInfo, error) {
 	rows, err := r.db.QueryContext(ctx, selectAccountForGroup, groupID)
 	if err != nil {
@@ -407,7 +398,7 @@ func (r *AccountRepository) ChangePassword(ctx context.Context, userID, password
 	return nil
 }
 
-//UserBelongsToAdminGroup returns true if user belongs to the admin groups
+// UserBelongsToAdminGroup returns true if user belongs to the admin groups
 func (r *AccountRepository) UserBelongsToAdminGroup(ctx context.Context, adminUserID, userID string) (bool, error) {
 	totalRecords := 0
 	err := r.db.QueryRowContext(ctx, userBelongsToAdminGroup, adminUserID, userID).Scan(&totalRecords)
@@ -417,8 +408,8 @@ func (r *AccountRepository) UserBelongsToAdminGroup(ctx context.Context, adminUs
 	return totalRecords != 0, nil
 }
 
-func dbRoleToPostGresRole(roleDb v1.Role) (role, error) {
-	switch roleDb {
+func dbRoleToPostGresRole(roleDB v1.Role) (role, error) {
+	switch roleDB {
 	case v1.RoleAdmin:
 		return roleAdmin, nil
 	case v1.RoleSuperAdmin:
@@ -426,11 +417,11 @@ func dbRoleToPostGresRole(roleDb v1.Role) (role, error) {
 	case v1.RoleUser:
 		return roleUser, nil
 	default:
-		return "", fmt.Errorf("undefined role: %v", roleDb)
+		return "", fmt.Errorf("undefined role: %v", roleDB)
 	}
 }
 
-func postgresRoleToDbRole(rolePS role) (v1.Role, error) {
+func postgresRoleToDBRole(rolePS role) (v1.Role, error) {
 	switch rolePS {
 	case roleAdmin:
 		return v1.RoleAdmin, nil
@@ -448,15 +439,15 @@ func scanUserRows(rows *sql.Rows) ([]*v1.AccountInfo, error) {
 	for rows.Next() {
 		user := &v1.AccountInfo{}
 		var userRole role
-		if err := rows.Scan(&user.UserId, &user.Password, &user.FirstName, &user.LastName,
+		if err := rows.Scan(&user.UserID, &user.Password, &user.FirstName, &user.LastName,
 			&user.Locale, &userRole); err != nil {
 			return nil, err
 		}
-		roleDb, err := postgresRoleToDbRole(userRole)
+		roleDB, err := postgresRoleToDBRole(userRole)
 		if err != nil {
 			return nil, err
 		}
-		user.Role = roleDb
+		user.Role = roleDB
 		users = append(users, user)
 	}
 	return users, nil
@@ -467,16 +458,80 @@ func scanUserRowsWithGroupInfo(rows *sql.Rows) ([]*v1.AccountInfo, error) {
 	for rows.Next() {
 		user := &v1.AccountInfo{}
 		var userRole role
-		if err := rows.Scan(&user.UserId, &user.FirstName, &user.LastName,
+		if err := rows.Scan(&user.UserID, &user.FirstName, &user.LastName,
 			&user.Locale, pq.Array(&user.GroupName), &userRole); err != nil {
 			return nil, err
 		}
-		roleDb, err := postgresRoleToDbRole(userRole)
+		roleDB, err := postgresRoleToDBRole(userRole)
 		if err != nil {
 			return nil, err
 		}
-		user.Role = roleDb
+		user.Role = roleDB
 		users = append(users, user)
 	}
 	return users, nil
+}
+
+type AccountRepositoryTx struct {
+	*Queries
+	db *sql.Tx
+}
+
+// NewAccountRepositoryTx create transaction object
+func NewAccountRepositoryTx(db *sql.Tx) *AccountRepositoryTx {
+	return &AccountRepositoryTx{
+		Queries: New(db),
+		db:      db,
+	}
+}
+
+func (r *AccountRepository) DropScopeTX(ctx context.Context, reqScope string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Log.Error("Failed to start Transaction", zap.Error(err))
+		return err
+	}
+	// txn Object
+	at := NewAccountRepositoryTx(tx)
+
+	groupsInfo, err := at.GetGroupsByScope(ctx, reqScope)
+	if err != nil {
+		logger.Log.Error("Failed to get group info by scope", zap.Error(err))
+		if err = tx.Rollback(); err != nil {
+			logger.Log.Error("DeleteScopeResourceTX rollback failure", zap.Error(err))
+		}
+		return err
+	}
+	for _, group := range groupsInfo {
+		var updatedScopes []string
+		for _, dbScope := range group.Scopes {
+			if dbScope != reqScope {
+				updatedScopes = append(updatedScopes, dbScope)
+			}
+		}
+		if len(updatedScopes) == 0 && group.ID != 1 { // Not to delete root group if it has one scope only
+			err = at.DeleteGroupById(ctx, group.ID)
+		} else {
+			err = at.UpdateScopesInGroup(ctx, UpdateScopesInGroupParams{group.ID, updatedScopes})
+		}
+		if err != nil {
+			logger.Log.Error("Failed to update/delete group ", zap.Error(err), zap.Any("groupid", group.ID), zap.Any("scope", reqScope))
+			if err = tx.Rollback(); err != nil {
+				logger.Log.Error("DeleteScopeResourceTX rollback failure", zap.Error(err))
+			}
+			return err
+		}
+	}
+
+	if err = at.DeleteScope(ctx, reqScope); err != nil {
+		logger.Log.Error("Failed to delete scope", zap.Error(err), zap.Any("scope", reqScope))
+		if err = tx.Commit(); err != nil {
+			logger.Log.Error("Failure in commit ", zap.Error(err))
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }

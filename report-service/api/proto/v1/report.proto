@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "v1";
+option go_package = "optisam-backend/report-service/pkg/api/v1";
 
 package optisam.reports.v1;
 
@@ -9,17 +9,14 @@ import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 
+/* NOTE:  Please keep the sequence same. As migration is done from v1 to v2.
+     Sequence:  1. DownloadReport    2. ListReportType
+  */
 service ReportService {
-
-  rpc ListReportType(ListReportTypeRequest) returns (ListReportTypeResponse) {
-    option (google.api.http) = {
-      get : "/api/v1/reports/types"
-    };
-  }
 
   rpc SubmitReport(SubmitReportRequest) returns (SubmitReportResponse) {
     option (google.api.http) = {
-      post : "/api/v1/reports"
+      post : "/api/v1/report"
       body : "*"
     };
   }
@@ -32,9 +29,29 @@ service ReportService {
 
   rpc DownloadReport(DownloadReportRequest) returns (DownloadReportResponse) {
     option (google.api.http) = {
-      get : "/api/v1/reports/{reportID}"
+      get : "/api/v1/report/{reportID}"
     };
   }
+
+  rpc ListReportType(ListReportTypeRequest) returns (ListReportTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/report/types"
+    };
+  }
+
+  rpc DropReportData(DropReportDataRequest) returns (DropReportDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/report/resource/{scope}"
+    };
+  }
+}
+
+message DropReportDataRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropReportDataResponse {
+  bool success = 1;
 }
 
 message ListReportTypeRequest {}
@@ -73,9 +90,9 @@ message ListReportRequest {
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10},
+    (validate.rules).int32 = {gte : 10, lte : 200},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-        {description : "Items per page", minimum : 10, maximum : 100}
+        {description : "Items per page", minimum : 10, maximum : 200}
   ];
 
   string sort_by = 3 [ (validate.rules).string = {

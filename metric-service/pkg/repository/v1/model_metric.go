@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // MetricType is an alias for string
@@ -20,8 +14,12 @@ const (
 	MetricOracleNUPStandard MetricType = "oracle.nup.standard"
 	// MetricAttrCounterStandard is attribute.counter.standard
 	MetricAttrCounterStandard MetricType = "attribute.counter.standard"
-	//MetricInstanceNumberStandard is instance.number.metric
+	// MetricInstanceNumberStandard is instance.number.metric
 	MetricInstanceNumberStandard MetricType = "instance.number.standard"
+	// MetricAttrSumStandard is attribute.sum.standard
+	MetricAttrSumStandard MetricType = "attribute.sum.standard"
+	// MetricUserSumStandard is user.sum.standard
+	MetricUserSumStandard MetricType = "user.sum.standard"
 )
 
 // String implements Stringer interface
@@ -42,17 +40,19 @@ func (m MetricSearchKey) String() string {
 	return string(m)
 }
 
-// MetricTypeId is an alias for int
-type MetricTypeId int
+// MetricTypeID is an alias for int
+type MetricTypeID int
 
 const (
-	MetricUnknown         MetricTypeId = 0
-	MetricOracleProcessor MetricTypeId = 1
-	MetricOracleNUP       MetricTypeId = 2
-	MetricSAGProcessor    MetricTypeId = 3
-	MetricIBMPVU          MetricTypeId = 4
-	MetricAttrCounter     MetricTypeId = 5
-	MetricInstanceNumber  MetricTypeId = 6
+	MetricUnknown         MetricTypeID = 0
+	MetricOracleProcessor MetricTypeID = 1
+	MetricOracleNUP       MetricTypeID = 2
+	MetricSAGProcessor    MetricTypeID = 3
+	MetricIBMPVU          MetricTypeID = 4
+	MetricAttrCounter     MetricTypeID = 5
+	MetricInstanceNumber  MetricTypeID = 6
+	MetricAttrSum         MetricTypeID = 7
+	MetricUserSum         MetricTypeID = 8
 )
 
 // MetricDescription provide description
@@ -64,58 +64,169 @@ func (m MetricDescription) String() string {
 
 const (
 	// MetricDescriptionOracleProcessorStandard provides description of oracle.processor.standard
-	MetricDescriptionOracleProcessorStandard MetricDescription = "Number of processor licenses required = CPU nb x Core(per CPU) nb x CoreFactor"
+	MetricDescriptionOracleProcessorStandard MetricDescription = "Number of licenses required = CPU nb x Core(per CPU) nb x CoreFactor"
 	// MetricDescriptionSagProcessorStandard provides description of sag.processor.standard
-	MetricDescriptionSagProcessorStandard MetricDescription = "Number of processor licenses required = MAX(Prod_licenses, NonProd_licenses) : licenses = CPU nb x Core(per CPU) nb x CoreFactor"
+	MetricDescriptionSagProcessorStandard MetricDescription = "Number of licenses required = MAX(Prod_licenses, NonProd_licenses) : licenses = CPU nb x Core(per CPU) nb x CoreFactor"
 	// MetricDescriptionIbmPvuStandard provides description of ibm.pvu.standard
 	MetricDescriptionIbmPvuStandard MetricDescription = "Number of licenses required = CPU nb x Core(per CPU) nb x CoreFactor"
 	// MetricDescriptionOracleNUPStandard provides description of oracle.nup.standard
-	MetricDescriptionOracleNUPStandard MetricDescription = "Named User Plus licenses required = MAX(A,B) : A = CPU nb x Core(per CPU) nb x CoreFactor x minimum number of NUP per processor, B = total number of current users with access to the Oracle product"
+	MetricDescriptionOracleNUPStandard MetricDescription = "Number Of licenses required = MAX(CPU nb x Core(per CPU) nb x CoreFactor x given_users, given number of users)"
 	// MetricDescriptionAttrCounterStandard provides description of attribute.counter.standard
-	MetricDescriptionAttrCounterStandard MetricDescription = "Number of licenses required = Number of equipment of a specific type containing a specific atribute set to a specific value."
-
-	// MetricDescriptionAttrCounterStandard provides description of attribute.counter.standard
-	MetricDescriptionInstanceNumberStandard MetricDescription = "Number Of instances where product has been installed multiply by a cofficent ,where instances are links between product and equipment(of any kind)"
+	MetricDescriptionAttrCounterStandard MetricDescription = "Number of licenses required = Number of equipment of type specific_type with specific_attribute = value."
+	// MetricDescriptionAttrCounterStandard provides description of instance.counter.standard
+	MetricDescriptionInstanceNumberStandard MetricDescription = "Number of licenses required = Sum of product installations / number_of_deployments_authorized_licenses"
+	// MetricDescriptionAttrSumStandard provides description of attribute.sum.standard
+	MetricDescriptionAttrSumStandard MetricDescription = "Number of licenses required = Ceil( Sum( on all equipments of type Equipment_type) of attribute_value)/ Reference_value"
+	// MetricDescriptionAttrCounterStandard provides description of user.sum.standard
+	MetricDescriptionUserSumStandard MetricDescription = "Number of licenses required = Sum of all users using the product."
 )
 
 var (
-	// MetricTypes is a slice of MetricTypeInfo
-	MetricTypes = []*MetricTypeInfo{
-		&MetricTypeInfo{
+	// MetricTypesAll is a slice of MetricTypeInfo for all scopes
+	MetricTypesAll = []*MetricTypeInfo{
+		{
 			Name:        MetricOPSOracleProcessorStandard,
 			Description: MetricDescriptionOracleProcessorStandard.String(),
 			Href:        "/api/v1/metric/ops",
 			MetricType:  MetricOracleProcessor,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricSPSSagProcessorStandard,
 			Description: MetricDescriptionSagProcessorStandard.String(),
 			Href:        "/api/v1/metric/sps",
 			MetricType:  MetricSAGProcessor,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricIPSIbmPvuStandard,
 			Description: MetricDescriptionIbmPvuStandard.String(),
 			Href:        "/api/v1/metric/ips",
 			MetricType:  MetricIBMPVU,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricOracleNUPStandard,
 			Description: MetricDescriptionOracleNUPStandard.String(),
 			Href:        "/api/v1/metric/oracle_nup",
 			MetricType:  MetricOracleNUP,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricAttrCounterStandard,
 			Description: MetricDescriptionAttrCounterStandard.String(),
 			Href:        "/api/v1/metric/acs",
 			MetricType:  MetricAttrCounter,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricInstanceNumberStandard,
 			Description: MetricDescriptionInstanceNumberStandard.String(),
 			Href:        "/api/v1/metric/inm",
 			MetricType:  MetricInstanceNumber,
+		},
+		{
+			Name:        MetricAttrSumStandard,
+			Description: MetricDescriptionAttrSumStandard.String(),
+			Href:        "/api/v1/metric/attr_sum",
+			MetricType:  MetricAttrSum,
+		},
+		{
+			Name:        MetricUserSumStandard,
+			Description: MetricDescriptionUserSumStandard.String(),
+			Href:        "/api/v1/metric/uss",
+			MetricType:  MetricUserSum,
+		},
+	}
+	// MetricTypesGeneric is a slice of MetricTypeInfo for generic scopes
+	MetricTypesGeneric = []*MetricTypeInfo{
+		{
+			Name:        MetricOPSOracleProcessorStandard,
+			Description: MetricDescriptionOracleProcessorStandard.String(),
+			Href:        "/api/v1/metric/ops",
+			MetricType:  MetricOracleProcessor,
+		},
+		{
+			Name:        MetricSPSSagProcessorStandard,
+			Description: MetricDescriptionSagProcessorStandard.String(),
+			Href:        "/api/v1/metric/sps",
+			MetricType:  MetricSAGProcessor,
+		},
+		{
+			Name:        MetricIPSIbmPvuStandard,
+			Description: MetricDescriptionIbmPvuStandard.String(),
+			Href:        "/api/v1/metric/ips",
+			MetricType:  MetricIBMPVU,
+		},
+		{
+			Name:        MetricOracleNUPStandard,
+			Description: MetricDescriptionOracleNUPStandard.String(),
+			Href:        "/api/v1/metric/oracle_nup",
+			MetricType:  MetricOracleNUP,
+		},
+		{
+			Name:        MetricAttrCounterStandard,
+			Description: MetricDescriptionAttrCounterStandard.String(),
+			Href:        "/api/v1/metric/acs",
+			MetricType:  MetricAttrCounter,
+		},
+		{
+			Name:        MetricInstanceNumberStandard,
+			Description: MetricDescriptionInstanceNumberStandard.String(),
+			Href:        "/api/v1/metric/inm",
+			MetricType:  MetricInstanceNumber,
+		},
+		{
+			Name:        MetricAttrSumStandard,
+			Description: MetricDescriptionAttrSumStandard.String(),
+			Href:        "/api/v1/metric/attr_sum",
+			MetricType:  MetricAttrSum,
+		},
+		{
+			Name:        MetricUserSumStandard,
+			Description: MetricDescriptionUserSumStandard.String(),
+			Href:        "/api/v1/metric/uss",
+			MetricType:  MetricUserSum,
+		},
+	}
+	// MetricTypesSpecific is a slice of MetricTypeInfo for specific scopes
+	MetricTypesSpecific = []*MetricTypeInfo{
+		{
+			Name:        MetricOPSOracleProcessorStandard,
+			Description: MetricDescriptionOracleProcessorStandard.String(),
+			Href:        "/api/v1/metric/ops",
+			MetricType:  MetricOracleProcessor,
+		},
+		{
+			Name:        MetricSPSSagProcessorStandard,
+			Description: MetricDescriptionSagProcessorStandard.String(),
+			Href:        "/api/v1/metric/sps",
+			MetricType:  MetricSAGProcessor,
+		},
+		{
+			Name:        MetricIPSIbmPvuStandard,
+			Description: MetricDescriptionIbmPvuStandard.String(),
+			Href:        "/api/v1/metric/ips",
+			MetricType:  MetricIBMPVU,
+		},
+		{
+			Name:        MetricOracleNUPStandard,
+			Description: MetricDescriptionOracleNUPStandard.String(),
+			Href:        "/api/v1/metric/oracle_nup",
+			MetricType:  MetricOracleNUP,
+		},
+		{
+			Name:        MetricAttrCounterStandard,
+			Description: MetricDescriptionAttrCounterStandard.String(),
+			Href:        "/api/v1/metric/acs",
+			MetricType:  MetricAttrCounter,
+		},
+		{
+			Name:        MetricInstanceNumberStandard,
+			Description: MetricDescriptionInstanceNumberStandard.String(),
+			Href:        "/api/v1/metric/inm",
+			MetricType:  MetricInstanceNumber,
+		},
+		{
+			Name:        MetricAttrSumStandard,
+			Description: MetricDescriptionAttrSumStandard.String(),
+			Href:        "/api/v1/metric/attr_sum",
+			MetricType:  MetricAttrSum,
 		},
 	}
 )
@@ -125,7 +236,7 @@ type MetricTypeInfo struct {
 	Name        MetricType
 	Description string
 	Href        string
-	MetricType  MetricTypeId
+	MetricType  MetricTypeID
 }
 
 // Metric contains name and metric of the metrics
@@ -133,4 +244,47 @@ type MetricInfo struct {
 	ID   string
 	Name string
 	Type MetricType
+}
+
+// MetricInfoFull contains metric info with linking of aggregation and acqrights
+type MetricInfoFull struct {
+	ID                string
+	Name              string
+	Type              MetricType
+	TotalAggregations int32
+	TotalAcqRights    int32
+}
+
+// ScopeType is the types of scopes available in optisam
+type ScopeType string
+
+func (st ScopeType) String() string {
+	return string(st)
+}
+
+func GetScopeType(st string) ScopeType {
+	switch st {
+	case "GENERIC":
+		return ScopeTypeGeneric
+	case "SPECIFIC":
+		return ScopeTypeSpecific
+	default:
+		return ScopeTypeGeneric
+	}
+}
+
+const (
+	ScopeTypeGeneric  ScopeType = "GENERIC"
+	ScopeTypeSpecific ScopeType = "SPECIFIC"
+)
+
+func (st ScopeType) ListMetricTypes() []*MetricTypeInfo {
+	switch st {
+	case ScopeTypeGeneric:
+		return MetricTypesGeneric
+	case ScopeTypeSpecific:
+		return MetricTypesSpecific
+	default:
+		return MetricTypesAll
+	}
 }

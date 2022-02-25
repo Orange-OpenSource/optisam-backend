@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package staticdata
 
 import (
@@ -48,20 +42,20 @@ func init() {
 func loadStaticData() error {
 	config := loader.NewDefaultConfig()
 	config.LoadStaticData = true
-	//year, month, day := time.Now().UTC().Add(-time.Hour * 24).Date()
-	//date := fmt.Sprintf("%d_%s_%d", year, month.String(), day)
+	// year, month, day := time.Now().UTC().Add(-time.Hour * 24).Date()
+	// date := fmt.Sprintf("%d_%s_%d", year, month.String(), day)
 	config.Alpha = CmdStaticdata.Conf.GetStringSlice("alpha")
 	config.BatchSize = CmdStaticdata.Conf.GetInt("batch_size")
 	destDir := CmdStaticdata.Conf.GetString("data_dir")
 	config.MasterDir = destDir
 	config.GenerateRDF = CmdStaticdata.Conf.GetBool("gen_rdf")
-	//destDir := CmdStaticdata.Conf.GetString("data_dir") + "/" + date
+	// destDir := CmdStaticdata.Conf.GetString("data_dir") + "/" + date
 	scopes, err := files.GetAllTheDirectories(destDir)
 	if err != nil {
 		return err
 	}
 
-	//TODO : consider scope based files in future versions
+	// TODO : consider scope based files in future versions
 	config.Scopes = scopes
 	config.StateConfig = CmdStaticdata.Conf.GetString("state_config")
 	config.ProductFiles = []string{
@@ -77,7 +71,7 @@ func loadStaticData() error {
 	config.InstProdFiles = []string{"instances_products.csv"}
 	config.InstEquipFiles = []string{"instances_equipments.csv"}
 	config.AcqRightsFiles = []string{"products_acquiredRights.csv"}
-	//config.UsersFiles = []string{"products_equipments_users.csv"}
+	// config.UsersFiles = []string{"products_equipments_users.csv"}
 	fmt.Printf("%+v\n", config)
 	return loader.Load(config)
 }

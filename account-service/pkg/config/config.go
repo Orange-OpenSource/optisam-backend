@@ -1,17 +1,13 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
+	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/pki"
 	"optisam-backend/common/optisam/postgres"
 
+	"optisam-backend/common/optisam/grpc"
 	"os"
 	"time"
 
@@ -28,6 +24,9 @@ import (
 type Config struct {
 	// Meaningful values are recommended (eg. production, development, staging, release/123, etc)
 	Environment string
+
+	// GRPC Server Configuration
+	GrpcServers grpc.Config
 
 	// Turns on some debug functionality
 	Debug bool
@@ -51,6 +50,9 @@ type Config struct {
 
 	// PKI configuration
 	PKI pki.Config
+
+	// IAM Configuration
+	IAM iam.Config
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -156,6 +158,6 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("database.pass", "DB_PASSWORD")
 	_ = v.BindEnv("database.name")
 
-	// PKI configuraiton
+	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -31,7 +25,7 @@ type metricOracleNUP struct {
 
 // ListMetricNUP implements Licence ListMetricNUP function
 func (l *LicenseRepository) ListMetricNUP(ctx context.Context, scopes ...string) ([]*v1.MetricNUPOracle, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricOracleNUPStandard, scopes...)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricOracleNUPStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricNUP - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -40,7 +34,7 @@ func (l *LicenseRepository) ListMetricNUP(ctx context.Context, scopes ...string)
 		Data []*metricOracleNUP
 	}
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
+	if err := json.Unmarshal(respJSON, &data); err != nil {
 		logger.Log.Error("dgraph/ListMetricNUP - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}

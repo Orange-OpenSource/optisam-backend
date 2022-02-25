@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package errors
 
 import (
@@ -12,25 +6,31 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
 
 func init() {
-	//Business Error
+	// Business Error
 	errMap["ClaimsNotFoundError"] = &customError{4001, "ClaimsNotFoundError", "cannot find claims in context", http.StatusBadRequest}
 	errMap["DgraphQueryExecutionError"] = &customError{4002, "DgraphQueryExecutionError", "cannot complete query transaction", http.StatusBadRequest}
 	errMap["DgraphDataUnmarshalError"] = &customError{4003, "DgraphDataUnmarshalError", "cannot unmarshal Json object", http.StatusBadRequest}
 	errMap["AcqRightsCountIsZeroError"] = &customError{4004, "AcqRightsCountIsZeroError", "length of total count cannot be zero", http.StatusBadRequest}
+	errMap["InvalidArgument"] = &customError{4005, "InvalidArgument", "Invalid argument", http.StatusBadRequest}
+	errMap["MetricNotExists"] = &customError{4005, "MetricNotExists", "metric does not exist", http.StatusBadRequest}
+	errMap["ProductNotAvailable"] = &customError{4005, "ProductNotAvailable", "product is not available", http.StatusBadRequest}
+	errMap["ProductNotAvailable/EditorNotExists"] = &customError{4005, "ProductNotAvailable/EditorNotExists", "product is not available or editor does not exist", http.StatusBadRequest}
 
-	//Validation Error
+	// Interservice Error
+	errMap["ServiceError"] = &customError{4005, "ServiceError", "inter-service failure", http.StatusInternalServerError}
+
+	// Validation Error
 	errMap["DataValidationError"] = &customError{4100, "DataValidationError", "Data Validation Failed", http.StatusBadRequest}
 	errMap["ScopeValidationError"] = &customError{4100, "ScopeValidationError", "Scope Validation Failed", http.StatusBadRequest}
 
-	//Database Error
+	// Database Error
 	errMap["DBError"] = &customError{4200, "DB", "Database Operation Failed", http.StatusInternalServerError}
 
-	//Authentication Error
+	// Authentication Error
 	errMap["NoTokenError"] = &customError{1001, "NoTokenError", "No Token in Authorization Header", http.StatusUnauthorized}
 	errMap["ParseTokenError"] = &customError{1002, "ParseTokenError", "Token cannot be parsed", http.StatusUnauthorized}
 	errMap["InvalidTokenError"] = &customError{1003, "InvalidTokenError", "Token Signature Verification Failed", http.StatusUnauthorized}
@@ -38,7 +38,8 @@ func init() {
 	errMap["InvalidAPIKeyError"] = &customError{1005, "InvalidAPIKeyError", "No Key in X-API-KEY Header", http.StatusUnauthorized}
 	errMap["NoAuthNError"] = &customError{1006, "NoAuthNError", "No Authentication Scheme in Request", http.StatusUnauthorized}
 	errMap["NoDataFound"] = &customError{1007, "NoDataFound", "No data found", http.StatusNoContent}
-	errMap["NoErrorMapped"] = &customError{1007, "NoErrorMapped", "Error is not mapped in current scenario", http.StatusInternalServerError}
+	errMap["NoErrorMapped"] = &customError{1008, "NoErrorMapped", "Error is not mapped in current scenario", http.StatusInternalServerError}
+	errMap["NoContent"] = &customError{1009, "NoContent", "No Content", http.StatusNoContent}
 }
 
 var (
@@ -73,7 +74,7 @@ func getError(value string) *customError {
 func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime.Marshaler, w http.ResponseWriter, _ *http.Request, err error) {
 	if err != nil {
 		const fallback = `{"code": 13, "message": "failed to marshal error message"}`
-		cError := getError(grpc.ErrorDesc(err))
+		cError := getError(status.Convert(err).Message())
 		if cError == nil {
 			s := status.Convert(err)
 			pb := s.Proto()
@@ -82,7 +83,7 @@ func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime
 			w.Header().Set("Content-Type", contentType)
 			st := runtime.HTTPStatusFromCode(s.Code())
 			w.WriteHeader(st)
-			w.Write(buf)
+			w.Write(buf) // nolint: errcheck
 		} else {
 			w.Header().Set("Content-type", marshaler.ContentType())
 			w.WriteHeader(cError.HTTPStatusCode)
@@ -93,7 +94,7 @@ func CustomHTTPError(ctx context.Context, _ *runtime.ServeMux, marshaler runtime
 				cError.HTTPStatusCode,
 			})
 			if jErr != nil {
-				w.Write([]byte(fallback))
+				w.Write([]byte(fallback)) // nolint: errcheck
 			}
 		}
 	}

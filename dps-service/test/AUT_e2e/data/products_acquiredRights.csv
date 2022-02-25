@@ -1,0 +1,22 @@
+SKU;SWIDTag;Product_name;Editor;Metric;Acquired_licenses;maintenance_licenses;unit_price;maintenance_unit_price;total_license_cost;total_maintenance_cost;total_cost;maintenance_start;maintenance_end;flag;product_version
+oracle_wl_1_ops;oracle_wl_1;Oracle Weblogic Server 12;Oracle;oracle.processor.standard;500;20;100;10;50000;200;50200;2020-01-01T10:58:56.0260078Z;2030-01-01T05:40:56.0260078Z;1;12.1.1
+oracle_wl_1_nup;oracle_wl_1;Oracle Weblogic Server 12;Oracle;oracle.nup.standard;100;10;100;10;10000;100;10100;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;12.1.1.2
+oracle_wl_2_ops;oracle_wl_2;Oracle Weblogic Server 10;Oracle;oracle.processor.standard;100;0;100;0;10000;0;10000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;10.1.1
+oracle_mysql_1_ops;oracle_mysql_1;Oracle Mysql 10;Oracle;oracle.processor.standard;100;0;100;0;10000;0;10000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;10.1.1
+oracle_mysql_2_nup;oracle_mysql_2;Oracle Mysql 10;Oracle;oracle.nup.standard;100;0;100;0;10000;0;10000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;10.1.1.2
+oracle_mysql_3_nup;oracle_mysql_3;Oracle Mysql 11;Oracle;oracle.nup.standard;100;0;100;0;10000;0;10000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;10.1.3
+oracle_micros__1_ops;oracle_micros_1;Oracle Micros;Oracle;ops_partition;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;11.1.1
+oracle_micros__2_ops;oracle_micros_2;Oracle Micros;Oracle;nup_partition;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;11.1.1
+oracle_micros_notdeployed;oracle_micros_notdeployed;Oracle Micros;Oracle;ops_serv;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;6.1
+ibm_cognos_1_pvu;ibm_cognos_1;IBM Cognos Analytics 11;IBM;ibm_pvu_75;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;1
+ibm_websphere_1_pvu;ibm_websphere_1;IBM Websphere 9;IBM;ibm_pvu;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;11.1.7
+ibm_websphere_2_pvu;ibm_websphere_2;IBM Websphere 8;IBM;ibm_pvu;0;0;0;0;0;0;0;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;9.0.5
+redhat_rhel_1_instance;redhat_rhel_1;Redhat Enterprise Linux Server 7;Redhat;os_instance;100;10;5;10;500;100;600;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;8.1.1
+redhat_rhel_2_instance;redhat_rhel_2;Redhat Enterprise Linux Server 6;Redhat;os_instance;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;11.5
+redhat_openshift_1_instance;redhat_openshift_1;Redhat Openshift Platform 3;Redhat;os_instance;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;7.7
+redhat_openshift_2_notdeployed;redhat_openshift_2;Redhat Openshift Platform 4;Redhat;os_instance;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;6.5
+sag_aris_1;sag_aris_1;Software AG ARIS 1;Software AG;sag;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;3
+sag_aris_2;sag_aris_2;Software AG ARIS 2;Software AG;sag;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;4.1
+sag_apama_1;sag_apama_1;Software AG APAMA;Software AG;sag;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;1.1
+hpud_1;hpud_1;Micro Focus HPUD 1;Micro Focus;attribute_counter_cpu;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;2.1
+hpud_2;hpud_2;Micro Focus HPUD 2;Micro Focus;attribute_counter_core;100;0;10;0;1000;0;1000;2020-01-01T10:58:56.0260078Z;2023-01-01T05:40:56.0260078Z;1;X.Y.Z

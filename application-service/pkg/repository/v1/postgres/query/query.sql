@@ -36,23 +36,33 @@ WHERE
 ; 
 
 -- name: GetInstancesView :many
-SELECT count(*) OVER() AS totalRecords,ai.instance_id,ai.instance_environment,CARDINALITY(coalesce(ai.products,'{}'))::INTEGER as num_of_products,CARDINALITY(coalesce(ai.equipments,'{}'))::INTEGER as num_of_equipments 
+SELECT count(*) OVER() AS totalRecords,ai.instance_id,ai.instance_environment,CARDINALITY(coalesce(ai.products,'{}'))::INTEGER as num_of_products
 FROM applications_instances ai
 WHERE 
   ai.scope = ANY(@scope::TEXT[])
   AND (CASE WHEN @is_product_id::bool THEN @product_id::TEXT = ANY (ai.products) ELSE TRUE END)
-  AND (CASE WHEN @is_application_id::bool THEN application_id = @application_id ELSE TRUE END)
+  AND (CASE WHEN @is_application_id::bool THEN ai.application_id = @application_id ELSE TRUE END)
   ORDER BY
   CASE WHEN @instance_id_asc::bool THEN ai.instance_id END asc,
   CASE WHEN @instance_id_desc::bool THEN ai.instance_id END desc,
   CASE WHEN @instance_environment_asc::bool THEN ai.instance_environment END asc,
   CASE WHEN @instance_environment_desc::bool THEN ai.instance_environment END desc,
   CASE WHEN @num_of_products_asc::bool THEN CARDINALITY(ai.products) END asc,
-  CASE WHEN @num_of_products_desc::bool THEN CARDINALITY(ai.products) END desc,
-  CASE WHEN @num_of_equipments_asc::bool THEN CARDINALITY(ai.equipments) END asc,
-  CASE WHEN @num_of_equipments_desc::bool THEN CARDINALITY(ai.equipments) END desc
+  CASE WHEN @num_of_products_desc::bool THEN CARDINALITY(ai.products) END desc
   LIMIT @page_size OFFSET @page_num
 ;
+
+-- name: GetInstanceViewEquipments :many
+SELECT count(*) OVER()
+FROM
+  ( SELECT UNNEST(equipments)
+    FROM applications_instances
+    WHERE scope = @scope
+      AND instance_id = @instance_id
+      AND (CASE WHEN @is_product_id::bool THEN @product_id::TEXT = ANY (products) ELSE TRUE END)
+      AND (CASE WHEN @is_application_id::bool THEN application_id = @application_id ELSE TRUE END)
+  )x
+WHERE (CASE WHEN @is_product_id::bool THEN UNNEST = ANY(@equipment_ids::TEXT[]) ELSE TRUE END);
 
 -- name: GetApplicationInstances :many
 SELECT * from applications_instances
@@ -76,7 +86,7 @@ VALUES ($1,$2,$3,$4,$5,$6)
 -- SCOPE BASED CHANGE
 ON CONFLICT (instance_id,scope)
 DO
- UPDATE SET instance_environment = $3, products = $4,equipments = $5;
+ UPDATE SET application_id = $1 ,instance_environment = $3, products = $4,equipments = $5;
 
 -- name: GetMaintenanceLevelByMonth :one
 SELECT
@@ -217,3 +227,56 @@ DELETE FROM applications WHERE scope = @scope;
 
 -- name: DeleteInstancesByScope :exec
 DELETE FROM applications_instances WHERE scope = @scope;
+
+-- name: DeleteDomainCriticityByScope :exec
+DELETE FROM domain_criticity where scope = $1;
+
+-- name: DeleteMaintenanceCirticityByScope :exec
+DELETE FROM maintenance_time_criticity where scope = $1;
+
+-- name: DeleteRiskMatricbyScope :exec
+Delete FROM risk_matrix where scope = $1;
+
+-- name: GetEquipmentsByApplicationID :one
+SELECT 
+    ARRAY_AGG(DISTINCT(equipment_ids))::TEXT[] as equipments
+from applications_instances, UNNEST(equipments) as equipment_ids
+WHERE 
+    scope = @scope and 
+    application_id = @application_id;
+
+-- name: GetApplicationsByProduct :many
+SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk,COUNT(DISTINCT(ai.instance_id))::INTEGER as num_of_instances,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments
+FROM applications a INNER JOIN 
+(select application_id,instance_id,UNNEST(coalesce(equipments,'{null}')) as equipment FROM applications_instances, UNNEST(products) as product_swidtags WHERE scope = ANY(@scope::TEXT[]) 
+  AND product_swidtags = ANY(@productSwidtags::TEXT[])
+) ai
+ON a.application_id = ai.application_id
+WHERE 
+  a.scope = ANY(@scope::TEXT[])
+  AND (CASE WHEN @lk_application_name::bool THEN lower(a.application_name) LIKE '%' || lower(@application_name::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN @is_application_name::bool THEN lower(a.application_name) = lower(@application_name) ELSE TRUE END)
+  AND (CASE WHEN @lk_application_owner::bool THEN lower(a.application_owner) LIKE '%' || lower(@application_owner::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN @is_application_owner::bool THEN lower(a.application_owner) = lower(@application_owner) ELSE TRUE END)
+  AND (CASE WHEN @lk_application_domain::bool THEN lower(a.application_domain) LIKE '%' || lower(@application_domain::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN @is_application_domain::bool THEN lower(a.application_domain) = lower(@application_domain) ELSE TRUE END)
+  AND (CASE WHEN @lk_obsolescence_risk::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower(@obsolescence_risk::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN @is_obsolescence_risk::bool THEN lower(a.obsolescence_risk) = lower(@obsolescence_risk) ELSE TRUE END)
+  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk
+  ORDER BY
+  CASE WHEN @application_id_asc::bool THEN a.application_id END asc,
+  CASE WHEN @application_id_desc::bool THEN a.application_id END desc,
+  CASE WHEN @application_name_asc::bool THEN application_name END asc,
+  CASE WHEN @application_name_desc::bool THEN application_name END desc,
+  CASE WHEN @application_owner_asc::bool THEN application_owner END asc,
+  CASE WHEN @application_owner_desc::bool THEN application_owner END desc,
+  CASE WHEN @application_domain_desc::bool THEN application_domain END desc,
+  CASE WHEN @application_domain_asc::bool THEN application_domain END asc,
+  CASE WHEN @obsolescence_risk_desc::bool THEN obsolescence_risk END desc,
+  CASE WHEN @obsolescence_risk_asc::bool THEN obsolescence_risk END asc,
+  CASE WHEN @num_of_instances_asc::bool THEN count(ai.instance_id) END asc,
+  CASE WHEN @num_of_instances_desc::bool THEN count(ai.instance_id) END desc,
+  CASE WHEN @num_of_equipments_asc::bool THEN COUNT(DISTINCT(ai.equipment)) END asc,
+  CASE WHEN @num_of_equipments_desc::bool THEN COUNT(DISTINCT(ai.equipment)) END desc
+  LIMIT @page_size OFFSET @page_num
+;

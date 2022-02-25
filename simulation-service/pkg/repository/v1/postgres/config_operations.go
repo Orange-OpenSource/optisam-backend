@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -36,29 +30,29 @@ func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1
 	}
 	defer func() {
 		if retErr != nil {
-			if err := txn.Rollback(); err != nil {
-				logger.Log.Error(" CreateConfig - failed to discard txn", zap.String("reason", err.Error()))
+			if error := txn.Rollback(); error != nil {
+				logger.Log.Error(" CreateConfig - failed to discard txn", zap.String("reason", error.Error()))
 				retErr = fmt.Errorf(" CreateConfig - cannot discard txn")
 			}
 			return
 		}
-		if err := txn.Commit(); err != nil {
-			logger.Log.Error(" CreateConfig - failed to commit txn", zap.String("reason", err.Error()))
+		if error := txn.Commit(); error != nil {
+			logger.Log.Error(" CreateConfig - failed to commit txn", zap.String("reason", error.Error()))
 			retErr = fmt.Errorf(" CreateConfig - cannot commit txn")
 		}
 	}()
 
 	var configID int32
-	//Insert into master table
+	// Insert into master table
 	err = txn.QueryRowContext(ctx, insertMasterdata, masterData.Name, masterData.EquipmentType, masterData.Status, masterData.CreatedBy, masterData.CreatedOn, masterData.UpdatedBy, masterData.UpdatedOn).Scan(&configID)
 
 	if err != nil {
 		return err
 	}
 
-	//Insert into metadata and data table
+	// Insert into metadata and data table
 	for _, d := range data {
-		//insert data into config_metadata and config_data table
+		// insert data into config_metadata and config_data table
 		err = insertConfigData(ctx, txn, configID, masterData.EquipmentType, d.ConfigMetadata, d.ConfigValues)
 		if err != nil {
 			return err
@@ -68,7 +62,7 @@ func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1
 	return nil
 }
 
-//UpdateConfig implements SimulationService UpdateConfig function
+// UpdateConfig implements SimulationService UpdateConfig function
 func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32, eqType string, metadataIDs []int32, data []*v1.ConfigData) (retErr error) {
 	// initiating  a database transaction
 	txn, err := r.db.BeginTx(ctx, &sql.TxOptions{})
@@ -77,14 +71,14 @@ func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32
 	}
 	defer func() {
 		if retErr != nil {
-			if err := txn.Rollback(); err != nil {
-				logger.Log.Error(" UpdateConfig - failed to discard txn", zap.String("reason", err.Error()))
+			if error := txn.Rollback(); error != nil {
+				logger.Log.Error(" UpdateConfig - failed to discard txn", zap.String("reason", error.Error()))
 				retErr = fmt.Errorf(" UpdateConfig - cannot discard txn")
 			}
 			return
 		}
-		if err := txn.Commit(); err != nil {
-			logger.Log.Error(" UpdateConfig - failed to commit txn", zap.String("reason", err.Error()))
+		if error := txn.Commit(); error != nil {
+			logger.Log.Error(" UpdateConfig - failed to commit txn", zap.String("reason", error.Error()))
 			retErr = fmt.Errorf(" UpdateConfig - cannot commit txn")
 		}
 	}()
@@ -92,7 +86,7 @@ func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32
 	if len(metadataIDs) != 0 {
 		deleteMetadataQuery, args := getDeleteMetadataQuery(metadataIDs, configID)
 
-		//Delete data from metadata table
+		// Delete data from metadata table
 		_, err = txn.ExecContext(ctx, deleteMetadataQuery, args...)
 		if err != nil {
 			return err
@@ -101,7 +95,7 @@ func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32
 
 	if len(data) != 0 {
 		for _, d := range data {
-			//insert data into config_metadata and config_data table
+			// insert data into config_metadata and config_data table
 			err = insertConfigData(ctx, txn, configID, eqType, d.ConfigMetadata, d.ConfigValues)
 			if err != nil {
 				return err
@@ -114,7 +108,7 @@ func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32
 		return fmt.Errorf("cannot find claims in context")
 	}
 
-	//Update master data
+	// Update master data
 	_, err = txn.ExecContext(ctx, updateMasterData, userClaims.UserID, time.Now().UTC())
 	if err != nil {
 		return err
@@ -160,7 +154,7 @@ func insertConfigData(ctx context.Context, txn *sql.Tx, configID int32, eqType s
 		return err
 	}
 	// insert into data table
-	dataQuery, args := getInsertConfigQuery(int32(metadataID), values)
+	dataQuery, args := getInsertConfigQuery(metadataID, values)
 	dataResult, err := txn.ExecContext(ctx, dataQuery, args...)
 	if err != nil {
 		return err

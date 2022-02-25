@@ -1,13 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cron
 
 import (
 	"context"
+	"crypto/rsa"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"optisam-backend/common/optisam/logger"
+	"optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 
@@ -24,18 +20,22 @@ import (
 )
 
 var (
-	Queue   workerqueue.Queue
-	AuthAPI string
+	Queue     workerqueue.Queue
+	AuthAPI   string
+	VerifyKey *rsa.PublicKey
+	APIKey    string
 )
 
-func CronJobConfigInit(q workerqueue.Queue, authapi string) {
+func JobConfigInit(q workerqueue.Queue, authapi string, key *rsa.PublicKey, apiKey string) {
 	Queue = q
 	AuthAPI = authapi
+	VerifyKey = key
+	APIKey = apiKey
 }
 
-//Thiw Job will be executed by cron
+// Thiw Job will be executed by cron
 func Job() {
-
+	logger.Log.Debug("cron job started...")
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Sugar().Infof("Panic recovered from cron job", r)
@@ -47,7 +47,11 @@ func Job() {
 	}
 
 	if cronCtx != nil {
-		jobID, err := Queue.PushJob(*cronCtx, job.Job{
+		cronAPIKeyCtx, err := grpc.AddClaimsInContext(*cronCtx, VerifyKey, APIKey)
+		if err != nil {
+			logger.Log.Error("Cron AddClaims Failed", zap.Error(err))
+		}
+		jobID, err := Queue.PushJob(cronAPIKeyCtx, job.Job{
 			Type:   sql.NullString{String: "ob"},
 			Status: job.JobStatusPENDING,
 			Data:   json.RawMessage(`{}`),
@@ -55,7 +59,7 @@ func Job() {
 		if err != nil {
 			logger.Log.Info("Error from job", zap.Int32("jobId", jobID))
 		}
-		logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
+		logger.Log.Info("Successfully pushed job by cron", zap.Int32("jobId", jobID))
 	}
 }
 
@@ -68,7 +72,7 @@ func createSharedContext(api string) (*context.Context, error) {
 		"grant_type": {"password"},
 	}
 
-	resp, err := http.PostForm(api, data)
+	resp, err := http.PostForm(api, data) // nolint: gosec
 	if err != nil {
 		log.Println("Failed to get user claims  ", err)
 		return nil, err

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -80,7 +74,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC099")
+	ID, err := getUIDForProductXID("ORAC099", []string{"scope1"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
@@ -98,19 +92,19 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 				id:  ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -141,19 +135,19 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -184,16 +178,16 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
 					},
@@ -224,13 +218,13 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
 					},
@@ -262,7 +256,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
 					},
@@ -318,13 +312,13 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC099")
+	ID, err := getUIDForProductXID("ORAC099", []string{"scope1"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
 	metric := "abc"
 	aggName := "xyz"
-	aggCleanup, err := aggSetup(metric, ID, aggName)
+	aggCleanup, err := aggSetup(metric, ID, aggName, "scope1")
 	if !assert.Empty(t, err, "error is not expected in agg setup") {
 		return
 	}
@@ -349,19 +343,19 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 				id:  ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -392,19 +386,19 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -435,16 +429,16 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
 					},
@@ -475,13 +469,13 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 				id: ID,
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
 					},
@@ -513,7 +507,7 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
 					},
@@ -550,7 +544,7 @@ func TestLicenseRepository_MetricOPSComputedLicensesAgg(t *testing.T) {
 		})
 	}
 
-	//time.Sleep(10 * time.Minute)
+	// time.Sleep(10 * time.Minute)
 }
 
 func TestLicenseRepository_MetricOPSComputedLicensesForAppProduct(t *testing.T) {
@@ -585,19 +579,19 @@ func TestLicenseRepository_MetricOPSComputedLicensesForAppProduct(t *testing.T) 
 				appID:  "A2",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -637,41 +631,46 @@ func TestLicenseRepository_MetricOPSComputedLicensesForAppProduct(t *testing.T) 
 	}
 }
 
-func aggSetup(metricName, productID, aggName string) (func() error, error) {
+func aggSetup(metricName, productID, aggName, scope string) (func() error, error) {
 	mu := &api.Mutation{
 		CommitNow: true,
 		Set: []*api.NQuad{
-			&api.NQuad{
+			{
 				Subject:     blankID(aggName),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("product_aggreagtion"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(aggName),
 				Predicate:   "dgraph.type",
 				ObjectValue: stringObjectValue("ProductAggregation"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(aggName),
 				Predicate:   "product_aggregation.name",
 				ObjectValue: stringObjectValue(aggName),
 			},
-			&api.NQuad{
+			{
+				Subject:     blankID(aggName),
+				Predicate:   "scopes",
+				ObjectValue: stringObjectValue(scope),
+			},
+			{
 				Subject:   blankID(aggName),
 				Predicate: "product_aggregation.products",
 				ObjectId:  productID,
 			},
-			&api.NQuad{
+			{
 				Subject:   productID,
 				Predicate: "product.acqRights",
 				ObjectId:  blankID("sku1"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("sku1"),
 				Predicate:   "acqRights.metric",
 				ObjectValue: stringObjectValue(metricName),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("sku1"),
 				Predicate:   "dgraph.name",
 				ObjectValue: stringObjectValue("AcquiredRights"),
@@ -762,7 +761,7 @@ func deleteProductEquipmentRelationships() error {
 					"product.equipment": null,
 					"product.users": null
 				  }`),
-				//DelNquads: []byte("uid(products) <product.equipment> * .ss"),
+				// DelNquads: []byte("uid(products) <product.equipment> * .ss"),
 				// Del: []*api.NQuad{
 				// 	{
 				// 		Subject:   "uid(products)",
@@ -866,7 +865,7 @@ func setup() (func() error, error) {
 		return nil
 	}, nil
 }
-func getUIDForProductXID(xid string) (string, error) {
+func getUIDForProductXID(xid string, scopes []string) (string, error) {
 	type id struct {
 		ID string
 	}
@@ -875,7 +874,7 @@ func getUIDForProductXID(xid string) (string, error) {
 	}
 
 	resp, err := dgClient.NewTxn().Query(context.Background(), `{
-	        IDs(func: eq(product.swidtag,`+xid+`)){
+	        IDs(func: eq(product.swidtag,"`+xid+`")) `+agregateFilters(scopeFilters(scopes))+`{
 				ID:uid
 			}
 	}`)

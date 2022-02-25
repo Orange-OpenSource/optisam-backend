@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -25,7 +19,7 @@ const (
 )
 
 // MetadataAllWithType implements Licence MetadataAllWithType function
-func (lr *LicenseRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes ...string) ([]*v1.Metadata, error) {
+func (l *LicenseRepository) MetadataAllWithType(ctx context.Context, typ v1.MetadataType, scopes ...string) ([]*v1.Metadata, error) {
 	id, err := convertMetadataTypeDGType(typ)
 	if err != nil {
 		return nil, err
@@ -38,7 +32,7 @@ func (lr *LicenseRepository) MetadataAllWithType(ctx context.Context, typ v1.Met
 		}
 	  }`
 
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/Metadata - cannot complete query")

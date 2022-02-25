@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -11,7 +5,6 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 
@@ -21,7 +14,7 @@ import (
 )
 
 // CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric
-func (s *metricServiceServer) CreateMetricIBMPvuStandard(ctx context.Context, req *v1.CreateMetricIPS) (*v1.CreateMetricIPS, error) {
+func (s *metricServiceServer) CreateMetricIBMPvuStandard(ctx context.Context, req *v1.MetricIPS) (*v1.MetricIPS, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -49,8 +42,8 @@ func (s *metricServiceServer) CreateMetricIBMPvuStandard(ctx context.Context, re
 		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching equipment type", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.NotFound, "cannot find base level equipment type")
 	}
-	if err := validateAttributesIPS(equipBase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); err != nil {
-		return nil, err
+	if error := validateAttributesIPS(equipBase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); error != nil {
+		return nil, error
 	}
 
 	met, err := s.metricRepo.CreateMetricIPS(ctx, serverToRepoMetricIPS(req), req.GetScopes()[0])
@@ -63,7 +56,50 @@ func (s *metricServiceServer) CreateMetricIBMPvuStandard(ctx context.Context, re
 
 }
 
-func serverToRepoMetricIPS(met *v1.CreateMetricIPS) *repo.MetricIPS {
+func (s *metricServiceServer) UpdateMetricIBMPvuStandard(ctx context.Context, req *v1.MetricIPS) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	_, err := s.metricRepo.GetMetricConfigIPS(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricIBMPvuStandard - repo/GetMetricConfigIPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric ips")
+	}
+	eqTypes, er := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
+	if er != nil {
+		logger.Log.Error("service/v1 - UpdateMetricIBMPvuStandard - repo/EquipmentTypes - fetching equipments", zap.String("reason", er.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	equipbase, err := equipmentTypeExistsByID(req.BaseEqTypeId, eqTypes)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.NotFound, "cannot find equipment type")
+	}
+	if e := validateAttributesIPS(equipbase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); e != nil {
+		return &v1.UpdateMetricResponse{}, e
+	}
+	if err := s.metricRepo.UpdateMetricIPS(ctx, &repo.MetricIPS{
+		Name:             req.Name,
+		NumCoreAttrID:    req.NumCoreAttrId,
+		BaseEqTypeID:     req.BaseEqTypeId,
+		CoreFactorAttrID: req.CoreFactorAttrId,
+	}, req.GetScopes()[0]); err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricIBMPvuStandard - repo/UpdateMetricIPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric ips")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
+}
+
+func serverToRepoMetricIPS(met *v1.MetricIPS) *repo.MetricIPS {
 	return &repo.MetricIPS{
 		ID:               met.ID,
 		Name:             met.Name,
@@ -73,8 +109,8 @@ func serverToRepoMetricIPS(met *v1.CreateMetricIPS) *repo.MetricIPS {
 	}
 }
 
-func repoToServerMetricIPS(met *repo.MetricIPS) *v1.CreateMetricIPS {
-	return &v1.CreateMetricIPS{
+func repoToServerMetricIPS(met *repo.MetricIPS) *v1.MetricIPS {
+	return &v1.MetricIPS{
 		ID:               met.ID,
 		Name:             met.Name,
 		NumCoreAttrId:    met.NumCoreAttrID,
@@ -114,18 +150,9 @@ func validateAttributesIPS(attr []*repo.Attribute, numCoreAttr string, coreFacto
 	return nil
 }
 
-func metricNameExistsIPS(metrics []*repo.MetricIPS, name string) int {
-	for i, met := range metrics {
-		if strcomp.CompareStrings(met.Name, name) {
-			return i
-		}
-	}
-	return -1
-}
-
-func equipmentTypeExistsByID(ID string, eqTypes []*repo.EquipmentType) (*repo.EquipmentType, error) {
+func equipmentTypeExistsByID(id string, eqTypes []*repo.EquipmentType) (*repo.EquipmentType, error) {
 	for _, eqt := range eqTypes {
-		if eqt.ID == ID {
+		if eqt.ID == id {
 			return eqt, nil
 		}
 	}

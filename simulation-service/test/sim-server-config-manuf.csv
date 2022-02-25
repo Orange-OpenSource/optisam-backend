@@ -1,0 +1,5 @@
+server_manufacturer;server_processorsNumber;server_coresNumber;corefactor_oracle
+Dell;2;1;0.5
+HCL;1;2;1
+Acer;4;2;0.25
+HP;2;4;1

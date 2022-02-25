@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -60,7 +54,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -109,7 +103,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 				mockLicense.EXPECT().MetricOPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricOPS(ctx, "Scope1").Times(1).Return([]*repo.MetricOPS{
-					&repo.MetricOPS{
+					{
 						Name:                  "OPS",
 						NumCoreAttrID:         "cores",
 						NumCPUAttrID:          "cpus",
@@ -119,7 +113,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 						StartEqTypeID:         "e1",
 						EndEqTypeID:           "e4",
 					},
-					&repo.MetricOPS{
+					{
 						Name:                  "WS",
 						NumCoreAttrID:         "cores",
 						NumCPUAttrID:          "cpus",
@@ -129,7 +123,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 						StartEqTypeID:         "e1",
 						EndEqTypeID:           "e4",
 					},
-					&repo.MetricOPS{
+					{
 						Name: "IMB",
 					},
 				}, nil)
@@ -236,11 +230,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "SPS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -286,19 +280,19 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 				mockLicense.EXPECT().MetricSPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(8), uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricSPS(ctx, "Scope1").Times(1).Return([]*repo.MetricSPS{
-					&repo.MetricSPS{
+					{
 						Name:             "SPS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricSPS{
+					{
 						Name:             "WS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricSPS{
+					{
 						Name: "IMB",
 					},
 				}, nil)
@@ -325,7 +319,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "IPS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
@@ -371,19 +365,19 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 				mockLicense.EXPECT().MetricIPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricIPS(ctx, "Scope1").Times(1).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						Name:             "SPS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricIPS{
+					{
 						Name:             "IPS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricIPS{
+					{
 						Name: "IMB",
 					},
 				}, nil)
@@ -410,11 +404,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "NUP",
 						Type: repo.MetricOracleNUPStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -461,9 +455,9 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
+				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), uint64(0), nil).Times(1)
 				mockLicense.EXPECT().ListMetricNUP(ctx, "Scope1").Times(1).Return([]*repo.MetricNUPOracle{
-					&repo.MetricNUPOracle{
+					{
 						Name:                  "NUP",
 						NumCoreAttrID:         "cores",
 						NumCPUAttrID:          "cpus",
@@ -473,7 +467,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 						StartEqTypeID:         "e1",
 						EndEqTypeID:           "e4",
 					},
-					&repo.MetricNUPOracle{
+					{
 						Name: "IMB",
 					},
 				}, nil)
@@ -500,15 +494,15 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockRepo
 				mockRepo.EXPECT().ProductIDForSwidtag(ctx, "ORAC001", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "oracle.processor.standard",
 						Type: "oracle.processor.standard",
 					},
-					&repo.Metric{
+					{
 						Name: "oracle.nup.standard",
 						Type: "oracle.nup.standard",
 					},
-					&repo.Metric{
+					{
 						Name: "ACS",
 						Type: "attribute.counter.standard",
 					},
@@ -551,13 +545,13 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
 				mockRepo.EXPECT().ListMetricACS(ctx, "Scope1").Times(1).Return([]*repo.MetricACS{
-					&repo.MetricACS{
+					{
 						Name:          "ACS",
 						EqType:        "server",
 						AttributeName: "corefactor",
 						Value:         "2",
 					},
-					&repo.MetricACS{
+					{
 						Name:          "ACS1",
 						EqType:        "server",
 						AttributeName: "cpu",
@@ -644,11 +638,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "SPS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "IPS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
@@ -672,11 +666,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "SPS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "IPS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
@@ -701,11 +695,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "OPS",
 						Type: "abc",
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -763,11 +757,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -835,11 +829,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "SPS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -904,11 +898,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "SPS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "IPS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
@@ -954,19 +948,19 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 				mockLicense.EXPECT().MetricIPSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), errors.New("Internal")).Times(1)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricIPS{
-					&repo.MetricIPS{
+					{
 						Name:             "SPS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricIPS{
+					{
 						Name:             "IPS",
 						NumCoreAttrID:    "cores",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
-					&repo.MetricIPS{
+					{
 						Name: "IMB",
 					},
 				}, nil)
@@ -989,11 +983,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "NUP",
 						Type: repo.MetricOracleNUPStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
@@ -1040,7 +1034,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
-				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), nil).Times(1)
+				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), uint64(0), nil).Times(1)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Intenal")).Times(1)
 			},
 			wantErr: true,
@@ -1061,11 +1055,11 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				rep = mockLicense
 				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
-					&repo.Metric{
+					{
 						Name: "NUP",
 						Type: repo.MetricOracleNUPStandard,
 					},
-					&repo.Metric{
+					{
 						Name: "ACS",
 						Type: repo.MetricAttrCounterStandard,
 					},
@@ -1112,13 +1106,13 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 				mockLicense.EXPECT().MetricACSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), errors.New("Internal")).Times(1)
 				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricACS{
-					&repo.MetricACS{
+					{
 						Name:          "ACS",
 						EqType:        "server",
 						AttributeName: "corefactor",
 						Value:         "2",
 					},
-					&repo.MetricACS{
+					{
 						Name:          "ACS1",
 						EqType:        "server",
 						AttributeName: "cpu",

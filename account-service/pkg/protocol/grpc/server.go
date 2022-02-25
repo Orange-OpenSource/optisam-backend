@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package grpc
 
 import (
@@ -22,14 +16,14 @@ import (
 )
 
 // RunServer runs gRPC service to publish Auth service
-func RunServer(ctx context.Context, v1API v1.AccountServiceServer, port string, verifyKey *rsa.PublicKey, adminRights mw.AdminRightsRequiredFunc) error {
+func RunServer(ctx context.Context, v1API v1.AccountServiceServer, port string, verifyKey *rsa.PublicKey, apiKey string, adminRights mw.AdminRightsRequiredFunc) error {
 	listen, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return err
 	}
 
 	// gRPC server statup options
-	opts := mw.ChainedWithAdminFilter(logger.Log, verifyKey, adminRights)
+	opts := mw.ChainedWithAdminFilter(logger.Log, verifyKey, apiKey, adminRights)
 	opts = append(opts, grpc.StatsHandler(&ocgrpc.ServerHandler{}))
 	// add middleware
 	// opts = grpc_middleware.AddLogging(logger.Log, opts)

@@ -4,9 +4,10 @@
     "title": "license.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
+  "tags": [
+    {
+      "name": "LicenseService"
+    }
   ],
   "consumes": [
     "application/json"
@@ -15,14 +16,98 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}": {
+    "/api/v1/license/aggregation/{name}/acquiredrights": {
+      "get": {
+        "operationId": "LicenseService_ListAcqRightsForAggregation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsForAggregationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/license/applications/{app_id}/products/{prod_id}": {
+      "get": {
+        "operationId": "LicenseService_ListAcqRightsForApplicationsProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListAcqRightsForApplicationsProductResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "prod_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/license/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}": {
       "post": {
-        "operationId": "LicensesForEquipAndMetric",
+        "operationId": "LicenseService_LicensesForEquipAndMetric",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1LicensesForEquipAndMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -65,50 +150,20 @@
         ]
       }
     },
-    "/api/v1/licenses/applications/{app_id}/products/{prod_id}": {
+    "/api/v1/license/product/{swid_tag}/acquiredrights": {
       "get": {
-        "operationId": "ListAcqRightsForApplicationsProduct",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListAcqRightsForApplicationsProductResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "app_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "prod_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/product/{swid_tag}/acquiredrights": {
-      "get": {
-        "operationId": "ListAcqRightsForProduct",
+        "operationId": "LicenseService_ListAcqRightsForProduct",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListAcquiredRightsForProductResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -131,14 +186,64 @@
         ]
       }
     },
-    "/api/v1/product/{swid_tag}/metric/{metric_name}": {
+    "/api/v1/license/product/{swid_tag}/computationdetails": {
+      "get": {
+        "summary": "ListComputationDetails",
+        "operationId": "LicenseService_ListComputationDetails",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListComputationDetailsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "swid_tag",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "description": "repeated string metric_name = 2 [(validate.rules).repeated = {min_items: 1}];.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/license/product/{swid_tag}/metric/{metric_name}": {
       "post": {
-        "operationId": "ProductLicensesForMetric",
+        "operationId": "LicenseService_ProductLicensesForMetric",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ProductLicensesForMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -168,65 +273,86 @@
           "LicenseService"
         ]
       }
-    },
-    "/api/v1/products/aggregations": {
-      "post": {
-        "operationId": "CreateProductAggregation",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ProductAggregation"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1ProductAggregation"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/products/aggregations/productview/{ID}/acquiredrights": {
-      "get": {
-        "operationId": "ListAcqRightsForProductAggregation",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListAcqRightsForProductAggregationResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
     }
   },
   "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AggregationAcquiredRights": {
+      "type": "object",
+      "properties": {
+        "SKU": {
+          "type": "string"
+        },
+        "aggregationName": {
+          "type": "string"
+        },
+        "swidTags": {
+          "type": "string"
+        },
+        "metric": {
+          "type": "string"
+        },
+        "numCptLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numAcqLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "deltaNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "deltaCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "avgUnitPrice": {
+          "type": "number",
+          "format": "double"
+        },
+        "computedDetails": {
+          "type": "string"
+        },
+        "metricNotDefined": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1Attribute": {
       "type": "object",
       "properties": {
@@ -240,27 +366,22 @@
           "$ref": "#/definitions/v1DataTypes"
         },
         "primary_key": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "displayed": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "searchable": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "parent_identifier": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "mapped_to": {
           "type": "string"
         },
         "simulated": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "int_val": {
           "type": "integer",
@@ -283,6 +404,33 @@
         },
         "string_val_old": {
           "type": "string"
+        }
+      }
+    },
+    "v1ComputedDetails": {
+      "type": "object",
+      "properties": {
+        "metric_name": {
+          "type": "string"
+        },
+        "numCptLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "computedDetails": {
+          "type": "string"
+        },
+        "numAcqLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "deltaNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "deltaCost": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -333,18 +481,18 @@
         }
       }
     },
-    "v1ListAcqRightsForApplicationsProductResponse": {
+    "v1ListAcqRightsForAggregationResponse": {
       "type": "object",
       "properties": {
         "acq_rights": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1ProductAcquiredRights"
+            "$ref": "#/definitions/v1AggregationAcquiredRights"
           }
         }
       }
     },
-    "v1ListAcqRightsForProductAggregationResponse": {
+    "v1ListAcqRightsForApplicationsProductResponse": {
       "type": "object",
       "properties": {
         "acq_rights": {
@@ -362,6 +510,20 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1ProductAcquiredRights"
+          }
+        },
+        "aggregation_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListComputationDetailsResponse": {
+      "type": "object",
+      "properties": {
+        "computed_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ComputedDetails"
           }
         }
       }
@@ -452,41 +614,12 @@
         "avgUnitPrice": {
           "type": "number",
           "format": "double"
-        }
-      }
-    },
-    "v1ProductAggregation": {
-      "type": "object",
-      "properties": {
-        "ID": {
+        },
+        "computedDetails": {
           "type": "string"
         },
-        "name": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "product_names": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "metric": {
-          "type": "string"
-        },
-        "products": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "products_full": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Product"
-          }
+        "metricNotDefined": {
+          "type": "boolean"
         }
       }
     },

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -14,6 +8,7 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	v1 "optisam-backend/report-service/pkg/api/v1"
@@ -22,7 +17,7 @@ import (
 	"optisam-backend/report-service/pkg/worker"
 	"strings"
 
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb" // nolint: staticcheck
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -37,6 +32,26 @@ type ReportServiceServer struct {
 // NewReportServiceServer creates Auth service
 func NewReportServiceServer(reportRepo repo.Report, queue workerqueue.Workerqueue) v1.ReportServiceServer {
 	return &ReportServiceServer{reportRepo: reportRepo, queue: queue}
+}
+
+func (r *ReportServiceServer) DropReportData(ctx context.Context, req *v1.DropReportDataRequest) (*v1.DropReportDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DropReportDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ListReport", zap.String("reason", "ScopeError"))
+		return &v1.DropReportDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationFailed")
+	}
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return &v1.DropReportDataResponse{Success: false}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	if err := r.reportRepo.DeleteReportsByScope(ctx, req.Scope); err != nil {
+		logger.Log.Error("Failed to delete reports", zap.Any("scope", req.Scope), zap.Error(err))
+		return &v1.DropReportDataResponse{Success: false}, status.Error(codes.Internal, err.Error())
+	}
+	return &v1.DropReportDataResponse{Success: true}, nil
 }
 
 func (r *ReportServiceServer) ListReportType(ctx context.Context, req *v1.ListReportTypeRequest) (*v1.ListReportTypeResponse, error) {
@@ -192,13 +207,13 @@ func (r *ReportServiceServer) ListReport(ctx context.Context, req *v1.ListReport
 	}
 
 	for i := range dbresp {
-		created_on, _ := ptypes.TimestampProto(dbresp[i].CreatedOn)
+		createdOn, _ := ptypes.TimestampProto(dbresp[i].CreatedOn)
 		apiresp.Reports[i] = &v1.Report{}
 		apiresp.Reports[i].ReportId = dbresp[i].ReportID
 		apiresp.Reports[i].ReportType = dbresp[i].ReportTypeName
 		apiresp.Reports[i].ReportStatus = string(dbresp[i].ReportStatus)
 		apiresp.Reports[i].CreatedBy = dbresp[i].CreatedBy
-		apiresp.Reports[i].CreatedOn = created_on
+		apiresp.Reports[i].CreatedOn = createdOn
 	}
 	return &apiresp, nil
 

@@ -1,0 +1,119 @@
+{
+    "schema_prod": {
+        "swidTag": "#string",
+        "name": "##string",
+        "category": "##string",
+        "edition": "##string",
+        "editor": "##string",
+        "version": "##string",
+        "numOfApplications": "##number",
+        "numofEquipments": "##number",
+        "totalCost": "##number"
+    },
+    "getProduct": {
+        "swidTag": "ibm_cognos_1",
+        "product_name": "IBM Cognos Analytics 11",
+        "editor": "IBM",
+        "version": "11.1.7",
+        "num_applications": 1,
+        "num_equipments": 2,
+        "defined_metrics": [
+    "ibm_pvu_75" ]
+    },
+    "createProduct": {
+        "swidTag": "p3",
+        "name": "prod3",
+        "category": "test",
+        "edition": "0.1.1",
+        "editor": "oracle",
+        "version": "0.1.1",
+        "optionOf": "p1",
+        "scope": "France",
+        "applications": {
+            "operation": "add",
+            "application_id": [
+                "a3",
+                "a4"
+            ]
+        },
+        "equipments": {
+            "operation": "add",
+            "equipmentusers": [
+                {
+                    "equipment_id": "e11",
+                    "num_user": 20
+                },
+                {
+                    "equipment_id": "e12",
+                    "num_user": 10
+                }
+            ]
+        }
+    },
+    "overview": {
+        "num_editors": 6,
+        "num_products": 28
+    },
+    "schema_overview": {
+        "num_editors": "#number",
+        "num_products": "#number"
+    },
+    "dashboard_products": {
+        "not_acquired_products": 5,
+        "not_deployed_products": 3,
+        "not_acquired_products_percentage": 20,
+        "not_deployed_products_percentage": 12,
+        "products_not_deployed": [
+            {
+                "swid_tag": "oracle_micros_notdeployed",
+                "product_name": "Oracle Micros",
+                "editor": "Oracle",
+                 "version": "6.1"
+            },
+            {
+                "swid_tag": "oracle_mysql_1",
+                "product_name": "Oracle Mysql 10",
+                "editor": "Oracle",
+                "version": "10.1.1"
+            },
+            {   "swid_tag": "oracle_micros_2",
+                "product_name": "Oracle Micros",
+                "editor": "Oracle",
+                "version": "11.1.1"
+                    
+            }
+        ],
+        "products_not_acquired": [
+            {
+                "swid_tag": "ibm_db2_1_notacquired",
+                "product_name": "IBM DB2 11",
+                "version": "11.5",
+                "editor": "IBM",
+            },
+            {
+                "swid_tag": "without_app_1",
+                "product_name": "Without application prod 1",
+                "version": "",
+                "editor": ""
+            },
+            {
+                "swid_tag": "random_prod_2",
+                "product_name": "Random product 2",
+                "editor": "Random",
+                 "version": "x.y.z"
+            },
+            {
+                "swid_tag": "without_inst_1",
+                "product_name": "Without instance prod 1",
+                "editor": "",
+                "version": ""
+            },
+            {
+                "swid_tag": "random_prod_1",
+                "product_name": "Random product 1",
+                "version": "x.y.z",
+                "editor": "Random",
+            }
+        ]
+    }
+}

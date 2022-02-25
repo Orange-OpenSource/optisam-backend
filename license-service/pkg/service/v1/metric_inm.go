@@ -1,13 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
+	"strconv"
 
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/strcomp"
@@ -18,43 +13,39 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
+func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
 	metrics, err := s.licenseRepo.ListMetricINM(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesINM", zap.Error(err))
-		return 0, status.Error(codes.Internal, "cannot fetch metric INM")
+		return 0, "", status.Error(codes.Internal, "cannot fetch metric INM")
 	}
-	ind := metricNameExistsINM(metrics, input[METRIC_NAME].(string))
+	ind := metricNameExistsINM(metrics, input[MetricName].(string))
 	if ind == -1 {
-		return 0, status.Error(codes.NotFound, "cannot find metric name")
+		return 0, "", status.Error(codes.NotFound, "cannot find metric name")
 	}
 
-	mat, err := computedMetricINM(metrics[ind])
-	if err != nil {
-		logger.Log.Error("service/v1 - computedLicensesINM - computedMetricINM - ", zap.Error(err))
-		return 0, err
-	}
+	mat := computedMetricINM(metrics[ind])
 	computedLicenses := uint64(0)
-
-	if input[IS_AGG].(bool) {
-		computedLicenses, err = s.licenseRepo.MetricINMComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	computedDetails := uint64(0)
+	if input[IsAgg].(bool) {
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricINMComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricINMComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricINMComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesINM - ", zap.String("reason", err.Error()))
-		return 0, status.Error(codes.Internal, "cannot compute licenses for metric INM")
+		return 0, "", status.Error(codes.Internal, "cannot compute licenses for metric INM")
 
 	}
-	return computedLicenses, nil
+	return computedLicenses, "Total instances: " + strconv.FormatUint(computedDetails, 10), nil
 }
 
-func computedMetricINM(met *repo.MetricINM) (*repo.MetricINMComputed, error) {
+func computedMetricINM(met *repo.MetricINM) *repo.MetricINMComputed {
 	return &repo.MetricINMComputed{
 		Name:        met.Name,
 		Coefficient: met.Coefficient,
-	}, nil
+	}
 }
 
 func metricNameExistsINM(metrics []*repo.MetricINM, name string) int {

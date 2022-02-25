@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
@@ -116,7 +110,7 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// v.AutomaticEnv()
 
 	// Application constants
-	v.Set("serviceName", "authservice")
+	v.Set("serviceName", "auth-service")
 
 	// Global configuration
 	v.SetDefault("environment", "production")

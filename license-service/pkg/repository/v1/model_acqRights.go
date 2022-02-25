@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // AcquiredRightsSearchKey is type to represent search keys string
@@ -66,7 +60,7 @@ type AcquiredRights struct {
 	SwidTag                        string
 	ProductName                    string
 	Editor                         string
-	Metric                         string
+	Metric                         []string
 	AcquiredLicensesNumber         int64
 	LicensesUnderMaintenanceNumber int64
 	AvgLicenesUnitPrice            float32
@@ -83,4 +77,23 @@ type QueryAcquiredRights struct { //
 	SortBy    AcquiredRightsSortBy
 	SortOrder SortOrder
 	Filter    *AggregateFilter
+}
+
+// AcqRightsInfo ...
+type AcqRightsInfo struct {
+	SKU                  string
+	Swidtag              string
+	ProductName          string
+	ProductEditor        string
+	ProductVersion       string
+	Metric               []string
+	Licenses             int32
+	MaintenanceLicenses  int32
+	UnitPrice            float64
+	MaintenanceUnitPrice float64
+	PurchaseCost         float64
+	MaintenanceCost      float64
+	TotalCost            float64
+	StartOfMaintenance   string
+	EndOfMaintenance     string
 }

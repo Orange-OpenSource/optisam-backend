@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -31,7 +25,7 @@ func productsNquadsForRow(cols []string, scope string, row []string, xidIDX int)
 	//	nodeType := "product"
 	nquads := make([]*api.NQuad, 0, len(row)+3)
 	uids, upserts := []string{}, []string{}
-	//prodUID := uidForXid(row[xidIDX])
+	// prodUID := uidForXid(row[xidIDX])
 	prodUID, nqs, prodUpsert := uidForXIDForType(row[xidIDX], "product", "product.swidtag", row[xidIDX], dgraphTypeProduct)
 	uids = append(uids, prodUID)
 	upserts = append(upserts, prodUpsert)
@@ -61,8 +55,8 @@ func productsNquadsForRow(cols []string, scope string, row []string, xidIDX int)
 				continue
 			}
 			// make a new node of type product
-			//uid := uidForXid(row[i])
-			//log.Println(row[xidIDX], row[i], prodUID, uid)
+			// uid := uidForXid(row[i])
+			// log.Println(row[xidIDX], row[i], prodUID, uid)
 			uid, nqs, upsert := uidForXIDForType(row[i], "product", "product.swidtag", row[i], dgraphTypeProduct)
 			uids = append(uids, uid)
 			upserts = append(upserts, upsert)

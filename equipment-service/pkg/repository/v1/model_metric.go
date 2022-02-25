@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // MetricType is an alias for string
@@ -38,15 +32,15 @@ func (m MetricSearchKey) String() string {
 	return string(m)
 }
 
-// MetricTypeId is an alias for int
-type MetricTypeId int
+// MetricTypeID is an alias for int
+type MetricTypeID int
 
 const (
-	MetricUnknown         MetricTypeId = 0
-	MetricOracleProcessor MetricTypeId = 1
-	MetricOracleNUP       MetricTypeId = 2
-	MetricSAGProcessor    MetricTypeId = 3
-	MetricIBMPVU          MetricTypeId = 4
+	MetricUnknown         MetricTypeID = 0
+	MetricOracleProcessor MetricTypeID = 1
+	MetricOracleNUP       MetricTypeID = 2
+	MetricSAGProcessor    MetricTypeID = 3
+	MetricIBMPVU          MetricTypeID = 4
 )
 
 // MetricDescription provide description
@@ -70,25 +64,25 @@ const (
 var (
 	// MetricTypes is a slice of MetricTypeInfo
 	MetricTypes = []*MetricTypeInfo{
-		&MetricTypeInfo{
+		{
 			Name:        MetricOPSOracleProcessorStandard,
 			Description: MetricDescriptionOracleProcessorStandard.String(),
 			Href:        "/api/v1/metric/ops",
 			MetricType:  MetricOracleProcessor,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricSPSSagProcessorStandard,
 			Description: "abc",
 			Href:        "/api/v1/metric/sps",
 			MetricType:  MetricSAGProcessor,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricIPSIbmPvuStandard,
 			Description: "pqr",
 			Href:        "/api/v1/metric/ips",
 			MetricType:  MetricIBMPVU,
 		},
-		&MetricTypeInfo{
+		{
 			Name:        MetricOracleNUPStandard,
 			Description: "uvw",
 			Href:        "/api/v1/metric/oracle_nup",
@@ -102,7 +96,7 @@ type MetricTypeInfo struct {
 	Name        MetricType
 	Description string
 	Href        string
-	MetricType  MetricTypeId
+	MetricType  MetricTypeID
 }
 
 // Metric contains name and metric of the metrics

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -19,25 +13,9 @@ type totalRecords struct {
 	TotalCount int32
 }
 
-type prodPred string
-
-func (p prodPred) String() string {
-	return string(p)
-}
-
 const (
 	offset   string = "$offset"
 	pagesize string = "$pagesize"
-)
-
-const (
-	prodPredName      prodPred = "product.name"
-	prodPredSwidTag   prodPred = "product.swidtag"
-	prodPredVersion   prodPred = "product.version"
-	prodPredEditor    prodPred = "product.editor"
-	prodPredNumOfApp  prodPred = "val(numOfApplications)"
-	prodPredNumOfEqp  prodPred = "val(numOfEquipments)"
-	prodPredTotalCost prodPred = "val(totalCost)"
 )
 
 // String implements string interface

@@ -9,7 +9,7 @@ SELECT * FROM jobs ;
 SELECT * FROM Jobs WHERE status  not in ('FAILED' ,'COMPLETED');
 
 -- name: CreateJob :one
-INSERT INTO jobs (type,status,data,comments,start_time,end_time) VALUES ($1,$2,$3,$4,$5,$6) RETURNING job_id;
+INSERT INTO jobs (type,status,data,comments,start_time,end_time,meta_data) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING job_id;
 
 
 -- name: UpdateJobStatusRunning :exec

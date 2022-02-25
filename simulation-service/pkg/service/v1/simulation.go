@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -31,7 +25,7 @@ func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.Si
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
 	var wg sync.WaitGroup
-	var metricResults []*v1.MetricSimulationResult
+	var metricResults []*v1.MetricSimulationResult // nolint: prealloc
 	for _, simDetails := range req.MetricDetails {
 		wg.Add(1)
 		var metricRes v1.MetricSimulationResult
@@ -68,7 +62,7 @@ func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.Si
 
 // SimulationByHardware function implements simulation by hardware functionality
 func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.SimulationByHardwareRequest) (*v1.SimulationByHardwareResponse, error) {
-	var simulationResults []*v1.SimulatedProductsLicenses
+	var simulationResults []*v1.SimulatedProductsLicenses // nolint: prealloc
 	var wg sync.WaitGroup
 	for _, simDetails := range req.MetricDetails {
 		wg.Add(1)
@@ -108,7 +102,7 @@ func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.
 
 func licenseServToSimulationServProductLicenseAll(licenses []*licenseService.ProductLicenseForEquipAndMetric) []*v1.SimulatedProductLicense {
 
-	var simLicenses []*v1.SimulatedProductLicense
+	simLicenses := make([]*v1.SimulatedProductLicense, 0)
 
 	for _, productLicense := range licenses {
 		simLicense := licenseServToSimulationServProductLicense(productLicense)
@@ -131,7 +125,7 @@ func licenseServToSimulationServProductLicense(license *licenseService.ProductLi
 
 func simulationToLicenseAttributesAll(attrs []*v1.EquipAttribute) []*licenseService.Attribute {
 
-	var resAttrs []*licenseService.Attribute
+	resAttrs := make([]*licenseService.Attribute, 0)
 	for _, attr := range attrs {
 		resAttr := simulationToLicenseAttributes(attr)
 		resAttrs = append(resAttrs, resAttr)

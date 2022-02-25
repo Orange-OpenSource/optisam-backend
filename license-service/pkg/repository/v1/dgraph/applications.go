@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -17,18 +11,18 @@ import (
 	"go.uber.org/zap"
 )
 
-//ProductExistsForApplication implements ProductExistsForApplication function
-func (lr *LicenseRepository) ProductExistsForApplication(ctx context.Context, prodID, appID string, scopes ...string) (bool, error) {
+// ProductExistsForApplication implements ProductExistsForApplication function
+func (l *LicenseRepository) ProductExistsForApplication(ctx context.Context, prodID, appID string, scopes ...string) (bool, error) {
 	q := `{
-		AppProduct(func: eq(application.id,` + appID + `))@filter(eq(scopes,[` + strings.Join(scopes, ",") + `])){
-			count(Product:application.product@filter(eq(product.swidtag,` + prodID + `)))
+		AppProduct(func: eq(application.id,"` + appID + `"))@filter(eq(scopes,[` + strings.Join(scopes, ",") + `])){
+			count(Product:application.product@filter(eq(product.swidtag,"` + prodID + `")))
 		}
 	  }`
 
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ProductExistsForApplication - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return false, fmt.Errorf("ProductExistsForApplication - cannot complete query transaction")
+		return false, fmt.Errorf("productExistsForApplication - cannot complete query transaction")
 	}
 
 	type Object struct {
@@ -41,7 +35,7 @@ func (lr *LicenseRepository) ProductExistsForApplication(ctx context.Context, pr
 	d := &data{}
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("ProductExistsForApplication - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return false, fmt.Errorf("ProductExistsForApplication - cannot unmarshal Json object")
+		return false, fmt.Errorf("productExistsForApplication - cannot unmarshal Json object")
 	}
 
 	if len(d.AppProduct) == 0 {
@@ -52,14 +46,14 @@ func (lr *LicenseRepository) ProductExistsForApplication(ctx context.Context, pr
 
 }
 
-//ProductApplicationEquipments implements ProductApplicationEquipments function
-func (lr *LicenseRepository) ProductApplicationEquipments(ctx context.Context, prodID, appID string, scopes ...string) ([]*v1.Equipment, error) {
+// ProductApplicationEquipments implements ProductApplicationEquipments function
+func (l *LicenseRepository) ProductApplicationEquipments(ctx context.Context, prodID, appID string, scopes ...string) ([]*v1.Equipment, error) {
 	q := `{
-		var(func: eq(application.id,` + appID + `))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
+		var(func: eq(application.id,"` + appID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
 		 app_inst as  application.instance
 		}
 	  
-		 var(func: eq(product.swidtag,` + prodID + `))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
+		 var(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
 		  prod_inst as ~instance.product@filter(uid(app_inst))
 		}
 	  
@@ -67,7 +61,7 @@ func (lr *LicenseRepository) ProductApplicationEquipments(ctx context.Context, p
 		  ins_equip as instance.equipment
 		}
 	  
-		Equipments(func: eq(product.swidtag,` + prodID + `))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
+		Equipments(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
 		  Equipment: product.equipment@filter(uid(ins_equip)) {
 			uid
 			EquipID: equipment.id
@@ -75,10 +69,10 @@ func (lr *LicenseRepository) ProductApplicationEquipments(ctx context.Context, p
 		  }
 		}
 		}`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ProductApplicationEquipments - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductApplicationEquipments - cannot complete query transaction")
+		return nil, fmt.Errorf("productApplicationEquipments - cannot complete query transaction")
 	}
 	type object struct {
 		Equipment []*v1.Equipment
@@ -89,7 +83,7 @@ func (lr *LicenseRepository) ProductApplicationEquipments(ctx context.Context, p
 	d := &data{}
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("ProductApplicationEquipments - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductApplicationEquipments - cannot unmarshal Json object")
+		return nil, fmt.Errorf("productApplicationEquipments - cannot unmarshal Json object")
 	}
 
 	if len(d.Equipments) == 0 {

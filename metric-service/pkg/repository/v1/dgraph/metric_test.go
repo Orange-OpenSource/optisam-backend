@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -12,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -19,7 +14,85 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_DropMetrics(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		l       *MetricRepository
+		input   string
+		setup   func() (func() error, error)
+		ctx     context.Context
+		wantErr bool
+	}{
+		{
+			name:    "SuccessCase",
+			ctx:     context.Background(),
+			input:   "s1",
+			wantErr: false,
+			setup: func() (func() error, error) {
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("s1"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("Oracle type1"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+					},
+				}
+
+				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+
+				metID1, ok := assigned.Uids["met1"]
+				if !ok {
+					return nil, errors.New("cannot find metric1 id after mutation in setup")
+				}
+
+				return func() error {
+					return deleteNodes(metID1)
+				}, nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.l = NewMetricRepository(dgClient)
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "not expecting error in setup")
+			}()
+			err = tt.l.DropMetrics(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.DropMetrics() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+		})
+	}
+}
 func TestMetricRepository_ListMetrices(t *testing.T) {
+
 	type args struct {
 		ctx    context.Context
 		scopes string
@@ -43,42 +116,42 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("met1"),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metric"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met1"),
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("Scope1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met1"),
 							Predicate:   "metric.name",
 							ObjectValue: stringObjectValue("Oracle type1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met1"),
 							Predicate:   "metric.type",
 							ObjectValue: stringObjectValue("oracle.processor.standard"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met2"),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metric"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met2"),
 							Predicate:   "metric.name",
 							ObjectValue: stringObjectValue("Oracle type2"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met2"),
 							Predicate:   "metric.type",
 							ObjectValue: stringObjectValue("oracle.processor.standard"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("met2"),
 							Predicate:   "scopes",
 							ObjectValue: stringObjectValue("Scope1"),
@@ -106,11 +179,11 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 			},
 
 			want: []*v1.MetricInfo{
-				&v1.MetricInfo{
+				{
 					Name: "Oracle type1",
 					Type: v1.MetricOPSOracleProcessorStandard,
 				},
-				&v1.MetricInfo{
+				{
 					Name: "Oracle type2",
 					Type: v1.MetricOPSOracleProcessorStandard,
 				},
@@ -133,6 +206,385 @@ func TestMetricRepository_ListMetrices(t *testing.T) {
 			}
 			if !tt.wantErr {
 				compareMetricsAll(t, "ListMetrices", tt.want, got)
+			}
+		})
+	}
+}
+
+func TestMetricRepository_DeleteMetric(t *testing.T) {
+	type args struct {
+		ctx        context.Context
+		metricName string
+		scope      string
+	}
+	tests := []struct {
+		name    string
+		l       *MetricRepository
+		args    args
+		setup   func() (func() error, error)
+		verify  func(*MetricRepository)
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			l: NewMetricRepository(dgClient),
+			args: args{
+				ctx:        context.Background(),
+				metricName: "Oracle type1",
+				scope:      "Scope1",
+			},
+			setup: func() (func() error, error) {
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("Oracle type1"),
+						},
+						{
+							Subject:     blankID("met1"),
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     blankID("met2"),
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     blankID("met2"),
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("Oracle type2"),
+						},
+						{
+							Subject:     blankID("met2"),
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     blankID("met2"),
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+					},
+				}
+
+				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+
+				metID1, ok := assigned.Uids["met1"]
+				if !ok {
+					return nil, errors.New("cannot find metric1 id after mutation in setup")
+				}
+
+				metID2, ok := assigned.Uids["met2"]
+				if !ok {
+					return nil, errors.New("cannot find metric2 id after mutation in setup")
+				}
+				return func() error {
+					return deleteNodes(metID1, metID2)
+				}, nil
+			},
+			verify: func(l *MetricRepository) {
+				metrics, err := l.ListMetrices(context.Background(), "Scope1")
+				if err != nil {
+					t.Errorf("MetricRepository.DeleteMetric(), verify() - Error in getting metrices error = %v", err)
+				}
+				wantMet := []*v1.MetricInfo{
+					{
+						Name: "Oracle type2",
+						Type: v1.MetricOPSOracleProcessorStandard,
+					},
+				}
+				compareMetricsAll(t, "MetricRepository.DeleteMetric()", wantMet, metrics)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "not expecting error in setup")
+			}()
+			if err := tt.l.DeleteMetric(tt.args.ctx, tt.args.metricName, tt.args.scope); (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.DeleteMetric() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestMetricRepository_MetricInfoWithAcqAndAgg(t *testing.T) {
+	type args struct {
+		ctx        context.Context
+		metricName string
+		scope      string
+	}
+	tests := []struct {
+		name    string
+		l       *MetricRepository
+		args    args
+		setup   func() (func() error, error)
+		want    *v1.MetricInfoFull
+		wantErr bool
+	}{
+		{name: "SUCCESS - linking present",
+			l: NewMetricRepository(dgClient),
+			args: args{
+				ctx:        context.Background(),
+				metricName: "OracleMet",
+				scope:      "Scope1",
+			},
+			setup: func() (func() error, error) {
+				met1 := blankID("met1")
+				met2 := blankID("met2")
+				agg1 := blankID("agg1")
+				acq1 := blankID("acq1")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     met1,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("OracleMet"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("Oracle type2"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     agg1,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("aggregation"),
+						},
+						{
+							Subject:     agg1,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     agg1,
+							Predicate:   "aggregation.name",
+							ObjectValue: stringObjectValue("Aggregation 1"),
+						},
+						{
+							Subject:     agg1,
+							Predicate:   "aggregation.metric",
+							ObjectValue: stringObjectValue("OracleMet"),
+						},
+						{
+							Subject:     acq1,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("acqRights"),
+						},
+						{
+							Subject:     acq1,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     acq1,
+							Predicate:   "acqRights.SKU",
+							ObjectValue: stringObjectValue("Acq1 SKU"),
+						},
+						{
+							Subject:     acq1,
+							Predicate:   "acqRights.metric",
+							ObjectValue: stringObjectValue("OracleMet"),
+						},
+					},
+				}
+
+				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+
+				metID1, ok := assigned.Uids["met1"]
+				if !ok {
+					return nil, errors.New("cannot find metric1 id after mutation in setup")
+				}
+
+				metID2, ok := assigned.Uids["met2"]
+				if !ok {
+					return nil, errors.New("cannot find metric2 id after mutation in setup")
+				}
+				AggID, ok := assigned.Uids["agg1"]
+				if !ok {
+					return nil, errors.New("cannot find aggregation1 id after mutation in setup")
+				}
+				AcqID, ok := assigned.Uids["acq1"]
+				if !ok {
+					return nil, errors.New("cannot find acqrights1 id after mutation in setup")
+				}
+				return func() error {
+					return deleteNodes(metID1, metID2, AggID, AcqID)
+				}, nil
+			},
+			want: &v1.MetricInfoFull{
+				Name:              "OracleMet",
+				Type:              v1.MetricOPSOracleProcessorStandard,
+				TotalAggregations: 1,
+				TotalAcqRights:    1,
+			},
+		},
+		{name: "SUCCESS - no linking present",
+			l: NewMetricRepository(dgClient),
+			args: args{
+				ctx:        context.Background(),
+				metricName: "OracleMet1",
+				scope:      "Scope1",
+			},
+			setup: func() (func() error, error) {
+				met1 := blankID("met1")
+				met2 := blankID("met2")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     met1,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("OracleMet1"),
+						},
+						{
+							Subject:     met1,
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metric"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "metric.name",
+							ObjectValue: stringObjectValue("Oracle type2"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "metric.type",
+							ObjectValue: stringObjectValue("oracle.processor.standard"),
+						},
+						{
+							Subject:     met2,
+							Predicate:   "scopes",
+							ObjectValue: stringObjectValue("Scope1"),
+						},
+					},
+				}
+
+				assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+
+				metID1, ok := assigned.Uids["met1"]
+				if !ok {
+					return nil, errors.New("cannot find metric1 id after mutation in setup")
+				}
+
+				metID2, ok := assigned.Uids["met2"]
+				if !ok {
+					return nil, errors.New("cannot find metric2 id after mutation in setup")
+				}
+				return func() error {
+					return deleteNodes(metID1, metID2)
+				}, nil
+			},
+			want: &v1.MetricInfoFull{
+				Name:              "OracleMet1",
+				Type:              v1.MetricOPSOracleProcessorStandard,
+				TotalAggregations: 0,
+				TotalAcqRights:    0,
+			},
+		},
+		{name: "SUCCESS - metric does not exist",
+			l: NewMetricRepository(dgClient),
+			args: args{
+				ctx:        context.Background(),
+				metricName: "OracleMet3",
+				scope:      "Scope1",
+			},
+			setup: func() (func() error, error) {
+				return func() error {
+					return nil
+				}, nil
+			},
+			want: &v1.MetricInfoFull{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "not expecting error from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "not expecting error in setup")
+			}()
+			got, err := tt.l.MetricInfoWithAcqAndAgg(tt.args.ctx, tt.args.metricName, tt.args.scope)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("MetricRepository.MetricInfoWithAcqAndAgg() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				compareMetricInfoFull(t, "MetricRepository.MetricInfoWithAcqAndAgg() = %v, want %v", tt.want, got)
 			}
 		})
 	}
@@ -171,6 +623,20 @@ func compareMetrics(t *testing.T, name string, exp, act *v1.MetricInfo) {
 
 	assert.Equalf(t, exp.Name, act.Name, "%s.Name should be same", name)
 	assert.Equalf(t, exp.Type, act.Type, "%s.Type should be same", name)
+}
+
+func compareMetricInfoFull(t *testing.T, name string, exp, act *v1.MetricInfoFull) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "metric is expected to be nil")
+	}
+
+	assert.Equalf(t, exp.Name, act.Name, "%s.Name should be same", name)
+	assert.Equalf(t, exp.Type, act.Type, "%s.Type should be same", name)
+	assert.Equalf(t, exp.TotalAggregations, act.TotalAggregations, "%s.TotalAggregations should be same", name)
+	assert.Equalf(t, exp.TotalAcqRights, act.TotalAcqRights, "%s.TotalAcqRights should be same", name)
 }
 
 type SchemaNode struct {

@@ -1,0 +1,6 @@
+server_cpu;server_processorsNumber;server_coresNumber;corefactor_oracle
+Intel Xeon;1;1;0.5
+Intel Pentium;1;2;1
+Intel i5;1;2;0.25
+Intel i3 4040;2;4;1
+Intel i7 8700;4;8;1

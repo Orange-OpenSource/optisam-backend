@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -42,7 +36,7 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 			want: 1,
 			setup: func() ([]*v1.Group, cleanUpFunc, error) {
 				return []*v1.Group{
-						&v1.Group{
+						{
 							ID:                 1,
 							Name:               "ROOT",
 							FullyQualifiedName: "ROOT",
@@ -144,7 +138,7 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 				// deleteGroupIDs := make([]int64, len(users))
 
 				return []*v1.Group{
-						&v1.Group{
+						{
 							ID:                 1,
 							Name:               "ROOT",
 							FullyQualifiedName: "ROOT",
@@ -242,7 +236,7 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 				}()
 
 				repo.CreateAccount(context.Background(), &v1.AccountInfo{
-					UserId:    "user7@test.com",
+					UserID:    "user7@test.com",
 					FirstName: "vishal",
 					LastName:  "mishra",
 					Locale:    "en",
@@ -308,7 +302,7 @@ func TestAccountRepository_DeleteGroup(t *testing.T) {
 
 				repo := NewAccountRepository(db)
 				acc := &v1.AccountInfo{
-					UserId:    "admintest",
+					UserID:    "admintest",
 					FirstName: "FIRST",
 					LastName:  "LAST",
 					Password:  "password",
@@ -332,7 +326,7 @@ func TestAccountRepository_DeleteGroup(t *testing.T) {
 				// 	return nil, 0, err
 				// }
 				accUser := &v1.AccountInfo{
-					UserId:    "usertest",
+					UserID:    "usertest",
 					FirstName: "FIRST",
 					LastName:  "LAST",
 					Password:  "password",
@@ -424,42 +418,42 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.Group, int64, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 						NumberOfGroups:     2,
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 						NumberOfGroups:     2,
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.C",
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
-					&v1.Group{
+					{
 						Name:               "E",
 						FullyQualifiedName: "SUPERROOT.A.B.E",
 						NumberOfGroups:     2,
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "F",
 						FullyQualifiedName: "SUPERROOT.A.B.E.F",
 					},
-					&v1.Group{
+					{
 						Name:               "G",
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
@@ -476,7 +470,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -487,7 +481,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u2",
+					UserID:   "u2",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -498,7 +492,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u3",
+					UserID:   "u3",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -509,7 +503,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u4",
+					UserID:   "u4",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -520,7 +514,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u5",
+					UserID:   "u5",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -616,42 +610,42 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.Group, int64, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 						NumberOfGroups:     2,
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 						NumberOfGroups:     2,
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.C",
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
-					&v1.Group{
+					{
 						Name:               "E",
 						FullyQualifiedName: "SUPERROOT.A.B.E",
 						NumberOfGroups:     2,
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "F",
 						FullyQualifiedName: "SUPERROOT.A.B.E.F",
 					},
-					&v1.Group{
+					{
 						Name:               "G",
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
@@ -668,7 +662,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -679,7 +673,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u2",
+					UserID:   "u2",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -690,7 +684,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u3",
+					UserID:   "u3",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -701,7 +695,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u4",
+					UserID:   "u4",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -712,7 +706,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u5",
+					UserID:   "u5",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -781,42 +775,42 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.Group, string, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 						NumberOfGroups:     2,
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 						NumberOfGroups:     2,
 						NumberOfUsers:      2,
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.C",
 						NumberOfUsers:      3,
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
-					&v1.Group{
+					{
 						Name:               "E",
 						FullyQualifiedName: "SUPERROOT.A.B.E",
 						NumberOfGroups:     2,
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "F",
 						FullyQualifiedName: "SUPERROOT.A.B.E.F",
 					},
-					&v1.Group{
+					{
 						Name:               "G",
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
@@ -833,7 +827,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -844,7 +838,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u2",
+					UserID:   "u2",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -855,7 +849,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u3",
+					UserID:   "u3",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -866,7 +860,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u4",
+					UserID:   "u4",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -877,7 +871,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u5",
+					UserID:   "u5",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -888,7 +882,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 					return nil, nil, "", err
 				}
 				acc = &v1.AccountInfo{
-					UserId:   "u6",
+					UserID:   "u6",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -1016,32 +1010,32 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 		users   []*v1.AccountInfo
 	}
 	grps := []*v1.Group{
-		&v1.Group{
+		{
 			Name:               "SUPERROOT",
 			FullyQualifiedName: "SUPERROOT",
 		},
-		&v1.Group{
+		{
 			Name:               "A",
 			FullyQualifiedName: "SUPERROOT.A",
 		},
-		&v1.Group{
+		{
 			Name:               "B",
 			FullyQualifiedName: "SUPERROOT.B",
 		},
-		&v1.Group{
+		{
 			Name:               "C",
 			FullyQualifiedName: "SUPERROOT.C",
 		},
-		&v1.Group{
+		{
 			Name:               "D",
 			FullyQualifiedName: "SUPERROOT.B.D",
 		},
-		&v1.Group{
+		{
 			Name:               "E",
 			FullyQualifiedName: "SUPERROOT.B.E",
 			NumberOfGroups:     2,
 		},
-		&v1.Group{
+		{
 			Name:               "F",
 			FullyQualifiedName: "SUPERROOT.C.F",
 		},
@@ -1075,8 +1069,8 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				accounts := []*v1.AccountInfo{
-					&v1.AccountInfo{
-						UserId:    "u1",
+					{
+						UserID:    "u1",
 						FirstName: "F1",
 						LastName:  "L1",
 						Password:  "password",
@@ -1084,8 +1078,8 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 						Role:      v1.RoleAdmin,
 						Group:     []int64{grps[1].ID, grps[4].ID, grps[6].ID},
 					},
-					&v1.AccountInfo{
-						UserId:    "u2",
+					{
+						UserID:    "u2",
 						FirstName: "F2",
 						LastName:  "L2",
 						Password:  "password",
@@ -1093,8 +1087,8 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 						Role:      v1.RoleAdmin,
 						Group:     []int64{grps[4].ID, grps[6].ID},
 					},
-					&v1.AccountInfo{
-						UserId:    "u3",
+					{
+						UserID:    "u3",
 						FirstName: "F3",
 						LastName:  "L3",
 						Password:  "password",
@@ -1109,20 +1103,20 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 					}
 				}
 				gwu := []*groupWithUsers{
-					&groupWithUsers{
+					{
 						groupID: grps[0].ID,
 						users: []*v1.AccountInfo{
 							accounts[1],
 							accounts[2],
 						},
 					},
-					&groupWithUsers{
+					{
 						groupID: grps[4].ID,
 						users: []*v1.AccountInfo{
 							accounts[0],
 						},
 					},
-					&groupWithUsers{
+					{
 						groupID: grps[6].ID,
 						users: []*v1.AccountInfo{
 							accounts[0],
@@ -1183,24 +1177,24 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 		userIDs []string
 	}
 	accounts := []*v1.AccountInfo{
-		&v1.AccountInfo{
-			UserId:    "u1",
+		{
+			UserID:    "u1",
 			FirstName: "F1",
 			LastName:  "L1",
 			Password:  "password",
 			Locale:    "en",
 			Role:      v1.RoleAdmin,
 		},
-		&v1.AccountInfo{
-			UserId:    "u2",
+		{
+			UserID:    "u2",
 			FirstName: "F2",
 			LastName:  "L2",
 			Password:  "password",
 			Locale:    "en",
 			Role:      v1.RoleAdmin,
 		},
-		&v1.AccountInfo{
-			UserId:    "u3",
+		{
+			UserID:    "u3",
 			FirstName: "F3",
 			LastName:  "L3",
 			Password:  "password",
@@ -1469,11 +1463,11 @@ func TestAccountRepository_GetRootGroup(t *testing.T) {
 		ctx context.Context
 	}
 	grps := []*v1.Group{
-		&v1.Group{
+		{
 			Name:               "A",
 			FullyQualifiedName: "ROOT.A",
 		},
-		&v1.Group{
+		{
 			Name:               "B",
 			FullyQualifiedName: "ROOT.B",
 		},

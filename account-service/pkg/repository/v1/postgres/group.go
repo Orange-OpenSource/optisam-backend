@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -83,13 +77,6 @@ const (
 	WHERE fully_qualified_name=$1
 	`
 
-	existsGroupbyID = `
-	SELECT
-	count(*) AS total_records
-	FROM groups
-	WHERE id=$1
-	`
-
 	parentIDOfGroup = `
 	SELECT
 	parent_id
@@ -114,9 +101,9 @@ func (r *AccountRepository) UserOwnedGroups(ctx context.Context, userID string, 
 	for rows.Next() {
 		group := &v1.Group{}
 		parentID := sql.NullInt64{}
-		if err := rows.Scan(&group.ID, &group.Name, &group.FullyQualifiedName, &parentID,
-			pq.Array(&group.Scopes), &totalRecords, &group.NumberOfUsers, &group.NumberOfGroups); err != nil {
-			return 0, nil, err
+		if error := rows.Scan(&group.ID, &group.Name, &group.FullyQualifiedName, &parentID,
+			pq.Array(&group.Scopes), &totalRecords, &group.NumberOfUsers, &group.NumberOfGroups); error != nil {
+			return 0, nil, error
 		}
 		group.ParentID = parentID.Int64
 		groups = append(groups, group)
@@ -218,14 +205,14 @@ func (r *AccountRepository) UpdateGroup(ctx context.Context, groupID int64, upda
 	}
 	defer func() {
 		if retErr != nil {
-			if err := txn.Rollback(); err != nil {
-				logger.Log.Error(" UpdateGroup - failed to discard txn", zap.String("reason", err.Error()))
+			if error := txn.Rollback(); error != nil {
+				logger.Log.Error(" UpdateGroup - failed to discard txn", zap.String("reason", error.Error()))
 				retErr = fmt.Errorf(" UpdateGroup - cannot discard txn")
 			}
 			return
 		}
-		if err := txn.Commit(); err != nil {
-			logger.Log.Error(" UpdateGroup - failed to commit txn", zap.String("reason", err.Error()))
+		if error := txn.Commit(); error != nil {
+			logger.Log.Error(" UpdateGroup - failed to commit txn", zap.String("reason", error.Error()))
 			retErr = fmt.Errorf(" UpdateGroup - cannot commit txn")
 		}
 	}()
@@ -256,7 +243,7 @@ func (r *AccountRepository) UpdateGroup(ctx context.Context, groupID int64, upda
 
 }
 
-//GroupExistsByFQN implements Account GroupExistsByFQN function
+// GroupExistsByFQN implements Account GroupExistsByFQN function
 func (r *AccountRepository) GroupExistsByFQN(ctx context.Context, fullyQN string) (bool, error) {
 	id := int64(0)
 	err := r.db.QueryRowContext(ctx, selectGroupByFQN, fullyQN).Scan(&id)
@@ -268,16 +255,6 @@ func (r *AccountRepository) GroupExistsByFQN(ctx context.Context, fullyQN string
 	}
 	return true, nil
 }
-
-//GroupExistsByID implements Account GroupExistsByID function
-// func (r *AccountRepository) GroupExistsByID(ctx context.Context, groupID int64) (bool, error) {
-// 	totalRecords := 0
-// 	err := r.db.QueryRowContext(ctx, existsGroupbyID, groupID).Scan(&totalRecords)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	return totalRecords != 0, nil
-// }
 
 // AddGroupUsers implements Account AddGroupUsers function
 func (r *AccountRepository) AddGroupUsers(ctx context.Context, groupID int64, userIDs []string) error {

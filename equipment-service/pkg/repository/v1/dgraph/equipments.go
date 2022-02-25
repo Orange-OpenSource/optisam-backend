@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -91,15 +85,18 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 }
 
 // CreateEquipmentType implements Licence CreateEquipmentType function
-func (lr *EquipmentRepository) CreateEquipmentType(ctx context.Context, eqType *v1.EquipmentType, scopes []string) (retType *v1.EquipmentType, retErr error) {
+func (r *EquipmentRepository) CreateEquipmentType(ctx context.Context, eqType *v1.EquipmentType, scopes []string) (retType *v1.EquipmentType, retErr error) {
 	nquads := nquadsForEquipment(eqType)
 	mu := &api.Mutation{
 		Set: nquads,
 		//	CommitNow: true,
 	}
-	fmt.Printf("eqtype: %+v", eqType)
-	txn := lr.dg.NewTxn()
 
+	logger.Log.Debug("eqTypes to be created ", zap.Any("EqType", eqType))
+
+	txn := r.dg.NewTxn()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	defer func() {
 		if retErr != nil {
 			if err := txn.Discard(ctx); err != nil {
@@ -131,8 +128,8 @@ func (lr *EquipmentRepository) CreateEquipmentType(ctx context.Context, eqType *
 	if schema == "" {
 		return eqType, nil
 	}
-	fmt.Printf("eqtype1: %+v", eqType)
-	if err := lr.dg.Alter(context.Background(), &api.Operation{
+	logger.Log.Debug("eqTypes created ", zap.Any("EqType", eqType))
+	if err := r.dg.Alter(context.Background(), &api.Operation{
 		Schema: schema,
 	}); err != nil {
 		fields := []zap.Field{
@@ -144,12 +141,11 @@ func (lr *EquipmentRepository) CreateEquipmentType(ctx context.Context, eqType *
 		return nil, fmt.Errorf("dgraph/CreateEquipmentType - cannot create schema for equipment type type :%s", eqType.Type)
 	}
 
-	fmt.Printf("eqtype: %+v", eqType)
 	return eqType, nil
 }
 
 // EquipmentTypes implements Licence EquipmentTypes function
-func (lr *EquipmentRepository) EquipmentTypes(ctx context.Context, scopes []string) ([]*v1.EquipmentType, error) {
+func (r *EquipmentRepository) EquipmentTypes(ctx context.Context, scopes []string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
 		EqTypes(func:has(metadata.equipment.type)) ` + agregateFilters(scopeFilters(scopes)) + `{
@@ -157,7 +153,7 @@ func (lr *EquipmentRepository) EquipmentTypes(ctx context.Context, scopes []stri
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
@@ -176,8 +172,8 @@ func (lr *EquipmentRepository) EquipmentTypes(ctx context.Context, scopes []stri
 	return convertEquipTypeAll(data.EqTypes), nil
 }
 
-//EquipmentTypeByType ...
-func (lr *EquipmentRepository) EquipmentTypeByType(ctx context.Context, typ string, scopes []string) (*v1.EquipmentType, error) {
+// EquipmentTypeByType ...
+func (r *EquipmentRepository) EquipmentTypeByType(ctx context.Context, typ string, scopes []string) (*v1.EquipmentType, error) {
 	q := `
 	{
 		EqTypes(func:eq(metadata.equipment.type,` + typ + `))` + agregateFilters(scopeFilters(scopes)) + `{
@@ -185,7 +181,7 @@ func (lr *EquipmentRepository) EquipmentTypeByType(ctx context.Context, typ stri
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
@@ -207,7 +203,8 @@ func (lr *EquipmentRepository) EquipmentTypeByType(ctx context.Context, typ stri
 	return convertEquipType(data.EqTypes[0]), nil
 }
 
-func (lr *EquipmentRepository) equipmentTypeByType(ctx context.Context, typ string, scopes []string) (*v1.EquipmentType, error) {
+// nolint: unused
+func (r *EquipmentRepository) equipmentTypeByType(ctx context.Context, typ string, scopes []string) (*v1.EquipmentType, error) {
 	q := `
 	{
 		EqTypes(func:eq(metadata.equipment.type,` + typ + `))` + agregateFilters(scopeFilters(scopes)) + `{
@@ -215,7 +212,7 @@ func (lr *EquipmentRepository) equipmentTypeByType(ctx context.Context, typ stri
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
@@ -276,14 +273,14 @@ func assignIDsEquipmentAttributes(ids map[string]string, typ string, attrb []*v1
 // metadata.equipment.attribute uid .
 
 // EquipmentWithID implements Licence EquipmentWithID function  TODO :EquipmentTypeByID
-func (lr *EquipmentRepository) EquipmentWithID(ctx context.Context, id string, scopes []string) (*v1.EquipmentType, error) {
+func (r *EquipmentRepository) EquipmentWithID(ctx context.Context, id string, scopes []string) (*v1.EquipmentType, error) {
 	q := `{
 		Equipment(func: uid(` + id + `)) ` + agregateFilters(scopeFilters(scopes)) + `{
 			` + eqTypeFields + `
 		}
 	  }`
 
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentWitID - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentWithID - cannot complete query")
@@ -306,7 +303,7 @@ func (lr *EquipmentRepository) EquipmentWithID(ctx context.Context, id string, s
 }
 
 // DeleteEquipmentType implements Equipment DeleteEquipmentType function
-func (lr *EquipmentRepository) DeleteEquipmentType(ctx context.Context, eqType, scope string) error {
+func (r *EquipmentRepository) DeleteEquipmentType(ctx context.Context, eqType, scope string) error {
 	query := `query {
 		var(func: eq(metadata.equipment.type,` + eqType + `)) @filter(eq(scopes,` + scope + `)){
 			equipType as uid
@@ -327,29 +324,49 @@ func (lr *EquipmentRepository) DeleteEquipmentType(ctx context.Context, eqType, 
 		Mutations: []*api.Mutation{muDelete},
 		CommitNow: true,
 	}
-	if _, err := lr.dg.NewTxn().Do(ctx, req); err != nil {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, err := r.dg.NewTxn().Do(ctx, req); err != nil {
 		logger.Log.Error("DeleteEquipmentType - ", zap.String("reason", err.Error()), zap.String("query", query))
-		return fmt.Errorf("DeleteEquipmentType - cannot complete query transaction")
+		return fmt.Errorf("deleteEquipmentType - cannot complete query transaction")
 	}
 	return nil
 }
 
 // UpdateEquipmentType implements Licence UpdateEquipmentType function
-func (lr *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string, typ string, req *v1.UpdateEquipmentRequest, scopes []string) (retType []*v1.Attribute, retErr error) {
+func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string, typ string, parentID string, req *v1.UpdateEquipmentRequest, scopes []string) (retType []*v1.Attribute, retErr error) {
 	nquads := nquadsForAllAttributes(id, req.Attr)
 	nquads = append(nquads, scopesNquad(scopes, id)...)
-	if req.ParentID != "" {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if req.ParentID != "" && req.ParentID != parentID {
 		nquads = append(nquads, &api.NQuad{
 			Subject:   id,
 			Predicate: "metadata.equipment.parent",
 			ObjectId:  req.ParentID,
 		})
+		delQuery := `query{
+			  v as q(func: eq(metadata.equipment.type, "` + typ + `"))  ` + agregateFilters(scopeFilters(scopes)) + `
+			}
+		`
+		delete := `
+			uid(v) <metadata.equipment.parent> * .
+		`
+		muDelete := &api.Mutation{DelNquads: []byte(delete)}
+		delreq := &api.Request{
+			Query:     delQuery,
+			Mutations: []*api.Mutation{muDelete},
+			CommitNow: true,
+		}
+		if _, err := r.dg.NewTxn().Do(ctx, delreq); err != nil {
+			logger.Log.Error("dgraph/UpdateEquipmentType - unable to delete child node for parent update - ", zap.String("reason", err.Error()), zap.String("query", delQuery))
+			return nil, fmt.Errorf("dgraph/UpdateEquipmentType - cannot complete query transaction")
+		}
 	}
 	mu := &api.Mutation{
 		Set: nquads,
 	}
-	txn := lr.dg.NewTxn()
-
+	txn := r.dg.NewTxn()
 	defer func() {
 		if retErr != nil {
 			if err := txn.Discard(ctx); err != nil {
@@ -363,7 +380,6 @@ func (lr *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id strin
 			retErr = fmt.Errorf("dgraph/UpdateEquipmentType - cannot commit txn")
 		}
 	}()
-
 	assigned, err := txn.Mutate(ctx, mu)
 	if err != nil {
 		fields := []zap.Field{
@@ -382,7 +398,7 @@ func (lr *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id strin
 	if schema == "" {
 		return req.Attr, nil
 	}
-	if err := lr.dg.Alter(context.Background(), &api.Operation{
+	if err := r.dg.Alter(context.Background(), &api.Operation{
 		Schema: schema,
 	}); err != nil {
 		fields := []zap.Field{
@@ -401,7 +417,7 @@ func (lr *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id strin
 }
 
 // EquipmentTypeChildren  implements Equipment EquipmentTypeChildren function
-func (lr *EquipmentRepository) EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*v1.EquipmentType, error) {
+func (r *EquipmentRepository) EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
 		var (func: uid(` + eqTypeID + `))` + agregateFilters(scopeFilters(scopes)) + ` @recurse(depth: ` + strconv.Itoa(depth) + `, loop: false){
@@ -412,7 +428,7 @@ func (lr *EquipmentRepository) EquipmentTypeChildren(ctx context.Context, eqType
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypeChildren - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypeChildren - cannot complete query")
@@ -479,8 +495,7 @@ func nquadsForEquipment(eqType *v1.EquipmentType) []*api.NQuad {
 // attibute.mapped_to string .
 
 func nquadsForAllAttributes(equipID string, attributes []*v1.Attribute) []*api.NQuad {
-
-	var nquads []*api.NQuad
+	var nquads []*api.NQuad // nolint: prealloc
 	for _, attr := range attributes {
 		attrBlankID, nqs := nquadsForAttributes(attr)
 		nquads = append(nquads, &api.NQuad{
@@ -498,42 +513,42 @@ func nquadsForAttributes(attr *v1.Attribute) (string, []*api.NQuad) {
 	blankID := blankID(attr.Name)
 	fmt.Println(blankID)
 	return blankID, []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.name",
 			ObjectValue: stringObjectValue(attr.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.type",
 			ObjectValue: intObjectValue(int64(attr.Type)),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.schema_name",
 			ObjectValue: stringObjectValue(attr.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.searchable",
 			ObjectValue: boolObjectValue(attr.IsSearchable),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.displayed",
 			ObjectValue: boolObjectValue(attr.IsDisplayed),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.identifier",
 			ObjectValue: boolObjectValue(attr.IsIdentifier),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.parentIdentifier",
 			ObjectValue: boolObjectValue(attr.IsParentIdentifier),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.mapped_to",
 			ObjectValue: stringObjectValue(attr.MappedTo),
@@ -580,7 +595,7 @@ func attributeZapFields(name string, attr *v1.Attribute) []zap.Field {
 	}
 }
 
-func attributesZapFields(name string, attrs []*v1.Attribute) []zap.Field {
+func attributesZapFields(name string, attrs []*v1.Attribute) []zap.Field { //nolint:unparam
 	var fields []zap.Field
 	for idx, attr := range attrs {
 		fields = append(fields, attributeZapFields(fmt.Sprintf("%v[%d]", name, idx), attr)...)
@@ -589,7 +604,7 @@ func attributesZapFields(name string, attrs []*v1.Attribute) []zap.Field {
 }
 
 func schemaForEquipmentType(typ string, attrb []*v1.Attribute) string {
-	//typ := eqType.Type
+	// typ := eqType.Type
 	equipType := "type Equipment" + typ + " { \n"
 	equipTypeFields := []string{
 		"type_name",
@@ -623,7 +638,7 @@ func schemaForEquipmentType(typ string, attrb []*v1.Attribute) string {
 
 // some of the special characters are not allowed in
 func replaceSpaces(mappedTo string) string {
-	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1)
+	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1) // nolint: gocritic
 }
 
 func schemaForAttribute(name string, attr *v1.Attribute) string {
@@ -657,8 +672,8 @@ func schemaForAttribute(name string, attr *v1.Attribute) string {
 	return name
 }
 
-//ListEquipmentsForProductAggregation ...
-func (lr *EquipmentRepository) ListEquipmentsForProductAggregation(ctx context.Context, proAggName string, eqType *v1.EquipmentType, params *v1.QueryEquipments, scopes []string) (int32, json.RawMessage, error) {
+// ListEquipmentsForProductAggregation ...
+func (r *EquipmentRepository) ListEquipmentsForProductAggregation(ctx context.Context, proAggName string, eqType *v1.EquipmentType, params *v1.QueryEquipments, scopes []string) (int32, json.RawMessage, error) {
 	sortOrder, err := sortOrderForDgraph(params.SortOrder)
 	if err != nil {
 		// TODO: log error
@@ -686,10 +701,10 @@ func (lr *EquipmentRepository) ListEquipmentsForProductAggregation(ctx context.C
 		}
 	} `
 
-	resp, err := lr.dg.NewTxn().QueryWithVars(ctx, q, variables)
+	resp, err := r.dg.NewTxn().QueryWithVars(ctx, q, variables)
 	if err != nil {
 		logger.Log.Error("ListEquipmentsForProductAggregation - ", zap.String("reason", err.Error()), zap.String("query", q), zap.Any("query params", variables))
-		return 0, nil, fmt.Errorf("ListEquipmentsForProductAggregation - cannot complete query transaction")
+		return 0, nil, fmt.Errorf("listEquipmentsForProductAggregation - cannot complete query transaction")
 	}
 
 	type Data struct {
@@ -701,7 +716,7 @@ func (lr *EquipmentRepository) ListEquipmentsForProductAggregation(ctx context.C
 
 	if err := json.Unmarshal(resp.GetJson(), &equipList); err != nil {
 		logger.Log.Error("Equipments - ", zap.String("reason", err.Error()), zap.String("query", q), zap.Any("query params", variables))
-		return 0, nil, fmt.Errorf("Equipments - cannot unmarshal Json object")
+		return 0, nil, fmt.Errorf("equipments - cannot unmarshal Json object")
 	}
 
 	if len(equipList.NumOfRecords) == 0 {
@@ -721,7 +736,7 @@ func scopesNquad(scp []string, blankID string) []*api.NQuad {
 
 func scopeNquad(scope, uid string) []*api.NQuad {
 	return []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     uid,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),

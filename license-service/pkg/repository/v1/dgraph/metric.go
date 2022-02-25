@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -18,22 +12,11 @@ import (
 	"go.uber.org/zap"
 )
 
-type predMetric string
-
-// String implements string.Stringer
-func (p predMetric) String() string {
-	return string(p)
-}
-
-const (
-	predMetricName predMetric = "metric.name"
-)
-
 // ListMetrices implements Licence ListMetrices function
 func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes ...string) ([]*v1.Metric, error) {
 
 	q := `   {
-             Metrics(func:eq(type_name,"metric")){
+             Metrics(func:eq(type_name,"metric")) ` + agregateFilters(scopeFilters(scopes)) + `{
 			   ID  : uid
 			   Name: metric.name
 			   Type: metric.type
@@ -44,7 +27,7 @@ func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes ...string) 
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ListMetrices - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListMetrices - cannot complete query transaction")
+		return nil, errors.New("listMetrices - cannot complete query transaction")
 	}
 
 	type Data struct {
@@ -53,7 +36,7 @@ func (l *LicenseRepository) ListMetrices(ctx context.Context, scopes ...string) 
 	var metricList Data
 	if err := json.Unmarshal(resp.GetJson(), &metricList); err != nil {
 		logger.Log.Error("ListMetrices - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("ListMetrices - cannot unmarshal Json object")
+		return nil, errors.New("listMetrices - cannot unmarshal Json object")
 	}
 
 	return metricList.Metrics, nil
@@ -71,7 +54,7 @@ func (l *LicenseRepository) listMetricWithMetricType(ctx context.Context, metTyp
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/listMetricWithMetricType - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New(fmt.Sprintf("cannot get metrices of %s", metType.String()))
+		return nil, fmt.Errorf("cannot get metrics of %s", metType.String())
 	}
 	return resp.Json, nil
 }

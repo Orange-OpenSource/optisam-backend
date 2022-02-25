@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -126,21 +120,21 @@ func TestLicenseRepository_ProductsForEquipmentForMetricOracleProcessorStandard(
 				scopes: "scope1",
 			},
 			want: []*v1.ProductData{
-				&v1.ProductData{
+				{
 					Name:     "Oracle Instant Client",
 					Version:  "9.2.0.8.0",
 					Category: "Other",
 					Editor:   "oracle",
 					Swidtag:  "ORAC001",
 				},
-				&v1.ProductData{
+				{
 					Name:     "ORACLE SGBD Enterprise",
 					Version:  "9.2.0.8.0",
 					Category: "Database",
 					Editor:   "oracle",
 					Swidtag:  "ORAC003",
 				},
-				&v1.ProductData{
+				{
 					Name:     "Oracle SGBD Noyau",
 					Version:  "9.2.0.8.0",
 					Category: "Database",
@@ -202,19 +196,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Server",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -247,19 +241,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Cluster",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -292,19 +286,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Vcenter",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -336,19 +330,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Datacenter",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -380,19 +374,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Server",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -434,19 +428,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Cluster",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -488,19 +482,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Vcenter",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -541,19 +535,19 @@ func TestLicenseRepository_ComputedLicensesForEquipmentForMetricOracleProcessorS
 				equipType: "Datacenter",
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
-						&v1.EquipmentType{
+						{
 							Type: "Partition",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Server",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Cluster",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Vcenter",
 						},
-						&v1.EquipmentType{
+						{
 							Type: "Datacenter",
 						},
 					},
@@ -641,7 +635,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				scopes:         "scope1",
 			},
 			want: []*v1.User{
-				&v1.User{
+				{
 					UserID:    "user_ORAC099PA_001",
 					UserCount: 1,
 				},
@@ -658,7 +652,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				scopes:         "scope1",
 			},
 			want: []*v1.User{
-				&v1.User{
+				{
 					UserID:    "user_ORAC099PA_001",
 					UserCount: 1,
 				},
@@ -675,7 +669,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				scopes:         "scope1",
 			},
 			want: []*v1.User{
-				&v1.User{
+				{
 					UserID:    "user_ORAC099PA_001",
 					UserCount: 1,
 				},
@@ -692,7 +686,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				scopes:         "scope1",
 			},
 			want: []*v1.User{
-				&v1.User{
+				{
 					UserID:    "user_ORAC099PA_001",
 					UserCount: 1,
 				},
@@ -709,7 +703,7 @@ func TestLicenseRepository_UsersForEquipmentForMetricOracleNUP(t *testing.T) {
 				scopes:         "scope1",
 			},
 			want: []*v1.User{
-				&v1.User{
+				{
 					UserID:    "user_ORAC099PA_001",
 					UserCount: 1,
 				},

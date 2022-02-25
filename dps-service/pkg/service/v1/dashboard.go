@@ -1,14 +1,7 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
 	"optisam-backend/common/optisam/helper"
@@ -24,12 +17,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type developmentRate struct {
-	Entity string
-	Points []float32
-	Err    error
-}
-
 func (d *dpsServiceServer) DashboardQualityOverview(ctx context.Context, req *v1.DashboardQualityOverviewRequest) (*v1.DashboardQualityOverviewResponse, error) {
 	var resp v1.DashboardQualityOverviewResponse
 
@@ -44,6 +31,9 @@ func (d *dpsServiceServer) DashboardQualityOverview(ctx context.Context, req *v1
 
 	currYear, currMonth, _ := time.Now().Date()
 	endMonth := (((int(currMonth) - int(req.NoOfDataPoints)) % 12) + 12) % 12
+	if endMonth == 0 {
+		endMonth = 12
+	}
 	endYear := currYear
 	if int(currMonth)-int(req.NoOfDataPoints) <= 0 {
 		endYear--
@@ -61,14 +51,14 @@ func (d *dpsServiceServer) DashboardQualityOverview(ctx context.Context, req *v1
 		logger.Log.Error("Failed to fetch failed record from DB ", zap.Error(err))
 		return &v1.DashboardQualityOverviewResponse{}, status.Error(codes.Internal, "DBError")
 	}
-	temp := make(map[string]map[int]int) //map[filename]map[month]count
+	temp := make(map[string]map[int]int)
 	temp["applications"] = make(map[int]int)
 	temp["products"] = make(map[int]int)
 	temp["acqRights"] = make(map[int]int)
 	temp["equipments"] = make(map[int]int)
 	totalApp, totalProd, totalAcq, totalEquip := 0, 0, 0, 0
 	for _, val := range res {
-		if val.Filename == strings.ToLower(fmt.Sprintf("%s_applications.csv", req.Scope)) {
+		if val.Filename == strings.ToLower(fmt.Sprintf("%s_applications.csv", req.Scope)) { // nolint: gocritic
 			temp["applications"][int(val.Month)] = int(val.Sum)
 			totalApp += int(val.Sum)
 			continue
@@ -113,83 +103,83 @@ func (d *dpsServiceServer) DashboardQualityOverview(ctx context.Context, req *v1
 	return &resp, nil
 }
 
-func (d *dpsServiceServer) DashboardDataFailureRate(ctx context.Context, req *v1.DataFailureRateRequest) (*v1.DataFailureRateResponse, error) {
-	resp := &v1.DataFailureRateResponse{}
-	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.PermissionDenied, "ClaimsNotFoundError")
-	}
+// func (d *dpsServiceServer) DashboardDataFailureRate(ctx context.Context, req *v1.DataFailureRateRequest) (*v1.DataFailureRateResponse, error) {
+// 	resp := &v1.DataFailureRateResponse{}
+// 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+// 	if !ok {
+// 		return nil, status.Error(codes.PermissionDenied, "ClaimsNotFoundError")
+// 	}
 
-	if !helper.Contains(userClaims.Socpes, req.Scope) {
-		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
-	}
-	prevYear, PrevMon, prevDay := time.Now().Add(time.Hour * 24 * -(30)).Date()
-	dbresp, err := d.dpsRepo.GetDataFileRecords(ctx, db.GetDataFileRecordsParams{
-		Year:          int32(prevYear),
-		Month:         int32(PrevMon),
-		Day:           int32(prevDay),
-		Scope:         req.Scope,
-		SimilarEscape: fmt.Sprintf("%s_(applications|products|instance|products_acquiredRights|equipment%%)%%.csv", req.Scope),
-	})
-	if err != nil {
-		logger.Log.Error("Failed to fetch data file records from DB ", zap.Error(err))
-		return resp, status.Error(codes.Internal, "DBError")
-	}
+// 	if !helper.Contains(userClaims.Socpes, req.Scope) {
+// 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+// 	}
+// 	prevYear, PrevMon, prevDay := time.Now().Add(time.Hour * 24 * -(30)).Date()
+// 	dbresp, err := d.dpsRepo.GetDataFileRecords(ctx, db.GetDataFileRecordsParams{
+// 		Year:          int32(prevYear),
+// 		Month:         int32(PrevMon),
+// 		Day:           int32(prevDay),
+// 		Scope:         req.Scope,
+// 		SimilarEscape: fmt.Sprintf("%s_(applications|products|instance|products_acquiredRights|equipment%%)%%.csv", req.Scope),
+// 	})
+// 	if err != nil {
+// 		logger.Log.Error("Failed to fetch data file records from DB ", zap.Error(err))
+// 		return resp, status.Error(codes.Internal, "DBError")
+// 	}
 
-	if dbresp.TotalRecords > 0 && dbresp.FailedRecords > 0 {
-		resp.FailureRate = (float32(dbresp.FailedRecords) * float32(100)) / float32(dbresp.TotalRecords)
-		resp.FailureRate = float32(math.Round(float64(resp.FailureRate*100)) / 100)
-	} else {
-		return resp, status.Error(codes.Internal, "NoContent")
-	}
+// 	if dbresp.TotalRecords > 0 && dbresp.FailedRecords > 0 {
+// 		resp.FailureRate = (float32(dbresp.FailedRecords) * float32(100)) / float32(dbresp.TotalRecords)
+// 		resp.FailureRate = float32(math.Round(float64(resp.FailureRate*100)) / 100)
+// 	} else {
+// 		return resp, status.Error(codes.NotFound, "NoContent")
+// 	}
 
-	return resp, nil
-}
+// 	return resp, nil
+// }
 
-func (d *dpsServiceServer) ListFailureReasonsRatio(ctx context.Context, req *v1.ListFailureReasonRequest) (*v1.ListFailureReasonResponse, error) {
-	var resp v1.ListFailureReasonResponse
-	userErrors := map[string]bool{"InvalidFileName": true,
-		"FileNotSupported": true,
-		"BadFile":          true,
-		"NoDataInFile":     true,
-		"HeadersMissing":   true,
-		"InsufficentData":  true,
-	}
-	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.PermissionDenied, "ClaimsNotFoundError")
-	}
+// func (d *dpsServiceServer) ListFailureReasonsRatio(ctx context.Context, req *v1.ListFailureReasonRequest) (*v1.ListFailureReasonResponse, error) {
+// 	var resp v1.ListFailureReasonResponse
+// 	userErrors := map[string]bool{"InvalidFileName": true,
+// 		"FileNotSupported": true,
+// 		"BadFile":          true,
+// 		"NoDataInFile":     true,
+// 		"HeadersMissing":   true,
+// 		"InsufficentData":  true,
+// 	}
+// 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+// 	if !ok {
+// 		return nil, status.Error(codes.PermissionDenied, "ClaimsNotFoundError")
+// 	}
 
-	if !helper.Contains(userClaims.Socpes, req.Scope) {
-		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
-	}
-	qYear, qMon, qDay := time.Now().Add(time.Hour * 24 * (-30)).Date()
-	dbresp, err := d.dpsRepo.GetFailureReasons(ctx, db.GetFailureReasonsParams{
-		Year:  int32(qYear),
-		Month: int32(qMon),
-		Day:   int32(qDay),
-		Data:  json.RawMessage(fmt.Sprintf("%s", req.GetScope()))})
-	if err != nil {
-		logger.Log.Error("Failed to fetch failed reaons from DB ", zap.Error(err))
-		return &resp, status.Error(codes.Internal, "DBError")
-	}
-	var totalFailure int64
-	resp.FailureReasons = make(map[string]float32)
-	if len(dbresp) > 0 {
-		for _, val := range dbresp {
-			totalFailure += val.FailedRecords
-			if userErrors[val.Comments.String] {
-				resp.FailureReasons[val.Comments.String] = float32(val.FailedRecords)
-			} else {
-				resp.FailureReasons["InternalError"] += float32(val.FailedRecords)
-			}
-		}
+// 	if !helper.Contains(userClaims.Socpes, req.Scope) {
+// 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+// 	}
+// 	qYear, qMon, qDay := time.Now().Add(time.Hour * 24 * (-30)).Date()
+// 	dbresp, err := d.dpsRepo.GetFailureReasons(ctx, db.GetFailureReasonsParams{
+// 		Year:  int32(qYear),
+// 		Month: int32(qMon),
+// 		Day:   int32(qDay),
+// 		Data:  json.RawMessage(fmt.Sprintf("%s", req.GetScope()))})
+// 	if err != nil {
+// 		logger.Log.Error("Failed to fetch failed reaons from DB ", zap.Error(err))
+// 		return &resp, status.Error(codes.Internal, "DBError")
+// 	}
+// 	var totalFailure int64
+// 	resp.FailureReasons = make(map[string]float32)
+// 	if len(dbresp) > 0 {
+// 		for _, val := range dbresp {
+// 			totalFailure += val.FailedRecords
+// 			if userErrors[val.Comments.String] {
+// 				resp.FailureReasons[val.Comments.String] = float32(val.FailedRecords)
+// 			} else {
+// 				resp.FailureReasons["InternalError"] += float32(val.FailedRecords)
+// 			}
+// 		}
 
-		for key, val := range resp.FailureReasons {
-			resp.FailureReasons[key] = float32(math.Round(float64((val*float32(100))/float32(totalFailure))*float64(100))) / float32(100)
-		}
-	} else {
-		return &resp, status.Error(codes.Internal, "NoContent")
-	}
-	return &resp, nil
-}
+// 		for key, val := range resp.FailureReasons {
+// 			resp.FailureReasons[key] = float32(math.Round(float64((val*float32(100))/float32(totalFailure))*float64(100))) / float32(100)
+// 		}
+// 	} else {
+// 		return &resp, status.Error(codes.NotFound, "NoContent")
+// 	}
+// 	return &resp, nil
+// }

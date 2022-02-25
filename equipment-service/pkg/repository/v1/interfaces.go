@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -13,7 +7,7 @@ import (
 
 //go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/equipment-service/pkg/repository/v1 Equipment
 
-//Equipment interface
+// Equipment interface
 type Equipment interface {
 	ListEquipmentsForProductAggregation(ctx context.Context, name string, eqType *EquipmentType, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
 
@@ -38,14 +32,17 @@ type Equipment interface {
 	// EquipmentTypeChildren fetches all equipment type children from database
 	EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*EquipmentType, error)
 
-	//UpsertMetaData stores metadata in dgrpah
-	UpsertMetadata(ctx context.Context, metadata *Metadata) error
+	// UpsertMetaData stores metadata in dgrpah
+	UpsertMetadata(ctx context.Context, metadata *Metadata) (string, error)
 
 	EquipmentWithID(ctx context.Context, id string, scopes []string) (*EquipmentType, error)
 
-	UpdateEquipmentType(ctx context.Context, id string, typ string, req *UpdateEquipmentRequest, scopes []string) (retType []*Attribute, retErr error)
+	UpdateEquipmentType(ctx context.Context, id string, typ string, parentID string, req *UpdateEquipmentRequest, scopes []string) (retType []*Attribute, retErr error)
 	Equipments(ctx context.Context, eqType *EquipmentType, params *QueryEquipments, scopes []string) (int32, json.RawMessage, error)
 	DeleteEquipments(ctx context.Context, scope string) error
+
+	// DropMetaData deletes metadata
+	DropMetaData(ctx context.Context, scope string) error
 
 	// Equipment gets equipmet for given type and id if exists,if not exist then ErrNotFound
 	Equipment(ctx context.Context, eqType *EquipmentType, id string, scopes []string) (json.RawMessage, error)

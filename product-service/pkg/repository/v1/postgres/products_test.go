@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -72,11 +66,11 @@ func Test_UpsertProductTx(t *testing.T) {
 					Equipments: &v1.UpsertProductRequestEquipment{
 						Operation: "add",
 						Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
-							&v1.UpsertProductRequestEquipmentEquipmentuser{
+							{
 								EquipmentId: "e1",
 								NumUser:     int32(1),
 							},
-							&v1.UpsertProductRequestEquipmentEquipmentuser{
+							{
 								EquipmentId: "e2",
 								NumUser:     int32(2),
 							},
@@ -127,11 +121,11 @@ func Test_UpsertProductTx(t *testing.T) {
 					Equipments: &v1.UpsertProductRequestEquipment{
 						Operation: "add",
 						Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
-							&v1.UpsertProductRequestEquipmentEquipmentuser{
+							{
 								EquipmentId: "e6",
 								NumUser:     int32(1),
 							},
-							&v1.UpsertProductRequestEquipmentEquipmentuser{
+							{
 								EquipmentId: "e7",
 								NumUser:     int32(2),
 							},

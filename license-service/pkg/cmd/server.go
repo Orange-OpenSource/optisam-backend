@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package cmd
 
 import (
@@ -31,7 +25,6 @@ import (
 	"github.com/InVisionApp/go-health/checkers"
 	"go.uber.org/zap"
 
-	//postgres library
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
@@ -53,11 +46,12 @@ func init() {
 }
 
 // RunServer runs gRPC server and HTTP gateway
+// nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
-	if os.Getenv("ENV") == "prod" {
+	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
 	} else if os.Getenv("ENV") == "pprod" {
 		viper.SetConfigName("config-pprod")
@@ -91,8 +85,8 @@ func RunServer() error {
 	instrumentationRouter.Handle("/healthz", healthcheck.Handler(healthChecker))
 
 	// initialize logger
-	if err := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); err != nil {
-		return fmt.Errorf("failed to initialize logger: %v", err)
+	if error := logger.Init(cfg.Log.LogLevel, cfg.Log.LogTimeFormat); error != nil {
+		return fmt.Errorf("failed to initialize logger: %v", error)
 	}
 
 	err = cfg.Validate()
@@ -113,18 +107,18 @@ func RunServer() error {
 
 	// Register http health check
 	{
-		check, err := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
-		if err != nil {
-			return fmt.Errorf("failed to create health checker: %v", err.Error())
+		check, error := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
+		if error != nil {
+			return fmt.Errorf("failed to create health checker: %v", error.Error())
 		}
-		err = healthChecker.AddCheck(&health.Config{
+		error = healthChecker.AddCheck(&health.Config{
 			Name:     "Http Server",
 			Checker:  check,
 			Interval: time.Duration(3) * time.Second,
 			Fatal:    true,
 		})
-		if err != nil {
-			return fmt.Errorf("failed to add health checker: %v", err.Error())
+		if error != nil {
+			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
 
@@ -132,8 +126,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Prometheus.Enabled {
 		logger.Log.Info("prometheus exporter enabled")
 
-		exporter, err := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
-		if err != nil {
+		exporter, error := prometheus.NewExporter(cfg.Instrumentation.Prometheus.Config)
+		if error != nil {
 			logger.Log.Fatal("Prometheus Exporter Error")
 		}
 		view.RegisterExporter(exporter)
@@ -141,7 +135,7 @@ func RunServer() error {
 	}
 
 	// Trace everything in development environment or when debugging is enabled
-	if cfg.Environment == "development" || cfg.Environment == "INTEGRATION" || cfg.Debug {
+	if cfg.Environment == "DEVELOPMENT" || cfg.Environment == "INTEGRATION" || cfg.Debug {
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
 	}
 
@@ -149,8 +143,8 @@ func RunServer() error {
 	if cfg.Instrumentation.Jaeger.Enabled {
 		logger.Log.Info("jaeger exporter enabled")
 
-		exporter, err := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
-		if err != nil {
+		exporter, error := jaeger.NewExporter(cfg.Instrumentation.Jaeger.Config)
+		if error != nil {
 			logger.Log.Fatal("Jaeger Exporter Error")
 		}
 		trace.RegisterExporter(exporter)

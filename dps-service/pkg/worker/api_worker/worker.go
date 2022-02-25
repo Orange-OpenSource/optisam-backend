@@ -1,23 +1,23 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package apiworker
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
+	"errors"
+	"fmt"
+	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
 	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/dps-service/pkg/worker/constants"
 	"optisam-backend/dps-service/pkg/worker/models"
+	product "optisam-backend/product-service/pkg/api/v1"
+	"os"
+	"path/filepath"
 	"time"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -29,9 +29,13 @@ type worker struct {
 	t           time.Duration
 }
 
-//NewWorker give worker object
-func NewWorker(id string, queue *workerqueue.Queue, db *sql.DB, conn map[string]*grpc.ClientConn, t time.Duration) *worker {
+var sourceDir, archiveDir string
+
+// NewWorker give worker object
+func NewWorker(id string, queue *workerqueue.Queue, db *sql.DB, conn map[string]*grpc.ClientConn, t time.Duration, sdir, adir string) *worker {
 	setRpcTimeOut(t)
+	sourceDir = sdir
+	archiveDir = adir
 	return &worker{id: id, Queue: queue, Queries: gendb.New(db), grpcServers: conn}
 }
 
@@ -43,53 +47,156 @@ func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
 	var data models.Envlope
 	err := json.Unmarshal(j.Data, &data)
 	if err != nil {
-		log.Println("Failed to get data from job, err : ", err)
+		logger.Log.Error("Failed to unmarshal job data ", zap.Error(err))
 		return err
-	}
-	var dataCount int32
-	if data.TargetAction != constants.DROP {
-		dataCount = GetDataCountInPayload(data.Data, data.TargetRPC)
 	}
 	err = dataToRPCMappings[data.TargetRPC][data.TargetAction](ctx, data, w.grpcServers[data.TargetService])
-	log.Println(" DEBUG: RPC call repsone , Err[", err, "] No of Data Sent [", dataCount, "] retries left [", j.RetryCount.Int32, "] maxretries [", w.Queue.GetRetries(), "]")
-	if err != nil {
-		if data.TargetAction != constants.DROP {
+	if data.TargetAction != constants.DROP {
+		if err != nil {
 			if j.RetryCount.Int32 == w.Queue.GetRetries() {
-				dbErr := w.Queries.UpdateFileFailedRecord(ctx, gendb.UpdateFileFailedRecordParams{
-					UploadID:      data.UploadID,
-					FileName:      data.FileName,
-					FailedRecords: dataCount,
-				})
-				if dbErr != nil {
-					log.Println("Failed to update failedrecord in db ,err [", err, "] ,requeued for defer worker for jobId ", j.JobID, "]")
-					dJob := job.Job{
-						Type:     constants.DEFERTYPE,
-						Data:     data.Data,
-						Comments: sql.NullString{String: "FAILED", Valid: true},
-						Status:   job.JobStatusPENDING,
-					}
-					w.Queue.PushJob(ctx, dJob, constants.DEFERWORKER)
-					return dbErr
+				if dberr := w.setFailedOrSuccessRecords(ctx, data, constants.FailedData, j.JobID); dberr != nil {
+					return dberr
 				}
 			}
+		} else {
+			if dberr := w.setFailedOrSuccessRecords(ctx, data, constants.SuccessData, j.JobID); dberr != nil {
+				return dberr
+			}
 		}
-		return err
 	}
-	if data.TargetAction != constants.DROP {
-		err = w.Queries.UpdateFileSuccessRecord(ctx, gendb.UpdateFileSuccessRecordParams{
+	return err
+}
+
+func (w *worker) setFailedOrSuccessRecords(ctx context.Context, data models.Envlope, action string, jobId int32) error {
+	var fileNewStatus gendb.UploadStatus
+	var dbErr error
+	dataCount := GetDataCountInPayload(data.Data, data.TargetRPC)
+	if action == constants.FailedData {
+		resp, err := w.Queries.UpdateFileFailedRecord(ctx, gendb.UpdateFileFailedRecordParams{
+			UploadID:      data.UploadID,
+			FileName:      data.FileName,
+			FailedRecords: dataCount,
+		})
+		if resp.Issuccess {
+			fileNewStatus = gendb.UploadStatusSUCCESS
+		} else if resp.Isfailed {
+			fileNewStatus = gendb.UploadStatusFAILED
+		} else if resp.Ispartial {
+			fileNewStatus = gendb.UploadStatusPARTIAL
+		}
+		dbErr = err
+		logger.Log.Debug("UpdateFailedRecord", zap.Any("uid", data.UploadID), zap.Any("file", data.FileName), zap.Any("newfilestatus", fileNewStatus), zap.Any("DBError", dbErr))
+	} else if action == constants.SuccessData {
+		resp, err := w.Queries.UpdateFileSuccessRecord(ctx, gendb.UpdateFileSuccessRecordParams{
 			UploadID:       data.UploadID,
 			FileName:       data.FileName,
 			SuccessRecords: dataCount,
 		})
-		if err != nil {
-			log.Println("Failed to update success record in db , err [", err, "] requeued for defer worker for jobId ", j.JobID, "]")
-			dJob := job.Job{
-				Type:     constants.DEFERTYPE,
-				Data:     data.Data,
-				Comments: sql.NullString{String: "SUCCESS", Valid: true},
-				Status:   job.JobStatusPENDING,
-			}
-			w.Queue.PushJob(ctx, dJob, constants.DEFERWORKER)
+		if resp.Issuccess {
+			fileNewStatus = gendb.UploadStatusSUCCESS
+		} else if resp.Isfailed {
+			fileNewStatus = gendb.UploadStatusFAILED
+		} else if resp.Ispartial {
+			fileNewStatus = gendb.UploadStatusPARTIAL
+		}
+		dbErr = err
+		logger.Log.Debug("UpdateSuccessRecord", zap.Any("uid", data.UploadID), zap.Any("file", data.FileName), zap.Any("newfilestatus", fileNewStatus), zap.Any("DBError", dbErr))
+	} else {
+		return errors.New("Unknown Action on records")
+	}
+
+	if dbErr == nil && fileNewStatus != "" {
+		dbErr = HandleDataFileStatus(ctx, w.Queries, fileNewStatus, data, w.grpcServers["product"])
+		action = string(fileNewStatus)
+	}
+	if dbErr != nil {
+		logger.Log.Error("UpdateFileStatus", zap.Any("uid", data.UploadID), zap.Any("file", data.FileName), zap.Any("newfilestatus", fileNewStatus), zap.Any("DBError", dbErr))
+		dJob := job.Job{
+			Type:     constants.DEFERTYPE,
+			Data:     data.Data,
+			Comments: sql.NullString{String: action, Valid: true},
+			Status:   job.JobStatusPENDING,
+		}
+		w.Queue.PushJob(ctx, dJob, constants.DEFERWORKER)
+		return dbErr
+	}
+	return nil
+}
+
+func HandleDataFileStatus(ctx context.Context, dbObj *gendb.Queries, dataFileStatus gendb.UploadStatus, data models.Envlope, prod grpc.ClientConnInterface) (err error) {
+
+	oldName := fmt.Sprintf("%s/%s", sourceDir, data.FileName)
+	newName := fmt.Sprintf("%s/%d_%s", archiveDir, data.UploadID, data.FileName)
+	//  dataFile status update
+	err = dbObj.UpdateFileStatus(ctx, gendb.UpdateFileStatusParams{
+		Status:   dataFileStatus,
+		UploadID: data.UploadID,
+		FileName: data.FileName,
+	})
+	if err != nil {
+		logger.Log.Error("UpdateFileStatus", zap.Any("uid", data.UploadID), zap.Any("file", data.FileName), zap.Any("newfilestatus", dataFileStatus), zap.Error(err))
+		return
+	}
+	logger.Log.Debug("UpdateFileStatus", zap.Any("uid", data.UploadID), zap.Any("gid", data.GlobalFileID), zap.Any("file", data.FileName), zap.Any("newfilestatus", dataFileStatus))
+
+	// global file status update
+	if data.GlobalFileID > int32(0) {
+		err = HandleGlobalFileStatus(ctx, dbObj, data.GlobalFileID, prod)
+		oldName = fmt.Sprintf("%s/%s", sourceDir, data.TransfromedFileName)
+		newName = fmt.Sprintf("%s/%s", archiveDir, data.TransfromedFileName)
+	}
+
+	// file archive
+	osErr := os.Rename(oldName, newName)
+	if osErr != nil {
+		logger.Log.Error("Failed to archive the file", zap.Any("uid", data.UploadID), zap.Any("gid", data.GlobalFileID), zap.Error(osErr))
+		return
+	}
+	logger.Log.Error("File Archived", zap.Any("old", oldName), zap.Any("new", newName))
+	return
+}
+
+func HandleGlobalFileStatus(ctx context.Context, dbObj *gendb.Queries, gid int32, prod grpc.ClientConnInterface) (err error) {
+
+	var dstatus []gendb.UploadStatus
+	gstatus := gendb.UploadStatusCOMPLETED //defau
+	fileRegx := fmt.Sprintf("%s/%d_*.csv", sourceDir, gid)
+	files, _ := filepath.Glob(fileRegx)
+	if files != nil && len(files) > 0 {
+		logger.Log.Error("More transformed file need to be proccessed", zap.Any("gid", gid))
+		return nil
+	}
+
+	dstatus, err = dbObj.GetAllDataFileStatusByGID(ctx, gid)
+	if err != nil {
+		logger.Log.Error("Failed to get all data file status ", zap.Any("gid", gid), zap.Error(err))
+		return
+	}
+	for _, val := range dstatus {
+		if val == gendb.UploadStatusPENDING || val == gendb.UploadStatusINPROGRESS {
+			logger.Log.Error("Few nifi transformed files are still in pending/progress", zap.Any("gid", gid))
+			return
+		}
+		if val == gendb.UploadStatusFAILED || val == gendb.UploadStatusPARTIAL {
+			gstatus = gendb.UploadStatusPARTIAL
+			break
+		}
+	}
+
+	scope, err := dbObj.UpdateGlobalFileStatus(ctx, gendb.UpdateGlobalFileStatusParams{
+		UploadID: gid,
+		Column2:  gstatus,
+	})
+	if err != nil {
+		logger.Log.Error("Failed to update global file status", zap.Error(err), zap.Any("gid", gid), zap.Any("status", gstatus))
+		return err
+	}
+	logger.Log.Debug("Global file status update ", zap.Any("gid", gid), zap.Any("status", gstatus))
+
+	if prod != nil {
+		logger.Log.Info("Calling CreateDashboardUpdateJob........")
+		if resp, err := product.NewProductServiceClient(prod).CreateDashboardUpdateJob(ctx, &product.CreateDashboardUpdateJobRequest{Scope: scope}); err != nil || !resp.Success {
+			logger.Log.Error("Failed to create licences calculation job", zap.Error(err))
 			return err
 		}
 	}

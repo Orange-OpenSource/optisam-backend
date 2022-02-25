@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -26,7 +20,7 @@ type metricIPS struct {
 
 // ListMetricIPS implements Licence ListMetricIPS function
 func (l *LicenseRepository) ListMetricIPS(ctx context.Context, scopes ...string) ([]*v1.MetricIPS, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricIPSIbmPvuStandard, scopes...)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricIPSIbmPvuStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricIPS - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -35,8 +29,8 @@ func (l *LicenseRepository) ListMetricIPS(ctx context.Context, scopes ...string)
 		Data []*metricIPS
 	}
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
-		//fmt.Println(string(resp.Json))
+	if err := json.Unmarshal(respJSON, &data); err != nil {
+		// fmt.Println(string(resp.Json))
 		logger.Log.Error("dgraph/ListMetricIPS - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}

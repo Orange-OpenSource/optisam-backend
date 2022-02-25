@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -59,15 +53,11 @@ func TestListEditors(t *testing.T) {
 			},
 		},
 		{
-			//This test case need to change in future
 			name:   "ListEditorsWithScopeMismatch",
 			input:  &v1.ListEditorsRequest{Scopes: []string{"s5", "s6"}},
-			outErr: false,
+			outErr: true,
 			ctx:    ctx,
-			mock: func(input *v1.ListEditorsRequest) {
-				var scopes []string
-				dbObj.EXPECT().ListEditors(ctx, scopes).Return(scopes, nil).Times(1)
-			},
+			mock:   func(input *v1.ListEditorsRequest) {},
 		},
 		{
 			name:   "ListEditorsWithoutContext",
@@ -81,7 +71,7 @@ func TestListEditors(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.ListEditors(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -113,13 +103,15 @@ func TestListEditorProducts(t *testing.T) {
 			input: &v1.ListEditorProductsRequest{Editor: "e1", Scopes: []string{"s1", "s2", "s3"}},
 			output: &v1.ListEditorProductsResponse{
 				Products: []*v1.Product{
-					&v1.Product{
+					{
 						SwidTag: "swid1",
 						Name:    "p1",
+						Version: "v1",
 					},
-					&v1.Product{
+					{
 						SwidTag: "swid2",
 						Name:    "p2",
+						Version: "v2",
 					},
 				},
 			},
@@ -130,12 +122,14 @@ func TestListEditorProducts(t *testing.T) {
 					ProductEditor: input.Editor,
 					Scopes:        input.Scopes}).Return([]db.GetProductsByEditorRow{
 					{
-						Swidtag:     "swid1",
-						ProductName: "p1",
+						Swidtag:        "swid1",
+						ProductName:    "p1",
+						ProductVersion: "v1",
 					},
 					{
-						Swidtag:     "swid2",
-						ProductName: "p2",
+						Swidtag:        "swid2",
+						ProductName:    "p2",
+						ProductVersion: "v2",
 					},
 				}, nil).Times(1)
 			},
@@ -152,7 +146,7 @@ func TestListEditorProducts(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.ListEditorProducts(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -11,7 +5,6 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 
@@ -21,7 +14,7 @@ import (
 )
 
 // CreateMetricSAGProcessorStandard will create an sag.processor.standard metric
-func (s *metricServiceServer) CreateMetricSAGProcessorStandard(ctx context.Context, req *v1.CreateMetricSPS) (*v1.CreateMetricSPS, error) {
+func (s *metricServiceServer) CreateMetricSAGProcessorStandard(ctx context.Context, req *v1.MetricSPS) (*v1.MetricSPS, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -50,8 +43,8 @@ func (s *metricServiceServer) CreateMetricSAGProcessorStandard(ctx context.Conte
 		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching equipment type", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.NotFound, "cannot find base level equipment type")
 	}
-	if err := validateAttributesSPS(equipBase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); err != nil {
-		return nil, err
+	if error := validateAttributesSPS(equipBase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); error != nil {
+		return nil, error
 	}
 
 	met, err := s.metricRepo.CreateMetricSPS(ctx, serverToRepoMetricSPS(req), req.GetScopes()[0])
@@ -64,7 +57,51 @@ func (s *metricServiceServer) CreateMetricSAGProcessorStandard(ctx context.Conte
 
 }
 
-func serverToRepoMetricSPS(met *v1.CreateMetricSPS) *repo.MetricSPS {
+func (s *metricServiceServer) UpdateMetricSAGProcessorStandard(ctx context.Context, req *v1.MetricSPS) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	_, err := s.metricRepo.GetMetricConfigSPS(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricSAGProcessorStandard - repo/GetMetricConfigSPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric sps")
+	}
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricSAGProcessorStandard - repo/EquipmentTypes - fetching equipments", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	equipbase, err := equipmentTypeExistsByID(req.BaseEqTypeId, eqTypes)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.NotFound, "cannot find equipment type")
+	}
+	if e := validateAttributesSPS(equipbase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); e != nil {
+		return &v1.UpdateMetricResponse{}, e
+	}
+	err = s.metricRepo.UpdateMetricSPS(ctx, &repo.MetricSPS{
+		Name:             req.Name,
+		NumCoreAttrID:    req.NumCoreAttrId,
+		BaseEqTypeID:     req.BaseEqTypeId,
+		CoreFactorAttrID: req.CoreFactorAttrId,
+	}, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricSAGProcessorStandard - repo/UpdateMetricSPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric sps")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
+}
+
+func serverToRepoMetricSPS(met *v1.MetricSPS) *repo.MetricSPS {
 	return &repo.MetricSPS{
 		ID:               met.ID,
 		Name:             met.Name,
@@ -74,8 +111,8 @@ func serverToRepoMetricSPS(met *v1.CreateMetricSPS) *repo.MetricSPS {
 	}
 }
 
-func repoToServerMetricSPS(met *repo.MetricSPS) *v1.CreateMetricSPS {
-	return &v1.CreateMetricSPS{
+func repoToServerMetricSPS(met *repo.MetricSPS) *v1.MetricSPS {
+	return &v1.MetricSPS{
 		ID:               met.ID,
 		Name:             met.Name,
 		NumCoreAttrId:    met.NumCoreAttrID,
@@ -113,13 +150,4 @@ func validateAttributesSPS(attrs []*repo.Attribute, numCoreAttr string, coreFact
 		return status.Error(codes.InvalidArgument, "corefactor attribute doesnt have valid data type")
 	}
 	return nil
-}
-
-func metricNameExistsSPS(metrics []*repo.MetricSPS, name string) int {
-	for i, met := range metrics {
-		if strcomp.CompareStrings(met.Name, name) {
-			return i
-		}
-	}
-	return -1
 }

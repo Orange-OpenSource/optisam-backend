@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -30,42 +24,42 @@ type metricIPS struct {
 func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIPS, scope string) (retMat *v1.MetricIPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricIPSIbmPvuStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(mat.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ips.base",
 			ObjectId:  mat.BaseEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ips.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.ips.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricIPS"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -119,14 +113,13 @@ func (l *MetricRepository) ListMetricIPS(ctx context.Context, scope string) ([]*
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricIPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type ibm.pvu.standard")
+		return nil, errors.New("cannot get metrics of type ibm.pvu.standard")
 	}
 	type Resp struct {
 		Data []*metricIPS
 	}
 	var data Resp
 	if err := json.Unmarshal(resp.Json, &data); err != nil {
-		//fmt.Println(string(resp.Json))
 		logger.Log.Error("dgraph/ListMetricIPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
 		return nil, errors.New("cannot Unmarshal")
 	}
@@ -139,7 +132,7 @@ func (l *MetricRepository) ListMetricIPS(ctx context.Context, scope string) ([]*
 // GetMetricConfigIPS implements Metric GetMetricConfigIPS function
 func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName string, scope string) (*v1.MetricIPSConfig, error) {
 	q := `{
-		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
+		Data(func: eq(metric.name,"` + metName + `"))@filter(eq(scopes,"` + scope + `")){
 			Name: metric.name
 			BaseEqType: metric.ips.base{
 				 metadata.equipment.type
@@ -155,14 +148,14 @@ func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/GetMetricConfigIPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type sps")
+		return nil, errors.New("cannot get metrics of type ips")
 	}
 	type Resp struct {
 		Metric []metricInfo `json:"Data"`
 	}
 	var data Resp
 	if err := json.Unmarshal(resp.Json, &data); err != nil {
-		fmt.Println(string(resp.Json))
+		//	fmt.Println(string(resp.Json))
 		logger.Log.Error("dgraph/GetMetricConfigIPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
 		return nil, errors.New("cannot Unmarshal")
 	}
@@ -179,6 +172,74 @@ func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName strin
 		CoreFactorAttr: data.Metric[0].CoreFactorAttr[0].AttributeName,
 		BaseEqType:     data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
 	}, nil
+}
+
+func (l *MetricRepository) GetMetricConfigIPSID(ctx context.Context, metName string, scope string) (*v1.MetricIPS, error) {
+	q := `{
+		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
+			 uid
+			 metric.name
+			 metric.ips.base{uid}
+			 metric.ips.attr_core_factor{uid}
+			 metric.ips.attr_num_cores{uid}
+		}
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/GetMetricConfigIPS - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type ips")
+	}
+	type Resp struct {
+		Metric []*metricIPS `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/GetMetricConfigIPS - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetricIPS(data.Metric[0])
+}
+
+func (l *MetricRepository) UpdateMetricIPS(ctx context.Context, met *v1.MetricIPS, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,"` + met.Name + `"))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	del := `
+	uid(ID) <metric.ips.base> * .
+	uid(ID) <metric.ips.attr_core_factor> * .
+	uid(ID) <metric.ips.attr_num_cores> * .	
+    `
+	set := `
+	    uid(ID) <metric.ips.base> <` + met.BaseEqTypeID + `> .
+	    uid(ID) <metric.ips.attr_core_factor> <` + met.CoreFactorAttrID + `> .
+		uid(ID) <metric.ips.attr_num_cores> <` + met.NumCoreAttrID + `> .	
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				DelNquads: []byte(del),
+			},
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricIPS - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }
 
 func converMetricToModelMetricAllIPS(mts []*metricIPS) ([]*v1.MetricIPS, error) {

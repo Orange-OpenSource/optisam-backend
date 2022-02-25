@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package common
 
 import (
@@ -20,6 +14,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var sqldb *sql.DB
@@ -69,7 +64,9 @@ func addConfig(path string) {
 }
 
 func Testdata(path string, files []string) (*sql.DB, []*docker.DockerInfo, error) {
-	logger.Init(-1, "")
+	if err := logger.Init(-1, ""); err != nil {
+		panic(err)
+	}
 	addConfig(path)
 	var err error
 	var dockers []*docker.DockerInfo
@@ -82,20 +79,22 @@ func Testdata(path string, files []string) (*sql.DB, []*docker.DockerInfo, error
 	}
 	pgDB, err := postgres.NewConnection(*cfg.Postgres)
 	if err != nil {
+		logger.Log.Error("Failed to connect postgres", zap.Error(err))
 		return nil, nil, err
 	}
 	if err := pgDB.Ping(); err != nil {
+		logger.Log.Error("Failed to ping postgres", zap.Error(err))
 		return nil, nil, err
 	}
 	sqldb = pgDB
 	if err := loadData(files); err != nil {
+		logger.Log.Error("Failed to load data into postgres", zap.Error(err))
 		return nil, nil, err
 	}
 	return sqldb, dockers, nil
 }
 
 func loadData(files []string) error {
-	//files := []string{"../scripts/1_user_login.sql", "../schema/2_add_users_audit_table.sql"}
 	for _, file := range files {
 		query, err := ioutil.ReadFile(file)
 		if err != nil {

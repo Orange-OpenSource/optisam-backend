@@ -1,0 +1,29 @@
+{
+    "metric_inm": {
+        "ID": "",
+        "Name": "apitest_instance",
+        "num_of_deployments": "2",
+        "scopes": [
+            "AUT"
+        ]
+    },
+    "metric_acs": {
+        "name": "apitest_attribute_core",
+        "eq_type": "server",
+        "attribute_name": "server_coresNumber",
+        "value": "2",
+        "scopes": ["AUT"]
+    },
+    "metric_ibm": {
+        "ID": "",
+        "Name": "apitest_ibm_pvu",
+        "num_core_attr_id": "0x162",
+        "core_factor_attr_id": "0x160",
+        "numCPU_attr_id": null,
+        "base_eq_type_id": "0x168",
+        "number_of_users": 0,
+        "scopes": [
+            "AUT"
+        ]
+    }
+}

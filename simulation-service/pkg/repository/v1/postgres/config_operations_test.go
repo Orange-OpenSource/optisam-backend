@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -100,7 +94,7 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 				}
 				index := configByName(masterData, "server_1")
 				if index == -1 {
-					return fmt.Errorf("config master data does not exists.")
+					return fmt.Errorf("config master data does not exists")
 				}
 				var expectedMasterData db.ConfigMaster
 				expectedMasterData = db.ConfigMaster{
@@ -311,7 +305,7 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 				}
 				index := configByName(masterData, "server_1")
 				if index == -1 {
-					return fmt.Errorf("config master data does not exists.")
+					return fmt.Errorf("config master data does not exists")
 				}
 
 				// verify config_metadata table data

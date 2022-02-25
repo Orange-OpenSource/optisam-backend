@@ -1,0 +1,15 @@
+Application_id;Name;Version;Owner;domain;flag
+App_1;SAG Application 1;1;Orange Money;Payment;1
+App_2;SAG Application 2;2.1;Orange India;HealthCare;1
+App_3;SAG Application 3;3.0,0;Orange France;Retail & Supply Chain;1
+App_4;Oracle Application 1;1;Orange Money;E-Commerce;1
+App_5;Oracle Application 2;1.1;Orange India;Payment;1
+App_6;General Application 1;1.2.0;General;Payment;1
+App_7;General Application 2;1.2.1;General;Healthcare;1
+App_8;General Application 3;1.2.2;;;1
+App_9;Without Domain Application 1;1.1;Default;;1
+App_10;Without Domain Application 2;1.1;Default;;1
+App_11;Without Product Application 1;1.1;Default;;1
+App_12;Without Equipment Application 1;1.1;Default;;1
+App_13;Without Instance Application 1;1.1;Default;;1
+App_14;Random Application 1;;Random;Random;1

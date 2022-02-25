@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -64,12 +58,12 @@ func Test_applicationServiceServer_ApplicationDomains(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ApplicationDomains(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -104,19 +98,19 @@ func Test_applicationServiceServer_ObsolescenceDomainCriticityMeta(t *testing.T)
 			args:   args{ctx: ctx, req: &v1.DomainCriticityMetaRequest{}},
 			fields: fields{applicationRepo: dbObj, queue: qObj},
 			mock: func(input *v1.DomainCriticityMetaRequest) {
-				dbObj.EXPECT().GetDomainCriticityMeta(ctx).Return([]db.DomainCriticityMetum{db.DomainCriticityMetum{
+				dbObj.EXPECT().GetDomainCriticityMeta(ctx).Return([]db.DomainCriticityMetum{{
 					DomainCriticID:   1,
 					DomainCriticName: "Critical",
-				}, db.DomainCriticityMetum{
+				}, {
 					DomainCriticID:   2,
 					DomainCriticName: "Non Critical",
 				}}, nil).Times(1)
 			},
-			want: &v1.DomainCriticityMetaResponse{DomainCriticityMeta: []*v1.DomainCriticityMeta{&v1.DomainCriticityMeta{
+			want: &v1.DomainCriticityMetaResponse{DomainCriticityMeta: []*v1.DomainCriticityMeta{{
 				DomainCriticId:   1,
 				DomainCriticName: "Critical",
 			},
-				&v1.DomainCriticityMeta{
+				{
 					DomainCriticId:   2,
 					DomainCriticName: "Non Critical",
 				},
@@ -127,12 +121,12 @@ func Test_applicationServiceServer_ObsolescenceDomainCriticityMeta(t *testing.T)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenceDomainCriticityMeta(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -168,7 +162,7 @@ func Test_applicationServiceServer_ObsolescenceMaintenanceCriticityMeta(t *testi
 			fields: fields{applicationRepo: dbObj, queue: qObj},
 			mock: func(input *v1.MaintenanceCriticityMetaRequest) {
 				dbObj.EXPECT().GetMaintenanceCricityMeta(ctx).Return([]db.MaintenanceLevelMetum{
-					db.MaintenanceLevelMetum{
+					{
 						MaintenanceLevelID:   1,
 						MaintenanceLevelName: "L1",
 					},
@@ -179,10 +173,10 @@ func Test_applicationServiceServer_ObsolescenceMaintenanceCriticityMeta(t *testi
 				}, nil).Times(1)
 			},
 			want: &v1.MaintenanceCriticityMetaResponse{
-				MaintenanceCriticityMeta: []*v1.MaintenanceCriticityMeta{&v1.MaintenanceCriticityMeta{
+				MaintenanceCriticityMeta: []*v1.MaintenanceCriticityMeta{{
 					MaintenanceCriticId:   1,
 					MaintenanceCriticName: "L1",
-				}, &v1.MaintenanceCriticityMeta{
+				}, {
 					MaintenanceCriticId:   2,
 					MaintenanceCriticName: "L2",
 				}},
@@ -193,12 +187,12 @@ func Test_applicationServiceServer_ObsolescenceMaintenanceCriticityMeta(t *testi
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenceMaintenanceCriticityMeta(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -233,10 +227,10 @@ func Test_applicationServiceServer_ObsolescenceRiskMeta(t *testing.T) {
 			fields: fields{applicationRepo: dbObj, queue: qObj},
 			args:   args{ctx: ctx, req: &v1.RiskMetaRequest{}},
 			mock: func(input *v1.RiskMetaRequest) {
-				dbObj.EXPECT().GetRiskMeta(ctx).Return([]db.RiskMetum{db.RiskMetum{
+				dbObj.EXPECT().GetRiskMeta(ctx).Return([]db.RiskMetum{{
 					RiskID:   1,
 					RiskName: "Low",
-				}, db.RiskMetum{
+				}, {
 					RiskID:   2,
 					RiskName: "High",
 				},
@@ -244,11 +238,11 @@ func Test_applicationServiceServer_ObsolescenceRiskMeta(t *testing.T) {
 			},
 			want: &v1.RiskMetaResponse{
 				RiskMeta: []*v1.RiskMeta{
-					&v1.RiskMeta{
+					{
 						RiskId:   1,
 						RiskName: "Low",
 					},
-					&v1.RiskMeta{
+					{
 						RiskId:   2,
 						RiskName: "High",
 					},
@@ -260,12 +254,12 @@ func Test_applicationServiceServer_ObsolescenceRiskMeta(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenceRiskMeta(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -301,14 +295,14 @@ func Test_applicationServiceServer_ObsolescenceDomainCriticity(t *testing.T) {
 			fields: fields{applicationRepo: dbObj, queue: qObj},
 			args:   args{ctx: ctx, req: &v1.DomainCriticityRequest{Scope: "Scope1"}},
 			mock: func(input *v1.DomainCriticityRequest) {
-				dbObj.EXPECT().GetDomainCriticity(ctx, input.Scope).Return([]db.GetDomainCriticityRow{db.GetDomainCriticityRow{
+				dbObj.EXPECT().GetDomainCriticity(ctx, input.Scope).Return([]db.GetDomainCriticityRow{{
 					DomainCriticID: 1,
 					Domains:        []string{"Finance", "Payment"},
 				}}, nil)
 			},
 			want: &v1.DomainCriticityResponse{
 				DomainsCriticity: []*v1.DomainCriticity{
-					&v1.DomainCriticity{
+					{
 						DomainCriticId: 1,
 						Domains:        []string{"Finance", "Payment"},
 					},
@@ -320,12 +314,12 @@ func Test_applicationServiceServer_ObsolescenceDomainCriticity(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenceDomainCriticity(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -361,7 +355,7 @@ func Test_applicationServiceServer_ObsolescenseMaintenanceCriticity(t *testing.T
 			args:   args{ctx: ctx, req: &v1.MaintenanceCriticityRequest{Scope: "Scope1"}},
 			mock: func(input *v1.MaintenanceCriticityRequest) {
 				dbObj.EXPECT().GetMaintenanceTimeCriticity(ctx, input.Scope).Return([]db.MaintenanceTimeCriticity{
-					db.MaintenanceTimeCriticity{
+					{
 						MaintenanceCriticID: 1,
 						LevelID:             1,
 						StartMonth:          1,
@@ -370,7 +364,7 @@ func Test_applicationServiceServer_ObsolescenseMaintenanceCriticity(t *testing.T
 				}, nil)
 			},
 			want: &v1.MaintenanceCriticityResponse{
-				MaintenanceCriticy: []*v1.MaintenanceCriticity{&v1.MaintenanceCriticity{
+				MaintenanceCriticy: []*v1.MaintenanceCriticity{{
 					MaintenanceCriticId: 1,
 					MaintenanceLevelId:  1,
 					StartMonth:          1,
@@ -383,12 +377,12 @@ func Test_applicationServiceServer_ObsolescenseMaintenanceCriticity(t *testing.T
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenseMaintenanceCriticity(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {
@@ -424,7 +418,7 @@ func Test_applicationServiceServer_ObsolescenseRiskMatrix(t *testing.T) {
 			args:   args{ctx: ctx, req: &v1.RiskMatrixRequest{Scope: "Scope1"}},
 			fields: fields{applicationRepo: dbObj, queue: qObj},
 			mock: func(input *v1.RiskMatrixRequest) {
-				dbObj.EXPECT().GetRiskMatrixConfig(ctx, input.Scope).Return([]db.GetRiskMatrixConfigRow{db.GetRiskMatrixConfigRow{
+				dbObj.EXPECT().GetRiskMatrixConfig(ctx, input.Scope).Return([]db.GetRiskMatrixConfigRow{{
 					ConfigurationID:      1,
 					DomainCriticID:       1,
 					DomainCriticName:     "Critical",
@@ -434,7 +428,7 @@ func Test_applicationServiceServer_ObsolescenseRiskMatrix(t *testing.T) {
 					RiskName:             "Low",
 				}}, nil)
 			},
-			want: &v1.RiskMatrixResponse{RiskMatrix: []*v1.RiskMatrix{&v1.RiskMatrix{
+			want: &v1.RiskMatrixResponse{RiskMatrix: []*v1.RiskMatrix{{
 				ConfigurationId:       1,
 				DomainCriticId:        1,
 				DomainCriticName:      "Critical",
@@ -449,12 +443,12 @@ func Test_applicationServiceServer_ObsolescenseRiskMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mock(tt.args.req)
-			s := NewApplicationServiceServer(dbObj, qObj)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
 			got, err := s.ObsolescenseRiskMatrix(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", tt.name)
 				return
-			} else if (got != nil && tt.want != nil) && !assert.Equal(t, *got, *(tt.want)) {
+			} else if (got != nil && tt.want != nil) && !assert.Equal(t, got, (tt.want)) {
 				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex [%v]", tt.name, tt.want, got)
 				return
 			} else {

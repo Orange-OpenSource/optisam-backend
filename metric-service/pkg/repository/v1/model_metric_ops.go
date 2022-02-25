@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 // MetricOPS is a representation of oracle.processor.standard
@@ -30,7 +24,7 @@ type MetricOPSComputed struct {
 	NumCPUAttr     *Attribute
 }
 
-//MetricOPSConfig is a representation of oracle.processor.standard metric configuration
+// MetricOPSConfig is a representation of oracle.processor.standard metric configuration
 type MetricOPSConfig struct {
 	ID                  string
 	Name                string

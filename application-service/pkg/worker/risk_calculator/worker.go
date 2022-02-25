@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package riskcalculator
 
 import (
@@ -23,24 +17,25 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//RiskCalWorker ...
+// RiskCalWorker ...
 type RiskCalWorker struct {
 	id              string
 	applicationRepo repo.Application
 	productClient   pro_v1.ProductServiceClient
 }
 
-//NewWorker ...
+// NewWorker ...
 func NewWorker(id string, grpcServers map[string]*grpc.ClientConn, applicationRepo repo.Application) *RiskCalWorker {
 	return &RiskCalWorker{id: id, productClient: pro_v1.NewProductServiceClient(grpcServers["product"]), applicationRepo: applicationRepo}
 }
 
-//ID ...
+// ID ...
 func (w *RiskCalWorker) ID() string {
 	return w.id
 }
 
-//DoWork ...
+// DoWork ...
+// nolint: funlen, gocyclo
 func (w *RiskCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 	apps, err := w.applicationRepo.GetApplicationsDetails(ctx)
 	if err != nil {
@@ -57,7 +52,7 @@ func (w *RiskCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 		})
 		if err != nil {
 			if err == sql.ErrNoRows {
-				if err := w.applicationRepo.AddApplicationbsolescenceRisk(ctx, db.AddApplicationbsolescenceRiskParams{
+				if err = w.applicationRepo.AddApplicationbsolescenceRisk(ctx, db.AddApplicationbsolescenceRiskParams{
 					Riskvalue:     sql.NullString{Valid: false},
 					Applicationid: app.ApplicationID,
 					Scope:         app.Scope,
@@ -86,7 +81,7 @@ func (w *RiskCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 		endDateExists := false
 		for i, ins := range appIns {
 			for i, pro := range ins.Products {
-				acqRights, err := w.productClient.ListAcqRights(ctx, &pro_v1.ListAcqRightsRequest{
+				acqRights, error := w.productClient.ListAcqRights(ctx, &pro_v1.ListAcqRightsRequest{
 					SearchParams: &pro_v1.AcqRightsSearchParams{
 						SwidTag: &pro_v1.StringFilter{
 							Filteringkey: pro,
@@ -100,11 +95,11 @@ func (w *RiskCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 					PageNum:   1,
 				})
 
-				if err != nil {
-					if err == sql.ErrNoRows {
+				if error != nil {
+					if error == sql.ErrNoRows {
 						continue
 					}
-					logger.Log.Error("worker - RiskCalculator - ListAcqRights", zap.Error(err))
+					logger.Log.Error("worker - RiskCalculator - ListAcqRights", zap.Error(error))
 					return status.Error(codes.Internal, "can not fetch list acqrights")
 				}
 				if acqRights == nil || len(acqRights.AcquiredRights) == 0 {
@@ -177,7 +172,7 @@ func (w *RiskCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 			return status.Error(codes.Internal, "DBError")
 		}
 	}
-	logger.Log.Info("Cron Job is Successfull")
+	logger.Log.Info("Cron Job is Successful")
 
 	return nil
 }

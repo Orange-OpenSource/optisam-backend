@@ -52,13 +52,13 @@ WHERE
 ; 
 
 -- name: ListProductsViewRedirectedApplication :many
-SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments ,COALESCE(acq.total_cost,0)::FLOAT as cost 
+SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments,pe.equipment_ids, COALESCE(acq.total_cost,0)::FLOAT as cost 
 FROM products p 
 INNER JOIN 
 (SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = ANY(@scope::TEXT[]) AND  (CASE WHEN @is_application_id::bool THEN application_id = @application_id ELSE TRUE END) GROUP BY swidtag) pa
 ON p.swidtag = pa.swidtag
 LEFT JOIN 
-(SELECT swidtag, count(equipment_id) as num_of_equipments FROM products_equipments WHERE scope = ANY(@scope::TEXT[]) AND (CASE WHEN @is_equipment_id::bool THEN equipment_id = @equipment_id ELSE TRUE END) GROUP BY swidtag) pe
+(SELECT swidtag, count(equipment_id) as num_of_equipments,  ARRAY_AGG(equipment_id)::TEXT[] as equipment_ids FROM products_equipments WHERE scope = ANY(@scope::TEXT[]) AND (CASE WHEN @is_equipment_id::bool THEN equipment_id = ANY(@equipment_ids::TEXT[]) ELSE TRUE END) GROUP BY swidtag) pe
 ON p.swidtag = pe.swidtag
 LEFT JOIN
 (SELECT swidtag, sum(total_cost) as total_cost FROM acqrights WHERE scope = ANY(@scope::TEXT[]) GROUP BY swidtag) acq
@@ -71,7 +71,7 @@ WHERE
   AND (CASE WHEN @is_product_name::bool THEN lower(p.product_name) = lower(@product_name) ELSE TRUE END)
   AND (CASE WHEN @lk_product_editor::bool THEN lower(p.product_editor) LIKE '%' || lower(@product_editor::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN @is_product_editor::bool THEN lower(p.product_editor) = lower(@product_editor) ELSE TRUE END)
-  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments, acq.total_cost
+  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments, pe.equipment_ids, acq.total_cost
   ORDER BY
   CASE WHEN @swidtag_asc::bool THEN p.swidtag END asc,
   CASE WHEN @swidtag_desc::bool THEN p.swidtag END desc,
@@ -137,16 +137,40 @@ WHERE
   LIMIT @page_size OFFSET @page_num
 ; 
 -- name: GetProductInformation :one
-SELECT p.swidtag,p.product_editor,p.product_edition,p.product_version
+SELECT p.swidtag,p.product_name,p.product_editor,p.product_version, acq.metrics, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications,COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments
 FROM products p 
+LEFT JOIN 
+(SELECT pa.swidtag, count(pa.application_id) as num_of_applications FROM products_applications pa WHERE pa.scope = @scope GROUP BY pa.swidtag) pa
+ON p.swidtag = pa.swidtag
+LEFT JOIN 
+(SELECT pe.swidtag, count(pe.equipment_id) as num_of_equipments FROM products_equipments pe WHERE pe.scope = @scope GROUP BY pe.swidtag) pe
+ON p.swidtag = pe.swidtag
+LEFT JOIN
+(SELECT ac.swidtag,ARRAY_AGG(DISTINCT acmetrics)::TEXT[] as metrics FROM acqrights ac, unnest(string_to_array(ac.metric,',')) as acmetrics WHERE ac.scope = @scope GROUP BY ac.swidtag) acq
+ON p.swidtag = acq.swidtag
 WHERE p.swidtag = @swidtag
-AND p.scope = ANY(@scope::TEXT[]);
+AND p.scope = @scope
+GROUP BY p.swidtag, p.product_name, p.product_editor, p.product_version, acq.metrics, pa.num_of_applications, pe.num_of_equipments;
+
+-- name: GetProductInformationFromAcqright :one
+SELECT ac.swidtag,
+       ac.product_name,
+       ac.product_editor,
+       ac.version,
+       ARRAY_AGG(DISTINCT acmetrics)::TEXT[] as metrics
+FROM acqrights ac, unnest(string_to_array(ac.metric,',')) as acmetrics
+WHERE ac.scope = @scope
+    AND ac.swidtag = @swidtag
+GROUP BY ac.swidtag,
+         ac.product_name,
+         ac.product_editor,
+         ac.version;
 
 -- name: GetProductOptions :many
 SELECT p.swidtag,p.product_name,p.product_edition,p.product_editor,p.product_version
 FROM products p 
 WHERE p.option_of = @swidtag
-AND p.scope = ANY(@scope::TEXT[]);
+AND p.scope = @scope;
 
 -- name: ListAggregationsView :many
 SELECT count(*) OVER() AS totalRecords,p.aggregation_id,p.aggregation_name,p.product_editor,array_agg(distinct p.swidtag)::TEXT[] as swidtags, COALESCE(sum(pa.num_of_applications),0)::INTEGER as num_of_applications , COALESCE(sum(pe.num_of_equipments),0)::INTEGER as num_of_equipments , COALESCE(SUM(acq.total_cost),0)::FLOAT as total_cost
@@ -203,21 +227,54 @@ GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product
 
 
 -- name: ProductAggregationDetails :one
-SELECT p.aggregation_id,p.aggregation_name,p.product_editor,array_agg(distinct p.swidtag)::TEXT[] as swidtags,array_agg(distinct p.product_edition)::TEXT[] as editions, COALESCE(SUM(pa.num_of_applications),0)::INTEGER as num_of_applications,COALESCE(SUM(pe.num_of_equipments),0)::INTEGER as num_of_equipments, COALESCE(SUM(acq.total_cost),0)::FLOAT as total_cost  
-FROM products p 
+SELECT x.product_editor as editor,
+    ARRAY_AGG(DISTINCT x.product_name)::TEXT [] as product_names,
+    ARRAY_AGG(DISTINCT x.swidtag)::TEXT [] as product_swidtags,
+    ARRAY_AGG(DISTINCT x.version)::TEXT[] as product_versions,
+    COALESCE(SUM(pa.num_of_applications),0)::INTEGER as num_of_applications,
+    COALESCE(SUM(pe.num_of_equipments),0)::INTEGER as num_of_equipments,
+    x.aggregation_name as aggregation_name,
+    x.aggregation_id as aggregation_id,
+    x.aggregation_metric as metric
+FROM(
+        SELECT  acq.swidtag,
+             acq.product_name,
+            acq.product_editor,
+            acq.version,
+            agg.aggregation_id,
+            agg.aggregation_name,
+            agg.aggregation_metric
+        FROM aggregations agg
+            JOIN acqrights acq ON acq.swidtag = ANY(agg.products)
+        WHERE acq.scope = @scope
+            AND agg.aggregation_scope = @scope
+            AND agg.aggregation_id = @aggregation_id
+            AND acq.metric = agg.aggregation_metric
+        UNION
+        SELECT prd.swidtag,
+            prd.product_name,
+            prd.product_editor,
+            prd.product_version as version,
+            agg.aggregation_id,
+            agg.aggregation_name,
+            agg.aggregation_metric
+        FROM aggregations agg
+            JOIN products prd ON prd.swidtag = ANY(agg.products)
+        WHERE prd.scope = @scope
+            AND agg.aggregation_scope = @scope
+            AND agg.aggregation_id = @aggregation_id
+            AND prd.aggregation_id = agg.aggregation_id
+    ) x
 LEFT JOIN
-(SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = ANY(@scope::TEXT[])  GROUP BY swidtag) pa
-ON p.swidtag = pa.swidtag
-LEFT JOIN
-(SELECT swidtag, count(equipment_id) as num_of_equipments FROM products_equipments WHERE scope = ANY(@scope::TEXT[])  GROUP BY swidtag) pe
-ON p.swidtag = pe.swidtag
-LEFT JOIN
-(SELECT swidtag, sum(total_cost) as total_cost FROM acqrights LEFT JOIN aggregations on acqrights.metric = aggregations.aggregation_metric WHERE aggregations.aggregation_id =  @aggregation_id AND acqrights.scope = ANY(@scope::TEXT[]) AND aggregations.aggregation_scope = ANY(@scope::TEXT[]) GROUP BY swidtag) acq
-ON p.swidtag = acq.swidtag
-WHERE
-  p.aggregation_id = @aggregation_id AND p.aggregation_id <> 0
-  AND p.scope = ANY(@scope::TEXT[])
-GROUP BY p.aggregation_id,p.aggregation_name,p.aggregation_name,p.product_editor;
+(SELECT pa.swidtag, count(pa.application_id) as num_of_applications FROM products_applications pa WHERE pa.scope = @scope GROUP BY pa.swidtag) pa
+ON pa.swidtag = x.swidtag
+LEFT JOIN 
+(SELECT pe.swidtag, count(pe.equipment_id) as num_of_equipments FROM products_equipments pe WHERE pe.scope = @scope GROUP BY pe.swidtag) pe
+ON pe.swidtag = x.swidtag
+GROUP BY x.product_editor,
+    x.aggregation_id,
+    x.aggregation_name,
+    x.aggregation_metric;
 
 -- name: ProductAggregationChildOptions :many
 SELECT p.swidtag,p.product_name,p.product_edition,p.product_editor,p.product_version
@@ -257,9 +314,12 @@ DELETE FROM products_equipments
 WHERE swidtag = @product_id and equipment_id = ANY(@equipment_id::TEXT[]) and scope = @scope;
 
 -- name: GetProductsByEditor :many
-SELECT swidtag, product_name
-FROM products
-WHERE product_editor = @product_editor and scope = ANY(@scopes::TEXT[]);
+SELECT p.swidtag, p.product_name, p.product_version
+FROM products p
+JOIN 
+(SELECT swidtag FROM products_equipments WHERE scope = ANY(@scopes::TEXT[]) GROUP BY swidtag) pe
+ON p.swidtag = pe.swidtag
+WHERE p.product_editor = @product_editor and p.scope = ANY(@scopes::TEXT[]);
 
 -- name: UpsertProductAggregation :exec
 -- SCOPE BASED CHANGE
@@ -269,24 +329,24 @@ swidtag = ANY(@swidtags::TEXT[]) AND scope = @scope;
 -- name: GetProductAggregation :many
 SELECT swidtag
 FROM products
-WHERE aggregation_id = $1 and aggregation_name = $2;
+WHERE aggregation_id = @aggregation_id AND aggregation_name = @aggregation_name AND scope = @scope;
 
--- name: DeleteProductAggregation :exec
-Update products set aggregation_id = $1, aggregation_name = $2 WHERE
-aggregation_id = $3;
+-- name: UpdateAggregationForProduct :exec
+Update products set aggregation_id = @aggregation_id, aggregation_name = @aggregation_name WHERE
+aggregation_id = @old_aggregation_id AND scope = @scope;
 
 -- name: UpsertAcqRights :exec
-INSERT INTO acqrights (sku,swidtag,product_name,product_editor,entity,scope,metric,num_licenses_acquired,avg_unit_price,avg_maintenance_unit_price,total_purchase_cost,total_maintenance_cost,total_cost,created_by,start_of_maintenance,end_of_maintenance,num_licences_maintainance,version)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$17,$18,$19,$20)
+INSERT INTO acqrights (sku,swidtag,product_name,product_editor,scope,metric,num_licenses_acquired,avg_unit_price,avg_maintenance_unit_price,total_purchase_cost,total_maintenance_cost,total_cost,created_by,start_of_maintenance,end_of_maintenance,num_licences_maintainance,version,comment)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
 ON CONFLICT (sku,scope)
 DO
-UPDATE SET swidtag = $2,product_name = $3,product_editor = $4,entity = $5,scope = $6,metric = $7,num_licenses_acquired = $8,
-            avg_unit_price = $9,avg_maintenance_unit_price = $10,total_purchase_cost = $11,
-            total_maintenance_cost = $12,total_cost = $13,updated_on = $15,updated_by = $16,start_of_maintenance = $17,end_of_maintenance = $18, num_licences_maintainance = $19, version = $20;
+UPDATE SET swidtag = $2,product_name = $3,product_editor = $4,scope = $5,metric = $6,num_licenses_acquired = $7,
+            avg_unit_price = $8,avg_maintenance_unit_price = $9,total_purchase_cost = $10,
+            total_maintenance_cost = $11,total_cost = $12,updated_by = $13,start_of_maintenance = $14,end_of_maintenance = $15, num_licences_maintainance = $16, version = $17, comment = $18;
 
 
 -- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.entity,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,start_of_maintenance, end_of_maintenance , version FROM 
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,start_of_maintenance, end_of_maintenance , version, comment FROM 
 acqrights a
 WHERE 
   a.scope = ANY(@scope::TEXT[])
@@ -311,8 +371,6 @@ WHERE
   CASE WHEN @sku_desc::bool THEN a.sku END desc,
   CASE WHEN @metric_asc::bool THEN a.metric END asc,
   CASE WHEN @metric_desc::bool THEN a.metric END desc,
-  CASE WHEN @entity_asc::bool THEN a.entity END asc,
-  CASE WHEN @entity_desc::bool THEN a.entity END desc,
   CASE WHEN @num_licenses_acquired_asc::bool THEN a.num_licenses_acquired END asc,
   CASE WHEN @num_licenses_acquired_desc::bool THEN a.num_licenses_acquired END desc,
   CASE WHEN @num_licences_maintainance_asc::bool THEN a.num_licences_maintainance END asc,
@@ -333,45 +391,108 @@ WHERE
   CASE WHEN @end_of_maintenance_desc::bool THEN a.end_of_maintenance END desc
   LIMIT @page_size OFFSET @page_num;
 
+-- name: ListProductAggregation :many
+SELECT
+    DISTINCT ag.aggregation_name as aggregation_name,
+   	ag.product_editor,
+   	swidtags,
+   	coalesce(pe.num_of_equipments,0) as num_of_equipments,
+   	coalesce(pa.num_of_applications,0) as num_of_applications,
+   	ag.id,
+   	ag.total_cost
+FROM
+    aggregated_rights ag
+    INNER JOIN (
+        SELECT
+            pa.swidtag,
+            count(pa.application_id) as num_of_applications
+        FROM
+            products_applications pa
+        WHERE
+            pa.scope = @scope
+        GROUP BY
+            pa.swidtag
+    ) pa ON pa.swidtag = ANY(ag.swidtags)
+    INNER JOIN (
+        SELECT
+            pe.swidtag,
+            count(pe.equipment_id) as num_of_equipments
+        FROM
+            products_equipments pe
+        WHERE
+            pe.scope = @scope
+        GROUP BY
+            pe.swidtag
+    ) pe ON pe.swidtag = ANY(ag.swidtags)
+WHERE
+    scope = @scope
+LIMIT
+    @page_size OFFSET @page_num;
+
 -- name: ListAcqRightsAggregation :many
-SELECT count(*) OVER() AS totalRecords,ag.aggregation_id,ag.aggregation_name,a.product_editor,a.metric,array_agg(a.sku)::TEXT[] as skus,array_agg(a.swidtag)::TEXT[] as swidtags,SUM(a.total_cost)::Numeric(15,2) as total_cost FROM 
-acqrights a JOIN (SELECT agg.aggregation_id,agg.aggregation_name,agg.aggregation_metric as metric,unnest(agg.products) as swidtag FROM aggregations agg where agg.aggregation_scope = ANY(@scope::TEXT[]) ) ag
-ON a.swidtag = ag.swidtag AND a.metric = ag.metric
-WHERE 
-    a.scope = ANY(@scope::TEXT[])
-  AND (CASE WHEN @lk_swidtag::bool THEN lower(a.swidtag) LIKE '%' || lower(@swidtag::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN @is_swidtag::bool THEN lower(a.swidtag) = lower(@swidtag) ELSE TRUE END)
-  AND (CASE WHEN @lk_aggregation_name::bool THEN lower(ag.aggregation_name) LIKE '%' || lower(@aggregation_name::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN @is_aggregation_name::bool THEN lower(ag.aggregation_name) = lower(@aggregation_name) ELSE TRUE END)
-  AND (CASE WHEN @lk_product_editor::bool THEN lower(a.product_editor) LIKE '%' || lower(@product_editor::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN @is_product_editor::bool THEN lower(a.product_editor) = lower(@product_editor) ELSE TRUE END)
-  AND (CASE WHEN @lk_sku::bool THEN lower(a.sku) LIKE '%' || lower(@sku::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN @is_sku::bool THEN lower(a.sku) = lower(@sku) ELSE TRUE END)
-  AND (CASE WHEN @lk_metric::bool THEN lower(a.metric) LIKE '%' || lower(@metric::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN @is_metric::bool THEN lower(a.metric) = lower(@metric) ELSE TRUE END)
-  GROUP BY ag.aggregation_id,ag.aggregation_name,a.product_editor,a.metric
-  ORDER BY
-  CASE WHEN @aggregation_name_asc::bool THEN aggregation_name END asc,
-  CASE WHEN @aggregation_name_desc::bool THEN aggregation_name END desc,
-  CASE WHEN @product_editor_asc::bool THEN a.product_editor END asc,
-  CASE WHEN @product_editor_desc::bool THEN a.product_editor END desc,
-  CASE WHEN @metric_asc::bool THEN a.metric END asc,
-  CASE WHEN @metric_desc::bool THEN a.metric END desc,
-  CASE WHEN @total_cost_asc::bool THEN 8 END asc,
-  CASE WHEN @total_cost_desc::bool THEN 8 END desc
-  LIMIT @page_size OFFSET @page_num;
+SELECT count(*) OVER() AS totalRecords,* from aggregated_rights
+WHERE scope = ANY(@scope::TEXT[]) LIMIT @page_size OFFSET @page_num;
 
 
 -- name: ListAcqRightsAggregationIndividual :many
-SELECT a.entity,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost, a.version FROM 
+SELECT a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost, a.version FROM 
 acqrights a
 WHERE 
   a.swidtag IN (SELECT UNNEST(products) from aggregations where aggregation_id = @aggregation_id  AND a.metric = aggregation_metric AND aggregation_scope = ANY(@scope::TEXT[]))
   AND a.scope = ANY(@scope::TEXT[]);
 
--- name: InsertAggregation :one
-INSERT INTO aggregations (aggregation_name,aggregation_metric,aggregation_scope,products,created_by)
-VALUES ($1,$2,$3,$4,$5) RETURNING *;
+-- name: ListProductsAggregationIndividual :many
+SELECT * ,COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications,COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments
+FROM products p 
+LEFT JOIN 
+(SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = p.scope  GROUP BY swidtag) pa
+ON p.swidtag = pa.swidtag
+LEFT JOIN 
+(SELECT swidtag, count(equipment_id) as num_of_equipments FROM products_equipments WHERE scope = p.scope  GROUP BY swidtag) pe
+ON p.swidtag = pe.swidtag
+LEFT JOIN 
+(SELECT *  FROM aggregated_rights WHERE scope = p.scope  GROUP BY swidtag) ar
+ON p.swidtag = ar.swidtag
+WHERE p.aggregation_name = @aggregation_name and p.scope = ANY(@scope::TEXT[]);
+
+-- name: UpsertAggregation :one
+INSERT INTO aggregated_rights (
+  aggregation_name,
+  sku,
+  scope,
+  product_editor,
+  metric,
+  products,
+  swidtags,
+  num_licenses_acquired,
+  avg_unit_price,
+  avg_maintenance_unit_price,
+  total_purchase_cost,
+  total_maintenance_cost,
+  total_cost,
+  created_by,
+  start_of_maintenance,
+  end_of_maintenance,
+  num_licences_maintainance,
+  comment)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) ON CONFLICT (aggregation_name,sku,scope) DO
+UPDATE
+SET product_editor = $4,
+    metric = $5,
+    products = $6,
+    swidtags = $7,
+    num_licenses_acquired = $8,
+    avg_unit_price = $9,
+    avg_maintenance_unit_price = $10,
+    total_purchase_cost = $11,
+    total_maintenance_cost = $12,
+    total_cost = $13,
+    updated_by = $14,
+    start_of_maintenance = $15,
+    end_of_maintenance = $16,
+    num_licences_maintainance = $17,
+    comment = $18
+RETURNING id;
 
 -- name: UpdateAggregation :one
 UPDATE aggregations
@@ -381,32 +502,44 @@ AND aggregation_scope = @scope
 RETURNING *;
 
 -- name: DeleteAggregation :exec
-DELETE FROM aggregations 
-WHERE aggregation_id = @aggregation_id
-AND aggregation_scope = ANY(@scope::TEXT[]);
+DELETE FROM aggregated_rights 
+WHERE id = @aggregation_id
+AND scope = @scope;
 
--- name: ListAggregation :many
-SELECT agg.aggregation_id,agg.aggregation_name,agg.aggregation_metric,acq.product_editor,agg.aggregation_scope,
-ARRAY_AGG(acq.product_name)::TEXT[] as product_names,ARRAY_AGG(agg.swidtag)::TEXT[] as product_swidtags
-FROM acqrights acq JOIN 
-(SELECT ag.aggregation_id,ag.aggregation_name,ag.aggregation_metric,ag.aggregation_scope,unnest(ag.products) swidtag,ag.created_on,ag.created_by,updated_on,updated_by from aggregations ag WHERE ag.aggregation_scope = ANY(@scope::TEXT[])) agg
-ON acq.swidtag = agg.swidtag AND acq.metric = agg.aggregation_metric WHERE scope = ANY(@scope::TEXT[])
-GROUP BY agg.aggregation_id,agg.aggregation_name,agg.aggregation_metric,acq.product_editor,agg.aggregation_scope;
+-- name: ListAggregations :many
+SELECT id,aggregation_name,sku,product_editor,metric,products,swidtags,scope,num_licenses_acquired,
+  num_licences_computed,num_licences_maintainance,avg_unit_price,avg_maintenance_unit_price,total_purchase_cost,
+  total_computed_cost,total_maintenance_cost,total_cost,start_of_maintenance,end_of_maintenance,comment
+FROM aggregated_rights
+WHERE scope = @scope;
 
--- name: ListAcqRightsProducts :many
-SELECT swidtag,product_name
-FROM acqrights acq
-WHERE swidtag NOT IN (SELECT UNNEST(products) from aggregations where aggregation_scope = @scope)
+-- name: ListProductsForAggregation :many
+SELECT acq.swidtag, acq.product_name, acq.product_editor 
+FROM acqrights acq 
+WHERE acq.scope = @scope 
+AND acq.swidtag NOT IN (SELECT UNNEST(agg.swidtags) from aggregated_rights agg where agg.scope = @scope and agg.metric = @metric) 
 AND acq.metric = @metric
 AND acq.product_editor = @editor
-AND acq.scope = @scope;
+UNION
+SELECT prd.swidtag, prd.product_name, prd.product_editor 
+FROM products prd 
+JOIN 
+(SELECT swidtag FROM products_equipments WHERE scope = @scope GROUP BY swidtag) pe
+ON prd.swidtag = pe.swidtag
+WHERE prd.scope = @scope 
+AND prd.swidtag NOT IN (SELECT UNNEST(agg.swidtags) from aggregated_rights agg where agg.scope = @scope and agg.metric = @metric)
+AND prd.product_editor = @editor;
 
--- name: ListAcqRightsEditors :many
-SELECT DISTINCT acq.product_editor
-FROM acqrights acq
-WHERE acq.scope = $1;
+-- name: ListEditorsForAggregation :many
+SELECT DISTINCT acq.product_editor 
+FROM acqrights acq 
+WHERE acq.scope = @scope AND acq.product_editor <> ''
+UNION
+SELECT DISTINCT prd.product_editor 
+FROM products prd 
+WHERE prd.scope = @scope AND prd.product_editor <> '';
 
--- name: ListAcqRightsMetrics :many
+-- name: ListMetricsForAggregation :many
 SELECT DISTINCT acq.metric
 FROM acqrights acq
 WHERE acq.scope = $1;
@@ -427,65 +560,69 @@ GROUP BY metric;
 SELECT swidtag as swid_tag, 
 product_name as product_name, 
 SUM(num_licenses_acquired) as num_licenses_acquired,
-SUM(num_licences_computed) as num_licences_computed,
-SUM(num_licenses_acquired-num_licences_computed) as delta
+num_licences_computed as num_licences_computed,
+(SUM(num_licenses_acquired)-num_licences_computed) as delta
 FROM acqrights 
 WHERE
 scope = @scope
 AND
 product_editor = @product_editor
-GROUP BY swidtag,product_name
-HAVING SUM(num_licenses_acquired-num_licences_computed) < 0
+GROUP BY swidtag, metric, product_name,num_licences_computed
+HAVING (SUM(num_licenses_acquired)-num_licences_computed) < 0
 ORDER BY delta ASC LIMIT 5;
 
 -- name: CounterFeitedProductsCosts :many
 SELECT swidtag as swid_tag, 
 product_name as product_name, 
 SUM(total_purchase_cost)::Numeric(15,2) as  total_purchase_cost,
-SUM(total_computed_cost)::Numeric(15,2) as total_computed_cost,
-SUM(total_purchase_cost-total_computed_cost)::Numeric(15,2) as delta_cost
+total_computed_cost::Numeric(15,2) as total_computed_cost,
+(SUM(total_purchase_cost)-total_computed_cost)::Numeric(15,2) as delta_cost
 FROM acqrights 
 WHERE
 scope = @scope
 AND
 product_editor = @product_editor
-GROUP BY swidtag,product_name
-HAVING SUM(total_purchase_cost-total_computed_cost) < 0
+GROUP BY swidtag, metric, product_name, total_computed_cost
+HAVING (SUM(total_purchase_cost)-total_computed_cost) < 0
 ORDER BY delta_cost ASC LIMIT 5;
 
 -- name: OverDeployedProductsLicences :many
 SELECT swidtag as swid_tag, 
 product_name as product_name, 
 SUM(num_licenses_acquired) as num_licenses_acquired,
-SUM(num_licences_computed) as num_licences_computed,
-SUM(num_licenses_acquired-num_licences_computed) as delta
+num_licences_computed as num_licences_computed,
+(SUM(num_licenses_acquired)-num_licences_computed) as delta
 FROM acqrights 
 WHERE
 scope = @scope
 AND
 product_editor = @product_editor
-GROUP BY swidtag,product_name
-HAVING SUM(num_licenses_acquired-num_licences_computed) > 0
-ORDER BY delta DESC LIMIT 5;
+GROUP BY swidtag, metric, product_name,num_licences_computed
+HAVING (SUM(num_licenses_acquired)-num_licences_computed) > 0
+ORDER BY delta ASC LIMIT 5;
 
 -- name: OverDeployedProductsCosts :many
 SELECT swidtag as swid_tag, 
 product_name as product_name, 
 SUM(total_purchase_cost)::Numeric(15,2) as  total_purchase_cost,
-SUM(total_computed_cost)::Numeric(15,2) as total_computed_cost,
-SUM(total_purchase_cost-total_computed_cost)::Numeric(15,2) as delta_cost
+total_computed_cost::Numeric(15,2) as total_computed_cost,
+(SUM(total_purchase_cost)-total_computed_cost)::Numeric(15,2) as delta_cost
 FROM acqrights 
 WHERE
 scope = @scope
 AND
 product_editor = @product_editor
-GROUP BY swidtag,product_name
-HAVING SUM(total_purchase_cost-total_computed_cost) > 0
+GROUP BY swidtag, metric, product_name, total_computed_cost
+HAVING (SUM(total_purchase_cost)-total_computed_cost) > 0
 ORDER BY delta_cost DESC LIMIT 5;
 
 -- name: ListAcqrightsProducts :many
 SELECT DISTINCT swidtag,scope
 FROM acqrights;
+
+-- name: ListAcqrightsProductsByScope :many
+SELECT DISTINCT swidtag,scope
+FROM acqrights where scope = $1;
 
 -- name: AddComputedLicenses :exec
 UPDATE 
@@ -497,32 +634,32 @@ WHERE sku = @sku
 AND scope = @scope;
 
 -- name: CounterfeitPercent :one
-SELECT tpc, delta_cost from (
+SELECT acq, delta_rights from (
 SELECT
-    sum(total_purchase_cost)::Numeric(15,2) as tpc,
-    abs(sum(case when total_purchase_cost < total_computed_cost then total_purchase_cost - total_computed_cost else 0 end))::Numeric(15,2) as delta_cost
+    sum(num_licenses_acquired)::Numeric(15,2) as acq,
+    abs(sum(case when num_licenses_acquired < total_computed_licenses then num_licenses_acquired - total_computed_licenses else 0 end))::Numeric(15,2) as delta_rights
     from (
-        select sum(total_purchase_cost) as total_purchase_cost,
-        sum(total_computed_cost) as total_computed_cost
+        select sum(num_licenses_acquired) as num_licenses_acquired,
+        num_licences_computed as total_computed_licenses
         from acqrights
-        where scope= @scope
-        group by swidtag
+        where scope= @scope AND metric = ANY(@metrics::TEXT[])
+        group by swidtag,metric, num_licences_computed
     ) y
-)x WHERE tpc IS NOT NULL;
+)x WHERE acq IS NOT NULL;
 
 -- name: OverdeployPercent :one
-SELECT tpc, delta_cost from (
+SELECT acq, delta_rights from (
 SELECT
-    sum(total_purchase_cost)::Numeric(15,2) as tpc,
-    sum(case when total_purchase_cost > total_computed_cost then total_purchase_cost - total_computed_cost else 0 end)::Numeric(15,2) as delta_cost
+    sum(num_licenses_acquired)::Numeric(15,2) as acq,
+    abs(sum(case when num_licenses_acquired > total_computed_licenses then num_licenses_acquired - total_computed_licenses else 0 end))::Numeric(15,2) as delta_rights
     from (
-        select sum(total_purchase_cost) as total_purchase_cost,
-        sum(total_computed_cost) as total_computed_cost
+        select sum(num_licenses_acquired) as num_licenses_acquired,
+        num_licences_computed as total_computed_licenses
         from acqrights
-        where scope= @scope
-        group by swidtag
+        where scope= @scope AND metric = ANY(@metrics::TEXT[])
+        group by swidtag,metric, num_licences_computed
     ) y
-)x WHERE tpc IS NOT NULL;
+)x WHERE acq IS NOT NULL;
 
 -- name: UpsertProductApplications :exec
 
@@ -551,12 +688,12 @@ group by (1);
 
 
 -- name: ProductsNotDeployed :many
-SELECT DISTINCT(swidtag), product_name FROM acqrights
+SELECT DISTINCT(swidtag), product_name, product_editor, version FROM acqrights
 WHERE acqrights.swidtag NOT IN (SELECT swidtag FROM products_equipments WHERE products_equipments.scope = @scope)
 AND acqrights.scope = @scope;
 
 -- name: ProductsNotAcquired :many
-SELECT swidtag, product_name FROM products
+SELECT swidtag, product_name, product_editor, product_version  FROM products
 WHERE products.swidtag NOT IN (SELECT swidtag FROM acqrights WHERE acqrights.scope = @scope)
 AND products.swidtag IN (SELECT swidtag FROM products_equipments WHERE products_equipments.scope = @scope)
 AND products.scope = @scope;
@@ -568,4 +705,110 @@ DELETE FROM products WHERE scope = @scope;
 DELETE FROM acqrights WHERE scope = @scope;
 
 -- name: DeleteProductAggregationByScope :exec
-DELETE FROM aggregations WHERE aggregation_scope = @scope;
+DELETE FROM aggregated_rights WHERE scope = @scope;
+
+-- name: GetAggregationByName :one
+SELECT *
+FROM aggregated_rights
+WHERE aggregation_name = @aggregation_name
+    AND scope = @scope;
+
+-- name: GetAggregationBySKU :one
+SELECT *
+FROM aggregated_rights
+WHERE sku = @sku
+    AND scope = @scope;
+
+-- name: GetAcqRightBySKU :one
+SELECT *
+FROM acqrights
+WHERE sku = @acqright_sku and scope = @scope;
+
+-- name: InsertAcqRight :exec
+INSERT INTO acqrights (sku,swidtag,product_name,product_editor,scope,metric,num_licenses_acquired,avg_unit_price,avg_maintenance_unit_price,total_purchase_cost,total_maintenance_cost,total_cost,created_by,start_of_maintenance,end_of_maintenance,num_licences_maintainance,version,comment)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18);
+
+-- name: UpsertDashboardUpdates :exec
+Insert into dashboard_audit (updated_at, next_update_at ,updated_by ,scope) values($1,$2,$3,$4)
+on CONFLICT (scope) 
+Do update set updated_at = $1, next_update_at = $2, updated_by = $3;
+
+-- name: GetDashboardUpdates :one
+select updated_at  at time zone $2::varchar as updated_at , next_update_at  at time zone $2::varchar as next_update_at from dashboard_audit where scope = $1;
+
+-- name: DeleteAcqrightBySKU :exec
+DELETE FROM acqrights WHERE scope = @scope AND sku = @sku;
+
+-- name: GetEquipmentsBySwidtag :one
+SELECT 
+    ARRAY_AGG(DISTINCT(equipment_id))::TEXT[] as equipments
+from products_equipments
+WHERE 
+    scope = @scope and 
+    swidtag = @swidtag;
+
+-- name: GetAcqBySwidtags :many
+Select * from acqrights where swidtag = ANY(@swidtag::TEXT[]) and scope = @scope;
+
+-- name: GetIndividualProductDetailByAggregation :many
+Select
+	ar.aggregation_name,
+    coalesce(num_of_applications,0) as num_of_applications,
+    coalesce(num_of_equipments,0) as num_of_equipments,
+    ar.product_editor,
+    name,
+    version,
+    p_id,
+    ar.total_cost
+from
+	aggregated_rights ar
+	LEFT JOIN (
+		select 
+			p.product_name as name,
+			p.product_version as version,
+			p.swidtag  as p_id
+			from products p 
+		where 
+			p.scope =  @scope
+	) p on p_id  = ANY(ar.swidtags::TEXT[])
+    LEFT JOIN (
+        SELECT
+            pa.swidtag ,
+            count(application_id) as num_of_applications
+        FROM
+            products_applications pa
+        WHERE
+            pa.scope = @scope
+        GROUP BY
+            pa.swidtag
+    ) pa ON p_id = pa.swidtag
+    LEFT JOIN (
+        SELECT
+            pe.swidtag ,
+            count(equipment_id) as num_of_equipments
+        FROM
+            products_equipments pe
+        WHERE
+            pe.scope = @scope
+        GROUP BY
+            pe.swidtag
+    ) pe ON p_id = pe.swidtag
+WHERE
+     ar.scope = @scope and ar.aggregation_name = @aggregation_name;
+
+-- name: ListSelectedProductsForAggregration :many
+SELECT acq.swidtag, acq.product_name, acq.product_editor
+FROM acqrights acq 
+WHERE acq.scope = @scope 
+AND acq.swidtag IN (SELECT UNNEST(agg.swidtags) from aggregated_rights agg where agg.scope = @scope and agg.id = @id) 
+UNION
+SELECT prd.swidtag, prd.product_name, prd.product_editor
+FROM products prd 
+WHERE prd.scope = @scope 
+AND prd.swidtag IN (SELECT UNNEST(agg.swidtags) from aggregated_rights agg where agg.scope = @scope and agg.id = @id);
+
+-- name: GetAggregationByID :one
+SELECT *
+FROM aggregated_rights
+WHERE id = @id
+    AND scope = @scope;

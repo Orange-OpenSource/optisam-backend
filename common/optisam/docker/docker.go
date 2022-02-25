@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package docker
 
 import (
@@ -76,7 +70,7 @@ func getContainerConfig(cfg Config) (*container.Config, error) {
 		return nil, fmt.Errorf("bindings are missing in config")
 	}
 	if cfg.Image == "" {
-		return nil, fmt.Errorf("Image is missing in config")
+		return nil, fmt.Errorf("image is missing in config")
 	}
 	mappings := make(nat.PortSet)
 	for _, v := range cfg.Bindings {
@@ -92,7 +86,7 @@ func getContainerConfig(cfg Config) (*container.Config, error) {
 	}, nil
 }
 
-//Start function starts the docker basis on configuration
+// Start function starts the docker basis on configuration
 func Start(cfg []Config) (dockers []*DockerInfo, err error) {
 	err = initClient()
 	if err != nil {
@@ -106,7 +100,7 @@ func Start(cfg []Config) (dockers []*DockerInfo, err error) {
 		var containerConfig *container.Config
 		var hostConfig *container.HostConfig
 		if data.Name == "" {
-			return dockers, fmt.Errorf("Docker/container name is missing , mandatory")
+			return dockers, fmt.Errorf("docker/container name is missing , mandatory")
 		}
 		docker.name = data.Name
 		hostConfig, err = getHostConfig(data)
@@ -192,7 +186,7 @@ func isContainerRunning(cfg []Config, names []string) bool {
 
 }
 
-//Stop func stop the docker image
+// Stop func stop the docker image
 func Stop(dockers []*DockerInfo) error {
 
 	if dockers == nil {

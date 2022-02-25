@@ -2,6 +2,7 @@ environment = "development"
 debug = false
 grpcport = "14090"
 httpport = "14091"
+delBatchSize = 20000
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -22,9 +23,16 @@ agentEndpoint = "192.168.99.100:6831"
 
 [dgraph]
 hosts = [
-   # "10.171.44.163:9082"
-#	"localhost:9080"
+    #"10.171.44.163:9082" 
+	"127.0.0.1:9080"
 ]
+
+[grpcservers]
+apikey = "12345678"
+timeout = 1000
+
+[grpcservers.Address]
+account = "localhost:20000"
 
 [app.params]
 pageSize = 20

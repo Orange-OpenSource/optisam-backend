@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import "strings"
@@ -17,11 +11,11 @@ func addTab(str string, num int) string {
 
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
+// func check(e error) {
+// 	if e != nil {
+// 		panic(e)
+// 	}
+// }
 
 func formatter(uf string) string {
 	balanceParenthesisCount := 0
@@ -34,7 +28,7 @@ func formatter(uf string) string {
 	for i := 0; i < len(splittedArray); i++ {
 		currentString := splittedArray[i]
 		trimmedString := strings.TrimSpace(currentString)
-		if strings.HasSuffix(trimmedString, "{") {
+		if strings.HasSuffix(trimmedString, "{") { // nolint: gocritic
 			trimmedString = addTab(trimmedString, balanceParenthesisCount)
 			balanceParenthesisCount++
 		} else if strings.HasPrefix(trimmedString, "}") {

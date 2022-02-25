@@ -1,17 +1,17 @@
 environment = "development"
 debug = false
-httpport = "9092"
+httpport = "9093"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
-loglevel = 0
+loglevel = -1
 
 [instrumentation]
 addr = ":8092"
 
 [instrumentation.prometheus]
 enabled = false
-namespace = "importservice"
+
 
 [instrumentation.jaeger]
 enabled = false
@@ -35,10 +35,11 @@ timeout = 10
 [grpcservers.Address]
 dps = "localhost:10000"
 simulation = "localhost:22090"
+account = "localhost:20000"
 
 [upload]
 uploadDir = "testdata"
-RawdataUploadDir = "nifi"
+RawdataUploadDir = "../../../dps-service/cmd/server/testdata/"
 DatafileAllowedRegex = ['''^products\.csv$''','''^products_equipments\.csv$''','''^applications_products\.csv$''',
                '''^products_acquiredRights\.csv$''',
                '''^applications\.csv$''','''^applications_instances\.csv$''','''^instances_equipments\.csv$''','''^instances_products\.csv$'''

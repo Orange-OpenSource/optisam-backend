@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "v1";
+option go_package = "optisam-backend/product-service/pkg/api/v1";
 
 package optisam.products.v1;
 
@@ -18,13 +18,13 @@ service ProductService {
 
   rpc DashboardOverview(DashboardOverviewRequest) returns (DashboardOverviewResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/overview"
+      get : "/api/v1/product/dashboard/overview"
     };
   }
 
   rpc ProductsPerEditor(ProductsPerEditorRequest) returns (ProductsPerEditorResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/editors/products"
+      get : "/api/v1/product/dashboard/editors/products"
     };
   }
 
@@ -43,43 +43,26 @@ service ProductService {
   rpc ListProductAggregationView(ListProductAggregationViewRequest)
       returns (ListProductAggregationViewResponse) {
     option (google.api.http) = {
-      get : "/api/v1/products/aggregations"
+      get : "/api/v1/product/aggregation/view"
     };
   }
 
-  rpc ListProductAggregationProductView(
-      ListProductAggregationProductViewRequest)
-      returns (ListProductAggregationProductViewResponse) {
+  rpc ProductAggregationProductViewDetails(ProductAggregationProductViewDetailsRequest)
+  returns (ProductAggregationProductViewDetailsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/products/aggregations/{ID}/products"
-    };
-  }
-
-  rpc ProductAggregationProductViewDetails(
-      ProductAggregationProductViewDetailsRequest)
-      returns (ProductAggregationProductViewDetailsResponse) {
-    option (google.api.http) = {
-      get : "/api/v1/products/aggregations/productview/{ID}/details"
-    };
-  }
-
-  rpc ProductAggregationProductViewOptions(
-      ProductAggregationProductViewOptionsRequest)
-      returns (ProductAggregationProductViewOptionsResponse) {
-    option (google.api.http) = {
-      get : "/api/v1/products/aggregations/productview/{ID}/options"
+      get : "/api/v1/product/aggregations/productview/{ID}/details"
     };
   }
 
   rpc ListEditors(ListEditorsRequest) returns (ListEditorsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/editors"
+      get : "/api/v1/product/editors"
     };
   }
 
     rpc ListEditorProducts(ListEditorProductsRequest) returns (ListEditorProductsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/editors/products"
+      get : "/api/v1/product/editors/products"
     };
   }
 
@@ -92,125 +75,299 @@ service ProductService {
 
   rpc UpsertAcqRights(UpsertAcqRightsRequest) returns (UpsertAcqRightsResponse) {
     option (google.api.http) = {
-      post : "/api/v1/acqrights"
+      post : "/api/v1/product/acqrights"
       body : "*"
     };
   }
 
   rpc ProductsPerMetricType(ProductsPerMetricTypeRequest) returns (ProductsPerMetricTypeResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/metrics/products"
+      get : "/api/v1/product/dashboard/metrics/products"
     };
   }
 
   rpc ComplianceAlert(ComplianceAlertRequest) returns (ComplianceAlertResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/alert/compliance"
+      get : "/api/v1/product/dashboard/alert/compliance"
     };
   }
 
   rpc CounterfeitedProducts(CounterfeitedProductsRequest) returns (CounterfeitedProductsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/compliance/counterfeiting"
+      get : "/api/v1/product/dashboard/compliance/counterfeiting"
     };
   }
 
   rpc OverdeployedProducts(OverdeployedProductsRequest) returns (OverdeployedProductsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/compliance/overdeployment"
+      get : "/api/v1/product/dashboard/compliance/overdeployment"
     };
   }
 
   rpc DashboardQualityProducts(DashboardQualityProductsRequest) returns (DashboardQualityProductsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/quality/products"
+      get : "/api/v1/product/dashboard/quality/products"
     };
   }
 
   rpc ListAcqRights(ListAcqRightsRequest) returns (ListAcqRightsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/acqrights"
+      get : "/api/v1/product/acqrights"
     };
   }
 
-  rpc ListAcqRightsAggregation(ListAcqRightsAggregationRequest)
-      returns (ListAcqRightsAggregationResponse) {
+  rpc ListAggregatedAcqRights(ListAggregatedAcqRightsRequest)
+      returns (ListAggregatedAcqRightsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/acqrights/aggregations"
+      get : "/api/v1/product/aggregated_acqrights"
     };
   }
 
   rpc ListAcqRightsAggregationRecords(ListAcqRightsAggregationRecordsRequest)
       returns (ListAcqRightsAggregationRecordsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/acqrights/aggregations/{aggregation_id}/records"
+      get : "/api/v1/product/acqrights/aggregations/{aggregation_id}/records"
     };
   }
 
-  rpc CreateProductAggregation(ProductAggregationMessage)
-      returns (ProductAggregationMessage) {
+   rpc ProductAggregationProductViewOptions(ProductAggregationProductViewOptionsRequest)
+   returns (ProductAggregationProductViewOptionsResponse) {
+      option (google.api.http) = {
+      get : "/api/v1/product/aggregations/productview/{ID}/options"
+    };
+  }
+
+  rpc CreateAggregation(AggregatedRights)returns (AggregatedRightsResponse) {
     option (google.api.http) = {
-      post : "/api/v1/aggregations"
+      post : "/api/v1/product/aggregations"
       body : "*"
     };
   }
 
-  rpc ListAcqRightsEditors(ListAcqRightsEditorsRequest)
-      returns (ListAcqRightsEditorsResponse) {
+  rpc ListAggregatedRightsEditors(ListAggregatedRightsEditorsRequest)returns (ListAggregatedRightsEditorsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/aggregations/editors"
+      get : "/api/v1/product/aggregations/editors"
     };
   }
 
-  rpc ListAcqRightsProducts(ListAcqRightsProductsRequest)
-      returns (ListAcqRightsProductsResponse) {
+  rpc ListAggregatedRightsProducts(ListAggregatedRightsProductsRequest)returns (ListAggregatedRightsProductsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/aggregations/products"
+      get : "/api/v1/product/aggregations/products"
     };
   }
-
-  rpc ListAcqRightsMetrics(ListAcqRightsMetricsRequest)
-      returns (ListAcqRightsMetricsResponse) {
+  
+  rpc ListAggregations(ListAggregationsRequest)returns (ListAggregationsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/aggregations/metrics"
-    };
-  }
-
-  rpc ListProductAggregation(ListProductAggregationRequest)
-      returns (ListProductAggregationResponse) {
-    option (google.api.http) = {
-      get : "/api/v1/aggregations"
+      get : "/api/v1/product/aggregations"
     };
   }
   // update product aggregation
-  rpc UpdateProductAggregation(ProductAggregationMessage)
-      returns (ProductAggregationMessage) {
+  rpc UpdateAggregation(AggregatedRights)returns (AggregatedRightsResponse) {
     option (google.api.http) = {
-      put : "/api/v1/aggregations/{ID}"
+      put : "/api/v1/product/aggregations/{ID}"
       body : "*"
     };
   }
 
-  rpc DeleteProductAggregation(DeleteProductAggregationRequest)
-      returns (DeleteProductAggregationResponse) {
+  rpc DeleteProductAggregation(DeleteProductAggregationRequest)returns (DeleteProductAggregationResponse) {
     option (google.api.http) = {
-      delete : "/api/v1/aggregations/{ID}"
+      delete : "/api/v1/product/aggregations/{ID}"
     };
   }
 
   rpc OverviewProductQuality(OverviewProductQualityRequest) returns (OverviewProductQualityResponse) {
     option (google.api.http) = {
-      get : "/api/v1/dashboard/product/quality"
+      get : "/api/v1/product/dashboard/product/quality"
     };
   }
 
   
   rpc DropProductData(DropProductDataRequest)returns (DropProductDataResponse) {
     option (google.api.http) = {
-      delete : "/api/v1/products/{scope}"
+      delete : "/api/v1/product/{scope}"
     };
   }
 
+  rpc CreateAcqRight(AcqRightRequest) returns (AcqRightResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/product/acqright"
+      body : "*"
+    };
+  }
+
+  rpc CreateDashboardUpdateJob(CreateDashboardUpdateJobRequest) returns (CreateDashboardUpdateJobResponse) {
+  }
+
+  rpc GetBanner(GetBannerRequest) returns (GetBannerResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/banner"
+    };
+  }
+
+  rpc UpdateAcqRight(AcqRightRequest) returns (AcqRightResponse) {
+    option (google.api.http) = {
+      put : "/api/v1/product/acqright/{sku}"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/product/acqright/{sku}"
+        body : "*"
+      }
+    };
+  }
+
+  rpc DeleteAcqRight(DeleteAcqRightRequest)returns (DeleteAcqRightResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/product/acqright/{sku}"
+    };
+  }
+
+  rpc GetEquipmentsByProduct(GetEquipmentsByProductRequest)returns (GetEquipmentsByProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/equipments"
+    };
+  }
+
+  rpc GetAggregationAcqrightsExpandedView(GetAggregationAcqrightsExpandedViewRequest)returns (GetAggregationAcqrightsExpandedViewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/expand/aggregation_acqrights"
+    };
+  }
+
+  rpc GetAggregationProductsExpandedView(GetAggregationProductsExpandedViewRequest)returns (GetAggregationProductsExpandedViewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/expand/aggregation_products"
+    };
+  }
+}
+
+message GetAggregationAcqrightsExpandedViewRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string aggregation_name = 2 [(validate.rules).string.min_len = 1];
+}
+
+message GetAggregationAcqrightsExpandedViewResponse{
+  int32 total_records = 1;
+  repeated AcqRights acqRights =2;
+}
+
+message GetAggregationProductsExpandedViewRequest { 
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string aggregation_name = 2 [(validate.rules).string.min_len = 1]; 
+}
+
+message GetAggregationProductsExpandedViewResponse {
+  int32 total_records = 1;
+  repeated ProductExpand products =2;
+}
+
+message ProductAggregationProductViewOptionsRequest { int32 ID = 1;
+  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
+
+message ProductAggregationProductViewOptionsResponse {
+  int32 numOfOptions = 1;
+  repeated OptionInfo optioninfo = 2;
+}
+
+message GetEquipmentsByProductRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string swidTag = 2;
+}
+
+message GetEquipmentsByProductResponse { 
+  repeated string equipment_id = 1; 
+}
+
+message DeleteAcqRightRequest {
+  string sku = 1 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DeleteAcqRightResponse { bool success = 1; }
+
+
+message CreateDashboardUpdateJobRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message CreateDashboardUpdateJobResponse{
+  bool success = 1;
+}
+
+
+message GetBannerRequest{
+  string time_zone = 1 [(validate.rules).string = {in: ["CET", "IST", "CEST"]}];
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+
+}
+
+message GetBannerResponse{
+  string updated_at = 1;
+  string next_update_at = 2;
+}
+
+message AcqRightRequest {
+  string sku = 1 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
+  string product_name = 2 [(validate.rules).string.pattern = "^[\\sa-zA-Z0-9().-]+$" ];
+  string version = 3 [ (validate.rules).string.pattern = "^[\\sa-zA-Z0-9.-]+$" ];
+  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string metric_name = 5 [(validate.rules).string.min_len = 1 ];
+  int32 num_licenses_acquired = 6 [(validate.rules).int32 = { gte: 0}];
+  double avg_unit_price = 7 [(validate.rules).double = { gte: 0}];
+  string start_of_maintenance = 8 ;
+  string end_of_maintenance = 9 ;
+  int32 num_licences_maintainance = 10 [(validate.rules).int32 = { gte: 0}];
+  double avg_maintenance_unit_price = 11 [(validate.rules).double = { gte: 0}];
+  string scope = 12 [(validate.rules).string.min_len = 1 ];
+  string comment = 13 [(validate.rules).string.max_len = 100 ];
+}
+
+message AcqRightResponse { 
+  bool success = 1; 
+}
+
+message AggregatedRights {
+  int32 ID = 1;
+  string aggregation_name = 2;
+  string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
+  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string metric_name = 5 [(validate.rules).string.min_len = 1 ];
+  repeated string product_names = 6 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().-]+$"];
+  repeated string swidtags = 7 [(validate.rules).repeated  = {min_items: 1}];
+  int32 num_licenses_acquired = 8 [(validate.rules).int32 = { gte: 0}];
+  double avg_unit_price = 9 [(validate.rules).double = { gte: 0}];
+  string start_of_maintenance = 10 ;
+  string end_of_maintenance = 11 ;
+  int32 num_licences_maintainance = 12 [(validate.rules).int32 = { gte: 0}];
+  double avg_maintenance_unit_price = 13 [(validate.rules).double = { gte: 0}];
+  string scope = 14 [(validate.rules).string.min_len = 1 ];
+  string comment = 15 [(validate.rules).string.max_len = 100 ];
+}
+
+message AggregatedRightsView {
+  int32 ID = 1;
+  string aggregation_name = 2;
+  string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
+  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string metric_name = 5 [(validate.rules).string.min_len = 1 ];
+  repeated string product_names = 6 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().-]+$"];
+  repeated string swidtags = 7 [(validate.rules).repeated  = {min_items: 1}];
+  int32 num_licenses_acquired = 8 [(validate.rules).int32 = { gte: 0}];
+  double avg_unit_price = 9 [(validate.rules).double = { gte: 0}];
+  string start_of_maintenance = 10 ;
+  string end_of_maintenance = 11 ;
+  int32 num_licences_maintainance = 12 [(validate.rules).int32 = { gte: 0}];
+  double avg_maintenance_unit_price = 13 [(validate.rules).double = { gte: 0}];
+  string scope = 14 [(validate.rules).string.min_len = 1 ];
+  string comment = 15 [(validate.rules).string.max_len = 100 ];
+  bool is_individual_right_exists = 16;
+  double total_purchase_cost = 17 [(validate.rules).double = { gte: 0}];
+  double total_cost = 18 [(validate.rules).double = { gte: 0}];
+  double total_maintenance_cost = 19 [(validate.rules).double = { gte: 0}];
+  string  licence_under_maintenance = 20;
+}
+
+message AggregatedRightsResponse { 
+  bool success = 1; 
 }
 
 message OverviewProductQualityRequest{
@@ -238,26 +395,19 @@ message EditorProducts {
   int32 num_products = 2;
 }
 
-message ProductAggregationProductViewOptionsRequest { int32 ID = 1;
-  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
-
-message ProductAggregationProductViewOptionsResponse {
-  int32 numOfOptions = 1;
-  repeated OptionInfo optioninfo = 2;
-}
-
 message ProductAggregationProductViewDetailsRequest { int32 ID = 1;
-  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
 
 message ProductAggregationProductViewDetailsResponse {
   int32 ID = 1;
   string name = 2;
   string editor = 3;
-  string product_name = 4;
+  repeated string product_names = 4;
   int32 num_applications = 5;
   int32 num_equipments = 6;
   repeated string products = 7;
-  repeated string editions = 8;
+  repeated string versions = 8;
 }
 
 message ListProductAggregationViewRequest {
@@ -267,9 +417,9 @@ message ListProductAggregationViewRequest {
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10},
+    (validate.rules).int32 = {gte : 10, lte : 200},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-        {description : "Items per page", minimum : 10, maximum : 100}
+        {description : "Items per page", minimum : 10, maximum : 200}
   ];
   enum SortBy {
     aggregation_name = 0;
@@ -301,7 +451,7 @@ message ListProductAggregationViewResponse {
 
 message ProductAggregationView {
   int32 ID = 1;
-  string name = 2;
+  string aggregation_name = 2;
   string editor = 3;
   int32 num_applications = 4;
   int32 num_equipments = 5;
@@ -309,13 +459,19 @@ message ProductAggregationView {
   repeated string swidtags = 7;
 }
 
-message ListProductAggregationProductViewRequest { int32 ID = 1;
-  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"]; }
-
-message ListProductAggregationProductViewResponse {
-  repeated Product products = 1;
+message ProductAggRecord {
+  string swidTag = 1;
+  string Name = 2;
+  string edition = 3;
+  string editor = 4;
+  string version = 5;
+  int32 num_applications = 6;
+  int32 num_equipments = 7;
+  double totalCost = 8;
+  string aggregation_name = 9;
 }
-  message ListEditorsRequest { repeated string scopes = 1  [(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];}
+
+message ListEditorsRequest { repeated string scopes = 1  [(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];}
 
 message ListEditorsResponse { repeated string editors = 1; }
 
@@ -352,9 +508,9 @@ message ListProductsRequest {
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10},
+    (validate.rules).int32 = {gte : 10, lte : 200},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-        {description : "Items per page", minimum : 10, maximum : 100}
+        {description : "Items per page", minimum : 10, maximum : 200}
   ];
   string sort_by = 3 [ (validate.rules).string = {
     in : [
@@ -383,14 +539,17 @@ message ProductSearchParams {
 }
 
 message ProductRequest { string swid_tag = 1;
-  repeated string scopes = 2 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
  }
 
 message ProductResponse {
   string swidTag = 1;
-  string editor = 2;
-  string edition = 3;
-  string release = 4;
+  string product_name = 2;
+  string editor = 3;
+  string version = 4;
+  int32 num_applications = 5;
+  int32 num_equipments = 6;
+  repeated string defined_metrics = 7; 
 }
 
 message ProductOptionsResponse {
@@ -404,6 +563,17 @@ message OptionInfo {
   string edition = 3;
   string editor = 4;
   string version = 5;
+}
+
+message ProductExpand {
+  string swidTag = 1;
+  string Name = 2;
+  string edition = 3;
+  string editor = 4;
+  string version = 5;
+  int32 num_applications = 6;
+  int32 num_equipments = 7;
+  double totalCost = 8;
 }
 
 message StringFilter {
@@ -485,7 +655,9 @@ message DashboardQualityProductsResponse {
 
 message DashboardQualityProducts {
   string swid_tag = 1;
-  string product_name = 2;
+  string product_name = 2; 
+  string editor = 3;
+  string version = 4;
 }
 
 message ProductsLicenses {
@@ -558,12 +730,11 @@ message UpsertAcqRightsRequest {
   double total_purchase_cost = 9;
   double total_maintenance_cost = 10;
   double total_cost = 11;
-  string entity = 12;
-  string scope = 13 [ (validate.rules).string.min_len = 1 ];
-  string start_of_maintenance = 14 ;
-  string end_of_maintenance = 15 ;
-  int32 num_licences_maintainance = 16;
-  string version = 17 [ (validate.rules).string.min_len = 1 ];
+  string scope = 12 [ (validate.rules).string.min_len = 1 ];
+  string start_of_maintenance = 13 ;
+  string end_of_maintenance = 14 ;
+  int32 num_licences_maintainance = 15;
+  string version = 16 [ (validate.rules).string.min_len = 1 ];
 }
 
 
@@ -577,26 +748,25 @@ message ListAcqRightsRequest {
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10, lt : 100},
+    (validate.rules).int32 = {gte : 10, lte : 200},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-        {description : "Items per page", minimum : 10, maximum : 100}
+        {description : "Items per page", minimum : 10, maximum : 200}
   ];
   enum SortBy {
-    ENTITY = 0;
-    SKU = 1;
-    SWID_TAG = 2;
-    PRODUCT_NAME = 3;
-    EDITOR = 4;
-    METRIC = 5;
-    ACQUIRED_LICENSES_NUMBER = 6;
-    AVG_LICENSE_UNIT_PRICE = 7;
-    AVG_MAINTENANCE_UNIT_PRICE = 8;
-    TOTAL_PURCHASE_COST = 9;
-    TOTAL_MAINTENANCE_COST = 10;
-    TOTAL_COST = 11;
-    START_OF_MAINTENANCE = 12;
-    END_OF_MAINTENANCE = 13;
-    LICENSES_UNDER_MAINTENANCE_NUMBER = 14;
+    SKU = 0;
+    SWID_TAG = 1;
+    PRODUCT_NAME = 2;
+    EDITOR = 3;
+    METRIC = 4;
+    ACQUIRED_LICENSES_NUMBER = 5;
+    AVG_LICENSE_UNIT_PRICE = 6;
+    AVG_MAINTENANCE_UNIT_PRICE = 7;
+    TOTAL_PURCHASE_COST = 8;
+    TOTAL_MAINTENANCE_COST = 9;
+    TOTAL_COST = 10;
+    START_OF_MAINTENANCE = 11;
+    END_OF_MAINTENANCE = 12;
+    LICENSES_UNDER_MAINTENANCE_NUMBER = 13;
   }
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   SortOrder sort_order = 4; //[(validate.rules).enum.defined_only = true];
@@ -618,35 +788,35 @@ message ListAcqRightsResponse {
 }
 
 message AcqRights {
-  string entity = 1;
-  string SKU = 2;
-  string swid_tag = 3;
-  string product_name = 4;
-  string editor = 5;
-  string metric = 6;
-  int32 acquired_licenses_number = 7;
-  double avg_licenes_unit_price = 8;
-  double avg_maintenance_unit_price = 9;
-  double total_purchase_cost = 10;
-  double total_maintenance_cost = 11;
-  double total_cost = 12;
-  google.protobuf.Timestamp start_of_maintenance = 13;
-  google.protobuf.Timestamp end_of_maintenance = 14;
-  string licenses_under_maintenance = 15;
-  int32 licenses_under_maintenance_number = 16;
-  string version = 17 ;
+  string SKU = 1;
+  string swid_tag = 2;
+  string product_name = 3;
+  string editor = 4;
+  string metric = 5;
+  int32 acquired_licenses_number = 6;
+  double avg_licenes_unit_price = 7;
+  double avg_maintenance_unit_price = 8;
+  double total_purchase_cost = 9;
+  double total_maintenance_cost = 10;
+  double total_cost = 11;
+  google.protobuf.Timestamp start_of_maintenance = 12;
+  google.protobuf.Timestamp end_of_maintenance = 13;
+  string licenses_under_maintenance = 14;
+  int32 licenses_under_maintenance_number = 15;
+  string version = 16;
+  string comment = 17;
 }
 
-message ListAcqRightsAggregationRequest {
+message ListAggregatedAcqRightsRequest {
   int32 page_num = 1 [
     (validate.rules).int32 = {gte : 1, lt : 1000},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10},
+    (validate.rules).int32 = {gte : 10, lte : 200},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
-        {description : "Items per page", minimum : 10, maximum : 100}
+        {description : "Items per page", minimum : 10, maximum : 200}
   ];
   enum SortBy {
     NAME = 0;
@@ -661,9 +831,9 @@ message ListAcqRightsAggregationRequest {
   
 }
 
-message ListAcqRightsAggregationResponse {
+message ListAggregatedAcqRightsResponse {
   int32 totalRecords = 1;
-  repeated AcqRightsAggregation aggregations = 2;
+  repeated AggregatedRightsView aggregations = 2;
 }
 
 message AcqRightsAggregation {
@@ -698,26 +868,43 @@ message ListAcqRightsAggregationRecordsResponse {
 
 message DeleteProductAggregationRequest {
   int32 ID = 1;
-  string scope = 2;
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message DeleteProductAggregationResponse { bool success = 1; }
 
-message ListProductAggregationResponse {
-  repeated ProductAggregation aggregations = 1;
+message ListAggregationsRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
-message ListProductAggregationRequest {
-  // May be required in future
-  repeated string scopes = 1 [(validate.rules).repeated  = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+message ListAggregationsResponse {
+  repeated ListAggregatedRights aggregations = 1;
+}
+
+message ListAggregatedRights {
+  int32 ID = 1;
+  string aggregation_name = 2;
+  string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
+  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string metric_name = 5 [(validate.rules).string.min_len = 1 ];
+  repeated string product_names = 6 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().-]+$"];
+  repeated string swidtags = 7 [(validate.rules).repeated  = {min_items: 1}];
+  int32 num_licenses_acquired = 8 [(validate.rules).int32 = { gte: 0}];
+  double avg_unit_price = 9 [(validate.rules).double = { gte: 0}];
+  google.protobuf.Timestamp start_of_maintenance = 10 ;
+  google.protobuf.Timestamp end_of_maintenance = 11 ;
+  int32 num_licences_maintainance = 12 [(validate.rules).int32 = { gte: 0}];
+  double avg_maintenance_unit_price = 13 [(validate.rules).double = { gte: 0}];
+  string scope = 14 [(validate.rules).string.min_len = 1 ];
+  string comment = 15 [(validate.rules).string.max_len = 100 ];
 }
 
 message ProductAggregationMessage {
   int32 ID = 1;
-  string name = 2;
+  string name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
   string editor = 3;
   string metric = 4;
-  string scope = 5;
+  string scope = 5 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
   repeated string products = 6;
 }
 
@@ -732,23 +919,34 @@ message ProductAggregation {
 }
 
 
-message ListAcqRightsEditorsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
-message ListAcqRightsEditorsResponse { repeated string editor = 1; }
+message ListAggregatedRightsEditorsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
+message ListAggregatedRightsEditorsResponse { repeated string editor = 1; }
 
-message ListAcqRightsMetricsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
-message ListAcqRightsMetricsResponse { repeated string metric = 1; }
-
-message ListAcqRightsProductsRequest { string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; string editor =2; string metric = 3;}
-message ListAcqRightsProductsResponse {
-  repeated AcqRightsProducts acqrights_products = 1;
-  message AcqRightsProducts {
-    string swidtag = 1;
-    string product_name = 2;
+message ListAggregatedRightsProductsRequest { 
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor = 2;
+  string metric = 3;
+  int32 ID = 4 [(validate.rules).int32 = { gte: 0}];
   }
+message ListAggregatedRightsProductsResponse {
+  repeated AggregatedRightsProducts aggrights_products = 1;
+  repeated AggregatedRightsProducts selected_products = 2;
+}
+
+message AggregatedRightsProducts {
+  string swidtag = 1;
+  string product_name = 2;
+  string editor = 3;
 }
 
 message DropProductDataRequest {  
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  enum deletion_types {
+    ACQRIGHTS = 0;
+    FULL = 1;
+    PARK = 2;
+  }
+  deletion_types deletion_type = 2 [(validate.rules).enum = {in: [0,1,2]}];
 }
 
 message DropProductDataResponse { 

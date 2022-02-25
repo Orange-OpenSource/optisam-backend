@@ -1,0 +1,246 @@
+{
+    "datacenter": [
+        {
+            "name": "datacenter_code",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "datacenter_code"
+        },
+        {
+            "name": "datacenter_name",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "datacenter_name"
+        }
+    ],
+    "vcenter": [
+        {
+            "name": "vcenter_code",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_code"
+        },
+        {
+            "name": "vcenter_name",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "vcenter_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "cluster": [
+        {
+            "name": "cluster_code",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cluster_code"
+        },
+        {
+            "name": "cluster_name",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "cluster_name"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "server": [
+        {
+            "name": "server_code",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_code"
+        },
+        {
+            "name": "server_hostname",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_hostname"
+        },
+        {
+            "name": "server_cpu",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_cpu"
+        },
+        {
+            "name": "server_manufacturer",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_manufacturer"
+        },
+        {
+            "name": "server_processorsNumber",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_processorsNumber"
+        },
+        {
+            "name": "server_coresNumber",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_coresNumber"
+        },
+        {
+            "name": "corefactor_oracle",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "corefactor_oracle"
+        },
+        {
+            "name": "pvu",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "pvu"
+        },
+        {
+            "name": "sag",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "sag"
+        },
+        {
+            "name": "server_hostingEntity",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "server_hostingEntity"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ],
+    "partition": [
+        {
+            "name": "partition_code",
+            "data_type": "STRING",
+            "primary_key": true,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "partition_code"
+        },
+        {
+            "name": "partition_hostname",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "partition_hostname"
+        },
+        {
+            "name": "partition_role",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "partition_role"
+        },
+        {
+            "name": "environment",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "environment"
+        },
+        {
+            "name": "shortOS",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "shortOS"
+        },
+        {
+            "name": "virtual_cores_VCPU",
+            "data_type": "FLOAT",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": null,
+            "mapped_to": "virtual_cores_VCPU"
+        },
+        {
+            "name": "parent_id",
+            "data_type": "STRING",
+            "primary_key": null,
+            "displayed": true,
+            "searchable": true,
+            "parent_identifier": true,
+            "mapped_to": "parent_id"
+        }
+    ]
+}

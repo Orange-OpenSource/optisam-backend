@@ -1,15 +1,8 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
 	"database/sql"
 	"flag"
-	"io/ioutil"
 	"log"
 	"optisam-backend/common/optisam/config"
 	"optisam-backend/common/optisam/docker"
@@ -20,7 +13,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gobuffalo/packr/v2"
+	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // nolint: gochecknoglobals
@@ -86,31 +82,31 @@ func TestMain(m *testing.M) {
 		time.Sleep(cfg.INITWAITTIME * time.Second)
 	}
 
-	pgDB, err := postgres.NewConnection(*cfg.Postgres)
+	sqldb, err = postgres.NewConnection(*cfg.Postgres)
 	if err != nil {
 		logger.Log.DPanic("Cannot connect to Postgres DB")
 	}
-	sqldb = pgDB
 
-	if err := loadData(); err != nil {
-		panic(err)
+	// Verify connection.
+	if err = sqldb.Ping(); err != nil {
+		logger.Log.Error("failed to verify connection to PostgreSQL: %v", zap.Error(err))
+		sqldb.Close()
+		return
 	}
+	logger.Log.Info(" DB connection established for testing at  ", zap.String(" host ", cfg.Postgres.Host))
+	defer sqldb.Close()
+
+	// Run Migration
+	migrations := &migrate.PackrMigrationSource{
+		Box: packr.New("migrations", "schema"),
+	}
+	n, err := migrate.Exec(sqldb, "postgres", migrations, migrate.Up)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return
+	}
+	log.Printf("Applied %d migrations!\n", n)
 	code := m.Run()
 	cleanup(dockers)
 	os.Exit(code)
-}
-
-func loadData() error {
-	files := []string{"scripts/1_configure.sql"}
-	for _, file := range files {
-		query, err := ioutil.ReadFile(file)
-		if err != nil {
-			return err
-		}
-		if _, err := sqldb.Exec(string(query)); err != nil {
-			return err
-		}
-
-	}
-	return nil
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package addcolumn
 
 import (
@@ -22,7 +16,7 @@ import (
 )
 
 var (
-	//CmdAddDate informs about the command
+	// CmdAddDate informs about the command
 	CmdAddColumn *config.Command
 )
 
@@ -60,7 +54,7 @@ func addDates() error {
 		val = append(val, v)
 	}
 
-	//fmt.Println(kv, col, val, dir)
+	// fmt.Println(kv, col, val, dir)
 	scopeDirs, err := getAllScopeDirs(dir)
 	files, err := getAllDirFiles(scopeDirs, ".csv")
 
@@ -68,7 +62,7 @@ func addDates() error {
 		return err
 	}
 
-	//fmt.Println(files)
+	// fmt.Println(files)
 
 	// //fmt.Println(filepath.Dir("updated/scope1/products.csv"))
 	// col := []string{"updated", "created"}
@@ -100,7 +94,7 @@ func readCsvFile(filePaths []string, cols []string, vals []string, rmHeaders []s
 		w.Comma = ';'
 
 		record, err := r.Read()
-		//fmt.Println(record)
+		// fmt.Println(record)
 		if err == io.EOF {
 			return nil
 		}
@@ -140,7 +134,7 @@ func readCsvFile(filePaths []string, cols []string, vals []string, rmHeaders []s
 		for i := range column {
 			record = append(record, column[i])
 		}
-		//fmt.Println(record)
+		// fmt.Println(record)
 		if err = w.Write(record); err != nil {
 			log.Fatal(err)
 		}
@@ -192,7 +186,7 @@ func getAllFilesWithSuffixFullPath(dir, suffix string) ([]string, error) {
 	var fileNames []string
 	for _, f := range files {
 		name := filepath.Base(f.Name())
-		//fmt.Println(name, f.Name())
+		// fmt.Println(name, f.Name())
 		if !f.IsDir() && strings.HasSuffix(name, suffix) {
 			fileNames = append(fileNames, dir+"/"+f.Name())
 		}

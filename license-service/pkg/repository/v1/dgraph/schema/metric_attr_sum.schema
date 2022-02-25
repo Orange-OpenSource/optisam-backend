@@ -1,0 +1,3 @@
+metric.attr_sum.equipment_type       : string .
+metric.attr_sum.attr_name            : string .
+metric.attr_sum.reference_value      : float .

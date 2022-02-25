@@ -1,0 +1,6 @@
+swidtag;sku;product;version;editor;metric;acquired_licenses;licenses_under_maintenance;avg_unit_price;avg_maintenance_unit_price;maintenance_start;maintenance_end
+RHOSP;MCT2885;Red Hat OpenStack Platform;Standard;Redhat;INSTANCE;388;;430;;2020-06-01T10:58:56.0260078Z;2021-05-31T10:58:56.0260078Z
+RHEL;RH00004;Red Hat Enterprise Linux Server;Standard;Redhat;INSTANCE;23;;256;;2020-06-01T10:58:56.0260078Z;2021-05-31T10:58:56.0260078Z
+RHEL_SM;MCT2927;"Red Hat Enterprise Linux with Smart Virtualization";Smart Virtualization;Redhat;INSTANCE;81;;1040;;2020-06-01T10:58:56.0260078Z;2021-05-31T10:58:56.0260078Z
+CEPH-1-NODE;RS00061;Red Hat Ceph Storage;Standard;Redhat;CEPH-1-NODE;50;;15000;;2020-06-01T10:58:56.0260078Z;2021-05-31T10:58:56.0260078Z
+CEPH-1-NODE;RS00059;Red Hat Ceph Storage;Standard;Redhat;CEPH-1-NODE;12;;4500;;2020-06-01T10:58:56.0260078Z;2021-05-31T10:58:56.0260078Z

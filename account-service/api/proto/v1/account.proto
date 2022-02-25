@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-option go_package = "v1";
+option go_package = "optisam-backend/account-service/pkg/api/v1";
 
-package v1;
+package optisam.account.v1;
 
 import "google/api/annotations.proto";
 //import "google/protobuf/field_mask.proto";
@@ -12,17 +12,17 @@ import "google/protobuf/timestamp.proto";
 service AccountService {
   rpc CreateAccount(Account)returns(Account){
     option (google.api.http) = {
-      post:"/api/v1/accounts"
+      post:"/api/v1/account/user"
       body:"*"
     };
   }
 
   rpc UpdateAccount(UpdateAccountRequest) returns (UpdateAccountResponse) {
     option (google.api.http) = {
-      put : "/api/v1/accounts/{account.user_id}"
+      put : "/api/v1/account/{account.user_id}"
       body : "account"
       additional_bindings{
-        patch : "/api/v1/accounts/{account.user_id}"
+        patch : "/api/v1/account/{account.user_id}"
         body : "account"
       }
     };
@@ -30,13 +30,13 @@ service AccountService {
 
   rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse) {
     option (google.api.http) = {
-      delete:"/api/v1/accounts/{user_id}"
+      delete:"/api/v1/account/{user_id}"
     };
   }
 
   rpc GetAccount(GetAccountRequest) returns (GetAccountResponse) {
     option (google.api.http) = {
-      get:"/api/v1/accounts/{user_id}"
+      get:"/api/v1/account/{user_id}"
     };
   }
 
@@ -50,63 +50,63 @@ service AccountService {
   // ListGroups list all the groups owned by user.
   rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {
-      get:"/api/v1/admin/groups"
+      get:"/api/v1/account/admin/groups"
     };
   }
 
    // ListUserGroups list all the groups which belongs to user.
    rpc ListUserGroups(ListGroupsRequest) returns (ListGroupsResponse) {
     option (google.api.http) = {
-      get:"/api/v1/admin/direct_groups"
+      get:"/api/v1/account/admin/direct_groups"
     };
   }
 
    // Group Creates a group.
    rpc CreateGroup(Group) returns (Group) {
     option (google.api.http) = {
-      post:"/api/v1/admin/groups"
+      post:"/api/v1/account/admin/groups"
       body:"*"
     };
   }
 
   rpc UpdateGroup(UpdateGroupRequest) returns (Group) {
     option (google.api.http) = {
-      put:"/api/v1/admin/groups/{group_id}"
+      put:"/api/v1/account/admin/groups/{group_id}"
       body:"*"
     };
   }
 
   rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse) {
     option (google.api.http) = {
-      delete:"/api/v1/admin/groups/{group_id}"
+      delete:"/api/v1/account/admin/groups/{group_id}"
     };
   }
 
 
   rpc ListChildGroups(ListChildGroupsRequest)returns (ListGroupsResponse) {
     option (google.api.http) = {
-      get:"/api/v1/admin/groups/{group_id}/groups"
+      get:"/api/v1/account/admin/groups/{group_id}/groups"
     };
   }
 
   //GetUsers list all the users present  
   rpc GetUsers(GetUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      get:"/api/v1/accounts"
+      get:"/api/v1/account/users"
     };
   }
 
   //GetGroupUsers list all the users present in the group
   rpc GetGroupUsers(GetGroupUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      get:"/api/v1/admin/groups/{group_id}/users"
+      get:"/api/v1/account/admin/groups/{group_id}/users"
     };
   }
 
   //AddGroupUser adds user to the group
   rpc AddGroupUser(AddGroupUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      put:"/api/v1/admin/groups/{group_id}/users/add"
+      put:"/api/v1/account/admin/groups/{group_id}/users/add"
       body:"*"
     };
   }
@@ -114,7 +114,7 @@ service AccountService {
   //DeleteGroupUser deletes users from the group
   rpc DeleteGroupUser(DeleteGroupUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      put:"/api/v1/admin/groups/{group_id}/users/delete"
+      put:"/api/v1/account/admin/groups/{group_id}/users/delete"
       body:"*"
     };
   }
@@ -123,7 +123,7 @@ service AccountService {
   //CreateScope creates a new scope and add it into root group
   rpc CreateScope(CreateScopeRequest) returns (CreateScopeResponse) {
     option (google.api.http) = {
-      post: "/api/v1/scopes"
+      post: "/api/v1/account/scopes"
       body: "*"
     };
   }
@@ -131,9 +131,34 @@ service AccountService {
   //ListScopes returns list of available scopes in system
   rpc ListScopes(ListScopesRequest) returns (ListScopesResponse) {
     option (google.api.http) = {
-      get: "/api/v1/scopes"
+      get: "/api/v1/account/scopes"
     };
   }
+
+    //DropScopeData delete all resource/data of a scope in service
+    rpc DropScopeData(DropScopeDataRequest) returns (DropScopeDataResponse) {
+      option (google.api.http) = {
+        delete: "/api/v1/account/scope/{scope}"
+      };
+    }
+
+  //GetScope returns scope details for a particular scope
+  rpc GetScope(GetScopeRequest) returns (Scope) {
+    option (google.api.http) = {
+      get: "/api/v1/account/scopes/{scope}"
+    };
+  }
+}
+
+message GetScopeRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropScopeDataRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message DropScopeDataResponse{
+  bool success = 1;
 }
 
 message ListScopesRequest {}
@@ -148,15 +173,22 @@ message Scope {
   string created_by = 3;
   google.protobuf.Timestamp created_on = 4;
   repeated string group_names = 5;
+  string scope_type = 6 ;
 }
 
 message CreateScopeRequest {
   string scope_code = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
   string scope_name = 2  [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  ScopeType scope_type = 3 [(validate.rules).enum = {in: [0,1]}];
+}
+
+enum ScopeType{
+  GENERIC = 0;
+  SPECIFIC = 1;
 }
 
 message CreateScopeResponse {
-  
+  bool success  = 1;
 }
 
 
@@ -238,9 +270,12 @@ enum ROLE {
 }
 
 message Account {
-  string user_id = 1 [(validate.rules).string.email = true];
-  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
-  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string user_id = 1 [(validate.rules).string = {
+    email : true,
+    pattern : "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",    
+  }];
+  string first_name = 2 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
   string locale = 4 [(validate.rules).string = {in: ["en", "fr"]}];
   ROLE role = 5   [(validate.rules).enum = {in: [1,2]}];;
   repeated int64 groups = 6;
@@ -252,9 +287,12 @@ message UpdateAccountRequest {
 }
 
 message UpdateAccount {
-  string user_id = 1 [(validate.rules).string.email = true];
-  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
-  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string user_id = 1 [(validate.rules).string = {
+    email : true,
+    pattern : "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",    
+  }];
+  string first_name = 2 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
   string locale = 4 [(validate.rules).string = {in: ["en", "fr"]}];
   ROLE role = 5;
   string profile_pic = 6;
@@ -265,7 +303,10 @@ message UpdateAccountResponse {
 }
 
 message DeleteAccountRequest {
-  string user_id = 1 [(validate.rules).string.email = true];
+  string user_id = 1 [(validate.rules).string = {
+    email : true,
+    pattern : "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",    
+  }];
 }
 
 message DeleteAccountResponse {
@@ -279,9 +320,12 @@ message GetAccountRequest {
 }
 
 message GetAccountResponse {
-  string user_id = 1[(validate.rules).string.email = true];
-  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
-  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string user_id = 1 [(validate.rules).string = {
+    email : true,
+    pattern : "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",    
+  }];
+  string first_name = 2 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
   ROLE role = 4;
   string locale = 5;
   string profile_pic =6;
@@ -297,9 +341,12 @@ message GetGroupUsersRequest{
 }
 
 message User {
-  string user_id = 1 [(validate.rules).string.email = true];
-  string first_name = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
-  string last_name = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"];
+  string user_id = 1 [(validate.rules).string = {
+    email : true,
+    pattern : "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$",    
+  }];
+  string first_name = 2 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
+  string last_name = 3 [(validate.rules).string.pattern = "^\\S(.*?)\\S$"];
   string locale = 4;
   repeated string groups = 5;
   ROLE role = 6;

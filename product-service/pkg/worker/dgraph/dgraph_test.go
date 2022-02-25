@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -66,10 +60,10 @@ func Test_worker_DoWorkSync(t *testing.T) {
 		t.Logf("Failed Percent: %.2f\n", (float64(coutFialed)/float64(countTotal))*100)
 	}()
 	for i := 0; i < 1000; i++ {
-		//wg.Add(1)
+		// wg.Add(1)
 		func(iter int) {
 			do(t, iter)
-			//wg.Done()
+			// wg.Done()
 		}(i)
 	}
 	//	wg.Wait()

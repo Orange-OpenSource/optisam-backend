@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -22,6 +16,76 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_DropMetadata(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Equipment
+
+	tests := []struct {
+		name    string
+		r       *equipmentServiceServer
+		ctx     context.Context
+		setup   func()
+		input   *v1.DropMetaDataRequest
+		wantErr bool
+	}{
+		{
+			name:    "ScopeNotFound",
+			wantErr: true,
+			ctx:     ctx,
+			setup:   func() {},
+			input:   &v1.DropMetaDataRequest{Scope: "scope9"},
+		},
+		{
+			name:    "ClaimsNotFound",
+			wantErr: true,
+			ctx:     context.Background(),
+			setup:   func() {},
+			input:   &v1.DropMetaDataRequest{Scope: "Scope1"},
+		},
+		{
+			name:    "DBError",
+			wantErr: true,
+			ctx:     ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DropMetaData(ctx, "Scope1").Return(errors.New("DBError")).Times(1)
+			},
+			input: &v1.DropMetaDataRequest{Scope: "Scope1"},
+		},
+		{
+			name:    "SuccessFullyEquipmentAndMetadataDeleted",
+			wantErr: false,
+			ctx:     ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockEquipment(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().DropMetaData(ctx, "Scope1").Return(nil).Times(1)
+			},
+			input: &v1.DropMetaDataRequest{Scope: "Scope1"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			r := NewEquipmentServiceServer(rep, nil)
+			_, err := r.DropMetaData(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DropMetaData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
 func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
@@ -30,14 +94,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 	})
 
 	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			Type:     "typ1",
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "p1",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr1",
 					Type:         repo.DataTypeString,
@@ -46,7 +110,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_1",
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr2",
 					Type:         repo.DataTypeString,
@@ -54,7 +118,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_2",
 				},
-				&repo.Attribute{
+				{
 					ID:           "3",
 					Name:         "attr3",
 					Type:         repo.DataTypeInt,
@@ -62,7 +126,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_3",
 				},
-				&repo.Attribute{
+				{
 					ID:           "4",
 					Name:         "attr4",
 					Type:         repo.DataTypeFloat,
@@ -70,7 +134,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_4",
 				},
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr5",
 					Type:               repo.DataTypeString,
@@ -79,20 +143,20 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					IsParentIdentifier: true,
 					MappedTo:           "mapping_5",
 				},
-				&repo.Attribute{
+				{
 					ID:       "1",
 					Name:     "attr6",
 					Type:     repo.DataTypeString,
 					MappedTo: "mapping_6",
 				},
-				&repo.Attribute{
+				{
 					ID:          "1",
 					Name:        "attr7",
 					IsDisplayed: true,
 					Type:        repo.DataTypeString,
 					MappedTo:    "mapping_7",
 				},
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr8",
 					IsDisplayed:  true,
@@ -102,14 +166,14 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ2",
 			ID:       "2",
 			SourceID: "s2",
 			ParentID: "p2",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -489,7 +553,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{name: "failure - validation - query : attribute string type less than 3 chars",
+		{name: "failure - validation - query : attribute string type less than 1 chars",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentsRequest{
@@ -498,7 +562,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 					PageSize:     10,
 					SortBy:       "attr1",
 					SortOrder:    v1.SortOrder_DESC,
-					SearchParams: "attr1=hi",
+					SearchParams: "attr1=",
 					Scopes:       []string{"A"},
 				},
 			},
@@ -623,7 +687,7 @@ func Test_equipmentServiceServer_ListEquipments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.ListEquipments(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.ListEquipments() error = %v, wantErr %v", err, tt.wantErr)
@@ -643,14 +707,14 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 		Socpes: []string{"A", "B"},
 	})
 	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			Type:     "typ1",
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr1",
 					Type:         repo.DataTypeString,
@@ -659,7 +723,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_1",
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr2",
 					Type:         repo.DataTypeString,
@@ -667,7 +731,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_2",
 				},
-				&repo.Attribute{
+				{
 					ID:           "3",
 					Name:         "attr3",
 					Type:         repo.DataTypeInt,
@@ -677,14 +741,14 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ2",
 			ID:       "2",
 			SourceID: "s2",
-			//ParentID: "p2",
+			// ParentID: "p2",
 			Scopes: []string{"B"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -851,7 +915,7 @@ func Test_equipmentServiceServer_GetEquipment(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.GetEquipment(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.GetEquipment() error = %v, wantErr %v", err, tt.wantErr)
@@ -871,14 +935,14 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 		Socpes: []string{"A", "B"},
 	})
 	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			Type:     "typ1",
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr1",
 					Type:         repo.DataTypeString,
@@ -887,7 +951,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_1",
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr2",
 					Type:         repo.DataTypeString,
@@ -895,7 +959,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_2",
 				},
-				&repo.Attribute{
+				{
 					ID:           "3",
 					Name:         "attr3",
 					Type:         repo.DataTypeInt,
@@ -905,14 +969,14 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ2",
 			ID:       "2",
 			SourceID: "s2",
-			//ParentID: "p2",
+			// ParentID: "p2",
 			Scopes: []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -924,14 +988,14 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ3",
 			ID:       "3",
 			SourceID: "s3",
 			ParentID: "4",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -1121,7 +1185,7 @@ func Test_equipmentServiceServer_ListEquipmentParents(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.ListEquipmentParents(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.ListEquipmentParents() error = %v, wantErr %v", err, tt.wantErr)
@@ -1141,14 +1205,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 		Socpes: []string{"A", "B"},
 	})
 	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			Type:     "typ1",
 			ID:       "1",
 			SourceID: "s1",
 			ParentID: "2",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr1",
 					Type:         repo.DataTypeString,
@@ -1157,7 +1221,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_1",
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr2",
 					Type:         repo.DataTypeString,
@@ -1165,7 +1229,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_2",
 				},
-				&repo.Attribute{
+				{
 					ID:           "3",
 					Name:         "attr3",
 					Type:         repo.DataTypeInt,
@@ -1173,7 +1237,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_3",
 				},
-				&repo.Attribute{
+				{
 					ID:           "4",
 					Name:         "attr4",
 					Type:         repo.DataTypeFloat,
@@ -1181,7 +1245,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsSearchable: true,
 					MappedTo:     "mapping_4",
 				},
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr5",
 					Type:               repo.DataTypeString,
@@ -1190,20 +1254,20 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsParentIdentifier: true,
 					MappedTo:           "mapping_5",
 				},
-				&repo.Attribute{
+				{
 					ID:       "1",
 					Name:     "attr6",
 					Type:     repo.DataTypeString,
 					MappedTo: "mapping_6",
 				},
-				&repo.Attribute{
+				{
 					ID:          "1",
 					Name:        "attr7",
 					IsDisplayed: true,
 					Type:        repo.DataTypeString,
 					MappedTo:    "mapping_7",
 				},
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr8",
 					IsDisplayed:  true,
@@ -1213,14 +1277,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ2",
 			ID:       "2",
 			SourceID: "s2",
-			//ParentID: "p2",
+			// ParentID: "p2",
 			Scopes: []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -1230,7 +1294,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					IsParentIdentifier: true,
 					MappedTo:           "mapping_1",
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr_2",
 					Type:         repo.DataTypeString,
@@ -1240,14 +1304,14 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type:     "typ3",
 			ID:       "3",
 			SourceID: "s3",
 			ParentID: "4",
 			Scopes:   []string{"A"},
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:                 "1",
 					Name:               "attr_1",
 					Type:               repo.DataTypeString,
@@ -1561,7 +1625,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{name: "failure - validation - query : attribute string type less than 3 chars",
+		{name: "failure - validation - query : attribute string type less than 1 chars",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListEquipmentChildrenRequest{
@@ -1572,7 +1636,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 					PageSize:       10,
 					SortBy:         "attr1",
 					SortOrder:      v1.SortOrder_DESC,
-					SearchParams:   "attr1=hi",
+					SearchParams:   "attr1=",
 					Scopes:         []string{"A"},
 				},
 			},
@@ -1744,7 +1808,7 @@ func Test_equipmentServiceServer_ListEquipmentChildren(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.ListEquipmentChildren(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.ListEquipmentChildren() error = %v, wantErr %v", err, tt.wantErr)
@@ -1833,7 +1897,7 @@ func Test_equipmentServiceServer_UpsertMetadata(t *testing.T) {
 					Source:       "equip_1.csv",
 					Attributes:   []string{"col_1", "col_2"},
 					Scope:        "Scope1",
-				}).Return(nil).Times(1)
+				}).Return("0x1", nil).Times(1)
 			},
 			want: &v1.UpsertMetadataResponse{
 				Success: true,
@@ -1884,7 +1948,7 @@ func Test_equipmentServiceServer_UpsertMetadata(t *testing.T) {
 					Source:       "equip_1.csv",
 					Attributes:   []string{"col_1", "col_2"},
 					Scope:        "Scope1",
-				}).Return(errors.New("Internal")).Times(1)
+				}).Return("", errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -1892,7 +1956,7 @@ func Test_equipmentServiceServer_UpsertMetadata(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.UpsertMetadata(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.UpsertMetadata() error = %v, wantErr %v", err, tt.wantErr)
@@ -1989,7 +2053,7 @@ func Test_equipmentServiceServer_DropEquipmentData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.DropEquipmentData(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.DropEquipmentData() error = %v, wantErr %v", err, tt.wantErr)

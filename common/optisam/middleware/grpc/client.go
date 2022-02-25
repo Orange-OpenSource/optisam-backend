@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package grpc
 
 import (
@@ -11,6 +5,8 @@ import (
 	"crypto/rsa"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/token/claims"
+
+	rest_middleware "optisam-backend/common/optisam/middleware/rest"
 
 	"github.com/dgrijalva/jwt-go"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
@@ -24,10 +20,25 @@ import (
 func AddAuthNClientInterceptor(key string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		ctx = metadata.AppendToOutgoingContext(ctx, "x-api-key", key)
+		if userClaims, ok := rest_middleware.RetrieveClaims(ctx); ok {
+			ctx = metadata.AppendToOutgoingContext(ctx, "user-id", userClaims.UserID)
+			ctx = metadata.AppendToOutgoingContext(ctx, "user-role", string(userClaims.Role))
+			for _, scope := range userClaims.Socpes {
+				ctx = metadata.AppendToOutgoingContext(ctx, "user-scopes", scope)
+			}
+			return invoker(ctx, method, req, reply, cc, opts...)
+		}
+		if userClaims, ok := RetrieveClaims(ctx); ok {
+			ctx = metadata.AppendToOutgoingContext(ctx, "user-id", userClaims.UserID)
+			ctx = metadata.AppendToOutgoingContext(ctx, "user-role", string(userClaims.Role))
+			for _, scope := range userClaims.Socpes {
+				ctx = metadata.AppendToOutgoingContext(ctx, "user-scopes", scope)
+			}
+			return invoker(ctx, method, req, reply, cc, opts...)
+		}
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
-
 func AddContextSharingInterceptor() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		mdgrpc, _ := metadata.FromIncomingContext(ctx)
@@ -38,13 +49,12 @@ func AddContextSharingInterceptor() grpc.UnaryClientInterceptor {
 		if mdrest != nil {
 			ctx = metadata.NewOutgoingContext(ctx, mdrest)
 		}
-
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
-//To call self service rpc Need to add claims or add claims when you have metadata
-func AddClaimsInContext(ctx context.Context, verifyKey *rsa.PublicKey) (context.Context, error) {
+// To call self service rpc Need to add claims or add claims when you have metadata
+func AddClaimsInContext(ctx context.Context, verifyKey *rsa.PublicKey, apiKey string) (context.Context, error) {
 	md, _ := metadata.FromIncomingContext(ctx)
 	if _, ok := md["authorization"]; ok {
 		tokenStr, err := grpc_auth.AuthFromMD(ctx, "bearer")
@@ -68,8 +78,14 @@ func AddClaimsInContext(ctx context.Context, verifyKey *rsa.PublicKey) (context.
 		if !ok {
 			return nil, status.Error(codes.Unauthenticated, "InvalidClaimsError")
 		}
+		delete(md, "authorization")
+		md["x-api-key"] = []string{apiKey}
+		md["user-id"] = []string{customClaims.UserID}
+		md["user-role"] = []string{string(customClaims.Role)}
+		md["user-scopes"] = customClaims.Socpes
+		// md["Access-Control-Allow-Headers"] = []string{"X-Requested-With,content-type, Accept"}
+		// ctx = metadata.NewIncomingContext(ctx, md)
 		return AddClaims(ctx, customClaims), nil
-	} else {
-		return nil, status.Error(codes.Unauthenticated, "NoAuthorizationFound")
 	}
+	return nil, status.Error(codes.Unauthenticated, "NoAuthorizationFound")
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -43,7 +37,7 @@ func instanceProductsForRow(cols []string, scope string, row []string, xidIDX in
 			// csv coloumn name
 			predicate = cols[i]
 		}
-		//log.Println(predicate)
+		// log.Println(predicate)
 		switch predicate {
 		case "instance.product":
 			if row[i] == "" {

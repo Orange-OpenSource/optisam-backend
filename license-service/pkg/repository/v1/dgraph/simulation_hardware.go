@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -19,7 +13,7 @@ import (
 )
 
 // ParentsHirerachyForEquipment ...
-func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) (*v1.Equipment, error) {
+func (l *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) (*v1.Equipment, error) {
 	q := `{
 		ParentsHirerachy(func: eq(equipment.id,` + equipID + `) , first: 1) @recurse(depth: ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false) ` + agregateFilters(scopeFilters(scopes)) + ` {
 			ID: uid
@@ -28,10 +22,10 @@ func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, eq
 			Parent:equipment.parent
 		}
 	}`
-	resp, err := r.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ParentsHirerachyForEquipment - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ParentsHirerachyForEquipment - cannot complete query transaction")
+		return nil, fmt.Errorf("parentsHirerachyForEquipment - cannot complete query transaction")
 	}
 	type eq struct {
 		ID      string
@@ -47,7 +41,7 @@ func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, eq
 
 	if err := json.Unmarshal(resp.GetJson(), &d); err != nil {
 		logger.Log.Error("ParentsHirerachyForEquipment - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ParentsHirerachyForEquipment - cannot unmarshal Json object")
+		return nil, fmt.Errorf("parentsHirerachyForEquipment - cannot unmarshal Json object")
 	}
 
 	if len(d.ParentsHirerachy) == 0 {
@@ -75,26 +69,26 @@ func (r *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, eq
 }
 
 // ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricOPSComputed, scopes ...string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
+func (l *LicenseRepository) ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricOPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricOracleNUPStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
+func (l *LicenseRepository) ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricIPSStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricIPSComputed, scopes ...string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
+func (l *LicenseRepository) ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricIPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
 // ProductsForEquipmentForMetricSAGStandard gives products for oracle processor.standard
-func (r *LicenseRepository) ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricSPSComputed, scopes ...string) ([]*v1.ProductData, error) {
-	return r.productsForEquipmentForMetric(ctx, equipID, equipType, hirearchyLevel, metric.Name, scopes...)
+func (l *LicenseRepository) ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricSPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
-func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metricName string, scopes ...string) ([]*v1.ProductData, error) {
+func (l *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, equipID string, hirearchyLevel uint8, metricName string, scopes ...string) ([]*v1.ProductData, error) {
 	q := `{
 		var (func:eq(equipment.id,` + equipID + `))@recurse(depth:  ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false) ` + agregateFilters(scopeFilters(scopes)) + `{
 			id as  ~product.equipment
@@ -111,10 +105,10 @@ func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, e
 			Swidtag :           product.swidtag
 		}  
 	  }`
-	resp, err := r.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ProductsForEquipmentForMetricOracleProcessorStandard - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductsForEquipmentForMetricOracleProcessorStandard - cannot complete query transaction")
+		return nil, fmt.Errorf("productsForEquipmentForMetricOracleProcessorStandard - cannot complete query transaction")
 	}
 	type data struct {
 		Products []*v1.ProductData
@@ -122,7 +116,7 @@ func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, e
 	prodList := &data{}
 	if err := json.Unmarshal(resp.GetJson(), &prodList); err != nil {
 		logger.Log.Error("ProductsForEquipmentForMetricOracleProcessorStandard - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductsForEquipmentForMetricOracleProcessorStandard - cannot unmarshal Json object")
+		return nil, fmt.Errorf("productsForEquipmentForMetricOracleProcessorStandard - cannot unmarshal Json object")
 	}
 	if len(prodList.Products) == 0 {
 		return nil, v1.ErrNoData
@@ -131,8 +125,8 @@ func (r *LicenseRepository) productsForEquipmentForMetric(ctx context.Context, e
 }
 
 // ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll implements license.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll
-func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, float64, error) {
-	templ, ok := r.templates[opsEquipTemplate]
+func (l *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, float64, error) {
+	templ, ok := l.templates[opsEquipTemplate]
 	if !ok {
 		return 0, 0, errors.New("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - cannot find template for:  " + string(opsEquipTemplate))
 	}
@@ -142,7 +136,7 @@ func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessor
 		return 0, 0, errors.New("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - query cannot be built")
 	}
 	fmt.Println(q)
-	licenses, err := r.licensesForQueryAll(ctx, q)
+	licenses, err := l.licensesForQueryAll(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - query failed", zap.Error(err), zap.String("query", q))
 		return 0, 0, errors.New("dgraph/ComputedLicensesForEquipmentForMetricOracleProcessorStandard - query failed")
@@ -152,16 +146,16 @@ func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessor
 }
 
 // ComputedLicensesForEquipmentForMetricOracleProcessorStandard gives licenses for product
-func (r *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, error) {
-	l, _, err := r.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx, equipID, equipType, mat, scopes...)
+func (l *LicenseRepository) ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, mat *v1.MetricOPSComputed, scopes ...string) (int64, error) {
+	lic, _, err := l.ComputedLicensesForEquipmentForMetricOracleProcessorStandardAll(ctx, equipID, equipType, mat, scopes...)
 	if err != nil {
 		return 0, err
 	}
-	return l, nil
+	return lic, nil
 }
 
-//UsersForEquipmentForMetricOracleNUP implements License UsersForEquipmentForMetricOracleNUP function
-func (r *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Context, equipID, equipType, productID string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.User, error) {
+// UsersForEquipmentForMetricOracleNUP implements License UsersForEquipmentForMetricOracleNUP function
+func (l *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Context, equipID, equipType, productID string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.User, error) {
 	q := `{
 		var(func:eq(equipment.id,"` + equipID + `"))@recurse(depth: ` + strconv.Itoa(int(hirearchyLevel)) + `, loop: false)` + agregateFilters(scopeFilters(scopes)) + `{
 		  userIDs as  equipment.users
@@ -178,10 +172,10 @@ func (r *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Cont
 		}
 	  }
 	`
-	resp, err := r.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("UsersForEquipmentForMetricOracleNUP - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("UsersForEquipmentForMetricOracleNUP - cannot complete query transaction")
+		return nil, fmt.Errorf("usersForEquipmentForMetricOracleNUP - cannot complete query transaction")
 	}
 	type data struct {
 		Users []*v1.User
@@ -189,7 +183,7 @@ func (r *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Cont
 	userInstances := &data{}
 	if err := json.Unmarshal(resp.GetJson(), &userInstances); err != nil {
 		logger.Log.Error("UsersForEquipmentForMetricOracleNUP - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("UsersForEquipmentForMetricOracleNUP - cannot unmarshal Json object")
+		return nil, fmt.Errorf("usersForEquipmentForMetricOracleNUP - cannot unmarshal Json object")
 	}
 	if len(userInstances.Users) == 0 {
 		return nil, v1.ErrNoData

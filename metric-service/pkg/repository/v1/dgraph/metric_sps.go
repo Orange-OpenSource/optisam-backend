@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -30,42 +24,42 @@ type metricSPS struct {
 func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSPS, scope string) (retMat *v1.MetricSPS, retErr error) {
 	blankID := blankID(mat.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricSPSSagProcessorStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(mat.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.sps.base",
 			ObjectId:  mat.BaseEqTypeID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.sps.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.sps.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricSPS"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -119,7 +113,7 @@ func (l *MetricRepository) ListMetricSPS(ctx context.Context, scope string) ([]*
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricSPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type IBM.pvu.standard")
+		return nil, errors.New("cannot get metrics of type IBM.pvu.standard")
 	}
 	type Resp struct {
 		Data []*metricSPS
@@ -155,7 +149,7 @@ func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/GetMetricConfigSPS - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type sps")
+		return nil, errors.New("cannot get metrics of type sps")
 	}
 	type Resp struct {
 		Metric []metricInfo `json:"Data"`
@@ -179,6 +173,74 @@ func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName strin
 		CoreFactorAttr: data.Metric[0].CoreFactorAttr[0].AttributeName,
 		BaseEqType:     data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
 	}, nil
+}
+
+func (l *MetricRepository) GetMetricConfigSPSID(ctx context.Context, metName string, scope string) (*v1.MetricSPS, error) {
+	q := `{
+		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
+			 uid
+			 metric.name
+			 metric.sps.base{uid}
+			 metric.sps.attr_core_factor{uid}
+			 metric.sps.attr_num_cores{uid}
+		}
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/GetMetricConfigSPSID - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type sps")
+	}
+	type Resp struct {
+		Metric []metricSPS `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/GetMetricConfigSPSID - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetricSPS(&data.Metric[0])
+}
+
+func (l *MetricRepository) UpdateMetricSPS(ctx context.Context, met *v1.MetricSPS, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,"` + met.Name + `"))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	del := `
+	uid(ID) <metric.sps.base> * .
+	uid(ID) <metric.sps.attr_core_factor> * .
+	uid(ID) <metric.sps.attr_num_cores> * .	
+`
+	set := `
+	    uid(ID) <metric.sps.base> <` + met.BaseEqTypeID + `> .
+	    uid(ID) <metric.sps.attr_core_factor> <` + met.CoreFactorAttrID + `> .
+		uid(ID) <metric.sps.attr_num_cores> <` + met.NumCoreAttrID + `> .	
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				DelNquads: []byte(del),
+			},
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricSPS - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }
 
 func converMetricToModelMetricAllSPS(mts []*metricSPS) ([]*v1.MetricSPS, error) {

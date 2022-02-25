@@ -3,9 +3,10 @@ debug = false
 grpcport = "12090"
 httpport = "12091"
 maxapiworker = 25
+DashboardTimeZone = "CET"
 
 [workerqueue]
-retries = 3
+retries = 0
 basedelay = 1
 
 [log]
@@ -27,7 +28,7 @@ agentEndpoint = "192.168.99.100:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+    "localhost:9082"
 #    "10.171.44.163:9082"  dev dgrpah
 
 ]
@@ -51,7 +52,7 @@ apiKey = "12345678"
 regopath = "rbac.rego"
 
 [cron]
-time = "12h"
+time = "@midnight"
 
 [grpcservers]
 apikey = "12345678"
@@ -59,6 +60,8 @@ timeout = 10
 
 [grpcservers.Address]
 license = "localhost:19090"
+metric = "localhost:18090"
+application = "localhost:11090"
 
 [httpservers.Address]
 auth = "localhost:9093"

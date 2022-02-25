@@ -1,23 +1,25 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/token/claims"
+	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
+	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
+	"optisam-backend/product-service/pkg/worker/dgraph"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
+	"reflect"
 	"testing"
 	"time"
 
@@ -68,7 +70,6 @@ func TestUpsertAcqRights(t *testing.T) {
 				TotalPurchaseCost:       float64(500.0),
 				TotalMaintenanceCost:    float64(20.0),
 				TotalCost:               float64(532.0),
-				Entity:                  "f",
 				Scope:                   "s1",
 				StartOfMaintenance:      "2019-08-27T09:58:56.0260078Z",
 				EndOfMaintenance:        "2021-01-29T09:58:56.0260078Z",
@@ -101,14 +102,31 @@ func TestUpsertAcqRights(t *testing.T) {
 					TotalPurchaseCost:       decimal.NewFromFloat(input.TotalPurchaseCost),
 					TotalMaintenanceCost:    decimal.NewFromFloat(input.TotalMaintenanceCost),
 					TotalCost:               decimal.NewFromFloat(input.TotalCost),
-					Entity:                  input.Entity,
 					Scope:                   input.Scope,
 					StartOfMaintenance:      startOfMaintenance,
 					EndOfMaintenance:        endOfMaintenance,
 					Version:                 input.Version,
+					CreatedBy:               "admin@superuser.com",
 				}).Return(nil).Times(1)
 
-				eData, err := getJob(input, dgworker.UpsertAcqRightsRequest)
+				eData, err := getJob(dgworker.UpsertAcqRightsRequest{
+					Sku:                     input.Sku,
+					Swidtag:                 input.Swidtag,
+					ProductName:             input.ProductName,
+					ProductEditor:           input.ProductEditor,
+					MetricType:              input.MetricType,
+					NumLicensesAcquired:     input.NumLicensesAcquired,
+					NumLicencesMaintenance:  input.NumLicencesMaintainance,
+					AvgMaintenanceUnitPrice: input.AvgMaintenanceUnitPrice,
+					AvgUnitPrice:            input.AvgUnitPrice,
+					TotalPurchaseCost:       input.TotalPurchaseCost,
+					TotalMaintenanceCost:    input.TotalMaintenanceCost,
+					TotalCost:               input.TotalCost,
+					Scope:                   input.Scope,
+					StartOfMaintenance:      input.StartOfMaintenance,
+					EndOfMaintenance:        input.EndOfMaintenance,
+					Version:                 input.Version,
+				}, dgworker.UpsertAcqRights)
 				if err != nil {
 					t.Errorf("Test cases has beed modiefied or test data has been modified")
 				}
@@ -123,7 +141,7 @@ func TestUpsertAcqRights(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.UpsertAcqRights(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
@@ -164,8 +182,7 @@ func TestListAcqRights(t *testing.T) {
 			output: &v1.ListAcqRightsResponse{
 				TotalRecords: int32(2),
 				AcquiredRights: []*v1.AcqRights{
-					&v1.AcqRights{
-						Entity:                         "a",
+					{
 						SKU:                            "b",
 						SwidTag:                        "c",
 						Editor:                         "d",
@@ -183,8 +200,7 @@ func TestListAcqRights(t *testing.T) {
 						LicensesUnderMaintenance:       "yes",
 						Version:                        "vv",
 					},
-					&v1.AcqRights{
-						Entity:                         "a2",
+					{
 						SKU:                            "b2",
 						SwidTag:                        "c2",
 						Editor:                         "d2",
@@ -197,7 +213,7 @@ func TestListAcqRights(t *testing.T) {
 						TotalPurchaseCost:              float64(3),
 						TotalMaintenanceCost:           float64(3),
 						TotalCost:                      float64(6),
-						LicensesUnderMaintenance:       "yes",
+						LicensesUnderMaintenance:       "no",
 						Version:                        "vv1",
 					},
 				},
@@ -206,14 +222,13 @@ func TestListAcqRights(t *testing.T) {
 			ctx:    ctx,
 			mock: func(input *v1.ListAcqRightsRequest, s *time.Time, e *time.Time) {
 				dbObj.EXPECT().ListAcqRightsIndividual(ctx, db.ListAcqRightsIndividualParams{
-					Scope:     input.Scopes,
-					PageNum:   input.PageSize * (input.PageNum - 1),
-					PageSize:  input.PageSize,
-					EntityAsc: true,
+					Scope:    input.Scopes,
+					PageNum:  input.PageSize * (input.PageNum - 1),
+					PageSize: input.PageSize,
+					SkuAsc:   true,
 				}).Return([]db.ListAcqRightsIndividualRow{
 					{
 						Totalrecords:            int64(2),
-						Entity:                  "a",
 						Sku:                     "b",
 						Swidtag:                 "c",
 						ProductEditor:           "d",
@@ -232,7 +247,6 @@ func TestListAcqRights(t *testing.T) {
 					},
 					{
 						Totalrecords:            int64(2),
-						Entity:                  "a2",
 						Sku:                     "b2",
 						Swidtag:                 "c2",
 						ProductEditor:           "d2",
@@ -269,7 +283,7 @@ func TestListAcqRights(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input, &timeStart, &timeEnd)
-			s := NewProductServiceServer(dbObj, qObj)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
 			got, err := s.ListAcqRights(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err [%s] ", test.name, err.Error())
@@ -284,639 +298,1712 @@ func TestListAcqRights(t *testing.T) {
 	}
 }
 
-func TestListAcqRightsProducts(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ListAcqRightsProductsRequest
-		output *v1.ListAcqRightsProductsResponse
-		mock   func(*v1.ListAcqRightsProductsRequest)
-		outErr bool
-		ctx    context.Context
+func Test_productServiceServer_CreateAcqRight(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	var met metv1.MetricServiceClient
+	type args struct {
+		ctx context.Context
+		req *v1.AcqRightRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.AcqRightResponse
+		wantErr bool
 	}{
-		{
-			name:  "ListAcqRightsProductsWithCorrectData",
-			input: &v1.ListAcqRightsProductsRequest{Scope: "s1", Editor: "b", Metric: "c"},
-			output: &v1.ListAcqRightsProductsResponse{
-				AcqrightsProducts: []*v1.ListAcqRightsProductsResponse_AcqRightsProducts{
-					&v1.ListAcqRightsProductsResponse_AcqRightsProducts{
-						Swidtag:     "p1",
-						ProductName: "p1name",
-					},
-					&v1.ListAcqRightsProductsResponse_AcqRightsProducts{
-						Swidtag:     "p2",
-						ProductName: "p2name",
-					},
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops,metricNup",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
 				},
 			},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsProductsRequest) {
-				dbObj.EXPECT().ListAcqRightsProducts(ctx, db.ListAcqRightsProductsParams{
-					Editor: input.Editor,
-					Metric: input.Metric,
-					Scope:  input.Scope}).Return([]db.ListAcqRightsProductsRow{
-					{
-						Swidtag:     "p1",
-						ProductName: "p1name",
-					},
-					{
-						Swidtag:     "p2",
-						ProductName: "p2name",
-					}}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListAcqRightsProductsWithScopeMissmatch",
-			input:  &v1.ListAcqRightsProductsRequest{Scope: "s4", Editor: "b", Metric: "c"},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListAcqRightsProductsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsProductsWithoutContext",
-			input:  &v1.ListAcqRightsProductsRequest{Scope: "s2", Editor: "b", Metric: "c"},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ListAcqRightsProductsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsProductsWithEmptyProductList",
-			input:  &v1.ListAcqRightsProductsRequest{Scope: "s1", Editor: "b", Metric: "c"},
-			output: &v1.ListAcqRightsProductsResponse{AcqrightsProducts: []*v1.ListAcqRightsProductsResponse_AcqRightsProducts{}},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsProductsRequest) {
-				dbObj.EXPECT().ListAcqRightsProducts(ctx, db.ListAcqRightsProductsParams{
-					Editor: input.Editor,
-					Metric: input.Metric,
-					Scope:  input.Scope}).Return([]db.ListAcqRightsProductsRow{}, nil).Times(1)
-			},
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ListAcqRightsProducts(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
-
-func TestListAcqRightsEditors(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ListAcqRightsEditorsRequest
-		output *v1.ListAcqRightsEditorsResponse
-		mock   func(*v1.ListAcqRightsEditorsRequest)
-		outErr bool
-		ctx    context.Context
-	}{
-		{
-			name:   "ListAcqRightsEditorsWithCorrectData",
-			input:  &v1.ListAcqRightsEditorsRequest{Scope: "s1"},
-			output: &v1.ListAcqRightsEditorsResponse{Editor: []string{"e1", "e2", "e3"}},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsEditorsRequest) {
-				dbObj.EXPECT().ListAcqRightsEditors(ctx, input.Scope).Return([]string{"e1", "e2", "e3"}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListAcqRightsEditorsWithScopeMismatch",
-			input:  &v1.ListAcqRightsEditorsRequest{Scope: "s4"},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListAcqRightsEditorsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsEditorsWithEpmtyResult",
-			input:  &v1.ListAcqRightsEditorsRequest{Scope: "s1"},
-			output: &v1.ListAcqRightsEditorsResponse{Editor: []string{}},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsEditorsRequest) {
-				dbObj.EXPECT().ListAcqRightsEditors(ctx, input.Scope).Return([]string{}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListAcqRightsEditorsWithoutContext",
-			input:  &v1.ListAcqRightsEditorsRequest{Scope: "s1"},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ListAcqRightsEditorsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsEditorsWithoutScope",
-			input:  &v1.ListAcqRightsEditorsRequest{},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListAcqRightsEditorsRequest) {},
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ListAcqRightsEditors(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
-
-func TestListAcqRightsMetrics(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ListAcqRightsMetricsRequest
-		output *v1.ListAcqRightsMetricsResponse
-		mock   func(*v1.ListAcqRightsMetricsRequest)
-		outErr bool
-		ctx    context.Context
-	}{
-		{
-			name:   "ListAcqRightsMetricsWithCorrectData",
-			input:  &v1.ListAcqRightsMetricsRequest{Scope: "s1"},
-			output: &v1.ListAcqRightsMetricsResponse{Metric: []string{"m1", "m2", "m3"}},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsMetricsRequest) {
-				dbObj.EXPECT().ListAcqRightsMetrics(ctx, input.Scope).Return([]string{"m1", "m2", "m3"}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListAcqRightsMetricsWithScopeMistmatch",
-			input:  &v1.ListAcqRightsMetricsRequest{Scope: "s4"},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListAcqRightsMetricsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsMetricsWithEmptyScope",
-			input:  &v1.ListAcqRightsMetricsRequest{},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ListAcqRightsMetricsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsMetricsWithoutContext",
-			input:  &v1.ListAcqRightsMetricsRequest{Scope: "s1"},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ListAcqRightsMetricsRequest) {},
-		},
-		{
-			name:   "ListAcqRightsMetricsWithEmptyResult",
-			input:  &v1.ListAcqRightsMetricsRequest{Scope: "s1"},
-			output: &v1.ListAcqRightsMetricsResponse{Metric: []string{}},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListAcqRightsMetricsRequest) {
-				dbObj.EXPECT().ListAcqRightsMetrics(ctx, input.Scope).Return([]string{}, nil).Times(1)
-			},
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ListAcqRightsMetrics(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
-
-func TestCreateProductAggregation(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ProductAggregationMessage
-		output *v1.ProductAggregationMessage
-		mock   func(*v1.ProductAggregationMessage)
-		outErr bool
-		ctx    context.Context
-	}{
-		{
-			name: "CreateProductAggregationWithCorrectData",
-			input: &v1.ProductAggregationMessage{
-				ID:       int32(1),
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Scope:    "s1",
-				Products: []string{"p1", "p2"},
-			},
-			output: &v1.ProductAggregationMessage{
-				ID:       int32(1),
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Scope:    "s1",
-				Products: []string{"p1", "p2"},
-			},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ProductAggregationMessage) {
-				dbObj.EXPECT().InsertAggregation(ctx, db.InsertAggregationParams{
-					AggregationName:   input.Name,
-					AggregationScope:  input.Scope,
-					AggregationMetric: input.Metric,
-					Products:          input.Products,
-				}).Return(db.Aggregation{
-					AggregationID:     int32(1),
-					AggregationName:   "agg",
-					AggregationMetric: "m",
-					AggregationScope:  "s1",
-					Products:          []string{"p1", "p2"},
-				}, nil).Times(1)
-
-				dbObj.EXPECT().UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-					AggregationID:   int32(1),
-					AggregationName: "agg",
-					Swidtags:        []string{"p1", "p2"},
-					Scope:           "s1",
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					}}, nil)
+				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
+				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops,metricNup",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
+					TotalMaintenanceCost:    decimal.NewFromFloat(float64(25)),
+					TotalCost:               decimal.NewFromFloat(float64(225)),
+					CreatedBy:               "admin@superuser.com",
+					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
+					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
+					NumLicencesMaintainance: 5,
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
 				}).Times(1).Return(nil)
-
-				edata, err := getJob(input, dgworker.UpsertAggregation)
-				if err != nil {
-					t.Errorf("Something has been changed in testcases")
-				}
-				qObj.EXPECT().PushJob(ctx, job.Job{
-					Type:   sql.NullString{String: "aw"},
-					Status: job.JobStatusPENDING,
-					Data:   edata,
-				}, "aw").Return(int32(2), nil)
-			},
-		},
-		{
-			name: "CreateAggregationWithScopeMismatch",
-			input: &v1.ProductAggregationMessage{
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Scope:    "s4",
-				Products: []string{"p1", "p2"},
-			},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ProductAggregationMessage) {},
-		},
-		{
-			name: "CreateAggregationWithNoScope",
-			input: &v1.ProductAggregationMessage{
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Products: []string{"p1", "p2"},
-			},
-			outErr: true,
-			ctx:    ctx,
-			mock:   func(input *v1.ProductAggregationMessage) {},
-		},
-		{
-			name: "CreateAggregationWithoutContext",
-			input: &v1.ProductAggregationMessage{
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Scope:    "s1",
-				Products: []string{"p1", "p2"},
-			},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ProductAggregationMessage) {},
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.CreateProductAggregation(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
-
-func TestListProductAggregation(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ListProductAggregationRequest
-		output *v1.ListProductAggregationResponse
-		mock   func(*v1.ListProductAggregationRequest)
-		outErr bool
-		ctx    context.Context
-	}{
-		{
-			name: "ListProductAggregationWithCorrectData",
-			input: &v1.ListProductAggregationRequest{
-				Scopes: []string{"s1"},
-			},
-			output: &v1.ListProductAggregationResponse{
-				Aggregations: []*v1.ProductAggregation{
-					&v1.ProductAggregation{
-						ID:           int32(1),
-						Name:         "a1",
-						Editor:       "b1",
-						Scope:        "c1",
-						Metric:       "d1",
-						ProductNames: []string{"p1", "p2"},
-						Products:     []string{"pp1", "pp2"},
-					},
-					&v1.ProductAggregation{
-						ID:           int32(2),
-						Name:         "a2",
-						Editor:       "b2",
-						Scope:        "c2",
-						Metric:       "d2",
-						ProductNames: []string{"p3", "p4"},
-						Products:     []string{"pp3", "pp4"},
-					},
-				},
-			},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ListProductAggregationRequest) {
-				dbObj.EXPECT().ListAggregation(ctx, input.Scopes).Return([]db.ListAggregationRow{
-					{
-						AggregationID:     int32(1),
-						AggregationMetric: "d1",
-						AggregationName:   "a1",
-						AggregationScope:  "c1",
-						ProductEditor:     "b1",
-						ProductNames:      []string{"p1", "p2"},
-						ProductSwidtags:   []string{"pp1", "pp2"},
-					},
-					{
-						AggregationID:     int32(2),
-						AggregationMetric: "d2",
-						AggregationName:   "a2",
-						AggregationScope:  "c2",
-						ProductEditor:     "b2",
-						ProductNames:      []string{"p3", "p4"},
-						ProductSwidtags:   []string{"pp3", "pp4"},
-					},
-				}, nil).Times(1)
-			},
-		},
-		{
-			name:   "ListProductAggregationWithoutContext",
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ListProductAggregationRequest) {},
-		},
-		{
-			name:   "ListProductAggregationWithEmptyResult",
-			outErr: false,
-			output: &v1.ListProductAggregationResponse{
-				Aggregations: []*v1.ProductAggregation{},
-			},
-			input: &v1.ListProductAggregationRequest{
-				Scopes: []string{"s1"},
-			},
-			ctx: ctx,
-			mock: func(input *v1.ListProductAggregationRequest) {
-				dbObj.EXPECT().ListAggregation(ctx, input.Scopes).Return([]db.ListAggregationRow{}, nil).Times(1)
-			},
-		},
-		{
-			name: "FAILURE: User does not have access to the scopes",
-			input: &v1.ListProductAggregationRequest{
-				Scopes: []string{"s4"},
-			},
-			ctx:    ctx,
-			mock:   func(*v1.ListProductAggregationRequest) {},
-			outErr: true,
-		},
-	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.ListProductAggregation(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
-			}
-		})
-	}
-}
-
-func TestUpdateProductAggregation(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.ProductAggregationMessage
-		output *v1.ProductAggregationMessage
-		mock   func(*v1.ProductAggregationMessage)
-		outErr bool
-		ctx    context.Context
-	}{
-		{
-			name: "UpdateAggregationWithCorrectData",
-			input: &v1.ProductAggregationMessage{
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Scope:    "s1",
-				Products: []string{"p1", "p2"},
-			},
-			output: &v1.ProductAggregationMessage{
-				ID:       int32(1),
-				Name:     "agg",
-				Editor:   "e",
-				Metric:   "m",
-				Products: []string{"p1", "p2"},
-			},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.ProductAggregationMessage) {
-				dbObj.EXPECT().UpdateAggregation(ctx, db.UpdateAggregationParams{
-					Scope:           input.Scope,
-					AggregationID:   input.ID,
-					AggregationName: input.Name,
-					Products:        input.Products,
-				}).Return(db.Aggregation{
-					AggregationID:     int32(1),
-					AggregationName:   "agg",
-					AggregationMetric: "m",
-					Products:          []string{"p1", "p2"},
-				}, nil).Times(1)
-
-				dbObj.EXPECT().GetProductAggregation(ctx, db.GetProductAggregationParams{
-					AggregationID:   int32(1),
-					AggregationName: "agg",
-				}).Return([]string{"p1", "p2"}, nil)
-
-				dbObj.EXPECT().UpsertProductAggregation(ctx, db.UpsertProductAggregationParams{
-					AggregationID:   int32(1),
-					AggregationName: "agg",
-					Scope:           "s1",
-					Swidtags:        []string{"p1", "p2"},
+				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					MetricType:              "ops,metricNup",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					AvgMaintenanceUnitPrice: 5,
+					TotalPurchaseCost:       200,
+					TotalMaintenanceCost:    25,
+					TotalCost:               225,
+					Scope:                   "scope1",
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintenance:  5,
+					Version:                 "prodversion",
 				})
-
-				edata, err := getJob(input, dgworker.UpsertAggregation)
 				if err != nil {
-					t.Errorf("Something has been changed in testcases")
+					t.Errorf("Failed to do json marshalling in test %v", err)
 				}
-				qObj.EXPECT().PushJob(ctx, job.Job{
+				e := dgworker.Envelope{Type: dgworker.UpsertAcqRights, JSON: jsonData}
+
+				envelopeData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
 					Type:   sql.NullString{String: "aw"},
 					Status: job.JobStatusPENDING,
-					Data:   edata,
-				}, "aw").Return(int32(2), nil)
+					Data:   envelopeData,
+				}, "aw").Times(1).Return(int32(1000), nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: true,
 			},
 		},
-		{
-			name: "UpdateAggregationWithoutContext",
-			input: &v1.ProductAggregationMessage{
-				Name:     "agg1",
-				Editor:   "e1",
-				Metric:   "m1",
-				Scope:    "s1",
-				Products: []string{"p1", "p2"},
+		{name: "SUCCESS-no maintenance",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgMaintenanceUnitPrice: 2,
+					AvgUnitPrice:            10,
+					Scope:                   "scope1",
+				},
 			},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.ProductAggregationMessage) {},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					}}, nil)
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
+					TotalCost:               decimal.NewFromFloat(float64(200)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
+					TotalMaintenanceCost:    decimal.NewFromFloat(0),
+					CreatedBy:               "admin@superuser.com",
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "", Valid: true},
+				}).Times(1).Return(nil)
+				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					MetricType:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					TotalPurchaseCost:       200,
+					TotalCost:               200,
+					AvgMaintenanceUnitPrice: 2,
+					Scope:                   "scope1",
+					Version:                 "prodversion",
+				})
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test %v", err)
+				}
+				e := dgworker.Envelope{Type: dgworker.UpsertAcqRights, JSON: jsonData}
+
+				envelopeData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "aw"},
+					Status: job.JobStatusPENDING,
+					Data:   envelopeData,
+				}, "aw").Times(1).Return(int32(1000), nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE-ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope5",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-GetAcqRightBySKU-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, errors.New("Internal"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-sku already exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-ServiceError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(nil, errors.New("service error"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-MetricNotExists-no metrics exists in scope",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-MetricNotExists-metrics exists in scope",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "sag",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-unable to parse start time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "notparsable",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-unable to parse end time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "notparsable",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-end time is less than start time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2019-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-all or none maintenance fields should be present",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 0,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-InsertAcqRight-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
+				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
+					TotalMaintenanceCost:    decimal.NewFromFloat(float64(25)),
+					TotalCost:               decimal.NewFromFloat(float64(225)),
+					CreatedBy:               "admin@superuser.com",
+					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
+					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
+					NumLicencesMaintainance: 5,
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
+				}).Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
 		},
 	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.UpdateProductAggregation(test.ctx, test.input)
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				metric:      met,
+			}
+			got, err := tt.s.CreateAcqRight(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.CreateAcqRight() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.CreateAcqRight() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestDeleteProductAggregation(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	dbObj := dbmock.NewMockProduct(mockCtrl)
-	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-	testSet := []struct {
-		name   string
-		input  *v1.DeleteProductAggregationRequest
-		output *v1.DeleteProductAggregationResponse
-		mock   func(*v1.DeleteProductAggregationRequest)
-		outErr bool
-		ctx    context.Context
+func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	var met metv1.MetricServiceClient
+	type args struct {
+		ctx context.Context
+		req *v1.AcqRightRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.AcqRightResponse
+		wantErr bool
 	}{
-		{
-			name: "DeleteProductAggregationWithCorrectData",
-			input: &v1.DeleteProductAggregationRequest{
-				ID:    int32(1),
-				Scope: "s1",
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     10,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
 			},
-			output: &v1.DeleteProductAggregationResponse{Success: true},
-			outErr: false,
-			ctx:    ctx,
-			mock: func(input *v1.DeleteProductAggregationRequest) {
-				userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-				if !ok {
-					t.Errorf("Failed in testcases")
-				}
-				dbObj.EXPECT().DeleteAggregation(ctx, db.DeleteAggregationParams{
-					AggregationID: input.ID,
-					Scope:         userClaims.Socpes,
-				}).Return(nil).Times(1)
-
-				dbObj.EXPECT().DeleteProductAggregation(ctx, db.DeleteProductAggregationParams{
-					AggregationID_2: int32(1),
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{
+					Sku:    "sku1",
+					Metric: "ops,metricNup",
+				}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					}}, nil)
+				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
+				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops",
+					NumLicensesAcquired:     10,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(100)),
+					TotalMaintenanceCost:    decimal.NewFromFloat(float64(25)),
+					TotalCost:               decimal.NewFromFloat(float64(125)),
+					CreatedBy:               "admin@superuser.com",
+					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
+					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
+					NumLicencesMaintainance: 5,
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
 				}).Times(1).Return(nil)
-
-				edata, err := getJob(input, dgworker.DeleteAggregation)
+				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					MetricType:              "ops",
+					NumLicensesAcquired:     10,
+					AvgUnitPrice:            10,
+					AvgMaintenanceUnitPrice: 5,
+					TotalPurchaseCost:       100,
+					TotalMaintenanceCost:    25,
+					TotalCost:               125,
+					Scope:                   "scope1",
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintenance:  5,
+					Version:                 "prodversion",
+					IsSwidtagModified:       true,
+					IsMetricModifed:         true,
+				})
 				if err != nil {
-					t.Errorf("Something has been changed in testcases")
+					t.Errorf("Failed to do json marshalling in test %v", err)
 				}
-				qObj.EXPECT().PushJob(ctx, job.Job{
+				e := dgworker.Envelope{Type: dgworker.UpsertAcqRights, JSON: jsonData}
+
+				envelopeData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
 					Type:   sql.NullString{String: "aw"},
 					Status: job.JobStatusPENDING,
-					Data:   edata,
-				}, "aw").Return(int32(2), nil)
+					Data:   envelopeData,
+				}, "aw").Times(1).Return(int32(1000), nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: true,
 			},
 		},
-		{
-			name:   "DeleteAggregationWithoutContext",
-			input:  &v1.DeleteProductAggregationRequest{},
-			outErr: true,
-			ctx:    context.Background(),
-			mock:   func(input *v1.DeleteProductAggregationRequest) {},
+		{name: "SUCCESS-no maintenance",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                 "sku1",
+					ProductName:         "product name",
+					Version:             "prodversion",
+					ProductEditor:       "producteditor",
+					MetricName:          "ops",
+					NumLicensesAcquired: 20,
+					AvgUnitPrice:        10,
+					Scope:               "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{
+					Sku:    "sku1",
+					Metric: "ops",
+				}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					}}, nil)
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
+					TotalCost:               decimal.NewFromFloat(float64(200)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(0),
+					TotalMaintenanceCost:    decimal.NewFromFloat(0),
+					CreatedBy:               "admin@superuser.com",
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "", Valid: true},
+				}).Times(1).Return(nil)
+				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+					Sku:                 "sku1",
+					Swidtag:             "product_name_producteditor_prodversion",
+					ProductName:         "product name",
+					ProductEditor:       "producteditor",
+					MetricType:          "ops",
+					NumLicensesAcquired: 20,
+					AvgUnitPrice:        10,
+					TotalPurchaseCost:   200,
+					TotalCost:           200,
+					Scope:               "scope1",
+					Version:             "prodversion",
+					IsSwidtagModified:   true,
+				})
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test %v", err)
+				}
+				e := dgworker.Envelope{Type: dgworker.UpsertAcqRights, JSON: jsonData}
+
+				envelopeData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "aw"},
+					Status: job.JobStatusPENDING,
+					Data:   envelopeData,
+				}, "aw").Times(1).Return(int32(1000), nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE-ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope5",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-GetAcqRightBySKU-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, errors.New("Internal"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-sku does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-ServiceError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{
+					Sku: "sku1",
+				}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(nil, errors.New("service error"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-MetricNotExists-no metrics exists in scope",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{
+					Sku: "sku1",
+				}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ListMetrices-MetricNotExists-metrics exists in scope",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "sag",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-unable to parse start time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "notparsable",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-unable to parse end time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "notparsable",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-end time is less than start time",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2019-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-all or none maintenance fields should be present",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 0,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-InsertAcqRight-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
+				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
+				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
+					Sku:                     "sku1",
+					Swidtag:                 "product_name_producteditor_prodversion",
+					ProductName:             "product name",
+					ProductEditor:           "producteditor",
+					Scope:                   "scope1",
+					Metric:                  "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
+					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
+					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
+					TotalMaintenanceCost:    decimal.NewFromFloat(float64(25)),
+					TotalCost:               decimal.NewFromFloat(float64(225)),
+					CreatedBy:               "admin@superuser.com",
+					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
+					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
+					NumLicencesMaintainance: 5,
+					Version:                 "prodversion",
+					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
+				}).Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
 		},
 	}
-	for _, test := range testSet {
-		t.Run("", func(t *testing.T) {
-			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj)
-			got, err := s.DeleteProductAggregation(test.ctx, test.input)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				metric:      met,
+			}
+			got, err := tt.s.UpdateAcqRight(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.UpdateAcqRight() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.UpdateAcqRight() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
-			if (err != nil) != test.outErr {
-				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
+func Test_productServiceServer_DeleteAcqRight(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.DeleteAcqRightRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.DeleteAcqRightResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAcqRightRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DeleteAcqrightBySKU(ctx, db.DeleteAcqrightBySKUParams{
+					Sku:   "sku1",
+					Scope: "scope1",
+				}).Times(1).Return(nil)
+				jsonData, err := json.Marshal(dgraph.DeleteAcqRightRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				})
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test %v", err)
+				}
+				e := dgworker.Envelope{Type: dgworker.DeleteAcqright, JSON: jsonData}
+
+				envelopeData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "aw"},
+					Status: job.JobStatusPENDING,
+					Data:   envelopeData,
+				}, "aw").Times(1).Return(int32(1000), nil)
+			},
+			want: &v1.DeleteAcqRightResponse{
+				Success: true,
+			},
+		},
+		{name: "FAILURE-ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DeleteAcqRightRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {},
+			want: &v1.DeleteAcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAcqRightRequest{
+					Sku:   "sku1",
+					Scope: "scope5",
+				},
+			},
+			setup: func() {},
+			want: &v1.DeleteAcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAcqRightRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DeleteAcqrightBySKU(ctx, db.DeleteAcqrightBySKUParams{
+					Sku:   "sku1",
+					Scope: "scope1",
+				}).Times(1).Return(errors.New("internal"))
+			},
+			want: &v1.DeleteAcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+			}
+			got, err := tt.s.DeleteAcqRight(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.DeleteAcqRight() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-				return
-			} else {
-				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.DeleteAcqRight() = %v, want %v", got, tt.want)
 			}
 		})
 	}

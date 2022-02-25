@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package claims
 
 import (
@@ -29,4 +23,18 @@ type Claims struct {
 	Role   Role
 	Socpes []string
 	jwt.StandardClaims
+}
+
+func ReturnRole(role string) (Role, bool) {
+	const noRole Role = ""
+	switch role {
+	case string(RoleSuperAdmin):
+		return RoleSuperAdmin, true
+	case string(RoleAdmin):
+		return RoleAdmin, true
+	case string(RoleUser):
+		return RoleUser, true
+	default:
+		return noRole, false
+	}
 }

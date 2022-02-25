@@ -1,7 +1,7 @@
 environment = "development"
 debug = false
-grpcport = 9090
-httpport = 9091
+grpcport = 20000
+httpport = 20001
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -27,3 +27,21 @@ name = "optisam"
 
 [pki]
 publickeypath = "cert.pem"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10000
+
+
+[grpcservers.Address]
+#product = "localhost:12090"
+#application = "localhost:11090"
+#dps = "localhost:10000"
+#metric = "localhost:18090"
+#equipment = "localhost:14090"
+#report = "localhost:19090"
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"

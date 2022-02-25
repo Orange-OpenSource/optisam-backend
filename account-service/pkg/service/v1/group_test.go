@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -53,14 +47,14 @@ func Test_accountServiceServer_ListGroups(t *testing.T) {
 			want: &v1.ListGroupsResponse{
 				NumOfRecords: 2,
 				Groups: []*v1.Group{
-					&v1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 						ParentId:           1,
 					},
-					&v1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						FullyQualifiedName: "Orange.OBS.OFS",
@@ -75,14 +69,14 @@ func Test_accountServiceServer_ListGroups(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(2, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -102,14 +96,14 @@ func Test_accountServiceServer_ListGroups(t *testing.T) {
 			want: &v1.ListGroupsResponse{
 				NumOfRecords: 2,
 				Groups: []*v1.Group{
-					&v1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 						ParentId:           1,
 					},
-					&v1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						FullyQualifiedName: "Orange.OBS.OFS",
@@ -135,14 +129,14 @@ func Test_accountServiceServer_ListGroups(t *testing.T) {
 			want: &v1.ListGroupsResponse{
 				NumOfRecords: 2,
 				Groups: []*v1.Group{
-					&v1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 						ParentId:           1,
 					},
-					&v1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						FullyQualifiedName: "Orange.OBS.OFS",
@@ -219,14 +213,14 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(2, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
@@ -268,14 +262,14 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(2, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
@@ -302,21 +296,21 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(3, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.ONS",
 						Scopes:             []string{"E", "F"},
 					},
-					&repo.Group{
+					{
 						ID:                 1,
 						Name:               "Orange",
 						ParentID:           0,
@@ -345,21 +339,21 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(3, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.ONS",
 						Scopes:             []string{"E", "F"},
 					},
-					&repo.Group{
+					{
 						ID:                 1,
 						Name:               "Orange",
 						ParentID:           0,
@@ -386,21 +380,21 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(3, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.ONS",
 						Scopes:             []string{"E", "F"},
 					},
-					&repo.Group{
+					{
 						ID:                 1,
 						Name:               "Orange",
 						ParentID:           0,
@@ -429,21 +423,21 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(3, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.ONS",
 						Scopes:             []string{"E", "F"},
 					},
-					&repo.Group{
+					{
 						ID:                 1,
 						Name:               "Orange",
 						ParentID:           0,
@@ -473,14 +467,14 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(2, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
@@ -523,14 +517,14 @@ func Test_accountServiceServer_CreateGroup(t *testing.T) {
 				rep = mockRepo
 				var queryParams *repo.GroupQueryParams
 				mockRepo.EXPECT().UserOwnedGroups(ctx, "admin@superuser.com", queryParams).Return(2, []*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OBS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS",
 						Scopes:             []string{"A", "B", "C", "D"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "ONS",
 						ParentID:           1,
@@ -652,14 +646,14 @@ func Test_accountServiceServer_ListUserGroups(t *testing.T) {
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().UserOwnedGroupsDirect(ctx, "admin@superuser.com", nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -670,14 +664,14 @@ func Test_accountServiceServer_ListUserGroups(t *testing.T) {
 			},
 			want: &v1.ListGroupsResponse{
 				Groups: []*v1.Group{
-					&v1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 						ParentId:           1,
 					},
-					&v1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						FullyQualifiedName: "Orange.OBS.OFS",
@@ -764,14 +758,14 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 				rep = mockRepo
 				mockRepo.EXPECT().GroupInfo(ctx, int64(1)).Return(&repo.Group{FullyQualifiedName: "Orange.OBS.OLS.OFS"}, nil).Times(1)
 				mockRepo.EXPECT().UserOwnedGroupsDirect(ctx, "admin@superuser.com", nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -780,14 +774,14 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 					},
 				}, nil).Times(1)
 				mockRepo.EXPECT().ChildGroupsDirect(ctx, int64(1), nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -798,14 +792,14 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 			},
 			want: &v1.ListGroupsResponse{
 				Groups: []*v1.Group{
-					&v1.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 						ParentId:           1,
 					},
-					&v1.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						FullyQualifiedName: "Orange.OBS.OFS",
@@ -870,7 +864,7 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 				rep = mockRepo
 				mockRepo.EXPECT().GroupInfo(ctx, int64(1)).Return(&repo.Group{FullyQualifiedName: "Orange.OBS.OLS.OFS"}, nil).Times(1)
 				mockRepo.EXPECT().UserOwnedGroupsDirect(ctx, "admin@superuser.com", nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
@@ -894,14 +888,14 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 				rep = mockRepo
 				mockRepo.EXPECT().GroupInfo(ctx, int64(1)).Return(&repo.Group{FullyQualifiedName: "Orange.OBS.OLS.OFS"}, nil).Times(1)
 				mockRepo.EXPECT().UserOwnedGroupsDirect(ctx, "admin@superuser.com", nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						ID:                 2,
 						Name:               "OLS",
 						ParentID:           1,
 						FullyQualifiedName: "Orange.OBS.OLS",
 						Scopes:             []string{"A", "B"},
 					},
-					&repo.Group{
+					{
 						ID:                 3,
 						Name:               "OFS",
 						ParentID:           1,
@@ -926,7 +920,7 @@ func Test_accountServiceServer_ListChildGroups(t *testing.T) {
 				rep = mockRepo
 				mockRepo.EXPECT().GroupInfo(ctx, int64(1)).Return(&repo.Group{FullyQualifiedName: "Orange.OBS.OLS.OFS"}, nil).Times(1)
 				mockRepo.EXPECT().UserOwnedGroupsDirect(ctx, "admin@superuser.com", nil).Return([]*repo.Group{
-					&repo.Group{
+					{
 						FullyQualifiedName: "A",
 					},
 				}, nil).Times(1)

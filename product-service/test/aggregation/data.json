@@ -1,0 +1,92 @@
+{
+    "schema_agg": {
+        "ID": "#number",
+        "name": "#string",
+        "editor": "#string",
+        "product_names": "#[] #string",
+        "products": "#[] #string",
+        "metric": "#string",
+        "scope": "#string"
+    },
+    "getAgg": {
+        "ID": "#number",
+        "name": "apitest_agg_oracleWL",
+        "editor": "Oracle",
+        "product_names": [
+            "Oracle Weblogic Server 12",
+            "Oracle Weblogic Server 10"
+        ],
+        "products": [
+            "oracle_wl_1",
+            "oracle_wl_2"
+        ],
+        "metric": "oracle.processor.standard",
+        "scope": "#string"
+    },
+    "createAgg": {
+        "ID": 0,
+        "name": "apitest_agg_ibm",
+        "editor": "IBM",
+        "metric": "ibm_pvu",
+        "products": [
+            "ibm_websphere_1",
+            "ibm_websphere_2"
+        ]
+    },
+    "schema_prod_agg": {
+        "ID": "#number",
+        "name": "#string",
+        "editor": "#string",
+        "swidtags": "#[] #string",
+        "num_applications": "##number",
+        "num_equipments": "##number",
+        "total_cost": "##number"
+    },
+    "getProdAgg": {
+        "ID": "#number",
+        "name": "apitest_agg_oracleWL",
+        "editor": "Oracle",
+        "num_applications": 2,
+        "num_equipments": 13,
+        "total_cost": 60200,
+        "swidtags": [
+            "oracle_wl_1",
+            "oracle_wl_2"
+        ]
+    },
+    "schema_acqrights_agg" : {
+        "ID": "#number",
+        "name": "#string",
+        "scope": "#string",
+        "editor": "#string",
+        "swidtags": "#[] #string",
+        "skus": "#[] #string",
+        "metric": "#string",
+        "total_cost": "#number"
+      },
+    "getAcqrightsAgg": {
+        "SKU": "oracle_wl_1_ops",
+        "swid_tag": "oracle_wl_1",
+        "product_name": "Oracle Weblogic Server 12",
+        "editor": "Oracle",
+        "metric": "oracle.processor.standard",
+        "acquired_licenses_number": 500,
+        "avg_licenes_unit_price": 100,
+        "avg_maintenance_unit_price": 10,
+        "total_purchase_cost": 50000,
+        "total_maintenance_cost": 200,
+        "total_cost": 50200,
+        "start_of_maintenance": "##string",
+        "end_of_maintenance": "##string",
+        "licenses_under_maintenance": "##string",
+        "licenses_under_maintenance_number": 20,
+        "version": "12.1.1",
+        "comment":""
+    }
+
+
+
+        
+    
+
+}

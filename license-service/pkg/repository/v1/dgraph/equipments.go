@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -91,14 +85,14 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 }
 
 // CreateEquipmentType implements Licence CreateEquipmentType function
-func (lr *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1.EquipmentType, scopes []string) (retType *v1.EquipmentType, retErr error) {
+func (l *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1.EquipmentType, scopes []string) (retType *v1.EquipmentType, retErr error) {
 	nquads := nquadsForEquipment(eqType)
 	mu := &api.Mutation{
 		Set: nquads,
 		//	CommitNow: true,
 	}
 	fmt.Printf("eqtype: %+v", eqType)
-	txn := lr.dg.NewTxn()
+	txn := l.dg.NewTxn()
 
 	defer func() {
 		if retErr != nil {
@@ -132,7 +126,7 @@ func (lr *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1
 		return eqType, nil
 	}
 	fmt.Printf("eqtype1: %+v", eqType)
-	if err := lr.dg.Alter(context.Background(), &api.Operation{
+	if err := l.dg.Alter(context.Background(), &api.Operation{
 		Schema: schema,
 	}); err != nil {
 		fields := []zap.Field{
@@ -149,15 +143,15 @@ func (lr *LicenseRepository) CreateEquipmentType(ctx context.Context, eqType *v1
 }
 
 // EquipmentTypes implements Licence EquipmentTypes function
-func (lr *LicenseRepository) EquipmentTypes(ctx context.Context, scopes ...string) ([]*v1.EquipmentType, error) {
+func (l *LicenseRepository) EquipmentTypes(ctx context.Context, scopes ...string) ([]*v1.EquipmentType, error) {
 	q := `
 	{
-		EqTypes(func:has(metadata.equipment.type)){
+		EqTypes(func:has(metadata.equipment.type))` + agregateFilters(scopeFilters(scopes)) + `{
 		  ` + eqTypeFields + `
 		}
 	}
 	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
+	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
@@ -176,35 +170,35 @@ func (lr *LicenseRepository) EquipmentTypes(ctx context.Context, scopes ...strin
 	return convertEquipTypeAll(data.EqTypes), nil
 }
 
-func (lr *LicenseRepository) equipmentTypeByType(ctx context.Context, typ string) (*v1.EquipmentType, error) {
-	q := `
-	{
-		EqTypes(func:eq(metadata.equipment.type,` + typ + `)){
-		 ` + eqTypeFields + `
-		}
-	}
-	`
-	resp, err := lr.dg.NewTxn().Query(ctx, q)
-	if err != nil {
-		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
-	}
+// func (lr *LicenseRepository) equipmentTypeByType(ctx context.Context, typ string) (*v1.EquipmentType, error) {
+// 	q := `
+// 	{
+// 		EqTypes(func:eq(metadata.equipment.type,` + typ + `)){
+// 		 ` + eqTypeFields + `
+// 		}
+// 	}
+// 	`
+// 	resp, err := lr.dg.NewTxn().Query(ctx, q)
+// 	if err != nil {
+// 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()), zap.String("query", q))
+// 		return nil, errors.New("dgraph/EquipmentTypes - cannot complete query")
+// 	}
 
-	type eqTypes struct {
-		EqTypes []*equipmentType
-	}
+// 	type eqTypes struct {
+// 		EqTypes []*equipmentType
+// 	}
 
-	data := eqTypes{}
+// 	data := eqTypes{}
 
-	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
-		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()))
-		return nil, fmt.Errorf("dgraph/EquipmentTypes - cannot unmarshal Json object")
-	}
-	if len(data.EqTypes) == 0 {
-		return nil, v1.ErrNoData
-	}
-	return convertEquipType(data.EqTypes[0]), nil
-}
+// 	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
+// 		logger.Log.Error("dgraph/EquipmentTypes - ", zap.String("reason", err.Error()))
+// 		return nil, fmt.Errorf("dgraph/EquipmentTypes - cannot unmarshal Json object")
+// 	}
+// 	if len(data.EqTypes) == 0 {
+// 		return nil, v1.ErrNoData
+// 	}
+// 	return convertEquipType(data.EqTypes[0]), nil
+// }
 
 func assignIDsEquipemntType(ids map[string]string, eqType *v1.EquipmentType) {
 	if len(ids) == 0 {
@@ -286,7 +280,7 @@ func nquadsForEquipment(eqType *v1.EquipmentType) []*api.NQuad {
 
 func nquadsForAllAttributes(equipID string, attributes []*v1.Attribute) []*api.NQuad {
 
-	var nquads []*api.NQuad
+	nquads := make([]*api.NQuad, len(attributes))
 	for _, attr := range attributes {
 		attrBlankID, nqs := nquadsForAttributes(attr)
 		nquads = append(nquads, &api.NQuad{
@@ -304,42 +298,42 @@ func nquadsForAttributes(attr *v1.Attribute) (string, []*api.NQuad) {
 	blankID := blankID(attr.Name)
 	fmt.Println(blankID)
 	return blankID, []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.name",
 			ObjectValue: stringObjectValue(attr.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.type",
 			ObjectValue: intObjectValue(int64(attr.Type)),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.schema_name",
 			ObjectValue: stringObjectValue(attr.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.searchable",
 			ObjectValue: boolObjectValue(attr.IsSearchable),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.displayed",
 			ObjectValue: boolObjectValue(attr.IsDisplayed),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.identifier",
 			ObjectValue: boolObjectValue(attr.IsIdentifier),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.parentIdentifier",
 			ObjectValue: boolObjectValue(attr.IsParentIdentifier),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "attribute.mapped_to",
 			ObjectValue: stringObjectValue(attr.MappedTo),
@@ -395,7 +389,7 @@ func attributesZapFields(name string, attrs []*v1.Attribute) []zap.Field {
 }
 
 func schemaForEquipmentType(typ string, attrb []*v1.Attribute) string {
-	//typ := eqType.Type
+	// typ := eqType.Type
 	equipType := "type Equipment" + typ + " { \n"
 	equipTypeFields := []string{
 		"type_name",
@@ -429,7 +423,7 @@ func schemaForEquipmentType(typ string, attrb []*v1.Attribute) string {
 
 // some of the special characters are not allowed in
 func replaceSpaces(mappedTo string) string {
-	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1)
+	return strings.Replace(strings.TrimSpace(mappedTo), " ", "_", -1) // nolint: gocritic
 }
 
 func schemaForAttribute(name string, attr *v1.Attribute) string {

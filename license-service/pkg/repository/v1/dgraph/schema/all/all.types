@@ -2,8 +2,7 @@ type AcquiredRights {
     type_name
     scopes
     updated
-    created
-    acqRights.entity                       
+    created                       
     acqRights.SKU                         
     acqRights.swidtag                     
     acqRights.productName                 
@@ -106,6 +105,15 @@ type Attribute {
     attibute.schema_name      
 }
 
+type MetricUSS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+}
+
 type MetricINM {
     type_name
     scopes
@@ -126,6 +134,18 @@ type MetricACS {
     metric.acs.equipment_type      
     metric.acs.attr_name           
     metric.acs.attr_value                            
+}
+
+type MetricAttrSum {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.attr_sum.equipment_type      
+    metric.attr_sum.attr_name           
+    metric.attr_sum.reference_value                           
 }
 
 type MetricIPS {
@@ -185,17 +205,28 @@ type MetricSPS {
     metric.sps.attr_num_cores                     
 }
 
-type ProductAggregation {
+type Aggregation {
     type_name
     scopes
     updated
     created
-    product_aggregation.id
-    product_aggregation.name        
-    product_aggregation.editor      
-    product_aggregation.product_name
-    product_aggregation.metric      
-    product_aggregation.products                  
+    aggregation.id                            
+    aggregation.name                          
+    aggregation.SKU                           
+    aggregation.editor                        
+    aggregation.product_names                 
+    aggregation.metric                         
+    aggregation.swidtags   
+    aggregation.products                   
+    aggregation.numOfAcqLicences              
+    aggregation.numOfLicencesUnderMaintenance 
+    aggregation.averageUnitPrice               
+    aggregation.averageMaintenantUnitPrice     
+    aggregation.totalPurchaseCost              
+    aggregation.totalMaintenanceCost           
+    aggregation.totalCost                      
+    aggregation.startOfMaintenance           
+    aggregation.endOfMaintenance                         
 }
 
 type Product {

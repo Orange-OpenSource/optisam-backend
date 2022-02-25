@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -13,45 +7,46 @@ import (
 	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
+	"strconv"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
 )
 
-//CreateMetricInstanceNumberStandard handles INM metric creation
+// CreateMetricInstanceNumberStandard handles INM metric creation
 func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Context, met *v1.MetricINM, scope string) (retmet *v1.MetricINM, retErr error) {
 	blankID := blankID(met.Name)
 	nquads := []*api.NQuad{
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "type_name",
 			ObjectValue: stringObjectValue("metric"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.type",
 			ObjectValue: stringObjectValue(v1.MetricInstanceNumberStandard.String()),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "metric.name",
 			ObjectValue: stringObjectValue(met.Name),
 		},
-		&api.NQuad{
+		{
 			Subject:   blankID,
 			Predicate: "metric.instancenumber.coefficient",
 			ObjectValue: &api.Value{
-				Val: &api.Value_DoubleVal{
-					DoubleVal: float64(met.Coefficient),
+				Val: &api.Value_IntVal{
+					IntVal: int64(met.Coefficient),
 				},
 			},
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "dgraph.type",
 			ObjectValue: stringObjectValue("MetricINM"),
 		},
-		&api.NQuad{
+		{
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
@@ -101,7 +96,7 @@ func (l *MetricRepository) GetMetricConfigINM(ctx context.Context, metName strin
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/GetMetricConfigINM - query failed", zap.Error(err), zap.String("query", q))
-		return nil, errors.New("cannot get metrices of type sps")
+		return nil, errors.New("cannot get metrics of type sps")
 	}
 	type Resp struct {
 		Metric []v1.MetricINM `json:"Data"`
@@ -119,4 +114,29 @@ func (l *MetricRepository) GetMetricConfigINM(ctx context.Context, metName strin
 		return nil, v1.ErrNoData
 	}
 	return &data.Metric[0], nil
+}
+
+func (l *MetricRepository) UpdateMetricINM(ctx context.Context, met *v1.MetricINM, scope string) error {
+	q := `query {
+		var(func: eq(metric.name,` + met.Name + `))@filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+	}`
+	set := `
+		uid(ID) <metric.instancenumber.coefficient> "` + strconv.Itoa(int(met.Coefficient)) + `" .
+	`
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	if _, err := l.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("dgraph/UpdateMetricINM - query failed", zap.Error(err), zap.String("query", req.Query))
+		return errors.New("cannot update metric")
+	}
+	return nil
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -20,7 +14,7 @@ const (
 func isRowDirty(row []string, updatedIdx, createdIdx int) (time.Time, error) {
 	switch {
 	case updatedIdx < 0 && createdIdx < 0:
-		//return time.Time{}, errors.New("updated and creted colums are missing")
+		// return time.Time{}, errors.New("updated and creted colums are missing")
 		return time.Time{}, nil
 	case len(row) <= updatedIdx && len(row) <= createdIdx:
 		// both created and updated records are not present we must treat this record as dirty
@@ -40,7 +34,7 @@ func isRowDirty(row []string, updatedIdx, createdIdx int) (time.Time, error) {
 		}
 		return t, nil
 	case len(row) > updatedIdx && len(row) > createdIdx:
-		//fmt.Println("$$$$$$$$$$$$", row[updatedIdx], lastUpdate.String())
+		// fmt.Println("$$$$$$$$$$$$", row[updatedIdx], lastUpdate.String())
 		timeRow := row[updatedIdx]
 		if timeRow == "" {
 			// if updated column is empty we should consider created
@@ -52,7 +46,7 @@ func isRowDirty(row []string, updatedIdx, createdIdx int) (time.Time, error) {
 			return t, fmt.Errorf("cannot parse updated time : %s, err: %v", timeRow, err)
 			// we cannot parse the time we must log an error and proceed row as dirty
 		}
-		//fmt.Println("!!!!!!!!!!!!!!!!!!!!!!! "+lastUpdate.String(), t.String(), t.After(lastUpdate))
+		// fmt.Println("!!!!!!!!!!!!!!!!!!!!!!! "+lastUpdate.String(), t.String(), t.After(lastUpdate))
 
 		return t, nil
 
@@ -61,4 +55,4 @@ func isRowDirty(row []string, updatedIdx, createdIdx int) (time.Time, error) {
 	return time.Time{}, nil
 }
 
-//func checkCreated()
+// func checkCreated()

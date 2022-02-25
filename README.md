@@ -1,33 +1,35 @@
+[![pipeline status](https://gitlab.tech.orange/optisam/optisam-it/optisam-backend/badges/develop/pipeline.svg)](https://gitlab.forge.orange-labs.fr/OrangeMoney/optisam/optisam-backend/commits/develop) [![coverage report](https://gitlab.tech.orange/optisam/optisam-it/optisam-backend/badges/develop/coverage.svg)](https://gitlab.forge.orange-labs.fr/OrangeMoney/optisam/optisam-backend/commits/develop)
+
 OpTISAM
-======
+=======
+
+## Introduction
 
 __OPTISAM__ (Optimized tool for inventive Software Asset Management) is a tool for the Software Asset Management Compliance Audit and Optimization Tool. This monorepo contains all the backend services namely:
 
-
-- account-service
-- application-service
+- [account-service](account-service/dbdoc/README.md)
+- [acqrights-service](acqrights-service/dbdoc/README.md)
+- [application-service](application-service/dbdoc/README.md)
 - auth-service
-- dps-service
+- [dps-service](dps-service/dbdoc/README.md)
 - equipment-service
-- simulation-service
 - import-service
 - license-service
 - metric-service
-- meta-service
-- product-service
-- report-service
-- simulation-service
+- [product-service](product-service/dbdoc/README.md)
+- [report-service](report-service/dbdoc/README.md)
+- [simulation-service](simulation-service/dbdoc/README.md)
 
 ## Quick start
 ### Download
 
 ```
-$ git clone https://github.com/Orange-OpenSource/optisam-backend.git
+$ git clone https://gitlab.tech.orange/optisam/optisam-it/optisam-backend.git
 ```
 
 ### Build
 
-##### - Change configuration file
+##### - Change configuration files
 <em>Update values of config files **${service}/cmd/server/config-local.toml** as per your requirement</em>
 
 * Building docker images for all micro-services
@@ -38,16 +40,6 @@ docker build --pull -t optisam/${service-name}-service:latest -f Dockerfile .
 docker push optisam/${service-name}-service:latest
 ```
 
-<<<<<<< HEAD
-* Building docker image for postgres database having required schema for optisam
-
-```
-cd account-service\pkg\repository\v1\postgres\scripts
-docker build --pull -t optisam/postgres:latest -f Dockerfile .
-docker push optisam/postgres:latest
-```
-
-=======
 ### Run
 
 ##### - Run using Docker-Compose
@@ -58,26 +50,20 @@ you can create and start all the services from your configuration (docker-compos
 docker-compose -f docker-compose.yml pull
 docker-compose -f docker-compose.yml up
 ```
->>>>>>> 656c79b2968dca4313d925964af4179de95d320d
-##### - Play with factory super admin user
 
-1) Once docker-compose is up and running, open optisam dashboard at http://localhost:4200
-2) login with below superadmin credentials
-    * username - admin@test.com
-    * password - admin
+---------------------------
+FOr GCP cluster deployment
+Open cloud shell and clone the source code locally
 
-<!-- ### Install and Usage
-## Contribute
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
-## Versions  -->
+cd ~/optisam-backend 
+export PROJECT_ID=diese-dev-optisam-it
+go build -o account_service/bin/server account-service/cmd/server/main.go
 
-## License
+docker build  -t eu.gcr.io/${PROJECT_ID}/optisam/account-service:v1.0.0 -f account-service/Dockerfile .
+docker push  eu.gcr.io/${PROJECT_ID}/optisam/account-service:v1.0.0
 
-Copyright (c) 2019 Orange
+## replace with other service names for next docker build
 
-This software is distributed under the terms and conditions of the 'Apache License 2.0'
-license which can be found in the file 'License.txt' in this package distribution 
-or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
+--------------------------------------
 
-## Contact
-* Homepage: [opensource.orange.com](http://opensource.orange.com/)
+

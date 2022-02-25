@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -27,7 +21,7 @@ func loadApplications(ml *MasterLoader, dg *dgo.Dgraph, masterDir string, scopes
 func applicationsNquadsForRow(cols []string, scope string, row []string, xidIDX int) ([]*api.NQuad, []string, []string, string, bool) {
 	//	nodeType := "product"
 	nquads := make([]*api.NQuad, 0, len(row)+3)
-	//appUID := uidForXid("app_" + row[xidIDX])
+	// appUID := uidForXid("app_" + row[xidIDX])
 	uids := []string{}
 	upserts := []string{}
 	appUID, nqs, upsert := uidForXIDForType("app_"+row[xidIDX], "application", "application.id", row[xidIDX], dgraphTypeApplication)

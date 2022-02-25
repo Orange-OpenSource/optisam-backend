@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 // import (
@@ -263,7 +257,7 @@ package loader
 
 // 				return func() error {
 // 					fmt.Println("i m here")
-// 					//return deleteNodes(sourceID, eqType.ID)
+// 		            // return deleteNodes(sourceID, eqType.ID)
 // 					return nil
 // 				}, nil
 // 			},
@@ -556,10 +550,10 @@ package loader
 // 					Instances(func:has(instance.id),orderasc:instance.id){
 // 						    ID:              instance.id
 // 							Environment:     instance.environment
-// 							NumOfEquipments: count(instance.equipment) 
+// 							NumOfEquipments: count(instance.equipment)
 // 							NumOfProducts:   count(instance.product)
-								 
-// 						  } 
+
+// 						  }
 //              	 }`
 // 				resp, err := dgClient.NewTxn().Query(context.Background(), q)
 // 				if err != nil {

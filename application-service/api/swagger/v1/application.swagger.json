@@ -4,9 +4,10 @@
     "title": "application.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
+  "tags": [
+    {
+      "name": "ApplicationService"
+    }
   ],
   "consumes": [
     "application/json"
@@ -15,15 +16,432 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/Obsolescence/meta/domaincriticity": {
+    "/api/v1/application": {
+      "post": {
+        "operationId": "ApplicationService_UpsertApplication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertApplicationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertApplicationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/domains": {
       "get": {
-        "operationId": "ObsolescenceDomainCriticityMeta",
+        "summary": "Obsolescense APIs",
+        "operationId": "ApplicationService_ApplicationDomains",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ApplicationDomainsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/equipments": {
+      "get": {
+        "operationId": "ApplicationService_GetEquipmentsByApplication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetEquipmentsByApplicationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "application_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/instances": {
+      "get": {
+        "operationId": "ApplicationService_ListInstances",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListInstancesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "instance_id",
+              "instance_environment",
+              "num_of_products",
+              "num_of_equipments"
+            ],
+            "default": "instance_id"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.application_id.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.application_id.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.application_id.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.application_id.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_id.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_id.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_id.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_id.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/obsolescence/domains": {
+      "get": {
+        "operationId": "ApplicationService_ObsolescenceDomainCriticity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DomainCriticityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      },
+      "post": {
+        "operationId": "ApplicationService_PostObsolescenceDomainCriticity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PostDomainCriticityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PostDomainCriticityRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/obsolescence/maintenance": {
+      "get": {
+        "operationId": "ApplicationService_ObsolescenseMaintenanceCriticity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MaintenanceCriticityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      },
+      "post": {
+        "operationId": "ApplicationService_PostObsolescenseMaintenanceCriticity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PostMaintenanceCriticityResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PostMaintenanceCriticityRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/obsolescence/matrix": {
+      "get": {
+        "operationId": "ApplicationService_ObsolescenseRiskMatrix",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RiskMatrixResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      },
+      "post": {
+        "operationId": "ApplicationService_PostObsolescenseRiskMatrix",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1PostRiskMatrixResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1PostRiskMatrixRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/obsolescence/meta/domaincriticity": {
+      "get": {
+        "operationId": "ApplicationService_ObsolescenceDomainCriticityMeta",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1DomainCriticityMetaResponse"
             }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
           }
         },
         "tags": [
@@ -31,15 +449,21 @@
         ]
       }
     },
-    "/api/v1/Obsolescence/meta/maintenancecriticity": {
+    "/api/v1/application/obsolescence/meta/maintenancecriticity": {
       "get": {
-        "operationId": "ObsolescenceMaintenanceCriticityMeta",
+        "operationId": "ApplicationService_ObsolescenceMaintenanceCriticityMeta",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1MaintenanceCriticityMetaResponse"
             }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
           }
         },
         "tags": [
@@ -47,17 +471,187 @@
         ]
       }
     },
-    "/api/v1/Obsolescence/meta/risks": {
+    "/api/v1/application/obsolescence/meta/risks": {
       "get": {
-        "operationId": "ObsolescenceRiskMeta",
+        "operationId": "ApplicationService_ObsolescenceRiskMeta",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1RiskMetaResponse"
             }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
           }
         },
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/obsolescence/resource/{scope}": {
+      "delete": {
+        "operationId": "ApplicationService_DropObscolenscenceData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DropObscolenscenceDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/{application_id}": {
+      "delete": {
+        "operationId": "ApplicationService_DeleteApplication",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteApplicationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/{application_id}/instances": {
+      "post": {
+        "operationId": "ApplicationService_UpsertInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertInstanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertInstanceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/{application_id}/instances/{instance_id}": {
+      "delete": {
+        "operationId": "ApplicationService_DeleteInstance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteInstanceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "instance_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
+    "/api/v1/application/{scope}": {
+      "delete": {
+        "operationId": "ApplicationService_DropApplicationData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DropApplicationDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "tags": [
           "ApplicationService"
         ]
@@ -65,12 +659,18 @@
     },
     "/api/v1/applications": {
       "get": {
-        "operationId": "ListApplications",
+        "operationId": "ApplicationService_ListApplications",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListApplicationsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -136,8 +736,7 @@
             "name": "search_params.name.filter_type",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "search_params.name.filteringkey_multiple",
@@ -146,7 +745,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "search_params.owner.filteringOrder",
@@ -165,8 +765,7 @@
             "name": "search_params.owner.filter_type",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "search_params.owner.filteringkey_multiple",
@@ -175,7 +774,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "search_params.product_id.filteringOrder",
@@ -194,8 +794,7 @@
             "name": "search_params.product_id.filter_type",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "search_params.product_id.filteringkey_multiple",
@@ -204,7 +803,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "search_params.domain.filteringOrder",
@@ -223,8 +823,7 @@
             "name": "search_params.domain.filter_type",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "search_params.domain.filteringkey_multiple",
@@ -233,7 +832,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "search_params.obsolescence_risk.filteringOrder",
@@ -252,8 +852,7 @@
             "name": "search_params.obsolescence_risk.filter_type",
             "in": "query",
             "required": false,
-            "type": "boolean",
-            "format": "boolean"
+            "type": "boolean"
           },
           {
             "name": "search_params.obsolescence_risk.filteringkey_multiple",
@@ -262,7 +861,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
+            },
+            "collectionFormat": "multi"
           },
           {
             "name": "scopes",
@@ -271,435 +871,8 @@
             "type": "array",
             "items": {
               "type": "string"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      },
-      "post": {
-        "operationId": "UpsertApplication",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpsertApplicationResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpsertApplicationRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/applications/domains": {
-      "get": {
-        "summary": "Obsolescense APIs",
-        "operationId": "ApplicationDomains",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ApplicationDomainsResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/applications/{application_id}": {
-      "delete": {
-        "operationId": "DeleteApplication",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DeleteApplicationResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/applications/{application_id}/instances": {
-      "post": {
-        "operationId": "UpsertInstance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpsertInstanceResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpsertInstanceRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/applications/{application_id}/instances/{instance_id}": {
-      "delete": {
-        "operationId": "DeleteInstance",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DeleteInstanceResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "application_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "instance_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/applications/{scope}": {
-      "delete": {
-        "operationId": "DropApplicationData",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DropApplicationDataResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "scope",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/instances": {
-      "get": {
-        "operationId": "ListInstances",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListInstancesResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "page_num",
-            "description": "Page number",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "page_size",
-            "description": "Items per page",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "sort_by",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "instance_id",
-              "instance_environment",
-              "num_of_products",
-              "num_of_equipments"
-            ],
-            "default": "instance_id"
-          },
-          {
-            "name": "sort_order",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "asc",
-              "desc"
-            ],
-            "default": "asc"
-          },
-          {
-            "name": "search_params.application_id.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.application_id.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.application_id.filter_type",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "search_params.application_id.filteringkey_multiple",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "search_params.product_id.filteringOrder",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int32"
-          },
-          {
-            "name": "search_params.product_id.filteringkey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "search_params.product_id.filter_type",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "search_params.product_id.filteringkey_multiple",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "scopes",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/obsolescence/domains": {
-      "get": {
-        "operationId": "ObsolescenceDomainCriticity",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1DomainCriticityResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      },
-      "post": {
-        "operationId": "PostObsolescenceDomainCriticity",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1PostDomainCriticityResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1PostDomainCriticityRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/obsolescence/maintenance": {
-      "get": {
-        "operationId": "ObsolescenseMaintenanceCriticity",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1MaintenanceCriticityResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      },
-      "post": {
-        "operationId": "PostObsolescenseMaintenanceCriticity",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1PostMaintenanceCriticityResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1PostMaintenanceCriticityRequest"
-            }
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      }
-    },
-    "/api/v1/obsolescence/matrix": {
-      "get": {
-        "operationId": "ObsolescenseRiskMatrix",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1RiskMatrixResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ApplicationService"
-        ]
-      },
-      "post": {
-        "operationId": "PostObsolescenseRiskMatrix",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1PostRiskMatrixResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1PostRiskMatrixRequest"
-            }
+            },
+            "collectionFormat": "multi"
           }
         ],
         "tags": [
@@ -733,6 +906,39 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
           }
         }
       }
@@ -808,8 +1014,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -817,8 +1022,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -878,8 +1082,26 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
+        }
+      }
+    },
+    "v1DropObscolenscenceDataResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1GetEquipmentsByApplicationResponse": {
+      "type": "object",
+      "properties": {
+        "equipment_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1043,8 +1265,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -1066,8 +1287,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -1089,8 +1309,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -1177,8 +1396,7 @@
           "type": "string"
         },
         "filter_type": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "filteringkey_multiple": {
           "type": "array",
@@ -1215,8 +1433,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     },
@@ -1248,8 +1465,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         }
       }
     }

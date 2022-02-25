@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -37,18 +31,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 	var rep repo.Equipment
 
 	eqTypes := []*repo.EquipmentType{
-		&repo.EquipmentType{
+		{
 			Type: "typ1",
 			ID:   "1",
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:           "1",
 					Name:         "attr1",
 					Type:         repo.DataTypeString,
 					IsDisplayed:  true,
 					IsSearchable: true,
 				},
-				&repo.Attribute{
+				{
 					ID:           "2",
 					Name:         "attr2",
 					Type:         repo.DataTypeString,
@@ -57,17 +51,17 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 				},
 			},
 		},
-		&repo.EquipmentType{
+		{
 			Type: "typ2",
 			ID:   "2",
 			Attributes: []*repo.Attribute{
-				&repo.Attribute{
+				{
 					ID:          "1",
 					Name:        "attr1",
 					Type:        repo.DataTypeString,
 					IsDisplayed: true,
 				},
-				&repo.Attribute{
+				{
 					ID:          "2",
 					Name:        "attr2",
 					Type:        repo.DataTypeString,
@@ -256,18 +250,18 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 				mockLicense := mock.NewMockEquipment(mockCtrl)
 				rep = mockLicense
 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"A"}).Times(1).Return([]*repo.EquipmentType{
-					&repo.EquipmentType{
+					{
 						Type: "typ1",
 						ID:   "1",
 						Attributes: []*repo.Attribute{
-							&repo.Attribute{
+							{
 								ID:           "1",
 								Name:         "attr1",
 								Type:         repo.DataTypeString,
 								IsDisplayed:  false,
 								IsSearchable: true,
 							},
-							&repo.Attribute{
+							{
 								ID:           "2",
 								Name:         "attr2",
 								Type:         repo.DataTypeString,
@@ -333,7 +327,7 @@ func Test_equipmentServiceServer_ListEquipmentsForProduct(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewEquipmentServiceServer(rep)
+			s := NewEquipmentServiceServer(rep, nil)
 			got, err := s.ListEquipmentsForProduct(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("equipmentServiceServer.ListEquipmentsForProduct() error = %v, wantErr %v", err, tt.wantErr)

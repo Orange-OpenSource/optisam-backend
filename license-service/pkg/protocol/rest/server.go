@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package rest
 
 import (
@@ -18,7 +12,9 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
@@ -30,14 +26,14 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	mux_http := http.NewServeMux()
+	muxHTTP := http.NewServeMux()
 	gw, err := newGateway(ctx, grpcPort)
 	if err != nil {
 		logger.Log.Fatal("failed to register GRPC gateway", zap.String("reason", err.Error()))
 
 	}
-	mux_http.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	mux_http.Handle("/", gw)
+	muxHTTP.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	muxHTTP.Handle("/", gw)
 
 	srv := &http.Server{
 		Addr: ":" + httpPort,
@@ -45,7 +41,7 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
 			// rest_middleware.ValidateAuth(verifyKey,
 			// 	rest_middleware.AddLogger(logger.Log,
-			mux_http),
+			muxHTTP),
 		// ))},
 		},
 	}
@@ -69,15 +65,25 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 }
 
 func newGateway(ctx context.Context, grpcPort string) (http.Handler, error) {
-	mux_gateway := runtime.NewServeMux()
+	muxGateway := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				UseProtoNames:   true,
+				EmitUnpopulated: true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
+	)
 	opts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithStatsHandler(&ocgrpc.ClientHandler{})}
 	conn, err := grpc.DialContext(ctx, "localhost:"+grpcPort, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := v1.RegisterLicenseServiceHandler(ctx, mux_gateway, conn); err != nil {
-		return nil, err
+	if error := v1.RegisterLicenseServiceHandler(ctx, muxGateway, conn); error != nil {
+		return nil, error
 	}
-	return mux_gateway, err
+	return muxGateway, err
 }

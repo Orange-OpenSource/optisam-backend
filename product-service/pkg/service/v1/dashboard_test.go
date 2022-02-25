@@ -1,18 +1,17 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/workerqueue"
+	"optisam-backend/common/optisam/workerqueue/job"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
@@ -20,6 +19,7 @@ import (
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
@@ -84,7 +84,8 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 				queue = mockQueue
 				mockRepository.EXPECT().GetProductQualityOverview(ctx, s.Scope).Times(1).Return(db.GetProductQualityOverviewRow{}, nil)
 			},
-			outputErr: true,
+			output:    &v1.OverviewProductQualityResponse{},
+			outputErr: false,
 		},
 		{
 			name:  "Failed : Scope not exist",
@@ -118,7 +119,7 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup(tt.input)
-			s := NewProductServiceServer(rep, queue)
+			s := NewProductServiceServer(rep, queue, nil, "")
 			got, err := s.OverviewProductQuality(tt.ctx, tt.input)
 			if (err != nil) != tt.outputErr {
 				t.Errorf("productServiceServer.OverviewProductQuality() error = %v, wantErr %v", err, tt.outputErr)
@@ -126,6 +127,148 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("productServiceServer.OverviewProductQuality() = %v, want %v", got, tt.output)
+			}
+		})
+	}
+}
+
+func Test_GetBanner(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	ct := time.Now()
+	nt := ct.Add(time.Hour)
+	cout := ct.Format("2006-01-02 15:04")
+	nout := nt.Format("2006-01-02 15:04")
+
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.GetBannerRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.GetBannerResponse
+		wantErr bool
+	}{
+		{
+			name: "Success",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetBannerRequest{
+					Scope:    "Scope1",
+					TimeZone: "CET",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				mockRepository.EXPECT().GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
+					Scope:   "Scope1",
+					Column2: "CET",
+				}).Return(db.GetDashboardUpdatesRow{
+					UpdatedAt:    ct,
+					NextUpdateAt: nt,
+				}, nil).Times(1)
+			},
+			want: &v1.GetBannerResponse{
+				UpdatedAt:    cout,
+				NextUpdateAt: nout,
+			},
+			wantErr: false,
+		},
+		{
+			name: "DataNotFound",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetBannerRequest{
+					Scope:    "Scope2",
+					TimeZone: "CET",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				mockRepository.EXPECT().GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
+					Scope:   "Scope2",
+					Column2: "CET",
+				}).Return(db.GetDashboardUpdatesRow{}, sql.ErrNoRows).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "ScopeNotFound",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetBannerRequest{
+					Scope:    "Scope20",
+					TimeZone: "CET",
+				},
+			},
+			setup: func() {
+			},
+			wantErr: true,
+		},
+		{
+			name: "ClaimsNotFound",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetBannerRequest{
+					Scope:    "Scope20",
+					TimeZone: "CET",
+				},
+			},
+			setup: func() {
+			},
+			wantErr: true,
+		},
+		{
+			name: "DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetBannerRequest{
+					Scope:    "Scope2",
+					TimeZone: "CET",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				mockRepository.EXPECT().GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
+					Scope:   "Scope2",
+					Column2: "CET",
+				}).Return(db.GetDashboardUpdatesRow{}, errors.New("DBError")).Times(1)
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewProductServiceServer(rep, queue, nil, "")
+			got, err := s.GetBanner(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.GetBanner() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.GetBanner() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -171,7 +314,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageNum:  int32(0),
 					PageSize: int32(1),
 				}).Times(1).Return([]db.ListProductsViewRow{
-					db.ListProductsViewRow{
+					{
 						Totalrecords: int64(40),
 					},
 				}, nil)
@@ -207,7 +350,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageNum:  int32(0),
 					PageSize: int32(1),
 				}).Times(1).Return([]db.ListProductsViewRow{
-					db.ListProductsViewRow{
+					{
 						Totalrecords: int64(40),
 					},
 				}, nil)
@@ -279,7 +422,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageNum:  int32(0),
 					PageSize: int32(1),
 				}).Times(1).Return([]db.ListProductsViewRow{
-					db.ListProductsViewRow{
+					{
 						Totalrecords: int64(40),
 					},
 				}, nil)
@@ -361,7 +504,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageNum:  int32(0),
 					PageSize: int32(1),
 				}).Times(1).Return([]db.ListProductsViewRow{
-					db.ListProductsViewRow{
+					{
 						Totalrecords: int64(40),
 					},
 				}, nil)
@@ -377,7 +520,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewProductServiceServer(rep, queue)
+			s := NewProductServiceServer(rep, queue, nil, "")
 			got, err := s.DashboardOverview(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("productServiceServer.DashboardOverview() error = %v, wantErr %v", err, tt.wantErr)
@@ -431,7 +574,7 @@ func Test_productServiceServer_ProductsPerEditor(t *testing.T) {
 						ProductEditor: "e1",
 						Scopes:        []string{"Scope1"},
 					}).Times(1).Return([]db.GetProductsByEditorRow{
-						db.GetProductsByEditorRow{
+						{
 							Swidtag:     "s1",
 							ProductName: "p1",
 						},
@@ -440,7 +583,7 @@ func Test_productServiceServer_ProductsPerEditor(t *testing.T) {
 			},
 			want: &v1.ProductsPerEditorResponse{
 				EditorsProducts: []*v1.EditorProducts{
-					&v1.EditorProducts{
+					{
 						Editor:      "e1",
 						NumProducts: int32(1),
 					},
@@ -534,7 +677,7 @@ func Test_productServiceServer_ProductsPerEditor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewProductServiceServer(rep, queue)
+			s := NewProductServiceServer(rep, queue, nil, "")
 			got, err := s.ProductsPerEditor(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("productServiceServer.ProductsPerEditor() error = %v, wantErr %v", err, tt.wantErr)
@@ -583,7 +726,7 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().ProductsPerMetric(ctx, []string{"Scope1"}).Times(1).Return([]db.ProductsPerMetricRow{
-					db.ProductsPerMetricRow{
+					{
 						Metric:      "OPS",
 						NumProducts: int64(100),
 					},
@@ -591,7 +734,7 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 			},
 			want: &v1.ProductsPerMetricTypeResponse{
 				MetricsProducts: []*v1.MetricProducts{
-					&v1.MetricProducts{
+					{
 						MetricName:  "OPS",
 						NumProducts: int32(100),
 					},
@@ -663,14 +806,14 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			lr := NewProductServiceServer(rep, queue)
+			lr := NewProductServiceServer(rep, queue, nil, "")
 			got, err := lr.ProductsPerMetricType(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acqRightsServiceServer.ProductsPerMetricType() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("acqRightsServiceServer.ProductsPerMetricType() = %v, want %v", got, tt.want)
+				t.Errorf("acqRightsServiceServer.ProductsPerMetricType() got = %v, want = %v", got, tt.want)
 			}
 		})
 	}
@@ -716,33 +859,33 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsLicencesRow{
-					db.CounterFeitedProductsLicencesRow{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
-						NumLicencesComputed: int64(1000),
+						NumLicencesComputed: int32(1000),
 						NumLicensesAcquired: int64(100),
-						Delta:               int64(-900),
+						Delta:               int32(-900),
 					},
-					db.CounterFeitedProductsLicencesRow{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
-						NumLicencesComputed: int64(1000),
+						NumLicencesComputed: int32(1000),
 						NumLicensesAcquired: int64(200),
-						Delta:               int64(-800),
+						Delta:               int32(-800),
 					},
 				}, nil)
 				mockRepository.EXPECT().CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsCostsRow{
-					db.CounterFeitedProductsCostsRow{
+					{
 						SwidTag:           "p1",
 						ProductName:       "p1n1",
 						TotalPurchaseCost: decimal.New(100, 0),
 						TotalComputedCost: decimal.New(1000, 0),
 						DeltaCost:         decimal.New(-900, 0),
 					},
-					db.CounterFeitedProductsCostsRow{
+					{
 						SwidTag:           "p2",
 						ProductName:       "p2n2",
 						TotalComputedCost: decimal.New(1000, 0),
@@ -753,14 +896,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 			},
 			want: &v1.CounterfeitedProductsResponse{
 				ProductsLicenses: []*v1.ProductsLicenses{
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(100),
 						Delta:               int64(-900),
 					},
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
 						NumLicensesComputed: int64(1000),
@@ -769,14 +912,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					},
 				},
 				ProductsCosts: []*v1.ProductsCosts{
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
 						LicensesAcquiredCost: float64(100),
 						LicensesComputedCost: float64(1000),
 						DeltaCost:            float64(-900),
 					},
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
 						LicensesComputedCost: float64(1000),
@@ -805,19 +948,19 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsLicencesRow{
-					db.CounterFeitedProductsLicencesRow{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
-						NumLicencesComputed: int64(1000),
+						NumLicencesComputed: int32(1000),
 						NumLicensesAcquired: int64(100),
-						Delta:               int64(-900),
+						Delta:               int32(-900),
 					},
-					db.CounterFeitedProductsLicencesRow{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
-						NumLicencesComputed: int64(1000),
+						NumLicencesComputed: int32(1000),
 						NumLicensesAcquired: int64(200),
-						Delta:               int64(-800),
+						Delta:               int32(-800),
 					},
 				}, nil)
 				mockRepository.EXPECT().CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
@@ -827,14 +970,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 			},
 			want: &v1.CounterfeitedProductsResponse{
 				ProductsLicenses: []*v1.ProductsLicenses{
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(100),
 						Delta:               int64(-900),
 					},
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
 						NumLicensesComputed: int64(1000),
@@ -867,14 +1010,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsCostsRow{
-					db.CounterFeitedProductsCostsRow{
+					{
 						SwidTag:           "p1",
 						ProductName:       "p1n1",
 						TotalPurchaseCost: decimal.New(100, 0),
 						TotalComputedCost: decimal.New(1000, 0),
 						DeltaCost:         decimal.New(-900, 0),
 					},
-					db.CounterFeitedProductsCostsRow{
+					{
 						SwidTag:           "p2",
 						ProductName:       "p2n2",
 						TotalComputedCost: decimal.New(1000, 0),
@@ -885,14 +1028,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 			},
 			want: &v1.CounterfeitedProductsResponse{
 				ProductsCosts: []*v1.ProductsCosts{
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
 						LicensesAcquiredCost: float64(100),
 						LicensesComputedCost: float64(1000),
 						DeltaCost:            float64(-900),
 					},
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
 						LicensesComputedCost: float64(1000),
@@ -931,14 +1074,14 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			lr := NewProductServiceServer(rep, queue)
+			lr := NewProductServiceServer(rep, queue, nil, "")
 			got, err := lr.CounterfeitedProducts(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acqRightsServiceServer.CounterfeitedProducts() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("acqRightsServiceServer.CounterfeitedProducts() = %v, want %v", got, tt.want)
+				t.Errorf("acqRightsServiceServer.CounterfeitedProducts() got = %v, want = %v", got, tt.want)
 			}
 		})
 	}
@@ -985,33 +1128,33 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsLicencesRow{
-					db.OverDeployedProductsLicencesRow{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
-						NumLicencesComputed: int64(100),
+						NumLicencesComputed: int32(100),
 						NumLicensesAcquired: int64(1000),
-						Delta:               int64(900),
+						Delta:               int32(900),
 					},
-					db.OverDeployedProductsLicencesRow{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
-						NumLicencesComputed: int64(200),
+						NumLicencesComputed: int32(200),
 						NumLicensesAcquired: int64(1000),
-						Delta:               int64(800),
+						Delta:               int32(800),
 					},
 				}, nil)
 				mockRepository.EXPECT().OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsCostsRow{
-					db.OverDeployedProductsCostsRow{
+					{
 						SwidTag:           "p1",
 						ProductName:       "p1n1",
 						TotalPurchaseCost: decimal.New(1000, 0),
 						TotalComputedCost: decimal.New(100, 0),
 						DeltaCost:         decimal.New(900, 0),
 					},
-					db.OverDeployedProductsCostsRow{
+					{
 						SwidTag:           "p2",
 						ProductName:       "p2n2",
 						TotalComputedCost: decimal.New(200, 0),
@@ -1022,14 +1165,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 			},
 			want: &v1.OverdeployedProductsResponse{
 				ProductsLicenses: []*v1.ProductsLicenses{
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
 						NumLicensesComputed: int64(100),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(900),
 					},
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
 						NumLicensesComputed: int64(200),
@@ -1038,14 +1181,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					},
 				},
 				ProductsCosts: []*v1.ProductsCosts{
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
 						LicensesAcquiredCost: float64(1000),
 						LicensesComputedCost: float64(100),
 						DeltaCost:            float64(900),
 					},
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
 						LicensesComputedCost: float64(200),
@@ -1074,19 +1217,19 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsLicencesRow{
-					db.OverDeployedProductsLicencesRow{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
-						NumLicencesComputed: int64(100),
+						NumLicencesComputed: int32(100),
 						NumLicensesAcquired: int64(1000),
-						Delta:               int64(900),
+						Delta:               int32(900),
 					},
-					db.OverDeployedProductsLicencesRow{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
-						NumLicencesComputed: int64(200),
+						NumLicencesComputed: int32(200),
 						NumLicensesAcquired: int64(1000),
-						Delta:               int64(800),
+						Delta:               int32(800),
 					},
 				}, nil)
 				mockRepository.EXPECT().OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
@@ -1096,14 +1239,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 			},
 			want: &v1.OverdeployedProductsResponse{
 				ProductsLicenses: []*v1.ProductsLicenses{
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
 						NumLicensesComputed: int64(100),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(900),
 					},
-					&v1.ProductsLicenses{
+					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
 						NumLicensesComputed: int64(200),
@@ -1136,14 +1279,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					Scope:         "Scope1",
 					ProductEditor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsCostsRow{
-					db.OverDeployedProductsCostsRow{
+					{
 						SwidTag:           "p1",
 						ProductName:       "p1n1",
 						TotalPurchaseCost: decimal.New(1000, 0),
 						TotalComputedCost: decimal.New(100, 0),
 						DeltaCost:         decimal.New(900, 0),
 					},
-					db.OverDeployedProductsCostsRow{
+					{
 						SwidTag:           "p2",
 						ProductName:       "p2n2",
 						TotalComputedCost: decimal.New(200, 0),
@@ -1154,14 +1297,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 			},
 			want: &v1.OverdeployedProductsResponse{
 				ProductsCosts: []*v1.ProductsCosts{
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
 						LicensesAcquiredCost: float64(1000),
 						LicensesComputedCost: float64(100),
 						DeltaCost:            float64(900),
 					},
-					&v1.ProductsCosts{
+					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
 						LicensesComputedCost: float64(200),
@@ -1200,14 +1343,14 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			lr := NewProductServiceServer(rep, queue)
+			lr := NewProductServiceServer(rep, queue, nil, "")
 			got, err := lr.OverdeployedProducts(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acqRightsServiceServer.OverdeployedProducts() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("acqRightsServiceServer.OverdeployedProducts() = %v, want %v", got, tt.want)
+				t.Errorf("acqRightsServiceServer.OverdeployedProducts() got= %v, want= %v", got, tt.want)
 			}
 		})
 	}
@@ -1222,6 +1365,7 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
 	var queue workerqueue.Workerqueue
+	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
 		req *v1.ComplianceAlertRequest
@@ -1246,15 +1390,39 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
-					Tpc:       decimal.New(50000, 0),
-					DeltaCost: decimal.New(500, 0),
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{
-					Tpc:       decimal.New(50000, 0),
-					DeltaCost: decimal.New(500, 0),
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{
+					Acq:         decimal.New(50000, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.OverdeployPercentRow{
+					Acq:         decimal.New(50000, 0),
+					DeltaRights: decimal.New(500, 0),
 				}, nil)
 			},
 			want: &v1.ComplianceAlertResponse{
@@ -1263,7 +1431,7 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 			},
 		},
 		{
-			name: "FAILURE: overdeployment - tpc is zero",
+			name: "FAILURE: - MetricServiceError",
 			args: args{
 				ctx: ctx,
 				req: &v1.ComplianceAlertRequest{
@@ -1274,21 +1442,18 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
-					Tpc:       decimal.New(50000, 0),
-					DeltaCost: decimal.New(500, 0),
-				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{
-					Tpc:       decimal.New(0, 0),
-					DeltaCost: decimal.New(500, 0),
-				}, nil)
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(nil, errors.New("internal"))
 			},
 			wantErr: true,
 		},
 		{
-			name: "FAILURE- tpc is zero - Counterfeit",
+			name: "FAILURE: - metrics are not defined",
 			args: args{
 				ctx: ctx,
 				req: &v1.ComplianceAlertRequest{
@@ -1299,15 +1464,109 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
-					Tpc:       decimal.New(0, 0),
-					DeltaCost: decimal.New(500, 0),
-				}, nil)
-
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(nil, nil)
 			},
+			want:    &v1.ComplianceAlertResponse{},
 			wantErr: true,
+		},
+		{
+			name: "FAILURE: overdeployment - Acq is zero",
+			args: args{
+				ctx: ctx,
+				req: &v1.ComplianceAlertRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{
+					Acq:         decimal.New(50000, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.OverdeployPercentRow{
+					Acq:         decimal.New(0, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+			},
+			want:    &v1.ComplianceAlertResponse{},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE- acq is zero - Counterfeit",
+			args: args{
+				ctx: ctx,
+				req: &v1.ComplianceAlertRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{
+					Acq:         decimal.New(0, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+			},
+			want:    &v1.ComplianceAlertResponse{},
+			wantErr: false,
 		},
 		{
 			name: "FAILURE: error in db/CounterfeitPercent",
@@ -1321,10 +1580,30 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{}, errors.New("Internal"))
-
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{}, errors.New("internal"))
 			},
 			wantErr: true,
 		},
@@ -1340,10 +1619,30 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{}, sql.ErrNoRows)
-
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{}, sql.ErrNoRows)
 			},
 			wantErr: true,
 		},
@@ -1359,13 +1658,37 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
-					Tpc:       decimal.New(50000, 0),
-					DeltaCost: decimal.New(500, 0),
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{}, errors.New("Internal"))
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{
+					Acq:         decimal.New(50000, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.OverdeployPercentRow{}, errors.New("internal"))
 			},
 			wantErr: true,
 		},
@@ -1381,13 +1704,37 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
-					Tpc:       decimal.New(50000, 0),
-					DeltaCost: decimal.New(500, 0),
+				met = mockMetric
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{}, sql.ErrNoRows)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.CounterfeitPercentRow{
+					Acq:         decimal.New(50000, 0),
+					DeltaRights: decimal.New(500, 0),
+				}, nil)
+				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
+					Metrics: []string{"ops", "metricNup"},
+					Scope:   "Scope1",
+				}).Times(1).Return(db.OverdeployPercentRow{}, sql.ErrNoRows)
 			},
 			wantErr: true,
 		},
@@ -1419,7 +1766,11 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			lr := NewProductServiceServer(rep, queue)
+			lr := &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				metric:      met,
+			}
 			got, err := lr.ComplianceAlert(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("acqRightsServiceServer.ComplianceAlert() error = %v, wantErr %v", err, tt.wantErr)
@@ -1468,18 +1819,24 @@ func Test_productServiceServer_DashboardQualityProducts(t *testing.T) {
 				queue = mockQueue
 				mockRepo.EXPECT().ProductsNotDeployed(ctx, "Scope1").Times(1).Return([]db.ProductsNotDeployedRow{
 					{
-						Swidtag:     "PND1",
-						ProductName: "ProNotDep1",
+						Swidtag:       "PND1",
+						ProductName:   "ProNotDep1",
+						ProductEditor: "e1",
+						Version:       "v1",
 					},
 					{
-						Swidtag:     "PND2",
-						ProductName: "ProNotDep2",
+						Swidtag:       "PND2",
+						ProductName:   "ProNotDep2",
+						ProductEditor: "e2",
+						Version:       "v2",
 					},
 				}, nil)
 				mockRepo.EXPECT().ProductsNotAcquired(ctx, "Scope1").Times(1).Return([]db.ProductsNotAcquiredRow{
 					{
-						Swidtag:     "PNA1",
-						ProductName: "ProNotAcq1",
+						Swidtag:        "PNA1",
+						ProductName:    "ProNotAcq1",
+						ProductEditor:  "e1",
+						ProductVersion: "v1",
 					},
 				}, nil)
 			},
@@ -1488,16 +1845,22 @@ func Test_productServiceServer_DashboardQualityProducts(t *testing.T) {
 					{
 						SwidTag:     "PND1",
 						ProductName: "ProNotDep1",
+						Editor:      "e1",
+						Version:     "v1",
 					},
 					{
 						SwidTag:     "PND2",
 						ProductName: "ProNotDep2",
+						Editor:      "e2",
+						Version:     "v2",
 					},
 				},
 				ProductsNotAcquired: []*v1.DashboardQualityProducts{
 					{
 						SwidTag:     "PNA1",
 						ProductName: "ProNotAcq1",
+						Editor:      "e1",
+						Version:     "v1",
 					},
 				},
 			},
@@ -1570,7 +1933,7 @@ func Test_productServiceServer_DashboardQualityProducts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewProductServiceServer(rep, queue)
+			s := NewProductServiceServer(rep, queue, nil, "")
 			got, err := s.DashboardQualityProducts(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("productServiceServer.DashboardQuality() error = %v, wantErr %v", err, tt.wantErr)
@@ -1578,6 +1941,95 @@ func Test_productServiceServer_DashboardQualityProducts(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("productServiceServer.DashboardQuality() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_productServiceServer_CreateDashboardUpdateJob(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		input   *v1.CreateDashboardUpdateJobRequest
+		want    *v1.CreateDashboardUpdateJobResponse
+		wantErr bool
+		ctx     context.Context
+		setup   func()
+	}{
+		{
+			name:    "SucessfullyJobCreated",
+			input:   &v1.CreateDashboardUpdateJobRequest{Scope: "Scope1"},
+			want:    &v1.CreateDashboardUpdateJobResponse{Success: true},
+			wantErr: false,
+			ctx:     ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(fmt.Sprintf(`{"updatedBy":"data_update" , "scope" :"%s"}`, "Scope1")),
+				}, "lcalw").Return(int32(0), nil).Times(1)
+			},
+		},
+		{
+			name:    "FailedInJobCreation",
+			input:   &v1.CreateDashboardUpdateJobRequest{Scope: "Scope1"},
+			want:    &v1.CreateDashboardUpdateJobResponse{Success: false},
+			wantErr: true,
+			ctx:     ctx,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				mockQueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "lcalw"},
+					Status: job.JobStatusPENDING,
+					Data:   json.RawMessage(fmt.Sprintf(`{"updatedBy":"data_update" , "scope" :"%s"}`, "Scope1")),
+				}, "lcalw").Return(int32(0), errors.New("JobFailed")).Times(1)
+			},
+		},
+		{
+			name:    "ContextNotFound",
+			input:   &v1.CreateDashboardUpdateJobRequest{Scope: "Scope1"},
+			want:    &v1.CreateDashboardUpdateJobResponse{Success: false},
+			wantErr: true,
+			ctx:     context.Background(),
+			setup:   func() {},
+		},
+		{
+			name:    "ScopeNotFound",
+			input:   &v1.CreateDashboardUpdateJobRequest{Scope: "Scope11"},
+			want:    &v1.CreateDashboardUpdateJobResponse{Success: false},
+			wantErr: true,
+			ctx:     context.Background(),
+			setup:   func() {},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewProductServiceServer(rep, queue, nil, "")
+			got, err := s.CreateDashboardUpdateJob(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.CreateDashboardUpdateJob() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.CreateDashboardUpdateJob() = %v, want %v", got, tt.want)
 			}
 		})
 	}

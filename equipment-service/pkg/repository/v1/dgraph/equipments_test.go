@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -51,12 +45,12 @@ func TestEquipmentRepository_CreateEquipmentType(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -81,9 +75,10 @@ func TestEquipmentRepository_CreateEquipmentType(t *testing.T) {
 				eqType := &v1.EquipmentType{
 					Type:     "MyType",
 					SourceID: sourceID,
+					Scopes:   []string{"scope1"},
 					ParentID: parentID,
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -91,43 +86,43 @@ func TestEquipmentRepository_CreateEquipmentType(t *testing.T) {
 							IsDisplayed:  true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_2",
 						},
-						&v1.Attribute{
+						{
 							Name:     "attr2.1",
 							Type:     v1.DataTypeInt,
 							MappedTo: "mapping_2.1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr3",
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
 							MappedTo:     "mapping_3",
 						},
-						&v1.Attribute{
+						{
 							Name:     "attr3.1",
 							Type:     v1.DataTypeFloat,
 							MappedTo: "mapping_3.1",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr4",
 							Type:               v1.DataTypeString,
 							IsParentIdentifier: true,
 							IsDisplayed:        true,
 							MappedTo:           "mapping_4",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr4.1",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
 							IsDisplayed:  true,
 							MappedTo:     "mapping_4.1",
 						},
-						&v1.Attribute{
+						{
 							Name:        "attr4.2",
 							Type:        v1.DataTypeString,
 							IsDisplayed: true,
@@ -153,33 +148,33 @@ func TestEquipmentRepository_CreateEquipmentType(t *testing.T) {
 				return eqType, nil
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr2",
 					Type:      "int",
 					Index:     true,
 					Tokenizer: []string{"int"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr2.1",
 					Type:      "int",
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr3",
 					Type:      "float",
 					Index:     true,
 					Tokenizer: []string{"float"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr3.1",
 					Type:      "float",
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr4.1",
 					Type:      "string",
 					Index:     true,
 					Tokenizer: []string{"trigram"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr4.2",
 					Type:      "string",
 				},
@@ -256,12 +251,12 @@ func TestEquipmentRepository_EquipmentTypes(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -285,13 +280,13 @@ func TestEquipmentRepository_EquipmentTypes(t *testing.T) {
 				}
 
 				eqTypes := []*v1.EquipmentType{
-					&v1.EquipmentType{
+					{
 						Type:     "MyType1",
 						SourceID: sourceID,
 						ParentID: parentID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:         "attr1",
 								Type:         v1.DataTypeString,
 								IsSearchable: true,
@@ -299,7 +294,7 @@ func TestEquipmentRepository_EquipmentTypes(t *testing.T) {
 								IsDisplayed:  true,
 								MappedTo:     "mapping_1",
 							},
-							&v1.Attribute{
+							{
 								Name:               "attr2",
 								Type:               v1.DataTypeString,
 								IsSearchable:       false,
@@ -309,13 +304,13 @@ func TestEquipmentRepository_EquipmentTypes(t *testing.T) {
 							},
 						},
 					},
-					&v1.EquipmentType{
+					{
 						Type:     "MyType2",
 						SourceID: sourceID,
 						ParentID: parentID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:         "attr1",
 								Type:         v1.DataTypeString,
 								IsSearchable: true,
@@ -367,11 +362,12 @@ func TestEquipmentRepository_EquipmentTypes(t *testing.T) {
 
 func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 	type args struct {
-		ctx    context.Context
-		id     string
-		typ    string
-		req    *v1.UpdateEquipmentRequest
-		scopes []string
+		ctx      context.Context
+		id       string
+		typ      string
+		parentID string
+		req      *v1.UpdateEquipmentRequest
+		scopes   []string
 	}
 	tests := []struct {
 		name   string
@@ -379,7 +375,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 		args   args
 		setup  func() (*v1.EquipmentType, string, func() error, error)
 		veryfy func(repo *EquipmentRepository) (*v1.EquipmentType, error)
-		//wantRetType     []*v1.Attribute
+		// wantRetType     []*v1.Attribute
 		wantSchemaNodes []*SchemaNode
 		predicates      []string
 		wantErr         bool
@@ -390,7 +386,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
 					Attr: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:               "attr4",
 							Type:               1,
 							IsIdentifier:       false,
@@ -399,7 +395,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_4",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr5",
 							Type:               2,
 							IsIdentifier:       false,
@@ -408,7 +404,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_5",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr6",
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
@@ -422,12 +418,12 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -456,20 +452,20 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 					ParentID: parentID,
 					Scopes:   []string{"scope1"},
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr2",
 							Type:               v1.DataTypeString,
 							IsParentIdentifier: true,
 							IsDisplayed:        true,
 							MappedTo:           "mapping_2",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr3",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -495,29 +491,29 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				return eqType, nil
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr1",
 					Type:      "int",
 					Index:     true,
 					Tokenizer: []string{"int"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr3",
 					Type:      "string",
 					Index:     true,
 					Tokenizer: []string{"trigram"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr4",
 					Type:      "string",
 					Index:     true,
 					Tokenizer: []string{"trigram"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr5",
 					Type:      "int",
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr6",
 					Type:      "float",
 					Index:     true,
@@ -533,20 +529,21 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{name: "SUCCESS - parent created ",
+		{name: "SUCCESS - parent created",
 			lr: NewEquipmentRepository(dgClient),
 			args: args{
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
+					ParentID: blankID("parent"),
 					Attr: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:               "attr3",
 							Type:               v1.DataTypeString,
 							IsParentIdentifier: true,
 							IsDisplayed:        true,
 							MappedTo:           "mapping_3",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr4",
 							Type:               v1.DataTypeInt,
 							IsIdentifier:       false,
@@ -555,7 +552,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_4",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr5",
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
@@ -563,6 +560,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 						},
 					},
 				},
+				scopes: []string{"scope1"},
 			},
 			setup: func() (*v1.EquipmentType, string, func() error, error) {
 				mu := &api.Mutation{
@@ -573,7 +571,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 						// 	Predicate:   "metadata_parent",
 						// 	ObjectValue: stringObjectValue("eq_type_1"),
 						// },
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -600,13 +598,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 					Type:     "MyType2",
 					SourceID: sourceID,
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -624,13 +622,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 					Type:     "MyType",
 					SourceID: sourceID,
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -656,23 +654,23 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				return eqType, nil
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr1",
 					Type:      "int",
 					Index:     true,
 					Tokenizer: []string{"int"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr2",
 					Type:      "string",
 					Index:     true,
 					Tokenizer: []string{"trigram"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr4",
 					Type:      "int",
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr5",
 					Type:      "float",
 					Index:     true,
@@ -687,20 +685,21 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{name: "SUCCESS - parent updated ",
+		{name: "SUCCESS - parent updated",
 			lr: NewEquipmentRepository(dgClient),
 			args: args{
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
+					ParentID: blankID("parent"),
 					Attr: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:               "attr3",
 							Type:               v1.DataTypeString,
 							IsParentIdentifier: true,
 							IsDisplayed:        true,
 							MappedTo:           "mapping_3",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr4",
 							Type:               v1.DataTypeInt,
 							IsIdentifier:       false,
@@ -709,7 +708,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_4",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr5",
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
@@ -717,17 +716,18 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 						},
 					},
 				},
+				scopes: []string{"scope1"},
 			},
 			setup: func() (*v1.EquipmentType, string, func() error, error) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -754,13 +754,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 					Type:     "MyType2",
 					SourceID: sourceID,
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -779,13 +779,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 					SourceID: sourceID,
 					ParentID: parentID,
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -811,23 +811,23 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				return eqType, nil
 			},
 			wantSchemaNodes: []*SchemaNode{
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr1",
 					Type:      "int",
 					Index:     true,
 					Tokenizer: []string{"int"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr2",
 					Type:      "string",
 					Index:     true,
 					Tokenizer: []string{"trigram"},
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr4",
 					Type:      "int",
 				},
-				&SchemaNode{
+				{
 					Predicate: "equipment.MyType.attr5",
 					Type:      "float",
 					Index:     true,
@@ -855,7 +855,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				assert.Empty(t, err, "error is not expect in cleanup")
 			}()
 			tt.args.req.ParentID = parID
-			gotRetType, err := tt.lr.UpdateEquipmentType(tt.args.ctx, got.ID, got.Type, tt.args.req, tt.args.scopes)
+			gotRetType, err := tt.lr.UpdateEquipmentType(tt.args.ctx, got.ID, got.Type, got.ParentID, tt.args.req, tt.args.scopes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EquipmentRepository.UpdateEquipmentType() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -904,19 +904,20 @@ func TestEquipmentRepository_EquipmentWithID(t *testing.T) {
 		{name: "success",
 			lr: NewEquipmentRepository(dgClient),
 			args: args{
-				ctx: context.Background(),
+				ctx:    context.Background(),
+				scopes: []string{"scope1"},
 			},
 			setup: func() (*v1.EquipmentType, func() error, error) {
 				// TODO create two nodes for parent type and data source
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
+						{
 							Subject:     blankID("parent"),
 							Predicate:   "metadata_parent",
 							ObjectValue: stringObjectValue("eq_type_1"),
 						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -943,8 +944,9 @@ func TestEquipmentRepository_EquipmentWithID(t *testing.T) {
 					Type:     "MyType",
 					SourceID: sourceID,
 					ParentID: parentID,
+					Scopes:   []string{"scope1"},
 					Attributes: []*v1.Attribute{
-						&v1.Attribute{
+						{
 							Name:         "attr1",
 							Type:         v1.DataTypeString,
 							IsSearchable: true,
@@ -952,20 +954,20 @@ func TestEquipmentRepository_EquipmentWithID(t *testing.T) {
 							IsDisplayed:  true,
 							MappedTo:     "mapping_1",
 						},
-						&v1.Attribute{
+						{
 							Name:         "attr2",
 							Type:         v1.DataTypeInt,
 							IsSearchable: true,
 							MappedTo:     "mapping_2",
 						},
-						&v1.Attribute{
+						{
 							Name:               "attr3",
 							Type:               v1.DataTypeString,
 							IsParentIdentifier: true,
 							IsDisplayed:        true,
 							MappedTo:           "mapping_3",
 						},
-						&v1.Attribute{
+						{
 							Name:        "attr4",
 							Type:        v1.DataTypeString,
 							IsDisplayed: true,
@@ -974,7 +976,7 @@ func TestEquipmentRepository_EquipmentWithID(t *testing.T) {
 					},
 				}
 				repo := NewEquipmentRepository(dgClient)
-				retEqp, err := repo.CreateEquipmentType(context.Background(), eqType, []string{})
+				retEqp, err := repo.CreateEquipmentType(context.Background(), eqType, eqType.Scopes)
 				if err != nil {
 					return nil, nil, errors.New("cannot create equipment in setup")
 				}
@@ -1369,12 +1371,7 @@ func TestEquipmentRepository_EquipmentTypeChildren(t *testing.T) {
 				mu := &api.Mutation{
 					CommitNow: true,
 					Set: []*api.NQuad{
-						&api.NQuad{
-							Subject:     blankID("parent"),
-							Predicate:   "metadata_parent",
-							ObjectValue: stringObjectValue("eq_type_1"),
-						},
-						&api.NQuad{
+						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("eq_type_1"),
@@ -1387,23 +1384,18 @@ func TestEquipmentRepository_EquipmentTypeChildren(t *testing.T) {
 					return "", nil, nil, err
 				}
 
-				parentID, ok := assigned.Uids["parent"]
-				if !ok {
-					return "", nil, nil, errors.New("cannot find parent id after mutation in setup")
-				}
-
 				sourceID, ok := assigned.Uids["data_source"]
 				if !ok {
 					return "", nil, nil, errors.New("cannot find source id after mutation in setup")
 				}
 
 				eqTypes := []*v1.EquipmentType{
-					&v1.EquipmentType{
+					{
 						Type:     "MyType1",
 						SourceID: sourceID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:         "attr1",
 								Type:         v1.DataTypeString,
 								IsSearchable: true,
@@ -1411,7 +1403,7 @@ func TestEquipmentRepository_EquipmentTypeChildren(t *testing.T) {
 								IsDisplayed:  true,
 								MappedTo:     "mapping_1",
 							},
-							&v1.Attribute{
+							{
 								Name:         "attr2",
 								Type:         v1.DataTypeString,
 								IsSearchable: false,
@@ -1421,12 +1413,12 @@ func TestEquipmentRepository_EquipmentTypeChildren(t *testing.T) {
 							},
 						},
 					},
-					&v1.EquipmentType{
+					{
 						Type:     "MyType2",
 						SourceID: sourceID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
-							&v1.Attribute{
+							{
 								Name:               "attr1",
 								Type:               v1.DataTypeString,
 								IsSearchable:       true,
@@ -1449,7 +1441,7 @@ func TestEquipmentRepository_EquipmentTypeChildren(t *testing.T) {
 				}
 
 				return eqType1.ID, []*v1.EquipmentType{eqTypes[1]}, func() error {
-					return deleteNodes(parentID, sourceID, eqType1.ID, eqType2.ID)
+					return deleteNodes(sourceID, eqType1.ID, eqType2.ID)
 				}, nil
 			},
 		},
@@ -1502,24 +1494,9 @@ func TestEquipmentRepository_DeleteEquipmentType(t *testing.T) {
 					CommitNow: true,
 					Set: []*api.NQuad{
 						{
-							Subject:     blankID("parent"),
-							Predicate:   "metadata_parent",
-							ObjectValue: stringObjectValue("parent1"),
-						},
-						{
 							Subject:     blankID("data_source"),
 							Predicate:   "metadata_source",
 							ObjectValue: stringObjectValue("data_source1"),
-						},
-						{
-							Subject:     blankID("parent"),
-							Predicate:   "metadata_parent",
-							ObjectValue: stringObjectValue("parent2"),
-						},
-						{
-							Subject:     blankID("data_source"),
-							Predicate:   "metadata_source",
-							ObjectValue: stringObjectValue("data_source2"),
 						},
 					},
 				}
@@ -1528,31 +1505,14 @@ func TestEquipmentRepository_DeleteEquipmentType(t *testing.T) {
 				if err != nil {
 					return nil, nil, err
 				}
-
-				parentID1, ok := assigned.Uids["parent1"]
-				if !ok {
-					return nil, nil, errors.New("cannot find parent id after mutation in setup")
-				}
-
-				sourceID1, ok := assigned.Uids["data_source1"]
+				sourceID, ok := assigned.Uids["data_source"]
 				if !ok {
 					return nil, nil, errors.New("cannot find source id after mutation in setup")
 				}
-				parentID2, ok := assigned.Uids["parent2"]
-				if !ok {
-					return nil, nil, errors.New("cannot find parent id after mutation in setup")
-				}
-
-				sourceID2, ok := assigned.Uids["data_source2"]
-				if !ok {
-					return nil, nil, errors.New("cannot find source id after mutation in setup")
-				}
-
 				eqTypes := []*v1.EquipmentType{
 					{
 						Type:     "MyType1",
-						SourceID: sourceID1,
-						ParentID: parentID1,
+						SourceID: sourceID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
 							{
@@ -1575,8 +1535,7 @@ func TestEquipmentRepository_DeleteEquipmentType(t *testing.T) {
 					},
 					{
 						Type:     "MyType2",
-						SourceID: sourceID2,
-						ParentID: parentID2,
+						SourceID: sourceID,
 						Scopes:   []string{"scope1"},
 						Attributes: []*v1.Attribute{
 							{
@@ -1590,17 +1549,17 @@ func TestEquipmentRepository_DeleteEquipmentType(t *testing.T) {
 						},
 					},
 				}
-
-				for _, eqType := range eqTypes {
-					_, err := repo.CreateEquipmentType(context.Background(), eqType, eqType.Scopes)
-					if err != nil {
-						fmt.Print(err)
-						return nil, nil, err
-					}
+				equip2, err := repo.CreateEquipmentType(context.Background(), eqTypes[1], eqTypes[1].Scopes)
+				if err != nil {
+					return nil, nil, err
 				}
-
+				eqTypes[0].ParentID = equip2.ID
+				_, err = repo.CreateEquipmentType(context.Background(), eqTypes[0], eqTypes[0].Scopes)
+				if err != nil {
+					return nil, nil, err
+				}
 				return eqTypes[1:], func() error {
-					return deleteNodes(parentID1, sourceID1, parentID2, sourceID2, eqTypes[0].ID, eqTypes[1].ID)
+					return deleteNodes(sourceID, eqTypes[0].ID, eqTypes[1].ID)
 				}, nil
 			},
 			verify: func(repo *EquipmentRepository) ([]*v1.EquipmentType, error) {

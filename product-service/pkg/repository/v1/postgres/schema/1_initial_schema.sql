@@ -12,7 +12,9 @@ CREATE TABLE jobs (
   start_time TIMESTAMP,
   end_time TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  retry_count INTEGER DEFAULT 0
+  retry_count INTEGER DEFAULT 0,
+  meta_data JSONB NOT NULL
+
 );
 
 CREATE TABLE IF NOT EXISTS products (
@@ -38,7 +40,6 @@ CREATE TABLE IF NOT EXISTS acqrights (
     swidtag VARCHAR NOT NULL,
     product_name VARCHAR NOT NULL,
     product_editor VARCHAR NOT NULL,
-    entity VARCHAR NOT NULL DEFAULT '',
     scope VARCHAR NOT NULL,
     metric VARCHAR NOT NULL,
     num_licenses_acquired INTEGER NOT NULL DEFAULT 0,
@@ -52,11 +53,12 @@ CREATE TABLE IF NOT EXISTS acqrights (
     total_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by VARCHAR NOT NULL,
-    updated_on TIMESTAMP,
+    updated_on TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_by VARCHAR ,
     start_of_maintenance TIMESTAMP DEFAULT NULL,
     end_of_maintenance TIMESTAMP DEFAULT NULL,
     version VARCHAR NOT NULL,
+    comment VARCHAR DEFAULT '',
     PRIMARY KEY(sku, scope)
 );
 
@@ -72,6 +74,35 @@ CREATE TABLE IF NOT EXISTS aggregations (
     updated_by VARCHAR,
    PRIMARY KEY(aggregation_id),
     UNIQUE (aggregation_name, aggregation_scope)
+);
+
+CREATE TABLE IF NOT EXISTS aggregated_rights (
+    id SERIAL NOT NULL,
+    aggregation_name VARCHAR NOT NULL,
+    sku VARCHAR NOT NULL,
+    product_editor VARCHAR NOT NULL,
+    metric VARCHAR NOT NULL,
+    products TEXT[] NOT NULL,
+    swidtags TEXT[] NOT NULL,
+    scope VARCHAR NOT NULL,
+    num_licenses_acquired INTEGER NOT NULL DEFAULT 0,
+    num_licences_computed INTEGER NOT NULL DEFAULT 0,
+    num_licences_maintainance INTEGER NOT NULL DEFAULT 0,
+    avg_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
+    avg_maintenance_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
+    total_purchase_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    total_computed_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    total_maintenance_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    total_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    start_of_maintenance TIMESTAMP DEFAULT NULL,
+    end_of_maintenance TIMESTAMP DEFAULT NULL,
+    comment VARCHAR DEFAULT '',
+    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_by VARCHAR NOT NULL,
+    updated_on TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_by VARCHAR ,
+    PRIMARY KEY(id),
+    UNIQUE (aggregation_name, sku, scope)
 );
 
 CREATE TABLE IF NOT EXISTS products_equipments (
@@ -91,6 +122,15 @@ CREATE TABLE IF NOT EXISTS products_applications (
     PRIMARY KEY (swidtag,application_id,scope)
 );
 
+CREATE TABLE IF NOT EXISTS dashboard_audit (
+     id SERIAL NOT NULL,
+     updated_at TIMESTAMP with time zone NOT NULL DEFAULT (NOW() at time zone 'UTC'),
+     next_update_at TIMESTAMP with time zone,
+     updated_by varchar NOT NULL,
+     scope varchar NOT NULL,
+     primary key (scope)
+);
+
 -- For testing
 -- insert into products(swidtag,product_name,product_version,product_edition,product_category,
 --  product_editor,scope,aggregation_id,aggregation_name,created_by,updated_by)
@@ -104,54 +144,54 @@ CREATE TABLE IF NOT EXISTS products_applications (
 --  VALUES ('p2','a1');
 -- INSERT INTO products_equipments(swidtag,equipment_id)
 --  values ('p1','e1');
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s1','p1','prod1','oracle','Orange','France','test_ops',1000,900, 
+--     total_cost, created_by, updated_by ) values ('p1_s1','p1','prod1','oracle','France','test_ops',1000,900, 
 --     0,10,5,10000,9000,0,10000,'admin','admin');
 
---     insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+--     insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s2','p2','prod2','oracle','Orange','France','test_ops',1000,950 
+--     total_cost, created_by, updated_by ) values ('p1_s2','p2','prod2','oracle','France','test_ops',1000,950 
 --     ,0,10,5,10000,9500,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s3','p3','prod3','oracle','Orange','France','test_ops',1000,980 
+--     total_cost, created_by, updated_by ) values ('p1_s3','p3','prod3','oracle','France','test_ops',1000,980 
 --     ,0,10,5,10000,9800,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s4','p4','prod4','oracle','Orange','France','test_ops',1000,990 
+--     total_cost, created_by, updated_by ) values ('p1_s4','p4','prod4','oracle','France','test_ops',1000,990 
 --     ,0,10,5,10000,9900,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s5','p1','prod1','oracle','Orange','France','test_ops',1000,999 
+--     total_cost, created_by, updated_by ) values ('p1_s5','p1','prod1','oracle','France','test_ops',1000,999 
 --     ,0,10,5,10000,9990,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s6','p6','prod1','oracle','Orange','France','test_ops',1000,1000 
+--     total_cost, created_by, updated_by ) values ('p1_s6','p6','prod1','oracle','France','test_ops',1000,1000 
 --     ,0,10,5,10000,10000,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s7','p7','prod1','oracle','Orange','France','test_ops',1000,1001 
+--     total_cost, created_by, updated_by ) values ('p1_s7','p7','prod1','oracle','France','test_ops',1000,1001 
 --     ,0,10,5,10000,10010,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s8','p8','prod1','oracle','Orange','France','test_ops',1000,1000 
+--     total_cost, created_by, updated_by ) values ('p1_s8','p8','prod1','oracle','France','test_ops',1000,1000 
 --     ,0,10,5,10000,10000,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s9','p9','prod1','oracle','Orange','France','test_ops',1000,10000 
+--     total_cost, created_by, updated_by ) values ('p1_s9','p9','prod1','oracle','France','test_ops',1000,10000 
 --     ,0,10,5,10000,10000,0,10000,'admin','admin');
 
--- insert into acqrights(sku,swidtag ,product_name,product_editor,entity,scope ,metric ,num_licenses_acquired,num_licences_computed,
+-- insert into acqrights(sku,swidtag ,product_name,product_editor,scope ,metric ,num_licenses_acquired,num_licences_computed,
 --     num_licences_maintainance ,avg_unit_price ,avg_maintenance_unit_price ,total_purchase_cost ,total_computed_cost,total_maintenance_cost,
---     total_cost, created_by, updated_by ) values ('p1_s10','p10','prod1','oracle','Orange','France','test_ops',1000,2000 
+--     total_cost, created_by, updated_by ) values ('p1_s10','p10','prod1','oracle','France','test_ops',1000,2000 
 --     ,0,10,5,10000,20000,0,10000,'admin','admin');
 
 

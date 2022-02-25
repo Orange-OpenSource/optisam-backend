@@ -1,23 +1,21 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
+	"bytes"
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	v1Acc "optisam-backend/account-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/logger"
 	rest_middleware "optisam-backend/common/optisam/middleware/rest"
+	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/dps-service/pkg/api/v1"
 	"optisam-backend/import-service/pkg/config"
 	v1Simulation "optisam-backend/simulation-service/pkg/api/v1"
@@ -27,40 +25,233 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type importServiceServer struct {
 	// grpcServers map[string]*grpc.ClientConn
 	dpsClient v1.DpsServiceClient
 	simClient v1Simulation.SimulationServiceClient
+	accClient v1Acc.AccountServiceClient
 	config    *config.Config
 }
 
 type uploadType string
+type downloadType string
 
 const (
-	metadataload uploadType = "metadata"
-	dataload     uploadType = "data"
-	rawdataload  uploadType = "globaldata"
-)
-
-var (
-	globalFileExtensions []string = []string{"xlsx", "csv"}
+	metadataload uploadType   = "metadata"
+	dataload     uploadType   = "data"
+	rawdataload  uploadType   = "globaldata"
+	analysis     uploadType   = "analysis"
+	corefactor   uploadType   = "corefactor"
+	errorFile    downloadType = "error"
+	GENERIC      string       = "GENERIC"
+	GEN          string       = "GEN"
+	XLSX         string       = ".xlsx"
+	CSV          string       = ".csv"
 )
 
 // NewImportServiceServer creates import service
 func NewImportServiceServer(grpcServers map[string]*grpc.ClientConn, config *config.Config) ImportServiceServer {
 	return &importServiceServer{config: config, dpsClient: v1.NewDpsServiceClient(grpcServers["dps"]),
-		simClient: v1Simulation.NewSimulationServiceClient(grpcServers["simulation"])}
+		simClient: v1Simulation.NewSimulationServiceClient(grpcServers["simulation"]),
+		accClient: v1Acc.NewAccountServiceClient(grpcServers["account"]),
+	}
+}
+
+// UploadFiles will be used for upload global,metadata,data files and analysis file (optimization future)
+func (i *importServiceServer) UploadFiles(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+	var err error
+	dataScope := req.FormValue("scope")
+	if dataScope == "" {
+		logger.Log.Error("ScopeNotFound")
+		http.Error(res, "ScopeNotFound", http.StatusBadRequest)
+		return
+	}
+	uploadCategory := req.FormValue("uploadType")
+	if dataScope == "" {
+		logger.Log.Error("uploadType")
+		http.Error(res, "uploadType", http.StatusBadRequest)
+		return
+	}
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		logger.Log.Error("ClaimsNotFound")
+		http.Error(res, "ClaimsNotFound", http.StatusBadRequest)
+		return
+	}
+
+	if !helper.Contains(userClaims.Socpes, dataScope) {
+		http.Error(res, "ScopeValidationFailed", http.StatusUnauthorized)
+		return
+	}
+
+	if err = req.ParseMultipartForm(32 << 20); nil != err {
+		logger.Log.Error("ParsingFailure", zap.Error(err))
+		http.Error(res, "ParsingFailure", http.StatusInternalServerError)
+		return
+	}
+	var status int
+	var resp interface{}
+	switch uploadCategory {
+	case string(analysis):
+		dstDir := fmt.Sprintf("%s/%s/analysis", i.config.Upload.RawDataUploadDir, dataScope)
+		resp, status, err = uploadFileForAnalysis(i, req, dataScope, dstDir)
+	case string(corefactor):
+		resp, status, err = saveCoreFactorReference(i, req)
+		if err != nil {
+			logger.Log.Error("Failed to upload file ", zap.Error(err))
+			http.Error(res, err.Error(), status)
+			return
+		}
+	default:
+		err = errors.New("unknownUploadCategoryReceived")
+		status = http.StatusBadRequest
+	}
+	if err != nil {
+		logger.Log.Error("Failed to upload file ", zap.Error(err))
+		http.Error(res, err.Error(), status)
+		return
+	}
+	out, jrr := json.Marshal(resp)
+	if jrr != nil {
+		logger.Log.Error("Failed to marshal the response", zap.Error(jrr))
+		http.Error(res, "ResponseParsingFailure", http.StatusInternalServerError)
+	}
+	res.Write(out) //nolint
+
+}
+
+func saveCoreFactorReference(i *importServiceServer, req *http.Request) (interface{}, int, error) {
+	file, fileInfo, err := req.FormFile("file")
+	if err != nil {
+		logger.Log.Error("Failed to read reference file", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	defer file.Close()
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		logger.Log.Error("Failed to parse reference file", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	sheets := f.GetSheetList()
+	if len(sheets) == 0 {
+		logger.Log.Error("Reference file doesn't have any sheet", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	rows, err := f.GetRows(sheets[0])
+	if err != nil {
+		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.String("sheet", sheets[0]))
+		return nil, http.StatusInternalServerError, err
+	} else if len(rows) < 2 {
+		logger.Log.Error("inapropiate sheet, no reference value found", zap.Error(err), zap.String("sheet", sheets[0]))
+		return nil, http.StatusInternalServerError, err
+	}
+	rows = rows[1:]
+	dataToSend := make(map[string]map[string]string)
+	for _, v := range rows {
+		logger.Log.Debug("reference row", zap.Any("row", v))
+		if len(v) == 3 {
+			mf := v[0]
+			ml := v[1]
+			if mf == "" {
+				mf = "default"
+			}
+			if ml == "" {
+				ml = "default"
+			}
+			if dataToSend[mf] == nil {
+				dataToSend[mf] = make(map[string]string)
+			}
+			dataToSend[mf][ml] = v[2]
+		}
+	}
+	byteData, err := json.Marshal(dataToSend)
+	if err != nil {
+		logger.Log.Error("Marshaling failure", zap.Error(err))
+		return nil, http.StatusInternalServerError, err
+	}
+	logger.Log.Debug("sending data to dps ", zap.Any("referecnce data", dataToSend))
+
+	resp, err := i.dpsClient.StoreCoreFactorReference(req.Context(), &v1.StoreReferenceDataRequest{
+		ReferenceData: byteData,
+		Filename:      fileInfo.Filename,
+	})
+	if err != nil {
+		logger.Log.Error(" unable to store core factor reference", zap.Error(err))
+		return nil, http.StatusInternalServerError, err
+	}
+	return resp, http.StatusOK, nil
+}
+
+func uploadFileForAnalysis(i *importServiceServer, req *http.Request, scope, dstDir string) (interface{}, int, error) {
+	var resp interface{}
+	err := os.MkdirAll(dstDir, os.ModePerm)
+	if err != nil {
+		logger.Log.Error("AnalysisDirectoryCreationFailure", zap.Error(err))
+		return nil, http.StatusInternalServerError, err
+	}
+	fileName := ""
+	for _, fheaders := range req.MultipartForm.File {
+		for _, hdr := range fheaders {
+			if !strings.Contains(hdr.Filename, XLSX) {
+				err = errors.New("InvalidFileExtension") //nolint
+				return nil, http.StatusBadRequest, err
+			}
+
+			infile, err := hdr.Open() //nolint
+			if err != nil {
+				return nil, http.StatusInternalServerError, err
+			}
+
+			var outfile *os.File
+			fileName = fmt.Sprintf("%d", time.Now().Nanosecond()) + "_" + hdr.Filename
+			fn := filepath.Join(dstDir, fileName)
+			outfile, err = os.Create(fn)
+			if err != nil {
+				return nil, http.StatusInternalServerError, err
+			}
+
+			if _, err = io.Copy(outfile, infile); err != nil {
+				if err2 := outfile.Close(); err2 != nil {
+					logger.Log.Error("FileCloseFailure", zap.Error(err2))
+					return nil, http.StatusInternalServerError, err2
+				}
+				logger.Log.Error("ContentCopyFailure", zap.Error(err))
+				if err1 := os.Remove(fn); err1 != nil {
+					err = err1
+				}
+				return nil, http.StatusInternalServerError, err
+			}
+			if err = outfile.Close(); err != nil {
+				logger.Log.Error("FileCloseFailure", zap.Error(err))
+				return nil, http.StatusInternalServerError, err
+			}
+		}
+		ctx1, cancel := context.WithDeadline(req.Context(), time.Now().Add(time.Second*300))
+		defer cancel()
+		resp, err = i.dpsClient.DataAnalysis(ctx1, &v1.DataAnalysisRequest{
+			Scope: scope,
+			File:  fileName,
+		})
+
+		if err != nil {
+			logger.Log.Error("AnalysisFailure", zap.Error(err))
+			return nil, http.StatusInternalServerError, err
+		}
+	}
+
+	return resp, http.StatusOK, nil
 }
 
 func (i *importServiceServer) UploadDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-	//origReq := req
+	// origReq := req
 	dataScope := req.FormValue("scope")
 	if dataScope == "" {
 		logger.Log.Error("No Scope for Data")
@@ -75,22 +266,31 @@ func (i *importServiceServer) UploadDataHandler(res http.ResponseWriter, req *ht
 		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
 		return
 	}
-	
+
 	if !helper.Contains(userClaims.Socpes, dataScope) {
 		http.Error(res, "ScopeValidationFailed", http.StatusForbidden)
 		return
 	}
-
+	scopeinfo, err := i.accClient.GetScope(req.Context(), &v1Acc.GetScopeRequest{Scope: dataScope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UploadDataHandler - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+		http.Error(res, "Unable to get scope info", http.StatusInternalServerError)
+		return
+	}
+	if scopeinfo.ScopeType == v1Acc.ScopeType_GENERIC.String() {
+		http.Error(res, "Can not upload data for generic scope", http.StatusForbidden)
+		return
+	}
 	uploadedBy := userClaims.UserID
 	// const _24K = (1 << 20) * 24
-	if err := req.ParseMultipartForm(32 << 20); nil != err {
-		logger.Log.Error("parse multi past form ", zap.Error(err))
+	if parseerr := req.ParseMultipartForm(32 << 20); parseerr != nil {
+		logger.Log.Error("parse multi past form ", zap.Error(parseerr))
 		http.Error(res, "cannot store files", http.StatusInternalServerError)
 		return
 	}
-	err := os.MkdirAll(i.config.Upload.UploadDir, os.ModePerm)
-	if err != nil {
-		logger.Log.Error("Cannot create Dir", zap.Error(err))
+	err1 := os.MkdirAll(i.config.Upload.UploadDir, os.ModePerm)
+	if err1 != nil {
+		logger.Log.Error("Cannot create Dir", zap.Error(err1))
 		http.Error(res, "cannot upload Error", http.StatusInternalServerError)
 		return
 	}
@@ -138,13 +338,13 @@ func (i *importServiceServer) UploadDataHandler(res http.ResponseWriter, req *ht
 			outfile.Close()
 			filenames = append(filenames, fmt.Sprintf("%s_%s", dataScope, hdr.Filename))
 		}
-		//ctx, _ := AnnotateContext(req.Context(), origReq)
-		authStr := strings.Replace(req.Header.Get("Authorization"), "Bearer", "bearer", 1)
-		md := metadata.Pairs("Authorization", authStr)
-		ctx := metadata.NewOutgoingContext(req.Context(), md)
+		// ctx, _ := AnnotateContext(req.Context(), origReq)
+		// authStr := strings.Replace(req.Header.Get("Authorization"), "Bearer", "bearer", 1)
+		// md := metadata.Pairs("Authorization", authStr)
+		// ctx := metadata.NewOutgoingContext(req.Context(), md)
 		// Notify call to DPS
 
-		_, err := i.dpsClient.NotifyUpload(ctx, &v1.NotifyUploadRequest{
+		_, err := i.dpsClient.NotifyUpload(req.Context(), &v1.NotifyUploadRequest{
 			Scope:      dataScope,
 			Type:       "data",
 			Files:      filenames,
@@ -152,13 +352,20 @@ func (i *importServiceServer) UploadDataHandler(res http.ResponseWriter, req *ht
 		})
 		if err != nil {
 			logger.Log.Error("DPS call failed", zap.Error(err))
+			errMsg := "InternalServerError"
+			errDesc := strings.Split(err.Error(), "=")
+			if strings.TrimSpace(errDesc[len(errDesc)-1]) == "Injection is already running" || strings.TrimSpace(errDesc[len(errDesc)-1]) == "Deletion is already running" {
+				errMsg = errDesc[len(errDesc)-1]
+			}
+			http.Error(res, errMsg, http.StatusInternalServerError)
+			return
 		}
-		res.Write([]byte("Files Uploaded"))
+		res.Write([]byte("Files Uploaded")) // nolint: errcheck
 	}
 }
 
 func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-	//origReq := req
+	// origReq := req
 	metadataScope := req.FormValue("scope")
 	if metadataScope == "" {
 		logger.Log.Error("No Scope for metaData")
@@ -173,26 +380,37 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
 		return
 	}
-	
+
 	if !helper.Contains(userClaims.Socpes, metadataScope) {
 		http.Error(res, "ScopeValidationFailed", http.StatusForbidden)
 		return
 	}
-
+	scopeinfo, err := i.accClient.GetScope(req.Context(), &v1Acc.GetScopeRequest{Scope: metadataScope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UploadDataHandler - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+		http.Error(res, "Unable to get scope info", http.StatusInternalServerError)
+		return
+	}
+	if scopeinfo.ScopeType == v1Acc.ScopeType_GENERIC.String() {
+		http.Error(res, "Can not upload data for generic scope", http.StatusForbidden)
+		return
+	}
 	uploadedBy := userClaims.UserID
 	// const _24K = (1 << 20) * 24
-	if err := req.ParseMultipartForm(32 << 20); nil != err {
-		logger.Log.Error("parse multi past form ", zap.Error(err))
+	if parseerr := req.ParseMultipartForm(32 << 20); parseerr != nil {
+		logger.Log.Error("parse multi past form ", zap.Error(parseerr))
 		http.Error(res, "cannot store files", http.StatusInternalServerError)
 		return
 	}
-	err := os.MkdirAll(i.config.Upload.UploadDir, os.ModePerm)
-	if err != nil {
-		logger.Log.Error("Cannot create Dir", zap.Error(err))
+	err1 := os.MkdirAll(i.config.Upload.UploadDir, os.ModePerm)
+	if err1 != nil {
+		logger.Log.Error("Cannot create Dir", zap.Error(err1))
 		http.Error(res, "cannot upload Error", http.StatusInternalServerError)
 		return
 	}
 	var filenames []string
+	// for _, _ = range req.MultipartForm.File {
+
 	for _, fheaders := range req.MultipartForm.File {
 		for _, hdr := range fheaders {
 			logger.Log.Info("Import MetaData File Handler", zap.String("File", hdr.Filename), zap.String("uploadedBy", uploadedBy))
@@ -202,7 +420,7 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 				removeFiles("", i.config.Upload.UploadDir, metadataload)
 				return
 			}
-			// open uploaded
+			// 	// open uploaded
 			infile, err := hdr.Open()
 			if err != nil {
 				logger.Log.Error("cannot open file directory", zap.Error(err))
@@ -235,12 +453,12 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 			outfile.Close()
 			filenames = append(filenames, fmt.Sprintf("%s_%s", metadataScope, hdr.Filename))
 		}
-		//ctx, _ := AnnotateContext(req.Context(), origReq)
-		authStr := strings.Replace(req.Header.Get("Authorization"), "Bearer", "bearer", 1)
-		md := metadata.Pairs("Authorization", authStr)
-		ctx := metadata.NewOutgoingContext(req.Context(), md)
+		// ctx, _ := AnnotateContext(req.Context(), origReq)
+		// authStr := strings.Replace(req.Header.Get("Authorization"), "Bearer", "bearer", 1)
+		// md := metadata.Pairs("Authorization", authStr)
+		// ctx := metadata.NewOutgoingContext(req.Context(), md)
 		// Notify call to DPS
-		_, err := i.dpsClient.NotifyUpload(ctx, &v1.NotifyUploadRequest{
+		_, err := i.dpsClient.NotifyUpload(req.Context(), &v1.NotifyUploadRequest{
 			Scope:      metadataScope,
 			Type:       "metadata",
 			Files:      filenames,
@@ -249,11 +467,11 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 		if err != nil {
 			logger.Log.Error("DPS call failed", zap.Error(err))
 		}
-		res.Write([]byte("Files Uploaded"))
+		res.Write([]byte("Files Uploaded")) // nolint: errcheck
 	}
 }
 
-func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+func (i *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
 
 	// Extract scopes from request
 	scopesString := req.FormValue("scopes")
@@ -268,7 +486,7 @@ func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 	// // convert it into an array of scopes
 	// scopes := strings.Split(scopesString, ",")
 
-	//Extract config_name from request
+	// Extract config_name from request
 	configName := req.FormValue("config_name")
 
 	if configName == "" {
@@ -287,7 +505,7 @@ func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 
 	configName = strings.ToLower(configName)
 
-	//Extract Equipment type from request
+	// Extract Equipment type from request
 	equipType := req.FormValue("equipment_type")
 
 	if equipType == "" {
@@ -296,11 +514,11 @@ func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 		return
 	}
 
-	//TODO : To verify that how are we gonna save equip types and how to make call to compare if the equipment type is included.
+	// TODO : To verify that how are we gonna save equip types and how to make call to compare if the equipment type is included.
 
-	//get auth token and add it into context
-	authToken := getAuthToken(req)
-	ctx := metadata.AppendToOutgoingContext(req.Context(), "authorization", authToken)
+	// get auth token and add it into context
+	// authToken := getAuthToken(req)
+	// ctx := metadata.AppendToOutgoingContext(req.Context(), "authorization", authToken)
 
 	// If there is no file uploaded
 	if len(req.MultipartForm.File) == 0 {
@@ -314,7 +532,7 @@ func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 	}
 
 	// calling create config
-	_, err = h.simClient.CreateConfig(ctx, &v1Simulation.CreateConfigRequest{
+	_, err = i.simClient.CreateConfig(req.Context(), &v1Simulation.CreateConfigRequest{
 		ConfigName:    configName,
 		EquipmentType: equipType,
 		Data:          configData,
@@ -328,7 +546,7 @@ func (h *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 
 }
 
-func (h *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+func (i *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
 
 	// Extract scopes from request
 	scopesString := req.FormValue("scopes")
@@ -349,18 +567,18 @@ func (h *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 		http.Error(res, "Config ID is required", http.StatusBadRequest)
 		return
 	}
-	configID, err := strconv.Atoi(configIDStr)
+	configID, err := strconv.Atoi(configIDStr) // nolint: gosec
 	if err != nil {
 		logger.Log.Error("Can not convert string to int")
 		http.Error(res, "Internal error", http.StatusInternalServerError)
 		return
 	}
 
-	//get auth token and add it into context
-	authToken := getAuthToken(req)
-	ctx := metadata.AppendToOutgoingContext(req.Context(), "authorization", authToken)
+	// //get auth token and add it into context
+	// authToken := getAuthToken(req)
+	// ctx := metadata.AppendToOutgoingContext(req.Context(), "authorization", authToken)
 
-	//Extract deletedMetadataIDs from request
+	// Extract deletedMetadataIDs from request
 	deletedMetadataIDs := req.FormValue("deletedMetadataIDs")
 	// If the request is empty
 	if len(req.MultipartForm.File) == 0 && deletedMetadataIDs == "" {
@@ -387,7 +605,7 @@ func (h *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 	}
 
 	// calling update config
-	_, err = h.simClient.UpdateConfig(ctx, &v1Simulation.UpdateConfigRequest{
+	_, err = i.simClient.UpdateConfig(req.Context(), &v1Simulation.UpdateConfigRequest{
 		ConfigId:           int32(configID),
 		DeletedMetadataIds: deletedMetadataIDsInt,
 		Data:               configData,
@@ -404,7 +622,7 @@ func (h *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 func removeFiles(scope string, dir string, datatype uploadType) {
 	logger.Log.Info("Removing Files", zap.String("Scope", scope))
 	var delFilesRegex string
-	if datatype == "data" {
+	if datatype == "data" { // nolint: gocritic
 		delFilesRegex = scope + "_*"
 	} else if datatype == "globaldata" {
 		delFilesRegex = "*"
@@ -450,9 +668,9 @@ func getConfigValueObject(configFile *csv.Reader, columns []string) ([]*v1Simula
 }
 
 func convertStringArrayToInt(deletedMetadataIDs []string) ([]int32, error) {
-	var res []int32
+	res := make([]int32, len(deletedMetadataIDs))
 	for _, id := range deletedMetadataIDs {
-		intID, err := strconv.Atoi(id)
+		intID, err := strconv.Atoi(id) // nolint: gosec
 		if err != nil {
 			return nil, err
 		}
@@ -475,7 +693,7 @@ func removeRepeatedElem(array []int32) []int32 {
 	}
 
 	var res = make([]int32, 0, len(array))
-	for key, _ := range hmap {
+	for key := range hmap {
 		res = append(res, key)
 
 	}
@@ -502,17 +720,17 @@ func getConfigData(multipartForm *multipart.Form, res http.ResponseWriter) ([]*v
 				attrMap[attrName] = 1
 			} else {
 				http.Error(res, "Only one file per attribute is allowed", http.StatusBadRequest)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 			configFile, err := hdr.Open()
 			if err != nil {
 				logger.Log.Error("Can not open file - Open() ", zap.Error(err))
 				http.Error(res, "can not open file", http.StatusInternalServerError)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 			defer configFile.Close()
 
-			//parse the file
+			// parse the file
 			configCsv := csv.NewReader(configFile)
 			configCsv.Comma = ';'
 
@@ -520,16 +738,16 @@ func getConfigData(multipartForm *multipart.Form, res http.ResponseWriter) ([]*v
 			if err == io.EOF {
 				logger.Log.Error("config file is empty ", zap.Error(err))
 				http.Error(res, "config file is empty", http.StatusNotFound)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 			if err != nil {
 				logger.Log.Error("can not read config file - Read() ", zap.Error(err))
 				http.Error(res, "can not read config file", http.StatusUnprocessableEntity)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 			if columns[0] != attrName {
 				http.Error(res, "can not read config file", http.StatusUnprocessableEntity)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 
 			// Get config values object
@@ -537,7 +755,7 @@ func getConfigData(multipartForm *multipart.Form, res http.ResponseWriter) ([]*v
 			if err != nil {
 				logger.Log.Error("Error in reading config file ", zap.Error(err))
 				http.Error(res, "can not read config file", http.StatusUnprocessableEntity)
-				return nil, errors.New("Error")
+				return nil, errors.New("error")
 			}
 
 			// Making request array
@@ -557,111 +775,164 @@ func getConfigData(multipartForm *multipart.Form, res http.ResponseWriter) ([]*v
 	return configData, nil
 }
 
-func getAuthToken(req *http.Request) string {
-	bearerToken := req.Header.Get("Authorization")
-	authToken := strings.TrimPrefix(bearerToken, "Bearer")
-	authToken = strings.TrimSpace(authToken)
-	authToken = "bearer " + authToken
+func (i *importServiceServer) UploadGlobalDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) { //nolint
+	var globalFileDir, genericFile, errFile string
+	var filenames []string
+	var hdrs []*multipart.FileHeader
+	stype := v1.NotifyUploadRequest_GENERIC
 
-	return authToken
-}
-func (i *importServiceServer) UploadGlobalDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-	//origReq := req
 	scope := req.FormValue("scope")
 	if scope == "" {
 		http.Error(res, "ScopeIsMissing", http.StatusBadRequest)
 		return
 	}
-	isDeleteOldInventory := req.FormValue("isDeleteOldInventory") == "true"
 
 	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
 	if !ok {
 		http.Error(res, "ClaimsNotFound", http.StatusBadRequest)
 		return
 	}
-	if userClaims.Role == claims.RoleUser {
-		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
-		return
-	}
-	
+
 	if !helper.Contains(userClaims.Socpes, scope) {
 		http.Error(res, "ScopeValidationFailed", http.StatusForbidden)
 		return
 	}
 
+	scopeInfo, err := i.accClient.GetScope(req.Context(), &v1Acc.GetScopeRequest{Scope: scope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UploadGlobalDataHandler - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+		http.Error(res, "InternalError", http.StatusInternalServerError)
+		return
+	}
+
 	uploadedBy := userClaims.UserID
-	if err := req.ParseMultipartForm(32 << 20); nil != err {
+	if err = req.ParseMultipartForm(32 << 20); nil != err {
 		logger.Log.Debug("parsing multipartFrom Error :", zap.Error(err))
 		http.Error(res, "FormParsingError", http.StatusInternalServerError)
 		return
 	}
-	globalFileDir := fmt.Sprintf("%s/%s", i.config.Upload.RawDataUploadDir, scope)
-	err := os.MkdirAll(globalFileDir, os.ModePerm)
-	if err != nil {
-		logger.Log.Debug("Cannot create Dir, Error :", zap.Error(err))
-		http.Error(res, "DirCreationError", http.StatusInternalServerError)
-		return
-	}
-	var filenames []string
-	var hdrs []*multipart.FileHeader
-	for _, fheaders := range req.MultipartForm.File {
-		for _, hdr := range fheaders {
-			ext := getglobalFileExtension(hdr.Filename)
-			if !helper.Contains(globalFileExtensions, ext) {
-				http.Error(res, "FileExtensionValidationFailure", http.StatusInternalServerError)
-				return
-			}
-			hdrs = append(hdrs, hdr)
-			filenames = append(filenames, hdr.Filename)
+
+	if scopeInfo.ScopeType == GENERIC {
+		genericFile = req.FormValue("file")
+		if genericFile == "" {
+			logger.Log.Debug("FileNameMissing")
+			http.Error(res, "FileNameMissing", http.StatusBadRequest)
+			return
+		}
+		if !strings.Contains(genericFile, XLSX) {
+			logger.Log.Debug("InvalidFileReceived")
+			http.Error(res, "InvalidFileReceived", http.StatusBadRequest)
+			return
 		}
 	}
-	authStr := strings.Replace(req.Header.Get("Authorization"), "Bearer", "bearer", 1)
-	md := metadata.Pairs("Authorization", authStr)
-	ctx := metadata.NewOutgoingContext(req.Context(), md)
-	_, err = i.dpsClient.NotifyUpload(ctx, &v1.NotifyUploadRequest{
-		Scope:                scope,
-		Type:                 "globaldata",
-		Files:                filenames,
-		UploadedBy:           uploadedBy,
-		IsDeleteOldInventory: isDeleteOldInventory,
+
+	if scopeInfo.ScopeType != GENERIC {
+		stype = v1.NotifyUploadRequest_SPECIFIC
+		globalFileDir = fmt.Sprintf("%s/%s", i.config.Upload.RawDataUploadDir, scope)
+		err = os.MkdirAll(globalFileDir, os.ModePerm)
+		if err != nil {
+			logger.Log.Debug("Cannot create Dir, Error :", zap.Error(err))
+			http.Error(res, "DirCreationError", http.StatusInternalServerError)
+			return
+		}
+		for _, fheaders := range req.MultipartForm.File {
+			for _, hdr := range fheaders {
+				ext := getglobalFileExtension(hdr.Filename)
+				if stype == v1.NotifyUploadRequest_GENERIC {
+					if !strings.Contains(ext, XLSX) {
+						http.Error(res, "GenerifcFileExtensionValidationFailure", http.StatusBadRequest)
+						return
+					}
+				} else {
+					if !strings.Contains(ext, CSV) {
+						http.Error(res, "SpecificFileExtensionValidationFailure", http.StatusBadRequest)
+						return
+					}
+				}
+				hdrs = append(hdrs, hdr)
+				filenames = append(filenames, hdr.Filename)
+			}
+		}
+	} else {
+		temp := strings.Split(genericFile, "_")
+		if len(temp) < 3 {
+			logger.Log.Debug("UnknownFileReceived", zap.String("expectation", "good_time_file.xlsx"))
+			http.Error(res, "UnknownFileReceived", http.StatusBadRequest)
+			return
+		}
+		temp = temp[2:]
+		errFile = strings.ReplaceAll(genericFile, "good", "bad")
+		filenames = append(filenames, strings.Join(temp, "_"))
+		logger.Log.Debug("parsing from generic file", zap.String("targetFile", filenames[0]), zap.String("errorFile", errFile))
+	}
+
+	dpsResp, err := i.dpsClient.NotifyUpload(req.Context(), &v1.NotifyUploadRequest{
+		Scope:             scope,
+		Type:              "globaldata",
+		Files:             filenames,
+		UploadedBy:        uploadedBy,
+		ScopeType:         stype,
+		AnalyzedErrorFile: errFile,
 	})
 	if err != nil {
 		logger.Log.Debug("DPS globaldata failed", zap.Error(err))
-		http.Error(res, "InternalServerError", http.StatusInternalServerError)
+		errMsg := "InternalServerError"
+		errDesc := strings.Split(err.Error(), "=")
+		if strings.TrimSpace(errDesc[len(errDesc)-1]) == "Injection is already running" || strings.TrimSpace(errDesc[len(errDesc)-1]) == "Deletion is already running" {
+			errMsg = errDesc[len(errDesc)-1]
+		}
+		http.Error(res, errMsg, http.StatusInternalServerError)
 		return
 	}
 
-	for _, hdr := range hdrs {
-		infile, err := hdr.Open()
-		if err != nil {
-			logger.Log.Debug("cannot open file hdr", zap.Error(err), zap.String("file", hdr.Filename))
-			http.Error(res, "FileFormHeaderError", http.StatusInternalServerError)
-			removeFiles("", globalFileDir, rawdataload)
-			return
-		}
-		// open destination
-		var outfile *os.File
-		fn := filepath.Join(globalFileDir, hdr.Filename)
-		if outfile, err = os.Create(fn); nil != err {
-			logger.Log.Debug("cannot create file", zap.Error(err), zap.String("file", hdr.Filename))
-			http.Error(res, "FileCreationError", http.StatusInternalServerError)
-			removeFiles("", globalFileDir, rawdataload)
-			return
-		}
-		if _, err = io.Copy(outfile, infile); nil != err {
-			logger.Log.Debug("cannot copy content of files", zap.Error(err), zap.String("file", hdr.Filename))
-			if err := os.Remove(fn); err != nil {
-				logger.Log.Debug("cannot remove", zap.Error(err), zap.String("file", hdr.Filename))
-				http.Error(res, "FileRemovingError", http.StatusInternalServerError)
+	if scopeInfo.ScopeType != GENERIC {
+		var fileName string
+		for _, hdr := range hdrs {
+			if scopeInfo.ScopeType == GENERIC {
+				fileName = filenames[0]
+			} else {
+				fileName = hdr.Filename
+			}
+			infile, err := hdr.Open()
+			if err != nil {
+				logger.Log.Debug("cannot open file hdr", zap.Error(err), zap.String("file", fileName))
+				http.Error(res, "FileFormHeaderError", http.StatusInternalServerError)
 				removeFiles("", globalFileDir, rawdataload)
 				return
 			}
-			http.Error(res, "ContentCopyFailure", http.StatusInternalServerError)
+			// open destination
+			var outfile *os.File
+			fn := filepath.Join(globalFileDir, fmt.Sprintf("%d_%s", dpsResp.FileUploadId[fileName], fileName))
+			if outfile, err = os.Create(fn); nil != err {
+				logger.Log.Debug("cannot create file", zap.Error(err), zap.String("file", fileName))
+				http.Error(res, "FileCreationError", http.StatusInternalServerError)
+				removeFiles("", globalFileDir, rawdataload)
+				return
+			}
+			if _, err = io.Copy(outfile, infile); nil != err {
+				logger.Log.Debug("cannot copy content of files", zap.Error(err), zap.String("file", fileName))
+				if err := os.Remove(fn); err != nil {
+					logger.Log.Debug("cannot remove", zap.Error(err), zap.String("file", fileName))
+					http.Error(res, "FileRemovingError", http.StatusInternalServerError)
+					removeFiles("", globalFileDir, rawdataload)
+					return
+				}
+				http.Error(res, "ContentCopyFailure", http.StatusInternalServerError)
+				outfile.Close()
+				return
+			}
 			outfile.Close()
-			return
+			res.Write([]byte(fmt.Sprintf("%s file uploaded\n", fileName))) // nolint: errcheck
 		}
-		outfile.Close()
-		res.Write([]byte(fmt.Sprintf("%s file uploaded\n", hdr.Filename)))
+	} else {
+
+		dst := fmt.Sprintf("%s/GEN/%s_%d_%s", i.config.Upload.RawDataUploadDir, scope, dpsResp.FileUploadId[filenames[0]], filenames[0])
+		src := fmt.Sprintf("%s/%s/analysis/%s", i.config.Upload.RawDataUploadDir, scope, genericFile)
+		logger.Log.Error("storing global file for nifi", zap.String("dst", dst), zap.String("src", src))
+		if err := os.Rename(src, dst); err != nil {
+			logger.Log.Error("Failed to move generic file from analysis to nifi src dir", zap.Error(err))
+			http.Error(res, "ContentCopyFailure", http.StatusInternalServerError)
+		}
 	}
 
 }
@@ -670,9 +941,78 @@ func getglobalFileExtension(fileName string) string {
 	if fileName == "" {
 		return ""
 	}
-	temp := strings.Split(fileName, ".")
+	temp := strings.SplitAfter(fileName, ".")
 	if len(temp) < 2 {
 		return ""
 	}
-	return temp[len(temp)-1]
+	return fmt.Sprintf(".%s", temp[len(temp)-1])
+}
+
+func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+	fileName := req.FormValue("fileName")
+	if fileName == "" {
+		logger.Log.Error("FileNameIsMissing")
+		http.Error(res, "FileNameIsMissing", http.StatusBadRequest)
+		return
+	}
+
+	downloadType := req.FormValue("downloadType")
+	if downloadType == "" {
+		logger.Log.Error("downloadTypeIsMissing")
+		http.Error(res, "downloadTypeIsMissing", http.StatusBadRequest)
+		return
+	}
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("ScopeIsMissing")
+		http.Error(res, "ScopeIsMissing", http.StatusBadRequest)
+		return
+	}
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		logger.Log.Error("ClaimsNotFound")
+		http.Error(res, "ClaimsNotFound", http.StatusInternalServerError)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		logger.Log.Error("ScopeValidationFailed")
+		http.Error(res, "ScopeValidationFailed", http.StatusUnauthorized)
+		return
+	}
+
+	if userClaims.Role == claims.RoleUser {
+		logger.Log.Error("RoleValidationFailed")
+		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
+		return
+	}
+	fileLocation := ""
+	switch string(downloadType) { //nolint
+	case string(errorFile):
+		fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "errors", fileName)
+
+	case string(analysis):
+		fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "analysis", fileName)
+
+	default:
+		http.Error(res, "InvalidDownloadTypeReceived", http.StatusBadRequest)
+		return
+	}
+
+	fileExists, err := helper.FileExists(fileLocation)
+	if err != nil {
+		http.Error(res, "Error in checking if file exists", http.StatusInternalServerError)
+		return
+	}
+	if !fileExists {
+		logger.Log.Info("Download - File does not exist", zap.Error(err), zap.String("file", fileLocation))
+		http.Error(res, "File does not exist", http.StatusNotFound)
+		return
+	}
+	fileData, err := ioutil.ReadFile(fileLocation)
+	if err != nil {
+		logger.Log.Info("Download - error in reading file", zap.Error(err), zap.String("file", fileLocation))
+		http.Error(res, "error in reading file", http.StatusInternalServerError)
+		return
+	}
+	http.ServeContent(res, req, fileName, time.Now().UTC(), bytes.NewReader(fileData))
 }

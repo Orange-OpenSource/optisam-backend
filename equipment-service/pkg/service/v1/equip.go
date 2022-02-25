@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -11,19 +5,23 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
+	accv1 "optisam-backend/account-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
 	"reflect"
-	"regexp"
+
+	// "regexp"
 	"strconv"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb" // nolint: staticcheck
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -31,32 +29,70 @@ import (
 // equipmentServiceServer is implementation of v1.authServiceServer proto interface
 type equipmentServiceServer struct {
 	equipmentRepo repo.Equipment
+	account       accv1.AccountServiceClient
 }
 
 // custom json unmarshal
-type customType string
+type customTypeFloat float64
 
-func (p *customType) UnmarshalJSON(data []byte) error {
+func (p *customTypeFloat) UnmarshalJSON(data []byte) error {
 	var tmp interface{}
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		logger.Log.Error("Failed to Unmarshal", zap.Error(err))
 		return err
 	}
 	switch v := tmp.(type) {
-	case int:
-		*p = customType(strconv.Itoa(v))
-	case float64:
-		*p = customType(strconv.FormatFloat(v, 'f', -1, 64))
 	case string:
-		*p = customType(string(v))
+		floatData, _ := strconv.ParseFloat(v, 64)
+		*p = customTypeFloat(floatData)
+	default:
+	}
+	return nil
+}
+
+type customTypeInt int64
+
+func (p *customTypeInt) UnmarshalJSON(data []byte) error {
+	var tmp interface{}
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		logger.Log.Error("Failed to Unmarshal", zap.Error(err))
+		return err
+	}
+	switch v := tmp.(type) {
+	case string:
+		intData, _ := strconv.ParseInt(v, 10, 64)
+		*p = customTypeInt(intData)
 	default:
 	}
 	return nil
 }
 
 // NewEquipmentServiceServer creates License service
-func NewEquipmentServiceServer(equipmentRepo repo.Equipment) v1.EquipmentServiceServer {
-	return &equipmentServiceServer{equipmentRepo: equipmentRepo}
+func NewEquipmentServiceServer(equipmentRepo repo.Equipment, grpcServers map[string]*grpc.ClientConn) v1.EquipmentServiceServer {
+	return &equipmentServiceServer{
+		equipmentRepo: equipmentRepo,
+		account:       accv1.NewAccountServiceClient(grpcServers["account"]),
+	}
+}
+
+func (s *equipmentServiceServer) DropMetaData(ctx context.Context, req *v1.DropMetaDataRequest) (*v1.DropMetaDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DropMetaDataResponse{Success: false}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return &v1.DropMetaDataResponse{Success: false}, status.Error(codes.InvalidArgument, "scope is not owned by user")
+	}
+
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return &v1.DropMetaDataResponse{Success: false}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	if err := s.equipmentRepo.DropMetaData(ctx, req.Scope); err != nil {
+		logger.Log.Error("Failed to delete equipment resource", zap.Error(err))
+		return &v1.DropMetaDataResponse{Success: false}, err
+	}
+	return &v1.DropMetaDataResponse{Success: true}, nil
 }
 
 func (s *equipmentServiceServer) UpsertMetadata(ctx context.Context, req *v1.UpsertMetadataRequest) (*v1.UpsertMetadataResponse, error) {
@@ -67,7 +103,7 @@ func (s *equipmentServiceServer) UpsertMetadata(ctx context.Context, req *v1.Ups
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.InvalidArgument, "scope is not owned by user")
 	}
-	if err := s.equipmentRepo.UpsertMetadata(ctx, &repo.Metadata{
+	if _, err := s.equipmentRepo.UpsertMetadata(ctx, &repo.Metadata{
 		MetadataType: req.GetMetadataType(),
 		Source:       req.GetMetadataSource(),
 		Attributes:   req.GetMetadataAttributes(),
@@ -79,8 +115,8 @@ func (s *equipmentServiceServer) UpsertMetadata(ctx context.Context, req *v1.Ups
 	return &v1.UpsertMetadataResponse{Success: true}, nil
 }
 
-//UpsertEquipment to load equipment data
-//uses reflection heavily
+// UpsertEquipment to load equipment data
+// uses reflection heavily
 func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.UpsertEquipmentRequest) (*v1.UpsertEquipmentResponse, error) {
 
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
@@ -124,10 +160,16 @@ func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.Up
 		switch {
 		case attr.IsIdentifier:
 			regTag = `json:"` + attr.MappedTo + `,omitempty" dbname:"equipment.id" validate:"required"`
-			reqType = reflect.TypeOf(customType(""))
+			reqType = reflect.TypeOf(t)
 		case attr.IsParentIdentifier:
 			regTag = `json:"` + attr.MappedTo + `,omitempty" dbname:"equipment.parent"`
-			reqType = reflect.TypeOf(customType(""))
+			reqType = reflect.TypeOf(t)
+		case attr.Type == repo.DataTypeFloat:
+			regTag = `json:"` + attr.MappedTo + `,omitempty" dbname:"equipment.` + req.GetEqType() + `.` + attr.Name + `"`
+			reqType = reflect.TypeOf(customTypeFloat(0.0))
+		case attr.Type == repo.DataTypeInt:
+			regTag = `json:"` + attr.MappedTo + `,omitempty" dbname:"equipment.` + req.GetEqType() + `.` + attr.Name + `"`
+			reqType = reflect.TypeOf(customTypeInt(0))
 		default:
 			regTag = `json:"` + attr.MappedTo + `,omitempty" dbname:"equipment.` + req.GetEqType() + `.` + attr.Name + `"`
 			reqType = reflect.TypeOf(t)
@@ -172,7 +214,6 @@ func (s *equipmentServiceServer) ListEquipments(ctx context.Context, req *v1.Lis
 	}
 	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
-		//logger.Log.Error("service/v1 - ListEquipments - fetching equipments", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
 
@@ -371,9 +412,9 @@ func (s *equipmentServiceServer) ListEquipmentChildren(ctx context.Context, req 
 		SortOrder: sortOrder(req.SortOrder),
 	}
 	if req.SearchParams != "" {
-		filter, err := parseEquipmentQueryParam(req.SearchParams, equipChild.Attributes)
-		if err != nil {
-			return nil, err
+		filter, error := parseEquipmentQueryParam(req.SearchParams, equipChild.Attributes)
+		if error != nil {
+			return nil, error
 		}
 		queryParams.Filter = filter
 	}
@@ -410,7 +451,7 @@ func (s *equipmentServiceServer) DropEquipmentData(ctx context.Context, req *v1.
 }
 
 func parseEquipmentQueryParam(query string, attributes []*repo.Attribute) (*repo.AggregateFilter, error) {
-	query = strings.Replace(query, ",", "&", -1)
+	query = strings.Replace(query, ",", "&", -1) // nolint: gocritic
 	values, err := url.ParseQuery(query)
 	if err != nil {
 		// TODO log error
@@ -439,10 +480,10 @@ func parseEquipmentQueryParam(query string, attributes []*repo.Attribute) (*repo
 
 		switch attributes[idx].Type {
 		case repo.DataTypeString:
-			if len(val[0]) < 3 {
-				return nil, status.Errorf(codes.InvalidArgument, "attribute: %s cannot be not searched as provided value: %s for string type attributes should have at least 3 characters", key, val[0])
+			if len(val[0]) < 1 {
+				return nil, status.Errorf(codes.InvalidArgument, "attribute: %s cannot be not searched as provided value: %s for string type attributes should have at least 1 characters", key, val[0])
 			}
-			val[0] = strings.Replace(regexp.QuoteMeta(val[0]), "/", "\\/", -1)
+			// val[0] = strings.Replace(regexp.QuoteMeta(val[0]), "/", "\\/", -1) // nolint: gocritic
 			aggregateFilter.Filters = append(aggregateFilter.Filters, addFilter(0, key, val[0], nil, 0))
 		case repo.DataTypeInt:
 			v, err := strconv.ParseInt(val[0], 10, 64)
@@ -452,7 +493,7 @@ func parseEquipmentQueryParam(query string, attributes []*repo.Attribute) (*repo
 			}
 			aggregateFilter.Filters = append(aggregateFilter.Filters, addFilter(0, key, v, nil, 0))
 		case repo.DataTypeFloat:
-			v, err := strconv.ParseFloat(val[0], 10)
+			v, err := strconv.ParseFloat(val[0], 10) //nolint
 			if err != nil {
 				// TODO log the error
 				return nil, status.Errorf(codes.InvalidArgument, "attribute: %s cannot be not searched as provided value: %s for int type attribute cannot be parsed", key, val[0])

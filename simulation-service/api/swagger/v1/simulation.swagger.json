@@ -4,10 +4,6 @@
     "title": "simulation.proto",
     "version": "version not set"
   },
-  "schemes": [
-    "http",
-    "https"
-  ],
   "consumes": [
     "application/json"
   ],
@@ -15,14 +11,20 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/config": {
+    "/api/v1/simulation/config": {
       "get": {
-        "operationId": "ListConfig",
+        "operationId": "SimulationService_ListConfig",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1ListConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -39,14 +41,20 @@
         ]
       }
     },
-    "/api/v1/config/{config_id}": {
+    "/api/v1/simulation/config/{config_id}": {
       "delete": {
-        "operationId": "DeleteConfig",
+        "operationId": "SimulationService_DeleteConfig",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1DeleteConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -64,14 +72,20 @@
         ]
       }
     },
-    "/api/v1/config/{config_id}/{metadata_id}": {
+    "/api/v1/simulation/config/{config_id}/{metadata_id}": {
       "get": {
-        "operationId": "GetConfigData",
+        "operationId": "SimulationService_GetConfigData",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1GetConfigDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -98,12 +112,18 @@
     },
     "/api/v1/simulation/hardware": {
       "post": {
-        "operationId": "SimulationByHardware",
+        "operationId": "SimulationService_SimulationByHardware",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1SimulationByHardwareResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -124,12 +144,18 @@
     },
     "/api/v1/simulation/metric": {
       "post": {
-        "operationId": "SimulationByMetric",
+        "operationId": "SimulationService_SimulationByMetric",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1SimulationByMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -150,6 +176,36 @@
     }
   },
   "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
     "v1Attribute": {
       "type": "object",
       "properties": {
@@ -248,27 +304,22 @@
           "$ref": "#/definitions/v1DataTypes"
         },
         "primary_key": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "displayed": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "searchable": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "parent_identifier": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "mapped_to": {
           "type": "string"
         },
         "simulated": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "int_val": {
           "type": "integer",
@@ -341,8 +392,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "num_cpt_licences": {
           "type": "string",
@@ -401,8 +451,7 @@
       "type": "object",
       "properties": {
         "success": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "licenses": {
           "type": "array",

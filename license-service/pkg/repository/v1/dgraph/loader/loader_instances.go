@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -46,15 +40,15 @@ func instancesForRow(cols []string, scope string, row []string, xidIDX int) ([]*
 				predicate = cols[i]
 			}
 		}
-		//log.Println(predicate)
+		// log.Println(predicate)
 		switch predicate {
 		case "application.id":
 			if row[i] == "" {
 				continue
 			}
 			// make a new node of type product
-			//uid := uidForXid("app_" + row[i])
-			//log.Println(row[xidIDX], row[i], prodUID, uid)
+			// uid := uidForXid("app_" + row[i])
+			// log.Println(row[xidIDX], row[i], prodUID, uid)
 			uid, nqs, upsert := uidForXIDForType("app_"+row[i], "application", "application.id", row[i], dgraphTypeApplication)
 			uids = append(uids, uid)
 			upserts = append(upserts, upsert)

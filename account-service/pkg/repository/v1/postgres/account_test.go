@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package postgres
 
 import (
@@ -12,12 +6,94 @@ import (
 	"fmt"
 	"math/rand"
 	v1 "optisam-backend/account-service/pkg/repository/v1"
+	"optisam-backend/common/optisam/logger"
 	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
+
+func TestDropScopeTX(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   func() error
+		check   func() bool
+		r       *AccountRepository
+		wantErr bool
+	}{
+		{
+			name: "SuccessCase",
+			setup: func() error {
+				q := "insert into scopes (scope_code,scope_name,created_by)values('UNT','unittest','admin@test.com') ;"
+				if _, err := db.Exec(q); err != nil {
+					return err
+				}
+				q = "insert into groups (id,name, fully_qualified_name,scopes, parent_id,created_by) Values (1000,'UITG','ROOT.UITG','{UIT}',1,'admin@test.com');"
+				if _, err := db.Exec(q); err != nil {
+					return err
+				}
+				q = "insert into users (username,first_name, last_name, role,locale, password) Values ('test@test.com','f','l','SuperAdmin','en','p');"
+				if _, err := db.Exec(q); err != nil {
+					return err
+				}
+				q = "insert into group_ownership values(1000,'test@test.com');"
+				if _, err := db.Exec(q); err != nil {
+					return err
+				}
+				return nil
+			},
+			check: func() bool {
+				q1 := "select scope_code from scopes where scope_code = 'UIT' ;"
+				row := db.QueryRow(q1)
+				count := 0
+				if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+					logger.Log.Error("Scan failed for scopes", zap.Error(err))
+					return true
+				} else if count > 0 {
+					return true
+				}
+
+				q1 = "select id from groups where 'UIT' = ANY(scopes::TEXT[]) ;"
+				row = db.QueryRow(q1)
+				if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+					logger.Log.Error("Scan failed for group", zap.Error(err))
+					return true
+				} else if count > 0 {
+					return true
+				}
+
+				q1 = "select count(*) from group_ownership where group_id = 10;"
+				row = db.QueryRow(q1)
+				count = 0
+				if err := row.Scan(&count); err != nil && err != sql.ErrNoRows {
+					logger.Log.Error("Scan failed for group_ownership", zap.Error(err))
+					return true
+				} else if count > 0 {
+					return true
+				}
+				return false
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.r = NewAccountRepository(db)
+			if err := tt.setup(); err != nil {
+				t.Errorf("Setup is failed TestDeleteScopeResourceTX  %s", err.Error())
+				return
+			}
+			if err := tt.r.DropScopeTX(context.Background(), "UIT"); (err != nil) != tt.wantErr {
+				t.Errorf("AccountRepository.DeleteScopeResourceTX() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && tt.check() {
+				t.Errorf("Failed , data should be deleted")
+			}
+		})
+	}
+}
 
 func TestAccountRepository_UpdateAccount(t *testing.T) {
 	type args struct {
@@ -344,7 +420,7 @@ func TestAccountRepository_AccountInfo(t *testing.T) {
 				}, nil
 			},
 			want: &v1.AccountInfo{
-				UserId:     "user1@test.com",
+				UserID:     "user1@test.com",
 				FirstName:  "first1",
 				LastName:   "last1",
 				Locale:     "en",
@@ -435,41 +511,41 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 		ctx context.Context
 	}
 	grps := []*v1.Group{
-		&v1.Group{
+		{
 			Name:               "SUPERROOT",
 			FullyQualifiedName: "SUPERROOT",
 		},
-		&v1.Group{
+		{
 			Name:               "A",
 			FullyQualifiedName: "SUPERROOT.A",
 			NumberOfUsers:      3,
 		},
-		&v1.Group{
+		{
 			Name:               "B",
 			FullyQualifiedName: "SUPERROOT.A.B",
 			NumberOfGroups:     2,
 		},
-		&v1.Group{
+		{
 			Name:               "C",
 			FullyQualifiedName: "SUPERROOT.A.C",
 			NumberOfUsers:      1,
 		},
-		&v1.Group{
+		{
 			Name:               "D",
 			FullyQualifiedName: "SUPERROOT.A.B.D",
 			NumberOfUsers:      1,
 		},
-		&v1.Group{
+		{
 			Name:               "E",
 			FullyQualifiedName: "SUPERROOT.A.B.E",
 			NumberOfGroups:     2,
 			NumberOfUsers:      1,
 		},
-		&v1.Group{
+		{
 			Name:               "F",
 			FullyQualifiedName: "SUPERROOT.A.B.E.F",
 		},
-		&v1.Group{
+		{
 			Name:               "G",
 			FullyQualifiedName: "SUPERROOT.A.B.E.G",
 		},
@@ -490,7 +566,7 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 			},
 			setup: func() (func() error, *v1.AccountInfo, error) {
 				acc := &v1.AccountInfo{
-					UserId:     "u1",
+					UserID:     "u1",
 					FirstName:  "FIRST",
 					LastName:   "LAST",
 					Password:   "password",
@@ -544,7 +620,7 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 					return nil, nil, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:    "u2",
+					UserID:    "u2",
 					FirstName: "FIRST",
 					LastName:  "LAST",
 					Locale:    "fr",
@@ -722,27 +798,27 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.AccountInfo, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 						NumberOfUsers:      2,
 						NumberOfGroups:     1,
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 						NumberOfGroups:     1,
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.B.C",
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 						NumberOfUsers:      2,
@@ -761,7 +837,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					return nil, nil, err
 				}
 				acc1 := &v1.AccountInfo{
-					UserId:    "u1",
+					UserID:    "u1",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Locale:    "fr",
@@ -776,7 +852,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					return nil, nil, err
 				}
 				acc2 := &v1.AccountInfo{
-					UserId:    "u2",
+					UserID:    "u2",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -791,7 +867,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 					return nil, nil, err
 				}
 				acc3 := &v1.AccountInfo{
-					UserId:    "u3",
+					UserID:    "u3",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -873,23 +949,23 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.AccountInfo, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.B.C",
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
@@ -907,7 +983,7 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 					return nil, nil, err
 				}
 				acc1 := &v1.AccountInfo{
-					UserId:    "u1",
+					UserID:    "u1",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -921,7 +997,7 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 					return nil, nil, err
 				}
 				acc2 := &v1.AccountInfo{
-					UserId:    "u2",
+					UserID:    "u2",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -935,7 +1011,7 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 					return nil, nil, err
 				}
 				acc3 := &v1.AccountInfo{
-					UserId:    "u3",
+					UserID:    "u3",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1009,27 +1085,27 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 			},
 			setup: func() (func() error, []*v1.AccountInfo, int64, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 						NumberOfUsers:      2,
 						NumberOfGroups:     1,
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 						NumberOfGroups:     1,
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.B.C",
 						NumberOfUsers:      1,
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 						NumberOfUsers:      2,
@@ -1048,7 +1124,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc1 := &v1.AccountInfo{
-					UserId:    "u1",
+					UserID:    "u1",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1062,7 +1138,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc2 := &v1.AccountInfo{
-					UserId:    "u2",
+					UserID:    "u2",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1076,7 +1152,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 					return nil, nil, 0, err
 				}
 				acc3 := &v1.AccountInfo{
-					UserId:    "u3",
+					UserID:    "u3",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1136,36 +1212,36 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 		groupID string
 	}
 	grps := []*v1.Group{
-		&v1.Group{
+		{
 			Name:               "SUPERROOT",
 			FullyQualifiedName: "SUPERROOT",
 		},
-		&v1.Group{
+		{
 			Name:               "A",
 			FullyQualifiedName: "SUPERROOT.A",
 		},
-		&v1.Group{
+		{
 			Name:               "B",
 			FullyQualifiedName: "SUPERROOT.A.B",
 		},
-		&v1.Group{
+		{
 			Name:               "C",
 			FullyQualifiedName: "SUPERROOT.A.C",
 		},
-		&v1.Group{
+		{
 			Name:               "D",
 			FullyQualifiedName: "SUPERROOT.A.B.D",
 		},
-		&v1.Group{
+		{
 			Name:               "E",
 			FullyQualifiedName: "SUPERROOT.A.B.E",
 			NumberOfGroups:     2,
 		},
-		&v1.Group{
+		{
 			Name:               "F",
 			FullyQualifiedName: "SUPERROOT.A.B.E.F",
 		},
-		&v1.Group{
+		{
 			Name:               "G",
 			FullyQualifiedName: "SUPERROOT.A.B.E.G",
 		},
@@ -1198,7 +1274,7 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -1243,7 +1319,7 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -1288,7 +1364,7 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 					return nil, 0, err
 				}
 				acc := &v1.AccountInfo{
-					UserId:   "u1",
+					UserID:   "u1",
 					Role:     v1.RoleAdmin,
 					Password: "password",
 					Group: []int64{
@@ -1361,7 +1437,7 @@ func TestAccountRepository_ChangePassword(t *testing.T) {
 			setup: func() (func() error, error) {
 				repo := NewAccountRepository(db)
 				if err := repo.CreateAccount(context.Background(), &v1.AccountInfo{
-					UserId:    "m@m.com",
+					UserID:    "m@m.com",
 					FirstName: "fn",
 					LastName:  "ln",
 					Password:  "password",
@@ -1440,23 +1516,23 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 			},
 			setup: func() (func() error, error) {
 				grps := []*v1.Group{
-					&v1.Group{
+					{
 						Name:               "SUPERROOT",
 						FullyQualifiedName: "SUPERROOT",
 					},
-					&v1.Group{
+					{
 						Name:               "A",
 						FullyQualifiedName: "SUPERROOT.A",
 					},
-					&v1.Group{
+					{
 						Name:               "B",
 						FullyQualifiedName: "SUPERROOT.A.B",
 					},
-					&v1.Group{
+					{
 						Name:               "C",
 						FullyQualifiedName: "SUPERROOT.A.C",
 					},
-					&v1.Group{
+					{
 						Name:               "D",
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
@@ -1474,7 +1550,7 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 					return nil, err
 				}
 				acc1 := &v1.AccountInfo{
-					UserId:    "admin1@test.com",
+					UserID:    "admin1@test.com",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Locale:    "fr",
@@ -1487,7 +1563,7 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 					return nil, err
 				}
 				acc2 := &v1.AccountInfo{
-					UserId:    "admin2@test.com",
+					UserID:    "admin2@test.com",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1501,7 +1577,7 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 					return nil, err
 				}
 				acc3 := &v1.AccountInfo{
-					UserId:    "user1@test.com",
+					UserID:    "user1@test.com",
 					FirstName: "abc",
 					LastName:  "xyz",
 					Password:  "password",
@@ -1555,8 +1631,8 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 
 func compareUsersAll(t *testing.T, name string, exp []*v1.AccountInfo, act []*v1.AccountInfo) {
 	for i := range exp {
-		idx := getUserByID(exp[i].UserId, act)
-		if !assert.NotEqualf(t, -1, idx, "%s.User with UserId: %s not found in users", exp[i].UserId) {
+		idx := getUserByID(exp[i].UserID, act)
+		if !assert.NotEqualf(t, -1, idx, "%s.User with UserId: %s not found in users", exp[i].UserID) {
 			return
 		}
 		compareUser(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[idx])
@@ -1565,7 +1641,7 @@ func compareUsersAll(t *testing.T, name string, exp []*v1.AccountInfo, act []*v1
 
 func getUserByID(userID string, user []*v1.AccountInfo) int {
 	for i := range user {
-		if userID == user[i].UserId {
+		if userID == user[i].UserID {
 			return i
 		}
 	}
@@ -1580,8 +1656,8 @@ func compareUser(t *testing.T, name string, exp *v1.AccountInfo, act *v1.Account
 		assert.Nil(t, act, "metadata is expected to be nil")
 	}
 
-	if exp.UserId != "" {
-		assert.Equalf(t, exp.UserId, act.UserId, "%s.UserId should be same", name)
+	if exp.UserID != "" {
+		assert.Equalf(t, exp.UserID, act.UserID, "%s.UserId should be same", name)
 	}
 	assert.Equalf(t, exp.FirstName, act.FirstName, "%s.FirstName should be same", name)
 	assert.Equalf(t, exp.LastName, act.LastName, "%s.LastName should be same", name)

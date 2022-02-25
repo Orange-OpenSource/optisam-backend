@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -31,7 +25,7 @@ func parentHierarchy(eqTypes []*repo.EquipmentType, startID string) ([]*repo.Equ
 		equipAnc, err := equipmentTypeExistsByID(parID, eqTypes)
 		if err != nil {
 			logger.Log.Error("service/v1 - parentHierarchy - fetching equipment type", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.NotFound, "parent hierachy not found")
+			return nil, status.Error(codes.NotFound, "parent hierarchy not found")
 		}
 		ancestors = append(ancestors, equipAnc)
 		parID = equipAnc.ParentID
@@ -46,48 +40,6 @@ func attributeExists(attributes []*repo.Attribute, attrID string) (*repo.Attribu
 		}
 	}
 	return nil, status.Errorf(codes.Unknown, "attribute not exists")
-}
-
-func validateAttributesOPS(attr []*repo.Attribute, numCoreAttr string, numCPUAttr string, coreFactorAttr string) error {
-
-	if numCoreAttr == "" {
-		return status.Error(codes.InvalidArgument, "num of cores attribute is empty")
-	}
-	if numCPUAttr == "" {
-		return status.Error(codes.InvalidArgument, "num of cpu attribute is empty")
-	}
-	if coreFactorAttr == "" {
-		return status.Error(codes.InvalidArgument, "core factor attribute is empty")
-	}
-
-	numOfCores, err := attributeExists(attr, numCoreAttr)
-	if err != nil {
-
-		return status.Error(codes.InvalidArgument, "numofcores attribute doesnt exists")
-	}
-	if numOfCores.Type != repo.DataTypeInt && numOfCores.Type != repo.DataTypeFloat {
-		return status.Error(codes.InvalidArgument, "numofcores attribute doesnt have valid data type")
-	}
-
-	numOfCPU, err := attributeExists(attr, numCPUAttr)
-	if err != nil {
-
-		return status.Error(codes.InvalidArgument, "numofcpu attribute doesnt exists")
-	}
-	if numOfCPU.Type != repo.DataTypeInt && numOfCPU.Type != repo.DataTypeFloat {
-		return status.Error(codes.InvalidArgument, "numofcpu attribute doesnt have valid data type")
-	}
-
-	coreFactor, err := attributeExists(attr, coreFactorAttr)
-	if err != nil {
-
-		return status.Error(codes.InvalidArgument, "corefactor attribute doesnt exists")
-	}
-
-	if coreFactor.Type != repo.DataTypeInt && coreFactor.Type != repo.DataTypeFloat {
-		return status.Error(codes.InvalidArgument, "corefactor attribute doesnt have valid data type")
-	}
-	return nil
 }
 
 func metricNameExistsOPS(metrics []*repo.MetricOPS, name string) int {
@@ -105,7 +57,7 @@ func validateLevelsNew(levels []*repo.EquipmentType, startIdx int, base string) 
 			return i, nil
 		}
 	}
-	return -1, errors.New("Not found")
+	return -1, errors.New("not found")
 }
 
 func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
@@ -116,7 +68,7 @@ func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes 
 
 	}
 	ind := 0
-	if ind = metricNameExistsOPS(metrics, input[METRIC_NAME].(string)); ind == -1 {
+	if ind = metricNameExistsOPS(metrics, input[MetricName].(string)); ind == -1 {
 		return 0, status.Error(codes.Internal, "metric name doesnot exists")
 	}
 	parTree, err := parentHierarchy(eqTypes, metrics[ind].StartEqTypeID)
@@ -165,10 +117,10 @@ func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes 
 	}
 
 	computedLicenses := uint64(0)
-	if input[IS_AGG].(bool) {
-		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, input[PROD_AGG_NAME].(string), input[METRIC_NAME].(string), mat, scope...)
+	if input[IsAgg].(bool) {
+		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, input[PROD_ID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -12,7 +6,6 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
 	v1 "optisam-backend/metric-service/pkg/api/v1"
 	repo "optisam-backend/metric-service/pkg/repository/v1"
 
@@ -21,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Context, req *v1.CreateMetricOPS) (*v1.CreateMetricOPS, error) {
+func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Context, req *v1.MetricOPS) (*v1.MetricOPS, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -68,8 +61,8 @@ func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Co
 		return nil, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
 	}
 
-	if err := validateAttributesOPS(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); err != nil {
-		return nil, err
+	if error := validateAttributesOPS(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); error != nil {
+		return nil, error
 	}
 
 	met, err := s.metricRepo.CreateMetricOPS(ctx, serverToRepoMetricOPS(req), req.GetScopes()[0])
@@ -80,6 +73,71 @@ func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Co
 
 	return repoToServerMetricOPS(met), nil
 
+}
+
+func (s *metricServiceServer) UpdateMetricOracleProcessorStandard(ctx context.Context, req *v1.MetricOPS) (*v1.UpdateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	if req.StartEqTypeId == "" {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "start level is empty")
+	}
+	_, err := s.metricRepo.GetMetricConfigOPS(ctx, req.Name, req.GetScopes()[0])
+	if err != nil {
+		if err == repo.ErrNoData {
+			return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "metric does not exist")
+		}
+		logger.Log.Error("service/v1 -UpdateMetricOracleProcessorStandard - repo/GetMetricConfigOPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch metric ops")
+	}
+	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricOracleProcessorStandard - repo/EquipmentTypes - fetching equipments", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	parAncestors, err := parentHierarchy(eqTypes, req.StartEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "parent hierarchy doesnt exists")
+	}
+
+	baseLevelIdx, err := validateLevelsNew(parAncestors, 0, req.BaseEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find base level equipment type in parent hierarchy")
+	}
+	aggLevelIdx, err := validateLevelsNew(parAncestors, baseLevelIdx, req.AggerateLevelEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find aggregate level equipment type in parent hierarchy")
+	}
+	_, err = validateLevelsNew(parAncestors, aggLevelIdx, req.EndEqTypeId)
+	if err != nil {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot find end level equipment type in parent hierarchy")
+	}
+
+	if e := validateAttributesOPS(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); e != nil {
+		return &v1.UpdateMetricResponse{}, e
+	}
+	err = s.metricRepo.UpdateMetricOPS(ctx, &repo.MetricOPS{
+		Name:                  req.Name,
+		NumCoreAttrID:         req.NumCoreAttrId,
+		NumCPUAttrID:          req.NumCPUAttrId,
+		StartEqTypeID:         req.StartEqTypeId,
+		BaseEqTypeID:          req.BaseEqTypeId,
+		CoreFactorAttrID:      req.CoreFactorAttrId,
+		AggerateLevelEqTypeID: req.AggerateLevelEqTypeId,
+		EndEqTypeID:           req.EndEqTypeId,
+	}, req.GetScopes()[0])
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateMetricOracleProcessorStandard - repo/UpdateMetricOPS", zap.String("reason", err.Error()))
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "cannot update metric ops")
+	}
+
+	return &v1.UpdateMetricResponse{
+		Success: true,
+	}, nil
 }
 
 func parentHierarchy(eqTypes []*repo.EquipmentType, startID string) ([]*repo.EquipmentType, error) {
@@ -95,7 +153,7 @@ func parentHierarchy(eqTypes []*repo.EquipmentType, startID string) ([]*repo.Equ
 		equipAnc, err := equipmentTypeExistsByID(parID, eqTypes)
 		if err != nil {
 			logger.Log.Error("service/v1 - parentHierarchy - fetching equipment type", zap.String("reason", err.Error()))
-			return nil, status.Error(codes.NotFound, "parent hierachy not found")
+			return nil, status.Error(codes.NotFound, "parent hierarchy not found")
 		}
 		ancestors = append(ancestors, equipAnc)
 		parID = equipAnc.ParentID
@@ -154,16 +212,7 @@ func validateAttributesOPS(attr []*repo.Attribute, numCoreAttr string, numCPUAtt
 	return nil
 }
 
-func metricNameExistsOPS(metrics []*repo.MetricOPS, name string) int {
-	for i, met := range metrics {
-		if strcomp.CompareStrings(met.Name, name) {
-			return i
-		}
-	}
-	return -1
-}
-
-func serverToRepoMetricOPS(met *v1.CreateMetricOPS) *repo.MetricOPS {
+func serverToRepoMetricOPS(met *v1.MetricOPS) *repo.MetricOPS {
 	return &repo.MetricOPS{
 		ID:                    met.ID,
 		Name:                  met.Name,
@@ -177,8 +226,8 @@ func serverToRepoMetricOPS(met *v1.CreateMetricOPS) *repo.MetricOPS {
 	}
 }
 
-func repoToServerMetricOPS(met *repo.MetricOPS) *v1.CreateMetricOPS {
-	return &v1.CreateMetricOPS{
+func repoToServerMetricOPS(met *repo.MetricOPS) *v1.MetricOPS {
+	return &v1.MetricOPS{
 
 		ID:                    met.ID,
 		Name:                  met.Name,
@@ -198,5 +247,5 @@ func validateLevelsNew(levels []*repo.EquipmentType, startIdx int, base string) 
 			return i, nil
 		}
 	}
-	return -1, errors.New("Not found")
+	return -1, errors.New("not found")
 }

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package loader
 
 import (
@@ -40,29 +34,31 @@ func createSchema(dg *dgo.Dgraph, files, typeFiles []string) error {
 		return err
 	}
 
-	//fmt.Println(schema)
+	// fmt.Println(schema)
 
 	if err := alterSchema(dg, schema); err != nil {
 		return err
 	}
 
-	if len(typeFiles) > 0 {
-		types, err := readFiles(typeFiles, "\n")
-		if err != nil {
-			return err
-		}
-
-		if err := alterSchema(dg, types); err != nil {
-			return err
-		}
+	types, err := readFiles(typeFiles, "\n")
+	if err != nil {
+		return err
 	}
+
+	// fmt.Println(types)
+
+	if err := alterSchema(dg, types); err != nil {
+		return err
+	}
+
+	// fmt.Println(schema)
 
 	log.Println("completed schema creation")
 	return nil
 }
 
 func alterSchema(dg *dgo.Dgraph, schema string) error {
-	//fmt.Println(schema)
+	// fmt.Println(schema)
 	if err := dg.Alter(context.Background(), &api.Operation{
 		Schema: strings.TrimSpace(schema),
 	}); err != nil {

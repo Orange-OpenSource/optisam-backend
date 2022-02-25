@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -41,21 +35,21 @@ type Metadata struct {
 
 // Attribute for attribute of data
 type Attribute struct {
-	ID                 string
-	Name               string
 	Type               DataType
 	IsIdentifier       bool
 	IsDisplayed        bool
 	IsSearchable       bool
 	IsParentIdentifier bool
-	MappedTo           string
 	IsSimulated        bool
 	IntVal             int
-	StringVal          string
-	FloatVal           float32
 	IntValOld          int
-	StringValOld       string
+	FloatVal           float32
 	FloatValOld        float32
+	ID                 string
+	Name               string
+	MappedTo           string
+	StringVal          string
+	StringValOld       string
 }
 
 func (a *Attribute) Val() interface{} {

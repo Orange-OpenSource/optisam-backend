@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -18,21 +12,16 @@ import (
 	"go.uber.org/zap"
 )
 
-//ReportRepository for Dgraph
+// ReportRepository for Dgraph
 type ReportRepository struct {
 	dg *dgo.Dgraph
 }
 
-//NewReportRepository creates new Repository
+// NewReportRepository creates new Repository
 func NewReportRepository(dg *dgo.Dgraph) *ReportRepository {
 	return &ReportRepository{
 		dg: dg,
 	}
-}
-
-type equip struct {
-	EquipmentType string
-	Parent        *equip
 }
 
 type JSONStringArr struct {
@@ -46,11 +35,11 @@ type Object struct {
 func (r *ReportRepository) EquipmentTypeParents(ctx context.Context, equipType string, scope string) ([]string, error) {
 	depth, err := r.getRecursionDepth(ctx, scope)
 	if err != nil {
-		return nil, fmt.Errorf("EquipmentTypeParents - cannot fetch recursion depth: %v", err)
+		return nil, fmt.Errorf("equipmentTypeParents - cannot fetch recursion depth: %v", err)
 	}
 
 	q := `{
-		Heirarchy(func: eq(metadata.equipment.type,` + equipType + `))@filter(eq(scopes,` + scope + `))@recurse(depth: ` + strconv.Itoa(depth) + `,loop:false)@normalize  {
+		Hierarchy(func: eq(metadata.equipment.type,` + equipType + `))@filter(eq(scopes,` + scope + `))@recurse(depth: ` + strconv.Itoa(depth) + `,loop:false)@normalize  {
 			EquipmentTypes: metadata.equipment.type
 			metadata.equipment.parent
 		}
@@ -59,24 +48,25 @@ func (r *ReportRepository) EquipmentTypeParents(ctx context.Context, equipType s
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("EquipmentTypeParents - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentTypeParents - cannot complete query transaction")
+		return nil, fmt.Errorf("equipmentTypeParents - cannot complete query transaction")
 	}
 
 	type data struct {
-		Heirarchy []*Object
+		Hierarchy []*Object
 	}
 	d := &data{}
-	fmt.Println(string(resp.GetJson()))
+	// fmt.Println(string(resp.GetJson()))
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("EquipmentTypeParents - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentTypeParents - cannot unmarshal Json object")
+		fmt.Println(string(resp.GetJson()))
+		return nil, fmt.Errorf("equipmentTypeParents - cannot unmarshal Json object")
 	}
 
-	if len(d.Heirarchy[0].EquipmentTypes.Val) == 1 {
+	if len(d.Hierarchy[0].EquipmentTypes.Val) == 1 {
 		return nil, repo.ErrNoData
 	}
 
-	return d.Heirarchy[0].EquipmentTypes.Val[1:], nil
+	return d.Hierarchy[0].EquipmentTypes.Val[1:], nil
 
 }
 
@@ -129,7 +119,7 @@ func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("EquipmentTypeAttrs - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentTypeAttrs - cannot complete query transaction")
+		return nil, fmt.Errorf("equipmentTypeAttrs - cannot complete query transaction")
 	}
 
 	type Attribute struct {
@@ -150,7 +140,7 @@ func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string
 
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("EquipmentTypeAttrs - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentTypeAttrs - cannot unmarshal Json object")
+		return nil, fmt.Errorf("equipmentTypeAttrs - cannot unmarshal Json object")
 	}
 
 	var res []*repo.EquipmentAttributes
@@ -171,7 +161,7 @@ func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string
 
 }
 
-//ProductEquipments implements interface's ProductEquipments
+// ProductEquipments implements interface's ProductEquipments
 func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string, scope string, eqtype string) ([]*repo.ProductEquipment, error) {
 
 	q := `{
@@ -187,7 +177,7 @@ func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ProductEquipments - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductEquipments - cannot complete query transaction")
+		return nil, fmt.Errorf("productEquipments - cannot complete query transaction")
 	}
 
 	type object struct {
@@ -202,7 +192,7 @@ func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string
 
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("ProductEquipments - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("ProductEquipments - cannot unmarshal Json object")
+		return nil, fmt.Errorf("productEquipments - cannot unmarshal Json object")
 	}
 
 	if len(d.DirectEquipments) == 0 {
@@ -213,22 +203,16 @@ func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string
 
 }
 
-type equipmentType struct {
-	EquipmentID   string
-	EquipmentType string
-	Parent        []*equipmentType
-}
-
 type Object1 struct {
 	EquipmentIDs   JSONStringArr
 	EquipmentTypes JSONStringArr
 }
 
-//EquipmentParents implements interface's EquipmentParents
+// EquipmentParents implements interface's EquipmentParents
 func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipType string, scope string) ([]*repo.ProductEquipment, error) {
 	depth, err := r.getRecursionDepth(ctx, scope)
 	if err != nil {
-		return nil, fmt.Errorf("EquipmentParents - cannot fetch recursion depth: %v", err)
+		return nil, fmt.Errorf("equipmentParents - cannot fetch recursion depth: %v", err)
 	}
 
 	q := `{
@@ -244,7 +228,7 @@ func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipT
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("EquipmentParents - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentParents - cannot complete query transaction")
+		return nil, fmt.Errorf("equipmentParents - cannot complete query transaction")
 	}
 
 	type data struct {
@@ -255,7 +239,7 @@ func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipT
 
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("EquipmentParents - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentParents - cannot unmarshal Json object")
+		return nil, fmt.Errorf("equipmentParents - cannot unmarshal Json object")
 	}
 
 	if len(d.EquipmentParents[0].EquipmentIDs.Val) == 1 {
@@ -278,7 +262,7 @@ func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipT
 
 }
 
-//EquipmentAttributes implements interface's EquipmentAttributes
+// EquipmentAttributes implements interface's EquipmentAttributes
 func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equipType string, attrs []*repo.EquipmentAttributes, scope string) (json.RawMessage, error) {
 
 	q := `{
@@ -293,7 +277,7 @@ func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equ
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("EquipmentAttributes - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentAttributes - cannot complete query transaction")
+		return nil, fmt.Errorf("equipmentAttributes - cannot complete query transaction")
 	}
 
 	type data struct {
@@ -304,10 +288,10 @@ func (r *ReportRepository) EquipmentAttributes(ctx context.Context, equipID, equ
 
 	if err := json.Unmarshal(resp.GetJson(), d); err != nil {
 		logger.Log.Error("EquipmentAttributes - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("EquipmentAttributes - cannot unmarshal Json object")
+		return nil, fmt.Errorf("equipmentAttributes - cannot unmarshal Json object")
 	}
 
-	return json.RawMessage(d.EquipmentAttributes[0]), nil
+	return d.EquipmentAttributes[0], nil
 }
 
 func (r *ReportRepository) getRecursionDepth(ctx context.Context, scope string) (int, error) {
@@ -350,7 +334,7 @@ func getAttributes(attrs []*repo.EquipmentAttributes, equipType string) string {
 
 	for _, name := range attrs {
 
-		if name.ParentIdentifier == true {
+		if name.ParentIdentifier == true { // nolint: gocritic
 			continue
 		} else if name.AttributeIdentifier == true {
 			attrString += name.AttributeName + ":" + "equipment.id \n"

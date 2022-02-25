@@ -1,18 +1,12 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -24,24 +18,15 @@ func (s *productServiceServer) ListEditors(ctx context.Context, req *v1.ListEdit
 	if !ok {
 		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
 	}
-	var scopes []string
-	heystack := strings.Join(userClaims.Socpes, "")
-	for _, scope := range req.Scopes {
-		if strings.Contains(heystack, scope) == true {
-			scopes = append(scopes, scope)
-		}
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-
-	dbresp, err := s.productRepo.ListEditors(ctx, scopes)
+	dbresp, err := s.productRepo.ListEditors(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEditors - ListEditors", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-
-	apiresp := v1.ListEditorsResponse{}
-	apiresp.Editors = dbresp
-
-	return &apiresp, nil
+	return &v1.ListEditorsResponse{Editors: dbresp}, nil
 }
 
 func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.ListEditorProductsRequest) (*v1.ListEditorProductsResponse, error) {
@@ -49,15 +34,10 @@ func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.L
 	if !ok {
 		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
 	}
-	var scopes []string
-	heystack := strings.Join(userClaims.Socpes, "/")
-	for _, scope := range req.Scopes {
-		if strings.Contains(heystack, scope) == true {
-			scopes = append(scopes, scope)
-		}
+	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-
-	dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.GetEditor(), Scopes: scopes})
+	dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.Editor, Scopes: req.Scopes})
 	if err != nil {
 		logger.Log.Error("service/v1 - ListEditorProducts - ListEditorProducts", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
@@ -69,6 +49,7 @@ func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.L
 		apiresp.Products[i] = &v1.Product{}
 		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
 		apiresp.Products[i].Name = dbresp[i].ProductName
+		apiresp.Products[i].Version = dbresp[i].ProductVersion
 	}
 	return &apiresp, nil
 

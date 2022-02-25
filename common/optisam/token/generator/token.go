@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package generator
 
 import (
@@ -22,11 +16,6 @@ type tokenGenerator struct {
 	refTokDur time.Duration
 }
 
-type customClaims struct {
-	OptisamClaims *claims.Claims
-	jwt.StandardClaims
-}
-
 // NewTokenGenerator returns an implementation of token.Generator
 func NewTokenGenerator(privateKeyPath string) (token.Generator, error) {
 	signBytes, err := ioutil.ReadFile(privateKeyPath)
@@ -41,7 +30,7 @@ func NewTokenGenerator(privateKeyPath string) (token.Generator, error) {
 
 	return &tokenGenerator{
 		signKey:   signKey,
-		accTokDur: time.Duration(2 * time.Hour),
+		accTokDur: 2 * time.Hour,
 	}, nil
 
 	// verifyBytes, err := ioutil.ReadFile(publicKeyPath)

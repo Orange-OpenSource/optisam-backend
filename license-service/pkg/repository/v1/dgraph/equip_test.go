@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -19,17 +13,17 @@ func equipmentSetup(t *testing.T) (eq []*v1.EquipmentType, cleanup func() error,
 	mu := &api.Mutation{
 		CommitNow: true,
 		Set: []*api.NQuad{
-			&api.NQuad{
+			{
 				Subject:     blankID("parent"),
 				Predicate:   "parent",
 				ObjectValue: stringObjectValue("parent_equip"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("data_source"),
 				Predicate:   "metadata.source",
 				ObjectValue: stringObjectValue("equip_3.csv"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID("data_source1"),
 				Predicate:   "metadata.source",
 				ObjectValue: stringObjectValue("equip_4.csv"),
@@ -79,7 +73,7 @@ func equipmentSetup(t *testing.T) (eq []*v1.EquipmentType, cleanup func() error,
 		SourceName: "equip_3.csv",
 		ParentID:   parentID,
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:         "attr1",
 				Type:         v1.DataTypeString,
 				IsSearchable: true,
@@ -87,45 +81,45 @@ func equipmentSetup(t *testing.T) (eq []*v1.EquipmentType, cleanup func() error,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_1",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr2",
 				Type:         v1.DataTypeInt,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_2",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr2.1",
 				Type:        v1.DataTypeInt,
 				IsDisplayed: true,
 				MappedTo:    "mapping_2.1",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr3",
 				Type:         v1.DataTypeFloat,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_3",
 			},
-			&v1.Attribute{
+			{
 				Name:     "attr3.1",
 				Type:     v1.DataTypeFloat,
 				MappedTo: "mapping_3.1",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr4",
 				Type:        v1.DataTypeString,
 				IsDisplayed: true,
 				MappedTo:    "mapping_4",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr4.1",
 				Type:         v1.DataTypeString,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_4.1",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr4.2",
 				Type:        v1.DataTypeString,
 				IsDisplayed: true,
@@ -154,7 +148,7 @@ func equipmentSetup(t *testing.T) (eq []*v1.EquipmentType, cleanup func() error,
 		SourceName: "equip_4.csv",
 		ParentID:   eqType.ID,
 		Attributes: []*v1.Attribute{
-			&v1.Attribute{
+			{
 				Name:         "attr1",
 				Type:         v1.DataTypeString,
 				IsSearchable: true,
@@ -162,51 +156,51 @@ func equipmentSetup(t *testing.T) (eq []*v1.EquipmentType, cleanup func() error,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_1",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr2",
 				Type:         v1.DataTypeInt,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_2",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr2.1",
 				Type:        v1.DataTypeInt,
 				IsDisplayed: true,
 				MappedTo:    "mapping_2.1",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr3",
 				Type:         v1.DataTypeFloat,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_3",
 			},
-			&v1.Attribute{
+			{
 				Name:     "attr3.1",
 				Type:     v1.DataTypeFloat,
 				MappedTo: "mapping_3.1",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr4",
 				Type:        v1.DataTypeString,
 				IsDisplayed: true,
 				MappedTo:    "mapping_4",
 			},
-			&v1.Attribute{
+			{
 				Name:         "attr4.1",
 				Type:         v1.DataTypeString,
 				IsSearchable: true,
 				IsDisplayed:  true,
 				MappedTo:     "mapping_4.1",
 			},
-			&v1.Attribute{
+			{
 				Name:        "attr4.2",
 				Type:        v1.DataTypeString,
 				IsDisplayed: true,
 				MappedTo:    "mapping_4.2",
 			},
-			&v1.Attribute{
+			{
 				Name:               "p_attr",
 				Type:               v1.DataTypeString,
 				IsParentIdentifier: true,

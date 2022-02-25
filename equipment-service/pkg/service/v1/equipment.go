@@ -1,17 +1,13 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
 	"context"
+	accv1 "optisam-backend/account-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
+	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
 	"strings"
@@ -21,6 +17,39 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func (s *equipmentServiceServer) CreateGenericScopeEquipmentTypes(ctx context.Context, req *v1.CreateGenericScopeEquipmentTypesRequest) (*v1.CreateGenericScopeEquipmentTypesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return nil, status.Error(codes.PermissionDenied, "only superadmin user can create equipments")
+	}
+	metadata := repo.GetGenericScopeMetadata(req.Scope)
+	eqTypes := repo.GetGenericScopeEquipmentTypes(req.Scope)
+	eqTypeIds := make(map[string]string)
+	for _, val := range metadata {
+		var uid string
+		var err error
+		var respEqType *repo.EquipmentType
+		if uid, err = s.equipmentRepo.UpsertMetadata(ctx, &val); err != nil { //nolint
+			logger.Log.Error("Failed to upser metadata in dgraph", zap.String("reason", err.Error()), zap.Any("scope", req.Scope))
+			return nil, status.Error(codes.Internal, "cannot upsert metadata")
+		}
+		eqTypes[val.Source].SourceID = uid
+		eqTypes[val.Source].ParentID = eqTypeIds[eqTypes[val.Source].ParentType]
+		if respEqType, err = s.equipmentRepo.CreateEquipmentType(ctx, eqTypes[val.Source], eqTypes[val.Source].Scopes); err != nil {
+			logger.Log.Error("Failed to create  eqtype in dgraph", zap.String("reason", err.Error()), zap.Any("scope", req.Scope))
+			return nil, status.Error(codes.Internal, "cannot create  eqType")
+		}
+		eqTypeIds[respEqType.Type] = respEqType.ID
+	}
+
+	return &v1.CreateGenericScopeEquipmentTypesResponse{
+		Success: true,
+	}, nil
+}
 
 func (s *equipmentServiceServer) ListEquipmentsMetadata(ctx context.Context, req *v1.ListEquipmentMetadataRequest) (*v1.ListEquipmentMetadataResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
@@ -37,7 +66,7 @@ func (s *equipmentServiceServer) ListEquipmentsMetadata(ctx context.Context, req
 	}
 	res, err := s.equipmentRepo.MetadataAllWithType(ctx, repo.MetadataTypeEquipment, req.Scopes)
 	if err != nil {
-		switch err {
+		switch err { // nolint: gocritic
 		case repo.ErrNoData:
 			return nil, status.Error(codes.NotFound, "cannot fetch equipment metadata")
 		}
@@ -103,7 +132,7 @@ func (s *equipmentServiceServer) DeleteEquipmentType(ctx context.Context, req *v
 			Success: false,
 		}, status.Error(codes.InvalidArgument, "some claims are not owned by user")
 	}
-	//check if equipment type exists
+	// check if equipment type exists
 	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, []string{req.Scope})
 	if err != nil {
 		logger.Log.Debug("service/v1 - DeleteEquipmentType - repo/EquipmentTypes -", zap.String("reason", err.Error()))
@@ -117,7 +146,7 @@ func (s *equipmentServiceServer) DeleteEquipmentType(ctx context.Context, req *v
 			Success: false,
 		}, status.Error(codes.NotFound, "equipment type does not exist")
 	}
-	//check if equipment type has children
+	// check if equipment type has children
 	_, err = s.equipmentRepo.EquipmentTypeChildren(ctx, eqTypes[idx].ID, len(eqTypes), []string{req.Scope})
 	if err != nil {
 		if err != repo.ErrNoData {
@@ -131,7 +160,7 @@ func (s *equipmentServiceServer) DeleteEquipmentType(ctx context.Context, req *v
 			Success: false,
 		}, status.Error(codes.InvalidArgument, "equipment type has children")
 	}
-	//check if equipments data exists
+	// check if equipments data exists
 	numEquipments, _, err := s.equipmentRepo.Equipments(ctx, eqTypes[idx], &repo.QueryEquipments{
 		PageSize:  50,
 		Offset:    offset(50, 1),
@@ -169,6 +198,14 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
 		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
 	}
+	scopeinfo, err := s.account.GetScope(ctx, &accv1.GetScopeRequest{Scope: req.Scopes[0]})
+	if err != nil {
+		logger.Log.Error("service/v1 - CreateEquipmentType - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "unable to fetch scope info")
+	}
+	if scopeinfo.ScopeType == accv1.ScopeType_GENERIC.String() {
+		return nil, status.Error(codes.PermissionDenied, "can not create equipment type for generic scope")
+	}
 	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateEquipmentType - fetching equipments", zap.String("reason", err.Error()))
@@ -179,16 +216,16 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 		return nil, status.Error(codes.InvalidArgument, "data source is already consumed by another equipment type")
 	}
 
-	// check if type name is avaliable or not
+	// check if type name is available or not
 	for _, eqt := range eqTypes {
 		if strcomp.CompareStrings(eqt.Type, req.Type) {
-			return nil, status.Errorf(codes.InvalidArgument, "type name: %v is not avaliable", req.Type)
+			return nil, status.Errorf(codes.InvalidArgument, "type name: %v is not available", req.Type)
 		}
 	}
 
 	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.MetadataId, req.Scopes)
 	if err != nil {
-		switch err {
+		switch err { // nolint: gocritic
 		case repo.ErrNoData:
 			return nil, status.Error(codes.NotFound, "cannot fetch equipment metadata")
 		}
@@ -197,8 +234,8 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 		return nil, status.Error(codes.Internal, "cannot fetch equipment metadata")
 	}
 
-	if err := validateEquipCreation(metadata.Attributes, eqTypes, req); err != nil {
-		return nil, err
+	if error := validateEquipCreation(metadata.Attributes, eqTypes, req); error != nil {
+		return nil, error
 	}
 
 	resp, err := s.equipmentRepo.CreateEquipmentType(ctx, servEquipTypeToRepoType(req), req.Scopes)
@@ -209,6 +246,7 @@ func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v
 	return repoEquipTypeToServiceType(resp), nil
 }
 
+// nolint: gocyclo
 func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v1.UpdateEquipmentTypeRequest) (*v1.EquipmentType, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -216,6 +254,16 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 	}
 	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
 		return nil, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	if userClaims.Role != claims.RoleSuperAdmin {
+		scopeinfo, err := s.account.GetScope(ctx, &accv1.GetScopeRequest{Scope: req.Scopes[0]})
+		if err != nil {
+			logger.Log.Error("service/v1 - UpdateEquipmentType - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "unable to fetch scope info")
+		}
+		if scopeinfo.ScopeType == accv1.ScopeType_GENERIC.String() {
+			return nil, status.Error(codes.PermissionDenied, "can not update equipment type for generic scope")
+		}
 	}
 	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, req.Scopes)
 	if err != nil {
@@ -230,7 +278,7 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 
 	metadata, err := s.equipmentRepo.MetadataWithID(ctx, equip.SourceID, req.Scopes)
 	if err != nil {
-		switch err {
+		switch err { // nolint: gocritic
 		case repo.ErrNoData:
 			return nil, status.Error(codes.NotFound, "cannot fetch equipment metadata")
 		}
@@ -238,39 +286,39 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 		logger.Log.Error("service/v1 - UpdateEquipmentType - fetching metadata with id", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch equipment metadata")
 	}
-	if req.ParentId != "" {
+	if req.ParentId != "" && req.ParentId != equip.ParentID {
 		if req.ParentId == req.Id {
 			return nil, status.Error(codes.InvalidArgument, "equipment type cannot be parent of itself")
 		}
 		// check if parent exists ot not
-		_, err := equipmentTypeExistsByID(req.ParentId, eqTypes)
-		if err != nil {
+		_, error := equipmentTypeExistsByID(req.ParentId, eqTypes)
+		if error != nil {
 			return nil, status.Error(codes.InvalidArgument, "parent not found")
 		}
-		//check if parent is any of the children of equip
-		equipChildren, err := s.equipmentRepo.EquipmentTypeChildren(ctx, req.Id, len(eqTypes), req.Scopes)
-		if err != nil {
-			if err != repo.ErrNoData {
-				logger.Log.Error("service/v1 - UpdateEquipmentType - EquipmentTypeChildren - fetching equipment type children", zap.String("reason", err.Error()))
+		// check if parent is any of the children of equip
+		equipChildren, error := s.equipmentRepo.EquipmentTypeChildren(ctx, req.Id, len(eqTypes), req.Scopes)
+		if error != nil {
+			if error != repo.ErrNoData {
+				logger.Log.Error("service/v1 - UpdateEquipmentType - EquipmentTypeChildren - fetching equipment type children", zap.String("reason", error.Error()))
 				return nil, status.Error(codes.Internal, "cannot fetch equipment type children")
 			}
 		} else {
-			_, err = equipmentTypeExistsByID(req.ParentId, equipChildren)
-			if err == nil {
+			_, error = equipmentTypeExistsByID(req.ParentId, equipChildren)
+			if error == nil {
 				return nil, status.Error(codes.InvalidArgument, "child can not be parent")
 			}
 		}
 		// if parent id already exits
 		if equip.ParentID != "" {
-			//check if data exists
-			numEquipments, _, err := s.equipmentRepo.Equipments(ctx, equip, &repo.QueryEquipments{
+			// check if data exists
+			numEquipments, _, error := s.equipmentRepo.Equipments(ctx, equip, &repo.QueryEquipments{
 				PageSize:  50,
 				Offset:    offset(50, 1),
 				SortOrder: sortOrder(v1.SortOrder_ASC),
 			}, req.Scopes)
-			if err != nil {
-				if err != repo.ErrNoData {
-					logger.Log.Error("service/v1 - UpdateEquipmentType - Equipments - fetching equipments for eqType", zap.String("reason", err.Error()))
+			if error != nil {
+				if error != repo.ErrNoData {
+					logger.Log.Error("service/v1 - UpdateEquipmentType - Equipments - fetching equipments for eqType", zap.String("reason", error.Error()))
 					return nil, status.Error(codes.Internal, "cannot fetch equipments")
 				}
 			}
@@ -279,14 +327,14 @@ func (s *equipmentServiceServer) UpdateEquipmentType(ctx context.Context, req *v
 			}
 		}
 	}
-	if err := validateEquipUpdation(metadata.Attributes, equip, req.ParentId, req.Attributes); err != nil {
-		return nil, err
+	if error := validateEquipUpdation(metadata.Attributes, equip, req.ParentId, req.Attributes); error != nil {
+		return nil, error
 	}
 	repoUpdateRequest := &repo.UpdateEquipmentRequest{
 		ParentID: req.ParentId,
 		Attr:     servAttrToRepoAttrAll(req.Attributes),
 	}
-	resp, err := s.equipmentRepo.UpdateEquipmentType(ctx, equip.ID, equip.Type, repoUpdateRequest, req.Scopes)
+	resp, err := s.equipmentRepo.UpdateEquipmentType(ctx, equip.ID, equip.Type, equip.ParentID, repoUpdateRequest, req.Scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 -UpdateEquipmentType - updating equipment type", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot update equipment type")
@@ -309,7 +357,7 @@ func (s *equipmentServiceServer) GetEquipmentMetadata(ctx context.Context, req *
 	}
 	metadata, err := s.equipmentRepo.MetadataWithID(ctx, req.ID, req.Scopes)
 	if err != nil {
-		switch err {
+		switch err { // nolint: gocritic
 		case repo.ErrNoData:
 			return nil, status.Error(codes.NotFound, "cannot fetch equipment metadata")
 		}
@@ -348,9 +396,9 @@ func (s *equipmentServiceServer) GetEquipmentMetadata(ctx context.Context, req *
 	return repoMetadataToSrvMetadata(metadata), nil
 }
 
-func equipmentTypeExistsByID(ID string, eqTypes []*repo.EquipmentType) (*repo.EquipmentType, error) {
+func equipmentTypeExistsByID(id string, eqTypes []*repo.EquipmentType) (*repo.EquipmentType, error) {
 	for _, eqt := range eqTypes {
-		if eqt.ID == ID {
+		if eqt.ID == id {
 			return eqt, nil
 		}
 	}
@@ -388,7 +436,7 @@ func validateEquipUpdation(mappedTo []string, equip *repo.EquipmentType, parentI
 			}
 		}
 	}
-	if countParentKey == 0 {
+	if countParentKey == 0 { // nolint: gocritic
 		if equip.ParentID == "" && parentID != "" {
 			return status.Error(codes.InvalidArgument, "one parent identifier required")
 		}

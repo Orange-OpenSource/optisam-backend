@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import (
@@ -24,7 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//DeleteConfig will delete configuration and its all data
+// DeleteConfig will delete configuration and its all data
 func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteConfigRequest) (*v1.DeleteConfigResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -43,7 +37,7 @@ func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteCo
 			logger.Log.Error("service/v1 - SimulationConfiguration - DeleteConfig - Repo - DeleteConfig", zap.Error(err))
 			return nil, status.Error(codes.Internal, "Internal Error")
 		}
-		err = hcs.repo.DeleteConfigData(ctx, int32(req.ConfigId))
+		err = hcs.repo.DeleteConfigData(ctx, req.ConfigId)
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - DeleteConfig - Repo - DeleteConfigData", zap.Error(err))
 			return nil, status.Error(codes.Internal, "Internal Error")
@@ -55,14 +49,14 @@ func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteCo
 	}
 }
 
-//ListConfig lists all the configuration with its attributes
+// ListConfig lists all the configuration with its attributes
 func (hcs *SimulationService) ListConfig(ctx context.Context, req *v1.ListConfigRequest) (*v1.ListConfigResponse, error) {
 	// Check if the equipment type is present.
 	isEquipType := true
 	if req.EquipmentType == "" {
 		isEquipType = false
 	}
-	//Call List Configuration Function
+	// Call List Configuration Function
 	configs, err := hcs.repo.ListConfig(ctx, db.ListConfigParams{
 		IsEquipType:   isEquipType,
 		EquipmentType: req.EquipmentType,
@@ -124,7 +118,6 @@ func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateCo
 			return nil, status.Error(codes.Internal, "Configuration with same name already exists")
 		}
 
-		//Database function to call the create config of database
 		err = hcs.repo.CreateConfig(ctx, servToRepoMasterData(userClaims.UserID, req.ConfigName, req.EquipmentType), servToRepoConfigDataAll(req.Data))
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - CreateConfig", zap.Error(err))
@@ -147,7 +140,7 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 	case claims.RoleUser:
 		return nil, status.Error(codes.PermissionDenied, "User do not have access to update configuration")
 	case claims.RoleAdmin, claims.RoleSuperAdmin:
-		//Call List Configuration Function
+		// Call List Configuration Function
 		configs, err := hcs.repo.ListConfig(ctx, db.ListConfigParams{
 			IsEquipType:   false,
 			EquipmentType: "",
@@ -170,7 +163,7 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 			logger.Log.Error("service/v1 - SimulationConfiguration - UpdateConfig - Repo - GetMetadatabyConfigID", zap.Error(err))
 			return nil, status.Error(codes.Internal, "Internal Error")
 		}
-		//Check if the deletedmetadataIDs are the part of config or not
+		// Check if the deletedmetadataIDs are the part of config or not
 		ok := checkIfAlreadyConfigured(req.Data, metadata, req.DeletedMetadataIds)
 		if ok == false {
 			logger.Log.Error("service/v1 - SimulationConfiguration - UpdateConfig", zap.Error(err))
@@ -189,9 +182,9 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 	}
 }
 
-//GetConfigData sends the config data back per metadataID
+// GetConfigData sends the config data back per metadataID
 func (hcs *SimulationService) GetConfigData(ctx context.Context, req *v1.GetConfigDataRequest) (*v1.GetConfigDataResponse, error) {
-	//Call List Configuration Function
+	// Call List Configuration Function
 	configs, err := hcs.repo.ListConfig(ctx, db.ListConfigParams{
 		IsEquipType:   false,
 		EquipmentType: "",
@@ -214,21 +207,21 @@ func (hcs *SimulationService) GetConfigData(ctx context.Context, req *v1.GetConf
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
 
-	//Check if the metadata is associated with the given config ID, Why? Because may be the metadataID
+	// Check if the metadata is associated with the given config ID, Why? Because may be the metadataID
 	// Can be associated with any other config and we can get the wrong data back
 	index = checkMetadataID(req.MetadataId, metadata)
 	if index == -1 {
 		return nil, status.Error(codes.Internal, "Metadata ID is not associated with given config ID")
 	}
 
-	//Call Databasefunction
+	// Call Databasefunction
 	configData, err := hcs.repo.GetDataByMetadataID(ctx, req.MetadataId)
 	if err != nil {
 		logger.Log.Error("service/v1 - SimulationConfiguration - GetConfigData - Repo - GetDataByMetadataID", zap.Error(err))
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
 
-	var jsonArray []string
+	jsonArray := make([]string, 0)
 
 	for _, cd := range configData {
 		jsonArray = append(jsonArray, string(cd.JsonData))
@@ -254,7 +247,7 @@ func checkMetadataID(id int32, realMetadata []db.GetMetadatabyConfigIDRow) int {
 func checkIfAlreadyConfigured(data []*v1.Data, metadata []db.GetMetadatabyConfigIDRow, deletedIDS []int32) bool {
 	for _, d := range data {
 		if i := checkMetadataName(d.Metadata.AttributeName, metadata); i != -1 {
-			if j := checkDeletedId(metadata[i].ID, deletedIDS); j == -1 {
+			if j := checkDeletedID(metadata[i].ID, deletedIDS); j == -1 {
 				return false
 			}
 		}
@@ -262,7 +255,7 @@ func checkIfAlreadyConfigured(data []*v1.Data, metadata []db.GetMetadatabyConfig
 	return true
 }
 
-func checkDeletedId(id int32, deletedIds []int32) int {
+func checkDeletedID(id int32, deletedIds []int32) int {
 	for i, rid := range deletedIds {
 		if rid == id {
 			return i
@@ -296,7 +289,7 @@ func repoToServMetadata(metadata db.GetMetadatabyConfigIDRow) *v1.Attribute {
 }
 
 func servToRepoConfigValueAll(configValues []*v1.ConfigValue) []*repo.ConfigValue {
-	var repoConfigValues []*repo.ConfigValue
+	repoConfigValues := make([]*repo.ConfigValue, 0)
 	for _, configValue := range configValues {
 		repoConfigValues = append(repoConfigValues, servToRepoConfigValue(configValue))
 	}
@@ -341,7 +334,7 @@ func configByID(configs []db.ConfigMaster, configID int32) int {
 }
 
 func servToRepoConfigDataAll(data []*v1.Data) []*repo.ConfigData {
-	var result []*repo.ConfigData
+	result := make([]*repo.ConfigData, 0)
 
 	for _, d := range data {
 		resMetadata := servToRepoMetadata(d.Metadata)
@@ -355,13 +348,13 @@ func servToRepoConfigDataAll(data []*v1.Data) []*repo.ConfigData {
 	return result
 }
 
-func repoToServConfigs(config db.ConfigMaster, metadata []db.GetMetadatabyConfigIDRow, created_on *tspb.Timestamp) *v1.Configuration {
+func repoToServConfigs(config db.ConfigMaster, metadata []db.GetMetadatabyConfigIDRow, createdOn *tspb.Timestamp) *v1.Configuration {
 	res := &v1.Configuration{
 		ConfigId:      config.ID,
 		ConfigName:    config.Name,
 		EquipmentType: config.EquipmentType,
 		CreatedBy:     config.CreatedBy,
-		CreatedOn:     created_on,
+		CreatedOn:     createdOn,
 	}
 	attributes := make([]*v1.Attribute, 0, len(metadata))
 

@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -31,7 +25,7 @@ func TestLicenseRepository_MetricIPSComputedLicenses(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC098")
+	ID, err := getUIDForProductXID("ORAC098", []string{"scope2"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
@@ -93,14 +87,14 @@ func TestLicenseRepository_MetricIPSComputedLicensesAgg(t *testing.T) {
 		}
 	}()
 
-	ID, err := getUIDForProductXID("ORAC098")
+	ID, err := getUIDForProductXID("ORAC098", []string{"scope2"})
 	if !assert.Empty(t, err, "error is not expected in getUIDforProductXID") {
 		return
 	}
 
 	metric := "abc"
 	aggName := "xyz"
-	aggCleanup, err := aggSetup(metric, ID, aggName)
+	aggCleanup, err := aggSetup(metric, ID, aggName, "scope2")
 	if !assert.Empty(t, err, "error is not expected in agg setup") {
 		return
 	}

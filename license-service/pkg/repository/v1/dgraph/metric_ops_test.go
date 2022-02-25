@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -59,7 +53,7 @@ func TestLicenseRepository_ListMetricOPS(t *testing.T) {
 		l     *LicenseRepository
 		args  args
 		setup func() ([]*v1.MetricOPS, func() error, error)
-		//want    []*v1.MetricOPS
+		// want    []*v1.MetricOPS
 		wantErr bool
 	}{
 		{name: "SUCCESS",
@@ -138,37 +132,37 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	mu := &api.Mutation{
 		CommitNow: true,
 		Set: []*api.NQuad{
-			&api.NQuad{
+			{
 				Subject:     blankID(bottomID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(baseID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(aggregateID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(topID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(coreFactorAttrID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(numOfCoresAttrID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
-			&api.NQuad{
+			{
 				Subject:     blankID(numOfCPUsAttrID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
@@ -188,7 +182,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(bottomID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -201,7 +195,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(baseID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -214,7 +208,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(aggregateID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -227,7 +221,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(topID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -240,7 +234,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(coreFactorAttrID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -253,7 +247,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(numOfCPUsAttrID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -266,7 +260,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 	defer func() {
 		if retErr != nil {
 			if err := deleteNode(numOfCoresAttrID); err != nil {
-				//t.Log(err)
+				// t.Log(err)
 			}
 		}
 	}()
@@ -282,7 +276,7 @@ func createMetric(mat *v1.MetricOPS) (retMat *v1.MetricOPS, cleanup func() error
 		NumCPUAttrID:          numOfCPUsAttrID,
 	}, "")
 	return gotRetMat, func() error {
-		//return nil
+		// return nil
 		return deleteNodes(gotRetMat.ID, bottomID, baseID, aggregateID, bottomID, coreFactorAttrID, numOfCoresAttrID, numOfCPUsAttrID)
 	}, nil
 }

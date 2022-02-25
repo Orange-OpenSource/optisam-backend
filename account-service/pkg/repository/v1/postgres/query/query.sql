@@ -6,3 +6,17 @@ INSERT INTO users_audit(
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE username = @user_id;
+
+-- name: GetGroupsByScope :many
+Select id,scopes from groups where $1 = ANY(scopes::TEXT[]);
+
+-- name: DeleteGroupById :exec
+Delete from groups where id = $1;
+
+-- name: UpdateScopesInGroup :exec
+Update groups set scopes = $2 where id = $1;
+
+-- name: DeleteScope :exec
+Delete from scopes where scope_code = $1;
+
+

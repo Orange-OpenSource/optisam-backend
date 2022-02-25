@@ -1,25 +1,56 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
-	"bytes"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
-	"text/template"
 )
 
-func queryBuilderNUP(mat *v1.MetricNUPComputed, templ *template.Template, id ...string) (string, error) {
-	buf := &bytes.Buffer{}
-	if err := templ.Execute(buf, mat); err != nil {
-		return "", nil
+// func queryBuilderNUP(mat *v1.MetricNUPComputed, templ *template.Template, id ...string) (string, error) {
+// 	buf := &bytes.Buffer{}
+// 	if err := templ.Execute(buf, mat); err != nil {
+// 		return "", err
+// 	}
+
+// 	return formatter(replacer(buf.String(), map[string]string{
+// 		"$ID": strings.Join(id, ","),
+// 	})), nil
+// }
+
+func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...string) string {
+	index := -1
+	aggregateIndex := -1
+	for i := range ops.EqTypeTree {
+		if ops.EqTypeTree[i].Type == ops.BaseType.Type {
+			index = i
+		}
+		if ops.EqTypeTree[i].Type == ops.AggregateLevel.Type {
+			aggregateIndex = i
+		}
 	}
 
-	return formatter(replacer(buf.String(), map[string]string{
-		"$ID": strings.Join(id, ","),
-	})), nil
+	return "{\n\t" + replacer(strings.Join([]string{
+		getToBase(ops.EqTypeTree[:index+1]),
+		getToTop(ops.EqTypeTree[index:], index > 0),
+		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
+		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
+	}, "\n\t"), map[string]string{
+		"$id":     strings.Join(id, ","),
+		"$Scopes": strings.Join(scopes, ",")}) + "\n}"
+}
+
+func buildQueryUsersForNUP(scopes []string, id ...string) string {
+	q := `{
+		var(func:uid($ID)){
+			product.users @filter(eq(scopes,[$Scopes])){
+				uc as users.count
+	 		}
+		}
+		Users(){
+			TotalUserCount: sum(val(uc))
+	  	}
+	  }`
+	return replacer(q, map[string]string{
+		"$ID":     strings.Join(id, ","),
+		"$Scopes": strings.Join(scopes, ","),
+	})
 }

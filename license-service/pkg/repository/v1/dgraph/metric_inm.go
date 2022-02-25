@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -18,14 +12,14 @@ import (
 )
 
 type metricINM struct {
-	ID          string  `json:"uid"`
-	Name        string  `json:"metric.name"`
-	Coefficient float32 `json:"metric.instancenumber.coefficient"`
+	ID          string `json:"uid"`
+	Name        string `json:"metric.name"`
+	Coefficient int32  `json:"metric.instancenumber.coefficient"`
 }
 
 // ListMetricINM implements Licence ListMetricINM function
 func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes ...string) ([]*v1.MetricINM, error) {
-	respJson, err := l.listMetricWithMetricType(ctx, v1.MetricInstanceNumberStandard, scopes...)
+	respJSON, err := l.listMetricWithMetricType(ctx, v1.MetricInstanceNumberStandard, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/ListMetricINM - listMetricWithMetricType", zap.Error(err))
 		return nil, err
@@ -33,10 +27,10 @@ func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes ...string)
 	type Resp struct {
 		Data []*metricINM
 	}
-	log.Println("INM metrics ", string(respJson))
+	log.Println("INM metrics ", string(respJSON))
 	var data Resp
-	if err := json.Unmarshal(respJson, &data); err != nil {
-		//fmt.Println(string(resp.Json))
+	if err := json.Unmarshal(respJSON, &data); err != nil {
+		// fmt.Println(string(resp.Json))
 		logger.Log.Error("dgraph/ListMetricINM - Unmarshal failed", zap.Error(err))
 		return nil, errors.New("cannot Unmarshal")
 	}
@@ -49,21 +43,18 @@ func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes ...string)
 func converMetricToModelMetricAllINM(mts []*metricINM) ([]*v1.MetricINM, error) {
 	mats := make([]*v1.MetricINM, len(mts))
 	for i := range mts {
-		m, err := converMetricToModelMetricINM(mts[i])
-		if err != nil {
-			return nil, err
-		}
+		m := converMetricToModelMetricINM(mts[i])
 		mats[i] = m
 	}
 
 	return mats, nil
 }
 
-func converMetricToModelMetricINM(m *metricINM) (*v1.MetricINM, error) {
+func converMetricToModelMetricINM(m *metricINM) *v1.MetricINM {
 
 	return &v1.MetricINM{
 		ID:          m.ID,
 		Name:        m.Name,
 		Coefficient: m.Coefficient,
-	}, nil
+	}
 }

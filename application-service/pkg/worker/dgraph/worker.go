@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -24,55 +18,56 @@ import (
 
 var mu sync.Mutex
 
-//Worker ...
+// Worker ...
 type Worker struct {
 	id string
 	dg *dgo.Dgraph
 }
 
-//MessageType ...
+// MessageType ...
 type MessageType string
 
 const (
-	//UpsertApplicationRequest is request type for upsert application in dgraph
+	// UpsertApplicationRequest is request type for upsert application in dgraph
 	UpsertApplicationRequest MessageType = "UpsertApplication"
-	//UpsertInstanceRequest is request type for upsert instances in dgraph
+	// UpsertInstanceRequest is request type for upsert instances in dgraph
 	UpsertInstanceRequest MessageType = "UpsertInstance"
-	//DropApplicationDataRequest is request type for delete applications and applications instances in dgraph for a particular scope
+	// DropApplicationDataRequest is request type for delete applications and applications instances in dgraph for a particular scope
 	DropApplicationDataRequest MessageType = "DropApplicationData"
 )
 
-//Envelope ...
+// Envelope ...
 type Envelope struct {
 	Type MessageType `json:"message_type"`
 	JSON json.RawMessage
 }
 
-//NewWorker ...
+// NewWorker ...
 func NewWorker(id string, dg *dgo.Dgraph) *Worker {
 	return &Worker{id: id, dg: dg}
 }
 
-//ID ...
+// ID ...
 func (w *Worker) ID() string {
 	return w.id
 }
 
-//DoWork impletation of work
+// DoWork impletation of work
+// nolint: funlen
 func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 	mu.Lock()
 	defer mu.Unlock()
-	//do something cool!
+	// do something cool!
 	var e Envelope
 	_ = json.Unmarshal(j.Data, &e)
-	fmt.Println(e.Type)
+	// fmt.Println(e.Type)
 	switch e.Type {
 	case UpsertApplicationRequest:
 		var mutations []*api.Mutation
 		var uar v1.UpsertApplicationRequest
 		_ = json.Unmarshal(e.JSON, &uar)
-		//SCOPE BASED CHANGE
-		query := `query {application as var(func: eq(application.id,` + uar.GetApplicationId() + `)) @filter(eq(type_name,"application") AND eq(scopes,"` + uar.GetScope() + `"))}`
+		// SCOPE BASED CHANGE
+		query := `query {application as var(func: eq(application.id,"` + uar.GetApplicationId() + `")) @filter(eq(type_name,"application") AND eq(scopes,"` + uar.GetScope() + `"))}`
 		mu := &api.Mutation{SetNquads: []byte(`
 		uid(application) <application.id> "` + uar.GetApplicationId() + `" .
 		uid(application) <application.name>"` + uar.GetName() + `" .
@@ -97,8 +92,8 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		var mutations []*api.Mutation
 		var uir v1.UpsertInstanceRequest
 		_ = json.Unmarshal(e.JSON, &uir)
-		fmt.Println(uir)
-		//SCOPE BASED CHANGE
+		// fmt.Println(uir)
+		// SCOPE BASED CHANGE
 		query := `query {
 			  var(func: eq(instance.id,"` + uir.GetInstanceId() + `")) @filter(eq(type_name,"instance") AND eq(scopes,"` + uir.GetScope() + `") ){
 				  instance as uid
@@ -117,13 +112,13 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		if uir.Products.GetOperation() == "add" {
 			for i, product := range uir.GetProducts().GetProductId() {
 				prodUID := `product` + strconv.Itoa(i)
-				//SCOPE BASED CHANGE
+				// SCOPE BASED CHANGE
 				query += `
 				var(func: eq(product.swidtag,"` + product + `")) @filter(eq(type_name,"product") AND eq(scopes,"` + uir.GetScope() + `")){
 					product` + strconv.Itoa(i) + ` as uid
 				}
 				`
-				//queries = append(queries, query)
+				// queries = append(queries, query)
 				mutations = append(mutations, &api.Mutation{
 					Cond: "@if(eq(len(" + prodUID + "),0))",
 					SetNquads: []byte(`
@@ -145,13 +140,13 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			for i, equipment := range uir.GetEquipments().GetEquipmentId() {
 				eqUID := `equipment` + strconv.Itoa(i)
 
-				//SCOPE BASED CHANGE
+				// SCOPE BASED CHANGE
 				query += `
 				var(func: eq(equipment.id,"` + equipment + `")) @filter(eq(type_name,"equipment") AND eq(scopes,"` + uir.GetScope() + `")){
 					equipment` + strconv.Itoa(i) + ` as uid
 				}
 				`
-				//queries = append(queries, query)
+				// queries = append(queries, query)
 				mutations = append(mutations, &api.Mutation{
 					Cond: "@if(eq(len(" + eqUID + "),0))",
 					SetNquads: []byte(`
@@ -170,7 +165,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 
 		if uir.GetApplicationId() != "" {
-			//SCOPE BASED CHANGE
+			// SCOPE BASED CHANGE
 			query += `
 			var(func: eq(application.id,"` + uir.GetApplicationId() + `")) @filter(eq(type_name,"application") AND eq(scopes,"` + uir.GetScope() + `")){
 				application as uid
@@ -192,7 +187,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				`),
 			})
 		}
-		//end query block
+		// end query block
 		query += "}"
 		req := &api.Request{
 			Query:     query,
@@ -245,6 +240,6 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		fmt.Println(e.JSON)
 	}
 
-	//Everything's fine, we're done here
+	// Everything's fine, we're done here
 	return nil
 }

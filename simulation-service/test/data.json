@@ -1,0 +1,153 @@
+{
+	"metricsimulation": {
+		"request": {
+			"swid_tag": "ibm_websphere_1",
+			"scope": "AUT",
+			"metric_details": [
+				{
+					"metric_name": "oracle.processor.standard",
+					"unit_cost": 1000
+				},
+				{
+					"metric_name": "os_instance",
+					"unit_cost": 1500
+				}
+			]
+		}
+	},
+	"metric_sim_result": [
+		{
+			"success": true,
+			"num_cpt_licences": "19",
+			"total_cost": 19000,
+			"metric_name": "oracle.processor.standard",
+			"sim_failure_reason": ""
+		},
+		{
+			"success": true,
+			"num_cpt_licences": "1",
+			"total_cost": 1500,
+			"metric_name": "os_instance",
+			"sim_failure_reason": ""
+		}
+	],
+	"hardwaresimulation": {
+		"equip_type": "server",
+		"equip_id": "SERV_01",
+		"attributes": [
+			{
+				"original_val": 0.25,
+				"simulated": false,
+				"ID": "0x23284",
+				"name": "corefactor_oracle",
+				"data_type": "FLOAT",
+				"primary_key": false,
+				"displayed": true,
+				"searchable": true,
+				"parent_identifier": false,
+				"mapped_to": "corefactor_oracle",
+				"float_val_old": 0.25,
+				"float_val": 0.25
+			},
+			{
+				"original_val": 25,
+				"simulated": false,
+				"ID": "0x23285",
+				"name": "pvu",
+				"data_type": "FLOAT",
+				"primary_key": false,
+				"displayed": true,
+				"searchable": true,
+				"parent_identifier": false,
+				"mapped_to": "pvu",
+				"float_val_old": 25,
+				"float_val": 25
+			},
+			{
+				"original_val": 4,
+				"simulated": true,
+				"ID": "0x23286",
+				"name": "server_coresNumber",
+				"data_type": "FLOAT",
+				"primary_key": false,
+				"displayed": true,
+				"searchable": true,
+				"parent_identifier": false,
+				"mapped_to": "server_coresNumber",
+				"float_val_old": 4,
+				"float_val": 1
+			},
+			{
+				"original_val": 2,
+				"simulated": true,
+				"ID": "0x23287",
+				"name": "server_processorsNumber",
+				"data_type": "INT",
+				"primary_key": false,
+				"displayed": true,
+				"searchable": true,
+				"parent_identifier": false,
+				"mapped_to": "server_processorsNumber",
+				"int_val_old": 2,
+				"int_val": 1
+			},
+			{
+				"original_val": 0.25,
+				"simulated": false,
+				"ID": "0x2328b",
+				"name": "sag",
+				"data_type": "FLOAT",
+				"primary_key": false,
+				"displayed": true,
+				"searchable": true,
+				"parent_identifier": false,
+				"mapped_to": "sag",
+				"float_val_old": 0.25,
+				"float_val": 0.25
+			}
+		],
+		"scope": "AUT",
+		"metric_details": [
+			{
+				"metric_type": "instance.number.standard",
+				"metric_name": "os_instance"
+			},
+			{
+				"metric_type": "ibm.pvu.standard",
+				"metric_name": "ibm_pvu"
+			},
+			{
+				"metric_type": "ibm.pvu.standard",
+				"metric_name": "ibm_pvu_75"
+			},
+			{
+				"metric_type": "attribute.counter.standard",
+				"metric_name": "attribute_counter_cpu"
+			},
+			{
+				"metric_type": "attribute.counter.standard",
+				"metric_name": "attribute_counter_core"
+			},
+			{
+				"metric_type": "oracle.processor.standard",
+				"metric_name": "oracle_processor"
+			},
+			{
+				"metric_type": "oracle.processor.standard",
+				"metric_name": "ops_partition"
+			},
+			{
+				"metric_type": "oracle.processor.standard",
+				"metric_name": "oracle.processor.standard"
+			}
+		]
+	},
+	"configurations": {
+		"config_id": "##number",
+		"config_name": "#string",
+		"equipment_type": "#string",
+		"created_by": "#string",
+		"created_on": "##string",
+		"config_attributes": "#[_ > 0]"
+	}
+}

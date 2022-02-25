@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package dgraph
 
 import (
@@ -182,15 +176,15 @@ func getLevelsOPS(mat *v1.MetricOPSComputed, parent, current int) *CalLevelOPS {
 	}
 }
 
-func getProcCalFilterOPSIndividualEuipment(l *CalLevelOPS) string {
-	bi := baseElementIndexOPS(l.Mat)
-	filter := make([]string, bi+1)
-	for i := 0; i <= bi; i++ {
-		//	fmt.Println("getProcCalFilter", i, l.Parent)
-		filter[i] = l.Mat.EqTypeTree[i].Type + "_" + l.Mat.EqTypeTree[l.Current].Type + "_" + l.Mat.EqTypeTree[l.Parent].Type
-	}
-	return strings.Join(filter, ",")
-}
+// func getProcCalFilterOPSIndividualEuipment(l *CalLevelOPS) string {
+// 	bi := baseElementIndexOPS(l.Mat)
+// 	filter := make([]string, bi+1)
+// 	for i := 0; i <= bi; i++ {
+// 		//	fmt.Println("getProcCalFilter", i, l.Parent)
+// 		filter[i] = l.Mat.EqTypeTree[i].Type + "_" + l.Mat.EqTypeTree[l.Current].Type + "_" + l.Mat.EqTypeTree[l.Parent].Type
+// 	}
+// 	return strings.Join(filter, ",")
+// }
 
 func baseElementIndexOPS(mat *v1.MetricOPSComputed) int {
 	for i, eqType := range mat.EqTypeTree {
@@ -238,7 +232,6 @@ func templEquipOPS() (*template.Template, error) {
 			return result
 		},
 		"seq": func(i int) []int {
-			//fmt.Println(i)
 			return make([]int, i)
 		},
 		"getProcCalFilter": func(l *CalLevelOPS) string { return "ID" },
@@ -256,7 +249,7 @@ func templEquipOPS() (*template.Template, error) {
 	}
 
 	tmplStr := strings.Join(templates, "\n")
-	//fmt.Println(tmplStr)
+	// fmt.Println(tmplStr)
 
 	return template.New("proctempl").Funcs(funcMap).Parse(tmplStr)
 

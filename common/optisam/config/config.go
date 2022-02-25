@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package config
 
 import (
@@ -23,7 +17,7 @@ type Config struct {
 	// Meaningful values are recommended (eg. production, development, staging, release/123, etc)
 	Environment string
 
-	//BadgerDir contains path of badgers
+	// BadgerDir contains path of badgers
 	BadgerDir string
 
 	// Turns on some debug functionality
@@ -43,7 +37,7 @@ type Config struct {
 	// Postgress connection information
 	Postgres *postgres.Config
 
-	// Dockers Conection information
+	// Dockers Connection information
 	Dockers []docker.Config
 
 	// Log configuration
@@ -57,7 +51,7 @@ type Config struct {
 	// PKI configuration
 	PKI pki.Config
 
-	//Init Wait time tells time taken by docker container to setup, now other things can run
+	// Init Wait time tells time taken by docker container to setup, now other things can run
 	INITWAITTIME time.Duration
 }
 

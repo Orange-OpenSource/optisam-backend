@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package v1
 
 import "errors"
@@ -109,7 +103,7 @@ func (e *EquipmentType) PrimaryKeyAttribute() (*Attribute, error) {
 			return attr, nil
 		}
 	}
-	return nil, errors.New("Primary key attribute is not found")
+	return nil, errors.New("primary key attribute is not found")
 }
 
 // ParentKeyAttribute returns primary key attribute of equipment type
@@ -119,7 +113,7 @@ func (e *EquipmentType) ParentKeyAttribute() (*Attribute, error) {
 			return attr, nil
 		}
 	}
-	return nil, errors.New("Primary key attribute is not found")
+	return nil, errors.New("primary key attribute is not found")
 }
 
 // QueryEquipments has parameters for query
@@ -138,4 +132,276 @@ type QueryEquipments struct {
 type UpdateEquipmentRequest struct {
 	ParentID string
 	Attr     []*Attribute
+}
+
+func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //nolint
+	var scopes []string
+	scopes = append(scopes, scope)
+	data := map[string]*EquipmentType{
+		"metadata_vcenter.csv": {
+			SourceName: "metadata_vcenter.csv",
+			Type:       "vcenter",
+			Attributes: []*Attribute{
+				{
+					Name:         "vcenter_name",
+					Type:         DataTypeString,
+					MappedTo:     "vcenter_name",
+					IsIdentifier: true,
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "vcenter_version",
+					Type:         DataTypeString,
+					MappedTo:     "vcenter_version",
+					IsDisplayed:  true,
+					IsSearchable: true},
+			},
+			Scopes: scopes,
+		},
+		"metadata_cluster.csv": {
+			SourceName: "metadata_cluster.csv",
+			Type:       "cluster",
+			Scopes:     scopes,
+			ParentType: "vcenter",
+			Attributes: []*Attribute{
+				{
+					Name:         "cluster_name",
+					Type:         DataTypeString,
+					MappedTo:     "cluster_name",
+					IsIdentifier: true,
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:               "parent_id",
+					Type:               DataTypeString,
+					MappedTo:           "parent_id",
+					IsParentIdentifier: true,
+					IsDisplayed:        true,
+					IsSearchable:       true,
+				},
+			},
+		},
+		"metadata_server.csv": {
+			SourceName: "metadata_server.csv",
+			Scopes:     scopes,
+			Type:       "server",
+			ParentType: "cluster",
+			Attributes: []*Attribute{
+				{
+					Name:         "hyperthreading",
+					Type:         DataTypeString,
+					MappedTo:     "hyperthreading",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "datacenter_name",
+					Type:         DataTypeString,
+					MappedTo:     "datacenter_name",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "server_id",
+					Type:         DataTypeString,
+					MappedTo:     "server_id",
+					IsIdentifier: true,
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "server_name",
+					Type:         DataTypeString,
+					MappedTo:     "server_name",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "cores_per_processor",
+					Type:         DataTypeInt,
+					MappedTo:     "cores_per_processor",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "oracle_core_factor",
+					Type:         DataTypeFloat,
+					MappedTo:     "oracle_core_factor",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "cpu_manufacturer",
+					Type:         DataTypeString,
+					MappedTo:     "cpu_manufacturer",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "ibm_pvu",
+					Type:         DataTypeFloat,
+					MappedTo:     "ibm_pvu",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "sag_uvu",
+					Type:         DataTypeInt,
+					MappedTo:     "sag_uvu",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "server_type",
+					Type:         DataTypeString,
+					MappedTo:     "server_type",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:               "parent_id",
+					Type:               DataTypeString,
+					MappedTo:           "parent_id",
+					IsParentIdentifier: true,
+					IsDisplayed:        true,
+					IsSearchable:       true,
+				},
+				{
+					Name:         "cpu_model",
+					Type:         DataTypeString,
+					MappedTo:     "cpu_model",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "server_os",
+					Type:         DataTypeString,
+					MappedTo:     "server_os",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "server_processors_numbers",
+					Type:         DataTypeInt,
+					MappedTo:     "server_processors_numbers",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+			},
+		},
+		"metadata_softpartition.csv": {
+			SourceName: "metadata_softpartition.csv",
+			Type:       "softpartition",
+			Scopes:     scopes,
+			ParentType: "server",
+			Attributes: []*Attribute{
+				{
+					Name:         "softpartition_id",
+					Type:         DataTypeString,
+					MappedTo:     "softpartition_id",
+					IsIdentifier: true,
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "softpartition_name",
+					Type:         DataTypeString,
+					MappedTo:     "softpartition_name",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:               "parent_id",
+					Type:               DataTypeString,
+					MappedTo:           "parent_id",
+					IsParentIdentifier: true,
+					IsDisplayed:        true,
+					IsSearchable:       true,
+				},
+			},
+		},
+		// "metadata_hardpartition.csv": {
+		// 	SourceName: "metadata_hardpartition.csv",
+		// 	Scopes:     scopes,
+		// 	Type:       "hardpartition",
+		// 	ParentType: "server",
+		// 	Attributes: []*Attribute{
+		// 		{
+		// 			Name:         "aix_entitlement",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "aix_entitlement",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "sparc_cap",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "sparc_cap",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "aix_lpm",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "aix_lpm",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "aix_sharingmode",
+		// 			Type:         DataTypeString,
+		// 			MappedTo:     "aix_sharingmode",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "sparc_livemigration",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "sparc_livemigration",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "aix_sharedpool_cpus",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "aix_sharedpool_cpus",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "aix_onlinevirtualcores",
+		// 			Type:         DataTypeInt,
+		// 			MappedTo:     "aix_onlinevirtualcores",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:         "aix_processormode",
+		// 			Type:         DataTypeString,
+		// 			MappedTo:     "aix_processormode",
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 		{
+		// 			Name:               "parent_id",
+		// 			Type:               DataTypeString,
+		// 			MappedTo:           "parent_id",
+		// 			IsParentIdentifier: true,
+		// 			IsDisplayed:        true,
+		// 			IsSearchable:       true,
+		// 		},
+		// 		{
+		// 			Name:         "hardpartition_id",
+		// 			Type:         DataTypeString,
+		// 			MappedTo:     "hardpartition_id",
+		// 			IsIdentifier: true,
+		// 			IsDisplayed:  true,
+		// 			IsSearchable: true,
+		// 		},
+		// 	},
+		// },
+	}
+	return data
 }

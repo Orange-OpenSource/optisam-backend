@@ -1,9 +1,3 @@
-// Copyright (C) 2019 Orange
-// 
-// This software is distributed under the terms and conditions of the 'Apache License 2.0'
-// license which can be found in the file 'License.txt' in this package distribution 
-// or at 'http://www.apache.org/licenses/LICENSE-2.0'. 
-
 package logger
 
 import (
@@ -19,13 +13,13 @@ var (
 	// Log is global logger
 	Log *zap.Logger
 
-	//GlobalLevel is the logging level
+	// GlobalLevel is the logging level
 	GlobalLevel zapcore.Level
 
 	// timeFormat is custom Time Format
 	customTimeFormat string
 
-	// onceInit guarantee intialize logger only once
+	// onceInit guarantee initialize logger only once
 	onceInit sync.Once
 )
 
@@ -43,7 +37,7 @@ func Init(lvl int, timeFormat string) error {
 		GlobalLevel = zapcore.Level(lvl)
 		// High-priority output should also go to standard error, and low-priority
 		// output should also go to standard out.
-		// It is usefull for Kubernetes deployment.
+		// It is useful for Kubernetes deployment.
 		// Kubernetes interprets os.Stdout log items as INFO and os.Stderr log items
 		// as ERROR by default.
 		highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {

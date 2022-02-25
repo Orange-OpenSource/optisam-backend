@@ -1,0 +1,48 @@
+{
+    "schema_data" : {
+        "upload_id": "#number",
+        "scope": "#string",
+        "file_name": "#string",
+        "status": "#string",
+        "uploaded_by": "#string",
+        "uploaded_on": "#string",
+        "total_records": "#number",
+        "success_records": "#number",
+        "failed_records": "##number",
+        "invalid_records": "##number",
+        "comments":"##string",
+        "error_file_api":"##string"
+    },
+    "data" : {
+        "upload_id": "#number",
+        "scope": "TST",
+        "file_name": "TST_products.csv",
+        "status": "COMPLETED",
+        "uploaded_by": "admin@test.com",
+        "uploaded_on": "#string",
+        "total_records": 7,
+        "success_records": 7,
+        "failed_records": 0,
+        "invalid_records": 0
+    },
+    "metadata" : {
+        "upload_id": "#number",
+        "scope": "TST",
+        "file_name": "metadata_equipment_server.csv",
+        "status": "COMPLETED",
+        "uploaded_by": "admin@test.com",
+        "uploaded_on": "#string"
+    },
+    "quality": {
+        "equipments": [3.14,2.15,1.31,47.1,18.52,27.79]
+    },
+
+    "schema_quality":
+    {
+     "applications": [0],
+     "products": [0],
+     "equipments": [0],
+     "acqrights": [0]
+        
+    }
+}

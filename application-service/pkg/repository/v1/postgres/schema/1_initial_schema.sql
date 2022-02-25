@@ -11,7 +11,9 @@ CREATE TABLE jobs (
   start_time TIMESTAMP,
   end_time TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  retry_count INTEGER DEFAULT 0
+  retry_count INTEGER DEFAULT 0,
+  meta_data JSONB NOT NULL
+
 );
 
 CREATE TABLE IF NOT EXISTS applications (
@@ -95,7 +97,7 @@ CREATE TABLE IF NOT EXISTS risk_matrix (
 
 
 CREATE TABLE IF NOT EXISTS risk_matrix_config (
-    configuration_id INTEGER NOT NULL REFERENCES risk_matrix(configuration_id),
+    configuration_id INTEGER NOT NULL REFERENCES risk_matrix(configuration_id) on DELETE CASCADE,
     domain_critic_id INTEGER NOT NULL REFERENCES domain_criticity_meta(domain_critic_id),
     maintenance_level_id INTEGER NOT NULL  REFERENCES maintenance_level_meta(maintenance_level_id),
     risk_id  INTEGER NOT NULL REFERENCES risk_meta(risk_id),
