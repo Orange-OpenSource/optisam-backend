@@ -126,27 +126,37 @@ enum DataTypes {
 
 
 message SimulationByMetricRequest {
-  string swid_tag = 1;
+  string editor = 1;
   repeated MetricSimDetails metric_details = 2;
   string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message MetricSimDetails {
-  string metric_name = 1;
-  double unit_cost = 2;
+  string swidtag = 1;
+  string aggregation_name = 2;
+  string metric_name = 3;
+  double unit_cost = 4;
+  string sku = 5;
 }
 
 message SimulationByMetricResponse {
-  repeated MetricSimulationResult metric_sim_result = 1;
+  bool success = 1;
+  repeated MetricSimulationResult metric_sim_result = 2;
+  string sim_failure_reason = 3;
+
 }
 
 
 message MetricSimulationResult{
-    bool success = 1;
-    uint64 num_cpt_licences =2;
-    double total_cost =3;
-    string metric_name = 4;
-    string sim_failure_reason = 5;
+    string swidtag = 1;
+    string aggregation_name = 2;
+    string metric_name = 3;
+    uint64 num_cpt_licences = 4;
+    double old_total_cost = 5;
+    double new_total_cost = 6;
+    string sku = 7;
+    bool not_deployed = 8;
+    bool metric_not_defined = 9;
 }
 
 

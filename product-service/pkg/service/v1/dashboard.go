@@ -11,7 +11,6 @@ import (
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue/job"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"time"
@@ -67,7 +66,7 @@ func (s *productServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerR
 	if err != nil {
 		logger.Log.Error("Failed to get dashboard audit info", zap.Error(err), zap.Any("Scope", req.Scope))
 		if err == sql.ErrNoRows {
-			return nil, status.Error(codes.Internal, "NotFound")
+			return nil, status.Error(codes.NotFound, "NotFound")
 		}
 		return nil, status.Error(codes.Internal, "DBError")
 	}
@@ -87,21 +86,40 @@ func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.GetProductQualityOverview(ctx, req.Scope)
+	productsNotDeployed, err := s.productRepo.ProductsNotDeployed(ctx, req.Scope)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return &v1.OverviewProductQualityResponse{}, nil
-		}
-		logger.Log.Error("service/v1 - OverviewProductQuality - db/GetDataQaulityOverview", zap.Error(err))
+		logger.Log.Error("service/v1 - OverviewProductQuality - db/ProductsNotDeployed - error in getting count of products with no deployement", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	notAcqPercentage, _ := dbresp.NotDeployedPercentage.Float64()
-	notDeployedPercent, _ := dbresp.NotAcquiredPercentage.Float64()
+	productsNotAcquried, err := s.productRepo.ProductsNotAcquired(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - OverviewProductQuality - db/ProductsNotAcquired - error in getting count of products with no license", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	productsNotDeployedCount := len(productsNotDeployed)
+	productsNotAcquriedCount := len(productsNotAcquried)
+	products, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
+		Scope:    []string{req.Scope},
+		PageNum:  0,
+		PageSize: 1,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - OverviewProductQuality - db/ListProductsView", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	var notAcqPercentage, notDeployedPercent float64
+	if len(products) > 0 {
+		numProducts := products[0].Totalrecords
+		if numProducts != 0 {
+			notAcqPercentage = float64(productsNotAcquriedCount*100) / float64(numProducts)
+			notDeployedPercent = float64(productsNotDeployedCount*100) / float64(numProducts)
+		}
+	}
 	return &v1.OverviewProductQualityResponse{
-		NotAcquiredProducts:           int32(dbresp.NotAcquired),
-		NotDeployedProducts:           int32(dbresp.NotDeployed),
-		NotAcquiredProductsPercentage: notAcqPercentage,
-		NotDeployedProductsPercentage: notDeployedPercent,
+		NotAcquiredProducts:           int32(productsNotAcquriedCount),
+		NotDeployedProducts:           int32(productsNotDeployedCount),
+		NotAcquiredProductsPercentage: math.Round(notAcqPercentage*100) / 100,
+		NotDeployedProductsPercentage: math.Round(notDeployedPercent*100) / 100,
 	}, nil
 }
 
@@ -147,11 +165,25 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	resp.NumEditors = int32(len(editors))
 
 	// Get the total cost and maintenance cost
-	costs, err := s.productRepo.GetAcqRightsCost(ctx, scopes)
+	costs, err := s.productRepo.GetLicensesCost(ctx, scopes)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		logger.Log.Error("service/v1 - DashboardOverview - db/GetAcqRightsCost", zap.Error(err))
+		logger.Log.Error("service/v1 - DashboardOverview - db/GetLicensesCost", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
+
+	cfAmount, err := s.productRepo.GetTotalCounterfietAmount(ctx, req.Scope)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalCounterfietAmount", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	usAmount, err := s.productRepo.GetTotalUnderusageAmount(ctx, req.Scope)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalUnderusageAmount", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	resp.TotalCounterfeitingAmount = cfAmount
+	resp.TotalUnderusageAmount = usAmount
 
 	if !errors.Is(err, sql.ErrNoRows) {
 		resp.TotalLicenseCost, _ = costs.TotalCost.Float64()
@@ -223,12 +255,8 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	// Convert single scope to slice of string
-	var scopes []string
-	scopes = append(scopes, req.Scope)
-
 	// Find Products Per Metric
-	productsPerMetric, err := s.productRepo.ProductsPerMetric(ctx, scopes)
+	productsPerMetric, err := s.productRepo.ProductsPerMetric(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -259,8 +287,8 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 
 	// Counterfeited Product Licenses
 	dbLicenses, err := s.productRepo.CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
-		Scope:         req.Scope,
-		ProductEditor: req.Editor,
+		Scope:  req.Scope,
+		Editor: req.Editor,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - CounterfeitedProducts - db/CounterFeitedProductsLicences", zap.Error(err))
@@ -274,8 +302,8 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 
 	// Counterfeited Product Costs
 	dbCosts, err := s.productRepo.CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
-		Scope:         req.Scope,
-		ProductEditor: req.Editor,
+		Scope:  req.Scope,
+		Editor: req.Editor,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - CounterfeitedProducts - db/CounterFeitedProductsCosts", zap.Error(err))
@@ -309,8 +337,8 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 
 	// OverDeployed Product Licenses
 	dbLicenses, err := s.productRepo.OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
-		Scope:         req.Scope,
-		ProductEditor: req.Editor,
+		Scope:  req.Scope,
+		Editor: req.Editor,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - OverdeployedProducts - db/OverDeployedProductsLicences", zap.Error(err))
@@ -324,8 +352,8 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 
 	// OverDeployed Product Costs
 	dbCosts, err := s.productRepo.OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
-		Scope:         req.Scope,
-		ProductEditor: req.Editor,
+		Scope:  req.Scope,
+		Editor: req.Editor,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - OverdeployedProducts - db/OverDeployedProductsCosts", zap.Error(err))
@@ -356,22 +384,7 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
-		Scopes: []string{req.Scope},
-	})
-	if err != nil {
-		logger.Log.Error("service/v1 - ComplianceAlert - ListMetrices", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "MetricServiceError")
-	}
-	if metrics == nil || len(metrics.Metrices) == 0 {
-		logger.Log.Error("service/v1 - ComplianceAlert - ListMetrices - metrics are not defined")
-		return &v1.ComplianceAlertResponse{}, status.Error(codes.NotFound, "MetricsNotFound")
-	}
-	metricNames := getMetricNames(metrics.Metrices)
-	cfRow, err := s.productRepo.CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-		Metrics: metricNames,
-		Scope:   req.Scope,
-	})
+	cfRow, err := s.productRepo.CounterfeitPercent(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -387,10 +400,7 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 	}
 	cfDeltaRights, _ := cfRow.DeltaRights.Float64()
 
-	odRow, err := s.productRepo.OverdeployPercent(ctx, db.OverdeployPercentParams{
-		Metrics: metricNames,
-		Scope:   req.Scope,
-	})
+	odRow, err := s.productRepo.OverdeployPercent(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -409,8 +419,8 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 	cfPer := (cfDeltaRights / cfAcq) * 100
 	odPer := (odDeltaRights / odAcq) * 100
 
-	cfPercent := toFixed(cfPer, 2)
-	odPercent := toFixed(odPer, 2)
+	cfPercent := helper.ToFixed(cfPer, 2)
+	odPercent := helper.ToFixed(odPer, 2)
 
 	return &v1.ComplianceAlertResponse{
 		CounterfeitingPercentage: cfPercent,
@@ -444,25 +454,17 @@ func (s *productServiceServer) DashboardQualityProducts(ctx context.Context, req
 	}, nil
 }
 
-func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
-}
-
-func toFixed(num float64, precision int) float64 {
-	output := math.Pow(10, float64(precision))
-	return float64(round(num*output)) / output
-}
-
 func dbToServOverDeployedProductsCosts(dbLic []db.OverDeployedProductsCostsRow) []*v1.ProductsCosts {
 	res := make([]*v1.ProductsCosts, 0)
 
 	for _, productCost := range dbLic {
-		tpc, _ := productCost.TotalPurchaseCost.Float64()
-		tcc, _ := productCost.TotalComputedCost.Float64()
+		tpc, _ := productCost.PurchaseCost.Float64()
+		tcc, _ := productCost.ComputedCost.Float64()
 		delta, _ := productCost.DeltaCost.Float64()
 		res = append(res, &v1.ProductsCosts{
-			SwidTag:              productCost.SwidTag,
-			ProductName:          productCost.ProductName,
+			SwidTag:              productCost.SwidTags,
+			ProductName:          productCost.ProductNames,
+			AggregationName:      productCost.AggregationName,
 			LicensesAcquiredCost: tpc,
 			LicensesComputedCost: tcc,
 			DeltaCost:            delta,
@@ -476,12 +478,16 @@ func dbToServOverDeployedProductsLicenses(dbLic []db.OverDeployedProductsLicence
 	res := make([]*v1.ProductsLicenses, 0)
 
 	for _, productLic := range dbLic {
+		nla, _ := productLic.NumAcquiredLicences.Float64()
+		nlc, _ := productLic.NumComputedLicences.Float64()
+		delta, _ := productLic.Delta.Float64()
 		res = append(res, &v1.ProductsLicenses{
-			SwidTag:             productLic.SwidTag,
-			ProductName:         productLic.ProductName,
-			NumLicensesAcquired: productLic.NumLicensesAcquired,
-			NumLicensesComputed: int64(productLic.NumLicencesComputed),
-			Delta:               int64(productLic.Delta),
+			SwidTag:             productLic.SwidTags,
+			ProductName:         productLic.ProductNames,
+			AggregationName:     productLic.AggregationName,
+			NumLicensesAcquired: int64(nla),
+			NumLicensesComputed: int64(nlc),
+			Delta:               int64(delta),
 		})
 	}
 
@@ -492,12 +498,13 @@ func dbToServCounterfeitedProductsCosts(dbLic []db.CounterFeitedProductsCostsRow
 	res := make([]*v1.ProductsCosts, 0)
 
 	for _, productCost := range dbLic {
-		tpc, _ := productCost.TotalPurchaseCost.Float64()
-		tcc, _ := productCost.TotalComputedCost.Float64()
+		tpc, _ := productCost.PurchaseCost.Float64()
+		tcc, _ := productCost.ComputedCost.Float64()
 		delta, _ := productCost.DeltaCost.Float64()
 		res = append(res, &v1.ProductsCosts{
-			SwidTag:              productCost.SwidTag,
-			ProductName:          productCost.ProductName,
+			SwidTag:              productCost.SwidTags,
+			ProductName:          productCost.ProductNames,
+			AggregationName:      productCost.AggregationName,
 			LicensesAcquiredCost: tpc,
 			LicensesComputedCost: tcc,
 			DeltaCost:            delta,
@@ -511,12 +518,16 @@ func dbToServCounterfeitedProductsLicenses(dbLic []db.CounterFeitedProductsLicen
 	res := make([]*v1.ProductsLicenses, 0)
 
 	for _, productLic := range dbLic {
+		nla, _ := productLic.NumAcquiredLicences.Float64()
+		nlc, _ := productLic.NumComputedLicences.Float64()
+		delta, _ := productLic.Delta.Float64()
 		res = append(res, &v1.ProductsLicenses{
-			SwidTag:             productLic.SwidTag,
-			ProductName:         productLic.ProductName,
-			NumLicensesAcquired: productLic.NumLicensesAcquired,
-			NumLicensesComputed: int64(productLic.NumLicencesComputed),
-			Delta:               int64(productLic.Delta),
+			SwidTag:             productLic.SwidTags,
+			ProductName:         productLic.ProductNames,
+			AggregationName:     productLic.AggregationName,
+			NumLicensesAcquired: int64(nla),
+			NumLicensesComputed: int64(nlc),
+			Delta:               int64(delta),
 		})
 	}
 
@@ -529,7 +540,7 @@ func dbToServProductsPerMetric(prodPerMetric []db.ProductsPerMetricRow) []*v1.Me
 	for _, p := range prodPerMetric {
 		res = append(res, &v1.MetricProducts{
 			MetricName:  p.Metric,
-			NumProducts: int32(p.NumProducts),
+			NumProducts: int32(p.Composition),
 		})
 	}
 
@@ -562,10 +573,10 @@ func dbToServProductsNotAcquired(prodNotAcquried []db.ProductsNotAcquiredRow) []
 	return res
 }
 
-func getMetricNames(met []*metv1.Metric) []string {
+/* func getMetricNames(met []*metv1.Metric) []string {
 	metNames := []string{}
 	for _, m := range met {
 		metNames = append(metNames, m.Name)
 	}
 	return metNames
-}
+} */

@@ -66,6 +66,20 @@ func (s *metricServiceServer) ListMetricType(ctx context.Context, req *v1.ListMe
 		logger.Log.Error("service/v1 - ListMetricType - account/GetScope - fetching scope info", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "unable to fetch scope info")
 	}
+
+	// metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
+	// if err != nil && err != repo.ErrNoData {
+	// 	logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching metrics", zap.String("reason", err.Error()))
+	// 	return nil, status.Error(codes.Internal, "cannot fetch metrics")
+	// }
+	// var opsExists, nupExists bool
+	// if metricTypeExistsAll(metrics, repo.MetricOPSOracleProcessorStandard) != -1 {
+	// 	opsExists = true
+	// }
+	// if metricTypeExistsAll(metrics, repo.MetricOracleNUPStandard) != -1 {
+	// 	nupExists = true
+	// }
+
 	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, repo.GetScopeType(scopeinfo.ScopeType), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - ListMetricType - fetching metric types", zap.String("reason", err.Error()))
@@ -206,6 +220,12 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUSS", zap.String("reason", err.Error()))
 			return nil, status.Error(codes.Internal, "cannot fetch metric uss")
 		}
+	case repo.MetricStaticStandard:
+		metric, err = s.metricRepo.GetMetricConfigSS(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ss")
+		}
 	}
 	resMetric, err := json.Marshal(metric)
 	if err != nil {
@@ -314,6 +334,8 @@ func (s *metricServiceServer) discriptionMetric(ctx context.Context, met *repo.M
 		return s.getDescriptionAttSum(ctx, met.Name, scope)
 	case repo.MetricUserSumStandard:
 		return repo.MetricDescriptionUserSumStandard.String(), nil
+	case repo.MetricStaticStandard:
+		return s.getDescriptionSS(ctx, met.Name, scope)
 	default:
 		return "", status.Error(codes.Internal, "description not found - "+met.Type.String())
 	}
@@ -328,3 +350,12 @@ func metricNameExistsAll(metrics []*repo.MetricInfo, name string) int {
 	}
 	return -1
 }
+
+// func metricTypeExistsAll(metrics []*repo.MetricInfo, metricType repo.MetricType) int {
+// 	for i, met := range metrics {
+// 		if met.Type == metricType {
+// 			return i
+// 		}
+// 	}
+// 	return -1
+// }

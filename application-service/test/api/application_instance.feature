@@ -2,7 +2,7 @@
 Feature: Application Service Test for Instances
 
   Background:
-  # * def applicationServiceUrl = "https://optisam-application-int.kermit-noprod-b.itn.intraorange"
+  # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
     * url applicationServiceUrl+'/api/v1/application'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

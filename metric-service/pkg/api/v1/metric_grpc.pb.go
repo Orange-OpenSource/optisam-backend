@@ -47,6 +47,10 @@ type MetricServiceClient interface {
 	CreateMetricInstanceNumberStandard(ctx context.Context, in *MetricINM, opts ...grpc.CallOption) (*MetricINM, error)
 	// UpdateMetricInstanceNumberStandard will update an instance.number.standard metric
 	UpdateMetricInstanceNumberStandard(ctx context.Context, in *MetricINM, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
+	// CreateMetricStaticStandard will create an static.standard metric
+	CreateMetricStaticStandard(ctx context.Context, in *MetricSS, opts ...grpc.CallOption) (*MetricSS, error)
+	// UpdateMetricStaticStandard will update an static.standard metric
+	UpdateMetricStaticStandard(ctx context.Context, in *MetricSS, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
 	// CreateMetricUserSumStandard will create an oracle.processor.standard metric
 	CreateMetricUserSumStandard(ctx context.Context, in *MetricUSS, opts ...grpc.CallOption) (*MetricUSS, error)
 	// CreateMetricAttrSumStandard will create an attribute.sum.standard metric
@@ -201,6 +205,24 @@ func (c *metricServiceClient) UpdateMetricInstanceNumberStandard(ctx context.Con
 	return out, nil
 }
 
+func (c *metricServiceClient) CreateMetricStaticStandard(ctx context.Context, in *MetricSS, opts ...grpc.CallOption) (*MetricSS, error) {
+	out := new(MetricSS)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetricStaticStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) UpdateMetricStaticStandard(ctx context.Context, in *MetricSS, opts ...grpc.CallOption) (*UpdateMetricResponse, error) {
+	out := new(UpdateMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/UpdateMetricStaticStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *metricServiceClient) CreateMetricUserSumStandard(ctx context.Context, in *MetricUSS, opts ...grpc.CallOption) (*MetricUSS, error) {
 	out := new(MetricUSS)
 	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetricUserSumStandard", in, out, opts...)
@@ -280,6 +302,10 @@ type MetricServiceServer interface {
 	CreateMetricInstanceNumberStandard(context.Context, *MetricINM) (*MetricINM, error)
 	// UpdateMetricInstanceNumberStandard will update an instance.number.standard metric
 	UpdateMetricInstanceNumberStandard(context.Context, *MetricINM) (*UpdateMetricResponse, error)
+	// CreateMetricStaticStandard will create an static.standard metric
+	CreateMetricStaticStandard(context.Context, *MetricSS) (*MetricSS, error)
+	// UpdateMetricStaticStandard will update an static.standard metric
+	UpdateMetricStaticStandard(context.Context, *MetricSS) (*UpdateMetricResponse, error)
 	// CreateMetricUserSumStandard will create an oracle.processor.standard metric
 	CreateMetricUserSumStandard(context.Context, *MetricUSS) (*MetricUSS, error)
 	// CreateMetricAttrSumStandard will create an attribute.sum.standard metric
@@ -339,6 +365,12 @@ func (UnimplementedMetricServiceServer) CreateMetricInstanceNumberStandard(conte
 }
 func (UnimplementedMetricServiceServer) UpdateMetricInstanceNumberStandard(context.Context, *MetricINM) (*UpdateMetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricInstanceNumberStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) CreateMetricStaticStandard(context.Context, *MetricSS) (*MetricSS, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricStaticStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) UpdateMetricStaticStandard(context.Context, *MetricSS) (*UpdateMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricStaticStandard not implemented")
 }
 func (UnimplementedMetricServiceServer) CreateMetricUserSumStandard(context.Context, *MetricUSS) (*MetricUSS, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricUserSumStandard not implemented")
@@ -637,6 +669,42 @@ func _MetricService_UpdateMetricInstanceNumberStandard_Handler(srv interface{}, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetricService_CreateMetricStaticStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricSS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).CreateMetricStaticStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/CreateMetricStaticStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).CreateMetricStaticStandard(ctx, req.(*MetricSS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_UpdateMetricStaticStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricSS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).UpdateMetricStaticStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/UpdateMetricStaticStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).UpdateMetricStaticStandard(ctx, req.(*MetricSS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MetricService_CreateMetricUserSumStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MetricUSS)
 	if err := dec(in); err != nil {
@@ -790,6 +858,14 @@ var _MetricService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMetricInstanceNumberStandard",
 			Handler:    _MetricService_UpdateMetricInstanceNumberStandard_Handler,
+		},
+		{
+			MethodName: "CreateMetricStaticStandard",
+			Handler:    _MetricService_CreateMetricStaticStandard_Handler,
+		},
+		{
+			MethodName: "UpdateMetricStaticStandard",
+			Handler:    _MetricService_UpdateMetricStaticStandard_Handler,
 		},
 		{
 			MethodName: "CreateMetricUserSumStandard",

@@ -23,7 +23,7 @@ func (l *LicenseRepository) MetricIPSComputedLicenses(ctx context.Context, id st
 
 // MetricIPSComputedLicensesAgg implements Licence MetricIPSComputedLicensesAgg function
 func (l *LicenseRepository) MetricIPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricIPSComputed, scopes ...string) (uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricIPSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, errors.New("dgraph/MetricIPSComputedLicensesAgg - query failed")

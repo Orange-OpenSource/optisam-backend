@@ -39,22 +39,28 @@ type AppInstance struct {
 
 // Acqright
 type AcqRightsInfo struct {
-	Version              string
-	SwidTag              string
-	Sku                  string
-	ProductName          string
-	Editor               string
-	Metric               string
-	NumOfMaintenanceLic  int
-	NumOfAcqLic          int
-	AvgPrice             float64
-	AvgMaintenantPrice   float64
-	TotalPurchasedCost   float64
-	TotalMaintenanceCost float64
-	TotalCost            float64
-	StartOfMaintenance   string
-	EndOfMaintenance     string
-	Action               string
+	Version                   string
+	SwidTag                   string
+	Sku                       string
+	ProductName               string
+	Editor                    string
+	Metric                    string
+	NumOfMaintenanceLic       int
+	NumOfAcqLic               int
+	AvgPrice                  float64
+	AvgMaintenantPrice        float64
+	TotalPurchasedCost        float64
+	TotalMaintenanceCost      float64
+	TotalCost                 float64
+	StartOfMaintenance        string
+	EndOfMaintenance          string
+	Action                    string
+	OrderingDate              string
+	CorporateSourcingContract string
+	SoftwareProvider          string
+	LastPurchasedOrder        string
+	MaintenanceProvider       string
+	SupportNumber             string
 }
 
 // FileData will carry combine information of whole file scope

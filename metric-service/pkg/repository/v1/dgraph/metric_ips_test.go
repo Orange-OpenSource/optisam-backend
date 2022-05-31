@@ -34,6 +34,7 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 				baseID := "base"
 				coreFactorAttrID := "coreFactor"
 				numOfCoresAttrID := "cores"
+				numOfCPUAttrID := "cpu"
 
 				mu := &api.Mutation{
 					CommitNow: true,
@@ -52,6 +53,11 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 						},
 						{
 							Subject:     blankID(numOfCoresAttrID),
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metadata"),
+						},
+						{
+							Subject:     blankID(numOfCPUAttrID),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metadata"),
 						},
@@ -101,13 +107,27 @@ func TestMetricRepository_CreateMetricIPS(t *testing.T) {
 					}
 				}()
 
+				numOfCPUAttrID, ok = assigned.Uids[numOfCPUAttrID]
+				if !ok {
+					return nil, nil, errors.New("numOfCPUAttrID is not found in assigned map")
+				}
+
+				defer func() {
+					if retErr != nil {
+						if err := deleteNode(numOfCPUAttrID); err != nil {
+							t.Log(err)
+						}
+					}
+				}()
+
 				return &v1.MetricIPS{
 						Name:             "ibm.pvu.standard",
 						BaseEqTypeID:     baseID,
 						CoreFactorAttrID: coreFactorAttrID,
 						NumCoreAttrID:    numOfCoresAttrID,
+						NumCPUAttrID:     numOfCPUAttrID,
 					}, func() error {
-						return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID)
+						return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID, numOfCPUAttrID)
 					}, nil
 			},
 		},
@@ -169,6 +189,7 @@ func TestMetricRepository_GetMetricConfigIPS(t *testing.T) {
 			want: &v1.MetricIPSConfig{
 				Name:           "ips1",
 				NumCoreAttr:    "ips_cores",
+				NumCPUAttr:     "ips_cpu",
 				CoreFactorAttr: "ips_corefactor",
 				BaseEqType:     "server",
 			},
@@ -199,6 +220,7 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 	baseID := "base"
 	coreFactorAttrID := "coreFactor"
 	numOfCoresAttrID := "cores"
+	numOfCPUAttrID := "cpu"
 	coreFactorAttrID1 := "corefactor1"
 
 	mu := &api.Mutation{
@@ -218,6 +240,11 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 			},
 			{
 				Subject:     blankID(numOfCoresAttrID),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+			{
+				Subject:     blankID(numOfCPUAttrID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
@@ -261,6 +288,15 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 		return
 	}
 
+	numOfCPUAttrID, ok = assigned.Uids[numOfCPUAttrID]
+	if !ok {
+		t.Log(errors.New("numOfCPUAttrID is not found in assigned map"))
+		if err := deleteNode(numOfCPUAttrID); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+
 	coreFactorAttrID1, ok = assigned.Uids[coreFactorAttrID1]
 	if !ok {
 		t.Log(errors.New("coreFactorAttrID1 is not found in assigned map"))
@@ -292,6 +328,7 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 					BaseEqTypeID:     baseID,
 					CoreFactorAttrID: coreFactorAttrID1,
 					NumCoreAttrID:    numOfCoresAttrID,
+					NumCPUAttrID:     numOfCPUAttrID,
 				},
 			},
 			setup: func(l *MetricRepository) (cleanup func() error, retErr error) {
@@ -300,6 +337,7 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 					BaseEqTypeID:     baseID,
 					CoreFactorAttrID: coreFactorAttrID,
 					NumCoreAttrID:    numOfCoresAttrID,
+					NumCPUAttrID:     numOfCPUAttrID,
 				}, "scope1")
 				if err != nil {
 					return func() error {
@@ -307,7 +345,7 @@ func TestMetricRepository_UpdateMetricIPS(t *testing.T) {
 					}, errors.New("error while creating metric ips")
 				}
 				return func() error {
-					return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID)
+					return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID, numOfCPUAttrID)
 				}, nil
 			},
 			// checking: func(l *MetricRepository) (*v1.MetricIPSConfig, error) {
@@ -407,6 +445,21 @@ func addMetricIPSConfig(metName string, scope string) (ids map[string]string, er
 				ObjectValue: stringObjectValue("ips_cores"),
 			},
 			{
+				Subject:   blankID("metric"),
+				Predicate: "metric.ips.attr_num_cpu",
+				ObjectId:  "_:attribute2",
+			},
+			{
+				Subject:     blankID("attribute2"),
+				Predicate:   "dgraph.type",
+				ObjectValue: stringObjectValue("attr"),
+			},
+			{
+				Subject:     blankID("attribute2"),
+				Predicate:   "attribute.name",
+				ObjectValue: stringObjectValue("ips_cpu"),
+			},
+			{
 				Subject:     blankID("metric"),
 				Predicate:   "scopes",
 				ObjectValue: stringObjectValue(scope),
@@ -434,6 +487,7 @@ func compareMetricIPS(t *testing.T, name string, exp, act *v1.MetricIPS) {
 	assert.Equalf(t, exp.BaseEqTypeID, act.BaseEqTypeID, "%s.BaseEqTypeID should be same", name)
 	assert.Equalf(t, exp.CoreFactorAttrID, act.CoreFactorAttrID, "%s.CoreFactorAttrID should be same", name)
 	assert.Equalf(t, exp.NumCoreAttrID, act.NumCoreAttrID, "%s.NumCoreAttrID should be same", name)
+	assert.Equalf(t, exp.NumCPUAttrID, act.NumCPUAttrID, "%s.NumCPUAttrID should be same", name)
 }
 
 func compareMetricIPSConfig(t *testing.T, name string, exp, act *v1.MetricIPSConfig) {
@@ -452,4 +506,5 @@ func compareMetricIPSConfig(t *testing.T, name string, exp, act *v1.MetricIPSCon
 	assert.Equalf(t, exp.BaseEqType, act.BaseEqType, "%s.BaseEqType should be same", name)
 	assert.Equalf(t, exp.CoreFactorAttr, act.CoreFactorAttr, "%s.CoreFactorAttr should be same", name)
 	assert.Equalf(t, exp.NumCoreAttr, act.NumCoreAttr, "%s.NumCoreAttr should be same", name)
+	assert.Equalf(t, exp.NumCPUAttr, act.NumCPUAttr, "%s.NumCPUAttr should be same", name)
 }

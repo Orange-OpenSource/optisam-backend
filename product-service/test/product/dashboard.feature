@@ -3,7 +3,7 @@ Feature: Dashboard Test
 
   Background:
 
-  # * def productServiceUrl = "https://optisam-product-int.kermit-noprod-b.itn.intraorange"
+  # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('../common.feature') credentials

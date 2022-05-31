@@ -2,14 +2,20 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
+	"optisam-backend/common/optisam/workerqueue"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
+	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -156,6 +162,229 @@ func TestListEditorProducts(t *testing.T) {
 
 			} else {
 				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}
+
+func TestGetRightsInfoByEditor(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	var met metv1.MetricServiceClient
+	type args struct {
+		ctx context.Context
+		req *v1.GetRightsInfoByEditorRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.GetRightsInfoByEditorResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetRightsInfoByEditorRequest{
+					Editor: "editor1",
+					Scope:  "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightsByEditor(ctx, db.GetAcqRightsByEditorParams{
+					ProductEditor: "editor1",
+					Scope:         "scope1",
+				}).Times(1).Return([]db.GetAcqRightsByEditorRow{
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						Metric:              "met1",
+						AvgUnitPrice:        2.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						Metric:              "met1",
+						AvgUnitPrice:        3.0,
+						NumLicensesAcquired: 3,
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAggregationByEditor(ctx, db.GetAggregationByEditorParams{
+					ProductEditor: "editor1",
+					Scope:         "scope1",
+				}).Times(1).Return([]db.GetAggregationByEditorRow{
+					{
+						AggregationName:     "agg2",
+						Swidtags:            "swid1",
+						Sku:                 "sku1",
+						Metric:              "met1",
+						AvgUnitPrice:        2.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						AggregationName:     "agg2",
+						Swidtags:            "swid1",
+						Sku:                 "sku1",
+						Metric:              "met1",
+						AvgUnitPrice:        3.0,
+						NumLicensesAcquired: 3,
+					},
+				}, nil)
+			},
+			want: &v1.GetRightsInfoByEditorResponse{
+				EditorRights: []*v1.RightsInfoByEditor{
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						MetricName:          "met1",
+						AvgUnitPrice:        2.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						MetricName:          "met1",
+						AvgUnitPrice:        3.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						AggregationName:     "agg2",
+						Swidtag:             "swid1",
+						Sku:                 "sku1",
+						MetricName:          "met1",
+						AvgUnitPrice:        2.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						AggregationName:     "agg2",
+						Swidtag:             "swid1",
+						Sku:                 "sku1",
+						MetricName:          "met1",
+						AvgUnitPrice:        3.0,
+						NumLicensesAcquired: 3,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{name: "FAILURE-can not find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetRightsInfoByEditorRequest{
+					Editor: "editor",
+					Scope:  "scope4",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE-Scope Validation error",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetRightsInfoByEditorRequest{
+					Editor: "editor",
+					Scope:  "scope4",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE-db/GetAcqRightsByEditor",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetRightsInfoByEditorRequest{
+					Editor: "editor",
+					Scope:  "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightsByEditor(ctx, db.GetAcqRightsByEditorParams{
+					ProductEditor: "editor",
+					Scope:         "scope1",
+				}).Times(1).Return([]db.GetAcqRightsByEditorRow{}, errors.New("internal"))
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-db/GetAggregationByEditor",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetRightsInfoByEditorRequest{
+					Editor: "editor",
+					Scope:  "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightsByEditor(ctx, db.GetAcqRightsByEditorParams{
+					ProductEditor: "editor",
+					Scope:         "scope1",
+				}).Times(1).Return([]db.GetAcqRightsByEditorRow{
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						Metric:              "met1",
+						AvgUnitPrice:        2.0,
+						NumLicensesAcquired: 3,
+					},
+					{
+						Sku:                 "sku1",
+						Swidtag:             "swid1",
+						Metric:              "met1",
+						AvgUnitPrice:        3.0,
+						NumLicensesAcquired: 3,
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAggregationByEditor(ctx, db.GetAggregationByEditorParams{
+					ProductEditor: "editor",
+					Scope:         "scope1",
+				}).Times(1).Return([]db.GetAggregationByEditorRow{}, errors.New("internal"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				metric:      met,
+			}
+			got, err := tt.s.GetRightsInfoByEditor(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.GetRightsInfoByEditor() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.GetRightsInfoByEditor() = %v, want %v", got, tt.want)
 			}
 		})
 	}

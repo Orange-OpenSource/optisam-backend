@@ -32,6 +32,42 @@ var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
 var (
+	filter_LicenseService_GetOverAllCompliance_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_LicenseService_GetOverAllCompliance_0(ctx context.Context, marshaler runtime.Marshaler, client LicenseServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetOverAllComplianceRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_LicenseService_GetOverAllCompliance_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetOverAllCompliance(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_LicenseService_GetOverAllCompliance_0(ctx context.Context, marshaler runtime.Marshaler, server LicenseServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetOverAllComplianceRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_LicenseService_GetOverAllCompliance_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetOverAllCompliance(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
 	filter_LicenseService_ListAcqRightsForProduct_0 = &utilities.DoubleArray{Encoding: map[string]int{"swid_tag": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
@@ -192,29 +228,12 @@ func local_request_LicenseService_ListAcqRightsForApplicationsProduct_0(ctx cont
 }
 
 var (
-	filter_LicenseService_ListComputationDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"swid_tag": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_LicenseService_ListComputationDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_LicenseService_ListComputationDetails_0(ctx context.Context, marshaler runtime.Marshaler, client LicenseServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListComputationDetailsRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["swid_tag"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "swid_tag")
-	}
-
-	protoReq.SwidTag, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "swid_tag", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -231,23 +250,6 @@ func request_LicenseService_ListComputationDetails_0(ctx context.Context, marsha
 func local_request_LicenseService_ListComputationDetails_0(ctx context.Context, marshaler runtime.Marshaler, server LicenseServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListComputationDetailsRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["swid_tag"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "swid_tag")
-	}
-
-	protoReq.SwidTag, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "swid_tag", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -553,6 +555,29 @@ func local_request_LicenseService_LicensesForEquipAndMetric_0(ctx context.Contex
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterLicenseServiceHandlerFromEndpoint instead.
 func RegisterLicenseServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux, server LicenseServiceServer) error {
 
+	mux.Handle("GET", pattern_LicenseService_GetOverAllCompliance_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.license.v1.LicenseService/GetOverAllCompliance")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_LicenseService_GetOverAllCompliance_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_LicenseService_GetOverAllCompliance_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_LicenseService_ListAcqRightsForProduct_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -732,6 +757,26 @@ func RegisterLicenseServiceHandler(ctx context.Context, mux *runtime.ServeMux, c
 // "LicenseServiceClient" to call the correct interceptors.
 func RegisterLicenseServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux, client LicenseServiceClient) error {
 
+	mux.Handle("GET", pattern_LicenseService_GetOverAllCompliance_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.license.v1.LicenseService/GetOverAllCompliance")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_LicenseService_GetOverAllCompliance_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_LicenseService_GetOverAllCompliance_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_LicenseService_ListAcqRightsForProduct_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -856,11 +901,13 @@ func RegisterLicenseServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 }
 
 var (
+	pattern_LicenseService_GetOverAllCompliance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "license", "overall", "compliance"}, ""))
+
 	pattern_LicenseService_ListAcqRightsForProduct_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "license", "product", "swid_tag", "acquiredrights"}, ""))
 
 	pattern_LicenseService_ListAcqRightsForApplicationsProduct_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "license", "applications", "app_id", "products", "prod_id"}, ""))
 
-	pattern_LicenseService_ListComputationDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "license", "product", "swid_tag", "computationdetails"}, ""))
+	pattern_LicenseService_ListComputationDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "license", "computationdetails"}, ""))
 
 	pattern_LicenseService_ListAcqRightsForAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "license", "aggregation", "name", "acquiredrights"}, ""))
 
@@ -870,6 +917,8 @@ var (
 )
 
 var (
+	forward_LicenseService_GetOverAllCompliance_0 = runtime.ForwardResponseMessage
+
 	forward_LicenseService_ListAcqRightsForProduct_0 = runtime.ForwardResponseMessage
 
 	forward_LicenseService_ListAcqRightsForApplicationsProduct_0 = runtime.ForwardResponseMessage

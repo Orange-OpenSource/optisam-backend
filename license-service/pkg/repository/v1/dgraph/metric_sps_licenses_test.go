@@ -49,6 +49,9 @@ func TestLicenseRepository_MetricSPSComputedLicenses(t *testing.T) {
 					NumCoresAttr: &v1.Attribute{
 						Name: "ServerCoresNumber",
 					},
+					NumCPUAttr: &v1.Attribute{
+						Name: "ServerCPUNumber",
+					},
 					CoreFactorAttr: &v1.Attribute{
 						Name: "SAG",
 					},
@@ -132,6 +135,9 @@ func TestLicenseRepository_MetricSPSComputedLicensesAgg(t *testing.T) {
 					},
 					NumCoresAttr: &v1.Attribute{
 						Name: "ServerCoresNumber",
+					},
+					NumCPUAttr: &v1.Attribute{
+						Name: "ServerCPUNumber",
 					},
 					CoreFactorAttr: &v1.Attribute{
 						Name: "SAG",

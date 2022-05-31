@@ -33,6 +33,7 @@ func TestMetricRepository_CreateMetricSPS(t *testing.T) {
 				baseID := "base"
 				coreFactorAttrID := "coreFactor"
 				numOfCoresAttrID := "cores"
+				numOfCpuAttrID := "cpu"
 
 				mu := &api.Mutation{
 					CommitNow: true,
@@ -51,6 +52,11 @@ func TestMetricRepository_CreateMetricSPS(t *testing.T) {
 						},
 						{
 							Subject:     blankID(numOfCoresAttrID),
+							Predicate:   "type_name",
+							ObjectValue: stringObjectValue("metadata"),
+						},
+						{
+							Subject:     blankID(numOfCpuAttrID),
 							Predicate:   "type_name",
 							ObjectValue: stringObjectValue("metadata"),
 						},
@@ -100,13 +106,27 @@ func TestMetricRepository_CreateMetricSPS(t *testing.T) {
 					}
 				}()
 
+				numOfCpuAttrID, ok = assigned.Uids[numOfCpuAttrID]
+				if !ok {
+					return nil, nil, errors.New("numOfCpuAttrID is not found in assigned map")
+				}
+
+				defer func() {
+					if retErr != nil {
+						if err := deleteNode(numOfCpuAttrID); err != nil {
+							t.Log(err)
+						}
+					}
+				}()
+
 				return &v1.MetricSPS{
 						Name:             "sag.processor.standard",
 						BaseEqTypeID:     baseID,
 						CoreFactorAttrID: coreFactorAttrID,
 						NumCoreAttrID:    numOfCoresAttrID,
+						NumCPUAttrID:     numOfCpuAttrID,
 					}, func() error {
-						return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID)
+						return deleteNodes(baseID, coreFactorAttrID, numOfCoresAttrID, numOfCpuAttrID)
 					}, nil
 			},
 		},
@@ -168,6 +188,7 @@ func TestMetricRepository_GetMetricConfigSPS(t *testing.T) {
 			want: &v1.MetricSPSConfig{
 				Name:           "sps1",
 				NumCoreAttr:    "sps_cores",
+				NumCPUAttr:     "sps_cpu",
 				CoreFactorAttr: "sps_corefactor",
 				BaseEqType:     "server",
 			},
@@ -200,6 +221,7 @@ func TestMetricRepository_UpdateMetricSPS(t *testing.T) {
 	coreFactorAttrID := "coreFactor"
 	numOfCoresAttrID := "cores"
 	coreFactorAttrID1 := "corefactor1"
+	numOfCpuAttrID := "cpu"
 
 	mu := &api.Mutation{
 		CommitNow: true,
@@ -218,6 +240,11 @@ func TestMetricRepository_UpdateMetricSPS(t *testing.T) {
 			},
 			{
 				Subject:     blankID(numOfCoresAttrID),
+				Predicate:   "type_name",
+				ObjectValue: stringObjectValue("metadata"),
+			},
+			{
+				Subject:     blankID(numOfCpuAttrID),
 				Predicate:   "type_name",
 				ObjectValue: stringObjectValue("metadata"),
 			},
@@ -261,6 +288,15 @@ func TestMetricRepository_UpdateMetricSPS(t *testing.T) {
 		return
 	}
 
+	numOfCpuAttrID, ok = assigned.Uids[numOfCpuAttrID]
+	if !ok {
+		t.Log(errors.New("numOfCpuAttrID is not found in assigned map"))
+		if err := deleteNode(numOfCpuAttrID); err != nil {
+			t.Log(err)
+		}
+		return
+	}
+
 	coreFactorAttrID1, ok = assigned.Uids[coreFactorAttrID1]
 	if !ok {
 		t.Log(errors.New("coreFactorAttrID1 is not found in assigned map"))
@@ -292,6 +328,7 @@ func TestMetricRepository_UpdateMetricSPS(t *testing.T) {
 					BaseEqTypeID:     baseID,
 					CoreFactorAttrID: coreFactorAttrID1,
 					NumCoreAttrID:    numOfCoresAttrID,
+					NumCPUAttrID:     numOfCpuAttrID,
 				},
 			},
 			setup: func(l *MetricRepository) (func() error, error) {
@@ -300,6 +337,7 @@ func TestMetricRepository_UpdateMetricSPS(t *testing.T) {
 					BaseEqTypeID:     baseID,
 					CoreFactorAttrID: coreFactorAttrID,
 					NumCoreAttrID:    numOfCoresAttrID,
+					NumCPUAttrID:     numOfCpuAttrID,
 				}, "scope1")
 				if err != nil {
 					return func() error {
@@ -412,6 +450,21 @@ func addMetricSPSConfig(metName string) (ids map[string]string, err error) {
 				Predicate:   "attribute.name",
 				ObjectValue: stringObjectValue("sps_cores"),
 			},
+			{
+				Subject:   blankID("metric"),
+				Predicate: "metric.sps.attr_num_cpu",
+				ObjectId:  "_:attribute2",
+			},
+			{
+				Subject:     blankID("attribute2"),
+				Predicate:   "dgraph.type",
+				ObjectValue: stringObjectValue("attr"),
+			},
+			{
+				Subject:     blankID("attribute2"),
+				Predicate:   "attribute.name",
+				ObjectValue: stringObjectValue("sps_cpu"),
+			},
 		},
 	}
 	assigned, err := dgClient.NewTxn().Mutate(context.Background(), mu)
@@ -435,6 +488,7 @@ func compareMetricSPS(t *testing.T, name string, exp, act *v1.MetricSPS) {
 	assert.Equalf(t, exp.BaseEqTypeID, act.BaseEqTypeID, "%s.BaseEqTypeID should be same", name)
 	assert.Equalf(t, exp.CoreFactorAttrID, act.CoreFactorAttrID, "%s.CoreFactorAttrID should be same", name)
 	assert.Equalf(t, exp.NumCoreAttrID, act.NumCoreAttrID, "%s.NumCoreAttrID should be same", name)
+	assert.Equalf(t, exp.NumCPUAttrID, act.NumCPUAttrID, "%s.NumCPUAttrID should be same", name)
 }
 
 func compareMetricSPSConfig(t *testing.T, name string, exp, act *v1.MetricSPSConfig) {
@@ -453,4 +507,5 @@ func compareMetricSPSConfig(t *testing.T, name string, exp, act *v1.MetricSPSCon
 	assert.Equalf(t, exp.BaseEqType, act.BaseEqType, "%s.BaseEqType should be same", name)
 	assert.Equalf(t, exp.CoreFactorAttr, act.CoreFactorAttr, "%s.CoreFactorAttr should be same", name)
 	assert.Equalf(t, exp.NumCoreAttr, act.NumCoreAttr, "%s.NumCoreAttr should be same", name)
+	assert.Equalf(t, exp.NumCPUAttr, act.NumCPUAttr, "%s.NumCPUAttr should be same", name)
 }

@@ -3,7 +3,7 @@
 Feature: Common utilities and authentication
 
   Background: pre-requisite
-    # * def authServiceUrl = "https://optisam-auth-int.kermit-noprod-b.itn.intraorange"
+    # * def authServiceUrl = "https://optisam-auth-int.apps.fr01.paas.tech.orange"
     * url authServiceUrl+'/api/v1'
     # Common configurations
     * karate.configure('logPrettyRequest', true)

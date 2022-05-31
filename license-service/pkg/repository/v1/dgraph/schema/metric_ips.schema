@@ -1,3 +1,4 @@
 metric.ips.base             : [uid] @count @reverse .
 metric.ips.attr_core_factor : [uid] @count @reverse .
 metric.ips.attr_num_cores   : [uid] @count @reverse .
+metric.ips.attr_num_cpu     : [uid] @count @reverse .

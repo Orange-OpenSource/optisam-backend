@@ -71,7 +71,7 @@ AND scope = @scope;
 
 -- name: GetApplicationInstance :one
 SELECT * from applications_instances
-WHERE instance_id = $1;
+WHERE instance_id = @instance_id AND scope = @scope;
 
 -- name: UpsertApplication :exec
 INSERT INTO applications (application_id, application_name, application_version, application_owner,application_domain, scope, created_on)
@@ -244,6 +244,16 @@ from applications_instances, UNNEST(equipments) as equipment_ids
 WHERE 
     scope = @scope and 
     application_id = @application_id;
+
+-- name: GetProductsByApplicationInstanceID :one
+SELECT
+    DISTINCT products
+from
+    applications_instances
+WHERE 
+    scope = @scope
+    AND application_id = @application_id
+    AND instance_id = @instance_id;
 
 -- name: GetApplicationsByProduct :many
 SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk,COUNT(DISTINCT(ai.instance_id))::INTEGER as num_of_instances,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments

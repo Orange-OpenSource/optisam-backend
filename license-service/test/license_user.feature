@@ -2,7 +2,7 @@
 Feature: License Service Test
 
   Background:
-  # * def licenseServiceUrl = "https://optisam-license-int.kermit-noprod-b.itn.intraorange"
+  # * def licenseServiceUrl = "https://optisam-license-int.apps.fr01.paas.tech.orange"
     * url licenseServiceUrl+'/api/v1/license'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('common.feature') credentials

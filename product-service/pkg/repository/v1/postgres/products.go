@@ -167,6 +167,11 @@ func (p *ProductRepository) DropProductDataTx(ctx context.Context, scope string,
 			logger.Log.Error("failed to delete acqrights data", zap.Error(err))
 			return err
 		}
+		if err := pt.DeleteAggregatedRightsByScope(ctx, scope); err != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("failed to delete aggrights data", zap.Error(err))
+			return err
+		}
 	}
 	if deletionType == v1.DropProductDataRequest_PARK || deletionType == v1.DropProductDataRequest_FULL {
 		if err := pt.DeleteProductsByScope(ctx, scope); err != nil {
@@ -174,9 +179,9 @@ func (p *ProductRepository) DropProductDataTx(ctx context.Context, scope string,
 			logger.Log.Error("failed to delete products data", zap.Error(err))
 			return err
 		}
-		if err := pt.DeleteProductAggregationByScope(ctx, scope); err != nil {
+		if err := pt.DeleteOverallComputedLicensesByScope(ctx, scope); err != nil {
 			tx.Rollback() // nolint: errcheck
-			logger.Log.Error("failed to delete product aggregations data", zap.Error(err))
+			logger.Log.Error("failed to delete compliance data", zap.Error(err))
 			return err
 		}
 	}

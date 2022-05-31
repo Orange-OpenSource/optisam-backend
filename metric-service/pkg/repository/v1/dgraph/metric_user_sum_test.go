@@ -105,11 +105,11 @@ func TestMetricRepository_CreateMetricUserSumStandard(t *testing.T) {
 				ctx:   context.Background(),
 				scope: "scope1",
 				met: &v1.MetricUSS{
-					Name: "User.sum.standard",
+					Name: "UserMetric",
 				},
 			},
 			wantRetmet: &v1.MetricUSS{
-				Name: "instance.number.standard",
+				Name: "UserMetric",
 			},
 		},
 	}

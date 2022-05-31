@@ -149,6 +149,26 @@ service MetricService {
     };
   }
 
+   // CreateMetricStaticStandard will create an static.standard metric
+  rpc CreateMetricStaticStandard(MetricSS)returns (MetricSS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ss"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricStaticStandard will update an static.standard metric
+  rpc UpdateMetricStaticStandard(MetricSS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/ss"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/ss"
+        body : "*"
+      }
+    };
+  }
+
 
   // CreateMetricUserSumStandard will create an oracle.processor.standard metric
   rpc CreateMetricUserSumStandard(MetricUSS)returns (MetricUSS){
@@ -239,6 +259,15 @@ message MetricINM {
 
 }
 
+message MetricSS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  int32 reference_value = 3 [(validate.rules).int32 = { gte: 0}];
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+} 
+
 message UpdateMetricResponse { 
   bool success = 1; 
 }
@@ -258,9 +287,10 @@ message MetricIPS {
   string ID = 1;
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   string num_core_attr_id = 3;
-  string core_factor_attr_id = 4;  
-  string base_eq_type_id = 5;
-  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;  
+  string base_eq_type_id = 6;
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 
 }
 
@@ -269,9 +299,10 @@ message MetricSPS {
   string ID = 1;
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   string num_core_attr_id = 3;
-  string core_factor_attr_id = 4;  
-  string base_eq_type_id = 5;
-  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;  
+  string base_eq_type_id = 6;
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 
 }
 
@@ -319,6 +350,7 @@ message MetricType {
     Instance_Number = 6;
     Attr_Sum = 7;
     User_Sum = 8;
+    Static_Standard = 9;
   }
   string name = 1;
   string description = 2;

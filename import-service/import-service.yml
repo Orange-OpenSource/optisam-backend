@@ -1,0 +1,164 @@
+kind: "Template"
+apiVersion: "v1"
+metadata:
+  name: "deploy-template"
+  annotations:
+    description: "Template for deployment"
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-import
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-import
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+      selector:
+        app: optisam-import
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      annotations:
+          haproxy.router.openshift.io/timeout: 300s
+      name: route-svc-optisam-import
+      labels:
+        run: optisam-import
+    spec:
+      host: optisam-import-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-import
+      tls:
+        termination: edge
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-import-instrumentation
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-import-instrumentation
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8081
+          protocol: TCP
+      selector:
+        app: optisam-import
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-import-instrumentation
+      labels:
+        run: optisam-import
+    spec:
+      host: optisam-import-inst-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-import-instrumentation
+      tls:
+        termination: edge
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: optisam-import
+      labels:
+        app: optisam-import
+    spec:
+      replicas: ${{REPLICAS}}
+      selector:
+        app: optisam-import
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: optisam-import
+            internal-elasticsearch: 'true'  
+          name: optisam-import
+        spec:
+          containers:
+            - name: optisam-import
+              image: ${DOCKER_REGISTRY}/optisam/import-service:${TAG}
+              imagePullPolicy: Always
+              env:
+                - name: "ENV"
+                  value: ${ENV}
+                - name: "DB_PASSWORD"  
+                  value: ${DB_PASSWORD}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8081
+                  protocol: TCP
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              resources:
+                requests:
+                  cpu: "80m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "100m"
+                  memory: "150Mi"
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /opt/config/
+                - name: optisam-dir
+                  mountPath: /optisam_dir
+                - name: secret-volume
+                  mountPath: /opt/secret
+                  readOnly: true
+          volumes:
+            - name: config-volume
+              configMap:
+                name: config-import-${ENV}
+            - name: optisam-dir
+              persistentVolumeClaim:
+                claimName: optisam-storage
+            - name: secret-volume
+              secret:
+                secretName: secret-apipublickey-${ENV}
+parameters:
+  - name: DB_PASSWORD
+    description: Postgres Database Password
+    required: true
+  - name: TAG
+    description: Tag for Docker image
+    value: latest
+    required: true
+  - name: ENV
+    description: Env for deployment
+    required: true
+  - name: REPLICAS
+    description: Pod replica count
+    value: "1"
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    value: "dockerfactory-unstable-iva.si.francetelecom.fr"
+    required: true

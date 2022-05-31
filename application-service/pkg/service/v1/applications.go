@@ -375,6 +375,27 @@ func (s *applicationServiceServer) GetEquipmentsByApplication(ctx context.Contex
 	return &v1.GetEquipmentsByApplicationResponse{EquipmentId: equipments}, nil
 }
 
+func (s *applicationServiceServer) GetProductsByApplicationInstance(ctx context.Context, req *v1.GetProductsByApplicationInstanceRequest) (*v1.GetProductsByApplicationInstanceResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("GetProductsByApplicationInstance - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	products, err := s.applicationRepo.GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
+		Scope:         req.Scope,
+		ApplicationID: req.ApplicationId,
+		InstanceID:    req.InstanceId,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - GetProductsByApplicationInstance - error from repo/GetProductsByApplicationInstanceID", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.GetProductsByApplicationInstanceResponse{ProductId: products}, nil
+}
+
 // nolint: gocyclo
 func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error) {
 	resp, err := s.applicationRepo.GetApplicationsView(ctx, db.GetApplicationsViewParams{

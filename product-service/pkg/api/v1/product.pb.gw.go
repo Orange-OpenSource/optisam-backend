@@ -140,6 +140,76 @@ func local_request_ProductService_ProductsPerEditor_0(ctx context.Context, marsh
 }
 
 var (
+	filter_ProductService_GetRightsInfoByEditor_0 = &utilities.DoubleArray{Encoding: map[string]int{"editor": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_ProductService_GetRightsInfoByEditor_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetRightsInfoByEditorRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["editor"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "editor")
+	}
+
+	protoReq.Editor, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "editor", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_GetRightsInfoByEditor_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetRightsInfoByEditor(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_GetRightsInfoByEditor_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetRightsInfoByEditorRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["editor"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "editor")
+	}
+
+	protoReq.Editor, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "editor", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_GetRightsInfoByEditor_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetRightsInfoByEditor(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
 	filter_ProductService_GetProductDetail_0 = &utilities.DoubleArray{Encoding: map[string]int{"swid_tag": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
@@ -316,11 +386,11 @@ func local_request_ProductService_ListProductAggregationView_0(ctx context.Conte
 }
 
 var (
-	filter_ProductService_ProductAggregationProductViewDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"ID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_ProductService_AggregatedRightDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"ID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
-func request_ProductService_ProductAggregationProductViewDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ProductAggregationProductViewDetailsRequest
+func request_ProductService_AggregatedRightDetails_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightDetailsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -343,17 +413,17 @@ func request_ProductService_ProductAggregationProductViewDetails_0(ctx context.C
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ProductAggregationProductViewDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_AggregatedRightDetails_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ProductAggregationProductViewDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.AggregatedRightDetails(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_ProductService_ProductAggregationProductViewDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ProductAggregationProductViewDetailsRequest
+func local_request_ProductService_AggregatedRightDetails_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightDetailsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -376,11 +446,47 @@ func local_request_ProductService_ProductAggregationProductViewDetails_0(ctx con
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ProductAggregationProductViewDetails_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_AggregatedRightDetails_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ProductAggregationProductViewDetails(ctx, &protoReq)
+	msg, err := server.AggregatedRightDetails(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_ProductService_ListDeployedAndAcquiredEditors_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ProductService_ListDeployedAndAcquiredEditors_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListDeployedAndAcquiredEditorsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListDeployedAndAcquiredEditors_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListDeployedAndAcquiredEditors(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_ListDeployedAndAcquiredEditors_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListDeployedAndAcquiredEditorsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListDeployedAndAcquiredEditors_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListDeployedAndAcquiredEditors(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -777,148 +883,8 @@ func local_request_ProductService_ListAggregatedAcqRights_0(ctx context.Context,
 
 }
 
-var (
-	filter_ProductService_ListAcqRightsAggregationRecords_0 = &utilities.DoubleArray{Encoding: map[string]int{"aggregation_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_ProductService_ListAcqRightsAggregationRecords_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAcqRightsAggregationRecordsRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["aggregation_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "aggregation_id")
-	}
-
-	protoReq.AggregationId, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "aggregation_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAcqRightsAggregationRecords_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.ListAcqRightsAggregationRecords(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_ProductService_ListAcqRightsAggregationRecords_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAcqRightsAggregationRecordsRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["aggregation_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "aggregation_id")
-	}
-
-	protoReq.AggregationId, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "aggregation_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAcqRightsAggregationRecords_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.ListAcqRightsAggregationRecords(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-var (
-	filter_ProductService_ProductAggregationProductViewOptions_0 = &utilities.DoubleArray{Encoding: map[string]int{"ID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_ProductService_ProductAggregationProductViewOptions_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ProductAggregationProductViewOptionsRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["ID"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ID")
-	}
-
-	protoReq.ID, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ID", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ProductAggregationProductViewOptions_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.ProductAggregationProductViewOptions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_ProductService_ProductAggregationProductViewOptions_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ProductAggregationProductViewOptionsRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["ID"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ID")
-	}
-
-	protoReq.ID, err = runtime.Int32(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ID", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ProductAggregationProductViewOptions_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := server.ProductAggregationProductViewOptions(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
 func request_ProductService_CreateAggregation_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AggregatedRights
+	var protoReq Aggregation
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -935,7 +901,7 @@ func request_ProductService_CreateAggregation_0(ctx context.Context, marshaler r
 }
 
 func local_request_ProductService_CreateAggregation_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AggregatedRights
+	var protoReq Aggregation
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -951,74 +917,384 @@ func local_request_ProductService_CreateAggregation_0(ctx context.Context, marsh
 
 }
 
+func request_ProductService_CreateAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.CreateAggregatedRights(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_CreateAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CreateAggregatedRights(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ProductService_UpdateAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	msg, err := client.UpdateAggregatedRights(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_UpdateAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	msg, err := server.UpdateAggregatedRights(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ProductService_UpdateAggregatedRights_1(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	msg, err := client.UpdateAggregatedRights(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_UpdateAggregatedRights_1(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq AggregatedRightsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	msg, err := server.UpdateAggregatedRights(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 var (
-	filter_ProductService_ListAggregatedRightsEditors_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_ProductService_DeleteAggregatedRights_0 = &utilities.DoubleArray{Encoding: map[string]int{"sku": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
-func request_ProductService_ListAggregatedRightsEditors_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAggregatedRightsEditorsRequest
+func request_ProductService_DeleteAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAggregatedRightsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregatedRightsEditors_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteAggregatedRights_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListAggregatedRightsEditors(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteAggregatedRights(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_ProductService_ListAggregatedRightsEditors_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAggregatedRightsEditorsRequest
+func local_request_ProductService_DeleteAggregatedRights_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAggregatedRightsRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregatedRightsEditors_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteAggregatedRights_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListAggregatedRightsEditors(ctx, &protoReq)
+	msg, err := server.DeleteAggregatedRights(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_ProductService_ListAggregatedRightsProducts_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_ProductService_DownloadAggregatedRightsFile_0 = &utilities.DoubleArray{Encoding: map[string]int{"sku": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
-func request_ProductService_ListAggregatedRightsProducts_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAggregatedRightsProductsRequest
+func request_ProductService_DownloadAggregatedRightsFile_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DownloadAggregatedRightsFileRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregatedRightsProducts_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DownloadAggregatedRightsFile_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListAggregatedRightsProducts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DownloadAggregatedRightsFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_ProductService_ListAggregatedRightsProducts_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListAggregatedRightsProductsRequest
+func local_request_ProductService_DownloadAggregatedRightsFile_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DownloadAggregatedRightsFileRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DownloadAggregatedRightsFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DownloadAggregatedRightsFile(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_ProductService_ListAggregationEditors_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ProductService_ListAggregationEditors_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAggregationEditorsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregatedRightsProducts_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregationEditors_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListAggregatedRightsProducts(ctx, &protoReq)
+	msg, err := client.ListAggregationEditors(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_ListAggregationEditors_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAggregationEditorsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregationEditors_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListAggregationEditors(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_ProductService_ListAggregationProducts_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_ProductService_ListAggregationProducts_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAggregationProductsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregationProducts_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListAggregationProducts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_ListAggregationProducts_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListAggregationProductsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_ListAggregationProducts_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListAggregationProducts(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1060,7 +1336,7 @@ func local_request_ProductService_ListAggregations_0(ctx context.Context, marsha
 }
 
 func request_ProductService_UpdateAggregation_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AggregatedRights
+	var protoReq Aggregation
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1094,7 +1370,75 @@ func request_ProductService_UpdateAggregation_0(ctx context.Context, marshaler r
 }
 
 func local_request_ProductService_UpdateAggregation_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AggregatedRights
+	var protoReq Aggregation
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["ID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ID")
+	}
+
+	protoReq.ID, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ID", err)
+	}
+
+	msg, err := server.UpdateAggregation(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ProductService_UpdateAggregation_1(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Aggregation
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["ID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "ID")
+	}
+
+	protoReq.ID, err = runtime.Int32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "ID", err)
+	}
+
+	msg, err := client.UpdateAggregation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_UpdateAggregation_1(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Aggregation
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1128,11 +1472,11 @@ func local_request_ProductService_UpdateAggregation_0(ctx context.Context, marsh
 }
 
 var (
-	filter_ProductService_DeleteProductAggregation_0 = &utilities.DoubleArray{Encoding: map[string]int{"ID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_ProductService_DeleteAggregation_0 = &utilities.DoubleArray{Encoding: map[string]int{"ID": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
-func request_ProductService_DeleteProductAggregation_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteProductAggregationRequest
+func request_ProductService_DeleteAggregation_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAggregationRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1155,17 +1499,17 @@ func request_ProductService_DeleteProductAggregation_0(ctx context.Context, mars
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteProductAggregation_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteAggregation_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteProductAggregation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteAggregation(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_ProductService_DeleteProductAggregation_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteProductAggregationRequest
+func local_request_ProductService_DeleteAggregation_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteAggregationRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1188,11 +1532,11 @@ func local_request_ProductService_DeleteProductAggregation_0(ctx context.Context
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteProductAggregation_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DeleteAggregation_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.DeleteProductAggregation(ctx, &protoReq)
+	msg, err := server.DeleteAggregation(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1299,6 +1643,58 @@ func local_request_ProductService_DropProductData_0(ctx context.Context, marshal
 	}
 
 	msg, err := server.DropProductData(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ProductService_DropAggregationData_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DropAggregationDataRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scope"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope")
+	}
+
+	protoReq.Scope, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope", err)
+	}
+
+	msg, err := client.DropAggregationData(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_DropAggregationData_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DropAggregationDataRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["scope"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "scope")
+	}
+
+	protoReq.Scope, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "scope", err)
+	}
+
+	msg, err := server.DropAggregationData(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1580,6 +1976,76 @@ func local_request_ProductService_DeleteAcqRight_0(ctx context.Context, marshale
 }
 
 var (
+	filter_ProductService_DownloadAcqRightFile_0 = &utilities.DoubleArray{Encoding: map[string]int{"sku": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_ProductService_DownloadAcqRightFile_0(ctx context.Context, marshaler runtime.Marshaler, client ProductServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DownloadAcqRightFileRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DownloadAcqRightFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.DownloadAcqRightFile(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ProductService_DownloadAcqRightFile_0(ctx context.Context, marshaler runtime.Marshaler, server ProductServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DownloadAcqRightFileRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["sku"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sku")
+	}
+
+	protoReq.Sku, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sku", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ProductService_DownloadAcqRightFile_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DownloadAcqRightFile(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
 	filter_ProductService_GetEquipmentsByProduct_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -1762,6 +2228,29 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_ProductService_GetRightsInfoByEditor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/GetRightsInfoByEditor")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_GetRightsInfoByEditor_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_GetRightsInfoByEditor_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ProductService_GetProductDetail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1831,18 +2320,18 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ProductAggregationProductViewDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_ProductService_AggregatedRightDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ProductAggregationProductViewDetails")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/AggregatedRightDetails")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProductService_ProductAggregationProductViewDetails_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProductService_AggregatedRightDetails_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1850,7 +2339,30 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ProductService_ProductAggregationProductViewDetails_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_AggregatedRightDetails_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListDeployedAndAcquiredEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListDeployedAndAcquiredEditors")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_ListDeployedAndAcquiredEditors_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListDeployedAndAcquiredEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2107,52 +2619,6 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAcqRightsAggregationRecords_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords")
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ProductService_ListAcqRightsAggregationRecords_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ProductService_ListAcqRightsAggregationRecords_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_ProductService_ProductAggregationProductViewOptions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ProductAggregationProductViewOptions")
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ProductService_ProductAggregationProductViewOptions_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ProductService_ProductAggregationProductViewOptions_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("POST", pattern_ProductService_CreateAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2176,18 +2642,18 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAggregatedRightsEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_ProductService_CreateAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregatedRightsEditors")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/CreateAggregatedRights")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProductService_ListAggregatedRightsEditors_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProductService_CreateAggregatedRights_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2195,22 +2661,22 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ProductService_ListAggregatedRightsEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_CreateAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAggregatedRightsProducts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_ProductService_UpdateAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregatedRightsProducts")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregatedRights")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProductService_ListAggregatedRightsProducts_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProductService_UpdateAggregatedRights_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2218,7 +2684,122 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ProductService_ListAggregatedRightsProducts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_UpdateAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PATCH", pattern_ProductService_UpdateAggregatedRights_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregatedRights")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_UpdateAggregatedRights_1(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_UpdateAggregatedRights_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DeleteAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteAggregatedRights")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_DeleteAggregatedRights_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DeleteAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_DownloadAggregatedRightsFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DownloadAggregatedRightsFile")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_DownloadAggregatedRightsFile_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DownloadAggregatedRightsFile_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListAggregationEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregationEditors")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_ListAggregationEditors_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListAggregationEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListAggregationProducts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregationProducts")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_ListAggregationProducts_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListAggregationProducts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2268,18 +2849,18 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("DELETE", pattern_ProductService_DeleteProductAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PATCH", pattern_ProductService_UpdateAggregation_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteProductAggregation")
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregation")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProductService_DeleteProductAggregation_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProductService_UpdateAggregation_1(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2287,7 +2868,30 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ProductService_DeleteProductAggregation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_UpdateAggregation_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DeleteAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteAggregation")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_DeleteAggregation_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DeleteAggregation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2334,6 +2938,29 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_ProductService_DropProductData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DropAggregationData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DropAggregationData")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_DropAggregationData_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DropAggregationData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2449,6 +3076,29 @@ func RegisterProductServiceHandlerServer(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_ProductService_DeleteAcqRight_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_DownloadAcqRightFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/optisam.products.v1.ProductService/DownloadAcqRightFile")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ProductService_DownloadAcqRightFile_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DownloadAcqRightFile_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2622,6 +3272,26 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_ProductService_GetRightsInfoByEditor_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/GetRightsInfoByEditor")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_GetRightsInfoByEditor_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_GetRightsInfoByEditor_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ProductService_GetProductDetail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2682,23 +3352,43 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ProductAggregationProductViewDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_ProductService_AggregatedRightDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ProductAggregationProductViewDetails")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/AggregatedRightDetails")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProductService_ProductAggregationProductViewDetails_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProductService_AggregatedRightDetails_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ProductService_ProductAggregationProductViewDetails_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_AggregatedRightDetails_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListDeployedAndAcquiredEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListDeployedAndAcquiredEditors")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_ListDeployedAndAcquiredEditors_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListDeployedAndAcquiredEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -2922,46 +3612,6 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAcqRightsAggregationRecords_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords")
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ProductService_ListAcqRightsAggregationRecords_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ProductService_ListAcqRightsAggregationRecords_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_ProductService_ProductAggregationProductViewOptions_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ProductAggregationProductViewOptions")
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ProductService_ProductAggregationProductViewOptions_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_ProductService_ProductAggregationProductViewOptions_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("POST", pattern_ProductService_CreateAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -2982,43 +3632,143 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAggregatedRightsEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_ProductService_CreateAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregatedRightsEditors")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/CreateAggregatedRights")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProductService_ListAggregatedRightsEditors_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProductService_CreateAggregatedRights_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ProductService_ListAggregatedRightsEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_CreateAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_ProductService_ListAggregatedRightsProducts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_ProductService_UpdateAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregatedRightsProducts")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregatedRights")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProductService_ListAggregatedRightsProducts_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProductService_UpdateAggregatedRights_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ProductService_ListAggregatedRightsProducts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_UpdateAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("PATCH", pattern_ProductService_UpdateAggregatedRights_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregatedRights")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_UpdateAggregatedRights_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_UpdateAggregatedRights_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DeleteAggregatedRights_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteAggregatedRights")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_DeleteAggregatedRights_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DeleteAggregatedRights_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_DownloadAggregatedRightsFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DownloadAggregatedRightsFile")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_DownloadAggregatedRightsFile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DownloadAggregatedRightsFile_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListAggregationEditors_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregationEditors")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_ListAggregationEditors_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListAggregationEditors_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_ProductService_ListAggregationProducts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/ListAggregationProducts")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_ListAggregationProducts_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_ListAggregationProducts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3062,23 +3812,43 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
-	mux.Handle("DELETE", pattern_ProductService_DeleteProductAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PATCH", pattern_ProductService_UpdateAggregation_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteProductAggregation")
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/UpdateAggregation")
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProductService_DeleteProductAggregation_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProductService_UpdateAggregation_1(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_ProductService_DeleteProductAggregation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ProductService_UpdateAggregation_1(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DeleteAggregation_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DeleteAggregation")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_DeleteAggregation_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DeleteAggregation_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3119,6 +3889,26 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 		}
 
 		forward_ProductService_DropProductData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("DELETE", pattern_ProductService_DropAggregationData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DropAggregationData")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_DropAggregationData_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DropAggregationData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -3222,6 +4012,26 @@ func RegisterProductServiceHandlerClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_ProductService_DownloadAcqRightFile_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/optisam.products.v1.ProductService/DownloadAcqRightFile")
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ProductService_DownloadAcqRightFile_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ProductService_DownloadAcqRightFile_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_ProductService_GetEquipmentsByProduct_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3292,13 +4102,17 @@ var (
 
 	pattern_ProductService_ProductsPerEditor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"api", "v1", "product", "dashboard", "editors", "products"}, ""))
 
+	pattern_ProductService_GetRightsInfoByEditor_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "product", "simulation", "editor", "rights"}, ""))
+
 	pattern_ProductService_GetProductDetail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "product", "swid_tag"}, ""))
 
 	pattern_ProductService_GetProductOptions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "product", "swid_tag", "options"}, ""))
 
 	pattern_ProductService_ListProductAggregationView_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "aggregation", "view"}, ""))
 
-	pattern_ProductService_ProductAggregationProductViewDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "product", "aggregations", "productview", "ID", "details"}, ""))
+	pattern_ProductService_AggregatedRightDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "product", "aggregations", "ID", "details"}, ""))
+
+	pattern_ProductService_ListDeployedAndAcquiredEditors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "simulation", "editors"}, ""))
 
 	pattern_ProductService_ListEditors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "editors"}, ""))
 
@@ -3322,25 +4136,35 @@ var (
 
 	pattern_ProductService_ListAggregatedAcqRights_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "aggregated_acqrights"}, ""))
 
-	pattern_ProductService_ListAcqRightsAggregationRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "product", "acqrights", "aggregations", "aggregation_id", "records"}, ""))
-
-	pattern_ProductService_ProductAggregationProductViewOptions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "product", "aggregations", "productview", "ID", "options"}, ""))
-
 	pattern_ProductService_CreateAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "aggregations"}, ""))
 
-	pattern_ProductService_ListAggregatedRightsEditors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "aggregations", "editors"}, ""))
+	pattern_ProductService_CreateAggregatedRights_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "aggregatedrights"}, ""))
 
-	pattern_ProductService_ListAggregatedRightsProducts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "aggregations", "products"}, ""))
+	pattern_ProductService_UpdateAggregatedRights_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregatedrights", "sku"}, ""))
+
+	pattern_ProductService_UpdateAggregatedRights_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregatedrights", "sku"}, ""))
+
+	pattern_ProductService_DeleteAggregatedRights_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregatedrights", "sku"}, ""))
+
+	pattern_ProductService_DownloadAggregatedRightsFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "product", "aggregatedrights", "sku", "file"}, ""))
+
+	pattern_ProductService_ListAggregationEditors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "aggregations", "editors"}, ""))
+
+	pattern_ProductService_ListAggregationProducts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "product", "aggregations", "products"}, ""))
 
 	pattern_ProductService_ListAggregations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "aggregations"}, ""))
 
 	pattern_ProductService_UpdateAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregations", "ID"}, ""))
 
-	pattern_ProductService_DeleteProductAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregations", "ID"}, ""))
+	pattern_ProductService_UpdateAggregation_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregations", "ID"}, ""))
+
+	pattern_ProductService_DeleteAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregations", "ID"}, ""))
 
 	pattern_ProductService_OverviewProductQuality_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 2, 2, 4}, []string{"api", "v1", "product", "dashboard", "quality"}, ""))
 
 	pattern_ProductService_DropProductData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "product", "scope"}, ""))
+
+	pattern_ProductService_DropAggregationData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "aggregation", "scope"}, ""))
 
 	pattern_ProductService_CreateAcqRight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "acqright"}, ""))
 
@@ -3351,6 +4175,8 @@ var (
 	pattern_ProductService_UpdateAcqRight_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "acqright", "sku"}, ""))
 
 	pattern_ProductService_DeleteAcqRight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "product", "acqright", "sku"}, ""))
+
+	pattern_ProductService_DownloadAcqRightFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "product", "acqright", "sku", "file"}, ""))
 
 	pattern_ProductService_GetEquipmentsByProduct_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "product", "equipments"}, ""))
 
@@ -3366,13 +4192,17 @@ var (
 
 	forward_ProductService_ProductsPerEditor_0 = runtime.ForwardResponseMessage
 
+	forward_ProductService_GetRightsInfoByEditor_0 = runtime.ForwardResponseMessage
+
 	forward_ProductService_GetProductDetail_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_GetProductOptions_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_ListProductAggregationView_0 = runtime.ForwardResponseMessage
 
-	forward_ProductService_ProductAggregationProductViewDetails_0 = runtime.ForwardResponseMessage
+	forward_ProductService_AggregatedRightDetails_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_ListDeployedAndAcquiredEditors_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_ListEditors_0 = runtime.ForwardResponseMessage
 
@@ -3396,25 +4226,35 @@ var (
 
 	forward_ProductService_ListAggregatedAcqRights_0 = runtime.ForwardResponseMessage
 
-	forward_ProductService_ListAcqRightsAggregationRecords_0 = runtime.ForwardResponseMessage
-
-	forward_ProductService_ProductAggregationProductViewOptions_0 = runtime.ForwardResponseMessage
-
 	forward_ProductService_CreateAggregation_0 = runtime.ForwardResponseMessage
 
-	forward_ProductService_ListAggregatedRightsEditors_0 = runtime.ForwardResponseMessage
+	forward_ProductService_CreateAggregatedRights_0 = runtime.ForwardResponseMessage
 
-	forward_ProductService_ListAggregatedRightsProducts_0 = runtime.ForwardResponseMessage
+	forward_ProductService_UpdateAggregatedRights_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_UpdateAggregatedRights_1 = runtime.ForwardResponseMessage
+
+	forward_ProductService_DeleteAggregatedRights_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_DownloadAggregatedRightsFile_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_ListAggregationEditors_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_ListAggregationProducts_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_ListAggregations_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_UpdateAggregation_0 = runtime.ForwardResponseMessage
 
-	forward_ProductService_DeleteProductAggregation_0 = runtime.ForwardResponseMessage
+	forward_ProductService_UpdateAggregation_1 = runtime.ForwardResponseMessage
+
+	forward_ProductService_DeleteAggregation_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_OverviewProductQuality_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_DropProductData_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_DropAggregationData_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_CreateAcqRight_0 = runtime.ForwardResponseMessage
 
@@ -3425,6 +4265,8 @@ var (
 	forward_ProductService_UpdateAcqRight_1 = runtime.ForwardResponseMessage
 
 	forward_ProductService_DeleteAcqRight_0 = runtime.ForwardResponseMessage
+
+	forward_ProductService_DownloadAcqRightFile_0 = runtime.ForwardResponseMessage
 
 	forward_ProductService_GetEquipmentsByProduct_0 = runtime.ForwardResponseMessage
 

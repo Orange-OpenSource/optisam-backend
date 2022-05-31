@@ -42,7 +42,7 @@ func (s *licenseServiceServer) ListAcqRightsForApplicationsProduct(ctx context.C
 	}
 
 	// Fetch Product AcquiredRights
-	ID, prodRights, err := s.licenseRepo.ProductAcquiredRights(ctx, req.ProdId, metrics, req.GetScope())
+	ID, _, prodRights, err := s.licenseRepo.ProductAcquiredRights(ctx, req.ProdId, metrics, false, req.GetScope())
 	if err != nil {
 		logger.Log.Error("service/v1 - ListAcqRightsForApplicationsProduct - ProductAcquiredRights", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "Internal Server Error")

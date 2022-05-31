@@ -32,6 +32,7 @@ func init() {
 	MetricCalculation[repo.MetricInstanceNumberStandard] = insMetricCalulation
 	MetricCalculation[repo.MetricAttrSumStandard] = attrSumMetricCalulation
 	MetricCalculation[repo.MetricUserSumStandard] = userSumMetricCalulation
+	MetricCalculation[repo.MetricStaticStandard] = ssMetricCalulation
 }
 
 func opsMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
@@ -92,6 +93,17 @@ func acsMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes [
 func insMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) { //nolint:unparam
 	resp := make(map[string]interface{})
 	computedLicences, computedDetails, err := s.computedLicensesINM(ctx, input)
+	if err != nil {
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
+	resp[ComputedDetails] = computedDetails
+	return resp, nil
+}
+
+func ssMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) { //nolint:unparam
+	resp := make(map[string]interface{})
+	computedLicences, computedDetails, err := s.computedLicensesSS(ctx, input)
 	if err != nil {
 		return resp, err
 	}

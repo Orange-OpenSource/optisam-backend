@@ -42,7 +42,7 @@ func (s *metricServiceServer) CreateMetricIBMPvuStandard(ctx context.Context, re
 		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching equipment type", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.NotFound, "cannot find base level equipment type")
 	}
-	if error := validateAttributesIPS(equipBase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); error != nil {
+	if error := validateAttributesIPS(equipBase.Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); error != nil {
 		return nil, error
 	}
 
@@ -81,12 +81,13 @@ func (s *metricServiceServer) UpdateMetricIBMPvuStandard(ctx context.Context, re
 	if err != nil {
 		return &v1.UpdateMetricResponse{}, status.Error(codes.NotFound, "cannot find equipment type")
 	}
-	if e := validateAttributesIPS(equipbase.Attributes, req.NumCoreAttrId, req.CoreFactorAttrId); e != nil {
+	if e := validateAttributesIPS(equipbase.Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); e != nil {
 		return &v1.UpdateMetricResponse{}, e
 	}
 	if err := s.metricRepo.UpdateMetricIPS(ctx, &repo.MetricIPS{
 		Name:             req.Name,
 		NumCoreAttrID:    req.NumCoreAttrId,
+		NumCPUAttrID:     req.NumCPUAttrId,
 		BaseEqTypeID:     req.BaseEqTypeId,
 		CoreFactorAttrID: req.CoreFactorAttrId,
 	}, req.GetScopes()[0]); err != nil {
@@ -104,6 +105,7 @@ func serverToRepoMetricIPS(met *v1.MetricIPS) *repo.MetricIPS {
 		ID:               met.ID,
 		Name:             met.Name,
 		NumCoreAttrID:    met.NumCoreAttrId,
+		NumCPUAttrID:     met.NumCPUAttrId,
 		CoreFactorAttrID: met.CoreFactorAttrId,
 		BaseEqTypeID:     met.BaseEqTypeId,
 	}
@@ -114,15 +116,20 @@ func repoToServerMetricIPS(met *repo.MetricIPS) *v1.MetricIPS {
 		ID:               met.ID,
 		Name:             met.Name,
 		NumCoreAttrId:    met.NumCoreAttrID,
+		NumCPUAttrId:     met.NumCPUAttrID,
 		CoreFactorAttrId: met.CoreFactorAttrID,
 		BaseEqTypeId:     met.BaseEqTypeID,
 	}
 }
 
-func validateAttributesIPS(attr []*repo.Attribute, numCoreAttr string, coreFactorAttr string) error {
+func validateAttributesIPS(attr []*repo.Attribute, numCoreAttr string, numCPUAttr string, coreFactorAttr string) error {
 
 	if numCoreAttr == "" {
 		return status.Error(codes.InvalidArgument, "num of cores attribute is empty")
+	}
+
+	if numCPUAttr == "" {
+		return status.Error(codes.InvalidArgument, "num of cpu attribute is empty")
 	}
 
 	if coreFactorAttr == "" {
@@ -136,6 +143,15 @@ func validateAttributesIPS(attr []*repo.Attribute, numCoreAttr string, coreFacto
 	}
 	if numOfCores.Type != repo.DataTypeInt && numOfCores.Type != repo.DataTypeFloat {
 		return status.Error(codes.InvalidArgument, "numofcores attribute doesnt have valid data type")
+	}
+
+	numOfCPU, err := attributeExists(attr, numCPUAttr)
+	if err != nil {
+
+		return status.Error(codes.InvalidArgument, "numofcpu attribute doesnt exists")
+	}
+	if numOfCPU.Type != repo.DataTypeInt && numOfCPU.Type != repo.DataTypeFloat {
+		return status.Error(codes.InvalidArgument, "numofcpu attribute doesnt have valid data type")
 	}
 
 	coreFactor, err := attributeExists(attr, coreFactorAttr)

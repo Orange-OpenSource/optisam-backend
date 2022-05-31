@@ -2,7 +2,7 @@
 Feature: Product Service - Acquired Rights Test : Normal User
 
   Background:
-  # * def productServiceUrl = "https://optisam-product-int.kermit-noprod-b.itn.intraorange"
+  # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('../common.feature') credentials

@@ -51,10 +51,10 @@ func (mr *MockDgraphReportMockRecorder) EquipmentAttributes(arg0, arg1, arg2, ar
 }
 
 // EquipmentParents mocks base method
-func (m *MockDgraphReport) EquipmentParents(arg0 context.Context, arg1, arg2, arg3 string) ([]*v1.ProductEquipment, error) {
+func (m *MockDgraphReport) EquipmentParents(arg0 context.Context, arg1, arg2, arg3 string) ([]*v1.Equipment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EquipmentParents", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].([]*v1.ProductEquipment)
+	ret0, _ := ret[0].([]*v1.Equipment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

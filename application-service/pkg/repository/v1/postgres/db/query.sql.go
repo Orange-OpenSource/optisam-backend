@@ -104,11 +104,16 @@ func (q *Queries) GetApplicationDomains(ctx context.Context, scope string) ([]st
 
 const getApplicationInstance = `-- name: GetApplicationInstance :one
 SELECT application_id, instance_id, instance_environment, products, equipments, scope from applications_instances
-WHERE instance_id = $1
+WHERE instance_id = $1 AND scope = $2
 `
 
-func (q *Queries) GetApplicationInstance(ctx context.Context, instanceID string) (ApplicationsInstance, error) {
-	row := q.db.QueryRowContext(ctx, getApplicationInstance, instanceID)
+type GetApplicationInstanceParams struct {
+	InstanceID string `json:"instance_id"`
+	Scope      string `json:"scope"`
+}
+
+func (q *Queries) GetApplicationInstance(ctx context.Context, arg GetApplicationInstanceParams) (ApplicationsInstance, error) {
+	row := q.db.QueryRowContext(ctx, getApplicationInstance, arg.InstanceID, arg.Scope)
 	var i ApplicationsInstance
 	err := row.Scan(
 		&i.ApplicationID,
@@ -935,6 +940,30 @@ func (q *Queries) GetObsolescenceRiskForApplication(ctx context.Context, arg Get
 	var risk_name string
 	err := row.Scan(&risk_name)
 	return risk_name, err
+}
+
+const getProductsByApplicationInstanceID = `-- name: GetProductsByApplicationInstanceID :one
+SELECT
+    DISTINCT products
+from
+    applications_instances
+WHERE 
+    scope = $1
+    AND application_id = $2
+    AND instance_id = $3
+`
+
+type GetProductsByApplicationInstanceIDParams struct {
+	Scope         string `json:"scope"`
+	ApplicationID string `json:"application_id"`
+	InstanceID    string `json:"instance_id"`
+}
+
+func (q *Queries) GetProductsByApplicationInstanceID(ctx context.Context, arg GetProductsByApplicationInstanceIDParams) ([]string, error) {
+	row := q.db.QueryRowContext(ctx, getProductsByApplicationInstanceID, arg.Scope, arg.ApplicationID, arg.InstanceID)
+	var products []string
+	err := row.Scan(pq.Array(&products))
+	return products, err
 }
 
 const getRiskLevelMetaIDs = `-- name: GetRiskLevelMetaIDs :many

@@ -115,6 +115,26 @@ func (mr *MockDpsServiceClientMockRecorder) DropUploadedFileData(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropUploadedFileData", reflect.TypeOf((*MockDpsServiceClient)(nil).DropUploadedFileData), varargs...)
 }
 
+// GetAnalysisFileInfo mocks base method
+func (m *MockDpsServiceClient) GetAnalysisFileInfo(arg0 context.Context, arg1 *v1.GetAnalysisFileInfoRequest, arg2 ...grpc.CallOption) (*v1.GetAnalysisFileInfoResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAnalysisFileInfo", varargs...)
+	ret0, _ := ret[0].(*v1.GetAnalysisFileInfoResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnalysisFileInfo indicates an expected call of GetAnalysisFileInfo
+func (mr *MockDpsServiceClientMockRecorder) GetAnalysisFileInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnalysisFileInfo", reflect.TypeOf((*MockDpsServiceClient)(nil).GetAnalysisFileInfo), varargs...)
+}
+
 // ListDeletionRecords mocks base method
 func (m *MockDpsServiceClient) ListDeletionRecords(arg0 context.Context, arg1 *v1.ListDeletionRequest, arg2 ...grpc.CallOption) (*v1.ListDeletionResponse, error) {
 	m.ctrl.T.Helper()

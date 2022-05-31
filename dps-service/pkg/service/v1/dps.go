@@ -43,6 +43,12 @@ type dpsServiceServer struct {
 	account     accv1.AccountServiceClient
 }
 
+const (
+	ERROR    string = "error"
+	ANALYSED string = "analysed"
+	SOURCE   string = "source"
+)
+
 // NewDpsServiceServer creates Application service
 func NewDpsServiceServer(dpsRepo repo.Dps, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn) v1.DpsServiceServer {
 	return &dpsServiceServer{
@@ -53,6 +59,53 @@ func NewDpsServiceServer(dpsRepo repo.Dps, queue workerqueue.Workerqueue, grpcSe
 		product:     prodV1.NewProductServiceClient(grpcServers["product"]),
 		account:     accv1.NewAccountServiceClient(grpcServers["account"]),
 	}
+}
+
+// GetAnalyisedFile:	Get analyised file name
+func (d *dpsServiceServer) GetAnalysisFileInfo(ctx context.Context, req *v1.GetAnalysisFileInfoRequest) (*v1.GetAnalysisFileInfoResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	if userClaims.Role == claims.RoleUser {
+		return nil, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	resp, err := d.dpsRepo.GetGlobalFileInfo(ctx, db.GetGlobalFileInfoParams{Scope: req.Scope, UploadID: req.UploadId})
+	if err != nil {
+		logger.Log.Error("Failed to get globalFileInfo", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	fileName := ""
+	var isOlderGeneric bool
+	if resp.ScopeType == db.ScopeTypesGENERIC {
+		analysisID := resp.AnalysisID.String
+		logger.Log.Debug("Checking analysisId", zap.String("id", resp.AnalysisID.String))
+		if analysisID != "" {
+			if strings.Contains(resp.AnalysisID.String, "bad_") {
+				analysisID = strings.Split(resp.AnalysisID.String, "_")[1]
+			}
+			switch req.FileType {
+			case ERROR:
+				fileName = fmt.Sprintf("bad_%s_%s", analysisID, resp.FileName)
+			case ANALYSED:
+				fileName = fmt.Sprintf("good_%s_%s", analysisID, resp.FileName)
+			case SOURCE:
+				fileName = fmt.Sprintf("%s_%s", analysisID, resp.FileName)
+			}
+		} else {
+			isOlderGeneric = true // generic files before analysis feature
+			fileName = fmt.Sprintf("%s_%d_%s", req.Scope, resp.UploadID, resp.FileName)
+		}
+	} else {
+		fileName = fmt.Sprintf("%d_%s", resp.UploadID, resp.FileName)
+	}
+
+	return &v1.GetAnalysisFileInfoResponse{IsOlderGeneric: isOlderGeneric, FileName: fileName, ScopeType: string(resp.ScopeType)}, nil
 }
 
 // TODO This is aysnc , will be converted into sync
@@ -211,7 +264,7 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 			Gid:        gid,
 			Status:     fileStatus,
 			ScopeType:  scopeType,
-			ErrorFile:  sql.NullString{String: req.AnalyzedErrorFile, Valid: true},
+			AnalysisID: sql.NullString{String: req.AnalysisId, Valid: true},
 		})
 		if err != nil {
 			logger.Log.Debug("Failed to insert file record in dps, err :", zap.Error(err), zap.Any("file", fileToSave))
@@ -509,12 +562,12 @@ func (d *dpsServiceServer) ListUploadGlobalData(ctx context.Context, req *v1.Lis
 		apiresp.Uploads[i].Scope = dbresp[i].Scope
 		apiresp.Uploads[i].FileName = dbresp[i].FileName
 
-		if dbresp[i].ErrorFile.String != "" {
-			errFile := fmt.Sprintf("%s/%s/errors/%s", config.GetConfig().RawdataLocation, dbresp[i].Scope, dbresp[i].ErrorFile.String)
+		if dbresp[i].AnalysisID.String != "" {
+			errFile := fmt.Sprintf("%s/%s/errors/%s", config.GetConfig().RawdataLocation, dbresp[i].Scope, fmt.Sprintf("bad_%s_%s", dbresp[i].AnalysisID.String, dbresp[i].FileName))
 			if _, err := os.Stat(errFile); err != nil {
 				logger.Log.Error("Error File is not generated", zap.Any("uid", dbresp[i].UploadID), zap.Any("errfile", errFile), zap.Error(err))
 			} else {
-				apiresp.Uploads[i].ErrorFileApi = fmt.Sprintf("/api/v1/import/download?fileName=%s&downloadType=error&scope=%s", dbresp[i].ErrorFile.String, req.Scope)
+				apiresp.Uploads[i].ErrorFileApi = fmt.Sprintf("/api/v1/import/download?uploadId=%d&downloadType=error&scope=%s", dbresp[i].UploadID, req.Scope)
 			}
 		}
 

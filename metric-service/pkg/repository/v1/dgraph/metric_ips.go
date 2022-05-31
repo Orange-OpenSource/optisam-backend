@@ -17,6 +17,7 @@ type metricIPS struct {
 	Name           string `json:"metric.name"`
 	Base           []*id  `json:"metric.ips.base"`
 	AttrNumCores   []*id  `json:"metric.ips.attr_num_cores"`
+	AttrNumCPU     []*id  `json:"metric.ips.attr_num_cpu"`
 	AtrrCoreFactor []*id  `json:"metric.ips.attr_core_factor"`
 }
 
@@ -53,6 +54,11 @@ func (l *MetricRepository) CreateMetricIPS(ctx context.Context, mat *v1.MetricIP
 			Subject:   blankID,
 			Predicate: "metric.ips.attr_num_cores",
 			ObjectId:  mat.NumCoreAttrID,
+		},
+		{
+			Subject:   blankID,
+			Predicate: "metric.ips.attr_num_cpu",
+			ObjectId:  mat.NumCPUAttrID,
 		},
 		{
 			Subject:     blankID,
@@ -143,6 +149,9 @@ func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName strin
 			NumCoreAttr: metric.ips.attr_num_cores{
 				attribute.name
 			}
+			NumCPUAttr: metric.ips.attr_num_cpu{
+				attribute.name
+			}
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -169,6 +178,7 @@ func (l *MetricRepository) GetMetricConfigIPS(ctx context.Context, metName strin
 		ID:             data.Metric[0].ID,
 		Name:           data.Metric[0].Name,
 		NumCoreAttr:    data.Metric[0].NumCoreAttr[0].AttributeName,
+		NumCPUAttr:     data.Metric[0].NumCPUAttr[0].AttributeName,
 		CoreFactorAttr: data.Metric[0].CoreFactorAttr[0].AttributeName,
 		BaseEqType:     data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
 	}, nil
@@ -182,6 +192,7 @@ func (l *MetricRepository) GetMetricConfigIPSID(ctx context.Context, metName str
 			 metric.ips.base{uid}
 			 metric.ips.attr_core_factor{uid}
 			 metric.ips.attr_num_cores{uid}
+			 metric.ips.attr_num_cpu{uid}
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -216,12 +227,14 @@ func (l *MetricRepository) UpdateMetricIPS(ctx context.Context, met *v1.MetricIP
 	del := `
 	uid(ID) <metric.ips.base> * .
 	uid(ID) <metric.ips.attr_core_factor> * .
-	uid(ID) <metric.ips.attr_num_cores> * .	
+	uid(ID) <metric.ips.attr_num_cores> * .
+	uid(ID) <metric.ips.attr_num_cpu> * .	
     `
 	set := `
 	    uid(ID) <metric.ips.base> <` + met.BaseEqTypeID + `> .
 	    uid(ID) <metric.ips.attr_core_factor> <` + met.CoreFactorAttrID + `> .
-		uid(ID) <metric.ips.attr_num_cores> <` + met.NumCoreAttrID + `> .	
+		uid(ID) <metric.ips.attr_num_cores> <` + met.NumCoreAttrID + `> .
+		uid(ID) <metric.ips.attr_num_cpu> <` + met.NumCPUAttrID + `> .	
 	`
 	req := &api.Request{
 		Query: q,
@@ -269,12 +282,17 @@ func converMetricToModelMetricIPS(m *metricIPS) (*v1.MetricIPS, error) {
 		return nil, errors.New("dgraph converMetricToModelMetricIPS - AttrNumCores not found")
 	}
 
+	if len(m.AttrNumCPU) == 0 {
+		return nil, errors.New("dgraph converMetricToModelMetricIPS - AttrNumCPU not found")
+	}
+
 	return &v1.MetricIPS{
 		ID:               m.ID,
 		Name:             m.Name,
 		BaseEqTypeID:     m.Base[0].ID,
 		CoreFactorAttrID: m.AtrrCoreFactor[0].ID,
 		NumCoreAttrID:    m.AttrNumCores[0].ID,
+		NumCPUAttrID:     m.AttrNumCPU[0].ID,
 	}, nil
 }
 

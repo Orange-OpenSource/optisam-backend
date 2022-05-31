@@ -272,7 +272,7 @@ func equipProductFilter(proFilter *v1.EquipFilter) *repo.AggregateFilter {
 	aggFilter := new(repo.AggregateFilter)
 	//	filter := make(map[int32]repo.Queryable)
 	if proFilter.ProductId != nil {
-		aggFilter.Filters = append(aggFilter.Filters, addFilter(proFilter.ProductId.FilteringOrder, repo.ProductSearchKeySwidTag.ToString(), proFilter.ProductId.Filteringkey, nil, 0))
+		aggFilter.Filters = append(aggFilter.Filters, addFilter(proFilter.ProductId.FilteringOrder, repo.ProductSearchKeySwidTag.ToString(), proFilter.ProductId.Filteringkey, proFilter.ProductId.FilteringkeyMultiple, 0))
 	}
 	return aggFilter
 }
@@ -281,7 +281,7 @@ func equipApplicationFilter(appFilter *v1.EquipFilter) *repo.AggregateFilter {
 	aggFilter := new(repo.AggregateFilter)
 	//	filter := make(map[int32]repo.Queryable)
 	if appFilter.ApplicationId != nil {
-		aggFilter.Filters = append(aggFilter.Filters, addFilter(appFilter.ApplicationId.FilteringOrder, repo.ApplicationSearchKeyID.String(), appFilter.ApplicationId.Filteringkey, nil, 0))
+		aggFilter.Filters = append(aggFilter.Filters, addFilter(appFilter.ApplicationId.FilteringOrder, repo.ApplicationSearchKeyID.String(), appFilter.ApplicationId.Filteringkey, appFilter.ApplicationId.FilteringkeyMultiple, 0))
 	}
 	return aggFilter
 }
@@ -290,7 +290,7 @@ func equipInstanceFilter(insFilter *v1.EquipFilter) *repo.AggregateFilter {
 	aggFilter := new(repo.AggregateFilter)
 	//	filter := make(map[int32]repo.Queryable)
 	if insFilter.InstanceId != nil {
-		aggFilter.Filters = append(aggFilter.Filters, addFilter(insFilter.InstanceId.FilteringOrder, repo.InstanceSearchKeyID.String(), insFilter.InstanceId.Filteringkey, nil, 0))
+		aggFilter.Filters = append(aggFilter.Filters, addFilter(insFilter.InstanceId.FilteringOrder, repo.InstanceSearchKeyID.String(), insFilter.InstanceId.Filteringkey, insFilter.InstanceId.FilteringkeyMultiple, 0))
 	}
 	return aggFilter
 }

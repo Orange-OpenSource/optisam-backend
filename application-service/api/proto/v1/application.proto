@@ -158,6 +158,10 @@ service ApplicationService {
       get : "/api/v1/application/equipments"
     };
   }
+
+  rpc GetProductsByApplicationInstance(GetProductsByApplicationInstanceRequest)returns (GetProductsByApplicationInstanceResponse) {
+    
+  }
 }
 
 message GetEquipmentsByApplicationRequest {  
@@ -167,6 +171,16 @@ message GetEquipmentsByApplicationRequest {
 
 message GetEquipmentsByApplicationResponse { 
   repeated string equipment_id = 1; 
+}
+
+message GetProductsByApplicationInstanceRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string application_id = 2;
+  string instance_id = 3;
+}
+
+message GetProductsByApplicationInstanceResponse { 
+  repeated string product_id = 1; 
 }
 
 message DropObscolenscenceDataRequest {  

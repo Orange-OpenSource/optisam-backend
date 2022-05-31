@@ -1,7 +1,12 @@
 package v1
 
-// ProductEquipment ...
 type ProductEquipment struct {
+	Swidtag    string
+	Equipments []*Equipment
+}
+
+// ProductEquipment ...
+type Equipment struct {
 	EquipmentID   string
 	EquipmentType string
 }

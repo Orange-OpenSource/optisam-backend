@@ -1,3 +1,4 @@
 metric.sps.base             : [uid] @count @reverse .
 metric.sps.attr_core_factor : [uid] @count @reverse .
 metric.sps.attr_num_cores   : [uid] @count @reverse .
+metric.sps.attr_num_cpu     : [uid] @count @reverse .

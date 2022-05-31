@@ -30,13 +30,15 @@ func queryBuilderSPS(metric *v1.MetricSPSComputed, scopes []string, id ...string
 	    var(func:uid(equipIDs)){
 			cn as equipment.$BaseType.$NumCores
 			cf as equipment.$BaseType.$CoreFactor
-			comp as  math (ceil (cn*cf))
+			cpu as equipment.$BaseType.$NumCPU
+			comp as  math (ceil (cn*cf*cpu))
 		}
 		
 		var(func:uid(equipIDs_non_prod)){
 			cn_non_prod as equipment.$BaseType.$NumCores
 			cf_non_prod as equipment.$BaseType.$CoreFactor
-			comp_non_prod as  math (ceil (cn_non_prod*cf_non_prod))
+			cpu_non_prod as equipment.$BaseType.$NumCPU
+			comp_non_prod as  math (ceil (cn_non_prod*cf_non_prod*cpu_non_prod))
 	    }
 	  
 	    Licenses(){
@@ -52,6 +54,7 @@ func queryBuilderSPS(metric *v1.MetricSPSComputed, scopes []string, id ...string
 		"$ID":         strings.Join(id, ","),
 		"$BaseType":   metric.BaseType.Type,
 		"$NumCores":   metric.NumCoresAttr.Name,
+		"$NumCPU":     metric.NumCPUAttr.Name,
 		"$CoreFactor": metric.CoreFactorAttr.Name,
 		"$Scopes":     strings.Join(scopes, ","),
 	})

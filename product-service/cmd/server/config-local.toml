@@ -28,7 +28,7 @@ agentEndpoint = "192.168.99.100:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9082"
+    "localhost:9080"
 #    "10.171.44.163:9082"  dev dgrpah
 
 ]
@@ -59,9 +59,10 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "localhost:19090"
+license = "localhost:19091"
 metric = "localhost:18090"
 application = "localhost:11090"
+account = "localhost:20000"
 
 [httpservers.Address]
 auth = "localhost:9093"

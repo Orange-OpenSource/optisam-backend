@@ -6,8 +6,11 @@ import (
 
 func buildQueryINM(id ...string) string {
 	q := `{
-		Licenses(func:uid($ID)){
-			Licenses: count(product.equipment)
+		var(func:uid($ID)){
+			instanceCount as count(product.equipment)
+		}
+		Licenses(){
+		  Licenses: sum(val(instanceCount))
 		}
 	  }`
 	return replacer(q, map[string]string{

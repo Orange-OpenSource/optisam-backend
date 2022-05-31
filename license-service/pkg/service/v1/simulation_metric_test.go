@@ -276,6 +276,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mat := &repo.MetricSPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
+					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
 				mockLicense.EXPECT().MetricSPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(8), uint64(10), nil).Times(1)
@@ -283,12 +284,14 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					{
 						Name:             "SPS",
 						NumCoreAttrID:    "cores",
+						NumCPUAttrID:     "cpus",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
 					{
 						Name:             "WS",
 						NumCoreAttrID:    "cores",
+						NumCPUAttrID:     "cpus",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
@@ -361,6 +364,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mat := &repo.MetricIPSComputed{
 					BaseType:       base,
 					NumCoresAttr:   cores,
+					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
 				mockLicense.EXPECT().MetricIPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
@@ -368,12 +372,14 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					{
 						Name:             "SPS",
 						NumCoreAttrID:    "cores",
+						NumCPUAttrID:     "cpus",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},
 					{
 						Name:             "IPS",
 						NumCoreAttrID:    "cores",
+						NumCPUAttrID:     "cpus",
 						CoreFactorAttrID: "corefactor",
 						BaseEqTypeID:     "e2",
 					},

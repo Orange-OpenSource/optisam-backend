@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/metric-service/pkg/repository/v1"
 
@@ -211,6 +212,7 @@ func (l *MetricRepository) GetMetricConfigOPS(ctx context.Context, metName strin
 		logger.Log.Error("dgraph/ListMetricOPS - query failed", zap.Error(err), zap.String("query", q))
 		return nil, errors.New("cannot get metrics of type oracle.processor.standard")
 	}
+	log.Println("dgraph/GetMetricConfigOPS - debugging logs, resp:", string(resp.Json))
 	type Resp struct {
 		Metric []metricInfo `json:"Data"`
 	}

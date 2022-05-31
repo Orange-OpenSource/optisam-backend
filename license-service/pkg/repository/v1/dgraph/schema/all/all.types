@@ -18,6 +18,12 @@ type AcquiredRights {
     acqRights.startOfMaintenance
     acqRights.endOfMaintenance
     acqRights.version
+    acqRights.orderingDate             
+    acqRights.corporateSourcingContract
+    acqRights.softwareProvider         
+    acqRights.lastPurchasedOrder       
+    acqRights.supportNumber            
+    acqRights.maintenanceProvider      
     <~product.acqRights>                  
 }
 
@@ -124,6 +130,16 @@ type MetricINM {
     metric.instancenumber.coefficient
 }
 
+type MetricSS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.static.reference_value
+}
+
 type MetricACS {
     type_name
     scopes
@@ -157,7 +173,8 @@ type MetricIPS {
     metric.name
     metric.ips.base            
     metric.ips.attr_core_factor
-    metric.ips.attr_num_cores                    
+    metric.ips.attr_num_cores   
+    metric.ips.attr_num_cpu                 
 }
 
 type MetricOracleOPS {
@@ -202,7 +219,8 @@ type MetricSPS {
     metric.name
     metric.sps.base            
     metric.sps.attr_core_factor
-    metric.sps.attr_num_cores                     
+    metric.sps.attr_num_cores 
+    metric.sps.attr_num_cpu                    
 }
 
 type Aggregation {
@@ -211,22 +229,36 @@ type Aggregation {
     updated
     created
     aggregation.id                            
-    aggregation.name                          
-    aggregation.SKU                           
+    aggregation.name                                                   
     aggregation.editor                        
-    aggregation.product_names                 
-    aggregation.metric                         
+    aggregation.product_names                            
     aggregation.swidtags   
-    aggregation.products                   
-    aggregation.numOfAcqLicences              
-    aggregation.numOfLicencesUnderMaintenance 
-    aggregation.averageUnitPrice               
-    aggregation.averageMaintenantUnitPrice     
-    aggregation.totalPurchaseCost              
-    aggregation.totalMaintenanceCost           
-    aggregation.totalCost                      
-    aggregation.startOfMaintenance           
-    aggregation.endOfMaintenance                         
+    aggregation.products                                        
+}
+
+type AggregatedRights{
+    type_name
+    scopes
+    updated
+    created                          
+    aggregatedRights.SKU  
+    aggregatedRights.aggregationId                                                  
+    aggregatedRights.metric                                           
+    aggregatedRights.numOfAcqLicences              
+    aggregatedRights.numOfLicencesUnderMaintenance 
+    aggregatedRights.averageUnitPrice               
+    aggregatedRights.averageMaintenanceUnitPrice     
+    aggregatedRights.totalPurchaseCost              
+    aggregatedRights.totalMaintenanceCost           
+    aggregatedRights.totalCost                      
+    aggregatedRights.startOfMaintenance           
+    aggregatedRights.endOfMaintenance   
+    aggregatedRights.orderingDate             
+    aggregatedRights.corporateSourcingContract   
+    aggregatedRights.softwareProvider             
+    aggregatedRights.lastPurchasedOrder         
+    aggregatedRights.supportNumber               
+    aggregatedRights.maintenanceProvider  
 }
 
 type Product {

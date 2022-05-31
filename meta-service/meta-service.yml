@@ -1,0 +1,87 @@
+kind: "Template"
+apiVersion: "v1"
+metadata:
+  name: "deploy-template"
+  annotations:
+    description: "Template for deployment"
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-meta
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-meta
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+      selector:
+        app: optisam-meta
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-meta
+      labels:
+        run: optisam-meta
+    spec:
+      host: optisam-meta-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-meta
+      port:
+        targetPort: api        
+      tls:
+        termination: edge
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: optisam-meta
+      labels:
+        app: optisam-meta
+    spec:
+      replicas: ${{REPLICAS}}
+      selector:
+        app: optisam-meta
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: optisam-meta
+            internal-elasticsearch: 'true'
+          name: optisam-meta
+        spec:
+          containers:
+            - name: optisam-meta
+              image: ${DOCKER_REGISTRY}/optisam/meta-service:${TAG}
+              imagePullPolicy: Always
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              resources:
+                requests:
+                  cpu: "80m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "100m"
+                  memory: "150Mi"
+parameters:
+  - name: TAG
+    description: Tag for Docker image
+    value: "latest"
+    required: true
+  - name: ENV
+    description: Env for deployment
+    required: true
+  - name: REPLICAS
+    description: Pod replica count
+    value: "1"
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    value: "dockerfactory-unstable-iva.si.francetelecom.fr"
+    required: true

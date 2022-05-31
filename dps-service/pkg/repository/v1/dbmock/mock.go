@@ -227,6 +227,21 @@ func (mr *MockDpsMockRecorder) GetFileStatus(arg0, arg1 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileStatus", reflect.TypeOf((*MockDps)(nil).GetFileStatus), arg0, arg1)
 }
 
+// GetGlobalFileInfo mocks base method
+func (m *MockDps) GetGlobalFileInfo(arg0 context.Context, arg1 db.GetGlobalFileInfoParams) (db.GetGlobalFileInfoRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGlobalFileInfo", arg0, arg1)
+	ret0, _ := ret[0].(db.GetGlobalFileInfoRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGlobalFileInfo indicates an expected call of GetGlobalFileInfo
+func (mr *MockDpsMockRecorder) GetGlobalFileInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGlobalFileInfo", reflect.TypeOf((*MockDps)(nil).GetGlobalFileInfo), arg0, arg1)
+}
+
 // GetInjectionStatus mocks base method
 func (m *MockDps) GetInjectionStatus(arg0 context.Context, arg1 string) (int64, error) {
 	m.ctrl.T.Helper()

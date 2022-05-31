@@ -686,8 +686,8 @@ func (r *EquipmentRepository) ListEquipmentsForProductAggregation(ctx context.Co
 	variables[pagesize] = strconv.Itoa(int(params.PageSize))
 
 	q := `query EquipsForProductAggregation($name:string,$pagesize:string,$offset:string) {
-		var(func: eq(product_aggregation.name, $name))` + agregateFilters(scopeFilters(scopes)) + `{
-			ID_PRODUCTS as product_aggregation.products
+		var(func: eq(aggregation.name, $name))` + agregateFilters(scopeFilters(scopes)) + `{
+			ID_PRODUCTS as aggregation.products
 	  	}
 		var(func: uid(ID_PRODUCTS))` + agregateFilters(scopeFilters(scopes)) + `{
 		  	IID as product.equipment @filter(eq(equipment.type,` + eqType.Type + `))

@@ -17,7 +17,6 @@ import (
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
-	"optisam-backend/product-service/pkg/worker/dgraph"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"reflect"
 	"testing"
@@ -161,6 +160,7 @@ func TestListAcqRights(t *testing.T) {
 	timeEnd := timeStart.Add(10 * time.Hour)
 	timestampStart, _ := ptypes.TimestampProto(timeStart)
 	timestampEnd, _ := ptypes.TimestampProto(timeEnd)
+	timestampOrderDate, _ := ptypes.TimestampProto(timeStart)
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
@@ -199,6 +199,12 @@ func TestListAcqRights(t *testing.T) {
 						EndOfMaintenance:               timestampEnd,
 						LicensesUnderMaintenance:       "yes",
 						Version:                        "vv",
+						OrderingDate:                   timestampOrderDate,
+						SoftwareProvider:               "abc",
+						MaintenanceProvider:            "xyz",
+						CorporateSourcingContract:      "pqr",
+						SupportNumber:                  "123",
+						LastPurchasedOrder:             "def",
 					},
 					{
 						SKU:                            "b2",
@@ -228,22 +234,28 @@ func TestListAcqRights(t *testing.T) {
 					SkuAsc:   true,
 				}).Return([]db.ListAcqRightsIndividualRow{
 					{
-						Totalrecords:            int64(2),
-						Sku:                     "b",
-						Swidtag:                 "c",
-						ProductEditor:           "d",
-						ProductName:             "e",
-						Metric:                  "f",
-						NumLicensesAcquired:     int32(2),
-						NumLicencesMaintainance: int32(2),
-						AvgMaintenanceUnitPrice: decimal.NewFromFloat(1),
-						AvgUnitPrice:            decimal.NewFromFloat(1),
-						TotalMaintenanceCost:    decimal.NewFromFloat(2),
-						TotalPurchaseCost:       decimal.NewFromFloat(2),
-						TotalCost:               decimal.NewFromFloat(4),
-						StartOfMaintenance:      sql.NullTime{Time: *s, Valid: true},
-						EndOfMaintenance:        sql.NullTime{Time: *e, Valid: true},
-						Version:                 "vv",
+						Totalrecords:              int64(2),
+						Sku:                       "b",
+						Swidtag:                   "c",
+						ProductEditor:             "d",
+						ProductName:               "e",
+						Metric:                    "f",
+						NumLicensesAcquired:       int32(2),
+						NumLicencesMaintainance:   int32(2),
+						AvgMaintenanceUnitPrice:   decimal.NewFromFloat(1),
+						AvgUnitPrice:              decimal.NewFromFloat(1),
+						TotalMaintenanceCost:      decimal.NewFromFloat(2),
+						TotalPurchaseCost:         decimal.NewFromFloat(2),
+						TotalCost:                 decimal.NewFromFloat(4),
+						StartOfMaintenance:        sql.NullTime{Time: *s, Valid: true},
+						EndOfMaintenance:          sql.NullTime{Time: *e, Valid: true},
+						Version:                   "vv",
+						OrderingDate:              sql.NullTime{Time: *s, Valid: true},
+						SoftwareProvider:          "abc",
+						MaintenanceProvider:       "xyz",
+						CorporateSourcingContract: "pqr",
+						SupportNumber:             "123",
+						LastPurchasedOrder:        "def",
 					},
 					{
 						Totalrecords:            int64(2),
@@ -324,19 +336,25 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.AcqRightRequest{
-					Sku:                     "sku1",
-					ProductName:             "product name",
-					Version:                 "prodversion",
-					ProductEditor:           "producteditor",
-					MetricName:              "ops,metricNup",
-					NumLicensesAcquired:     20,
-					AvgUnitPrice:            10,
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicencesMaintainance: 5,
-					AvgMaintenanceUnitPrice: 5,
-					Scope:                   "scope1",
-					Comment:                 "acqright created from UI",
+					Sku:                       "sku1",
+					ProductName:               "product name",
+					Version:                   "prodversion",
+					ProductEditor:             "producteditor",
+					MetricName:                "metricNup",
+					NumLicensesAcquired:       20,
+					AvgUnitPrice:              10,
+					StartOfMaintenance:        "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:          "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance:   5,
+					AvgMaintenanceUnitPrice:   5,
+					Scope:                     "scope1",
+					Comment:                   "acqright created from UI",
+					OrderingDate:              "2020-01-01T10:58:56.026008Z",
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				},
 			},
 			setup: func() {
@@ -350,7 +368,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -361,50 +379,67 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 							Description: "metric description",
 						},
 						{
-							Type:        "NUP",
+							Type:        "oracle.nup.standard",
 							Name:        "metricNup",
 							Description: "metricNup description",
 						},
 					}}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{}, nil)
 				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
 				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
+				orderingtime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
 				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
-					Sku:                     "sku1",
-					Swidtag:                 "product_name_producteditor_prodversion",
-					ProductName:             "product name",
-					ProductEditor:           "producteditor",
-					Scope:                   "scope1",
-					Metric:                  "ops,metricNup",
-					NumLicensesAcquired:     20,
-					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
-					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
-					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
-					TotalMaintenanceCost:    decimal.NewFromFloat(float64(25)),
-					TotalCost:               decimal.NewFromFloat(float64(225)),
-					CreatedBy:               "admin@superuser.com",
-					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
-					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
-					NumLicencesMaintainance: 5,
-					Version:                 "prodversion",
-					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
+					Sku:                       "sku1",
+					Swidtag:                   "product_name_producteditor_prodversion",
+					ProductName:               "product name",
+					ProductEditor:             "producteditor",
+					Scope:                     "scope1",
+					Metric:                    "metricNup",
+					NumLicensesAcquired:       20,
+					AvgUnitPrice:              decimal.NewFromFloat(float64(10)),
+					AvgMaintenanceUnitPrice:   decimal.NewFromFloat(float64(5)),
+					TotalPurchaseCost:         decimal.NewFromFloat(float64(200)),
+					TotalMaintenanceCost:      decimal.NewFromFloat(float64(25)),
+					TotalCost:                 decimal.NewFromFloat(float64(225)),
+					CreatedBy:                 "admin@superuser.com",
+					StartOfMaintenance:        sql.NullTime{Time: starttime, Valid: true},
+					EndOfMaintenance:          sql.NullTime{Time: endtime, Valid: true},
+					NumLicencesMaintainance:   5,
+					Version:                   "prodversion",
+					Comment:                   sql.NullString{String: "acqright created from UI", Valid: true},
+					OrderingDate:              sql.NullTime{Time: orderingtime, Valid: true},
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				}).Times(1).Return(nil)
-				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
-					Sku:                     "sku1",
-					Swidtag:                 "product_name_producteditor_prodversion",
-					ProductName:             "product name",
-					ProductEditor:           "producteditor",
-					MetricType:              "ops,metricNup",
-					NumLicensesAcquired:     20,
-					AvgUnitPrice:            10,
-					AvgMaintenanceUnitPrice: 5,
-					TotalPurchaseCost:       200,
-					TotalMaintenanceCost:    25,
-					TotalCost:               225,
-					Scope:                   "scope1",
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicencesMaintenance:  5,
-					Version:                 "prodversion",
+				jsonData, err := json.Marshal(dgworker.UpsertAcqRightsRequest{
+					Sku:                       "sku1",
+					Swidtag:                   "product_name_producteditor_prodversion",
+					ProductName:               "product name",
+					ProductEditor:             "producteditor",
+					MetricType:                "metricNup",
+					NumLicensesAcquired:       20,
+					AvgUnitPrice:              10,
+					AvgMaintenanceUnitPrice:   5,
+					TotalPurchaseCost:         200,
+					TotalMaintenanceCost:      25,
+					TotalCost:                 225,
+					Scope:                     "scope1",
+					StartOfMaintenance:        "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:          "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintenance:    5,
+					Version:                   "prodversion",
+					OrderingDate:              "2020-01-01T10:58:56.026008Z",
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				})
 				if err != nil {
 					t.Errorf("Failed to do json marshalling in test %v", err)
@@ -429,15 +464,20 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.AcqRightRequest{
-					Sku:                     "sku1",
-					ProductName:             "product name",
-					Version:                 "prodversion",
-					ProductEditor:           "producteditor",
-					MetricName:              "ops",
-					NumLicensesAcquired:     20,
-					AvgMaintenanceUnitPrice: 2,
-					AvgUnitPrice:            10,
-					Scope:                   "scope1",
+					Sku:                       "sku1",
+					ProductName:               "product name",
+					Version:                   "prodversion",
+					ProductEditor:             "producteditor",
+					MetricName:                "ops",
+					NumLicensesAcquired:       20,
+					AvgMaintenanceUnitPrice:   2,
+					AvgUnitPrice:              10,
+					Scope:                     "scope1",
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				},
 			},
 			setup: func() {
@@ -451,7 +491,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -462,41 +502,60 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 							Description: "metric description",
 						},
 						{
-							Type:        "NUP",
+							Type:        "oracle.nup.standard",
 							Name:        "metricNup",
 							Description: "metricNup description",
 						},
 					}}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{
+					{
+						Sku:    "sku2",
+						Metric: "metricNup",
+					},
+				}, nil)
 				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
-					Sku:                     "sku1",
-					Swidtag:                 "product_name_producteditor_prodversion",
-					ProductName:             "product name",
-					ProductEditor:           "producteditor",
-					Scope:                   "scope1",
-					Metric:                  "ops",
-					NumLicensesAcquired:     20,
-					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
-					TotalPurchaseCost:       decimal.NewFromFloat(float64(200)),
-					TotalCost:               decimal.NewFromFloat(float64(200)),
-					AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
-					TotalMaintenanceCost:    decimal.NewFromFloat(0),
-					CreatedBy:               "admin@superuser.com",
-					Version:                 "prodversion",
-					Comment:                 sql.NullString{String: "", Valid: true},
+					Sku:                       "sku1",
+					Swidtag:                   "product_name_producteditor_prodversion",
+					ProductName:               "product name",
+					ProductEditor:             "producteditor",
+					Scope:                     "scope1",
+					Metric:                    "ops",
+					NumLicensesAcquired:       20,
+					AvgUnitPrice:              decimal.NewFromFloat(float64(10)),
+					TotalPurchaseCost:         decimal.NewFromFloat(float64(200)),
+					TotalCost:                 decimal.NewFromFloat(float64(200)),
+					AvgMaintenanceUnitPrice:   decimal.NewFromFloat(2),
+					TotalMaintenanceCost:      decimal.NewFromFloat(0),
+					CreatedBy:                 "admin@superuser.com",
+					Version:                   "prodversion",
+					Comment:                   sql.NullString{String: "", Valid: true},
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				}).Times(1).Return(nil)
-				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
-					Sku:                     "sku1",
-					Swidtag:                 "product_name_producteditor_prodversion",
-					ProductName:             "product name",
-					ProductEditor:           "producteditor",
-					MetricType:              "ops",
-					NumLicensesAcquired:     20,
-					AvgUnitPrice:            10,
-					TotalPurchaseCost:       200,
-					TotalCost:               200,
-					AvgMaintenanceUnitPrice: 2,
-					Scope:                   "scope1",
-					Version:                 "prodversion",
+				jsonData, err := json.Marshal(dgworker.UpsertAcqRightsRequest{
+					Sku:                       "sku1",
+					Swidtag:                   "product_name_producteditor_prodversion",
+					ProductName:               "product name",
+					ProductEditor:             "producteditor",
+					MetricType:                "ops",
+					NumLicensesAcquired:       20,
+					AvgUnitPrice:              10,
+					TotalPurchaseCost:         200,
+					TotalCost:                 200,
+					AvgMaintenanceUnitPrice:   2,
+					Scope:                     "scope1",
+					Version:                   "prodversion",
+					CorporateSourcingContract: "csc",
+					SoftwareProvider:          "oracle",
+					LastPurchasedOrder:        "odernum",
+					SupportNumber:             "123",
+					MaintenanceProvider:       "oracle",
 				})
 				if err != nil {
 					t.Errorf("Failed to do json marshalling in test %v", err)
@@ -597,7 +656,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, errors.New("Internal"))
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, errors.New("Internal"))
 			},
 			want: &v1.AcqRightResponse{
 				Success: false,
@@ -634,7 +693,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 			},
 			want: &v1.AcqRightResponse{
 				Success: false,
@@ -671,7 +730,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(nil, errors.New("service error"))
@@ -711,7 +770,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{}, nil)
@@ -751,7 +810,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -759,6 +818,242 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 						{
 							Type:        "oracle.processor.standard",
 							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-repo/GetAcqRightMetricsBySwidtag-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{}, errors.New("internal"))
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-acquired right metric does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{
+					{
+						Sku:    "sku2",
+						Metric: "ops1",
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-can not choose metric other then ops1",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "ops",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops1",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "metricNup",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{
+					{
+						Sku:    "sku2",
+						Metric: "ops1",
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE-unable to parse ordering date",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                 "sku1",
+					ProductName:         "product name",
+					Version:             "prodversion",
+					ProductEditor:       "producteditor",
+					MetricName:          "acs",
+					NumLicensesAcquired: 20,
+					AvgUnitPrice:        10,
+					OrderingDate:        "notparsable",
+					Scope:               "scope1",
+					Comment:             "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "attribute.counter.standard",
+							Name:        "acs",
 							Description: "metric description",
 						},
 						{
@@ -782,7 +1077,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "acs",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "notparsable",
@@ -804,7 +1099,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -815,9 +1110,9 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 							Description: "metric description",
 						},
 						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
+							Type:        "attribute.counter.standard",
+							Name:        "acs",
+							Description: "metric description",
 						},
 					},
 				}, nil)
@@ -835,7 +1130,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -857,7 +1152,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -888,7 +1183,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -910,7 +1205,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -941,7 +1236,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -962,7 +1257,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -985,7 +1280,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE-InsertAcqRight-DBError",
+		{name: "FAILURE-UpsertAcqRights-DBError",
 			args: args{
 				ctx: ctx,
 				req: &v1.AcqRightRequest{
@@ -993,7 +1288,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -1015,7 +1310,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1040,7 +1335,7 @@ func Test_productServiceServer_CreateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					ProductEditor:           "producteditor",
 					Scope:                   "scope1",
-					Metric:                  "ops",
+					Metric:                  "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
 					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
@@ -1133,7 +1428,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{
+				}).Times(1).Return(db.GetAcqRightBySKURow{
 					Sku:    "sku1",
 					Metric: "ops,metricNup",
 				}, nil)
@@ -1152,6 +1447,10 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 							Description: "metricNup description",
 						},
 					}}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{}, nil)
 				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
 				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
 				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
@@ -1174,7 +1473,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					Version:                 "prodversion",
 					Comment:                 sql.NullString{String: "acqright created from UI", Valid: true},
 				}).Times(1).Return(nil)
-				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+				jsonData, err := json.Marshal(dgworker.UpsertAcqRightsRequest{
 					Sku:                     "sku1",
 					Swidtag:                 "product_name_producteditor_prodversion",
 					ProductName:             "product name",
@@ -1238,7 +1537,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{
+				}).Times(1).Return(db.GetAcqRightBySKURow{
 					Sku:    "sku1",
 					Metric: "ops",
 				}, nil)
@@ -1257,6 +1556,15 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 							Description: "metricNup description",
 						},
 					}}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{
+					{
+						Sku:    "sku2",
+						Metric: "ops",
+					},
+				}, nil)
 				mockRepo.EXPECT().UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
 					Sku:                     "sku1",
 					Swidtag:                 "product_name_producteditor_prodversion",
@@ -1274,7 +1582,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					Version:                 "prodversion",
 					Comment:                 sql.NullString{String: "", Valid: true},
 				}).Times(1).Return(nil)
-				jsonData, err := json.Marshal(dgraph.UpsertAcqRightsRequest{
+				jsonData, err := json.Marshal(dgworker.UpsertAcqRightsRequest{
 					Sku:                 "sku1",
 					Swidtag:             "product_name_producteditor_prodversion",
 					ProductName:         "product name",
@@ -1387,7 +1695,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, errors.New("Internal"))
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, errors.New("Internal"))
 			},
 			want: &v1.AcqRightResponse{
 				Success: false,
@@ -1424,7 +1732,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{}, sql.ErrNoRows)
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
 			},
 			want: &v1.AcqRightResponse{
 				Success: false,
@@ -1461,7 +1769,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{
+				}).Times(1).Return(db.GetAcqRightBySKURow{
 					Sku: "sku1",
 				}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
@@ -1503,7 +1811,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{
+				}).Times(1).Return(db.GetAcqRightBySKURow{
 					Sku: "sku1",
 				}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
@@ -1545,7 +1853,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1568,6 +1876,73 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "FAILURE-can not choose metric other then nup1",
+			args: args{
+				ctx: ctx,
+				req: &v1.AcqRightRequest{
+					Sku:                     "sku1",
+					ProductName:             "product name",
+					Version:                 "prodversion",
+					ProductEditor:           "producteditor",
+					MetricName:              "nup",
+					NumLicensesAcquired:     20,
+					AvgUnitPrice:            10,
+					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
+					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
+					NumLicencesMaintainance: 5,
+					AvgMaintenanceUnitPrice: 5,
+					Scope:                   "scope1",
+					Comment:                 "acqright created from UI",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
+				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "oracle.processor.standard",
+							Name:        "ops",
+							Description: "metric description",
+						},
+						{
+							Type:        "oracle.nup.standard",
+							Name:        "nup",
+							Description: "metricNup description",
+						},
+						{
+							Type:        "oracle.nup.standard",
+							Name:        "nup1",
+							Description: "metricNup description",
+						},
+					},
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+					Scope:   "scope1",
+					Swidtag: "product_name_producteditor_prodversion",
+				}).Times(1).Return([]db.GetAcqRightMetricsBySwidtagRow{
+					{
+						Sku:    "sku2",
+						Metric: "nup1",
+					},
+				}, nil)
+			},
+			want: &v1.AcqRightResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
 		{name: "FAILURE-unable to parse start time",
 			args: args{
 				ctx: ctx,
@@ -1576,7 +1951,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "notparsable",
@@ -1598,7 +1973,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1629,7 +2004,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -1651,7 +2026,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1682,7 +2057,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -1704,7 +2079,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1735,7 +2110,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -1756,7 +2131,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1779,7 +2154,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE-InsertAcqRight-DBError",
+		{name: "FAILURE-UpsertAcqRights-DBError",
 			args: args{
 				ctx: ctx,
 				req: &v1.AcqRightRequest{
@@ -1787,7 +2162,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					Version:                 "prodversion",
 					ProductEditor:           "producteditor",
-					MetricName:              "ops",
+					MetricName:              "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            10,
 					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
@@ -1809,7 +2184,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
 					AcqrightSku: "sku1",
 					Scope:       "scope1",
-				}).Times(1).Return(db.Acqright{Sku: "sku1"}, nil)
+				}).Times(1).Return(db.GetAcqRightBySKURow{Sku: "sku1"}, nil)
 				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
 					Scopes: []string{"scope1"},
 				}).Times(1).Return(&metv1.ListMetricResponse{
@@ -1834,7 +2209,7 @@ func Test_productServiceServer_UpdateAcqRight(t *testing.T) {
 					ProductName:             "product name",
 					ProductEditor:           "producteditor",
 					Scope:                   "scope1",
-					Metric:                  "ops",
+					Metric:                  "metricNup",
 					NumLicensesAcquired:     20,
 					AvgUnitPrice:            decimal.NewFromFloat(float64(10)),
 					AvgMaintenanceUnitPrice: decimal.NewFromFloat(float64(5)),
@@ -1914,7 +2289,7 @@ func Test_productServiceServer_DeleteAcqRight(t *testing.T) {
 					Sku:   "sku1",
 					Scope: "scope1",
 				}).Times(1).Return(nil)
-				jsonData, err := json.Marshal(dgraph.DeleteAcqRightRequest{
+				jsonData, err := json.Marshal(dgworker.DeleteAcqRightRequest{
 					Sku:   "sku1",
 					Scope: "scope1",
 				})
@@ -2004,6 +2379,201 @@ func Test_productServiceServer_DeleteAcqRight(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("productServiceServer.DeleteAcqRight() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_productServiceServer_DownloadAcqRightFile(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.DownloadAcqRightFileRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.DownloadAcqRightFileResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{
+					Sku:      "sku1",
+					Metric:   "ops,metricNup",
+					FileName: "sku1_file.pdf",
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightFileDataBySKU(ctx, db.GetAcqRightFileDataBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return([]byte("filedata"), nil)
+			},
+			want: &v1.DownloadAcqRightFileResponse{
+				FileData: []byte("filedata"),
+			},
+		},
+		{name: "FAILURE-ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup:   func() {},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope5",
+				},
+			},
+			setup:   func() {},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-GetAcqRightBySKU-SKU does not exist",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, sql.ErrNoRows)
+			},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-GetAcqRightBySKU-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{}, errors.New("internal"))
+			},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-Acquired Right does not contain file",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{
+					Sku:    "sku1",
+					Metric: "ops,metricNup",
+				}, nil)
+			},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-GetAcqRightFileDataBySKU-DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DownloadAcqRightFileRequest{
+					Sku:   "sku1",
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return(db.GetAcqRightBySKURow{
+					Sku:      "sku1",
+					Metric:   "ops,metricNup",
+					FileName: "sku1_file.pdf",
+				}, nil)
+				mockRepo.EXPECT().GetAcqRightFileDataBySKU(ctx, db.GetAcqRightFileDataBySKUParams{
+					AcqrightSku: "sku1",
+					Scope:       "scope1",
+				}).Times(1).Return([]byte(""), errors.New("internal"))
+			},
+			want:    &v1.DownloadAcqRightFileResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+			}
+			got, err := tt.s.DownloadAcqRightFile(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.DownloadAcqRightFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.DownloadAcqRightFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}

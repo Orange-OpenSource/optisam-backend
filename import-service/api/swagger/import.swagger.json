@@ -9,6 +9,48 @@
       "https"
    ],
    "paths": {
+      "/api/v1/import/download": {
+         "post": {
+            "summary": "download report/error/source file.",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+               {
+                  "in": "formData",
+                  "name": "downloadType",
+                  "type": "string",
+                  "required": true,
+                  "description": "values would be one of these value error/analysis/source"
+               },
+               {
+                  "in": "formData",
+                  "name": "uploadId",
+                  "type": "string",
+                  "required": true,
+                  "description": "This field is required when downloadType is error/source"
+               },
+               {
+                  "in": "formData",
+                  "name": "scope",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "fileName",
+                  "type": "string",
+                  "required": true,
+                  "description": "This field is required when downloadType is analysis"
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "A successful response."
+               }
+            }
+         }
+      },
       "/api/v1/import/upload": {
          "post": {
             "summary": "Upload file or files.",

@@ -40,7 +40,7 @@ type productAcquiredRight struct {
 // IsProductPurchasedInAggregation return aggregation name is swidtag is part of aggregation
 func (l *LicenseRepository) IsProductPurchasedInAggregation(ctx context.Context, swidtag string, scope string) (string, error) {
 	q := ` query {
-		aggreagation(func:eq(dgraph.type,Aggregation))@filter(eq(scopes, ` + scope + ` ) and eq(aggregation.swidtags, ` + swidtag + ` )){
+		aggregation(func:type(Aggregation))@filter(eq(scopes, ` + scope + ` ) and eq(aggregation.swidtags, "` + swidtag + `" )){
   			 aggregation.name
 			}
 		}
@@ -54,16 +54,16 @@ func (l *LicenseRepository) IsProductPurchasedInAggregation(ctx context.Context,
 	type Aggregation struct {
 		Aggregation []struct {
 			Name string `json:"aggregation.name"`
-		} `json:"aggreagation"`
+		} `json:"aggregation"`
 	}
 
-	fmt.Println(string(resp.GetJson()))
+	// fmt.Println(string(resp.GetJson()))
 	out := Aggregation{}
 	if err = json.Unmarshal(resp.GetJson(), &out); err != nil {
 		logger.Log.Error("Failed to marshal the product-aggregation link", zap.Error(err))
 		return "", err
 	}
-	fmt.Println(out)
+	// fmt.Println(out)
 	if len(out.Aggregation) > 0 {
 		return out.Aggregation[0].Name, nil
 	}
@@ -110,11 +110,12 @@ func (l *LicenseRepository) GetProductInformation(ctx context.Context, swidtag s
 }
 
 // ProductAcquiredRights implements Licence ProductAcquiredRights function
-func (l *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag string, metrics []*v1.Metric, scopes ...string) (string, []*v1.ProductAcquiredRight, error) {
+func (l *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag string, metrics []*v1.Metric, isSimulation bool, scopes ...string) (string, string, []*v1.ProductAcquiredRight, error) {
 	q := `
 	{
 		Products(func: eq(product.swidtag,"` + swidTag + `"))` + agregateFilters(scopeFilters(scopes)) + `{
 		  ID: uid
+		  ProductName: product.name
 		  AcquiredRights: product.acqRights{
 		  SKU: acqRights.SKU
 		  Metric: acqRights.metric
@@ -129,11 +130,12 @@ func (l *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag s
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/ProductAcquiredRights - query failed", zap.Error(err), zap.String("query", q))
-		return "", nil, errors.New("dgraph/ProductAcquiredRights -  failed to fetch acquired rights")
+		return "", "", nil, errors.New("dgraph/ProductAcquiredRights -  failed to fetch acquired rights")
 	}
 
 	type product struct {
 		ID             string
+		ProductName    string
 		AcquiredRights []*productAcquiredRight
 	}
 
@@ -145,15 +147,15 @@ func (l *LicenseRepository) ProductAcquiredRights(ctx context.Context, swidTag s
 
 	if err := json.Unmarshal(resp.Json, data); err != nil {
 		logger.Log.Error("dgraph/ProductAcquiredRights - unmarshal failed", zap.Error(err), zap.String("query", q), zap.String("response", string(resp.Json)))
-		return "", nil, errors.New("dgraph/ProductAcquiredRights -  failed unmarshal response")
+		return "", "", nil, errors.New("dgraph/ProductAcquiredRights -  failed unmarshal response")
 	}
 
 	if len(data.Products) == 0 {
 		logger.Log.Error("dgraph/ProductAcquiredRights -failed", zap.String("reason", "no data found i"))
-		return "", nil, v1.ErrNodeNotFound
+		return "", "", nil, v1.ErrNodeNotFound
 	}
 
-	return data.Products[0].ID, concatAcqRightForSameMetric(metrics, data.Products[0].AcquiredRights), nil
+	return data.Products[0].ID, data.Products[0].ProductName, concatAcqRightForSameMetric(metrics, data.Products[0].AcquiredRights, isSimulation), nil
 }
 
 // ProductEquipments implements Licence ProductEquipments function
@@ -248,8 +250,22 @@ func aggFilter(filter *v1.AggregateFilter) string {
 	return ` @filter(eq(aggregation.metric,["` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `"]))`
 }
 
-func concatAcqRightForSameMetric(metrics []*v1.Metric, acqRight []*productAcquiredRight) []*v1.ProductAcquiredRight {
+func concatAcqRightForSameMetric(metrics []*v1.Metric, acqRight []*productAcquiredRight, isSimulation bool) []*v1.ProductAcquiredRight {
 	resAcqRight := make([]*v1.ProductAcquiredRight, 0, len(acqRight))
+	if isSimulation {
+		for _, acq := range acqRight {
+			sort.Strings(acq.Metric)
+			resAcqRight = append(resAcqRight, &v1.ProductAcquiredRight{
+				SKU:               acq.SKU,
+				Metric:            strings.Join(acq.Metric, ","),
+				AcqLicenses:       acq.AcqLicenses,
+				TotalCost:         acq.TotalCost,
+				TotalPurchaseCost: acq.TotalPurchaseCost,
+				AvgUnitPrice:      acq.AvgUnitPrice,
+			})
+		}
+		return resAcqRight
+	}
 	encountered := map[string]int{}
 	metricType := map[v1.MetricType]string{}
 	for i := range acqRight {
@@ -300,6 +316,13 @@ func concatAcqRightForSameMetric(metrics []*v1.Metric, acqRight []*productAcquir
 			})
 		}
 	}
+	for _, acq := range resAcqRight {
+		if acq.AcqLicenses != 0 {
+			acq.AvgUnitPrice = acq.TotalPurchaseCost / float64(acq.AcqLicenses)
+		} else {
+			acq.AvgUnitPrice = acq.TotalPurchaseCost / float64(len(strings.Split(acq.SKU, ",")))
+		}
+	}
 	nupMetric, ok := metricType[v1.MetricOracleNUPStandard]
 	if ok {
 		opsMetric, ok := metricType[v1.MetricOPSOracleProcessorStandard]
@@ -310,7 +333,7 @@ func concatAcqRightForSameMetric(metrics []*v1.Metric, acqRight []*productAcquir
 			resAcqRight[opsidx].AcqLicenses += uint64(math.Ceil(float64(resAcqRight[nupidx].AcqLicenses) / 50))
 			// resAcqRight[opsidx].TotalCost = (resAcqRight[opsidx].TotalCost + acqRight[nupidx].TotalCost) / 2
 			// resAcqRight[opsidx].TotalPurchaseCost = (resAcqRight[opsidx].TotalPurchaseCost + acqRight[nupidx].TotalPurchaseCost) / 2
-			// resAcqRight[opsidx].AvgUnitPrice = (resAcqRight[opsidx].AvgUnitPrice + acqRight[nupidx].AvgUnitPrice) / 2
+			// resAcqRight[opsidx].AvgUnitPrice = resAcqRight[opsidx].AvgUnitPrice
 			resAcqRight[nupidx] = resAcqRight[len(resAcqRight)-1] // Copy last element to index.
 			resAcqRight = resAcqRight[:len(resAcqRight)-1]        // Truncate slice.
 		}

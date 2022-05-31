@@ -18,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DpsServiceClient interface {
 	StoreCoreFactorReference(ctx context.Context, in *StoreReferenceDataRequest, opts ...grpc.CallOption) (*StoreReferenceDataResponse, error)
+	GetAnalysisFileInfo(ctx context.Context, in *GetAnalysisFileInfoRequest, opts ...grpc.CallOption) (*GetAnalysisFileInfoResponse, error)
 	ViewFactorReference(ctx context.Context, in *ViewReferenceDataRequest, opts ...grpc.CallOption) (*ViewReferenceDataResponse, error)
 	ViewCoreFactorLogs(ctx context.Context, in *ViewCoreFactorLogsRequest, opts ...grpc.CallOption) (*ViewCoreFactorLogsResponse, error)
 	DataAnalysis(ctx context.Context, in *DataAnalysisRequest, opts ...grpc.CallOption) (*DataAnalysisResponse, error)
@@ -43,6 +44,15 @@ func NewDpsServiceClient(cc grpc.ClientConnInterface) DpsServiceClient {
 func (c *dpsServiceClient) StoreCoreFactorReference(ctx context.Context, in *StoreReferenceDataRequest, opts ...grpc.CallOption) (*StoreReferenceDataResponse, error) {
 	out := new(StoreReferenceDataResponse)
 	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/StoreCoreFactorReference", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) GetAnalysisFileInfo(ctx context.Context, in *GetAnalysisFileInfoRequest, opts ...grpc.CallOption) (*GetAnalysisFileInfoResponse, error) {
+	out := new(GetAnalysisFileInfoResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/GetAnalysisFileInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,6 +172,7 @@ func (c *dpsServiceClient) ListDeletionRecords(ctx context.Context, in *ListDele
 // for forward compatibility
 type DpsServiceServer interface {
 	StoreCoreFactorReference(context.Context, *StoreReferenceDataRequest) (*StoreReferenceDataResponse, error)
+	GetAnalysisFileInfo(context.Context, *GetAnalysisFileInfoRequest) (*GetAnalysisFileInfoResponse, error)
 	ViewFactorReference(context.Context, *ViewReferenceDataRequest) (*ViewReferenceDataResponse, error)
 	ViewCoreFactorLogs(context.Context, *ViewCoreFactorLogsRequest) (*ViewCoreFactorLogsResponse, error)
 	DataAnalysis(context.Context, *DataAnalysisRequest) (*DataAnalysisResponse, error)
@@ -182,6 +193,9 @@ type UnimplementedDpsServiceServer struct {
 
 func (UnimplementedDpsServiceServer) StoreCoreFactorReference(context.Context, *StoreReferenceDataRequest) (*StoreReferenceDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCoreFactorReference not implemented")
+}
+func (UnimplementedDpsServiceServer) GetAnalysisFileInfo(context.Context, *GetAnalysisFileInfoRequest) (*GetAnalysisFileInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAnalysisFileInfo not implemented")
 }
 func (UnimplementedDpsServiceServer) ViewFactorReference(context.Context, *ViewReferenceDataRequest) (*ViewReferenceDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ViewFactorReference not implemented")
@@ -245,6 +259,24 @@ func _DpsService_StoreCoreFactorReference_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DpsServiceServer).StoreCoreFactorReference(ctx, req.(*StoreReferenceDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_GetAnalysisFileInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAnalysisFileInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).GetAnalysisFileInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/GetAnalysisFileInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).GetAnalysisFileInfo(ctx, req.(*GetAnalysisFileInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -472,6 +504,10 @@ var _DpsService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCoreFactorReference",
 			Handler:    _DpsService_StoreCoreFactorReference_Handler,
+		},
+		{
+			MethodName: "GetAnalysisFileInfo",
+			Handler:    _DpsService_GetAnalysisFileInfo_Handler,
 		},
 		{
 			MethodName: "ViewFactorReference",

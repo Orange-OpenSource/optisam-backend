@@ -112,7 +112,7 @@ func Test_NotifyUpload(t *testing.T) {
 					Gid:        int32(0),
 					Status:     db.UploadStatusPENDING,
 					ScopeType:  db.ScopeTypesGENERIC,
-					ErrorFile:  sql.NullString{String: "", Valid: true},
+					AnalysisID: sql.NullString{String: "", Valid: true},
 				}).Return(db.UploadedDataFile{
 					UploadID:       int32(1),
 					Scope:          "Scope1",
@@ -126,7 +126,7 @@ func Test_NotifyUpload(t *testing.T) {
 					FailedRecords:  int32(0),
 					Gid:            int32(0),
 					ScopeType:      db.ScopeTypesGENERIC,
-					ErrorFile:      sql.NullString{String: "", Valid: true},
+					AnalysisID:     sql.NullString{String: "", Valid: true},
 				}, nil).Times(1)
 
 				dataForJob, _ := json.Marshal(db.UploadedDataFile{
@@ -142,7 +142,7 @@ func Test_NotifyUpload(t *testing.T) {
 					FailedRecords:  int32(0),
 					Gid:            int32(0),
 					ScopeType:      db.ScopeTypesGENERIC,
-					ErrorFile:      sql.NullString{String: "", Valid: true},
+					AnalysisID:     sql.NullString{String: "", Valid: true},
 				})
 				qObj.EXPECT().PushJob(ctx, job.Job{
 					Type:   constants.FILETYPE,
@@ -217,7 +217,7 @@ func Test_dpsServiceServer_ListUploadGlobalData(t *testing.T) {
 						Status:       db.UploadStatusUPLOADED,
 						UploadedBy:   "dummy",
 						UploadedOn:   ut,
-						ErrorFile:    sql.NullString{String: "bad_temp.xlsx", Valid: true},
+						AnalysisID:   sql.NullString{String: "121", Valid: true},
 					},
 					{
 						Totalrecords: int64(2),
@@ -228,6 +228,7 @@ func Test_dpsServiceServer_ListUploadGlobalData(t *testing.T) {
 						Status:       db.UploadStatusUPLOADED,
 						UploadedBy:   "dummy2",
 						UploadedOn:   ut,
+						AnalysisID:   sql.NullString{String: "121", Valid: true},
 					}}, nil)
 
 			},
@@ -285,6 +286,92 @@ func Test_dpsServiceServer_ListUploadGlobalData(t *testing.T) {
 			}
 			if !tt.wantErr {
 				compareListUploadResponse(t, "dpsServiceServer.ListUploadGlobalData()", tt.output, got)
+			}
+		})
+	}
+}
+
+func Test_dpsServiceServer_GetGlobalFileInfo(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	ctx2 := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope10"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Dps
+	var queue workerqueue.Queue
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.GetAnalysisFileInfoRequest
+		setup   func(*v1.GetAnalysisFileInfoRequest)
+		output  *v1.GetAnalysisFileInfoResponse
+		wantErr bool
+	}{
+		{
+			name: "SuccessCaseNoError",
+			ctx:  ctx,
+			input: &v1.GetAnalysisFileInfoRequest{
+				Scope:    "scope1",
+				UploadId: int32(10),
+				FileType: "error",
+			},
+			setup: func(req *v1.GetAnalysisFileInfoRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetGlobalFileInfo(ctx, db.GetGlobalFileInfoParams{UploadID: int32(10), Scope: "scope1"}).Return(db.GetGlobalFileInfoRow{AnalysisID: sql.NullString{String: "123", Valid: true}, FileName: "temp.xlsx", UploadID: int32(1), ScopeType: db.ScopeTypesGENERIC}, nil).Times(1)
+			},
+			output: &v1.GetAnalysisFileInfoResponse{
+				FileName: "bad_123_temp.xlsx",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Context not found ",
+			ctx:  context.Background(),
+			input: &v1.GetAnalysisFileInfoRequest{
+				Scope: "scope1",
+			},
+			setup:   func(req *v1.GetAnalysisFileInfoRequest) {},
+			wantErr: true,
+		},
+		{
+			name: "scope out of context ",
+			ctx:  context.Background(),
+			input: &v1.GetAnalysisFileInfoRequest{
+				Scope: "scope5",
+			},
+			setup:   func(req *v1.GetAnalysisFileInfoRequest) {},
+			wantErr: true,
+		},
+		{
+			name: "Unauthorised Role",
+			ctx:  ctx2,
+			input: &v1.GetAnalysisFileInfoRequest{
+				Scope: "scope10",
+			},
+			setup:   func(req *v1.GetAnalysisFileInfoRequest) {},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			obj := NewDpsServiceServer(rep, &queue, nil)
+			got, err := obj.GetAnalysisFileInfo(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.GetAnalysisFileInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got.FileName != tt.output.FileName {
+				t.Errorf("dpsServiceServer.GetAnalysisFileInfo() error got = %v, want %v", got, tt.output)
+				return
 			}
 		})
 	}

@@ -2896,6 +2896,18 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -2920,9 +2932,10 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					{
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
-						NumCoreAttrID:    "1A",
-						CoreFactorAttrID: "1C",
 						BaseEqTypeID:     "2",
+						CoreFactorAttrID: "1C",
+						NumCPUAttrID:     "1B",
+						NumCoreAttrID:    "1A",
 					},
 				}, nil).Times(1)
 				mockLicense.EXPECT().ProductsForEquipmentForMetricIPSStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricIPSComputed{
@@ -2935,6 +2948,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						FloatVal:    1.25,
 						FloatValOld: 1.5,
 						Name:        "coreFactor",
+					},
+					NumCPUAttr: &repo.Attribute{
+						ID:          "1B",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      2,
+						IntValOld:   1,
+						Name:        "numCPU",
 					},
 					NumCoresAttr: &repo.Attribute{
 						ID:          "1A",
@@ -3292,6 +3313,18 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 							},
 						},
 						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
 							ID:        "1A",
 							Name:      "numCores",
 							Simulated: true,
@@ -3317,6 +3350,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						ID:               "1M",
 						Name:             "ibm.pvu.standard",
 						NumCoreAttrID:    "1A",
+						NumCPUAttrID:     "1B",
 						CoreFactorAttrID: "1C",
 						BaseEqTypeID:     "2",
 					},
@@ -3331,6 +3365,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						FloatVal:    1.25,
 						FloatValOld: 1.5,
 						Name:        "coreFactor",
+					},
+					NumCPUAttr: &repo.Attribute{
+						ID:          "1B",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      2,
+						IntValOld:   1,
+						Name:        "numCPU",
 					},
 					NumCoresAttr: &repo.Attribute{
 						ID:          "1A",
@@ -3377,6 +3419,18 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 5,
 							},
 						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
 					},
 					Scope: "Scope1",
 				},
@@ -3391,6 +3445,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
+						NumCPUAttrID:     "1B",
 						CoreFactorAttrID: "1C",
 						BaseEqTypeID:     "2",
 					},
@@ -3413,6 +3468,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						IntVal:      3,
 						IntValOld:   5,
 						Name:        "numCores",
+					},
+					NumCPUAttr: &repo.Attribute{
+						ID:          "1B",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      2,
+						IntValOld:   1,
+						Name:        "numCPU",
 					},
 				}, []string{"Scope1"}).Return([]*repo.ProductData{
 					{
@@ -3773,6 +3836,18 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 								IntValOld: 5,
 							},
 						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
 					},
 					Scope: "Scope1",
 				},
@@ -3787,6 +3862,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						ID:               "1M",
 						Name:             "sag.processor.standard",
 						NumCoreAttrID:    "1A",
+						NumCPUAttrID:     "1B",
 						CoreFactorAttrID: "1C",
 						BaseEqTypeID:     "2",
 					},
@@ -3809,6 +3885,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						IntVal:      3,
 						IntValOld:   5,
 						Name:        "numCores",
+					},
+					NumCPUAttr: &repo.Attribute{
+						ID:          "1B",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      2,
+						IntValOld:   1,
+						Name:        "numCPU",
 					},
 				}, []string{"Scope1"}).Return(nil, repo.ErrNoData).Times(1)
 			},

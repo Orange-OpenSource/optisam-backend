@@ -97,3 +97,23 @@ type AcqRightsInfo struct {
 	StartOfMaintenance   string
 	EndOfMaintenance     string
 }
+
+// AggregatedRightsInfo ...
+type AggregatedRightsInfo struct {
+	SKU                  string
+	AggregationID        int
+	Metric               []string
+	Licenses             int32
+	MaintenanceLicenses  int32
+	UnitPrice            float64
+	MaintenanceUnitPrice float64
+	PurchaseCost         float64
+	MaintenanceCost      float64
+	TotalCost            float64
+	StartOfMaintenance   string
+	EndOfMaintenance     string
+}
+
+type Acqrights struct {
+	Swidtag string `json:"acqRights.swidtag"`
+}

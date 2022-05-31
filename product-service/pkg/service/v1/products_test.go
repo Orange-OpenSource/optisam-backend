@@ -686,7 +686,130 @@ func Test_productServiceServer_DropProductData(t *testing.T) {
 		})
 	}
 }
+func Test_productServiceServer_DropAggregationData(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.DropAggregationDataRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.DropAggregationDataResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropAggregationDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DeleteAggregationByScope(ctx, "Scope1").Times(1).Return(nil)
+				jsonData, err := json.Marshal(&v1.DropAggregationDataRequest{
+					Scope: "Scope1",
+				})
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test %v", err)
+				}
+				e := dgworker.Envelope{Type: dgworker.DropAggregationData, JSON: jsonData}
 
+				envolveData, err := json.Marshal(e)
+				if err != nil {
+					t.Errorf("Failed to do json marshalling in test  %v", err)
+				}
+				job := job.Job{
+					Type:   sql.NullString{String: "aw"},
+					Status: job.JobStatusPENDING,
+					Data:   envolveData,
+				}
+				mockQueue.EXPECT().PushJob(ctx, job, "aw").Return(int32(1000), nil)
+			},
+			want: &v1.DropAggregationDataResponse{
+				Success: true,
+			},
+			wantErr: false,
+		},
+		{name: "FAILURE - ClaimsNotFound",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.DropAggregationDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {},
+			want: &v1.DropAggregationDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropAggregationDataRequest{
+					Scope: "Scope4",
+				},
+			},
+			setup: func() {},
+			want: &v1.DropAggregationDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - DeleteAggregationByScope - DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.DropAggregationDataRequest{
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().DeleteAggregationByScope(ctx, "Scope1").Times(1).Return(errors.New("Internal"))
+			},
+			want: &v1.DropAggregationDataResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+			}
+			got, err := tt.s.DropAggregationData(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.DropAggregationData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.DropAggregationData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 func Test_productServiceServer_GetEquipmentsByProduct(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",

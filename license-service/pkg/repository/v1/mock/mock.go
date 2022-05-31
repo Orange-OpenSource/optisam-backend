@@ -34,6 +34,27 @@ func (m *MockLicense) EXPECT() *MockLicenseMockRecorder {
 	return m.recorder
 }
 
+// AggregationDetails mocks base method
+func (m *MockLicense) AggregationDetails(arg0 context.Context, arg1 string, arg2 []*v1.Metric, arg3 bool, arg4 ...string) (*v1.AggregationInfo, []*v1.ProductAcquiredRight, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AggregationDetails", varargs...)
+	ret0, _ := ret[0].(*v1.AggregationInfo)
+	ret1, _ := ret[1].([]*v1.ProductAcquiredRight)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AggregationDetails indicates an expected call of AggregationDetails
+func (mr *MockLicenseMockRecorder) AggregationDetails(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregationDetails", reflect.TypeOf((*MockLicense)(nil).AggregationDetails), varargs...)
+}
+
 // AggregationIndividualRights mocks base method
 func (m *MockLicense) AggregationIndividualRights(arg0 context.Context, arg1, arg2 []string, arg3 ...string) ([]*v1.AcqRightsInfo, error) {
 	m.ctrl.T.Helper()
@@ -130,24 +151,34 @@ func (mr *MockLicenseMockRecorder) EquipmentTypes(arg0 interface{}, arg1 ...inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentTypes", reflect.TypeOf((*MockLicense)(nil).EquipmentTypes), varargs...)
 }
 
-// GetAggregationDetails mocks base method
-func (m *MockLicense) GetAggregationDetails(arg0 context.Context, arg1 string, arg2 ...string) (*v1.AggregationInfo, error) {
+// GetAcqRights mocks base method
+func (m *MockLicense) GetAcqRights(arg0 context.Context, arg1 []string, arg2, arg3 string) ([]*v1.Acqrights, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetAggregationDetails", varargs...)
-	ret0, _ := ret[0].(*v1.AggregationInfo)
+	ret := m.ctrl.Call(m, "GetAcqRights", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*v1.Acqrights)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAggregationDetails indicates an expected call of GetAggregationDetails
-func (mr *MockLicenseMockRecorder) GetAggregationDetails(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+// GetAcqRights indicates an expected call of GetAcqRights
+func (mr *MockLicenseMockRecorder) GetAcqRights(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationDetails", reflect.TypeOf((*MockLicense)(nil).GetAggregationDetails), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRights", reflect.TypeOf((*MockLicense)(nil).GetAcqRights), arg0, arg1, arg2, arg3)
+}
+
+// GetAggregations mocks base method
+func (m *MockLicense) GetAggregations(arg0 context.Context, arg1, arg2 string) ([]*v1.Aggregation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAggregations", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*v1.Aggregation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAggregations indicates an expected call of GetAggregations
+func (mr *MockLicenseMockRecorder) GetAggregations(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregations", reflect.TypeOf((*MockLicense)(nil).GetAggregations), arg0, arg1, arg2)
 }
 
 // GetProductInformation mocks base method
@@ -323,6 +354,26 @@ func (mr *MockLicenseMockRecorder) ListMetricSPS(arg0 interface{}, arg1 ...inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMetricSPS", reflect.TypeOf((*MockLicense)(nil).ListMetricSPS), varargs...)
+}
+
+// ListMetricSS mocks base method
+func (m *MockLicense) ListMetricSS(arg0 context.Context, arg1 ...string) ([]*v1.MetricSS, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListMetricSS", varargs...)
+	ret0, _ := ret[0].([]*v1.MetricSS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMetricSS indicates an expected call of ListMetricSS
+func (mr *MockLicenseMockRecorder) ListMetricSS(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMetricSS", reflect.TypeOf((*MockLicense)(nil).ListMetricSS), varargs...)
 }
 
 // ListMetricUserSum mocks base method
@@ -756,23 +807,24 @@ func (mr *MockLicenseMockRecorder) ParentsHirerachyForEquipment(arg0, arg1, arg2
 }
 
 // ProductAcquiredRights mocks base method
-func (m *MockLicense) ProductAcquiredRights(arg0 context.Context, arg1 string, arg2 []*v1.Metric, arg3 ...string) (string, []*v1.ProductAcquiredRight, error) {
+func (m *MockLicense) ProductAcquiredRights(arg0 context.Context, arg1 string, arg2 []*v1.Metric, arg3 bool, arg4 ...string) (string, string, []*v1.ProductAcquiredRight, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ProductAcquiredRights", varargs...)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].([]*v1.ProductAcquiredRight)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].([]*v1.ProductAcquiredRight)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // ProductAcquiredRights indicates an expected call of ProductAcquiredRights
-func (mr *MockLicenseMockRecorder) ProductAcquiredRights(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+func (mr *MockLicenseMockRecorder) ProductAcquiredRights(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductAcquiredRights", reflect.TypeOf((*MockLicense)(nil).ProductAcquiredRights), varargs...)
 }
 

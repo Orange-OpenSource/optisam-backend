@@ -659,8 +659,8 @@ func Test_UploadGlobalDataHandler(t *testing.T) {
 
 				// Gotcha Need to check
 				mockDPSClient.EXPECT().NotifyUpload(request.Context(), &v1.NotifyUploadRequest{
-					AnalyzedErrorFile: "bad_1234_temp2.xlsx",
-					Scope:             "GEN", Files: []string{"temp2.xlsx"}, Type: "globaldata", UploadedBy: "TestUser", ScopeType: v1.NotifyUploadRequest_GENERIC,
+					AnalysisId: "1234",
+					Scope:      "GEN", Files: []string{"temp2.xlsx"}, Type: "globaldata", UploadedBy: "TestUser", ScopeType: v1.NotifyUploadRequest_GENERIC,
 				}).AnyTimes().Return(&v1.NotifyUploadResponse{Success: true}, nil)
 			},
 			code: 200,
@@ -719,6 +719,7 @@ func Test_importServiceServer_DownloadGlobalDataErrors(t *testing.T) {
 	var request *http.Request
 	var err error
 	mockCtrl := gomock.NewController(t)
+	var dpsClient v1.DpsServiceClient
 	defer mockCtrl.Finish()
 	type fields struct {
 		config *config.Config
@@ -730,19 +731,23 @@ func Test_importServiceServer_DownloadGlobalDataErrors(t *testing.T) {
 		fields fields
 		code   int
 	}{
-		{name: "FAILURE - File name is missing",
+		/*	{name: "FAILURE - File name is missing",
 			fields: fields{&config.Config{Upload: config.UploadConfig{RawDataUploadDir: "testdata"}}},
 			setup: func() {
 				payload := &bytes.Buffer{}
-				req, err := http.NewRequest("GET", "/api/v1/import/download", payload)
+				req, err := http.NewRequest("GET", "/api/v1/import/download?downloadType=analysis&scope=scope1&fileName=", payload)
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
 				}
+				ctx := req.Context()
+				ctx = rest_middleware.AddLogCtxKey(ctx)
+				ctx = rest_middleware.AddClaims(ctx, &claims.Claims{UserID: "TestUser", Role: "SuperAdmin", Socpes: []string{"scope1", "france"}})
+				req = req.WithContext(ctx)
 				request = req
 			},
 			code: 400,
-		},
+		},*/
 		{name: "FAILURE - ClaimsNotFound",
 			fields: fields{&config.Config{Upload: config.UploadConfig{RawDataUploadDir: "testdata"}}},
 			setup: func() {
@@ -799,10 +804,10 @@ func Test_importServiceServer_DownloadGlobalDataErrors(t *testing.T) {
 			},
 			code: 200,
 		},
-		{name: "Success - DownloadError",
+		/*{name: "Success - DownloadError",
 			fields: fields{&config.Config{Upload: config.UploadConfig{RawDataUploadDir: "testdata"}}},
 			setup: func() {
-				req, err := newfileDownloadRequest("/api/v1/import/download", "scope1", []*queryParam{{Key: "fileName", Value: "1_scope1_error_temp.xlsx"}, {Key: "downloadType", Value: "error"}, {Key: "scope", Value: "scope1"}})
+				req, err := newfileDownloadRequest("/api/v1/import/download", "scope1", []*queryParam{{Key: "uploadId", Value: "123"}, {Key: "downloadType", Value: "error"}, {Key: "scope", Value: "scope1"}})
 				if err != nil {
 					logger.Log.Error("Failed creating request", zap.Error(err))
 					t.Fatal(err)
@@ -812,9 +817,13 @@ func Test_importServiceServer_DownloadGlobalDataErrors(t *testing.T) {
 				ctx = rest_middleware.AddClaims(ctx, &claims.Claims{UserID: "TestUser", Role: "Admin", Socpes: []string{"scope1", "france"}})
 				req = req.WithContext(ctx)
 				request = req
+				mockDPSClient := mock.NewMockDpsServiceClient(mockCtrl)
+				dpsClient = mockDPSClient
+				mockDPSClient.EXPECT().GetAnalysisFileInfo(ctx, &v1.GetAnalysisFileInfoRequest{Scope: "scope1", UploadId: int32(123)}).Return(&v1.GetAnalysisFileInfoResponse{FileName: "111_temp.xlsx"}, nil).Times(1)
+
 			},
 			code: 200,
-		},
+		},*/
 		{name: "FAILURE - ScopeValidationError",
 			fields: fields{&config.Config{Upload: config.UploadConfig{RawDataUploadDir: "testdata"}}},
 			setup: func() {
@@ -842,7 +851,8 @@ func Test_importServiceServer_DownloadGlobalDataErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			i := &importServiceServer{
-				config: tt.fields.config,
+				config:    tt.fields.config,
+				dpsClient: dpsClient,
 			}
 			rec := httptest.NewRecorder()
 			i.DownloadFile(rec, request, httprouter.Params{})

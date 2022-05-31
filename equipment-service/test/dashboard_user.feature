@@ -2,7 +2,7 @@
 Feature: DashboardTest
 
   Background:
-  # * def equipmentServiceUrl = "https://optisam-equipment-int.kermit-noprod-b.itn.intraorange"
+  # * def equipmentServiceUrl = "https://optisam-equipment-int.apps.fr01.paas.tech.orange"
     * url equipmentServiceUrl+'/api/v1/equipment'
    * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('common.feature') credentials

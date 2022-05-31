@@ -107,8 +107,8 @@ func (l *MetricRepository) MetricInfoWithAcqAndAgg(ctx context.Context, metricNa
 				Name: metric.name
 				Type: metric.type
 		 	}
-   			var(func:eq(aggregation.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
-	 			tagg as count(aggregation.name)
+   			var(func:eq(aggregatedRights.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
+	 			tagg as count(aggregatedRights.SKU)
 		 	}
 	   		var(func:eq(acqRights.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
 				tacq as count(acqRights.SKU)

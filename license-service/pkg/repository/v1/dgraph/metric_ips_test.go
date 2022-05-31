@@ -23,4 +23,5 @@ func compareMetricIPS(t *testing.T, name string, exp, act *v1.MetricIPS) {
 	assert.Equalf(t, exp.BaseEqTypeID, act.BaseEqTypeID, "%s.BaseEqTypeID should be same", name)
 	assert.Equalf(t, exp.CoreFactorAttrID, act.CoreFactorAttrID, "%s.CoreFactorAttrID should be same", name)
 	assert.Equalf(t, exp.NumCoreAttrID, act.NumCoreAttrID, "%s.NumCoreAttrID should be same", name)
+	assert.Equalf(t, exp.NumCoreAttrID, act.NumCoreAttrID, "%s.NumCPUAttrID should be same", name)
 }

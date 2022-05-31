@@ -2,12 +2,13 @@ package v1
 
 import (
 	"context"
-	"log"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	licenseService "optisam-backend/license-service/pkg/api/v1"
+	l_v1 "optisam-backend/license-service/pkg/api/v1"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
+	"sort"
+	"strings"
 	"sync"
 
 	"go.uber.org/zap"
@@ -24,39 +25,26 @@ func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.Si
 	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	var wg sync.WaitGroup
-	var metricResults []*v1.MetricSimulationResult // nolint: prealloc
-	for _, simDetails := range req.MetricDetails {
-		wg.Add(1)
-		var metricRes v1.MetricSimulationResult
-		req := licenseService.ProductLicensesForMetricRequest{
-			SwidTag:    req.SwidTag,
-			MetricName: simDetails.MetricName,
-			UnitCost:   simDetails.UnitCost,
-			Scope:      req.Scope,
-		}
-		go func(req *licenseService.ProductLicensesForMetricRequest) {
-			log.Printf("Context:%v", ctx)
-			cmptLicense, err := hcs.licenseClient.ProductLicensesForMetric(ctx, req)
-			if err != nil {
-				logger.Log.Error("service/v1 - Simulation - SimulationByMetric - LicenseService - ProductLicensesForMetric", zap.Error(err))
-				metricRes.Success = false
-				metricRes.MetricName = req.MetricName
-				metricRes.SimFailureReason = err.Error()
-			} else {
-				metricRes.Success = true
-				metricRes.NumCptLicences = cmptLicense.NumCptLicences
-				metricRes.TotalCost = cmptLicense.TotalCost
-				metricRes.MetricName = req.MetricName
-			}
-			defer wg.Done()
-		}(&req)
-		metricResults = append(metricResults, &metricRes)
+	if len(req.MetricDetails) == 0 {
+		return &v1.SimulationByMetricResponse{
+			Success: true,
+		}, nil
 	}
-	wg.Wait()
-
+	compResp, err := hcs.licenseClient.GetOverAllCompliance(ctx, &l_v1.GetOverAllComplianceRequest{
+		Editor:     req.Editor,
+		Scope:      req.Scope,
+		Simulation: true,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - Simulation - SimulationByMetric - l_v1 - GetOverAllCompliance", zap.Error(err))
+		return &v1.SimulationByMetricResponse{
+			Success:          false,
+			SimFailureReason: err.Error(),
+		}, nil
+	}
 	return &v1.SimulationByMetricResponse{
-		MetricSimResult: metricResults,
+		Success:         true,
+		MetricSimResult: convertCompToMetricSimResponse(compResp.AcqRights, req.MetricDetails),
 	}, nil
 }
 
@@ -67,7 +55,7 @@ func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.
 	for _, simDetails := range req.MetricDetails {
 		wg.Add(1)
 		var simulationResult v1.SimulatedProductsLicenses
-		req := licenseService.LicensesForEquipAndMetricRequest{
+		req := l_v1.LicensesForEquipAndMetricRequest{
 			EquipType:  req.EquipType,
 			EquipId:    req.EquipId,
 			MetricType: simDetails.MetricType,
@@ -76,10 +64,10 @@ func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.
 			Scope:      req.Scope,
 		}
 
-		go func(req *licenseService.LicensesForEquipAndMetricRequest) {
+		go func(req *l_v1.LicensesForEquipAndMetricRequest) {
 			response, err := hcs.licenseClient.LicensesForEquipAndMetric(ctx, req)
 			if err != nil {
-				logger.Log.Error("service/v1 - Simulation - SimulationByHardware - LicenseService - LicensesForEquipAndMetric", zap.Error(err))
+				logger.Log.Error("service/v1 - Simulation - SimulationByHardware - l_v1 - LicensesForEquipAndMetric", zap.Error(err))
 				simulationResult.Success = false
 				simulationResult.MetricName = req.MetricName
 				simulationResult.SimFailureReason = err.Error()
@@ -100,7 +88,7 @@ func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.
 	}, nil
 }
 
-func licenseServToSimulationServProductLicenseAll(licenses []*licenseService.ProductLicenseForEquipAndMetric) []*v1.SimulatedProductLicense {
+func licenseServToSimulationServProductLicenseAll(licenses []*l_v1.ProductLicenseForEquipAndMetric) []*v1.SimulatedProductLicense {
 
 	simLicenses := make([]*v1.SimulatedProductLicense, 0)
 
@@ -112,7 +100,7 @@ func licenseServToSimulationServProductLicenseAll(licenses []*licenseService.Pro
 	return simLicenses
 }
 
-func licenseServToSimulationServProductLicense(license *licenseService.ProductLicenseForEquipAndMetric) *v1.SimulatedProductLicense {
+func licenseServToSimulationServProductLicense(license *l_v1.ProductLicenseForEquipAndMetric) *v1.SimulatedProductLicense {
 	return &v1.SimulatedProductLicense{
 		OldLicences: license.OldLicences,
 		NewLicenses: license.NewLicenses,
@@ -123,9 +111,9 @@ func licenseServToSimulationServProductLicense(license *licenseService.ProductLi
 	}
 }
 
-func simulationToLicenseAttributesAll(attrs []*v1.EquipAttribute) []*licenseService.Attribute {
+func simulationToLicenseAttributesAll(attrs []*v1.EquipAttribute) []*l_v1.Attribute {
 
-	resAttrs := make([]*licenseService.Attribute, 0)
+	resAttrs := make([]*l_v1.Attribute, 0)
 	for _, attr := range attrs {
 		resAttr := simulationToLicenseAttributes(attr)
 		resAttrs = append(resAttrs, resAttr)
@@ -134,12 +122,12 @@ func simulationToLicenseAttributesAll(attrs []*v1.EquipAttribute) []*licenseServ
 	return resAttrs
 }
 
-func simulationToLicenseAttributes(attr *v1.EquipAttribute) *licenseService.Attribute {
-	lsattr := &licenseService.Attribute{
+func simulationToLicenseAttributes(attr *v1.EquipAttribute) *l_v1.Attribute {
+	lsattr := &l_v1.Attribute{
 		ID:               attr.ID,
 		Name:             attr.Name,
 		PrimaryKey:       attr.PrimaryKey,
-		DataType:         licenseService.DataTypes(attr.DataType),
+		DataType:         l_v1.DataTypes(attr.DataType),
 		Displayed:        attr.Displayed,
 		Searchable:       attr.Searchable,
 		ParentIdentifier: attr.ParentIdentifier,
@@ -149,15 +137,75 @@ func simulationToLicenseAttributes(attr *v1.EquipAttribute) *licenseService.Attr
 
 	switch attr.DataType {
 	case v1.DataTypes_INT:
-		lsattr.Val = &licenseService.Attribute_IntVal{IntVal: attr.GetIntVal()}
-		lsattr.OldVal = &licenseService.Attribute_IntValOld{IntValOld: attr.GetIntValOld()}
+		lsattr.Val = &l_v1.Attribute_IntVal{IntVal: attr.GetIntVal()}
+		lsattr.OldVal = &l_v1.Attribute_IntValOld{IntValOld: attr.GetIntValOld()}
 	case v1.DataTypes_FLOAT:
-		lsattr.Val = &licenseService.Attribute_FloatVal{FloatVal: attr.GetFloatVal()}
-		lsattr.OldVal = &licenseService.Attribute_FloatValOld{FloatValOld: attr.GetFloatValOld()}
+		lsattr.Val = &l_v1.Attribute_FloatVal{FloatVal: attr.GetFloatVal()}
+		lsattr.OldVal = &l_v1.Attribute_FloatValOld{FloatValOld: attr.GetFloatValOld()}
 	case v1.DataTypes_STRING:
-		lsattr.Val = &licenseService.Attribute_StringVal{StringVal: attr.GetStringVal()}
-		lsattr.OldVal = &licenseService.Attribute_StringValOld{StringValOld: attr.GetStringValOld()}
+		lsattr.Val = &l_v1.Attribute_StringVal{StringVal: attr.GetStringVal()}
+		lsattr.OldVal = &l_v1.Attribute_StringValOld{StringValOld: attr.GetStringValOld()}
 	}
 
 	return lsattr
+}
+
+func convertCompToMetricSimResponse(compliance []*l_v1.AggregationAcquiredRights, metsim []*v1.MetricSimDetails) []*v1.MetricSimulationResult {
+	simresp := []*v1.MetricSimulationResult{}
+	for _, comp := range compliance {
+		for _, ms := range metsim {
+			sliceCompSwidtags := strings.Split(comp.SwidTags, ",")
+			if len(sliceCompSwidtags) > 1 {
+				sort.Strings(sliceCompSwidtags)
+			}
+			sliceMsSwidtags := strings.Split(ms.Swidtag, ",")
+			if len(sliceMsSwidtags) > 1 {
+				sort.Strings(sliceMsSwidtags)
+			}
+			if comp.Metric == ms.MetricName && comp.SKU == ms.Sku && strings.Join(sliceCompSwidtags, ",") == strings.Join(sliceMsSwidtags, ",") && comp.AggregationName == ms.AggregationName {
+				simresp = append(simresp, &v1.MetricSimulationResult{
+					Swidtag:          strings.Join(sliceCompSwidtags, ","),
+					AggregationName:  comp.AggregationName,
+					MetricName:       ms.MetricName,
+					NumCptLicences:   uint64(comp.NumCptLicences),
+					OldTotalCost:     float64(comp.NumCptLicences) * comp.AvgUnitPrice,
+					NewTotalCost:     float64(comp.NumCptLicences) * ms.UnitCost,
+					Sku:              comp.SKU,
+					NotDeployed:      comp.NotDeployed,
+					MetricNotDefined: comp.MetricNotDefined,
+				})
+			}
+		}
+	}
+	return concatMetricSimResultForSameSwidtag(simresp)
+}
+
+func concatMetricSimResultForSameSwidtag(simMet []*v1.MetricSimulationResult) []*v1.MetricSimulationResult {
+	resSimMetric := make([]*v1.MetricSimulationResult, 0, len(simMet))
+	encountered := map[string]int{}
+	for i := range simMet {
+		idx, ok := encountered[simMet[i].Swidtag+":"+simMet[i].MetricName]
+		if ok {
+			// Add values to original.
+			resSimMetric[idx].Sku = strings.Join([]string{resSimMetric[idx].Sku, simMet[i].Sku}, ",")
+			resSimMetric[idx].OldTotalCost += simMet[i].OldTotalCost
+			resSimMetric[idx].NewTotalCost += simMet[i].NewTotalCost
+		} else {
+			// Record this element as an encountered element.
+			encountered[simMet[i].Swidtag+":"+simMet[i].MetricName] = len(resSimMetric)
+			// Append to result slice.
+			resSimMetric = append(resSimMetric, &v1.MetricSimulationResult{
+				Sku:              simMet[i].Sku,
+				MetricName:       simMet[i].MetricName,
+				NumCptLicences:   simMet[i].NumCptLicences,
+				OldTotalCost:     simMet[i].OldTotalCost,
+				NewTotalCost:     simMet[i].NewTotalCost,
+				AggregationName:  simMet[i].AggregationName,
+				Swidtag:          simMet[i].Swidtag,
+				NotDeployed:      simMet[i].NotDeployed,
+				MetricNotDefined: simMet[i].MetricNotDefined,
+			})
+		}
+	}
+	return resSimMetric
 }

@@ -90,7 +90,11 @@ func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListPro
 	var err error
 	// nolint: gocritic
 	if req.GetSearchParams().GetApplicationId().GetFilteringkey() != "" {
-		apiresp, err = s.listProductViewInApplication(ctx, req, req.Scopes)
+		if req.GetSearchParams().GetInstanceId().GetFilteringkey() != "" {
+			apiresp, err = s.listProductViewInApplicationInstance(ctx, req, req.Scopes)
+		} else {
+			apiresp, err = s.listProductViewInApplication(ctx, req, req.Scopes)
+		}
 	} else if req.GetSearchParams().GetEquipmentId().GetFilteringkey() != "" {
 		apiresp, err = s.listProductViewInEquipment(ctx, req, req.Scopes)
 	} else {
@@ -183,6 +187,71 @@ func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	return &v1.GetEquipmentsByProductResponse{EquipmentId: equipments}, nil
+}
+
+// nolint: gocyclo
+func (s *productServiceServer) listProductViewInApplicationInstance(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+	products, err := s.application.GetProductsByApplicationInstance(ctx, &appv1.GetProductsByApplicationInstanceRequest{
+		Scope:         scopes[0],
+		ApplicationId: req.SearchParams.ApplicationId.Filteringkey,
+		InstanceId:    req.SearchParams.InstanceId.Filteringkey,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - listProductViewInApplicationInstance - application/GetProductsByApplicationInstance", zap.Error(err))
+		return nil, status.Error(codes.Internal, "ServiceError")
+	}
+	prodFilter := []string{}
+	if products != nil {
+		prodFilter = products.ProductId
+	}
+	dbresp, err := s.productRepo.ListProductsByApplicationInstance(ctx, db.ListProductsByApplicationInstanceParams{
+		Scope:               req.Scopes,
+		Swidtag:             prodFilter,
+		ProductName:         req.GetSearchParams().GetName().GetFilteringkey(),
+		IsProductName:       req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+		LkProductName:       !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+		ProductEditor:       req.GetSearchParams().GetEditor().GetFilteringkey(),
+		IsProductEditor:     req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
+		LkProductEditor:     !req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
+		ProductNameAsc:      strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductNameDesc:     strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		SwidtagAsc:          strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		SwidtagDesc:         strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductVersionAsc:   strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductVersionDesc:  strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductEditionAsc:   strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductEditionDesc:  strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductCategoryAsc:  strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductCategoryDesc: strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductEditorAsc:    strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductEditorDesc:   strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		TotalCostAsc:        strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		TotalCostDesc:       strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		PageNum:             req.GetPageSize() * (req.GetPageNum() - 1),
+		PageSize:            req.GetPageSize(),
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - listProductViewInApplicationInstance - db/ListProductsByApplicationInstance", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	apiresp := v1.ListProductsResponse{}
+	apiresp.Products = make([]*v1.Product, len(dbresp))
+	if len(dbresp) > 0 {
+		apiresp.TotalRecords = int32(dbresp[0].Totalrecords)
+	}
+
+	for i := range dbresp {
+		apiresp.Products[i] = &v1.Product{}
+		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
+		apiresp.Products[i].Name = dbresp[i].ProductName
+		apiresp.Products[i].Edition = dbresp[i].ProductEdition
+		apiresp.Products[i].Editor = dbresp[i].ProductEditor
+		apiresp.Products[i].Version = dbresp[i].ProductVersion
+		apiresp.Products[i].Category = dbresp[i].ProductCategory
+		apiresp.Products[i].TotalCost = dbresp[i].TotalCost
+	}
+	return &apiresp, nil
 }
 
 // nolint: gocyclo
@@ -462,4 +531,39 @@ func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.Drop
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 	}
 	return &v1.DropProductDataResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) DropAggregationData(ctx context.Context, req *v1.DropAggregationDataRequest) (*v1.DropAggregationDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	if err := s.productRepo.DeleteAggregationByScope(ctx, req.Scope); err != nil {
+		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	// For dgworker Queue
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	}
+	e := dgworker.Envelope{Type: dgworker.DropAggregationData, JSON: jsonData}
+
+	envolveData, err := json.Marshal(e)
+	if err != nil {
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	}
+
+	_, err = s.queue.PushJob(ctx, job.Job{
+		Type:   sql.NullString{String: "aw"},
+		Status: job.JobStatusPENDING,
+		Data:   envolveData,
+	}, "aw")
+	if err != nil {
+		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+	}
+	return &v1.DropAggregationDataResponse{Success: true}, nil
 }

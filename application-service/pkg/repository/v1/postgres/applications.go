@@ -49,7 +49,10 @@ func (p *ApplicationRepository) UpsertInstanceTX(ctx context.Context, req *v1.Up
 		return err
 	}
 	at := NewApplicationRepositoryTx(tx)
-	instance, err := at.GetApplicationInstance(ctx, req.GetInstanceId())
+	instance, err := at.GetApplicationInstance(ctx, gendb.GetApplicationInstanceParams{
+		InstanceID: req.InstanceId,
+		Scope:      req.Scope,
+	})
 
 	if err != nil && err != sql.ErrNoRows {
 		logger.Log.Error("service/v1 - UpsertInstance - GetApplicationInstance", zap.Error(err))

@@ -15,16 +15,15 @@ type License interface {
 
 	// CreateProductAggregation creates aggregations of a product
 	// CreateProductAggregation(ctx context.Context, pa *ProductAggregation, scopes []string) (*ProductAggregation, error)
-	GetAggregationDetails(ctx context.Context, name string, scopes ...string) (*AggregationInfo, error)
+	AggregationDetails(ctx context.Context, name string, metrics []*Metric, isSimulation bool, scopes ...string) (*AggregationInfo, []*ProductAcquiredRight, error)
 	AggregationIndividualRights(ctx context.Context, productIDs, metrics []string, scopes ...string) ([]*AcqRightsInfo, error)
-
 	// ProductAggregationsByName returns true and product aggregation details if object or node with that name exists
 	// ProductAggregationsByName(ctx context.Context, name string, scopes []string) (*ProductAggregation, error)
 	// ProductIDForSwidtag returns true and unique id assignerd by database if object or node with that id exists
 	ProductIDForSwidtag(ctx context.Context, id string, params *QueryProducts, scopes ...string) (string, error)
 
 	// ProductAcquiredRights fets list of acquired rights for the product along with ID of the product
-	ProductAcquiredRights(ctx context.Context, swidTag string, metrics []*Metric, scopes ...string) (string, []*ProductAcquiredRight, error)
+	ProductAcquiredRights(ctx context.Context, swidTag string, metrics []*Metric, isSimulation bool, scopes ...string) (string, string, []*ProductAcquiredRight, error)
 
 	// MetadataAllWithType gets metadata for given metadata type
 	MetadataAllWithType(ctx context.Context, typ MetadataType, scopes ...string) ([]*Metadata, error)
@@ -102,6 +101,9 @@ type License interface {
 	// ListMetricINM returns all metrics of type instance.number.standard
 	ListMetricINM(ctx context.Context, scopes ...string) ([]*MetricINM, error)
 
+	// ListMetricSS returns all metrics of type static.standard
+	ListMetricSS(ctx context.Context, scopes ...string) ([]*MetricSS, error)
+
 	// ListMetricAttrSum returns all metrics of type attribute.sum.standard metric
 	ListMetricAttrSum(ctx context.Context, scopes ...string) ([]*MetricAttrSumStand, error)
 
@@ -140,6 +142,12 @@ type License interface {
 
 	// MetricOPSComputedLicensesForAppProduct gives licenses for application's product
 	MetricOPSComputedLicensesForAppProduct(ctx context.Context, prodID, appID string, mat *MetricOPSComputed, scopes ...string) (uint64, error)
+
+	// GetAggregations give acqproduct not used in agg and agg list for scope
+	GetAggregations(ctx context.Context, editor, scope string) ([]*Aggregation, error)
+
+	// GetAcqRights give acqproduct not used in agg and agg list for scope
+	GetAcqRights(ctx context.Context, swidtags []string, editor, scope string) ([]*Acqrights, error)
 }
 
 // Queryable interface provide methods for something that can be queried

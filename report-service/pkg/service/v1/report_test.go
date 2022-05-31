@@ -123,8 +123,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							//Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -148,13 +148,13 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeID:   2,
 					ReportStatus:   db.ReportStatusPENDING,
 					CreatedBy:      "admin@superuser.com",
-					ReportMetadata: []byte(`{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"}`),
+					ReportMetadata: []byte(`{"editor":"e1","equipType":"partition"}`),
 				}).Times(1).Return(int32(1), nil)
 
 				mockworkerqueue.EXPECT().PushJob(ctx, job.Job{
 					Type:   sql.NullString{String: "rw"},
 					Status: job.JobStatusPENDING,
-					Data:   []byte(`{"report_type":"ProductEquipmentsReport","scope":"Scope1","json":{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"},"report_id":1}`),
+					Data:   []byte(`{"report_type":"ProductEquipmentsReport","scope":"Scope1","json":{"editor":"e1","equipType":"partition"},"report_id":1}`),
 				}, "rw").Times(1).Return(int32(1), nil)
 
 			},
@@ -171,8 +171,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_AcqrightsReport{
 						AcqrightsReport: &v1.AcqRightsReport{
-							Swidtag: []string{"p1", "p2"},
-							Editor:  "e1",
+							// Swidtag: []string{"p1", "p2"},
+							Editor: "e1",
 						},
 					},
 				},
@@ -205,8 +205,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -236,8 +236,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -259,8 +259,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -313,8 +313,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -338,7 +338,7 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeID:   2,
 					ReportStatus:   db.ReportStatusPENDING,
 					CreatedBy:      "admin@superuser.com",
-					ReportMetadata: []byte(`{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"}`),
+					ReportMetadata: []byte(`{"editor":"e1","equipType":"partition"}`),
 				}).Times(1).Return(int32(1), nil)
 
 			},
@@ -356,8 +356,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -381,7 +381,7 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeID:   2,
 					ReportStatus:   db.ReportStatusPENDING,
 					CreatedBy:      "admin@superuser.com",
-					ReportMetadata: []byte(`{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"}`),
+					ReportMetadata: []byte(`{"editor":"e1","equipType":"partition"}`),
 				}).Times(1).Return(int32(0), errors.New("Internal Error"))
 
 			},
@@ -399,8 +399,8 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeId: 2,
 					ReportMetadata: &v1.SubmitReportRequest_ProductEquipmentsReport{
 						ProductEquipmentsReport: &v1.ProductEquipmentsReport{
-							Editor:    "e1",
-							Swidtag:   []string{"p1", "p2"},
+							Editor: "e1",
+							// Swidtag:   []string{"p1", "p2"},
 							EquipType: "partition",
 						},
 					},
@@ -424,13 +424,13 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 					ReportTypeID:   2,
 					ReportStatus:   db.ReportStatusPENDING,
 					CreatedBy:      "admin@superuser.com",
-					ReportMetadata: []byte(`{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"}`),
+					ReportMetadata: []byte(`{"editor":"e1","equipType":"partition"}`),
 				}).Times(1).Return(int32(1), nil)
 
 				mockworkerqueue.EXPECT().PushJob(ctx, job.Job{
 					Type:   sql.NullString{String: "rw"},
 					Status: job.JobStatusPENDING,
-					Data:   []byte(`{"report_type":"ProductEquipmentsReport","scope":"Scope1","json":{"editor":"e1","swidtag":["p1","p2"],"equipType":"partition"},"report_id":1}`),
+					Data:   []byte(`{"report_type":"ProductEquipmentsReport","scope":"Scope1","json":{"editor":"e1","equipType":"partition"},"report_id":1}`),
 				}, "rw").Times(1).Return(int32(0), errors.New("Internal Error"))
 
 			},

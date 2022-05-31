@@ -14,7 +14,7 @@
 import http from "k6/http";
 import { group, check, sleep } from "k6";
 
-const BASE_URL = "https://optisam-application-int.kermit-noprod-b.itn.intraorange";
+const BASE_URL = "https://optisam-application-int.apps.fr01.paas.tech.orange";
 // Sleep duration between successive requests.
 // You might want to edit the value of this variable or remove calls to the sleep function on the script.
 const SLEEP_DURATION = 0.1;
@@ -33,7 +33,7 @@ export let options = {
 };
 
 export function setup() {
-    let loginRes = http.post(`https://optisam-auth-int.kermit-noprod-b.itn.intraorange/api/v1/token`, {
+    let loginRes = http.post(`https://optisam-auth-int.apps.fr01.paas.tech.orange/api/v1/token`, {
         username: "admin@test.com",
         password: "admin",
         grant_type: "password"

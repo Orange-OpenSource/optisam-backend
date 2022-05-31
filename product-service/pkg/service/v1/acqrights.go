@@ -10,6 +10,7 @@ import (
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue/job"
 	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	metModels "optisam-backend/metric-service/pkg/repository/v1"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
@@ -28,6 +29,7 @@ const (
 	no  string = "no"
 )
 
+// nolint: funlen, gocyclo
 func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.UpsertAcqRightsRequest) (*v1.UpsertAcqRightsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -36,12 +38,9 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	startOfMaintenance := sql.NullTime{Valid: false}
-	endOfMaintenance := sql.NullTime{Valid: false}
-
-	var startTime, endTime time.Time
+	var startOfMaintenance, endOfMaintenance, orderingDate sql.NullTime
+	var startTime, endTime, orderingTime time.Time
 	var err1, err2 error
-
 	if req.NumLicencesMaintainance <= 0 {
 		req.StartOfMaintenance = ""
 		req.EndOfMaintenance = ""
@@ -52,7 +51,6 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 		}
 		maintenanceStartTime := req.StartOfMaintenance
 		maintenanceEndTime := req.EndOfMaintenance
-
 		if len(maintenanceStartTime) <= 10 {
 			if strings.Contains(maintenanceStartTime, "/") && len(maintenanceStartTime) <= 8 {
 				startTime, err1 = time.Parse("1/2/06", maintenanceStartTime)
@@ -73,7 +71,6 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 			}
 		}
 		startOfMaintenance = sql.NullTime{Time: startTime, Valid: true}
-
 		if len(maintenanceEndTime) <= 10 {
 			if strings.Contains(maintenanceEndTime, "/") && len(maintenanceEndTime) <= 8 {
 				endTime, err2 = time.Parse("1/2/06", maintenanceEndTime)
@@ -99,74 +96,114 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 			return nil, status.Error(codes.InvalidArgument, "end time is less than start time")
 		}
 	}
+	if req.OrderingDate != "" {
+		var err error
+		if strings.Contains(req.OrderingDate, "/") && len(req.OrderingDate) <= 8 {
+			orderingTime, err = time.Parse("1/2/06", req.OrderingDate)
+		} else if len(req.OrderingDate) == 10 {
+			orderingTime, err = time.Parse("02-01-2006", req.OrderingDate)
+		} else {
+			orderingTime, err = time.Parse(time.RFC3339Nano, req.OrderingDate)
+		}
+		if err != nil {
+			logger.Log.Error("service/v1 - UpsertAcqRights - unable to parse ordering time", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.InvalidArgument, "unable to parse ordering time")
+		}
+		orderingDate = sql.NullTime{Time: orderingTime, Valid: true}
+	}
 	if err := s.productRepo.UpsertAcqRights(ctx, db.UpsertAcqRightsParams{
-		Sku:                     req.GetSku(),
-		Swidtag:                 req.GetSwidtag(),
-		ProductName:             req.GetProductName(),
-		ProductEditor:           req.GetProductEditor(),
-		Metric:                  req.GetMetricType(),
-		NumLicensesAcquired:     req.GetNumLicensesAcquired(),
-		NumLicencesMaintainance: req.GetNumLicencesMaintainance(),
-		AvgUnitPrice:            decimal.NewFromFloat(req.GetAvgUnitPrice()),
-		AvgMaintenanceUnitPrice: decimal.NewFromFloat(req.GetAvgMaintenanceUnitPrice()),
-		TotalPurchaseCost:       decimal.NewFromFloat(req.GetTotalPurchaseCost()),
-		TotalMaintenanceCost:    decimal.NewFromFloat(req.GetTotalMaintenanceCost()),
-		TotalCost:               decimal.NewFromFloat(req.GetTotalCost()),
-		Scope:                   req.GetScope(),
-		StartOfMaintenance:      startOfMaintenance,
-		EndOfMaintenance:        endOfMaintenance,
-		Version:                 req.GetVersion(),
-		CreatedBy:               userClaims.UserID,
+		Sku:                       req.GetSku(),
+		Swidtag:                   req.GetSwidtag(),
+		ProductName:               req.GetProductName(),
+		CorporateSourcingContract: req.GetCorporateSourcingContract(),
+		OrderingDate:              orderingDate,
+		ProductEditor:             req.GetProductEditor(),
+		Metric:                    req.GetMetricType(),
+		SoftwareProvider:          req.GetSoftwareProvider(),
+		MaintenanceProvider:       req.GetMaintenanceProvider(),
+		NumLicensesAcquired:       req.GetNumLicensesAcquired(),
+		NumLicencesMaintainance:   req.GetNumLicencesMaintainance(),
+		AvgUnitPrice:              decimal.NewFromFloat(req.GetAvgUnitPrice()),
+		AvgMaintenanceUnitPrice:   decimal.NewFromFloat(req.GetAvgMaintenanceUnitPrice()),
+		TotalPurchaseCost:         decimal.NewFromFloat(req.GetTotalPurchaseCost()),
+		TotalMaintenanceCost:      decimal.NewFromFloat(req.GetTotalMaintenanceCost()),
+		TotalCost:                 decimal.NewFromFloat(req.GetTotalCost()),
+		Scope:                     req.GetScope(),
+		StartOfMaintenance:        startOfMaintenance,
+		EndOfMaintenance:          endOfMaintenance,
+		Version:                   req.GetVersion(),
+		CreatedBy:                 userClaims.UserID,
+		LastPurchasedOrder:        req.GetLastPurchasedOrder(),
+		SupportNumber:             req.GetSupportNumber(),
 	}); err != nil {
 		logger.Log.Error("service/v1 - UpsertAcqRights - UpsertAcquiredRights", zap.String("reason", err.Error()))
 		return &v1.UpsertAcqRightsResponse{Success: false}, status.Error(codes.Unknown, "DBError")
 	}
-
 	// For Worker Queue
 	s.pushUpsertAcqrightsWorkerJob(ctx, dgworker.UpsertAcqRightsRequest{
-		Sku:                     req.Sku,
-		Swidtag:                 req.Swidtag,
-		ProductName:             req.ProductName,
-		ProductEditor:           req.ProductEditor,
-		MetricType:              req.MetricType,
-		NumLicensesAcquired:     req.NumLicensesAcquired,
-		AvgUnitPrice:            req.AvgUnitPrice,
-		AvgMaintenanceUnitPrice: req.AvgMaintenanceUnitPrice,
-		TotalPurchaseCost:       req.TotalPurchaseCost,
-		TotalMaintenanceCost:    req.TotalMaintenanceCost,
-		TotalCost:               req.TotalCost,
-		Scope:                   req.Scope,
-		StartOfMaintenance:      req.StartOfMaintenance,
-		EndOfMaintenance:        req.EndOfMaintenance,
-		NumLicencesMaintenance:  req.NumLicencesMaintainance,
-		Version:                 req.Version,
+		Sku:                       req.Sku,
+		Swidtag:                   req.Swidtag,
+		ProductName:               req.ProductName,
+		ProductEditor:             req.ProductEditor,
+		MetricType:                req.MetricType,
+		NumLicensesAcquired:       req.NumLicensesAcquired,
+		AvgUnitPrice:              req.AvgUnitPrice,
+		AvgMaintenanceUnitPrice:   req.AvgMaintenanceUnitPrice,
+		TotalPurchaseCost:         req.TotalPurchaseCost,
+		TotalMaintenanceCost:      req.TotalMaintenanceCost,
+		TotalCost:                 req.TotalCost,
+		Scope:                     req.Scope,
+		StartOfMaintenance:        req.StartOfMaintenance,
+		EndOfMaintenance:          req.EndOfMaintenance,
+		NumLicencesMaintenance:    req.NumLicencesMaintainance,
+		Version:                   req.Version,
+		CorporateSourcingContract: req.CorporateSourcingContract,
+		SoftwareProvider:          req.SoftwareProvider,
+		OrderingDate:              req.OrderingDate,
+		MaintenanceProvider:       req.MaintenanceProvider,
+		LastPurchasedOrder:        req.LastPurchasedOrder,
+		SupportNumber:             req.SupportNumber,
 	})
-
 	return &v1.UpsertAcqRightsResponse{Success: true}, nil
 }
 
-// nolint: gocyclo
+// nolint: gocyclo, funlen
 func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAcqRightsRequest) (*v1.ListAcqRightsResponse, error) {
-
-	// ctx, span := trace.StartSpan(ctx, "Service Layer")
-	// defer span.End()
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
-
-	// log.Println("SCOPES ", userClaims.Socpes)
-
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		logger.Log.Sugar().Infof("acrights-service - ListAcqRights - user don't have access to the scopes: %v, requested scopes: %v", userClaims.Socpes, req.Scopes)
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-
+	var orderingTime time.Time
+	var orderingdate sql.NullTime
+	if req.GetSearchParams().GetOrderingDate().GetFilteringkey() != "" {
+		var err error
+		if strings.Contains(req.GetSearchParams().GetOrderingDate().GetFilteringkey(), "/") && len(req.GetSearchParams().GetOrderingDate().GetFilteringkey()) <= 8 {
+			orderingTime, err = time.Parse("1/2/06", req.GetSearchParams().GetOrderingDate().GetFilteringkey())
+		} else if len(req.GetSearchParams().GetOrderingDate().GetFilteringkey()) == 10 {
+			orderingTime, err = time.Parse("02-01-2006", req.GetSearchParams().GetOrderingDate().GetFilteringkey())
+		} else {
+			orderingTime, err = time.Parse(time.RFC3339Nano, req.GetSearchParams().GetOrderingDate().GetFilteringkey())
+		}
+		if err != nil {
+			logger.Log.Sugar().Errorf("service/v1 - ListAcqRights - unable to parse ordering date search params", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.InvalidArgument, "not correct timestamp for ordering date search params")
+		}
+		orderingdate = sql.NullTime{Time: orderingTime, Valid: true}
+	}
 	dbresp, err := s.productRepo.ListAcqRightsIndividual(ctx, db.ListAcqRightsIndividualParams{
 		Scope:                       req.Scopes,
 		Sku:                         req.GetSearchParams().GetSKU().GetFilteringkey(),
 		IsSku:                       req.GetSearchParams().GetSKU().GetFilterType() && req.GetSearchParams().GetSKU().GetFilteringkey() != "",
 		LkSku:                       !req.GetSearchParams().GetSKU().GetFilterType() && req.GetSearchParams().GetSKU().GetFilteringkey() != "",
+		SoftwareProvider:            req.GetSearchParams().GetSoftwareProvider().GetFilteringkey(),
+		IsSoftwareProvider:          req.GetSearchParams().GetSoftwareProvider().GetFilterType() && req.GetSearchParams().GetSoftwareProvider().GetFilteringkey() != "",
+		LkSoftwareProvider:          !req.GetSearchParams().GetSoftwareProvider().GetFilterType() && req.GetSearchParams().GetSoftwareProvider().GetFilteringkey() != "",
+		OrderingDate:                orderingdate,
+		IsOrderingDate:              !req.GetSearchParams().GetOrderingDate().GetFilterType() && req.GetSearchParams().GetOrderingDate().GetFilteringkey() != "",
 		Swidtag:                     req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:                   req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
 		LkSwidtag:                   !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -215,14 +252,11 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 		logger.Log.Error("service/v1 - ListAcqRights - ListAcqRightsIndividual", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-
 	apiresp := v1.ListAcqRightsResponse{}
 	apiresp.AcquiredRights = make([]*v1.AcqRights, len(dbresp))
-
 	if len(dbresp) > 0 {
 		apiresp.TotalRecords = int32(dbresp[0].Totalrecords)
 	}
-
 	for i := range dbresp {
 		apiresp.AcquiredRights[i] = &v1.AcqRights{}
 		apiresp.AcquiredRights[i].Version = dbresp[i].Version
@@ -239,6 +273,15 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 		apiresp.AcquiredRights[i].TotalMaintenanceCost, _ = dbresp[i].TotalMaintenanceCost.Float64()
 		apiresp.AcquiredRights[i].TotalCost, _ = dbresp[i].TotalCost.Float64()
 		apiresp.AcquiredRights[i].Comment = dbresp[i].Comment.String
+		apiresp.AcquiredRights[i].SoftwareProvider = dbresp[i].SoftwareProvider
+		apiresp.AcquiredRights[i].SupportNumber = dbresp[i].SupportNumber
+		apiresp.AcquiredRights[i].LastPurchasedOrder = dbresp[i].LastPurchasedOrder
+		apiresp.AcquiredRights[i].MaintenanceProvider = dbresp[i].MaintenanceProvider
+		apiresp.AcquiredRights[i].CorporateSourcingContract = dbresp[i].CorporateSourcingContract
+		apiresp.AcquiredRights[i].FileName = dbresp[i].FileName
+		if dbresp[i].OrderingDate.Valid {
+			apiresp.AcquiredRights[i].OrderingDate, _ = ptypes.TimestampProto(dbresp[i].OrderingDate.Time)
+		}
 		if dbresp[i].StartOfMaintenance.Valid {
 			apiresp.AcquiredRights[i].StartOfMaintenance, _ = ptypes.TimestampProto(dbresp[i].StartOfMaintenance.Time)
 		}
@@ -253,7 +296,6 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 			apiresp.AcquiredRights[i].LicensesUnderMaintenance = no
 		}
 	}
-
 	return &apiresp, nil
 }
 
@@ -279,10 +321,11 @@ func (s *productServiceServer) CreateAcqRight(ctx context.Context, req *v1.AcqRi
 		return &v1.AcqRightResponse{}, status.Error(codes.InvalidArgument, "SKU already exists")
 	}
 
-	dbAcqRight, upsertAcqRight, err := s.validateAcqRight(ctx, userClaims.UserID, req)
+	dbAcqRight, upsertAcqRight, err := s.validateAcqRight(ctx, req)
 	if err != nil {
 		return &v1.AcqRightResponse{}, err
 	}
+	dbAcqRight.CreatedBy = userClaims.UserID
 	if inserr := s.productRepo.UpsertAcqRights(ctx, dbAcqRight); inserr != nil {
 		logger.Log.Error("service/v1 - CreateAcqRight - UpsertAcqRights", zap.String("reason", inserr.Error()))
 		return &v1.AcqRightResponse{}, status.Error(codes.Unknown, "DBError")
@@ -316,10 +359,11 @@ func (s *productServiceServer) UpdateAcqRight(ctx context.Context, req *v1.AcqRi
 		logger.Log.Error("service/v1 - CreateAcqRight - GetAcqRightBySKU", zap.String("reason", err.Error()))
 		return &v1.AcqRightResponse{}, status.Error(codes.Internal, "DBError")
 	}
-	dbAcqRight, upsertAcqRight, err := s.validateAcqRight(ctx, userClaims.UserID, req)
+	dbAcqRight, upsertAcqRight, err := s.validateAcqRight(ctx, req)
 	if err != nil {
 		return &v1.AcqRightResponse{}, err
 	}
+	dbAcqRight.CreatedBy = userClaims.UserID
 	if uperr := s.productRepo.UpsertAcqRights(ctx, dbAcqRight); uperr != nil {
 		logger.Log.Error("service/v1 - UpdateAcqright - UpsertAcqRights", zap.String("reason", uperr.Error()))
 		return &v1.AcqRightResponse{}, status.Error(codes.Unknown, "DBError")
@@ -379,8 +423,45 @@ func (s *productServiceServer) DeleteAcqRight(ctx context.Context, req *v1.Delet
 	}, nil
 }
 
-// nolint: gocyclo
-func (s *productServiceServer) validateAcqRight(ctx context.Context, userID string, req *v1.AcqRightRequest) (db.UpsertAcqRightsParams, *dgworker.UpsertAcqRightsRequest, error) {
+func (s *productServiceServer) DownloadAcqRightFile(ctx context.Context, req *v1.DownloadAcqRightFileRequest) (*v1.DownloadAcqRightFileResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Sugar().Errorf("service/v1 - DownloadAcqRightFile - req scope: %s, available scopes: %v", req.Scope, userClaims.Socpes)
+		return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+	acq, err := s.productRepo.GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+		AcqrightSku: req.Sku,
+		Scope:       req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.InvalidArgument, "SKU does not exist")
+		}
+		logger.Log.Error("service/v1 - DownloadAcqRightFile - GetAcqRightBySKU", zap.String("reason", err.Error()))
+		return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	if acq.FileName == "" {
+		return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.InvalidArgument, "Acquired Right does not contain file")
+	}
+	acqFileData, err := s.productRepo.GetAcqRightFileDataBySKU(ctx, db.GetAcqRightFileDataBySKUParams{
+		AcqrightSku: req.Sku,
+		Scope:       req.Scope,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - DownloadAcqRightFile - GetAcqRightFileDataBySKU", zap.String("reason", err.Error()))
+		return &v1.DownloadAcqRightFileResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.DownloadAcqRightFileResponse{
+		FileData: acqFileData,
+	}, nil
+}
+
+// nolint: gocyclo,funlen
+func (s *productServiceServer) validateAcqRight(ctx context.Context, req *v1.AcqRightRequest) (db.UpsertAcqRightsParams, *dgworker.UpsertAcqRightsRequest, error) {
+	swidtag := strings.ReplaceAll(strings.Join([]string{req.ProductName, req.ProductEditor, req.Version}, "_"), " ", "_")
 	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
 		Scopes: []string{req.Scope},
 	})
@@ -392,17 +473,35 @@ func (s *productServiceServer) validateAcqRight(ctx context.Context, userID stri
 		return db.UpsertAcqRightsParams{}, nil, status.Error(codes.InvalidArgument, "MetricNotExists")
 	}
 	for _, met := range strings.Split(req.MetricName, ",") {
-		if idx := metricExists(metrics.Metrices, met); idx == -1 {
+		idx := metricExists(metrics.Metrices, met)
+		if idx == -1 {
 			logger.Log.Error("service/v1 - validateAcqRight - metric does not exist", zap.String("metric:", met))
 			return db.UpsertAcqRightsParams{}, nil, status.Error(codes.InvalidArgument, "MetricNotExists")
+		}
+		if err := s.metricCheckForProcessorAndNup(ctx, metrics.Metrices, idx, 0, swidtag, req.Scope); err != nil {
+			return db.UpsertAcqRightsParams{}, nil, err
 		}
 	}
 	var totalPurchaseCost, totalMaintenanceCost float64
 	totalPurchaseCost = req.AvgUnitPrice * float64(req.NumLicensesAcquired)
-	var startOfMaintenance sql.NullTime
-	var endOfMaintenance sql.NullTime
-	var startTime, endTime time.Time
+	var startOfMaintenance, endOfMaintenance, orderingDate sql.NullTime
+	var startTime, endTime, orderingTime time.Time
 	var err1, err2 error
+	if req.OrderingDate != "" {
+		var err error
+		if strings.Contains(req.OrderingDate, "/") && len(req.OrderingDate) <= 8 {
+			orderingTime, err = time.Parse("1/2/06", req.OrderingDate)
+		} else if len(req.OrderingDate) == 10 {
+			orderingTime, err = time.Parse("02-01-2006", req.OrderingDate)
+		} else {
+			orderingTime, err = time.Parse(time.RFC3339Nano, req.OrderingDate)
+		}
+		if err != nil {
+			logger.Log.Error("service/v1 - validateAcqRight - unable to parse ordering time", zap.String("reason", err.Error()))
+			return db.UpsertAcqRightsParams{}, nil, status.Error(codes.InvalidArgument, "unable to parse ordering time")
+		}
+		orderingDate = sql.NullTime{Time: orderingTime, Valid: true}
+	}
 	if req.NumLicencesMaintainance == 0 && req.StartOfMaintenance == "" && req.EndOfMaintenance == "" {
 		// do nothing
 	} else if req.NumLicencesMaintainance != 0 && req.StartOfMaintenance != "" && req.EndOfMaintenance != "" {
@@ -440,43 +539,55 @@ func (s *productServiceServer) validateAcqRight(ctx context.Context, userID stri
 		return db.UpsertAcqRightsParams{}, nil, status.Error(codes.InvalidArgument, "all or no fields should be present( maintenance licenses, start date, end date)")
 	}
 	totalMaintenanceCost = req.AvgMaintenanceUnitPrice * float64(req.NumLicencesMaintainance)
-	swidtag := strings.ReplaceAll(strings.Join([]string{req.ProductName, req.ProductEditor, req.Version}, "_"), " ", "_")
 	return db.UpsertAcqRightsParams{
-			Sku:                     req.Sku,
-			Swidtag:                 swidtag,
-			ProductName:             req.ProductName,
-			ProductEditor:           req.ProductEditor,
-			Scope:                   req.Scope,
-			Metric:                  req.MetricName,
-			NumLicensesAcquired:     req.NumLicensesAcquired,
-			AvgUnitPrice:            decimal.NewFromFloat(req.AvgUnitPrice),
-			AvgMaintenanceUnitPrice: decimal.NewFromFloat(req.AvgMaintenanceUnitPrice),
-			TotalPurchaseCost:       decimal.NewFromFloat(totalPurchaseCost),
-			TotalMaintenanceCost:    decimal.NewFromFloat(totalMaintenanceCost),
-			TotalCost:               decimal.NewFromFloat(totalPurchaseCost + totalMaintenanceCost),
-			CreatedBy:               userID,
-			StartOfMaintenance:      startOfMaintenance,
-			EndOfMaintenance:        endOfMaintenance,
-			NumLicencesMaintainance: req.NumLicencesMaintainance,
-			Version:                 req.Version,
-			Comment:                 sql.NullString{String: req.Comment, Valid: true},
+			Sku:                       req.Sku,
+			Swidtag:                   swidtag,
+			ProductName:               req.ProductName,
+			ProductEditor:             req.ProductEditor,
+			Scope:                     req.Scope,
+			Metric:                    req.MetricName,
+			NumLicensesAcquired:       req.NumLicensesAcquired,
+			AvgUnitPrice:              decimal.NewFromFloat(req.AvgUnitPrice),
+			AvgMaintenanceUnitPrice:   decimal.NewFromFloat(req.AvgMaintenanceUnitPrice),
+			TotalPurchaseCost:         decimal.NewFromFloat(totalPurchaseCost),
+			TotalMaintenanceCost:      decimal.NewFromFloat(totalMaintenanceCost),
+			TotalCost:                 decimal.NewFromFloat(totalPurchaseCost + totalMaintenanceCost),
+			StartOfMaintenance:        startOfMaintenance,
+			EndOfMaintenance:          endOfMaintenance,
+			NumLicencesMaintainance:   req.NumLicencesMaintainance,
+			Version:                   req.Version,
+			Comment:                   sql.NullString{String: req.Comment, Valid: true},
+			OrderingDate:              orderingDate,
+			CorporateSourcingContract: req.CorporateSourcingContract,
+			SoftwareProvider:          req.SoftwareProvider,
+			LastPurchasedOrder:        req.LastPurchasedOrder,
+			SupportNumber:             req.SupportNumber,
+			MaintenanceProvider:       req.MaintenanceProvider,
+			FileName:                  req.FileName,
+			FileData:                  req.FileData,
 		}, &dgworker.UpsertAcqRightsRequest{
-			Sku:                     req.Sku,
-			Swidtag:                 swidtag,
-			ProductName:             req.ProductName,
-			ProductEditor:           req.ProductEditor,
-			MetricType:              req.MetricName,
-			NumLicensesAcquired:     req.NumLicensesAcquired,
-			AvgUnitPrice:            req.AvgUnitPrice,
-			AvgMaintenanceUnitPrice: req.AvgMaintenanceUnitPrice,
-			TotalPurchaseCost:       totalPurchaseCost,
-			TotalMaintenanceCost:    totalMaintenanceCost,
-			TotalCost:               (totalPurchaseCost + totalMaintenanceCost),
-			Scope:                   req.Scope,
-			StartOfMaintenance:      req.StartOfMaintenance,
-			EndOfMaintenance:        req.EndOfMaintenance,
-			NumLicencesMaintenance:  req.NumLicencesMaintainance,
-			Version:                 req.Version,
+			Sku:                       req.Sku,
+			Swidtag:                   swidtag,
+			ProductName:               req.ProductName,
+			ProductEditor:             req.ProductEditor,
+			MetricType:                req.MetricName,
+			NumLicensesAcquired:       req.NumLicensesAcquired,
+			AvgUnitPrice:              req.AvgUnitPrice,
+			AvgMaintenanceUnitPrice:   req.AvgMaintenanceUnitPrice,
+			TotalPurchaseCost:         totalPurchaseCost,
+			TotalMaintenanceCost:      totalMaintenanceCost,
+			TotalCost:                 (totalPurchaseCost + totalMaintenanceCost),
+			Scope:                     req.Scope,
+			StartOfMaintenance:        req.StartOfMaintenance,
+			EndOfMaintenance:          req.EndOfMaintenance,
+			NumLicencesMaintenance:    req.NumLicencesMaintainance,
+			Version:                   req.Version,
+			OrderingDate:              req.OrderingDate,
+			CorporateSourcingContract: req.CorporateSourcingContract,
+			SoftwareProvider:          req.SoftwareProvider,
+			LastPurchasedOrder:        req.LastPurchasedOrder,
+			SupportNumber:             req.SupportNumber,
+			MaintenanceProvider:       req.MaintenanceProvider,
 		}, nil
 
 }
@@ -511,4 +622,62 @@ func (s *productServiceServer) pushUpsertAcqrightsWorkerJob(ctx context.Context,
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 	}
 	logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
+}
+
+func (s *productServiceServer) metricCheckForProcessorAndNup(ctx context.Context, metrics []*metv1.Metric, idx int, aggid int32, swidtag, scope string) error {
+	switch metrics[idx].Type {
+	case metModels.MetricOPSOracleProcessorStandard.String(), metModels.MetricOracleNUPStandard.String():
+		if aggid != 0 {
+			aggRightsMetrics, err := s.productRepo.GetAggRightMetricsByAggregationId(ctx, db.GetAggRightMetricsByAggregationIdParams{
+				AggID: aggid,
+				Scope: scope,
+			})
+			if err != nil {
+				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAggRightMetricsByAggregationId - unable to get acqrights metrics by aggregation id:%v", zap.Error(err))
+				return status.Error(codes.Internal, "DBError")
+			}
+			for _, acqMetric := range aggRightsMetrics {
+				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
+					return err
+				}
+			}
+		} else {
+			acqMetrics, err := s.productRepo.GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+				Swidtag: swidtag,
+				Scope:   scope,
+			})
+			if err != nil {
+				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAcqRightMetricsBySwidtag - unable to get acqrights metrics by swidtag:%v", zap.Error(err))
+				return status.Error(codes.Internal, "DBError")
+			}
+			for _, acqMetric := range acqMetrics {
+				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	default:
+		return nil
+	}
+}
+
+func metricCheckForProcessorAndNupInRights(metrics []*metv1.Metric, acqmet string, idx int) error {
+	ind := metricExists(metrics, acqmet)
+	if ind == -1 {
+		logger.Log.Error("service/v1 - validateAcqRight - acquired right metric does not exist", zap.String("metric:", acqmet))
+		return status.Error(codes.Internal, "Internal Error")
+	}
+	if metrics[ind].Type == metModels.MetricOPSOracleProcessorStandard.String() && metrics[idx].Type == metModels.MetricOPSOracleProcessorStandard.String() {
+		if metrics[idx].Name != metrics[ind].Name {
+			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.processor.standard for the same product/aggregation.")
+		}
+	}
+	if metrics[ind].Type == metModels.MetricOracleNUPStandard.String() && metrics[idx].Type == metModels.MetricOracleNUPStandard.String() {
+		if metrics[idx].Name != metrics[ind].Name {
+			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.nup.standard for the same product/aggregation.")
+		}
+	}
+	return nil
 }

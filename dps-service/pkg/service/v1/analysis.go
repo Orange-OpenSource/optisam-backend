@@ -74,7 +74,7 @@ var (
 
 	sheetsAndHeaders map[string]map[string]Info = map[string]map[string]Info{
 		servers:        {"server_name": Info{MandatoryWithBlank, STRING}, "server_id": Info{Mandatory, STRING}, "server_type": Info{Wished, STRING}, "server_os": Info{Wished, STRING}, "cpu_model": Info{Mandatory, STRING}, "cores_per_processor": Info{Mandatory, INT}, "hyperthreading": Info{Wished, STRING}, "cluster_name": Info{MandatoryWithBlank, STRING}, "vcenter_name": Info{MandatoryWithBlank, STRING}, "vcenter_version": Info{Wished, STRING}, "datacenter_name": Info{Wished, STRING}, "ibm_pvu": Info{MandatoryWithBlank, FLOAT64}, "sag_uvu": Info{MandatoryWithBlank, INT}, "cpu_manufacturer": Info{MandatoryWithBlank, STRING}, "server_processors_numbers": Info{Mandatory, INT}},
-		acquiredRights: {"sku": Info{Mandatory, STRING}, "product_name": Info{Mandatory, STRING}, "product_version": Info{Mandatory, STRING}, "product_editor": Info{Mandatory, STRING}, "metric": Info{Mandatory, STRING}, "licence_type": Info{Wished, STRING}, "acquired_licenses": Info{Mandatory, INT}, "unit_price": Info{Mandatory, FLOAT64}, "maintenance_licences": Info{MandatoryWithBlank, INT}, "maintenance_unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_start": Info{MandatoryWithBlank, DATE}, "maintenance_end": Info{MandatoryWithBlank, DATE}},
+		acquiredRights: {"maintenance_provider": Info{MandatoryWithBlank, STRING}, "last_po": Info{MandatoryWithBlank, STRING}, "support_number": Info{MandatoryWithBlank, STRING}, "software_provider": Info{MandatoryWithBlank, STRING}, "ordering_date": Info{MandatoryWithBlank, DATE}, "csc": Info{MandatoryWithBlank, STRING}, "sku": Info{Mandatory, STRING}, "product_name": Info{Mandatory, STRING}, "product_version": Info{Mandatory, STRING}, "product_editor": Info{Mandatory, STRING}, "metric": Info{Mandatory, STRING}, "licence_type": Info{Wished, STRING}, "acquired_licenses": Info{Mandatory, INT}, "unit_price": Info{Mandatory, FLOAT64}, "maintenance_licences": Info{MandatoryWithBlank, INT}, "maintenance_unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_start": Info{MandatoryWithBlank, DATE}, "maintenance_end": Info{MandatoryWithBlank, DATE}},
 		softpartitions: {"softpartition_name": Info{MandatoryWithBlank, STRING}, "softpartition_id": Info{Mandatory, STRING}, "server_id": Info{Mandatory, STRING}},
 		products:       {"product_name": Info{Mandatory, STRING}, "product_version": Info{Mandatory, STRING}, "product_editor": Info{Mandatory, STRING}, "host_id": Info{Mandatory, STRING}, "domain": Info{MandatoryWithBlank, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "application_name": Info{MandatoryWithBlank, STRING}, "application_id": Info{MandatoryWithBlank, STRING}, "application_instance_name": Info{MandatoryWithBlank, STRING}, "number_of_access": Info{MandatoryWithBlank, INT}}}
 
@@ -92,11 +92,12 @@ type Node struct {
 }
 
 type ObjectCommentInfo struct {
-	Msg         string
-	Action      string
-	Column      string
-	IsFullRow   bool
-	Coordinates []int
+	Msg          string
+	Action       string
+	Column       string   // single column need to highlight
+	IsFullRow    bool     // true for full row
+	Coordinates  []int    // cordinates of full row
+	ColumnRanges []string // multiple columns need to highlight
 }
 
 type BadReferenceInfo struct {
@@ -287,6 +288,7 @@ func (d *dpsServiceServer) DataAnalysis(ctx context.Context, req *v1.DataAnalysi
 		TargetFile:  fmt.Sprintf("api/v1/import/download?fileName=good_%s&downloadType=analysis&scope=%s", req.File, req.Scope),
 		ErrorFile:   fmt.Sprintf("api/v1/import/download?fileName=bad_%s&downloadType=error&scope=%s", req.File, req.Scope),
 		Description: description, Status: analysisStatus}, nil
+
 }
 
 func getErrorResponse(err error) (status string, msg string) {
@@ -362,7 +364,7 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue chan map[strin
 				return err
 			}
 			if ok {
-				obj, ok := handleServerSheetInconsistency(serverID, rows[i], inconsitency)
+				obj, ok := handleServerSheetInconsistency(serverID, rows[i], inconsitency, headersIndex, i+1)
 				if ok {
 					goodObj = append(goodObj, rows[i])
 					badServers[serverID] = 2
@@ -384,10 +386,10 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue chan map[strin
 			}
 		} else {
 			mainObj[servers] = append(mainObj[servers], ObjectCommentInfo{
-				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]),
+				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]+1),
 				Action:      DuplicateLine,
 				IsFullRow:   true,
-				Coordinates: []int{len(rows[i]), i},
+				Coordinates: []int{len(rows[i]), i + 1},
 			})
 			badObj = append(badObj, rows[i])
 			badServers[serverID] = 1
@@ -461,10 +463,10 @@ func analyzeSoftpartitionSheet(fp *excel.File, goodObjQueue, badObjQueue chan ma
 			}
 		} else {
 			mainObj[softpartitions] = append(mainObj[softpartitions], ObjectCommentInfo{
-				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]),
+				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]+1),
 				Action:      DuplicateLine,
 				IsFullRow:   true,
-				Coordinates: []int{len(rows[i]), i},
+				Coordinates: []int{len(rows[i]), i + 1},
 			})
 			badObj = append(badObj, rows[i])
 			if badSoftpartitions[partitionID] == 0 {
@@ -591,10 +593,10 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue chan map[stri
 			}
 		} else {
 			mainObj[products] = append(mainObj[products], ObjectCommentInfo{
-				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]),
+				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]+1),
 				Action:      DuplicateLine,
 				IsFullRow:   true,
-				Coordinates: []int{len(rows[i]), i},
+				Coordinates: []int{len(rows[i]), i + 1},
 			})
 			badObj = append(badObj, rows[i])
 		}
@@ -668,7 +670,7 @@ func analyzeAcquiredRightSheet(fp *excel.File, goodObjQueue, badObjQueue chan ma
 					goodObj = append(goodObj, rows[i])
 				} else {
 					badObj = append(badObj, rows[i])
-					mainObj[acquiredRights] = append(mainObj[acquiredRights], obj)
+					mainObj[acquiredRights] = append(mainObj[acquiredRights], obj...)
 				}
 			} else {
 				badObj = append(badObj, rows[i])
@@ -676,7 +678,7 @@ func analyzeAcquiredRightSheet(fp *excel.File, goodObjQueue, badObjQueue chan ma
 			}
 		} else {
 			mainObj[acquiredRights] = append(mainObj[acquiredRights], ObjectCommentInfo{
-				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]),
+				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(rows[i], "|")]+1),
 				Action:      DuplicateLine,
 				Coordinates: []int{len(rows[i]), i + 1},
 				IsFullRow:   true,
@@ -873,6 +875,10 @@ func mainObjWriter(fp *excel.File, scope, fileName string, mainObjQueue chan map
 						continue
 					}
 					err = addCellAnalysisByCordinates(fp, val.Coordinates[0], val.Coordinates[1], sheet, val.Msg, val.Action)
+				} else if val.ColumnRanges != nil {
+					for _, v := range val.ColumnRanges {
+						err = addCellAnalysisByColumn(fp, v, sheet, val.Msg, val.Action)
+					}
 				} else {
 					err = addCellAnalysisByColumn(fp, val.Column, sheet, val.Msg, val.Action)
 				}
@@ -897,9 +903,15 @@ func handleHeaders(fp *excel.File, sheetSeq map[string]int) (map[string]map[stri
 	var isMissingHeader bool
 	sheets := ""
 	seq := 0
+	sheetNum := 1
 	for _, sheetName := range fp.GetSheetList() {
+		fp.SetActiveSheet(sheetNum)
+		sheetNum++
 		sheetSeq[sheetName] = seq
 		seq++
+		if sheetsAndHeaders[sheetName] == nil { // dont process the other sheets
+			continue
+		}
 		if incomingHeadersIndex[sheetName] == nil {
 			incomingHeadersIndex[sheetName] = make(map[string]int)
 		}
@@ -912,6 +924,7 @@ func handleHeaders(fp *excel.File, sheetSeq map[string]int) (map[string]map[stri
 			return nil, fmt.Errorf("analysis:%s sheet is empty", sheetName)
 		}
 		for i, val := range rows[0] {
+			val = strings.ToLower(val)
 			if incomingHeadersIndex[sheetName][val] == 0 {
 				incomingHeadersIndex[sheetName][val] = i + 1
 			} else if err := handleDuplicateHeader(fp, sheetName, val, i+1); err != nil {
@@ -919,7 +932,7 @@ func handleHeaders(fp *excel.File, sheetSeq map[string]int) (map[string]map[stri
 			}
 		}
 		for k, v := range sheetsAndHeaders[sheetName] {
-			if v.IsMandatory == Mandatory && incomingHeadersIndex[sheetName][k] == 0 {
+			if (v.IsMandatory == Mandatory || v.IsMandatory == MandatoryWithBlank) && incomingHeadersIndex[sheetName][k] == 0 {
 				logger.Log.Error("Mandatory header missing ", zap.Any("sheet", sheetName), zap.Any("header", k))
 				isMissingHeader = true
 				sheets += fmt.Sprintf("%s,", sheetName)
@@ -969,16 +982,21 @@ func handleSoftpartitionInconsistency(fp *excel.File, headersIndex map[string]in
 	return ObjectCommentInfo{}, true
 }
 
-func handleServerSheetInconsistency(serverID string, data []string, inconsistency map[string]string) (ObjectCommentInfo, bool) {
-	key := strings.Join(data, "|")
-	if inconsistency[key] != "" && serverID != "" && inconsistency[key] != serverID {
+func handleServerSheetInconsistency(serverID string, data []string, inconsistency map[string]string, headersIndex map[string]int, y int) (ObjectCommentInfo, bool) {
+	value := strings.Join(data, "|")
+	if inconsistency[serverID] != "" {
+		colName, err := excel.ColumnNumberToName(headersIndex["server_id"])
+		if err != nil {
+			logger.Log.Error("Failed to get server_id column namne", zap.Error(err))
+			colName = "A"
+		}
 		return ObjectCommentInfo{
 			Msg:    "ServerId is repeated with different configuration",
 			Action: Inconsistent1,
-			Column: "column",
+			Column: fmt.Sprintf("%s%d", colName, y+1),
 		}, false
 	} else if serverID != "" {
-		inconsistency[key] = serverID
+		inconsistency[serverID] = value
 	}
 	return ObjectCommentInfo{}, true
 }
@@ -995,7 +1013,7 @@ func handleProductSheetInconsistency(fp *excel.File, headersIndex map[string]int
 		return ObjectCommentInfo{
 			Msg:    "Inconsistency, same application_id cannot have different name",
 			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", colName, y),
+			Column: fmt.Sprintf("%s%d", colName, y+1),
 		}, false
 
 	}
@@ -1017,77 +1035,153 @@ func getCellValue(fp *excel.File, key string, rowNo int, headersIndex map[string
 	return
 }
 
-func handleAcquiredRightSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, x, y int) (ObjectCommentInfo, bool, error) {
+func handleAcquiredRightSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, x, y int) ([]ObjectCommentInfo, bool, error) { // nolint
 	sku := getCellValue(fp, "sku", y, headersIndex, acquiredRights)
-	name := getCellValue(fp, "product_name", y, headersIndex, acquiredRights)
-	version := getCellValue(fp, "product_version", y, headersIndex, acquiredRights)
-	editor := getCellValue(fp, "product_editor", y, headersIndex, acquiredRights)
-	val := fmt.Sprintf("%s_%s_%s", name, version, editor)
-	key := sku
-	if inconsistency[key] != "" && val != "" && inconsistency[key] != val {
+	mp := getCellValue(fp, "maintenance_provider", y, headersIndex, acquiredRights)
+	sp := getCellValue(fp, "software_provider", y, headersIndex, acquiredRights)
+	csc := getCellValue(fp, "csc", y, headersIndex, acquiredRights)
+	sn := getCellValue(fp, "support_number", y, headersIndex, acquiredRights)
+	lpo := getCellValue(fp, "last_po", y, headersIndex, acquiredRights)
+	var obj []ObjectCommentInfo
+	if len(mp) > 16 {
+		col, err := excel.ColumnNumberToName(headersIndex["maintenance_provider"])
+		if err != nil {
+			logger.Log.Error("Failed to get maintenance_provider colname in acqRights Sheet", zap.Any("colNumber", headersIndex["maintenance_provider"]), zap.Error(err))
+			return nil, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "maintenance_provider characters max limit is 16",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+	}
+	if len(sn) > 16 {
+		col, err := excel.ColumnNumberToName(headersIndex["support_number"])
+		if err != nil {
+			logger.Log.Error("Failed to get support_number colname in acqRights Sheet", zap.Any("colNumber", headersIndex["support_number"]), zap.Error(err))
+			return nil, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "support_number characters max limit is 16",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+	}
+	if len(sp) > 16 {
+		col, err := excel.ColumnNumberToName(headersIndex["software_provider"])
+		if err != nil {
+			logger.Log.Error("Failed to get software_provider colname in acqRights Sheet", zap.Any("colNumber", headersIndex["software_provider"]), zap.Error(err))
+			return nil, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "software_provider characters max limit is 16",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+	}
+	if len(csc) > 16 {
+		col, err := excel.ColumnNumberToName(headersIndex["csc"])
+		if err != nil {
+			logger.Log.Error("Failed to get csc colname in acqRights Sheet", zap.Any("colNumber", headersIndex["csc"]), zap.Error(err))
+			return nil, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "csc characters max limit is 16",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+	}
+	if len(lpo) > 16 {
+		col, err := excel.ColumnNumberToName(headersIndex["last_po"])
+		if err != nil {
+			logger.Log.Error("Failed to get last_po colname in acqRights Sheet", zap.Any("colNumber", headersIndex["last_po"]), zap.Error(err))
+			return nil, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "last_purchase_order characters max limit is 16",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+	}
+	if strings.Contains(sku, "+") {
 		col, err := excel.ColumnNumberToName(headersIndex["sku"])
 		if err != nil {
 			logger.Log.Error("Failed to get colname in acqRights Sheet", zap.Any("colNumber", headersIndex["sku"]), zap.Error(err))
-			return ObjectCommentInfo{}, false, err
+			return nil, false, err
 		}
-		return ObjectCommentInfo{
-			Msg:    "Inconsistency, multiple sku with same product_name,version and editor found",
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "Inconsistency,+  is not allowed in sku",
 			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, x),
-		}, false, nil
-	} else if val != "" {
-		inconsistency[key] = val
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
 	}
 
 	st := getCellValue(fp, "maintenance_start", y, headersIndex, acquiredRights)
 	et := getCellValue(fp, "maintenance_end", y, headersIndex, acquiredRights)
 	maintenanceLic := getCellValue(fp, "maintenance_licences", y, headersIndex, acquiredRights)
-	var msg string
+	msCol, err := excel.ColumnNumberToName(headersIndex["maintenance_start"])
+	if err != nil {
+		logger.Log.Error("Failed to get colname in acqRights Sheet", zap.Any("colNumber", headersIndex["maintenance_start"]), zap.Error(err))
+		return nil, false, err
+	}
+	meCol, err := excel.ColumnNumberToName(headersIndex["maintenance_end"])
+	if err != nil {
+		logger.Log.Error("Failed to get colname in acqRights Sheet", zap.Any("colNumber", headersIndex["maintenance_end"]), zap.Error(err))
+		return nil, false, err
+	}
 	if getMaintainenceLicNum(maintenanceLic) > 0 {
 		if st != "" && et != "" {
 			if !isMaintenanceDateOk(st, et) {
-				col, err := excel.ColumnNumberToName(headersIndex["maintenance_start"])
-				if err != nil {
-					logger.Log.Error("Failed to get colname in acqRights Sheet", zap.Any("colNumber", headersIndex["maintenance_start"]), zap.Error(err))
-					return ObjectCommentInfo{}, false, err
-				}
-				return ObjectCommentInfo{
+				obj = append(obj, ObjectCommentInfo{
 					Msg:    "end of maintenance date must be greater than start date",
 					Action: Inconsistent2,
-					Column: fmt.Sprintf("%s%d", col, x),
-				}, false, nil
+					Column: fmt.Sprintf("%s%d", meCol, y),
+				})
 			}
-			return ObjectCommentInfo{}, true, nil
 		} else if st != "" {
-			msg = "End of maintenance date is mandatory with maintenance licenses"
+			obj = append(obj, ObjectCommentInfo{
+				Msg:    "End of maintenance date is mandatory with maintenance licenses",
+				Action: Inconsistent2,
+				Column: fmt.Sprintf("%s%d", meCol, y),
+			})
 		} else if et != "" {
-			msg = "Start of maintenance date is mandatory with maintenance licenses"
+			obj = append(obj, ObjectCommentInfo{
+				Msg:    "Start of maintenance date is mandatory with maintenance licenses",
+				Action: Inconsistent2,
+				Column: fmt.Sprintf("%s%d", msCol, y),
+			})
 		} else {
-			msg = "start and end of maintenance date is mandatory with maintenance licenses"
+			obj = append(obj, ObjectCommentInfo{
+				Msg:          "start and end of maintenance date is mandatory with maintenance licenses",
+				Action:       Inconsistent2,
+				IsFullRow:    false,
+				ColumnRanges: []string{fmt.Sprintf("%s%d", msCol, y), fmt.Sprintf("%s%d", meCol, y)},
+			})
 		}
-		return ObjectCommentInfo{
-			Msg:         msg,
-			Action:      Inconsistent2,
-			IsFullRow:   true,
-			Coordinates: []int{x, y},
-		}, false, nil
-	} else if st != "" || et != "" {
-		msg = "start and end of maintenance date is not considered as maintenance licences no is zero"
+	} else if st != "" && et != "" {
+		obj = append(obj, ObjectCommentInfo{
+			Msg:          "start and end of maintenance date is not considered as maintenance licences no is zero",
+			Action:       Inconsistent2,
+			IsFullRow:    false,
+			ColumnRanges: []string{fmt.Sprintf("%s%d", msCol, y), fmt.Sprintf("%s%d", meCol, y)},
+		})
 	} else if st != "" {
-		msg = "End of maintenance date is not considered as maintenance licences no is zero"
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "End of maintenance date is not considered as maintenance licences no is zero",
+			Action: Inconsistent2,
+			Column: fmt.Sprintf("%s%d", msCol, y),
+		})
 	} else if et != "" {
-		msg = "start of maintenance date is not considered as maintenance licences no is zero"
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    "start of maintenance date is not considered as maintenance licences no is zero",
+			Action: Inconsistent2,
+			Column: fmt.Sprintf("%s%d", meCol, y),
+		})
 	}
-	if msg != "" {
-		return ObjectCommentInfo{
-			Msg:         msg,
-			Action:      Inconsistent2,
-			IsFullRow:   true,
-			Coordinates: []int{x, y},
-		}, false, nil
+	if len(obj) > 0 {
+		return obj, false, nil
 	}
-
-	return ObjectCommentInfo{}, true, nil
+	return nil, true, nil
 }
 
 func isMaintenanceDateOk(st, et string) bool {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
@@ -27,7 +26,7 @@ func (l *LicenseRepository) ListMetricINM(ctx context.Context, scopes ...string)
 	type Resp struct {
 		Data []*metricINM
 	}
-	log.Println("INM metrics ", string(respJSON))
+	// log.Println("INM metrics ", string(respJSON))
 	var data Resp
 	if err := json.Unmarshal(respJSON, &data); err != nil {
 		// fmt.Println(string(resp.Json))

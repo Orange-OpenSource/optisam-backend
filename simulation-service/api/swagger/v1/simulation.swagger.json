@@ -379,34 +379,56 @@
     "v1MetricSimDetails": {
       "type": "object",
       "properties": {
+        "swidtag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
         "metric_name": {
           "type": "string"
         },
         "unit_cost": {
           "type": "number",
           "format": "double"
+        },
+        "sku": {
+          "type": "string"
         }
       }
     },
     "v1MetricSimulationResult": {
       "type": "object",
       "properties": {
-        "success": {
-          "type": "boolean"
+        "swidtag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "metric_name": {
+          "type": "string"
         },
         "num_cpt_licences": {
           "type": "string",
           "format": "uint64"
         },
-        "total_cost": {
+        "old_total_cost": {
           "type": "number",
           "format": "double"
         },
-        "metric_name": {
+        "new_total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "sku": {
           "type": "string"
         },
-        "sim_failure_reason": {
-          "type": "string"
+        "not_deployed": {
+          "type": "boolean"
+        },
+        "metric_not_defined": {
+          "type": "boolean"
         }
       }
     },
@@ -507,7 +529,7 @@
     "v1SimulationByMetricRequest": {
       "type": "object",
       "properties": {
-        "swid_tag": {
+        "editor": {
           "type": "string"
         },
         "metric_details": {
@@ -524,11 +546,17 @@
     "v1SimulationByMetricResponse": {
       "type": "object",
       "properties": {
+        "success": {
+          "type": "boolean"
+        },
         "metric_sim_result": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1MetricSimulationResult"
           }
+        },
+        "sim_failure_reason": {
+          "type": "string"
         }
       }
     },

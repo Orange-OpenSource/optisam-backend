@@ -37,6 +37,7 @@ type ApplicationServiceClient interface {
 	PostObsolescenseRiskMatrix(ctx context.Context, in *PostRiskMatrixRequest, opts ...grpc.CallOption) (*PostRiskMatrixResponse, error)
 	DropObscolenscenceData(ctx context.Context, in *DropObscolenscenceDataRequest, opts ...grpc.CallOption) (*DropObscolenscenceDataResponse, error)
 	GetEquipmentsByApplication(ctx context.Context, in *GetEquipmentsByApplicationRequest, opts ...grpc.CallOption) (*GetEquipmentsByApplicationResponse, error)
+	GetProductsByApplicationInstance(ctx context.Context, in *GetProductsByApplicationInstanceRequest, opts ...grpc.CallOption) (*GetProductsByApplicationInstanceResponse, error)
 }
 
 type applicationServiceClient struct {
@@ -218,6 +219,15 @@ func (c *applicationServiceClient) GetEquipmentsByApplication(ctx context.Contex
 	return out, nil
 }
 
+func (c *applicationServiceClient) GetProductsByApplicationInstance(ctx context.Context, in *GetProductsByApplicationInstanceRequest, opts ...grpc.CallOption) (*GetProductsByApplicationInstanceResponse, error) {
+	out := new(GetProductsByApplicationInstanceResponse)
+	err := c.cc.Invoke(ctx, "/optisam.applications.v1.ApplicationService/GetProductsByApplicationInstance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ApplicationServiceServer is the server API for ApplicationService service.
 // All implementations should embed UnimplementedApplicationServiceServer
 // for forward compatibility
@@ -242,6 +252,7 @@ type ApplicationServiceServer interface {
 	PostObsolescenseRiskMatrix(context.Context, *PostRiskMatrixRequest) (*PostRiskMatrixResponse, error)
 	DropObscolenscenceData(context.Context, *DropObscolenscenceDataRequest) (*DropObscolenscenceDataResponse, error)
 	GetEquipmentsByApplication(context.Context, *GetEquipmentsByApplicationRequest) (*GetEquipmentsByApplicationResponse, error)
+	GetProductsByApplicationInstance(context.Context, *GetProductsByApplicationInstanceRequest) (*GetProductsByApplicationInstanceResponse, error)
 }
 
 // UnimplementedApplicationServiceServer should be embedded to have forward compatible implementations.
@@ -304,6 +315,9 @@ func (UnimplementedApplicationServiceServer) DropObscolenscenceData(context.Cont
 }
 func (UnimplementedApplicationServiceServer) GetEquipmentsByApplication(context.Context, *GetEquipmentsByApplicationRequest) (*GetEquipmentsByApplicationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEquipmentsByApplication not implemented")
+}
+func (UnimplementedApplicationServiceServer) GetProductsByApplicationInstance(context.Context, *GetProductsByApplicationInstanceRequest) (*GetProductsByApplicationInstanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductsByApplicationInstance not implemented")
 }
 
 // UnsafeApplicationServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -659,6 +673,24 @@ func _ApplicationService_GetEquipmentsByApplication_Handler(srv interface{}, ctx
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ApplicationService_GetProductsByApplicationInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductsByApplicationInstanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).GetProductsByApplicationInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.applications.v1.ApplicationService/GetProductsByApplicationInstance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).GetProductsByApplicationInstance(ctx, req.(*GetProductsByApplicationInstanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ApplicationService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.applications.v1.ApplicationService",
 	HandlerType: (*ApplicationServiceServer)(nil),
@@ -738,6 +770,10 @@ var _ApplicationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetEquipmentsByApplication",
 			Handler:    _ApplicationService_GetEquipmentsByApplication_Handler,
+		},
+		{
+			MethodName: "GetProductsByApplicationInstance",
+			Handler:    _ApplicationService_GetProductsByApplicationInstance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

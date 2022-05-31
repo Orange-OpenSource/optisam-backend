@@ -57,37 +57,80 @@ CREATE TABLE IF NOT EXISTS acqrights (
     updated_by VARCHAR ,
     start_of_maintenance TIMESTAMP DEFAULT NULL,
     end_of_maintenance TIMESTAMP DEFAULT NULL,
+    last_purchased_order VARCHAR NOT NULL DEFAULT '', 
+    support_number VARCHAR NOT NULL DEFAULT '',
+    maintenance_provider VARCHAR NOT NULL DEFAULT '',
     version VARCHAR NOT NULL,
     comment VARCHAR DEFAULT '',
+    ordering_date TIMESTAMP DEFAULT NULL,
+    corporate_sourcing_contract VARCHAR NOT NULL DEFAULT '',
+    software_provider VARCHAR NOT NULL DEFAULT '',
+    file_name VARCHAR NOT NULL DEFAULT '',
+    file_data BYTEA,
     PRIMARY KEY(sku, scope)
 );
 
 CREATE TABLE IF NOT EXISTS aggregations (
-    aggregation_id SERIAL NOT NULL,
+    id SERIAL NOT NULL,
     aggregation_name VARCHAR NOT NULL,
-    aggregation_metric VARCHAR NOT NULL,
-    aggregation_scope VARCHAR NOT NULL,
+    scope VARCHAR NOT NULL,
+    product_editor VARCHAR NOT NULL,
     products TEXT[] NOT NULL,
+    swidtags TEXT[] NOT NULL,
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by VARCHAR NOT NULL,
     updated_on TIMESTAMP,
     updated_by VARCHAR,
-   PRIMARY KEY(aggregation_id),
-    UNIQUE (aggregation_name, aggregation_scope)
+   PRIMARY KEY(id),
+    UNIQUE (aggregation_name, scope)
 );
 
+-- CREATE TABLE IF NOT EXISTS aggregated_rights (
+--     id SERIAL NOT NULL,
+--     aggregation_name VARCHAR NOT NULL,
+--     sku VARCHAR NOT NULL,
+--     product_editor VARCHAR NOT NULL,
+--     metric VARCHAR NOT NULL,
+--     products TEXT[] NOT NULL,
+--     swidtags TEXT[] NOT NULL,
+--     ordering_date TIMESTAMP DEFAULT NULL,
+--     corporate_sourcing_contract VARCHAR NOT NULL DEFAULT '',
+--     software_provider VARCHAR NOT NULL DEFAULT '',
+--     scope VARCHAR NOT NULL,
+--     num_licenses_acquired INTEGER NOT NULL DEFAULT 0,
+--     num_licences_computed INTEGER NOT NULL DEFAULT 0,
+--     num_licences_maintainance INTEGER NOT NULL DEFAULT 0,
+--     avg_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     avg_maintenance_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     total_purchase_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     total_computed_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     total_maintenance_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     total_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+--     start_of_maintenance TIMESTAMP DEFAULT NULL,
+--     end_of_maintenance TIMESTAMP DEFAULT NULL,
+--     last_purchased_order VARCHAR NOT NULL DEFAULT '',
+--     support_number VARCHAR NOT NULL DEFAULT '',
+--     maintenance_provider VARCHAR NOT NULL DEFAULT '',
+--     comment VARCHAR DEFAULT '',
+--     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+--     created_by VARCHAR NOT NULL,
+--     updated_on TIMESTAMP NOT NULL DEFAULT NOW(),
+--     updated_by VARCHAR ,
+--     PRIMARY KEY(id),
+--     UNIQUE (aggregation_name, sku, scope)
+-- );
+
 CREATE TABLE IF NOT EXISTS aggregated_rights (
-    id SERIAL NOT NULL,
-    aggregation_name VARCHAR NOT NULL,
     sku VARCHAR NOT NULL,
-    product_editor VARCHAR NOT NULL,
+    aggregation_id INTEGER NOT NULL, 
     metric VARCHAR NOT NULL,
-    products TEXT[] NOT NULL,
-    swidtags TEXT[] NOT NULL,
+    ordering_date TIMESTAMP DEFAULT NULL,
+    corporate_sourcing_contract VARCHAR NOT NULL DEFAULT '',
+    software_provider VARCHAR NOT NULL DEFAULT '',
     scope VARCHAR NOT NULL,
     num_licenses_acquired INTEGER NOT NULL DEFAULT 0,
     num_licences_computed INTEGER NOT NULL DEFAULT 0,
-    num_licences_maintainance INTEGER NOT NULL DEFAULT 0,
+    num_licences_maintenance INTEGER NOT NULL DEFAULT 0,
     avg_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
     avg_maintenance_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
     total_purchase_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
@@ -96,13 +139,18 @@ CREATE TABLE IF NOT EXISTS aggregated_rights (
     total_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
     start_of_maintenance TIMESTAMP DEFAULT NULL,
     end_of_maintenance TIMESTAMP DEFAULT NULL,
+    last_purchased_order VARCHAR NOT NULL DEFAULT '',
+    support_number VARCHAR NOT NULL DEFAULT '',
+    maintenance_provider VARCHAR NOT NULL DEFAULT '',
     comment VARCHAR DEFAULT '',
     created_on TIMESTAMP NOT NULL DEFAULT NOW(),
     created_by VARCHAR NOT NULL,
     updated_on TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_by VARCHAR ,
-    PRIMARY KEY(id),
-    UNIQUE (aggregation_name, sku, scope)
+    updated_by VARCHAR,
+    file_name VARCHAR NOT NULL DEFAULT '',
+    file_data BYTEA,
+    FOREIGN KEY (aggregation_id) REFERENCES aggregations ON DELETE CASCADE,
+    PRIMARY KEY(sku,scope)
 );
 
 CREATE TABLE IF NOT EXISTS products_equipments (
@@ -130,6 +178,28 @@ CREATE TABLE IF NOT EXISTS dashboard_audit (
      scope varchar NOT NULL,
      primary key (scope)
 );
+
+CREATE TABLE IF NOT EXISTS overall_computed_licences(
+    sku VARCHAR NOT NULL,
+    swidtags VARCHAR NOT NULL,
+    scope VARCHAR NOT NULL,
+    product_names VARCHAR NOT NULL,
+    aggregation_name VARCHAR NOT NULL DEFAULT '',
+    metrics VARCHAR NOT NULL,
+    num_computed_licences INTEGER NOT NULL DEFAULT 0,
+    num_acquired_licences INTEGER NOT NULL DEFAULT 0,
+    total_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    purchase_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    computed_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    delta_number INTEGER NOT NULL DEFAULT 0,
+    delta_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
+    avg_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
+    computed_details VARCHAR NOT NULL,
+    metic_not_defined BOOLEAN DEFAULT FALSE,
+    not_deployed BOOLEAN DEFAULT FALSE,
+    editor VARCHAR NOT NULL,
+    primary key (sku,swidtags,scope)
+)
 
 -- For testing
 -- insert into products(swidtag,product_name,product_version,product_edition,product_category,

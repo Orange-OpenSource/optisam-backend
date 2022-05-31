@@ -36,6 +36,153 @@ var (
 // define the regex for a UUID once up-front
 var _dps_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on GetAnalysisFileInfoRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAnalysisFileInfoRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for UploadId
+
+	// no validation rules for Scope
+
+	// no validation rules for FileType
+
+	return nil
+}
+
+// GetAnalysisFileInfoRequestValidationError is the validation error returned
+// by GetAnalysisFileInfoRequest.Validate if the designated constraints aren't met.
+type GetAnalysisFileInfoRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalysisFileInfoRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalysisFileInfoRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalysisFileInfoRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalysisFileInfoRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalysisFileInfoRequestValidationError) ErrorName() string {
+	return "GetAnalysisFileInfoRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalysisFileInfoRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalysisFileInfoRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalysisFileInfoRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalysisFileInfoRequestValidationError{}
+
+// Validate checks the field values on GetAnalysisFileInfoResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAnalysisFileInfoResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for FileName
+
+	// no validation rules for ScopeType
+
+	// no validation rules for IsOlderGeneric
+
+	return nil
+}
+
+// GetAnalysisFileInfoResponseValidationError is the validation error returned
+// by GetAnalysisFileInfoResponse.Validate if the designated constraints
+// aren't met.
+type GetAnalysisFileInfoResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAnalysisFileInfoResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAnalysisFileInfoResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAnalysisFileInfoResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAnalysisFileInfoResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAnalysisFileInfoResponseValidationError) ErrorName() string {
+	return "GetAnalysisFileInfoResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAnalysisFileInfoResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAnalysisFileInfoResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAnalysisFileInfoResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAnalysisFileInfoResponseValidationError{}
+
 // Validate checks the field values on ViewCoreFactorLogsRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1404,7 +1551,7 @@ func (m *NotifyUploadRequest) Validate() error {
 
 	// no validation rules for ScopeType
 
-	// no validation rules for AnalyzedErrorFile
+	// no validation rules for AnalysisId
 
 	return nil
 }

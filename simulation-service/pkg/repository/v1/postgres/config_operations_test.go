@@ -43,33 +43,33 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 					UpdatedOn:     time.Now().UTC(),
 				},
 				data: []*v1.ConfigData{
-					&v1.ConfigData{
+					{
 						ConfigMetadata: &v1.Metadata{
 							AttributeName:  "cpu",
 							ConfigFileName: "1.csv",
 						},
 						ConfigValues: []*v1.ConfigValue{
-							&v1.ConfigValue{
+							{
 								Key:   "xenon",
 								Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 							},
-							&v1.ConfigValue{
+							{
 								Key:   "phenon",
 								Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 							},
 						},
 					},
-					&v1.ConfigData{
+					{
 						ConfigMetadata: &v1.Metadata{
 							AttributeName:  "cf",
 							ConfigFileName: "2.csv",
 						},
 						ConfigValues: []*v1.ConfigValue{
-							&v1.ConfigValue{
+							{
 								Key:   "1",
 								Value: []byte(`{"cf":"1"}`),
 							},
-							&v1.ConfigValue{
+							{
 								Key:   "2",
 								Value: []byte(`{"cf":"2"}`),
 							},
@@ -113,12 +113,12 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 				}
 				var expectedMetadataAll []db.GetMetadatabyConfigIDRow
 				expectedMetadataAll = []db.GetMetadatabyConfigIDRow{
-					db.GetMetadatabyConfigIDRow{
+					{
 						EquipmentType:  "Server",
 						AttributeName:  "cpu",
 						ConfigFilename: "1.csv",
 					},
-					db.GetMetadatabyConfigIDRow{
+					{
 						EquipmentType:  "Server",
 						AttributeName:  "cf",
 						ConfigFilename: "2.csv",
@@ -192,35 +192,35 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             1,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -250,33 +250,33 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 				eqType:      "Server",
 				metadataIDs: []int32{1, 2},
 				data: []*v1.ConfigData{
-					&v1.ConfigData{
+					{
 						ConfigMetadata: &v1.Metadata{
 							AttributeName:  "cpu",
 							ConfigFileName: "3.csv",
 						},
 						ConfigValues: []*v1.ConfigValue{
-							&v1.ConfigValue{
+							{
 								Key:   "xenon",
 								Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 							},
-							&v1.ConfigValue{
+							{
 								Key:   "phenon",
 								Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 							},
 						},
 					},
-					&v1.ConfigData{
+					{
 						ConfigMetadata: &v1.Metadata{
 							AttributeName:  "cf",
 							ConfigFileName: "4.csv",
 						},
 						ConfigValues: []*v1.ConfigValue{
-							&v1.ConfigValue{
+							{
 								Key:   "1",
 								Value: []byte(`{"cf":"1"}`),
 							},
-							&v1.ConfigValue{
+							{
 								Key:   "2",
 								Value: []byte(`{"cf":"2"}`),
 							},
@@ -315,12 +315,12 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 				}
 				var expectedMetadataAll []db.GetMetadatabyConfigIDRow
 				expectedMetadataAll = []db.GetMetadatabyConfigIDRow{
-					db.GetMetadatabyConfigIDRow{
+					{
 						EquipmentType:  "Server",
 						AttributeName:  "cpu",
 						ConfigFilename: "3.csv",
 					},
-					db.GetMetadatabyConfigIDRow{
+					{
 						EquipmentType:  "Server",
 						AttributeName:  "cf",
 						ConfigFilename: "4.csv",

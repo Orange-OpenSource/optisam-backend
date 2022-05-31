@@ -15,6 +15,7 @@ type metricSPS struct {
 	Name           string `json:"metric.name"`
 	Base           []*id  `json:"metric.sps.base"`
 	AttrNumCores   []*id  `json:"metric.sps.attr_num_cores"`
+	AttrNumCPU     []*id  `json:"metric.sps.attr_num_cpu"`
 	AtrrCoreFactor []*id  `json:"metric.sps.attr_core_factor"`
 }
 
@@ -66,11 +67,16 @@ func converMetricToModelMetricSPS(m *metricSPS) (*v1.MetricSPS, error) {
 		return nil, errors.New("dgraph converMetricToModelMetricSPS - AttrNumCores not found")
 	}
 
+	if len(m.AttrNumCPU) == 0 {
+		return nil, errors.New("dgraph converMetricToModelMetricSPS - AttrNumCPU not found")
+	}
+
 	return &v1.MetricSPS{
 		ID:               m.ID,
 		Name:             m.Name,
 		BaseEqTypeID:     m.Base[0].ID,
 		CoreFactorAttrID: m.AtrrCoreFactor[0].ID,
 		NumCoreAttrID:    m.AttrNumCores[0].ID,
+		NumCPUAttrID:     m.AttrNumCPU[0].ID,
 	}, nil
 }

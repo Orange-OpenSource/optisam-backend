@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"errors"
+	"fmt"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	ls "optisam-backend/license-service/pkg/api/v1"
@@ -12,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSimulationService_SimulationByMetric(t *testing.T) {
@@ -39,15 +41,33 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.SimulationByMetricRequest{
-					SwidTag: "Oracle_Database_11g_Enterprise_Edition_10.3",
+					Editor: "Oracle",
 					MetricDetails: []*v1.MetricSimDetails{
-						&v1.MetricSimDetails{
+						{
+							Sku:        "sku1",
+							Swidtag:    "swid3",
 							MetricName: "ibm_pvu",
 							UnitCost:   200,
 						},
-						&v1.MetricSimDetails{
-							MetricName: "oracle_processor",
+						{
+							Sku:        "sku2",
+							Swidtag:    "swid3",
+							MetricName: "ibm_pvu",
 							UnitCost:   300,
+						},
+						{
+							Sku:             "sku3",
+							Swidtag:         "swid2,swid1",
+							AggregationName: "aggname1",
+							MetricName:      "oracle_processor",
+							UnitCost:        300,
+						},
+						{
+							Sku:             "sku5",
+							Swidtag:         "swid1",
+							AggregationName: "",
+							MetricName:      "oracle_processor",
+							UnitCost:        50,
 						},
 					},
 					Scope: "Scope1",
@@ -57,30 +77,84 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicenseClient := mockls.NewMockLicenseServiceClient(mockCtrl)
 				licenseClient = mockLicenseClient
-				gomock.InOrder(
-					mockLicenseClient.EXPECT().ProductLicensesForMetric(ctx, gomock.Any()).Times(2).DoAndReturn(func(ctx context.Context, req *ls.ProductLicensesForMetricRequest) (*ls.ProductLicensesForMetricResponse, error) {
-						if req.MetricName == "ibm_pvu" {
-							return &ls.ProductLicensesForMetricResponse{
-								NumCptLicences: 1200,
-								TotalCost:      240000,
-								MetricName:     "ibm_pvu",
-							}, nil
-						}
-						return nil, errors.New("Internal")
-					}),
-				)
+				mockLicenseClient.EXPECT().GetOverAllCompliance(ctx, &ls.GetOverAllComplianceRequest{
+					Scope:      "Scope1",
+					Editor:     "Oracle",
+					Simulation: true,
+				}).Times(2).Return(&ls.GetOverAllComplianceResponse{
+					AcqRights: []*ls.AggregationAcquiredRights{
+						{
+							SKU:             "sku3",
+							AggregationName: "aggname1",
+							SwidTags:        "swid1,swid2",
+							Metric:          "oracle_processor",
+							NumCptLicences:  10,
+							AvgUnitPrice:    10,
+						},
+						{
+							SKU:             "sku5",
+							AggregationName: "",
+							SwidTags:        "swid1",
+							Metric:          "oracle_processor",
+							NumCptLicences:  10,
+							AvgUnitPrice:    10,
+						},
+						{
+							SKU:             "sku1",
+							AggregationName: "",
+							SwidTags:        "swid3",
+							Metric:          "ibm_pvu",
+							NumCptLicences:  10,
+							AvgUnitPrice:    20,
+						},
+						{
+							SKU:             "sku2",
+							AggregationName: "",
+							SwidTags:        "swid3",
+							Metric:          "ibm_pvu",
+							NumCptLicences:  10,
+							AvgUnitPrice:    10,
+						},
+						{
+							SKU:             "sku4",
+							AggregationName: "",
+							SwidTags:        "swid4",
+							Metric:          "ibm",
+							NumCptLicences:  10,
+							AvgUnitPrice:    10,
+						},
+					},
+				}, nil)
 			},
 			want: &v1.SimulationByMetricResponse{
+				Success: true,
 				MetricSimResult: []*v1.MetricSimulationResult{
-					&v1.MetricSimulationResult{
-						Success:        true,
-						NumCptLicences: 1200,
-						TotalCost:      240000,
-						MetricName:     "ibm_pvu",
+					{
+						Sku:             "sku3",
+						Swidtag:         "swid1,swid2",
+						AggregationName: "aggname1",
+						MetricName:      "oracle_processor",
+						NumCptLicences:  10,
+						OldTotalCost:    100,
+						NewTotalCost:    3000,
 					},
-					&v1.MetricSimulationResult{
-						MetricName:       "oracle_processor",
-						SimFailureReason: "Internal",
+					{
+						Sku:             "sku5",
+						Swidtag:         "swid1",
+						AggregationName: "",
+						MetricName:      "oracle_processor",
+						NumCptLicences:  10,
+						OldTotalCost:    100,
+						NewTotalCost:    500,
+					},
+					{
+						Sku:             "sku1,sku2",
+						Swidtag:         "swid3",
+						AggregationName: "",
+						MetricName:      "ibm_pvu",
+						NumCptLicences:  20,
+						OldTotalCost:    300,
+						NewTotalCost:    5000,
 					},
 				},
 			},
@@ -90,7 +164,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.SimulationByMetricRequest{
-					SwidTag:       "Oracle_Database_11g_Enterprise_Edition_10.3",
+					Editor:        "Oracle",
 					MetricDetails: []*v1.MetricSimDetails{},
 					Scope:         "Scope1",
 				},
@@ -98,7 +172,9 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 			setup: func() {
 
 			},
-			want: &v1.SimulationByMetricResponse{},
+			want: &v1.SimulationByMetricResponse{
+				Success: true,
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -110,8 +186,9 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 				t.Errorf("SimulationService.SimulationByMetric() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SimulationService.SimulationByMetric() = %v, want %v", got, tt.want)
+			if !tt.wantErr {
+				compareMetricSimulationResultAll(t, "SimulationService.SimulationByMetric", tt.want.MetricSimResult, got.MetricSimResult)
+				//t.Errorf("SimulationService.SimulationByMetric() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -124,7 +201,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
 	})
 	attributes := []*v1.EquipAttribute{
-		&v1.EquipAttribute{
+		{
 			ID:         "0x5092e",
 			Name:       "server_corenumber",
 			DataType:   v1.DataTypes_INT,
@@ -135,7 +212,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			OldVal:     &v1.EquipAttribute_IntValOld{16},
 			Simulated:  false,
 		},
-		&v1.EquipAttribute{
+		{
 			ID:         "0x5092f",
 			Name:       "pvu",
 			DataType:   v1.DataTypes_FLOAT,
@@ -146,7 +223,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			OldVal:     &v1.EquipAttribute_FloatValOld{100},
 			Simulated:  true,
 		},
-		&v1.EquipAttribute{
+		{
 			ID:         "0x50935",
 			Name:       "corefactor_oracle",
 			DataType:   v1.DataTypes_FLOAT,
@@ -157,7 +234,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			OldVal:     &v1.EquipAttribute_FloatValOld{1},
 			Simulated:  true,
 		},
-		&v1.EquipAttribute{
+		{
 			ID:         "0x50934",
 			Name:       "serverprocessornumber",
 			DataType:   v1.DataTypes_INT,
@@ -168,7 +245,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			OldVal:     &v1.EquipAttribute_IntValOld{2},
 			Simulated:  false,
 		},
-		&v1.EquipAttribute{
+		{
 			ID:         "0x5093b",
 			Name:       "sag",
 			DataType:   v1.DataTypes_FLOAT,
@@ -203,11 +280,11 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 					EquipId:    "30373237-3132-5a43-3336-32364341424d",
 					Attributes: attributes,
 					MetricDetails: []*v1.SimMetricDetails{
-						&v1.SimMetricDetails{
+						{
 							MetricType: "oracle.processor.standard",
 							MetricName: "oracle_processor",
 						},
-						&v1.SimMetricDetails{
+						{
 							MetricType: "ibm.pvu.standard",
 							MetricName: "ibm_pvu",
 						},
@@ -227,7 +304,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 
 						return &ls.LicensesForEquipAndMetricResponse{
 							Licenses: []*ls.ProductLicenseForEquipAndMetric{
-								&ls.ProductLicenseForEquipAndMetric{
+								{
 									MetricName:  "oracle_processor",
 									OldLicences: 120000,
 									NewLicenses: 130000,
@@ -247,11 +324,11 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			},
 			want: &v1.SimulationByHardwareResponse{
 				SimulationResult: []*v1.SimulatedProductsLicenses{
-					&v1.SimulatedProductsLicenses{
+					{
 						Success:    true,
 						MetricName: "oracle_processor",
 						Licenses: []*v1.SimulatedProductLicense{
-							&v1.SimulatedProductLicense{
+							{
 								OldLicences: 120000,
 								NewLicenses: 130000,
 								Delta:       10000,
@@ -261,7 +338,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 							},
 						},
 					},
-					&v1.SimulatedProductsLicenses{
+					{
 						MetricName:       "ibm_pvu",
 						SimFailureReason: "Internal",
 					},
@@ -301,4 +378,26 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 			}
 		})
 	}
+}
+
+func compareMetricSimulationResultAll(t *testing.T, name string, exp []*v1.MetricSimulationResult, act []*v1.MetricSimulationResult) {
+	for i := range exp {
+		compareMetricSimulationResult(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
+	}
+}
+
+func compareMetricSimulationResult(t *testing.T, name string, exp *v1.MetricSimulationResult, act *v1.MetricSimulationResult) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "resulr is expected to be nil")
+	}
+	assert.Equalf(t, exp.Swidtag, act.Swidtag, "%s.Swidtag should be same", name)
+	assert.Equalf(t, exp.AggregationName, act.AggregationName, "%s.AggregationName should be same", name)
+	assert.Equalf(t, exp.MetricName, act.MetricName, "%s.MetricName should be same", name)
+	assert.Equalf(t, exp.NumCptLicences, act.NumCptLicences, "%s.NumCptLicences should be same", name)
+	assert.Equalf(t, exp.OldTotalCost, act.OldTotalCost, "%s.OldTotalCost should be same", name)
+	assert.Equalf(t, exp.NewTotalCost, act.NewTotalCost, "%s.NewTotalCost should be same", name)
+	assert.Equalf(t, exp.Sku, act.Sku, "%s.Sku should be same", name)
 }

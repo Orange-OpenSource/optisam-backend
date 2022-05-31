@@ -10,8 +10,6 @@ import (
 	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/workerqueue"
 	"optisam-backend/common/optisam/workerqueue/job"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
@@ -33,7 +31,7 @@ var (
 	})
 )
 
-func Test_OverviewProeuctQuality(t *testing.T) {
+func Test_OverviewProductQuality(t *testing.T) {
 
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
@@ -57,19 +55,43 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().GetProductQualityOverview(ctx, s.Scope).Times(1).Return(db.GetProductQualityOverviewRow{
-					TotalRecords:          int64(4),
-					NotDeployed:           int64(1),
-					NotAcquired:           int64(1),
-					NotDeployedPercentage: decimal.New(25, 0),
-					NotAcquiredPercentage: decimal.New(25, 0),
+				mockRepository.EXPECT().ProductsNotDeployed(ctx, "s1").Times(1).Return([]db.ProductsNotDeployedRow{
+					{
+						Swidtag:       "PND1",
+						ProductName:   "ProNotDep1",
+						ProductEditor: "e1",
+						Version:       "v1",
+					},
+					{
+						Swidtag:       "PND2",
+						ProductName:   "ProNotDep2",
+						ProductEditor: "e2",
+						Version:       "v2",
+					},
+				}, nil)
+				mockRepository.EXPECT().ProductsNotAcquired(ctx, "s1").Times(1).Return([]db.ProductsNotAcquiredRow{
+					{
+						Swidtag:        "PNA1",
+						ProductName:    "ProNotAcq1",
+						ProductEditor:  "e1",
+						ProductVersion: "v1",
+					},
+				}, nil)
+				mockRepository.EXPECT().ListProductsView(ctx, db.ListProductsViewParams{
+					Scope:    []string{"s1"},
+					PageNum:  int32(0),
+					PageSize: int32(1),
+				}).Times(1).Return([]db.ListProductsViewRow{
+					{
+						Totalrecords: int64(40),
+					},
 				}, nil)
 			},
 			output: &v1.OverviewProductQualityResponse{
 				NotAcquiredProducts:           int32(1),
-				NotDeployedProducts:           int32(1),
-				NotAcquiredProductsPercentage: float64(25),
-				NotDeployedProductsPercentage: float64(25),
+				NotDeployedProducts:           int32(2),
+				NotAcquiredProductsPercentage: float64(2.5),
+				NotDeployedProductsPercentage: float64(5.0),
 			},
 		},
 		{
@@ -82,10 +104,15 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().GetProductQualityOverview(ctx, s.Scope).Times(1).Return(db.GetProductQualityOverviewRow{}, nil)
+				mockRepository.EXPECT().ProductsNotDeployed(ctx, "s1").Times(1).Return([]db.ProductsNotDeployedRow{}, nil)
+				mockRepository.EXPECT().ProductsNotAcquired(ctx, "s1").Times(1).Return([]db.ProductsNotAcquiredRow{}, nil)
+				mockRepository.EXPECT().ListProductsView(ctx, db.ListProductsViewParams{
+					Scope:    []string{"s1"},
+					PageNum:  0,
+					PageSize: 1,
+				}).Times(1).Return([]db.ListProductsViewRow{}, nil)
 			},
-			output:    &v1.OverviewProductQualityResponse{},
-			outputErr: false,
+			output: &v1.OverviewProductQualityResponse{},
 		},
 		{
 			name:  "Failed : Scope not exist",
@@ -97,7 +124,7 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().GetProductQualityOverview(ctx, s.Scope).Times(1).Return(db.GetProductQualityOverviewRow{}, nil)
+				mockRepository.EXPECT().ProductsNotDeployed(ctx, s.Scope).Times(1).Return([]db.ProductsNotDeployedRow{}, nil)
 			},
 			outputErr: true,
 		},
@@ -111,7 +138,7 @@ func Test_OverviewProeuctQuality(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().GetProductQualityOverview(ctx, s.Scope).Times(1).Return(db.GetProductQualityOverviewRow{}, nil)
+				mockRepository.EXPECT().ProductsNotDeployed(ctx, s.Scope).Times(1).Return([]db.ProductsNotDeployedRow{}, nil)
 			},
 			outputErr: true,
 		},
@@ -319,16 +346,20 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					},
 				}, nil)
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return([]string{"e1", "e2", "e3"}, nil)
-				mockRepository.EXPECT().GetAcqRightsCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetAcqRightsCostRow{
+				mockRepository.EXPECT().GetLicensesCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetLicensesCostRow{
 					TotalCost:            decimal.New(123, 2),
 					TotalMaintenanceCost: decimal.New(12, 2),
 				}, nil)
+				mockRepository.EXPECT().GetTotalCounterfietAmount(ctx, "Scope1").Times(1).Return(float64(10.0), nil)
+				mockRepository.EXPECT().GetTotalUnderusageAmount(ctx, "Scope1").Times(1).Return(float64(20.0), nil)
 			},
 			want: &v1.DashboardOverviewResponse{
-				NumEditors:           int32(3),
-				NumProducts:          int32(40),
-				TotalLicenseCost:     float64(12300),
-				TotalMaintenanceCost: float64(1200),
+				NumEditors:                int32(3),
+				NumProducts:               int32(40),
+				TotalLicenseCost:          float64(12300),
+				TotalMaintenanceCost:      float64(1200),
+				TotalCounterfeitingAmount: float64(10.0),
+				TotalUnderusageAmount:     float64(20.0),
 			},
 		},
 		{
@@ -355,7 +386,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					},
 				}, nil)
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return([]string{"e1", "e2", "e3"}, nil)
-				mockRepository.EXPECT().GetAcqRightsCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetAcqRightsCostRow{}, errors.New("Internal"))
+				mockRepository.EXPECT().GetLicensesCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetLicensesCostRow{}, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -450,15 +481,19 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageSize: int32(1),
 				}).Times(1).Return(nil, nil)
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return([]string{"e1"}, nil)
-				mockRepository.EXPECT().GetAcqRightsCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetAcqRightsCostRow{
+				mockRepository.EXPECT().GetLicensesCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetLicensesCostRow{
 					TotalCost:            decimal.New(123, 2),
 					TotalMaintenanceCost: decimal.New(12, 2),
 				}, nil)
+				mockRepository.EXPECT().GetTotalCounterfietAmount(ctx, "Scope1").Times(1).Return(float64(10.0), nil)
+				mockRepository.EXPECT().GetTotalUnderusageAmount(ctx, "Scope1").Times(1).Return(float64(20.0), nil)
 			},
 			want: &v1.DashboardOverviewResponse{
-				NumEditors:           int32(1),
-				TotalLicenseCost:     float64(12300),
-				TotalMaintenanceCost: float64(1200),
+				NumEditors:                int32(1),
+				TotalLicenseCost:          float64(12300),
+				TotalMaintenanceCost:      float64(1200),
+				TotalCounterfeitingAmount: float64(10.0),
+				TotalUnderusageAmount:     float64(20.0),
 			},
 		},
 		{
@@ -481,7 +516,9 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					PageSize: int32(1),
 				}).Times(1).Return(nil, nil)
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return(nil, nil)
-				mockRepository.EXPECT().GetAcqRightsCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetAcqRightsCostRow{}, nil)
+				mockRepository.EXPECT().GetLicensesCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetLicensesCostRow{}, nil)
+				mockRepository.EXPECT().GetTotalCounterfietAmount(ctx, "Scope1").Times(1).Return(float64(0.0), nil)
+				mockRepository.EXPECT().GetTotalUnderusageAmount(ctx, "Scope1").Times(1).Return(float64(0.0), nil)
 			},
 			want: &v1.DashboardOverviewResponse{},
 		},
@@ -509,7 +546,9 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 					},
 				}, nil)
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return([]string{"e1", "e2", "e3"}, nil)
-				mockRepository.EXPECT().GetAcqRightsCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetAcqRightsCostRow{}, sql.ErrNoRows)
+				mockRepository.EXPECT().GetLicensesCost(ctx, []string{"Scope1"}).Times(1).Return(db.GetLicensesCostRow{}, sql.ErrNoRows)
+				mockRepository.EXPECT().GetTotalCounterfietAmount(ctx, "Scope1").Times(1).Return(float64(0.0), nil)
+				mockRepository.EXPECT().GetTotalUnderusageAmount(ctx, "Scope1").Times(1).Return(float64(0.0), nil)
 			},
 			want: &v1.DashboardOverviewResponse{
 				NumEditors:  int32(3),
@@ -725,10 +764,10 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().ProductsPerMetric(ctx, []string{"Scope1"}).Times(1).Return([]db.ProductsPerMetricRow{
+				mockRepository.EXPECT().ProductsPerMetric(ctx, "Scope1").Times(1).Return([]db.ProductsPerMetricRow{
 					{
 						Metric:      "OPS",
-						NumProducts: int64(100),
+						Composition: int64(100),
 					},
 				}, nil)
 			},
@@ -755,7 +794,7 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().ProductsPerMetric(ctx, []string{"Scope1"}).Times(1).Return(nil, nil)
+				mockRepository.EXPECT().ProductsPerMetric(ctx, "Scope1").Times(1).Return(nil, nil)
 			},
 			want: &v1.ProductsPerMetricTypeResponse{},
 		},
@@ -798,7 +837,7 @@ func Test_acqRightsServiceServer_ProductsPerMetricType(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				mockRepository.EXPECT().ProductsPerMetric(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
+				mockRepository.EXPECT().ProductsPerMetric(ctx, "Scope1").Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -856,41 +895,45 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsLicencesRow{
 					{
-						SwidTag:             "p1",
-						ProductName:         "p1n1",
-						NumLicencesComputed: int32(1000),
-						NumLicensesAcquired: int64(100),
-						Delta:               int32(-900),
+						SwidTags:            "p1",
+						ProductNames:        "p1n1",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(1000, 0),
+						NumAcquiredLicences: decimal.New(100, 0),
+						Delta:               decimal.New(-900, 0),
 					},
 					{
-						SwidTag:             "p2",
-						ProductName:         "p2n2",
-						NumLicencesComputed: int32(1000),
-						NumLicensesAcquired: int64(200),
-						Delta:               int32(-800),
+						SwidTags:            "p2",
+						ProductNames:        "p2n2",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(1000, 0),
+						NumAcquiredLicences: decimal.New(200, 0),
+						Delta:               decimal.New(-800, 0),
 					},
 				}, nil)
 				mockRepository.EXPECT().CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsCostsRow{
 					{
-						SwidTag:           "p1",
-						ProductName:       "p1n1",
-						TotalPurchaseCost: decimal.New(100, 0),
-						TotalComputedCost: decimal.New(1000, 0),
-						DeltaCost:         decimal.New(-900, 0),
+						SwidTags:        "p1",
+						ProductNames:    "p1n1",
+						AggregationName: "agg1",
+						PurchaseCost:    decimal.New(100, 0),
+						ComputedCost:    decimal.New(1000, 0),
+						DeltaCost:       decimal.New(-900, 0),
 					},
 					{
-						SwidTag:           "p2",
-						ProductName:       "p2n2",
-						TotalComputedCost: decimal.New(1000, 0),
-						TotalPurchaseCost: decimal.New(200, 0),
-						DeltaCost:         decimal.New(-800, 0),
+						SwidTags:        "p2",
+						ProductNames:    "p2n2",
+						AggregationName: "agg1",
+						ComputedCost:    decimal.New(1000, 0),
+						PurchaseCost:    decimal.New(200, 0),
+						DeltaCost:       decimal.New(-800, 0),
 					},
 				}, nil)
 			},
@@ -899,6 +942,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(100),
 						Delta:               int64(-900),
@@ -906,6 +950,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(200),
 						Delta:               int64(-800),
@@ -915,6 +960,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
+						AggregationName:      "agg1",
 						LicensesAcquiredCost: float64(100),
 						LicensesComputedCost: float64(1000),
 						DeltaCost:            float64(-900),
@@ -922,6 +968,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
+						AggregationName:      "agg1",
 						LicensesComputedCost: float64(1000),
 						LicensesAcquiredCost: float64(200),
 						DeltaCost:            float64(-800),
@@ -945,27 +992,29 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsLicencesRow{
 					{
-						SwidTag:             "p1",
-						ProductName:         "p1n1",
-						NumLicencesComputed: int32(1000),
-						NumLicensesAcquired: int64(100),
-						Delta:               int32(-900),
+						SwidTags:            "p1",
+						ProductNames:        "p1n1",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(1000, 0),
+						NumAcquiredLicences: decimal.New(100, 0),
+						Delta:               decimal.New(-900, 0),
 					},
 					{
-						SwidTag:             "p2",
-						ProductName:         "p2n2",
-						NumLicencesComputed: int32(1000),
-						NumLicensesAcquired: int64(200),
-						Delta:               int32(-800),
+						SwidTags:            "p2",
+						ProductNames:        "p2n2",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(1000, 0),
+						NumAcquiredLicences: decimal.New(200, 0),
+						Delta:               decimal.New(-800, 0),
 					},
 				}, nil)
 				mockRepository.EXPECT().CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			want: &v1.CounterfeitedProductsResponse{
@@ -973,6 +1022,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(100),
 						Delta:               int64(-900),
@@ -980,6 +1030,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(1000),
 						NumLicensesAcquired: int64(200),
 						Delta:               int64(-800),
@@ -1003,26 +1054,28 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return(nil, errors.New("Internal"))
 				mockRepository.EXPECT().CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.CounterFeitedProductsCostsRow{
 					{
-						SwidTag:           "p1",
-						ProductName:       "p1n1",
-						TotalPurchaseCost: decimal.New(100, 0),
-						TotalComputedCost: decimal.New(1000, 0),
-						DeltaCost:         decimal.New(-900, 0),
+						SwidTags:        "p1",
+						ProductNames:    "p1n1",
+						AggregationName: "agg1",
+						PurchaseCost:    decimal.New(100, 0),
+						ComputedCost:    decimal.New(1000, 0),
+						DeltaCost:       decimal.New(-900, 0),
 					},
 					{
-						SwidTag:           "p2",
-						ProductName:       "p2n2",
-						TotalComputedCost: decimal.New(1000, 0),
-						TotalPurchaseCost: decimal.New(200, 0),
-						DeltaCost:         decimal.New(-800, 0),
+						SwidTags:        "p2",
+						ProductNames:    "p2n2",
+						AggregationName: "agg1",
+						ComputedCost:    decimal.New(1000, 0),
+						PurchaseCost:    decimal.New(200, 0),
+						DeltaCost:       decimal.New(-800, 0),
 					},
 				}, nil)
 			},
@@ -1031,6 +1084,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
+						AggregationName:      "agg1",
 						LicensesAcquiredCost: float64(100),
 						LicensesComputedCost: float64(1000),
 						DeltaCost:            float64(-900),
@@ -1038,6 +1092,7 @@ func Test_acqRightsServiceServer_CounterfeitedProducts(t *testing.T) {
 					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
+						AggregationName:      "agg1",
 						LicensesComputedCost: float64(1000),
 						LicensesAcquiredCost: float64(200),
 						DeltaCost:            float64(-800),
@@ -1125,41 +1180,45 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsLicencesRow{
 					{
-						SwidTag:             "p1",
-						ProductName:         "p1n1",
-						NumLicencesComputed: int32(100),
-						NumLicensesAcquired: int64(1000),
-						Delta:               int32(900),
+						SwidTags:            "p1",
+						ProductNames:        "p1n1",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(100, 0),
+						NumAcquiredLicences: decimal.New(1000, 0),
+						Delta:               decimal.New(900, 0),
 					},
 					{
-						SwidTag:             "p2",
-						ProductName:         "p2n2",
-						NumLicencesComputed: int32(200),
-						NumLicensesAcquired: int64(1000),
-						Delta:               int32(800),
+						SwidTags:            "p2",
+						ProductNames:        "p2n2",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(200, 0),
+						NumAcquiredLicences: decimal.New(1000, 0),
+						Delta:               decimal.New(800, 0),
 					},
 				}, nil)
 				mockRepository.EXPECT().OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsCostsRow{
 					{
-						SwidTag:           "p1",
-						ProductName:       "p1n1",
-						TotalPurchaseCost: decimal.New(1000, 0),
-						TotalComputedCost: decimal.New(100, 0),
-						DeltaCost:         decimal.New(900, 0),
+						SwidTags:        "p1",
+						ProductNames:    "p1n1",
+						AggregationName: "agg1",
+						PurchaseCost:    decimal.New(1000, 0),
+						ComputedCost:    decimal.New(100, 0),
+						DeltaCost:       decimal.New(900, 0),
 					},
 					{
-						SwidTag:           "p2",
-						ProductName:       "p2n2",
-						TotalComputedCost: decimal.New(200, 0),
-						TotalPurchaseCost: decimal.New(1000, 0),
-						DeltaCost:         decimal.New(800, 0),
+						SwidTags:        "p2",
+						ProductNames:    "p2n2",
+						AggregationName: "agg1",
+						ComputedCost:    decimal.New(200, 0),
+						PurchaseCost:    decimal.New(1000, 0),
+						DeltaCost:       decimal.New(800, 0),
 					},
 				}, nil)
 			},
@@ -1168,6 +1227,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(100),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(900),
@@ -1175,6 +1235,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(200),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(800),
@@ -1184,6 +1245,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
+						AggregationName:      "agg1",
 						LicensesAcquiredCost: float64(1000),
 						LicensesComputedCost: float64(100),
 						DeltaCost:            float64(900),
@@ -1191,6 +1253,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
+						AggregationName:      "agg1",
 						LicensesComputedCost: float64(200),
 						LicensesAcquiredCost: float64(1000),
 						DeltaCost:            float64(800),
@@ -1214,27 +1277,29 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsLicencesRow{
 					{
-						SwidTag:             "p1",
-						ProductName:         "p1n1",
-						NumLicencesComputed: int32(100),
-						NumLicensesAcquired: int64(1000),
-						Delta:               int32(900),
+						SwidTags:            "p1",
+						ProductNames:        "p1n1",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(100, 0),
+						NumAcquiredLicences: decimal.New(1000, 0),
+						Delta:               decimal.New(900, 0),
 					},
 					{
-						SwidTag:             "p2",
-						ProductName:         "p2n2",
-						NumLicencesComputed: int32(200),
-						NumLicensesAcquired: int64(1000),
-						Delta:               int32(800),
+						SwidTags:            "p2",
+						ProductNames:        "p2n2",
+						AggregationName:     "agg1",
+						NumComputedLicences: decimal.New(200, 0),
+						NumAcquiredLicences: decimal.New(1000, 0),
+						Delta:               decimal.New(800, 0),
 					},
 				}, nil)
 				mockRepository.EXPECT().OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			want: &v1.OverdeployedProductsResponse{
@@ -1242,6 +1307,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:             "p1",
 						ProductName:         "p1n1",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(100),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(900),
@@ -1249,6 +1315,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:             "p2",
 						ProductName:         "p2n2",
+						AggregationName:     "agg1",
 						NumLicensesComputed: int64(200),
 						NumLicensesAcquired: int64(1000),
 						Delta:               int64(800),
@@ -1272,26 +1339,28 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return(nil, errors.New("Internal"))
 				mockRepository.EXPECT().OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
-					Scope:         "Scope1",
-					ProductEditor: "Oracle",
+					Scope:  "Scope1",
+					Editor: "Oracle",
 				}).Times(1).Return([]db.OverDeployedProductsCostsRow{
 					{
-						SwidTag:           "p1",
-						ProductName:       "p1n1",
-						TotalPurchaseCost: decimal.New(1000, 0),
-						TotalComputedCost: decimal.New(100, 0),
-						DeltaCost:         decimal.New(900, 0),
+						SwidTags:        "p1",
+						ProductNames:    "p1n1",
+						AggregationName: "agg1",
+						PurchaseCost:    decimal.New(1000, 0),
+						ComputedCost:    decimal.New(100, 0),
+						DeltaCost:       decimal.New(900, 0),
 					},
 					{
-						SwidTag:           "p2",
-						ProductName:       "p2n2",
-						TotalComputedCost: decimal.New(200, 0),
-						TotalPurchaseCost: decimal.New(1000, 0),
-						DeltaCost:         decimal.New(800, 0),
+						SwidTags:        "p2",
+						ProductNames:    "p2n2",
+						AggregationName: "agg1",
+						ComputedCost:    decimal.New(200, 0),
+						PurchaseCost:    decimal.New(1000, 0),
+						DeltaCost:       decimal.New(800, 0),
 					},
 				}, nil)
 			},
@@ -1300,6 +1369,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:              "p1",
 						ProductName:          "p1n1",
+						AggregationName:      "agg1",
 						LicensesAcquiredCost: float64(1000),
 						LicensesComputedCost: float64(100),
 						DeltaCost:            float64(900),
@@ -1307,6 +1377,7 @@ func Test_acqRightsServiceServer_OverdeployedProducts(t *testing.T) {
 					{
 						SwidTag:              "p2",
 						ProductName:          "p2n2",
+						AggregationName:      "agg1",
 						LicensesComputedCost: float64(200),
 						LicensesAcquiredCost: float64(1000),
 						DeltaCost:            float64(800),
@@ -1365,7 +1436,6 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
 	var queue workerqueue.Workerqueue
-	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
 		req *v1.ComplianceAlertRequest
@@ -1390,37 +1460,13 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
 					Acq:         decimal.New(50000, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.OverdeployPercentRow{
+				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{
 					Acq:         decimal.New(50000, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
@@ -1429,51 +1475,6 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				CounterfeitingPercentage: float64(1),
 				OverdeploymentPercentage: float64(1),
 			},
-		},
-		{
-			name: "FAILURE: - MetricServiceError",
-			args: args{
-				ctx: ctx,
-				req: &v1.ComplianceAlertRequest{
-					Scope: "Scope1",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepository := dbmock.NewMockProduct(mockCtrl)
-				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
-				rep = mockRepository
-				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(nil, errors.New("internal"))
-			},
-			wantErr: true,
-		},
-		{
-			name: "FAILURE: - metrics are not defined",
-			args: args{
-				ctx: ctx,
-				req: &v1.ComplianceAlertRequest{
-					Scope: "Scope1",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepository := dbmock.NewMockProduct(mockCtrl)
-				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
-				rep = mockRepository
-				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(nil, nil)
-			},
-			want:    &v1.ComplianceAlertResponse{},
-			wantErr: true,
 		},
 		{
 			name: "FAILURE: overdeployment - Acq is zero",
@@ -1487,37 +1488,13 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
 					Acq:         decimal.New(50000, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.OverdeployPercentRow{
+				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{
 					Acq:         decimal.New(0, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
@@ -1537,30 +1514,9 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
 					Acq:         decimal.New(0, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
@@ -1580,30 +1536,9 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{}, errors.New("internal"))
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{}, errors.New("internal"))
 			},
 			wantErr: true,
 		},
@@ -1619,30 +1554,9 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{}, sql.ErrNoRows)
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{}, sql.ErrNoRows)
 			},
 			wantErr: true,
 		},
@@ -1658,37 +1572,13 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
 					Acq:         decimal.New(50000, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.OverdeployPercentRow{}, errors.New("internal"))
+				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{}, errors.New("internal"))
 			},
 			wantErr: true,
 		},
@@ -1704,37 +1594,13 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepository
 				queue = mockQueue
-				met = mockMetric
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"Scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "ops",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "metricNup",
-							Description: "metricNup description",
-						},
-					},
-				}, nil)
-				mockRepository.EXPECT().CounterfeitPercent(ctx, db.CounterfeitPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.CounterfeitPercentRow{
+				mockRepository.EXPECT().CounterfeitPercent(ctx, "Scope1").Times(1).Return(db.CounterfeitPercentRow{
 					Acq:         decimal.New(50000, 0),
 					DeltaRights: decimal.New(500, 0),
 				}, nil)
-				mockRepository.EXPECT().OverdeployPercent(ctx, db.OverdeployPercentParams{
-					Metrics: []string{"ops", "metricNup"},
-					Scope:   "Scope1",
-				}).Times(1).Return(db.OverdeployPercentRow{}, sql.ErrNoRows)
+				mockRepository.EXPECT().OverdeployPercent(ctx, "Scope1").Times(1).Return(db.OverdeployPercentRow{}, sql.ErrNoRows)
 			},
 			wantErr: true,
 		},
@@ -1769,7 +1635,6 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 			lr := &productServiceServer{
 				productRepo: rep,
 				queue:       queue,
-				metric:      met,
 			}
 			got, err := lr.ComplianceAlert(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {

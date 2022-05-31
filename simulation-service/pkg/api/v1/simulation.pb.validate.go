@@ -609,7 +609,7 @@ func (m *SimulationByMetricRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for SwidTag
+	// no validation rules for Editor
 
 	for idx, item := range m.GetMetricDetails() {
 		_, _ = idx, item
@@ -704,9 +704,15 @@ func (m *MetricSimDetails) Validate() error {
 		return nil
 	}
 
+	// no validation rules for Swidtag
+
+	// no validation rules for AggregationName
+
 	// no validation rules for MetricName
 
 	// no validation rules for UnitCost
+
+	// no validation rules for Sku
 
 	return nil
 }
@@ -773,6 +779,8 @@ func (m *SimulationByMetricResponse) Validate() error {
 		return nil
 	}
 
+	// no validation rules for Success
+
 	for idx, item := range m.GetMetricSimResult() {
 		_, _ = idx, item
 
@@ -789,6 +797,8 @@ func (m *SimulationByMetricResponse) Validate() error {
 		}
 
 	}
+
+	// no validation rules for SimFailureReason
 
 	return nil
 }
@@ -857,15 +867,23 @@ func (m *MetricSimulationResult) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Success
+	// no validation rules for Swidtag
 
-	// no validation rules for NumCptLicences
-
-	// no validation rules for TotalCost
+	// no validation rules for AggregationName
 
 	// no validation rules for MetricName
 
-	// no validation rules for SimFailureReason
+	// no validation rules for NumCptLicences
+
+	// no validation rules for OldTotalCost
+
+	// no validation rules for NewTotalCost
+
+	// no validation rules for Sku
+
+	// no validation rules for NotDeployed
+
+	// no validation rules for MetricNotDefined
 
 	return nil
 }

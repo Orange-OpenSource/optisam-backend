@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS uploaded_data_files  (
     failed_records INTEGER NOT NULL DEFAULT 0,
     comments varchar DEFAULT '',
     scope_type  scope_types DEFAULT 'GENERIC',
-    error_file VARCHAR DEFAULT '',
+    analysis_id VARCHAR DEFAULT '',
     PRIMARY KEY(upload_id,file_name)
 );
 

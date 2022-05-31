@@ -442,11 +442,15 @@ func getAcqRightsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (model
 			temp.Version = list[headers.IndexesOfHeaders[constants.PRODUCTVERSION]]
 			temp.SwidTag = list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			temp.Sku = list[headers.IndexesOfHeaders[constants.SKU]]
+			temp.CorporateSourcingContract = list[headers.IndexesOfHeaders[constants.CorporateSourcingContract]]
+			temp.OrderingDate = list[headers.IndexesOfHeaders[constants.OrderingDate]]
 			temp.ProductName = list[headers.IndexesOfHeaders[constants.PRODUCTNAME]]
 			temp.Editor = list[headers.IndexesOfHeaders[constants.EDITOR]]
 			temp.Metric = list[headers.IndexesOfHeaders[constants.METRIC]]
+			temp.SoftwareProvider = list[headers.IndexesOfHeaders[constants.SoftwareProvider]]
 			temp.NumOfAcqLic, _ = strconv.Atoi(list[headers.IndexesOfHeaders[constants.ACQLICNO]])
 			temp.NumOfMaintenanceLic, _ = strconv.Atoi(list[headers.IndexesOfHeaders[constants.LICUNDERMAINTENANCENO]])
+			temp.MaintenanceProvider = list[headers.IndexesOfHeaders[constants.MaintenanceProvider]]
 			temp.AvgPrice, _ = strconv.ParseFloat(list[headers.IndexesOfHeaders[constants.AVGUNITPRICE]], 64)
 			temp.AvgMaintenantPrice, _ = strconv.ParseFloat(list[headers.IndexesOfHeaders[constants.AVGMAINENANCEUNITPRICE]], 64)
 			temp.TotalPurchasedCost, _ = strconv.ParseFloat(list[headers.IndexesOfHeaders[constants.TOTALPURCHASECOST]], 64)
@@ -455,6 +459,8 @@ func getAcqRightsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (model
 			temp.Action = constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			temp.StartOfMaintenance = list[headers.IndexesOfHeaders[constants.StartOfMaintenance]]
 			temp.EndOfMaintenance = list[headers.IndexesOfHeaders[constants.EndOfMaintenance]]
+			temp.LastPurchasedOrder = list[headers.IndexesOfHeaders[constants.LastPurchasedOrder]]
+			temp.SupportNumber = list[headers.IndexesOfHeaders[constants.SupportNumber]]
 			oldData, ok := resp.AcqRights[temp.Sku]
 			if ok {
 				resp.DuplicateRecords = append(resp.DuplicateRecords, oldData)
@@ -642,22 +648,28 @@ func createProdAcqRightsJobs(data models.FileData, targetService string) (jobs [
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
 		jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
 		appData := product.UpsertAcqRightsRequest{
-			Version:                 val.Version,
-			Sku:                     val.Sku,
-			Swidtag:                 val.SwidTag,
-			ProductName:             val.ProductName,
-			ProductEditor:           val.Editor,
-			MetricType:              val.Metric,
-			NumLicensesAcquired:     int32(val.NumOfAcqLic),
-			NumLicencesMaintainance: int32(val.NumOfMaintenanceLic),
-			AvgUnitPrice:            val.AvgPrice,
-			AvgMaintenanceUnitPrice: val.AvgMaintenantPrice,
-			TotalPurchaseCost:       val.TotalPurchasedCost,
-			TotalMaintenanceCost:    val.TotalMaintenanceCost,
-			TotalCost:               val.TotalCost,
-			Scope:                   data.Scope,
-			StartOfMaintenance:      val.StartOfMaintenance,
-			EndOfMaintenance:        val.EndOfMaintenance,
+			Version:                   val.Version,
+			Sku:                       val.Sku,
+			CorporateSourcingContract: val.CorporateSourcingContract,
+			OrderingDate:              val.OrderingDate,
+			Swidtag:                   val.SwidTag,
+			ProductName:               val.ProductName,
+			ProductEditor:             val.Editor,
+			MetricType:                val.Metric,
+			SoftwareProvider:          val.SoftwareProvider,
+			NumLicensesAcquired:       int32(val.NumOfAcqLic),
+			NumLicencesMaintainance:   int32(val.NumOfMaintenanceLic),
+			MaintenanceProvider:       val.MaintenanceProvider,
+			AvgUnitPrice:              val.AvgPrice,
+			AvgMaintenanceUnitPrice:   val.AvgMaintenantPrice,
+			TotalPurchaseCost:         val.TotalPurchasedCost,
+			TotalMaintenanceCost:      val.TotalMaintenanceCost,
+			TotalCost:                 val.TotalCost,
+			Scope:                     data.Scope,
+			StartOfMaintenance:        val.StartOfMaintenance,
+			EndOfMaintenance:          val.EndOfMaintenance,
+			LastPurchasedOrder:        val.LastPurchasedOrder,
+			SupportNumber:             val.SupportNumber,
 		}
 		envlope.TargetAction = constants.UPSERT
 		envlope.Data, err = json.Marshal(appData)

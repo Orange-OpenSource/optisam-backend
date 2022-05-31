@@ -53,6 +53,9 @@ type Metric interface {
 	// ListMetricIPS returns all metrics of type ibm.pvu.standard
 	ListMetricIPS(ctx context.Context, scopes string) ([]*MetricIPS, error)
 
+	// ListMetricSS returns all metrics of type static.standard
+	// ListMetricSS(ctx context.Context, scopes string) ([]*MetricSS, error)
+
 	// CreateMetricOracleNUPStandard creates an oracle.nup.standard metric
 	CreateMetricOracleNUPStandard(ctx context.Context, mat *MetricNUPOracle, scopes string) (*MetricNUPOracle, error)
 
@@ -63,6 +66,9 @@ type Metric interface {
 
 	// CreateMetricUSS creates an User.sum.standard metric
 	CreateMetricUSS(ctx context.Context, met *MetricUSS, scope string) (*MetricUSS, error)
+
+	// CreateMetricStaticStandard creates an static.standard metric
+	CreateMetricStaticStandard(ctx context.Context, met *MetricSS, scope string) (*MetricSS, error)
 
 	// GetMetricConfigUSS return metric configuration of type User.sum.standard
 	GetMetricConfigUSS(ctx context.Context, metName string, scope string) (*MetricUSS, error)
@@ -100,11 +106,17 @@ type Metric interface {
 	// GetMetricConfigINM return metric configuration of type instance.number.standard
 	GetMetricConfigINM(ctx context.Context, metName string, scopes string) (*MetricINM, error)
 
+	// GetMetricConfigSS return metric configuration of type static.standard
+	GetMetricConfigSS(ctx context.Context, metName string, scopes string) (*MetricSS, error)
+
 	// DropMetrics delete the all metrics of particular scope
 	DropMetrics(ctx context.Context, scope string) error
 
 	// UpdateMetricINM updates parameter(coeffitient) of the metric
 	UpdateMetricINM(ctx context.Context, met *MetricINM, scope string) error
+
+	// UpdateMetricSS updates parameter(Reference Value) of the metric
+	UpdateMetricSS(ctx context.Context, met *MetricSS, scope string) error
 
 	// UpdateMetricAttrSum updates parameter(metric Reference Value, EqType, AttributeName) of the metric
 	UpdateMetricAttrSum(ctx context.Context, met *MetricAttrSumStand, scope string) error

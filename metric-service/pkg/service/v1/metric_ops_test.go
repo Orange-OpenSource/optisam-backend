@@ -58,9 +58,11 @@ func Test_metricServiceServer_CreateMetricOracleProcessorStandard(t *testing.T) 
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
 					{
 						Name: "ONS",
+						Type: repo.MetricSPSSagProcessorStandard,
 					},
 					{
 						Name: "WS",
+						Type: repo.MetricIPSIbmPvuStandard,
 					},
 				}, nil)
 

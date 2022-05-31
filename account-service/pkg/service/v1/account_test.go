@@ -84,6 +84,7 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
 				prod = mockProdClient
 				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1", DeletionType: product.DropProductDataRequest_FULL}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
+				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).Times(1)
 
 				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
 				equip = mockEquipClient
@@ -125,6 +126,7 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
 				prod = mockProdClient
 				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
+				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).Times(1)
 
 				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
 				equip = mockEquipClient

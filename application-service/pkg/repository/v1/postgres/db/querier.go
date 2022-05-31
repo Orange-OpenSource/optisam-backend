@@ -14,7 +14,7 @@ type Querier interface {
 	DeleteMaintenanceCirticityByScope(ctx context.Context, scope string) error
 	DeleteRiskMatricbyScope(ctx context.Context, scope string) error
 	GetApplicationDomains(ctx context.Context, scope string) ([]string, error)
-	GetApplicationInstance(ctx context.Context, instanceID string) (ApplicationsInstance, error)
+	GetApplicationInstance(ctx context.Context, arg GetApplicationInstanceParams) (ApplicationsInstance, error)
 	GetApplicationInstances(ctx context.Context, arg GetApplicationInstancesParams) ([]ApplicationsInstance, error)
 	GetApplicationsByProduct(ctx context.Context, arg GetApplicationsByProductParams) ([]GetApplicationsByProductRow, error)
 	GetApplicationsDetails(ctx context.Context) ([]GetApplicationsDetailsRow, error)
@@ -32,6 +32,7 @@ type Querier interface {
 	GetMaintenanceLevelByMonthByName(ctx context.Context, levelname string) (MaintenanceLevelMetum, error)
 	GetMaintenanceTimeCriticity(ctx context.Context, scope string) ([]MaintenanceTimeCriticity, error)
 	GetObsolescenceRiskForApplication(ctx context.Context, arg GetObsolescenceRiskForApplicationParams) (string, error)
+	GetProductsByApplicationInstanceID(ctx context.Context, arg GetProductsByApplicationInstanceIDParams) ([]string, error)
 	GetRiskLevelMetaIDs(ctx context.Context) ([]int32, error)
 	GetRiskMatrix(ctx context.Context) ([]RiskMatrix, error)
 	GetRiskMatrixConfig(ctx context.Context, scope string) ([]GetRiskMatrixConfigRow, error)

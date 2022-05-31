@@ -367,22 +367,22 @@ func TestGetAggregationProductsExpandedView(t *testing.T) {
 // 	}
 // }
 
-func TestProductAggregationProductViewDetails(t *testing.T) {
+func Test_productServiceServer_AggregatedRightDetails(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
 	testSet := []struct {
 		name   string
-		input  *v1.ProductAggregationProductViewDetailsRequest
-		output *v1.ProductAggregationProductViewDetailsResponse
-		mock   func(*v1.ProductAggregationProductViewDetailsRequest)
+		input  *v1.AggregatedRightDetailsRequest
+		output *v1.AggregatedRightDetailsResponse
+		mock   func(*v1.AggregatedRightDetailsRequest)
 		ctx    context.Context
 		outErr bool
 	}{
 		{
 			name:  "ProductAggregationProductViewDetailsWithCorrectData",
-			input: &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s1"},
-			output: &v1.ProductAggregationProductViewDetailsResponse{
+			input: &v1.AggregatedRightDetailsRequest{ID: int32(1), Scope: "s1"},
+			output: &v1.AggregatedRightDetailsResponse{
 				ID:              int32(1),
 				Name:            "agg",
 				Editor:          "e",
@@ -394,14 +394,13 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 			},
 			outErr: false,
 			ctx:    ctx,
-			mock: func(input *v1.ProductAggregationProductViewDetailsRequest) {
-				dbObj.EXPECT().ProductAggregationDetails(ctx, db.ProductAggregationDetailsParams{
-					AggregationID: input.ID,
-					Scope:         input.Scope,
-				}).Return(db.ProductAggregationDetailsRow{
-					AggregationID:     int32(1),
+			mock: func(input *v1.AggregatedRightDetailsRequest) {
+				dbObj.EXPECT().AggregatedRightDetails(ctx, db.AggregatedRightDetailsParams{
+					ID:    input.ID,
+					Scope: input.Scope,
+				}).Return(db.AggregatedRightDetailsRow{
 					AggregationName:   "agg",
-					Editor:            "e",
+					ProductEditor:     "e",
 					ProductSwidtags:   []string{"p1", "p2", "p3"},
 					ProductVersions:   []string{"v1", "v2", "v3"},
 					NumOfApplications: int32(5),
@@ -412,24 +411,24 @@ func TestProductAggregationProductViewDetails(t *testing.T) {
 		},
 		{
 			name:   "ProductAggregationProductViewDetailsWithOutContext",
-			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s1"},
+			input:  &v1.AggregatedRightDetailsRequest{ID: int32(1), Scope: "s1"},
 			ctx:    context.Background(),
 			outErr: true,
-			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
+			mock:   func(input *v1.AggregatedRightDetailsRequest) {},
 		},
 		{
 			name:   "FAILURE: No access to Scopes",
-			input:  &v1.ProductAggregationProductViewDetailsRequest{ID: int32(1), Scope: "s4"},
+			input:  &v1.AggregatedRightDetailsRequest{ID: int32(1), Scope: "s4"},
 			ctx:    ctx,
 			outErr: true,
-			mock:   func(input *v1.ProductAggregationProductViewDetailsRequest) {},
+			mock:   func(input *v1.AggregatedRightDetailsRequest) {},
 		},
 	}
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
 			s := NewProductServiceServer(dbObj, qObj, nil, "")
-			got, err := s.ProductAggregationProductViewDetails(test.ctx, test.input)
+			got, err := s.AggregatedRightDetails(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
 				return

@@ -1,0 +1,158 @@
+kind: "Template"
+apiVersion: "v1"
+metadata:
+  name: "deploy-template"
+  annotations:
+    description: "Template for deployment"
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-metric
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-metric
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+        - name: instapi
+          port: 81
+          targetPort: 8081
+          protocol: TCP    
+        - name: grpc
+          port: 8090
+          targetPort: 8090
+          protocol: TCP           
+      selector:
+        app: optisam-metric
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-metric
+      labels:
+        run: optisam-metric
+    spec:
+      host: optisam-metric-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-metric
+      port:
+        targetPort: api           
+      tls:
+        termination: edge
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-metric-instrumentation
+      labels:
+        run: optisam-metric
+    spec:
+      host: optisam-metric-inst-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-metric
+      port:
+        targetPort: instapi          
+      tls:
+        termination: edge
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: optisam-metric
+      labels:
+        app: optisam-metric
+    spec:
+      replicas: ${{REPLICAS}}
+      selector:
+        app: optisam-metric
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          annotations:
+            prometheus.io/port: '8081'
+            prometheus.io/scrape: 'true'
+          labels:
+            app: optisam-metric
+            internal-elasticsearch: 'true'
+          name: optisam-metric
+        spec:
+          containers:
+            - name: optisam-metric
+              image: ${DOCKER_REGISTRY}/optisam/metric-service:${TAG}
+              imagePullPolicy: Always
+              env:
+                - name: "ENV"
+                  value: ${ENV}
+                - name: "DB_PASSWORD"  
+                  value: ${DB_PASSWORD}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8081
+                  protocol: TCP
+                - containerPort: 8090
+                  protocol: TCP
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              resources:
+                requests:
+                  cpu: "80m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "100m"
+                  memory: "150Mi"
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /opt/config
+                - name: secret-volume
+                  mountPath: /opt/secret
+                  readOnly: true
+          volumes:
+            - name: config-volume
+              configMap:
+                name: config-metric-${ENV}
+            - name: secret-volume
+              secret:
+                secretName: secret-apipublickey-${ENV}
+parameters:
+  - name: DB_PASSWORD
+    description: Postgres Database Password
+    required: true
+  - name: TAG
+    description: Tag for Docker image
+    value: "latest"
+    required: true
+  - name: ENV
+    description: Env for deployment
+    required: true
+  - name: REPLICAS
+    description: Pod replica count
+    value: "1"
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    value: "dockerfactory-unstable-iva.si.francetelecom.fr"
+    required: true

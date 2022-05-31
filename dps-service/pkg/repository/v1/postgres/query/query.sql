@@ -1,5 +1,5 @@
 -- name: InsertUploadedData :one
-INSERT INTO uploaded_data_files (scope,data_type,file_name,uploaded_by,gid,status,scope_type, error_file)
+INSERT INTO uploaded_data_files (scope,data_type,file_name,uploaded_by,gid,status,scope_type, analysis_id)
 VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning *;
 
 -- name: InsertUploadedMetaData :one
@@ -170,3 +170,6 @@ insert into core_factor_logs (file_name)values($1);
 
 -- name: DeleteCoreFactorReference :exec
 delete from core_factor_references;
+
+-- name: GetGlobalFileInfo :one
+select analysis_id, file_name,scope_type, upload_id from uploaded_data_files where data_type = 'GLOBALDATA' and  scope = $1 and upload_id = $2 ;

@@ -2,7 +2,7 @@
 Feature: Simulation Service Test : Admin
 
   Background:
-  # * def simulationServiceUrl = "https://optisam-simulation-int.kermit-noprod-b.itn.intraorange"
+  # * def simulationServiceUrl = "https://optisam-simulation-int.apps.fr01.paas.tech.orange"
     * url simulationServiceUrl+'/api/v1'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

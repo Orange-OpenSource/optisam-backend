@@ -25,7 +25,7 @@ func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id st
 
 // MetricSPSComputedLicensesAgg implements Licence MetricSPSComputedLicensesAgg function
 func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricSPSComputed, scopes ...string) (uint64, uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricSPSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, 0, errors.New("dgraph/MetricSPSComputedLicensesAgg - query failed")
@@ -44,11 +44,12 @@ func (l *LicenseRepository) MetricSPSComputedLicensesAgg(ctx context.Context, na
 }
 
 // nolint: unparam
-func (l *LicenseRepository) getProductUIDsForAggAndMetric(ctx context.Context, name, metric string) ([]string, error) {
+func (l *LicenseRepository) getProductUIDsForAggAndMetric(ctx context.Context, name, metric string, scopes ...string) ([]string, error) {
 	q := `{
-		Products (func:eq(aggregation.name,"` + name + `"))@Normalize@cascade{
+		Products (func:eq(aggregation.name,"` + name + `"))  ` + agregateFilters(scopeFilters(scopes)) + ` @Normalize @cascade{
 			aggregation.products{
 			   ID: uid
+			   product.swidtag
 			}
 		}
 	  }
@@ -82,7 +83,7 @@ func (l *LicenseRepository) getProductUIDsForAggAndMetric(ctx context.Context, n
 }
 
 func (l *LicenseRepository) licensesForSPS(ctx context.Context, q string) (uint64, uint64, error) {
-	fmt.Println(q)
+	// fmt.Println(q)
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		//	logger.Log.Error("dgraph/MetricSPSComputedLicenses - query failed", zap.Error(err), zap.String("query", q))

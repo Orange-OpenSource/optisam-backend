@@ -3,7 +3,7 @@
 Feature: Account Service Test
 
   Background:
-  # * def accountServiceUrl = "https://ng-account-int.kermit-noprod-b.itn.intraorange"
+  # * def accountServiceUrl = "https://ng-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

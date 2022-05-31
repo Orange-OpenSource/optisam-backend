@@ -436,6 +436,10 @@ func getMetricWithNewValuesIPS(computedMetric *repo.MetricIPSComputed, attribute
 		computedMetric.NumCoresAttr = servAttrToRepoAttr(attributes[index])
 	}
 
+	if index := containsAttribute(attributes, computedMetric.NumCPUAttr.Name); index != -1 {
+		computedMetric.NumCPUAttr = servAttrToRepoAttr(attributes[index])
+	}
+
 	return computedMetric
 }
 
@@ -446,6 +450,10 @@ func getMetricWithNewValuesSPS(computedMetric *repo.MetricSPSComputed, attribute
 
 	if index := containsAttribute(attributes, computedMetric.NumCoresAttr.Name); index != -1 {
 		computedMetric.NumCoresAttr = servAttrToRepoAttr(attributes[index])
+	}
+
+	if index := containsAttribute(attributes, computedMetric.NumCPUAttr.Name); index != -1 {
+		computedMetric.NumCPUAttr = servAttrToRepoAttr(attributes[index])
 	}
 
 	return computedMetric

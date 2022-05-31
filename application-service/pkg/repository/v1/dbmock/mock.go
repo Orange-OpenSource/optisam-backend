@@ -163,7 +163,7 @@ func (mr *MockApplicationMockRecorder) GetApplicationDomains(arg0, arg1 interfac
 }
 
 // GetApplicationInstance mocks base method
-func (m *MockApplication) GetApplicationInstance(arg0 context.Context, arg1 string) (db.ApplicationsInstance, error) {
+func (m *MockApplication) GetApplicationInstance(arg0 context.Context, arg1 db.GetApplicationInstanceParams) (db.ApplicationsInstance, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetApplicationInstance", arg0, arg1)
 	ret0, _ := ret[0].(db.ApplicationsInstance)
@@ -430,6 +430,21 @@ func (m *MockApplication) GetObsolescenceRiskForApplication(arg0 context.Context
 func (mr *MockApplicationMockRecorder) GetObsolescenceRiskForApplication(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObsolescenceRiskForApplication", reflect.TypeOf((*MockApplication)(nil).GetObsolescenceRiskForApplication), arg0, arg1)
+}
+
+// GetProductsByApplicationInstanceID mocks base method
+func (m *MockApplication) GetProductsByApplicationInstanceID(arg0 context.Context, arg1 db.GetProductsByApplicationInstanceIDParams) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductsByApplicationInstanceID", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductsByApplicationInstanceID indicates an expected call of GetProductsByApplicationInstanceID
+func (mr *MockApplicationMockRecorder) GetProductsByApplicationInstanceID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByApplicationInstanceID", reflect.TypeOf((*MockApplication)(nil).GetProductsByApplicationInstanceID), arg0, arg1)
 }
 
 // GetRiskLevelMetaIDs mocks base method

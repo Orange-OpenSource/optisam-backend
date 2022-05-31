@@ -49,6 +49,7 @@ const (
 	dataload     uploadType   = "data"
 	rawdataload  uploadType   = "globaldata"
 	analysis     uploadType   = "analysis"
+	source       uploadType   = "source"
 	corefactor   uploadType   = "corefactor"
 	errorFile    downloadType = "error"
 	GENERIC      string       = "GENERIC"
@@ -776,7 +777,7 @@ func getConfigData(multipartForm *multipart.Form, res http.ResponseWriter) ([]*v
 }
 
 func (i *importServiceServer) UploadGlobalDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) { //nolint
-	var globalFileDir, genericFile, errFile string
+	var globalFileDir, genericFile, analysisID string
 	var filenames []string
 	var hdrs []*multipart.FileHeader
 	stype := v1.NotifyUploadRequest_GENERIC
@@ -860,19 +861,19 @@ func (i *importServiceServer) UploadGlobalDataHandler(res http.ResponseWriter, r
 			http.Error(res, "UnknownFileReceived", http.StatusBadRequest)
 			return
 		}
+		analysisID = temp[1]
 		temp = temp[2:]
-		errFile = strings.ReplaceAll(genericFile, "good", "bad")
 		filenames = append(filenames, strings.Join(temp, "_"))
-		logger.Log.Debug("parsing from generic file", zap.String("targetFile", filenames[0]), zap.String("errorFile", errFile))
+		logger.Log.Debug("parsing from generic file", zap.String("targetFile", filenames[0]), zap.String("analysis_id", analysisID))
 	}
 
 	dpsResp, err := i.dpsClient.NotifyUpload(req.Context(), &v1.NotifyUploadRequest{
-		Scope:             scope,
-		Type:              "globaldata",
-		Files:             filenames,
-		UploadedBy:        uploadedBy,
-		ScopeType:         stype,
-		AnalyzedErrorFile: errFile,
+		Scope:      scope,
+		Type:       "globaldata",
+		Files:      filenames,
+		UploadedBy: uploadedBy,
+		ScopeType:  stype,
+		AnalysisId: analysisID,
 	})
 	if err != nil {
 		logger.Log.Debug("DPS globaldata failed", zap.Error(err))
@@ -948,11 +949,30 @@ func getglobalFileExtension(fileName string) string {
 	return fmt.Sprintf(".%s", temp[len(temp)-1])
 }
 
-func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-	fileName := req.FormValue("fileName")
-	if fileName == "" {
-		logger.Log.Error("FileNameIsMissing")
-		http.Error(res, "FileNameIsMissing", http.StatusBadRequest)
+func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Request, param httprouter.Params) { // nolint
+	uploadID := ""
+	fileName := ""
+	scopeType := ""
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		logger.Log.Error("ClaimsNotFound")
+		http.Error(res, "ClaimsNotFound", http.StatusInternalServerError)
+		return
+	}
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("ScopeIsMissing")
+		http.Error(res, "ScopeIsMissing", http.StatusBadRequest)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		logger.Log.Error("ScopeValidationFailed")
+		http.Error(res, "ScopeValidationFailed", http.StatusUnauthorized)
+		return
+	}
+	if userClaims.Role == claims.RoleUser {
+		logger.Log.Error("RoleValidationFailed")
+		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
 		return
 	}
 
@@ -962,57 +982,79 @@ func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Re
 		http.Error(res, "downloadTypeIsMissing", http.StatusBadRequest)
 		return
 	}
-	scope := req.FormValue("scope")
-	if scope == "" {
-		logger.Log.Error("ScopeIsMissing")
-		http.Error(res, "ScopeIsMissing", http.StatusBadRequest)
-		return
-	}
-	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
-	if !ok {
-		logger.Log.Error("ClaimsNotFound")
-		http.Error(res, "ClaimsNotFound", http.StatusInternalServerError)
-		return
-	}
-	if !helper.Contains(userClaims.Socpes, scope) {
-		logger.Log.Error("ScopeValidationFailed")
-		http.Error(res, "ScopeValidationFailed", http.StatusUnauthorized)
-		return
-	}
-
-	if userClaims.Role == claims.RoleUser {
-		logger.Log.Error("RoleValidationFailed")
-		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
-		return
+	var isOlderGeneric bool
+	if downloadType == string(errorFile) || downloadType == string(source) {
+		uploadID = req.FormValue("uploadId")
+		if uploadID == "" {
+			logger.Log.Error("UploadIdIsMissing")
+			http.Error(res, "UploadIdIsMissing", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseInt(uploadID, 10, 64)
+		if err != nil {
+			logger.Log.Error("BadUploadIdReceived")
+			http.Error(res, "BadUploadIdReceived", http.StatusBadRequest)
+			return
+		}
+		resp, err := i.dpsClient.GetAnalysisFileInfo(req.Context(), &v1.GetAnalysisFileInfoRequest{
+			Scope:    scope,
+			UploadId: int32(id),
+			FileType: downloadType,
+		})
+		if err != nil {
+			logger.Log.Error("Failed to get fileInfo", zap.Error(err), zap.String("uploadID", uploadID), zap.String("downloadType", downloadType))
+			http.Error(res, "Failed to get fileInfo", http.StatusInternalServerError)
+			return
+		}
+		fileName = resp.FileName
+		scopeType = resp.ScopeType
+		isOlderGeneric = resp.IsOlderGeneric
+	} else if downloadType == string(analysis) {
+		fileName = req.FormValue("fileName")
+		if scope == "" {
+			logger.Log.Error("FileNameIsMissing")
+			http.Error(res, "FileNameIsMissing", http.StatusBadRequest)
+			return
+		}
 	}
 	fileLocation := ""
 	switch string(downloadType) { //nolint
 	case string(errorFile):
 		fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "errors", fileName)
-
 	case string(analysis):
 		fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "analysis", fileName)
-
+	case string(source):
+		if scopeType == GENERIC {
+			if isOlderGeneric { // older generic files
+				fileRegex := fileName + "*"
+				fileLocation = path.Join(i.config.Upload.RawDataUploadDir, "GEN", "archive", fileRegex)
+			} else {
+				fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "analysis", fileName)
+			}
+		} else {
+			fileRegex := fileName + "*"
+			fileLocation = path.Join(i.config.Upload.RawDataUploadDir, scope, "archive", fileRegex)
+		}
 	default:
 		http.Error(res, "InvalidDownloadTypeReceived", http.StatusBadRequest)
 		return
 	}
-
-	fileExists, err := helper.FileExists(fileLocation)
-	if err != nil {
-		http.Error(res, "Error in checking if file exists", http.StatusInternalServerError)
-		return
-	}
-	if !fileExists {
-		logger.Log.Info("Download - File does not exist", zap.Error(err), zap.String("file", fileLocation))
+	logger.Log.Debug("looking for file ", zap.String("filelocation", fileLocation))
+	file, err := filepath.Glob(fileLocation)
+	if err != nil || file == nil {
+		logger.Log.Error("Download - File does not exist", zap.Error(err), zap.String("file", fileLocation))
 		http.Error(res, "File does not exist", http.StatusNotFound)
 		return
 	}
+	if scopeType != GENERIC {
+		fileLocation = file[0]
+	}
 	fileData, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		logger.Log.Info("Download - error in reading file", zap.Error(err), zap.String("file", fileLocation))
+		logger.Log.Error("Download - error in reading file", zap.Error(err), zap.String("file", fileLocation))
 		http.Error(res, "error in reading file", http.StatusInternalServerError)
 		return
 	}
 	http.ServeContent(res, req, fileName, time.Now().UTC(), bytes.NewReader(fileData))
+	return
 }

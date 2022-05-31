@@ -5,6 +5,7 @@ type MetricSPS struct {
 	ID               string
 	Name             string
 	NumCoreAttrID    string
+	NumCPUAttrID     string
 	CoreFactorAttrID string
 	BaseEqTypeID     string
 }
@@ -15,4 +16,5 @@ type MetricSPSComputed struct {
 	BaseType       *EquipmentType
 	CoreFactorAttr *Attribute
 	NumCoresAttr   *Attribute
+	NumCPUAttr     *Attribute
 }

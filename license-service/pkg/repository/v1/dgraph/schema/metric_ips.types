@@ -7,5 +7,6 @@ type MetricIPS {
     metric.name
     metric.ips.base            
     metric.ips.attr_core_factor
-    metric.ips.attr_num_cores                    
+    metric.ips.attr_num_cores  
+    metric.ips.attr_num_cpu                  
 }

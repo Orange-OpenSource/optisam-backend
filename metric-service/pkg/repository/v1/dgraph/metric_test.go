@@ -400,7 +400,7 @@ func TestMetricRepository_MetricInfoWithAcqAndAgg(t *testing.T) {
 						{
 							Subject:     agg1,
 							Predicate:   "type_name",
-							ObjectValue: stringObjectValue("aggregation"),
+							ObjectValue: stringObjectValue("aggregated_rights"),
 						},
 						{
 							Subject:     agg1,
@@ -409,12 +409,12 @@ func TestMetricRepository_MetricInfoWithAcqAndAgg(t *testing.T) {
 						},
 						{
 							Subject:     agg1,
-							Predicate:   "aggregation.name",
-							ObjectValue: stringObjectValue("Aggregation 1"),
+							Predicate:   "aggregatedRights.SKU",
+							ObjectValue: stringObjectValue("Aggregated right sku"),
 						},
 						{
 							Subject:     agg1,
-							Predicate:   "aggregation.metric",
+							Predicate:   "aggregatedRights.metric",
 							ObjectValue: stringObjectValue("OracleMet"),
 						},
 						{
@@ -456,7 +456,7 @@ func TestMetricRepository_MetricInfoWithAcqAndAgg(t *testing.T) {
 				}
 				AggID, ok := assigned.Uids["agg1"]
 				if !ok {
-					return nil, errors.New("cannot find aggregation1 id after mutation in setup")
+					return nil, errors.New("cannot find aggregatedright1 id after mutation in setup")
 				}
 				AcqID, ok := assigned.Uids["acq1"]
 				if !ok {

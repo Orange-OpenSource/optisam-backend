@@ -139,6 +139,21 @@ func (mr *MockMetricMockRecorder) CreateMetricSPS(arg0, arg1, arg2 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricSPS", reflect.TypeOf((*MockMetric)(nil).CreateMetricSPS), arg0, arg1, arg2)
 }
 
+// CreateMetricStaticStandard mocks base method
+func (m *MockMetric) CreateMetricStaticStandard(arg0 context.Context, arg1 *v1.MetricSS, arg2 string) (*v1.MetricSS, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMetricStaticStandard", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.MetricSS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetricStaticStandard indicates an expected call of CreateMetricStaticStandard
+func (mr *MockMetricMockRecorder) CreateMetricStaticStandard(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricStaticStandard", reflect.TypeOf((*MockMetric)(nil).CreateMetricStaticStandard), arg0, arg1, arg2)
+}
+
 // CreateMetricUSS mocks base method
 func (m *MockMetric) CreateMetricUSS(arg0 context.Context, arg1 *v1.MetricUSS, arg2 string) (*v1.MetricUSS, error) {
 	m.ctrl.T.Helper()
@@ -360,6 +375,21 @@ func (m *MockMetric) GetMetricConfigSPSID(arg0 context.Context, arg1, arg2 strin
 func (mr *MockMetricMockRecorder) GetMetricConfigSPSID(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricConfigSPSID", reflect.TypeOf((*MockMetric)(nil).GetMetricConfigSPSID), arg0, arg1, arg2)
+}
+
+// GetMetricConfigSS mocks base method
+func (m *MockMetric) GetMetricConfigSS(arg0 context.Context, arg1, arg2 string) (*v1.MetricSS, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricConfigSS", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.MetricSS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricConfigSS indicates an expected call of GetMetricConfigSS
+func (mr *MockMetricMockRecorder) GetMetricConfigSS(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricConfigSS", reflect.TypeOf((*MockMetric)(nil).GetMetricConfigSS), arg0, arg1, arg2)
 }
 
 // GetMetricConfigUSS mocks base method
@@ -608,4 +638,18 @@ func (m *MockMetric) UpdateMetricSPS(arg0 context.Context, arg1 *v1.MetricSPS, a
 func (mr *MockMetricMockRecorder) UpdateMetricSPS(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricSPS", reflect.TypeOf((*MockMetric)(nil).UpdateMetricSPS), arg0, arg1, arg2)
+}
+
+// UpdateMetricSS mocks base method
+func (m *MockMetric) UpdateMetricSS(arg0 context.Context, arg1 *v1.MetricSS, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMetricSS", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMetricSS indicates an expected call of UpdateMetricSS
+func (mr *MockMetricMockRecorder) UpdateMetricSS(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricSS", reflect.TypeOf((*MockMetric)(nil).UpdateMetricSS), arg0, arg1, arg2)
 }

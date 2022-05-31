@@ -153,15 +153,18 @@ func TestLicenseRepository_ProductAcquiredRights(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := tt.r.ProductAcquiredRights(tt.args.ctx, tt.args.swidTag, tt.args.metrics, tt.args.scopes)
+			gotid, gotname, got1, err := tt.r.ProductAcquiredRights(tt.args.ctx, tt.args.swidTag, tt.args.metrics, false, tt.args.scopes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LicenseRepository.ProductAcquiredRights() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			if !tt.wantErr {
-				if got == "" {
+				if gotid == "" {
 					t.Errorf("LicenseRepository.ProductAcquiredRights() - ID is empty")
+				}
+				if gotname == "" {
+					t.Errorf("LicenseRepository.ProductAcquiredRights() - ProductName is empty")
 				}
 				compareProductAcquiredRightsAll(t, "ProductAcquiredRights", tt.want1, got1)
 			}

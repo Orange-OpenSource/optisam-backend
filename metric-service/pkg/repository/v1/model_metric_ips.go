@@ -5,6 +5,7 @@ type MetricIPS struct {
 	ID               string
 	Name             string
 	NumCoreAttrID    string
+	NumCPUAttrID     string
 	CoreFactorAttrID string
 	BaseEqTypeID     string
 }
@@ -15,6 +16,7 @@ type MetricIPSComputed struct {
 	BaseType       *EquipmentType
 	CoreFactorAttr *Attribute
 	NumCoresAttr   *Attribute
+	NumCPUAttr     *Attribute
 }
 
 // EquipmentType for creating equipment type
@@ -33,6 +35,7 @@ type MetricIPSConfig struct {
 	ID             string
 	Name           string
 	NumCoreAttr    string
+	NumCPUAttr     string
 	CoreFactorAttr string
 	BaseEqType     string
 }

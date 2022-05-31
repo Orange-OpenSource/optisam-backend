@@ -38,7 +38,7 @@ func (s *licenseServiceServer) computedLicensesAttrSum(ctx context.Context, eqTy
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesAttrSum - ", zap.String("reason", err.Error()))
-		return 0, "", status.Error(codes.Internal, "cannot compute licenses for metric ACS")
+		return 0, "", status.Error(codes.Internal, "cannot compute licenses for metric attribute sum standard")
 
 	}
 	return computedLicenses, "Sum of values: " + strconv.FormatUint(computedDetails, 10), nil

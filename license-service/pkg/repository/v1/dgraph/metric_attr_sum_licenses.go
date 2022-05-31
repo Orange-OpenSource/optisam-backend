@@ -15,7 +15,7 @@ func (l *LicenseRepository) MetricAttrSumComputedLicenses(ctx context.Context, i
 	q := buildQueryAttrSum(mat, scopes, id)
 	sumValue, err := l.licensesForQueryAll(ctx, q)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricAttrSumComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))
+		logger.Log.Error("dgraph/MetricAttrSumComputedLicenses - licensesForQueryAll", zap.Error(err), zap.String("query", q))
 		return 0, 0, errors.New("dgraph/MetricAttrSumComputedLicenses - query failed")
 	}
 	return uint64(math.Ceil(sumValue.LicensesNoCeil / mat.ReferenceValue)), uint64(sumValue.LicensesNoCeil), nil
@@ -23,7 +23,7 @@ func (l *LicenseRepository) MetricAttrSumComputedLicenses(ctx context.Context, i
 
 // MetricAttrSumComputedLicensesAgg implements Licence MetricAttrSumComputedLicensesAgg function
 func (l *LicenseRepository) MetricAttrSumComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricAttrSumComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, 0, errors.New("dgraph/MetricAttrSumComputedLicensesAgg - query failed")
@@ -34,7 +34,7 @@ func (l *LicenseRepository) MetricAttrSumComputedLicensesAgg(ctx context.Context
 	q := buildQueryAttrSum(mat, scopes, ids...)
 	sumValue, err := l.licensesForQueryAll(ctx, q)
 	if err != nil {
-		logger.Log.Error("dgraph/MetricAttrSumComputedLicensesAgg - licensesForQuery", zap.Error(err))
+		logger.Log.Error("dgraph/MetricAttrSumComputedLicensesAgg - licensesForQueryAll", zap.Error(err))
 		return 0, 0, errors.New("dgraph/MetricAttrSumComputedLicensesAgg - query failed")
 	}
 	return uint64(math.Ceil(sumValue.LicensesNoCeil / mat.ReferenceValue)), uint64(sumValue.LicensesNoCeil), nil

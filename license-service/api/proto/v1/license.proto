@@ -8,6 +8,11 @@ import "google/api/annotations.proto";
 import "validate/validate.proto";
 
 service LicenseService {
+  rpc GetOverAllCompliance(GetOverAllComplianceRequest) returns (GetOverAllComplianceResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/overall/compliance"
+    };
+  }
 
   rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest)returns (ListAcquiredRightsForProductResponse) {
     option (google.api.http) = {
@@ -25,7 +30,7 @@ service LicenseService {
   // ListComputationDetails
   rpc ListComputationDetails(ListComputationDetailsRequest) returns (ListComputationDetailsResponse) {
     option (google.api.http) = {
-      get : "/api/v1/license/product/{swid_tag}/computationdetails"
+      get : "/api/v1/license/computationdetails"
     };
   }
 
@@ -51,11 +56,21 @@ service LicenseService {
   }
 }
 
+message GetOverAllComplianceRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor = 2 ;
+  bool simulation = 3;
+}
+
+message GetOverAllComplianceResponse {
+  repeated AggregationAcquiredRights acq_rights = 1;
+}
+
 message ListComputationDetailsRequest {
   string swid_tag = 1;
-  //repeated string metric_name = 2 [(validate.rules).repeated = {min_items: 1}];
-  string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$"];
-  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  string sku = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$"];
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  string agg_name = 4;
 }
 
 message ListComputationDetailsResponse {
@@ -118,6 +133,7 @@ message ProductLicensesForMetricResponse {
 message ListAcqRightsForAggregationRequest {
   string name = 1;
   string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  bool simulation = 3;
 }
 
 message ListAcqRightsForAggregationResponse {
@@ -137,6 +153,7 @@ message Metric {
 message ListAcquiredRightsForProductRequest {
   string swid_tag = 1;
   string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  bool simulation = 3;
 }
 
 message ListAcquiredRightsForProductResponse {
@@ -181,6 +198,10 @@ message ProductAcquiredRights {
   double avgUnitPrice = 9;
   string computedDetails = 10;
   bool metricNotDefined = 11;
+  bool notDeployed = 12;
+  string productName = 14;
+  double purchaseCost = 15;
+  double computedCost = 16;
 }
 
 message AggregationAcquiredRights {
@@ -196,6 +217,10 @@ message AggregationAcquiredRights {
   double avgUnitPrice = 10;
   string computedDetails = 11;
   bool metricNotDefined = 12;
+  bool notDeployed = 13;
+  string productNames = 14;
+  double purchaseCost = 15;
+  double computedCost = 16;
 }
 
 message Attribute {

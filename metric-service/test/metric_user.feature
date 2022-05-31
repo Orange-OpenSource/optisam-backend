@@ -2,7 +2,7 @@
 Feature: Metric Service Test
 
   Background:
-  # * def metricServiceUrl = "https://optisam-metric-int.kermit-noprod-b.itn.intraorange"
+  # * def metricServiceUrl = "https://optisam-metric-int.apps.fr01.paas.tech.orange"
     * url metricServiceUrl+'/api/v1'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('common.feature') credentials

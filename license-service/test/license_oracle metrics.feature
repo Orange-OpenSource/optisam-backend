@@ -2,7 +2,7 @@
 Feature: License Service Test - Oracle editor metrics : Admin
 
   Background:
-  # * def licenseServiceUrl = "https://optisam-license-int.kermit-noprod-b.itn.intraorange"
+  # * def licenseServiceUrl = "https://optisam-license-int.apps.fr01.paas.tech.orange"
     * url licenseServiceUrl+'/api/v1/license'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

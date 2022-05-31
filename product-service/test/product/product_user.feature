@@ -3,7 +3,7 @@ Feature: Product Service Test : Normal user
 
   Background:
     * url productServiceUrl+'/api/v1'
-  # * def productServiceUrl = "https://optisam-product-int.kermit-noprod-b.itn.intraorange"
+  # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('../common.feature') credentials

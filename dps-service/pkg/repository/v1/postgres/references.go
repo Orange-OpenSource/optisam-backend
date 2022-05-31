@@ -11,6 +11,8 @@ import (
 )
 
 // UpsertProductTx upserts products/ linking data
+
+// nolint: gosec
 func (p *DpsRepository) StoreCoreFactorReferences(ctx context.Context, data map[string]map[string]string) error {
 	if len(data) == 0 {
 		return errors.New("emptyReference")

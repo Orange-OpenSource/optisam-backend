@@ -1,26 +1,21 @@
 package v1
 
-// AggregationInfoFull contains info of that aggregation and individual rights associated with products
+// AggregationInfo contains info of aggregation
 type AggregationInfo struct {
-	ID                   int
-	Name                 string
-	SKU                  string
-	ProductNames         []string
-	Swidtags             []string
-	ProductIDs           []string
-	Editor               string
-	Metric               []string
-	Licenses             int32
-	MaintenanceLicenses  int32
-	UnitPrice            float64
-	MaintenanceUnitPrice float64
-	PurchaseCost         float64
-	MaintenanceCost      float64
-	TotalCost            float64
-	StartOfMaintenance   string
-	EndOfMaintenance     string
-	NumOfApplications    int32
-	NumOfEquipments      int32
+	ID                int
+	Name              string
+	ProductNames      []string
+	Swidtags          []string
+	ProductIDs        []string
+	Editor            string
+	NumOfApplications int32
+	NumOfEquipments   int32
+}
+
+// AggregationWithAggRightsInfo ...
+type AggregationWithAggRightsInfo struct {
+	Aggregation      *AggregationInfo
+	AggregatedRights []*AggregatedRightsInfo
 }
 
 // ProductAggregation is the logical grouping of products
@@ -87,4 +82,9 @@ type QueryProductAggregations struct {
 
 func (prodAggKey ProductAggSearchKey) ToString() string {
 	return string(prodAggKey)
+}
+
+type Aggregation struct {
+	Name     string   `json:"aggregation.name"`
+	Swidtags []string `json:"aggregation.swidtags"`
 }

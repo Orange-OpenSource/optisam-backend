@@ -38,7 +38,7 @@ func (l *LicenseRepository) MetricOPSComputedLicensesForAppProduct(ctx context.C
 
 // MetricOPSComputedLicensesAgg implements Licence MetricOPSComputedLicensesAgg function
 func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, name, metirc string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metirc)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metirc, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, errors.New("dgraph/MetricOPSComputedLicensesAgg - query failed")
@@ -83,7 +83,10 @@ func (l *LicenseRepository) licensesForQueryAll(ctx context.Context, q string) (
 	}
 
 	if len(data.Licenses) == 0 {
-		return nil, v1.ErrNoData
+		return &license{
+			Licenses:       0,
+			LicensesNoCeil: 0,
+		}, nil
 	}
 
 	if len(data.Licenses) == 2 {

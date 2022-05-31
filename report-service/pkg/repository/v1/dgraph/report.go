@@ -162,30 +162,25 @@ func (r *ReportRepository) EquipmentTypeAttrs(ctx context.Context, eqtype string
 }
 
 // ProductEquipments implements interface's ProductEquipments
-func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string, scope string, eqtype string) ([]*repo.ProductEquipment, error) {
+func (r *ReportRepository) ProductEquipments(ctx context.Context, editor string, scope string, eqtype string) ([]*repo.ProductEquipment, error) {
 
 	q := `{
-		DirectEquipments(func: eq(product.swidtag,"` + swidTag + `"))@filter(eq(scopes,"` + scope + `")){
-	  	Equipments: product.equipment @filter(eq(equipment.type,"` + eqtype + `")){
-	 	 EquipmentID: equipment.id
-	  	 EquipmentType: equipment.type
-	  
-	}
-	}
-			
-			}`
+		DirectEquipments(func: eq(product.editor,"` + editor + `")) @filter(eq(scopes,"` + scope + `")) @cascade{
+			Swidtag: product.swidtag
+	  		Equipments: product.equipment @filter(eq(equipment.type,"` + eqtype + `")){
+	 	 		EquipmentID: equipment.id
+	  	 		EquipmentType: equipment.type
+			}
+		}
+	}`
 	resp, err := r.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("ProductEquipments - ", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, fmt.Errorf("productEquipments - cannot complete query transaction")
 	}
 
-	type object struct {
-		Equipments []*repo.ProductEquipment
-	}
-
 	type data struct {
-		DirectEquipments []*object
+		DirectEquipments []*repo.ProductEquipment
 	}
 
 	d := &data{}
@@ -198,8 +193,7 @@ func (r *ReportRepository) ProductEquipments(ctx context.Context, swidTag string
 	if len(d.DirectEquipments) == 0 {
 		return nil, repo.ErrNoData
 	}
-
-	return d.DirectEquipments[0].Equipments, nil
+	return d.DirectEquipments, nil
 
 }
 
@@ -209,7 +203,7 @@ type Object1 struct {
 }
 
 // EquipmentParents implements interface's EquipmentParents
-func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipType string, scope string) ([]*repo.ProductEquipment, error) {
+func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipType string, scope string) ([]*repo.Equipment, error) {
 	depth, err := r.getRecursionDepth(ctx, scope)
 	if err != nil {
 		return nil, fmt.Errorf("equipmentParents - cannot fetch recursion depth: %v", err)
@@ -246,13 +240,13 @@ func (r *ReportRepository) EquipmentParents(ctx context.Context, equipID, equipT
 		return nil, repo.ErrNoData
 	}
 
-	var res []*repo.ProductEquipment
+	var res []*repo.Equipment
 
 	for i := 0; i < len(d.EquipmentParents[0].EquipmentIDs.Val); i++ {
 		if d.EquipmentParents[0].EquipmentIDs.Val[i] == equipID {
 			continue
 		}
-		res = append(res, &repo.ProductEquipment{
+		res = append(res, &repo.Equipment{
 			EquipmentID:   d.EquipmentParents[0].EquipmentIDs.Val[i],
 			EquipmentType: d.EquipmentParents[0].EquipmentTypes.Val[i],
 		})

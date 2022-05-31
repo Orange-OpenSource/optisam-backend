@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	v1 "optisam-backend/account-service/pkg/api/v1"
 	repo "optisam-backend/account-service/pkg/repository/v1"
@@ -90,10 +91,20 @@ func (s *accountServiceServer) DropScopeData(ctx context.Context, req *v1.DropSc
 	// Delete Product & AcquiredRights resource
 	g.Go(func() error {
 		if _, err := s.product.DropProductData(ctx, &product.DropProductDataRequest{Scope: req.Scope, DeletionType: product.DropProductDataRequest_FULL}); err != nil {
-			logger.Log.Error("Failed to delete resources in account service", zap.Error(err))
+			logger.Log.Error("Failed to delete product or acquired rights resources in product service", zap.Error(err))
 			return err
 		}
-		logger.Log.Info("Application Resource deleted successfully")
+		logger.Log.Info("Product or Acquired Rights Resource deleted successfully")
+		return nil
+	})
+
+	// Delete Aggregations resource
+	g.Go(func() error {
+		if _, err := s.product.DropAggregationData(ctx, &product.DropAggregationDataRequest{Scope: req.Scope}); err != nil {
+			logger.Log.Error("Failed to delete aggregation resources in product service", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("Aggregation Resource deleted successfully")
 		return nil
 	})
 
@@ -495,6 +506,11 @@ func (s *accountServiceServer) AddGroupUser(ctx context.Context, req *v1.AddGrou
 			continue
 		}
 		userIDS = append(userIDS, userID)
+	}
+
+	if len(userIDS) == 0 {
+		logger.Log.Error("service/v1 - AddGroupUser - ", zap.Error(errors.New("invalid argument - user already present")))
+		return nil, status.Error(codes.AlreadyExists, "user already present in parent group")
 	}
 	if len(userIDS) > 0 {
 		if error := s.accountRepo.AddGroupUsers(ctx, req.GroupId, userIDS); error != nil {

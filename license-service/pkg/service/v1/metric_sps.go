@@ -75,6 +75,12 @@ func computedMetricSPS(met *repo.MetricSPS, eqTypes []*repo.EquipmentType) (*rep
 		return nil, status.Error(codes.Internal, "numofcores attribute doesnt exits")
 
 	}
+	numOfCPU, err := attributeExists(equipBase.Attributes, met.NumCPUAttrID)
+	if err != nil {
+		logger.Log.Error("service/v1 - attributeExists - ", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "numofcpu attribute doesnt exits")
+
+	}
 	coreFactor, err := attributeExists(equipBase.Attributes, met.CoreFactorAttrID)
 	if err != nil {
 		logger.Log.Error("service/v1 - attributeExists - corefactor", zap.String("reason", err.Error()))
@@ -86,5 +92,6 @@ func computedMetricSPS(met *repo.MetricSPS, eqTypes []*repo.EquipmentType) (*rep
 		BaseType:       equipBase,
 		NumCoresAttr:   numOfCores,
 		CoreFactorAttr: coreFactor,
+		NumCPUAttr:     numOfCPU,
 	}, nil
 }

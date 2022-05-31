@@ -2,7 +2,7 @@
 Feature: Metric Service Test - Create new metrics : admin user
 
   Background:
-  # * def metricServiceUrl = "https://optisam-metric-int.kermit-noprod-b.itn.intraorange"
+  # * def metricServiceUrl = "https://optisam-metric-int.apps.fr01.paas.tech.orange"
     * url metricServiceUrl+'/api/v1'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

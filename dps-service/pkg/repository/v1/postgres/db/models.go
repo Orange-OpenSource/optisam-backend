@@ -167,5 +167,5 @@ type UploadedDataFile struct {
 	FailedRecords  int32          `json:"failed_records"`
 	Comments       sql.NullString `json:"comments"`
 	ScopeType      ScopeTypes     `json:"scope_type"`
-	ErrorFile      sql.NullString `json:"error_file"`
+	AnalysisID     sql.NullString `json:"analysis_id"`
 }

@@ -735,6 +735,101 @@
         ]
       }
     },
+    "/api/v1/metric/ss": {
+      "post": {
+        "summary": "CreateMetricStaticStandard will create an static.standard metric",
+        "operationId": "MetricService_CreateMetricStaticStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricSS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricSS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateMetricStaticStandard will update an static.standard metric",
+        "operationId": "MetricService_UpdateMetricStaticStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricSS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateMetricStaticStandard will update an static.standard metric",
+        "operationId": "MetricService_UpdateMetricStaticStandard2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricSS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
     "/api/v1/metric/types": {
       "get": {
         "summary": "ListMetricType",
@@ -1087,6 +1182,9 @@
         "num_core_attr_id": {
           "type": "string"
         },
+        "numCPU_attr_id": {
+          "type": "string"
+        },
         "core_factor_attr_id": {
           "type": "string"
         },
@@ -1196,11 +1294,36 @@
         "num_core_attr_id": {
           "type": "string"
         },
+        "numCPU_attr_id": {
+          "type": "string"
+        },
         "core_factor_attr_id": {
           "type": "string"
         },
         "base_eq_type_id": {
           "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1MetricSS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "reference_value": {
+          "type": "integer",
+          "format": "int32"
         },
         "scopes": {
           "type": "array",
@@ -1238,7 +1361,8 @@
         "Attr_Counter",
         "Instance_Number",
         "Attr_Sum",
-        "User_Sum"
+        "User_Sum",
+        "Static_Standard"
       ],
       "default": "Unknown"
     },

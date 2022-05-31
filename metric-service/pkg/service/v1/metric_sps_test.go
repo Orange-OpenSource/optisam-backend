@@ -62,6 +62,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -83,12 +84,14 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				mockRepo.EXPECT().CreateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
+					NumCPUAttrID:     "a2",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
 				}, "Scope1").Times(1).Return(&repo.MetricSPS{
 					ID:               "SPS",
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
+					NumCPUAttrID:     "a2",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
 				}, nil)
@@ -97,6 +100,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				ID:               "SPS",
 				Name:             "SPS",
 				NumCoreAttrId:    "a1",
+				NumCPUAttrId:     "a2",
 				CoreFactorAttrId: "a3",
 				BaseEqTypeId:     "e2",
 			},
@@ -107,6 +111,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -121,6 +126,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -140,6 +146,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -167,6 +174,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -188,6 +196,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				mockRepo.EXPECT().CreateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
+					NumCPUAttrID:     "a2",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
 				}, "Scope1").Times(1).Return(nil, errors.New("Test error"))
@@ -200,6 +209,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -226,6 +236,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "sps",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -252,6 +263,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -292,6 +304,35 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "",
+					NumCPUAttrId:     "a2",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - num of cpu attribute is empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -319,6 +360,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -346,6 +388,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a4",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -373,6 +416,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -413,12 +457,88 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "FAILURE - numofcpu attribute doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a4",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return(eqTypes, nil)
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - numofcpu attribute doesnt have valid data type",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeString,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+				}, nil)
+			},
+			wantErr: true,
+		},
 		{name: "FAILURE - core factor attribute doesnt exists",
 			args: args{
 				ctx: ctx,
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a4",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -446,6 +566,7 @@ func Test_metricServiceServer_CreateMetricSAGProcessorStandard(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -553,6 +674,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -565,6 +687,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e1",
 				}, nil).Times(1)
@@ -572,6 +695,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().UpdateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
+					NumCPUAttrID:     "a2",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
 				}, "Scope1").Return(nil).Times(1)
@@ -586,6 +710,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -603,6 +728,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -625,6 +751,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -637,6 +764,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e5",
 				}, nil).Times(1)
@@ -653,6 +781,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -665,6 +794,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e4",
 				}, nil).Times(1)
@@ -672,6 +802,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().UpdateMetricSPS(ctx, &repo.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrID:    "a1",
+					NumCPUAttrID:     "a2",
 					CoreFactorAttrID: "a3",
 					BaseEqTypeID:     "e2",
 				}, "Scope1").Return(errors.New("Test error")).Times(1)
@@ -687,6 +818,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -709,6 +841,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e4",
 					Scopes:           []string{"Scope1"},
@@ -721,6 +854,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e7",
 				}, nil).Times(1)
@@ -737,6 +871,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -749,6 +884,37 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
+					CoreFactorAttr: "a3",
+					BaseEqType:     "e2",
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return(eqTypes, nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - num of cpu attribute is empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
+					Name:           "SPS",
+					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e2",
 				}, nil).Times(1)
@@ -765,6 +931,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -777,6 +944,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e2",
 				}, nil).Times(1)
@@ -793,6 +961,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a6",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -805,6 +974,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a9",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e2",
 				}, nil).Times(1)
@@ -821,6 +991,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -833,6 +1004,67 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
+					CoreFactorAttr: "a3",
+					BaseEqType:     "e2",
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return(eqTypes, nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - numofcpu attribute doesnt exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a6",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
+					Name:           "SPS",
+					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a9",
+					CoreFactorAttr: "a3",
+					BaseEqType:     "e2",
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return(eqTypes, nil).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - numofcpu attribute doesnt have valid data type",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "2",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
+					Name:           "SPS",
+					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e2",
 				}, nil).Times(1)
@@ -849,6 +1081,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "a9",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -861,6 +1094,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a8",
 					BaseEqType:     "e3",
 				}, nil).Times(1)
@@ -877,6 +1111,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				req: &v1.MetricSPS{
 					Name:             "SPS",
 					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
 					CoreFactorAttrId: "1",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
@@ -889,6 +1124,7 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 				mockRepo.EXPECT().GetMetricConfigSPS(ctx, "SPS", "Scope1").Return(&repo.MetricSPSConfig{
 					Name:           "SPS",
 					NumCoreAttr:    "a1",
+					NumCPUAttr:     "a2",
 					CoreFactorAttr: "a3",
 					BaseEqType:     "e2",
 				}, nil).Times(1)

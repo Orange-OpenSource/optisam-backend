@@ -17,6 +17,7 @@ type metricSPS struct {
 	Name           string `json:"metric.name"`
 	Base           []*id  `json:"metric.sps.base"`
 	AttrNumCores   []*id  `json:"metric.sps.attr_num_cores"`
+	AttrNumCPU     []*id  `json:"metric.sps.attr_num_cpu"`
 	AtrrCoreFactor []*id  `json:"metric.sps.attr_core_factor"`
 }
 
@@ -48,6 +49,11 @@ func (l *MetricRepository) CreateMetricSPS(ctx context.Context, mat *v1.MetricSP
 			Subject:   blankID,
 			Predicate: "metric.sps.attr_core_factor",
 			ObjectId:  mat.CoreFactorAttrID,
+		},
+		{
+			Subject:   blankID,
+			Predicate: "metric.sps.attr_num_cpu",
+			ObjectId:  mat.NumCPUAttrID,
 		},
 		{
 			Subject:   blankID,
@@ -144,6 +150,9 @@ func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName strin
 			NumCoreAttr: metric.sps.attr_num_cores{
 				attribute.name
 			}
+			NumCPUAttr: metric.sps.attr_num_cpu{
+				attribute.name
+			}
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -170,6 +179,7 @@ func (l *MetricRepository) GetMetricConfigSPS(ctx context.Context, metName strin
 		ID:             data.Metric[0].ID,
 		Name:           data.Metric[0].Name,
 		NumCoreAttr:    data.Metric[0].NumCoreAttr[0].AttributeName,
+		NumCPUAttr:     data.Metric[0].NumCPUAttr[0].AttributeName,
 		CoreFactorAttr: data.Metric[0].CoreFactorAttr[0].AttributeName,
 		BaseEqType:     data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
 	}, nil
@@ -183,6 +193,7 @@ func (l *MetricRepository) GetMetricConfigSPSID(ctx context.Context, metName str
 			 metric.sps.base{uid}
 			 metric.sps.attr_core_factor{uid}
 			 metric.sps.attr_num_cores{uid}
+			 metric.sps.attr_num_cpu{uid}
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -217,12 +228,14 @@ func (l *MetricRepository) UpdateMetricSPS(ctx context.Context, met *v1.MetricSP
 	del := `
 	uid(ID) <metric.sps.base> * .
 	uid(ID) <metric.sps.attr_core_factor> * .
-	uid(ID) <metric.sps.attr_num_cores> * .	
+	uid(ID) <metric.sps.attr_num_cores> * .
+	uid(ID) <metric.sps.attr_num_cpu> * .
 `
 	set := `
 	    uid(ID) <metric.sps.base> <` + met.BaseEqTypeID + `> .
 	    uid(ID) <metric.sps.attr_core_factor> <` + met.CoreFactorAttrID + `> .
-		uid(ID) <metric.sps.attr_num_cores> <` + met.NumCoreAttrID + `> .	
+		uid(ID) <metric.sps.attr_num_cores> <` + met.NumCoreAttrID + `> .
+	    uid(ID) <metric.sps.attr_num_cpu> <` + met.NumCPUAttrID + `> .	
 	`
 	req := &api.Request{
 		Query: q,
@@ -270,11 +283,16 @@ func converMetricToModelMetricSPS(m *metricSPS) (*v1.MetricSPS, error) {
 		return nil, errors.New("dgraph converMetricToModelMetricSPS - AttrNumCores not found")
 	}
 
+	if len(m.AttrNumCPU) == 0 {
+		return nil, errors.New("dgraph converMetricToModelMetricSPS - AttrNumCPU not found")
+	}
+
 	return &v1.MetricSPS{
 		ID:               m.ID,
 		Name:             m.Name,
 		BaseEqTypeID:     m.Base[0].ID,
 		CoreFactorAttrID: m.AtrrCoreFactor[0].ID,
 		NumCoreAttrID:    m.AttrNumCores[0].ID,
+		NumCPUAttrID:     m.AttrNumCPU[0].ID,
 	}, nil
 }

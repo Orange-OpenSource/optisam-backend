@@ -7,5 +7,6 @@ type MetricSPS {
     metric.name
     metric.sps.base            
     metric.sps.attr_core_factor
-    metric.sps.attr_num_cores                     
+    metric.sps.attr_num_cores  
+    metric.sps.attr_num_cpu                   
 }

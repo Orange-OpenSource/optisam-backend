@@ -35,7 +35,7 @@ func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id st
 
 // MetricNUPComputedLicensesAgg implements Licence MetricNUPComputedLicensesAgg function
 func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, name, metric string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, 0, errors.New("getProductUIDsForAggAndMetric query failed")

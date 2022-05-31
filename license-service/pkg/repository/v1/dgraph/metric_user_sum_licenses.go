@@ -21,7 +21,7 @@ func (l *LicenseRepository) MetricUserSumComputedLicenses(ctx context.Context, i
 
 // MetricUserSumComputedLicensesAgg implements Licence MetricUserSumComputedLicensesAgg function
 func (l *LicenseRepository) MetricUserSumComputedLicensesAgg(ctx context.Context, name, metric string, scopes ...string) (uint64, uint64, error) {
-	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric)
+	ids, err := l.getProductUIDsForAggAndMetric(ctx, name, metric, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricUserSumComputedLicensesAgg - getProductUIDsForAggAndMetric", zap.Error(err))
 		return 0, 0, errors.New("dgraph/MetricUserSumComputedLicensesAgg - query failed")

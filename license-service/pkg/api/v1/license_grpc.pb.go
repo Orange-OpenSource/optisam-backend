@@ -17,6 +17,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LicenseServiceClient interface {
+	GetOverAllCompliance(ctx context.Context, in *GetOverAllComplianceRequest, opts ...grpc.CallOption) (*GetOverAllComplianceResponse, error)
 	ListAcqRightsForProduct(ctx context.Context, in *ListAcquiredRightsForProductRequest, opts ...grpc.CallOption) (*ListAcquiredRightsForProductResponse, error)
 	ListAcqRightsForApplicationsProduct(ctx context.Context, in *ListAcqRightsForApplicationsProductRequest, opts ...grpc.CallOption) (*ListAcqRightsForApplicationsProductResponse, error)
 	// ListComputationDetails
@@ -32,6 +33,15 @@ type licenseServiceClient struct {
 
 func NewLicenseServiceClient(cc grpc.ClientConnInterface) LicenseServiceClient {
 	return &licenseServiceClient{cc}
+}
+
+func (c *licenseServiceClient) GetOverAllCompliance(ctx context.Context, in *GetOverAllComplianceRequest, opts ...grpc.CallOption) (*GetOverAllComplianceResponse, error) {
+	out := new(GetOverAllComplianceResponse)
+	err := c.cc.Invoke(ctx, "/optisam.license.v1.LicenseService/GetOverAllCompliance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *licenseServiceClient) ListAcqRightsForProduct(ctx context.Context, in *ListAcquiredRightsForProductRequest, opts ...grpc.CallOption) (*ListAcquiredRightsForProductResponse, error) {
@@ -92,6 +102,7 @@ func (c *licenseServiceClient) LicensesForEquipAndMetric(ctx context.Context, in
 // All implementations should embed UnimplementedLicenseServiceServer
 // for forward compatibility
 type LicenseServiceServer interface {
+	GetOverAllCompliance(context.Context, *GetOverAllComplianceRequest) (*GetOverAllComplianceResponse, error)
 	ListAcqRightsForProduct(context.Context, *ListAcquiredRightsForProductRequest) (*ListAcquiredRightsForProductResponse, error)
 	ListAcqRightsForApplicationsProduct(context.Context, *ListAcqRightsForApplicationsProductRequest) (*ListAcqRightsForApplicationsProductResponse, error)
 	// ListComputationDetails
@@ -105,6 +116,9 @@ type LicenseServiceServer interface {
 type UnimplementedLicenseServiceServer struct {
 }
 
+func (UnimplementedLicenseServiceServer) GetOverAllCompliance(context.Context, *GetOverAllComplianceRequest) (*GetOverAllComplianceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOverAllCompliance not implemented")
+}
 func (UnimplementedLicenseServiceServer) ListAcqRightsForProduct(context.Context, *ListAcquiredRightsForProductRequest) (*ListAcquiredRightsForProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsForProduct not implemented")
 }
@@ -133,6 +147,24 @@ type UnsafeLicenseServiceServer interface {
 
 func RegisterLicenseServiceServer(s grpc.ServiceRegistrar, srv LicenseServiceServer) {
 	s.RegisterService(&_LicenseService_serviceDesc, srv)
+}
+
+func _LicenseService_GetOverAllCompliance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOverAllComplianceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LicenseServiceServer).GetOverAllCompliance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.license.v1.LicenseService/GetOverAllCompliance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LicenseServiceServer).GetOverAllCompliance(ctx, req.(*GetOverAllComplianceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _LicenseService_ListAcqRightsForProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -247,6 +279,10 @@ var _LicenseService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.license.v1.LicenseService",
 	HandlerType: (*LicenseServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetOverAllCompliance",
+			Handler:    _LicenseService_GetOverAllCompliance_Handler,
+		},
 		{
 			MethodName: "ListAcqRightsForProduct",
 			Handler:    _LicenseService_ListAcqRightsForProduct_Handler,

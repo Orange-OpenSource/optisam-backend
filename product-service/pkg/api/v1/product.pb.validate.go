@@ -58,6 +58,8 @@ func (m *GetAggregationAcqrightsExpandedViewRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for Metric
+
 	return nil
 }
 
@@ -851,6 +853,474 @@ var _ interface {
 	ErrorName() string
 } = DeleteAcqRightResponseValidationError{}
 
+// Validate checks the field values on DownloadAcqRightFileRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DownloadAcqRightFileRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DownloadAcqRightFileRequest_Sku_Pattern.MatchString(m.GetSku()) {
+		return DownloadAcqRightFileRequestValidationError{
+			field:  "Sku",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
+		}
+	}
+
+	if !_DownloadAcqRightFileRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DownloadAcqRightFileRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DownloadAcqRightFileRequestValidationError is the validation error returned
+// by DownloadAcqRightFileRequest.Validate if the designated constraints
+// aren't met.
+type DownloadAcqRightFileRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DownloadAcqRightFileRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DownloadAcqRightFileRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DownloadAcqRightFileRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DownloadAcqRightFileRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DownloadAcqRightFileRequestValidationError) ErrorName() string {
+	return "DownloadAcqRightFileRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DownloadAcqRightFileRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDownloadAcqRightFileRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DownloadAcqRightFileRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DownloadAcqRightFileRequestValidationError{}
+
+var _DownloadAcqRightFileRequest_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+
+var _DownloadAcqRightFileRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DownloadAcqRightFileResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DownloadAcqRightFileResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for FileData
+
+	return nil
+}
+
+// DownloadAcqRightFileResponseValidationError is the validation error returned
+// by DownloadAcqRightFileResponse.Validate if the designated constraints
+// aren't met.
+type DownloadAcqRightFileResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DownloadAcqRightFileResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DownloadAcqRightFileResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DownloadAcqRightFileResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DownloadAcqRightFileResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DownloadAcqRightFileResponseValidationError) ErrorName() string {
+	return "DownloadAcqRightFileResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DownloadAcqRightFileResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDownloadAcqRightFileResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DownloadAcqRightFileResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DownloadAcqRightFileResponseValidationError{}
+
+// Validate checks the field values on DeleteAggregatedRightsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteAggregatedRightsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DeleteAggregatedRightsRequest_Sku_Pattern.MatchString(m.GetSku()) {
+		return DeleteAggregatedRightsRequestValidationError{
+			field:  "Sku",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
+		}
+	}
+
+	if !_DeleteAggregatedRightsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DeleteAggregatedRightsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DeleteAggregatedRightsRequestValidationError is the validation error
+// returned by DeleteAggregatedRightsRequest.Validate if the designated
+// constraints aren't met.
+type DeleteAggregatedRightsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAggregatedRightsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAggregatedRightsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAggregatedRightsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAggregatedRightsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAggregatedRightsRequestValidationError) ErrorName() string {
+	return "DeleteAggregatedRightsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteAggregatedRightsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAggregatedRightsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAggregatedRightsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAggregatedRightsRequestValidationError{}
+
+var _DeleteAggregatedRightsRequest_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+
+var _DeleteAggregatedRightsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DeleteAggregatedRightsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteAggregatedRightsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DeleteAggregatedRightsResponseValidationError is the validation error
+// returned by DeleteAggregatedRightsResponse.Validate if the designated
+// constraints aren't met.
+type DeleteAggregatedRightsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAggregatedRightsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAggregatedRightsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAggregatedRightsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAggregatedRightsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAggregatedRightsResponseValidationError) ErrorName() string {
+	return "DeleteAggregatedRightsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteAggregatedRightsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAggregatedRightsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAggregatedRightsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAggregatedRightsResponseValidationError{}
+
+// Validate checks the field values on DownloadAggregatedRightsFileRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *DownloadAggregatedRightsFileRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DownloadAggregatedRightsFileRequest_Sku_Pattern.MatchString(m.GetSku()) {
+		return DownloadAggregatedRightsFileRequestValidationError{
+			field:  "Sku",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
+		}
+	}
+
+	if !_DownloadAggregatedRightsFileRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DownloadAggregatedRightsFileRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DownloadAggregatedRightsFileRequestValidationError is the validation error
+// returned by DownloadAggregatedRightsFileRequest.Validate if the designated
+// constraints aren't met.
+type DownloadAggregatedRightsFileRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DownloadAggregatedRightsFileRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DownloadAggregatedRightsFileRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DownloadAggregatedRightsFileRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DownloadAggregatedRightsFileRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DownloadAggregatedRightsFileRequestValidationError) ErrorName() string {
+	return "DownloadAggregatedRightsFileRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DownloadAggregatedRightsFileRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDownloadAggregatedRightsFileRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DownloadAggregatedRightsFileRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DownloadAggregatedRightsFileRequestValidationError{}
+
+var _DownloadAggregatedRightsFileRequest_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+
+var _DownloadAggregatedRightsFileRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DownloadAggregatedRightsFileResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *DownloadAggregatedRightsFileResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for FileData
+
+	return nil
+}
+
+// DownloadAggregatedRightsFileResponseValidationError is the validation error
+// returned by DownloadAggregatedRightsFileResponse.Validate if the designated
+// constraints aren't met.
+type DownloadAggregatedRightsFileResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DownloadAggregatedRightsFileResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DownloadAggregatedRightsFileResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DownloadAggregatedRightsFileResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DownloadAggregatedRightsFileResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DownloadAggregatedRightsFileResponseValidationError) ErrorName() string {
+	return "DownloadAggregatedRightsFileResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DownloadAggregatedRightsFileResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDownloadAggregatedRightsFileResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DownloadAggregatedRightsFileResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DownloadAggregatedRightsFileResponseValidationError{}
+
 // Validate checks the field values on CreateDashboardUpdateJobRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1174,7 +1644,7 @@ func (m *AcqRightRequest) Validate() error {
 	if !_AcqRightRequest_ProductName_Pattern.MatchString(m.GetProductName()) {
 		return AcqRightRequestValidationError{
 			field:  "ProductName",
-			reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().-]+$\"",
+			reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().+-]+$\"",
 		}
 	}
 
@@ -1231,6 +1701,27 @@ func (m *AcqRightRequest) Validate() error {
 		}
 	}
 
+	if utf8.RuneCountInString(m.GetLastPurchasedOrder()) > 16 {
+		return AcqRightRequestValidationError{
+			field:  "LastPurchasedOrder",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSupportNumber()) > 16 {
+		return AcqRightRequestValidationError{
+			field:  "SupportNumber",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetMaintenanceProvider()) > 16 {
+		return AcqRightRequestValidationError{
+			field:  "MaintenanceProvider",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
 	if utf8.RuneCountInString(m.GetScope()) < 1 {
 		return AcqRightRequestValidationError{
 			field:  "Scope",
@@ -1244,6 +1735,26 @@ func (m *AcqRightRequest) Validate() error {
 			reason: "value length must be at most 100 runes",
 		}
 	}
+
+	// no validation rules for OrderingDate
+
+	if utf8.RuneCountInString(m.GetCorporateSourcingContract()) > 16 {
+		return AcqRightRequestValidationError{
+			field:  "CorporateSourcingContract",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSoftwareProvider()) > 16 {
+		return AcqRightRequestValidationError{
+			field:  "SoftwareProvider",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	// no validation rules for FileName
+
+	// no validation rules for FileData
 
 	return nil
 }
@@ -1304,7 +1815,7 @@ var _ interface {
 
 var _AcqRightRequest_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
 
-var _AcqRightRequest_ProductName_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().-]+$")
+var _AcqRightRequest_ProductName_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().+-]+$")
 
 var _AcqRightRequest_Version_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
 
@@ -1377,10 +1888,10 @@ var _ interface {
 	ErrorName() string
 } = AcqRightResponseValidationError{}
 
-// Validate checks the field values on AggregatedRights with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
-func (m *AggregatedRights) Validate() error {
+// Validate checks the field values on Aggregation with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *Aggregation) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -1389,98 +1900,45 @@ func (m *AggregatedRights) Validate() error {
 
 	// no validation rules for AggregationName
 
-	if !_AggregatedRights_Sku_Pattern.MatchString(m.GetSku()) {
-		return AggregatedRightsValidationError{
-			field:  "Sku",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
-		}
-	}
-
-	if !_AggregatedRights_ProductEditor_Pattern.MatchString(m.GetProductEditor()) {
-		return AggregatedRightsValidationError{
+	if !_Aggregation_ProductEditor_Pattern.MatchString(m.GetProductEditor()) {
+		return AggregationValidationError{
 			field:  "ProductEditor",
 			reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9.-]+$\"",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetMetricName()) < 1 {
-		return AggregatedRightsValidationError{
-			field:  "MetricName",
-			reason: "value length must be at least 1 runes",
 		}
 	}
 
 	for idx, item := range m.GetProductNames() {
 		_, _ = idx, item
 
-		if !_AggregatedRights_ProductNames_Pattern.MatchString(item) {
-			return AggregatedRightsValidationError{
+		if !_Aggregation_ProductNames_Pattern.MatchString(item) {
+			return AggregationValidationError{
 				field:  fmt.Sprintf("ProductNames[%v]", idx),
-				reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().-]+$\"",
+				reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().+-]+$\"",
 			}
 		}
 
 	}
 
 	if len(m.GetSwidtags()) < 1 {
-		return AggregatedRightsValidationError{
+		return AggregationValidationError{
 			field:  "Swidtags",
 			reason: "value must contain at least 1 item(s)",
 		}
 	}
 
-	if m.GetNumLicensesAcquired() < 0 {
-		return AggregatedRightsValidationError{
-			field:  "NumLicensesAcquired",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if m.GetAvgUnitPrice() < 0 {
-		return AggregatedRightsValidationError{
-			field:  "AvgUnitPrice",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	// no validation rules for StartOfMaintenance
-
-	// no validation rules for EndOfMaintenance
-
-	if m.GetNumLicencesMaintainance() < 0 {
-		return AggregatedRightsValidationError{
-			field:  "NumLicencesMaintainance",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if m.GetAvgMaintenanceUnitPrice() < 0 {
-		return AggregatedRightsValidationError{
-			field:  "AvgMaintenanceUnitPrice",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
 	if utf8.RuneCountInString(m.GetScope()) < 1 {
-		return AggregatedRightsValidationError{
+		return AggregationValidationError{
 			field:  "Scope",
 			reason: "value length must be at least 1 runes",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetComment()) > 100 {
-		return AggregatedRightsValidationError{
-			field:  "Comment",
-			reason: "value length must be at most 100 runes",
 		}
 	}
 
 	return nil
 }
 
-// AggregatedRightsValidationError is the validation error returned by
-// AggregatedRights.Validate if the designated constraints aren't met.
-type AggregatedRightsValidationError struct {
+// AggregationValidationError is the validation error returned by
+// Aggregation.Validate if the designated constraints aren't met.
+type AggregationValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1488,22 +1946,22 @@ type AggregatedRightsValidationError struct {
 }
 
 // Field function returns field value.
-func (e AggregatedRightsValidationError) Field() string { return e.field }
+func (e AggregationValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AggregatedRightsValidationError) Reason() string { return e.reason }
+func (e AggregationValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AggregatedRightsValidationError) Cause() error { return e.cause }
+func (e AggregationValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AggregatedRightsValidationError) Key() bool { return e.key }
+func (e AggregationValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AggregatedRightsValidationError) ErrorName() string { return "AggregatedRightsValidationError" }
+func (e AggregationValidationError) ErrorName() string { return "AggregationValidationError" }
 
 // Error satisfies the builtin error interface
-func (e AggregatedRightsValidationError) Error() string {
+func (e AggregationValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1515,14 +1973,14 @@ func (e AggregatedRightsValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAggregatedRights.%s: %s%s",
+		"invalid %sAggregation.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AggregatedRightsValidationError{}
+var _ error = AggregationValidationError{}
 
 var _ interface {
 	Field() string
@@ -1530,13 +1988,252 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AggregatedRightsValidationError{}
+} = AggregationValidationError{}
 
-var _AggregatedRights_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+var _Aggregation_ProductEditor_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
 
-var _AggregatedRights_ProductEditor_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
+var _Aggregation_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().+-]+$")
 
-var _AggregatedRights_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().-]+$")
+// Validate checks the field values on AggregationResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AggregationResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// AggregationResponseValidationError is the validation error returned by
+// AggregationResponse.Validate if the designated constraints aren't met.
+type AggregationResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AggregationResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AggregationResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AggregationResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AggregationResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AggregationResponseValidationError) ErrorName() string {
+	return "AggregationResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AggregationResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAggregationResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AggregationResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AggregationResponseValidationError{}
+
+// Validate checks the field values on AggregatedRightsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AggregatedRightsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_AggregatedRightsRequest_Sku_Pattern.MatchString(m.GetSku()) {
+		return AggregatedRightsRequestValidationError{
+			field:  "Sku",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
+		}
+	}
+
+	// no validation rules for AggregationID
+
+	if utf8.RuneCountInString(m.GetMetricName()) < 1 {
+		return AggregatedRightsRequestValidationError{
+			field:  "MetricName",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if m.GetNumLicensesAcquired() < 0 {
+		return AggregatedRightsRequestValidationError{
+			field:  "NumLicensesAcquired",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetAvgUnitPrice() < 0 {
+		return AggregatedRightsRequestValidationError{
+			field:  "AvgUnitPrice",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	// no validation rules for StartOfMaintenance
+
+	// no validation rules for EndOfMaintenance
+
+	if utf8.RuneCountInString(m.GetLastPurchasedOrder()) > 16 {
+		return AggregatedRightsRequestValidationError{
+			field:  "LastPurchasedOrder",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSupportNumber()) > 16 {
+		return AggregatedRightsRequestValidationError{
+			field:  "SupportNumber",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetMaintenanceProvider()) > 16 {
+		return AggregatedRightsRequestValidationError{
+			field:  "MaintenanceProvider",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if m.GetNumLicencesMaintenance() < 0 {
+		return AggregatedRightsRequestValidationError{
+			field:  "NumLicencesMaintenance",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetAvgMaintenanceUnitPrice() < 0 {
+		return AggregatedRightsRequestValidationError{
+			field:  "AvgMaintenanceUnitPrice",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetScope()) < 1 {
+		return AggregatedRightsRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetComment()) > 100 {
+		return AggregatedRightsRequestValidationError{
+			field:  "Comment",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	// no validation rules for OrderingDate
+
+	if utf8.RuneCountInString(m.GetCorporateSourcingContract()) > 16 {
+		return AggregatedRightsRequestValidationError{
+			field:  "CorporateSourcingContract",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetSoftwareProvider()) > 16 {
+		return AggregatedRightsRequestValidationError{
+			field:  "SoftwareProvider",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	// no validation rules for FileName
+
+	// no validation rules for FileData
+
+	return nil
+}
+
+// AggregatedRightsRequestValidationError is the validation error returned by
+// AggregatedRightsRequest.Validate if the designated constraints aren't met.
+type AggregatedRightsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AggregatedRightsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AggregatedRightsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AggregatedRightsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AggregatedRightsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AggregatedRightsRequestValidationError) ErrorName() string {
+	return "AggregatedRightsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AggregatedRightsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAggregatedRightsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AggregatedRightsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AggregatedRightsRequestValidationError{}
+
+var _AggregatedRightsRequest_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
 
 // Validate checks the field values on AggregatedRightsView with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1577,7 +2274,7 @@ func (m *AggregatedRightsView) Validate() error {
 		if !_AggregatedRightsView_ProductNames_Pattern.MatchString(item) {
 			return AggregatedRightsViewValidationError{
 				field:  fmt.Sprintf("ProductNames[%v]", idx),
-				reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().-]+$\"",
+				reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().+-]+$\"",
 			}
 		}
 
@@ -1608,9 +2305,9 @@ func (m *AggregatedRightsView) Validate() error {
 
 	// no validation rules for EndOfMaintenance
 
-	if m.GetNumLicencesMaintainance() < 0 {
+	if m.GetNumLicencesMaintenance() < 0 {
 		return AggregatedRightsViewValidationError{
-			field:  "NumLicencesMaintainance",
+			field:  "NumLicencesMaintenance",
 			reason: "value must be greater than or equal to 0",
 		}
 	}
@@ -1660,6 +2357,20 @@ func (m *AggregatedRightsView) Validate() error {
 	}
 
 	// no validation rules for LicenceUnderMaintenance
+
+	// no validation rules for OrderingDate
+
+	// no validation rules for CorporateSourcingContract
+
+	// no validation rules for SoftwareProvider
+
+	// no validation rules for LastPurchasedOrder
+
+	// no validation rules for SupportNumber
+
+	// no validation rules for MaintenanceProvider
+
+	// no validation rules for FileName
 
 	return nil
 }
@@ -1724,7 +2435,7 @@ var _AggregatedRightsView_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
 
 var _AggregatedRightsView_ProductEditor_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
 
-var _AggregatedRightsView_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().-]+$")
+var _AggregatedRightsView_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().+-]+$")
 
 // Validate checks the field values on AggregatedRightsResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2108,6 +2819,254 @@ var _ interface {
 	ErrorName() string
 } = ProductsPerEditorResponseValidationError{}
 
+// Validate checks the field values on GetRightsInfoByEditorRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetRightsInfoByEditorRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetEditor()) < 1 {
+		return GetRightsInfoByEditorRequestValidationError{
+			field:  "Editor",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_GetRightsInfoByEditorRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetRightsInfoByEditorRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// GetRightsInfoByEditorRequestValidationError is the validation error returned
+// by GetRightsInfoByEditorRequest.Validate if the designated constraints
+// aren't met.
+type GetRightsInfoByEditorRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetRightsInfoByEditorRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetRightsInfoByEditorRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetRightsInfoByEditorRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetRightsInfoByEditorRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetRightsInfoByEditorRequestValidationError) ErrorName() string {
+	return "GetRightsInfoByEditorRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetRightsInfoByEditorRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetRightsInfoByEditorRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetRightsInfoByEditorRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetRightsInfoByEditorRequestValidationError{}
+
+var _GetRightsInfoByEditorRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on GetRightsInfoByEditorResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetRightsInfoByEditorResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetEditorRights() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return GetRightsInfoByEditorResponseValidationError{
+					field:  fmt.Sprintf("EditorRights[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetRightsInfoByEditorResponseValidationError is the validation error
+// returned by GetRightsInfoByEditorResponse.Validate if the designated
+// constraints aren't met.
+type GetRightsInfoByEditorResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetRightsInfoByEditorResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetRightsInfoByEditorResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetRightsInfoByEditorResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetRightsInfoByEditorResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetRightsInfoByEditorResponseValidationError) ErrorName() string {
+	return "GetRightsInfoByEditorResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetRightsInfoByEditorResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetRightsInfoByEditorResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetRightsInfoByEditorResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetRightsInfoByEditorResponseValidationError{}
+
+// Validate checks the field values on RightsInfoByEditor with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *RightsInfoByEditor) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Sku
+
+	// no validation rules for Swidtag
+
+	// no validation rules for AggregationName
+
+	// no validation rules for MetricName
+
+	// no validation rules for AvgUnitPrice
+
+	// no validation rules for NumLicensesAcquired
+
+	return nil
+}
+
+// RightsInfoByEditorValidationError is the validation error returned by
+// RightsInfoByEditor.Validate if the designated constraints aren't met.
+type RightsInfoByEditorValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RightsInfoByEditorValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RightsInfoByEditorValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RightsInfoByEditorValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RightsInfoByEditorValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RightsInfoByEditorValidationError) ErrorName() string {
+	return "RightsInfoByEditorValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RightsInfoByEditorValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRightsInfoByEditor.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RightsInfoByEditorValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RightsInfoByEditorValidationError{}
+
 // Validate checks the field values on EditorProducts with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
 // is returned.
@@ -2177,18 +3136,18 @@ var _ interface {
 	ErrorName() string
 } = EditorProductsValidationError{}
 
-// Validate checks the field values on
-// ProductAggregationProductViewDetailsRequest with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *ProductAggregationProductViewDetailsRequest) Validate() error {
+// Validate checks the field values on AggregatedRightDetailsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AggregatedRightDetailsRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
 	// no validation rules for ID
 
-	if !_ProductAggregationProductViewDetailsRequest_Scope_Pattern.MatchString(m.GetScope()) {
-		return ProductAggregationProductViewDetailsRequestValidationError{
+	if !_AggregatedRightDetailsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return AggregatedRightDetailsRequestValidationError{
 			field:  "Scope",
 			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
@@ -2197,10 +3156,10 @@ func (m *ProductAggregationProductViewDetailsRequest) Validate() error {
 	return nil
 }
 
-// ProductAggregationProductViewDetailsRequestValidationError is the validation
-// error returned by ProductAggregationProductViewDetailsRequest.Validate if
-// the designated constraints aren't met.
-type ProductAggregationProductViewDetailsRequestValidationError struct {
+// AggregatedRightDetailsRequestValidationError is the validation error
+// returned by AggregatedRightDetailsRequest.Validate if the designated
+// constraints aren't met.
+type AggregatedRightDetailsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2208,24 +3167,24 @@ type ProductAggregationProductViewDetailsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ProductAggregationProductViewDetailsRequestValidationError) Field() string { return e.field }
+func (e AggregatedRightDetailsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ProductAggregationProductViewDetailsRequestValidationError) Reason() string { return e.reason }
+func (e AggregatedRightDetailsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ProductAggregationProductViewDetailsRequestValidationError) Cause() error { return e.cause }
+func (e AggregatedRightDetailsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ProductAggregationProductViewDetailsRequestValidationError) Key() bool { return e.key }
+func (e AggregatedRightDetailsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ProductAggregationProductViewDetailsRequestValidationError) ErrorName() string {
-	return "ProductAggregationProductViewDetailsRequestValidationError"
+func (e AggregatedRightDetailsRequestValidationError) ErrorName() string {
+	return "AggregatedRightDetailsRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ProductAggregationProductViewDetailsRequestValidationError) Error() string {
+func (e AggregatedRightDetailsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2237,14 +3196,14 @@ func (e ProductAggregationProductViewDetailsRequestValidationError) Error() stri
 	}
 
 	return fmt.Sprintf(
-		"invalid %sProductAggregationProductViewDetailsRequest.%s: %s%s",
+		"invalid %sAggregatedRightDetailsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ProductAggregationProductViewDetailsRequestValidationError{}
+var _ error = AggregatedRightDetailsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -2252,14 +3211,14 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ProductAggregationProductViewDetailsRequestValidationError{}
+} = AggregatedRightDetailsRequestValidationError{}
 
-var _ProductAggregationProductViewDetailsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+var _AggregatedRightDetailsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
-// Validate checks the field values on
-// ProductAggregationProductViewDetailsResponse with the rules defined in the
-// proto definition for this message. If any rules are violated, an error is returned.
-func (m *ProductAggregationProductViewDetailsResponse) Validate() error {
+// Validate checks the field values on AggregatedRightDetailsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *AggregatedRightDetailsResponse) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -2277,11 +3236,10 @@ func (m *ProductAggregationProductViewDetailsResponse) Validate() error {
 	return nil
 }
 
-// ProductAggregationProductViewDetailsResponseValidationError is the
-// validation error returned by
-// ProductAggregationProductViewDetailsResponse.Validate if the designated
+// AggregatedRightDetailsResponseValidationError is the validation error
+// returned by AggregatedRightDetailsResponse.Validate if the designated
 // constraints aren't met.
-type ProductAggregationProductViewDetailsResponseValidationError struct {
+type AggregatedRightDetailsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -2289,24 +3247,24 @@ type ProductAggregationProductViewDetailsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ProductAggregationProductViewDetailsResponseValidationError) Field() string { return e.field }
+func (e AggregatedRightDetailsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ProductAggregationProductViewDetailsResponseValidationError) Reason() string { return e.reason }
+func (e AggregatedRightDetailsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ProductAggregationProductViewDetailsResponseValidationError) Cause() error { return e.cause }
+func (e AggregatedRightDetailsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ProductAggregationProductViewDetailsResponseValidationError) Key() bool { return e.key }
+func (e AggregatedRightDetailsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ProductAggregationProductViewDetailsResponseValidationError) ErrorName() string {
-	return "ProductAggregationProductViewDetailsResponseValidationError"
+func (e AggregatedRightDetailsResponseValidationError) ErrorName() string {
+	return "AggregatedRightDetailsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ProductAggregationProductViewDetailsResponseValidationError) Error() string {
+func (e AggregatedRightDetailsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -2318,14 +3276,14 @@ func (e ProductAggregationProductViewDetailsResponseValidationError) Error() str
 	}
 
 	return fmt.Sprintf(
-		"invalid %sProductAggregationProductViewDetailsResponse.%s: %s%s",
+		"invalid %sAggregatedRightDetailsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ProductAggregationProductViewDetailsResponseValidationError{}
+var _ error = AggregatedRightDetailsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -2333,7 +3291,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ProductAggregationProductViewDetailsResponseValidationError{}
+} = AggregatedRightDetailsResponseValidationError{}
 
 // Validate checks the field values on ListProductAggregationViewRequest with
 // the rules defined in the proto definition for this message. If any rules
@@ -2680,6 +3638,8 @@ func (m *ProductAggregationView) Validate() error {
 
 	// no validation rules for TotalCost
 
+	// no validation rules for IndividualProductExists
+
 	return nil
 }
 
@@ -2821,6 +3781,83 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductAggRecordValidationError{}
+
+// Validate checks the field values on ListDeployedAndAcquiredEditorsRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *ListDeployedAndAcquiredEditorsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_ListDeployedAndAcquiredEditorsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListDeployedAndAcquiredEditorsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// ListDeployedAndAcquiredEditorsRequestValidationError is the validation error
+// returned by ListDeployedAndAcquiredEditorsRequest.Validate if the
+// designated constraints aren't met.
+type ListDeployedAndAcquiredEditorsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) ErrorName() string {
+	return "ListDeployedAndAcquiredEditorsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListDeployedAndAcquiredEditorsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListDeployedAndAcquiredEditorsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListDeployedAndAcquiredEditorsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListDeployedAndAcquiredEditorsRequestValidationError{}
+
+var _ListDeployedAndAcquiredEditorsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ListEditorsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -3554,6 +4591,18 @@ func (m *ProductSearchParams) Validate() error {
 		if err := v.Validate(); err != nil {
 			return ProductSearchParamsValidationError{
 				field:  "ApplicationId",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetInstanceId()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ProductSearchParamsValidationError{
+				field:  "InstanceId",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -4873,6 +5922,8 @@ func (m *ProductsLicenses) Validate() error {
 
 	// no validation rules for ProductName
 
+	// no validation rules for AggregationName
+
 	// no validation rules for NumLicensesAcquired
 
 	// no validation rules for NumLicensesComputed
@@ -4948,6 +5999,8 @@ func (m *ProductsCosts) Validate() error {
 
 	// no validation rules for ProductName
 
+	// no validation rules for AggregationName
+
 	// no validation rules for LicensesAcquiredCost
 
 	// no validation rules for LicensesComputedCost
@@ -5010,74 +6063,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProductsCostsValidationError{}
-
-// Validate checks the field values on FinancialOverdeployedProducts with the
-// rules defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *FinancialOverdeployedProducts) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// FinancialOverdeployedProductsValidationError is the validation error
-// returned by FinancialOverdeployedProducts.Validate if the designated
-// constraints aren't met.
-type FinancialOverdeployedProductsValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e FinancialOverdeployedProductsValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e FinancialOverdeployedProductsValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e FinancialOverdeployedProductsValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e FinancialOverdeployedProductsValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e FinancialOverdeployedProductsValidationError) ErrorName() string {
-	return "FinancialOverdeployedProductsValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e FinancialOverdeployedProductsValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sFinancialOverdeployedProducts.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = FinancialOverdeployedProductsValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = FinancialOverdeployedProductsValidationError{}
 
 // Validate checks the field values on ProductsPerMetricTypeRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -5583,6 +6568,10 @@ func (m *DashboardOverviewResponse) Validate() error {
 
 	// no validation rules for NumProducts
 
+	// no validation rules for TotalCounterfeitingAmount
+
+	// no validation rules for TotalUnderusageAmount
+
 	return nil
 }
 
@@ -5701,6 +6690,38 @@ func (m *UpsertAcqRightsRequest) Validate() error {
 			reason: "value length must be at least 1 runes",
 		}
 	}
+
+	if utf8.RuneCountInString(m.GetCorporateSourcingContract()) > 16 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "CorporateSourcingContract",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	// no validation rules for OrderingDate
+
+	if utf8.RuneCountInString(m.GetSoftwareProvider()) > 16 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "SoftwareProvider",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetMaintenanceProvider()) > 100 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "MaintenanceProvider",
+			reason: "value length must be at most 100 runes",
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetLastPurchasedOrder()) > 16 {
+		return UpsertAcqRightsRequestValidationError{
+			field:  "LastPurchasedOrder",
+			reason: "value length must be at most 16 runes",
+		}
+	}
+
+	// no validation rules for SupportNumber
 
 	return nil
 }
@@ -6014,6 +7035,30 @@ func (m *AcqRightsSearchParams) Validate() error {
 		}
 	}
 
+	if v, ok := interface{}(m.GetSoftwareProvider()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "SoftwareProvider",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOrderingDate()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsSearchParamsValidationError{
+				field:  "OrderingDate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -6220,6 +7265,30 @@ func (m *AcqRights) Validate() error {
 
 	// no validation rules for Comment
 
+	if v, ok := interface{}(m.GetOrderingDate()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return AcqRightsValidationError{
+				field:  "OrderingDate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for CorporateSourcingContract
+
+	// no validation rules for SoftwareProvider
+
+	// no validation rules for LastPurchasedOrder
+
+	// no validation rules for SupportNumber
+
+	// no validation rules for MaintenanceProvider
+
+	// no validation rules for FileName
+
 	return nil
 }
 
@@ -6320,16 +7389,11 @@ func (m *ListAggregatedAcqRightsRequest) Validate() error {
 		}
 	}
 
-	for idx, item := range m.GetScopes() {
-		_, _ = idx, item
-
-		if !_ListAggregatedAcqRightsRequest_Scopes_Pattern.MatchString(item) {
-			return ListAggregatedAcqRightsRequestValidationError{
-				field:  fmt.Sprintf("Scopes[%v]", idx),
-				reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
-			}
+	if !_ListAggregatedAcqRightsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAggregatedAcqRightsRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
-
 	}
 
 	return nil
@@ -6392,7 +7456,7 @@ var _ interface {
 	ErrorName() string
 } = ListAggregatedAcqRightsRequestValidationError{}
 
-var _ListAggregatedAcqRightsRequest_Scopes_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+var _ListAggregatedAcqRightsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ListAggregatedAcqRightsResponse with the
 // rules defined in the proto definition for this message. If any rules are
@@ -6568,18 +7632,6 @@ func (m *ListAcqRightsAggregationSearchParams) Validate() error {
 		return nil
 	}
 
-	if v, ok := interface{}(m.GetSwidTag()).(interface {
-		Validate() error
-	}); ok {
-		if err := v.Validate(); err != nil {
-			return ListAcqRightsAggregationSearchParamsValidationError{
-				field:  "SwidTag",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if v, ok := interface{}(m.GetName()).(interface {
 		Validate() error
 	}); ok {
@@ -6622,6 +7674,30 @@ func (m *ListAcqRightsAggregationSearchParams) Validate() error {
 		if err := v.Validate(); err != nil {
 			return ListAcqRightsAggregationSearchParamsValidationError{
 				field:  "Metric",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetOrderingDate()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "OrderingDate",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetSoftwareProvider()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAcqRightsAggregationSearchParamsValidationError{
+				field:  "SoftwareProvider",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -6857,18 +7933,23 @@ var _ interface {
 	ErrorName() string
 } = ListAcqRightsAggregationRecordsResponseValidationError{}
 
-// Validate checks the field values on DeleteProductAggregationRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// Validate checks the field values on DeleteAggregationRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *DeleteProductAggregationRequest) Validate() error {
+func (m *DeleteAggregationRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	// no validation rules for ID
+	if m.GetID() < 0 {
+		return DeleteAggregationRequestValidationError{
+			field:  "ID",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
 
-	if !_DeleteProductAggregationRequest_Scope_Pattern.MatchString(m.GetScope()) {
-		return DeleteProductAggregationRequestValidationError{
+	if !_DeleteAggregationRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DeleteAggregationRequestValidationError{
 			field:  "Scope",
 			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
@@ -6877,10 +7958,9 @@ func (m *DeleteProductAggregationRequest) Validate() error {
 	return nil
 }
 
-// DeleteProductAggregationRequestValidationError is the validation error
-// returned by DeleteProductAggregationRequest.Validate if the designated
-// constraints aren't met.
-type DeleteProductAggregationRequestValidationError struct {
+// DeleteAggregationRequestValidationError is the validation error returned by
+// DeleteAggregationRequest.Validate if the designated constraints aren't met.
+type DeleteAggregationRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -6888,24 +7968,24 @@ type DeleteProductAggregationRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e DeleteProductAggregationRequestValidationError) Field() string { return e.field }
+func (e DeleteAggregationRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DeleteProductAggregationRequestValidationError) Reason() string { return e.reason }
+func (e DeleteAggregationRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DeleteProductAggregationRequestValidationError) Cause() error { return e.cause }
+func (e DeleteAggregationRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DeleteProductAggregationRequestValidationError) Key() bool { return e.key }
+func (e DeleteAggregationRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DeleteProductAggregationRequestValidationError) ErrorName() string {
-	return "DeleteProductAggregationRequestValidationError"
+func (e DeleteAggregationRequestValidationError) ErrorName() string {
+	return "DeleteAggregationRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e DeleteProductAggregationRequestValidationError) Error() string {
+func (e DeleteAggregationRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -6917,14 +7997,14 @@ func (e DeleteProductAggregationRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDeleteProductAggregationRequest.%s: %s%s",
+		"invalid %sDeleteAggregationRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DeleteProductAggregationRequestValidationError{}
+var _ error = DeleteAggregationRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -6932,79 +8012,9 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DeleteProductAggregationRequestValidationError{}
+} = DeleteAggregationRequestValidationError{}
 
-var _DeleteProductAggregationRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
-
-// Validate checks the field values on DeleteProductAggregationResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, an error is returned.
-func (m *DeleteProductAggregationResponse) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for Success
-
-	return nil
-}
-
-// DeleteProductAggregationResponseValidationError is the validation error
-// returned by DeleteProductAggregationResponse.Validate if the designated
-// constraints aren't met.
-type DeleteProductAggregationResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DeleteProductAggregationResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DeleteProductAggregationResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DeleteProductAggregationResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DeleteProductAggregationResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DeleteProductAggregationResponseValidationError) ErrorName() string {
-	return "DeleteProductAggregationResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DeleteProductAggregationResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDeleteProductAggregationResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DeleteProductAggregationResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DeleteProductAggregationResponseValidationError{}
+var _DeleteAggregationRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ListAggregationsRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -7012,6 +8022,46 @@ var _ interface {
 func (m *ListAggregationsRequest) Validate() error {
 	if m == nil {
 		return nil
+	}
+
+	if val := m.GetPageNum(); val < 1 || val >= 1000 {
+		return ListAggregationsRequestValidationError{
+			field:  "PageNum",
+			reason: "value must be inside range [1, 1000)",
+		}
+	}
+
+	if val := m.GetPageSize(); val < 10 || val > 200 {
+		return ListAggregationsRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be inside range [10, 200]",
+		}
+	}
+
+	if _, ok := ListAggregationsRequest_SortBy_name[int32(m.GetSortBy())]; !ok {
+		return ListAggregationsRequestValidationError{
+			field:  "SortBy",
+			reason: "value must be one of the defined enum values",
+		}
+	}
+
+	if _, ok := SortOrder_name[int32(m.GetSortOrder())]; !ok {
+		return ListAggregationsRequestValidationError{
+			field:  "SortOrder",
+			reason: "value must be one of the defined enum values",
+		}
+	}
+
+	if v, ok := interface{}(m.GetSearchParams()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAggregationsRequestValidationError{
+				field:  "SearchParams",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if !_ListAggregationsRequest_Scope_Pattern.MatchString(m.GetScope()) {
@@ -7082,6 +8132,98 @@ var _ interface {
 
 var _ListAggregationsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
+// Validate checks the field values on ListAggregationsSearchParams with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAggregationsSearchParams) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetAggregationName()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAggregationsSearchParamsValidationError{
+				field:  "AggregationName",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetProductEditor()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return ListAggregationsSearchParamsValidationError{
+				field:  "ProductEditor",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// ListAggregationsSearchParamsValidationError is the validation error returned
+// by ListAggregationsSearchParams.Validate if the designated constraints
+// aren't met.
+type ListAggregationsSearchParamsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAggregationsSearchParamsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAggregationsSearchParamsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAggregationsSearchParamsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAggregationsSearchParamsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAggregationsSearchParamsValidationError) ErrorName() string {
+	return "ListAggregationsSearchParamsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListAggregationsSearchParamsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAggregationsSearchParams.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAggregationsSearchParamsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAggregationsSearchParamsValidationError{}
+
 // Validate checks the field values on ListAggregationsResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -7089,6 +8231,8 @@ func (m *ListAggregationsResponse) Validate() error {
 	if m == nil {
 		return nil
 	}
+
+	// no validation rules for TotalRecords
 
 	for idx, item := range m.GetAggregations() {
 		_, _ = idx, item
@@ -7165,189 +8309,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAggregationsResponseValidationError{}
-
-// Validate checks the field values on ListAggregatedRights with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, an error is returned.
-func (m *ListAggregatedRights) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for ID
-
-	// no validation rules for AggregationName
-
-	if !_ListAggregatedRights_Sku_Pattern.MatchString(m.GetSku()) {
-		return ListAggregatedRightsValidationError{
-			field:  "Sku",
-			reason: "value does not match regex pattern \"^[a-zA-Z0-9_.]+$\"",
-		}
-	}
-
-	if !_ListAggregatedRights_ProductEditor_Pattern.MatchString(m.GetProductEditor()) {
-		return ListAggregatedRightsValidationError{
-			field:  "ProductEditor",
-			reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9.-]+$\"",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetMetricName()) < 1 {
-		return ListAggregatedRightsValidationError{
-			field:  "MetricName",
-			reason: "value length must be at least 1 runes",
-		}
-	}
-
-	for idx, item := range m.GetProductNames() {
-		_, _ = idx, item
-
-		if !_ListAggregatedRights_ProductNames_Pattern.MatchString(item) {
-			return ListAggregatedRightsValidationError{
-				field:  fmt.Sprintf("ProductNames[%v]", idx),
-				reason: "value does not match regex pattern \"^[\\\\sa-zA-Z0-9().-]+$\"",
-			}
-		}
-
-	}
-
-	if len(m.GetSwidtags()) < 1 {
-		return ListAggregatedRightsValidationError{
-			field:  "Swidtags",
-			reason: "value must contain at least 1 item(s)",
-		}
-	}
-
-	if m.GetNumLicensesAcquired() < 0 {
-		return ListAggregatedRightsValidationError{
-			field:  "NumLicensesAcquired",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if m.GetAvgUnitPrice() < 0 {
-		return ListAggregatedRightsValidationError{
-			field:  "AvgUnitPrice",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if v, ok := interface{}(m.GetStartOfMaintenance()).(interface {
-		Validate() error
-	}); ok {
-		if err := v.Validate(); err != nil {
-			return ListAggregatedRightsValidationError{
-				field:  "StartOfMaintenance",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if v, ok := interface{}(m.GetEndOfMaintenance()).(interface {
-		Validate() error
-	}); ok {
-		if err := v.Validate(); err != nil {
-			return ListAggregatedRightsValidationError{
-				field:  "EndOfMaintenance",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if m.GetNumLicencesMaintainance() < 0 {
-		return ListAggregatedRightsValidationError{
-			field:  "NumLicencesMaintainance",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if m.GetAvgMaintenanceUnitPrice() < 0 {
-		return ListAggregatedRightsValidationError{
-			field:  "AvgMaintenanceUnitPrice",
-			reason: "value must be greater than or equal to 0",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetScope()) < 1 {
-		return ListAggregatedRightsValidationError{
-			field:  "Scope",
-			reason: "value length must be at least 1 runes",
-		}
-	}
-
-	if utf8.RuneCountInString(m.GetComment()) > 100 {
-		return ListAggregatedRightsValidationError{
-			field:  "Comment",
-			reason: "value length must be at most 100 runes",
-		}
-	}
-
-	return nil
-}
-
-// ListAggregatedRightsValidationError is the validation error returned by
-// ListAggregatedRights.Validate if the designated constraints aren't met.
-type ListAggregatedRightsValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListAggregatedRightsValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListAggregatedRightsValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListAggregatedRightsValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListAggregatedRightsValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListAggregatedRightsValidationError) ErrorName() string {
-	return "ListAggregatedRightsValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ListAggregatedRightsValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListAggregatedRights.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListAggregatedRightsValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListAggregatedRightsValidationError{}
-
-var _ListAggregatedRights_Sku_Pattern = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
-
-var _ListAggregatedRights_ProductEditor_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
-
-var _ListAggregatedRights_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().-]+$")
 
 // Validate checks the field values on ProductAggregationMessage with the rules
 // defined in the proto definition for this message. If any rules are
@@ -7517,16 +8478,16 @@ var _ interface {
 	ErrorName() string
 } = ProductAggregationValidationError{}
 
-// Validate checks the field values on ListAggregatedRightsEditorsRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, an error is returned.
-func (m *ListAggregatedRightsEditorsRequest) Validate() error {
+// Validate checks the field values on ListAggregationEditorsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAggregationEditorsRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	if !_ListAggregatedRightsEditorsRequest_Scope_Pattern.MatchString(m.GetScope()) {
-		return ListAggregatedRightsEditorsRequestValidationError{
+	if !_ListAggregationEditorsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAggregationEditorsRequestValidationError{
 			field:  "Scope",
 			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
@@ -7535,10 +8496,10 @@ func (m *ListAggregatedRightsEditorsRequest) Validate() error {
 	return nil
 }
 
-// ListAggregatedRightsEditorsRequestValidationError is the validation error
-// returned by ListAggregatedRightsEditorsRequest.Validate if the designated
+// ListAggregationEditorsRequestValidationError is the validation error
+// returned by ListAggregationEditorsRequest.Validate if the designated
 // constraints aren't met.
-type ListAggregatedRightsEditorsRequestValidationError struct {
+type ListAggregationEditorsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -7546,24 +8507,24 @@ type ListAggregatedRightsEditorsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAggregatedRightsEditorsRequestValidationError) Field() string { return e.field }
+func (e ListAggregationEditorsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAggregatedRightsEditorsRequestValidationError) Reason() string { return e.reason }
+func (e ListAggregationEditorsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAggregatedRightsEditorsRequestValidationError) Cause() error { return e.cause }
+func (e ListAggregationEditorsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAggregatedRightsEditorsRequestValidationError) Key() bool { return e.key }
+func (e ListAggregationEditorsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAggregatedRightsEditorsRequestValidationError) ErrorName() string {
-	return "ListAggregatedRightsEditorsRequestValidationError"
+func (e ListAggregationEditorsRequestValidationError) ErrorName() string {
+	return "ListAggregationEditorsRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAggregatedRightsEditorsRequestValidationError) Error() string {
+func (e ListAggregationEditorsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -7575,14 +8536,14 @@ func (e ListAggregatedRightsEditorsRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAggregatedRightsEditorsRequest.%s: %s%s",
+		"invalid %sListAggregationEditorsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAggregatedRightsEditorsRequestValidationError{}
+var _ error = ListAggregationEditorsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -7590,14 +8551,14 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAggregatedRightsEditorsRequestValidationError{}
+} = ListAggregationEditorsRequestValidationError{}
 
-var _ListAggregatedRightsEditorsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+var _ListAggregationEditorsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
-// Validate checks the field values on ListAggregatedRightsEditorsResponse with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, an error is returned.
-func (m *ListAggregatedRightsEditorsResponse) Validate() error {
+// Validate checks the field values on ListAggregationEditorsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAggregationEditorsResponse) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -7605,10 +8566,10 @@ func (m *ListAggregatedRightsEditorsResponse) Validate() error {
 	return nil
 }
 
-// ListAggregatedRightsEditorsResponseValidationError is the validation error
-// returned by ListAggregatedRightsEditorsResponse.Validate if the designated
+// ListAggregationEditorsResponseValidationError is the validation error
+// returned by ListAggregationEditorsResponse.Validate if the designated
 // constraints aren't met.
-type ListAggregatedRightsEditorsResponseValidationError struct {
+type ListAggregationEditorsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -7616,24 +8577,24 @@ type ListAggregatedRightsEditorsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAggregatedRightsEditorsResponseValidationError) Field() string { return e.field }
+func (e ListAggregationEditorsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAggregatedRightsEditorsResponseValidationError) Reason() string { return e.reason }
+func (e ListAggregationEditorsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAggregatedRightsEditorsResponseValidationError) Cause() error { return e.cause }
+func (e ListAggregationEditorsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAggregatedRightsEditorsResponseValidationError) Key() bool { return e.key }
+func (e ListAggregationEditorsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAggregatedRightsEditorsResponseValidationError) ErrorName() string {
-	return "ListAggregatedRightsEditorsResponseValidationError"
+func (e ListAggregationEditorsResponseValidationError) ErrorName() string {
+	return "ListAggregationEditorsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAggregatedRightsEditorsResponseValidationError) Error() string {
+func (e ListAggregationEditorsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -7645,14 +8606,14 @@ func (e ListAggregatedRightsEditorsResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAggregatedRightsEditorsResponse.%s: %s%s",
+		"invalid %sListAggregationEditorsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAggregatedRightsEditorsResponseValidationError{}
+var _ error = ListAggregationEditorsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -7660,18 +8621,18 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAggregatedRightsEditorsResponseValidationError{}
+} = ListAggregationEditorsResponseValidationError{}
 
-// Validate checks the field values on ListAggregatedRightsProductsRequest with
-// the rules defined in the proto definition for this message. If any rules
-// are violated, an error is returned.
-func (m *ListAggregatedRightsProductsRequest) Validate() error {
+// Validate checks the field values on ListAggregationProductsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAggregationProductsRequest) Validate() error {
 	if m == nil {
 		return nil
 	}
 
-	if !_ListAggregatedRightsProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
-		return ListAggregatedRightsProductsRequestValidationError{
+	if !_ListAggregationProductsRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListAggregationProductsRequestValidationError{
 			field:  "Scope",
 			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
@@ -7679,10 +8640,8 @@ func (m *ListAggregatedRightsProductsRequest) Validate() error {
 
 	// no validation rules for Editor
 
-	// no validation rules for Metric
-
 	if m.GetID() < 0 {
-		return ListAggregatedRightsProductsRequestValidationError{
+		return ListAggregationProductsRequestValidationError{
 			field:  "ID",
 			reason: "value must be greater than or equal to 0",
 		}
@@ -7691,10 +8650,10 @@ func (m *ListAggregatedRightsProductsRequest) Validate() error {
 	return nil
 }
 
-// ListAggregatedRightsProductsRequestValidationError is the validation error
-// returned by ListAggregatedRightsProductsRequest.Validate if the designated
+// ListAggregationProductsRequestValidationError is the validation error
+// returned by ListAggregationProductsRequest.Validate if the designated
 // constraints aren't met.
-type ListAggregatedRightsProductsRequestValidationError struct {
+type ListAggregationProductsRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -7702,24 +8661,24 @@ type ListAggregatedRightsProductsRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAggregatedRightsProductsRequestValidationError) Field() string { return e.field }
+func (e ListAggregationProductsRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAggregatedRightsProductsRequestValidationError) Reason() string { return e.reason }
+func (e ListAggregationProductsRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAggregatedRightsProductsRequestValidationError) Cause() error { return e.cause }
+func (e ListAggregationProductsRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAggregatedRightsProductsRequestValidationError) Key() bool { return e.key }
+func (e ListAggregationProductsRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAggregatedRightsProductsRequestValidationError) ErrorName() string {
-	return "ListAggregatedRightsProductsRequestValidationError"
+func (e ListAggregationProductsRequestValidationError) ErrorName() string {
+	return "ListAggregationProductsRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAggregatedRightsProductsRequestValidationError) Error() string {
+func (e ListAggregationProductsRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -7731,14 +8690,14 @@ func (e ListAggregatedRightsProductsRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAggregatedRightsProductsRequest.%s: %s%s",
+		"invalid %sListAggregationProductsRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAggregatedRightsProductsRequestValidationError{}
+var _ error = ListAggregationProductsRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -7746,14 +8705,14 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAggregatedRightsProductsRequestValidationError{}
+} = ListAggregationProductsRequestValidationError{}
 
-var _ListAggregatedRightsProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+var _ListAggregationProductsRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
-// Validate checks the field values on ListAggregatedRightsProductsResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, an error is returned.
-func (m *ListAggregatedRightsProductsResponse) Validate() error {
+// Validate checks the field values on ListAggregationProductsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListAggregationProductsResponse) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -7765,7 +8724,7 @@ func (m *ListAggregatedRightsProductsResponse) Validate() error {
 			Validate() error
 		}); ok {
 			if err := v.Validate(); err != nil {
-				return ListAggregatedRightsProductsResponseValidationError{
+				return ListAggregationProductsResponseValidationError{
 					field:  fmt.Sprintf("AggrightsProducts[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -7782,7 +8741,7 @@ func (m *ListAggregatedRightsProductsResponse) Validate() error {
 			Validate() error
 		}); ok {
 			if err := v.Validate(); err != nil {
-				return ListAggregatedRightsProductsResponseValidationError{
+				return ListAggregationProductsResponseValidationError{
 					field:  fmt.Sprintf("SelectedProducts[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -7795,10 +8754,10 @@ func (m *ListAggregatedRightsProductsResponse) Validate() error {
 	return nil
 }
 
-// ListAggregatedRightsProductsResponseValidationError is the validation error
-// returned by ListAggregatedRightsProductsResponse.Validate if the designated
+// ListAggregationProductsResponseValidationError is the validation error
+// returned by ListAggregationProductsResponse.Validate if the designated
 // constraints aren't met.
-type ListAggregatedRightsProductsResponseValidationError struct {
+type ListAggregationProductsResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -7806,24 +8765,24 @@ type ListAggregatedRightsProductsResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListAggregatedRightsProductsResponseValidationError) Field() string { return e.field }
+func (e ListAggregationProductsResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListAggregatedRightsProductsResponseValidationError) Reason() string { return e.reason }
+func (e ListAggregationProductsResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListAggregatedRightsProductsResponseValidationError) Cause() error { return e.cause }
+func (e ListAggregationProductsResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListAggregatedRightsProductsResponseValidationError) Key() bool { return e.key }
+func (e ListAggregationProductsResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListAggregatedRightsProductsResponseValidationError) ErrorName() string {
-	return "ListAggregatedRightsProductsResponseValidationError"
+func (e ListAggregationProductsResponseValidationError) ErrorName() string {
+	return "ListAggregationProductsResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListAggregatedRightsProductsResponseValidationError) Error() string {
+func (e ListAggregationProductsResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -7835,14 +8794,14 @@ func (e ListAggregatedRightsProductsResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListAggregatedRightsProductsResponse.%s: %s%s",
+		"invalid %sListAggregationProductsResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListAggregatedRightsProductsResponseValidationError{}
+var _ error = ListAggregationProductsResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -7850,12 +8809,12 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListAggregatedRightsProductsResponseValidationError{}
+} = ListAggregationProductsResponseValidationError{}
 
-// Validate checks the field values on AggregatedRightsProducts with the rules
+// Validate checks the field values on AggregationProducts with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *AggregatedRightsProducts) Validate() error {
+func (m *AggregationProducts) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -7869,9 +8828,9 @@ func (m *AggregatedRightsProducts) Validate() error {
 	return nil
 }
 
-// AggregatedRightsProductsValidationError is the validation error returned by
-// AggregatedRightsProducts.Validate if the designated constraints aren't met.
-type AggregatedRightsProductsValidationError struct {
+// AggregationProductsValidationError is the validation error returned by
+// AggregationProducts.Validate if the designated constraints aren't met.
+type AggregationProductsValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -7879,24 +8838,24 @@ type AggregatedRightsProductsValidationError struct {
 }
 
 // Field function returns field value.
-func (e AggregatedRightsProductsValidationError) Field() string { return e.field }
+func (e AggregationProductsValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e AggregatedRightsProductsValidationError) Reason() string { return e.reason }
+func (e AggregationProductsValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e AggregatedRightsProductsValidationError) Cause() error { return e.cause }
+func (e AggregationProductsValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e AggregatedRightsProductsValidationError) Key() bool { return e.key }
+func (e AggregationProductsValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e AggregatedRightsProductsValidationError) ErrorName() string {
-	return "AggregatedRightsProductsValidationError"
+func (e AggregationProductsValidationError) ErrorName() string {
+	return "AggregationProductsValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e AggregatedRightsProductsValidationError) Error() string {
+func (e AggregationProductsValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -7908,14 +8867,14 @@ func (e AggregatedRightsProductsValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sAggregatedRightsProducts.%s: %s%s",
+		"invalid %sAggregationProducts.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = AggregatedRightsProductsValidationError{}
+var _ error = AggregationProductsValidationError{}
 
 var _ interface {
 	Field() string
@@ -7923,7 +8882,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = AggregatedRightsProductsValidationError{}
+} = AggregationProductsValidationError{}
 
 // Validate checks the field values on DropProductDataRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -8082,6 +9041,152 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DropProductDataResponseValidationError{}
+
+// Validate checks the field values on DropAggregationDataRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropAggregationDataRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DropAggregationDataRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DropAggregationDataRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// DropAggregationDataRequestValidationError is the validation error returned
+// by DropAggregationDataRequest.Validate if the designated constraints aren't met.
+type DropAggregationDataRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropAggregationDataRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropAggregationDataRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropAggregationDataRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropAggregationDataRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropAggregationDataRequestValidationError) ErrorName() string {
+	return "DropAggregationDataRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropAggregationDataRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropAggregationDataRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropAggregationDataRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropAggregationDataRequestValidationError{}
+
+var _DropAggregationDataRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DropAggregationDataResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DropAggregationDataResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DropAggregationDataResponseValidationError is the validation error returned
+// by DropAggregationDataResponse.Validate if the designated constraints
+// aren't met.
+type DropAggregationDataResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropAggregationDataResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropAggregationDataResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropAggregationDataResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropAggregationDataResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropAggregationDataResponseValidationError) ErrorName() string {
+	return "DropAggregationDataResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropAggregationDataResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropAggregationDataResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropAggregationDataResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropAggregationDataResponseValidationError{}
 
 // Validate checks the field values on UpsertProductRequestApplication with the
 // rules defined in the proto definition for this message. If any rules are

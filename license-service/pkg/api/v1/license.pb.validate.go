@@ -36,6 +36,172 @@ var (
 // define the regex for a UUID once up-front
 var _license_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on GetOverAllComplianceRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetOverAllComplianceRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_GetOverAllComplianceRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetOverAllComplianceRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Editor
+
+	// no validation rules for Simulation
+
+	return nil
+}
+
+// GetOverAllComplianceRequestValidationError is the validation error returned
+// by GetOverAllComplianceRequest.Validate if the designated constraints
+// aren't met.
+type GetOverAllComplianceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetOverAllComplianceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetOverAllComplianceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetOverAllComplianceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetOverAllComplianceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetOverAllComplianceRequestValidationError) ErrorName() string {
+	return "GetOverAllComplianceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetOverAllComplianceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetOverAllComplianceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetOverAllComplianceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetOverAllComplianceRequestValidationError{}
+
+var _GetOverAllComplianceRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on GetOverAllComplianceResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetOverAllComplianceResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAcqRights() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return GetOverAllComplianceResponseValidationError{
+					field:  fmt.Sprintf("AcqRights[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetOverAllComplianceResponseValidationError is the validation error returned
+// by GetOverAllComplianceResponse.Validate if the designated constraints
+// aren't met.
+type GetOverAllComplianceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetOverAllComplianceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetOverAllComplianceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetOverAllComplianceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetOverAllComplianceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetOverAllComplianceResponseValidationError) ErrorName() string {
+	return "GetOverAllComplianceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetOverAllComplianceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetOverAllComplianceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetOverAllComplianceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetOverAllComplianceResponseValidationError{}
+
 // Validate checks the field values on ListComputationDetailsRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -59,6 +225,8 @@ func (m *ListComputationDetailsRequest) Validate() error {
 			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
 		}
 	}
+
+	// no validation rules for AggName
 
 	return nil
 }
@@ -901,6 +1069,8 @@ func (m *ListAcqRightsForAggregationRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for Simulation
+
 	return nil
 }
 
@@ -1288,6 +1458,8 @@ func (m *ListAcquiredRightsForProductRequest) Validate() error {
 		}
 	}
 
+	// no validation rules for Simulation
+
 	return nil
 }
 
@@ -1634,6 +1806,14 @@ func (m *ProductAcquiredRights) Validate() error {
 
 	// no validation rules for MetricNotDefined
 
+	// no validation rules for NotDeployed
+
+	// no validation rules for ProductName
+
+	// no validation rules for PurchaseCost
+
+	// no validation rules for ComputedCost
+
 	return nil
 }
 
@@ -1724,6 +1904,14 @@ func (m *AggregationAcquiredRights) Validate() error {
 	// no validation rules for ComputedDetails
 
 	// no validation rules for MetricNotDefined
+
+	// no validation rules for NotDeployed
+
+	// no validation rules for ProductNames
+
+	// no validation rules for PurchaseCost
+
+	// no validation rules for ComputedCost
 
 	return nil
 }

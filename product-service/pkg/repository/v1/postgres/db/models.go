@@ -34,68 +34,81 @@ func (e *JobStatus) Scan(src interface{}) error {
 }
 
 type Acqright struct {
-	Sku                     string          `json:"sku"`
-	Swidtag                 string          `json:"swidtag"`
-	ProductName             string          `json:"product_name"`
-	ProductEditor           string          `json:"product_editor"`
-	Scope                   string          `json:"scope"`
-	Metric                  string          `json:"metric"`
-	NumLicensesAcquired     int32           `json:"num_licenses_acquired"`
-	NumLicencesComputed     int32           `json:"num_licences_computed"`
-	NumLicencesMaintainance int32           `json:"num_licences_maintainance"`
-	AvgUnitPrice            decimal.Decimal `json:"avg_unit_price"`
-	AvgMaintenanceUnitPrice decimal.Decimal `json:"avg_maintenance_unit_price"`
-	TotalPurchaseCost       decimal.Decimal `json:"total_purchase_cost"`
-	TotalComputedCost       decimal.Decimal `json:"total_computed_cost"`
-	TotalMaintenanceCost    decimal.Decimal `json:"total_maintenance_cost"`
-	TotalCost               decimal.Decimal `json:"total_cost"`
-	CreatedOn               time.Time       `json:"created_on"`
-	CreatedBy               string          `json:"created_by"`
-	UpdatedOn               time.Time       `json:"updated_on"`
-	UpdatedBy               sql.NullString  `json:"updated_by"`
-	StartOfMaintenance      sql.NullTime    `json:"start_of_maintenance"`
-	EndOfMaintenance        sql.NullTime    `json:"end_of_maintenance"`
-	Version                 string          `json:"version"`
-	Comment                 sql.NullString  `json:"comment"`
+	Sku                       string          `json:"sku"`
+	Swidtag                   string          `json:"swidtag"`
+	ProductName               string          `json:"product_name"`
+	ProductEditor             string          `json:"product_editor"`
+	Scope                     string          `json:"scope"`
+	Metric                    string          `json:"metric"`
+	NumLicensesAcquired       int32           `json:"num_licenses_acquired"`
+	NumLicencesComputed       int32           `json:"num_licences_computed"`
+	NumLicencesMaintainance   int32           `json:"num_licences_maintainance"`
+	AvgUnitPrice              decimal.Decimal `json:"avg_unit_price"`
+	AvgMaintenanceUnitPrice   decimal.Decimal `json:"avg_maintenance_unit_price"`
+	TotalPurchaseCost         decimal.Decimal `json:"total_purchase_cost"`
+	TotalComputedCost         decimal.Decimal `json:"total_computed_cost"`
+	TotalMaintenanceCost      decimal.Decimal `json:"total_maintenance_cost"`
+	TotalCost                 decimal.Decimal `json:"total_cost"`
+	CreatedOn                 time.Time       `json:"created_on"`
+	CreatedBy                 string          `json:"created_by"`
+	UpdatedOn                 time.Time       `json:"updated_on"`
+	UpdatedBy                 sql.NullString  `json:"updated_by"`
+	StartOfMaintenance        sql.NullTime    `json:"start_of_maintenance"`
+	EndOfMaintenance          sql.NullTime    `json:"end_of_maintenance"`
+	LastPurchasedOrder        string          `json:"last_purchased_order"`
+	SupportNumber             string          `json:"support_number"`
+	MaintenanceProvider       string          `json:"maintenance_provider"`
+	Version                   string          `json:"version"`
+	Comment                   sql.NullString  `json:"comment"`
+	OrderingDate              sql.NullTime    `json:"ordering_date"`
+	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
+	SoftwareProvider          string          `json:"software_provider"`
+	FileName                  string          `json:"file_name"`
+	FileData                  []byte          `json:"file_data"`
 }
 
 type AggregatedRight struct {
-	ID                      int32           `json:"id"`
-	AggregationName         string          `json:"aggregation_name"`
-	Sku                     string          `json:"sku"`
-	ProductEditor           string          `json:"product_editor"`
-	Metric                  string          `json:"metric"`
-	Products                []string        `json:"products"`
-	Swidtags                []string        `json:"swidtags"`
-	Scope                   string          `json:"scope"`
-	NumLicensesAcquired     int32           `json:"num_licenses_acquired"`
-	NumLicencesComputed     int32           `json:"num_licences_computed"`
-	NumLicencesMaintainance int32           `json:"num_licences_maintainance"`
-	AvgUnitPrice            decimal.Decimal `json:"avg_unit_price"`
-	AvgMaintenanceUnitPrice decimal.Decimal `json:"avg_maintenance_unit_price"`
-	TotalPurchaseCost       decimal.Decimal `json:"total_purchase_cost"`
-	TotalComputedCost       decimal.Decimal `json:"total_computed_cost"`
-	TotalMaintenanceCost    decimal.Decimal `json:"total_maintenance_cost"`
-	TotalCost               decimal.Decimal `json:"total_cost"`
-	StartOfMaintenance      sql.NullTime    `json:"start_of_maintenance"`
-	EndOfMaintenance        sql.NullTime    `json:"end_of_maintenance"`
-	Comment                 sql.NullString  `json:"comment"`
-	CreatedOn               time.Time       `json:"created_on"`
-	CreatedBy               string          `json:"created_by"`
-	UpdatedOn               time.Time       `json:"updated_on"`
-	UpdatedBy               sql.NullString  `json:"updated_by"`
+	Sku                       string          `json:"sku"`
+	AggregationID             int32           `json:"aggregation_id"`
+	Metric                    string          `json:"metric"`
+	OrderingDate              sql.NullTime    `json:"ordering_date"`
+	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
+	SoftwareProvider          string          `json:"software_provider"`
+	Scope                     string          `json:"scope"`
+	NumLicensesAcquired       int32           `json:"num_licenses_acquired"`
+	NumLicencesComputed       int32           `json:"num_licences_computed"`
+	NumLicencesMaintenance    int32           `json:"num_licences_maintenance"`
+	AvgUnitPrice              decimal.Decimal `json:"avg_unit_price"`
+	AvgMaintenanceUnitPrice   decimal.Decimal `json:"avg_maintenance_unit_price"`
+	TotalPurchaseCost         decimal.Decimal `json:"total_purchase_cost"`
+	TotalComputedCost         decimal.Decimal `json:"total_computed_cost"`
+	TotalMaintenanceCost      decimal.Decimal `json:"total_maintenance_cost"`
+	TotalCost                 decimal.Decimal `json:"total_cost"`
+	StartOfMaintenance        sql.NullTime    `json:"start_of_maintenance"`
+	EndOfMaintenance          sql.NullTime    `json:"end_of_maintenance"`
+	LastPurchasedOrder        string          `json:"last_purchased_order"`
+	SupportNumber             string          `json:"support_number"`
+	MaintenanceProvider       string          `json:"maintenance_provider"`
+	Comment                   sql.NullString  `json:"comment"`
+	CreatedOn                 time.Time       `json:"created_on"`
+	CreatedBy                 string          `json:"created_by"`
+	UpdatedOn                 time.Time       `json:"updated_on"`
+	UpdatedBy                 sql.NullString  `json:"updated_by"`
+	FileName                  string          `json:"file_name"`
+	FileData                  []byte          `json:"file_data"`
 }
 
 type Aggregation struct {
-	AggregationID     int32          `json:"aggregation_id"`
-	AggregationName   string         `json:"aggregation_name"`
-	AggregationMetric string         `json:"aggregation_metric"`
-	AggregationScope  string         `json:"aggregation_scope"`
-	Products          []string       `json:"products"`
-	CreatedOn         time.Time      `json:"created_on"`
-	CreatedBy         string         `json:"created_by"`
-	UpdatedOn         sql.NullTime   `json:"updated_on"`
-	UpdatedBy         sql.NullString `json:"updated_by"`
+	ID              int32          `json:"id"`
+	AggregationName string         `json:"aggregation_name"`
+	Scope           string         `json:"scope"`
+	ProductEditor   string         `json:"product_editor"`
+	Products        []string       `json:"products"`
+	Swidtags        []string       `json:"swidtags"`
+	CreatedOn       time.Time      `json:"created_on"`
+	CreatedBy       string         `json:"created_by"`
+	UpdatedOn       sql.NullTime   `json:"updated_on"`
+	UpdatedBy       sql.NullString `json:"updated_by"`
 }
 
 type DashboardAudit struct {
@@ -117,6 +130,27 @@ type Job struct {
 	CreatedAt  time.Time       `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
 	MetaData   json.RawMessage `json:"meta_data"`
+}
+
+type OverallComputedLicence struct {
+	Sku                 string          `json:"sku"`
+	Swidtags            string          `json:"swidtags"`
+	Scope               string          `json:"scope"`
+	ProductNames        string          `json:"product_names"`
+	AggregationName     string          `json:"aggregation_name"`
+	Metrics             string          `json:"metrics"`
+	NumComputedLicences int32           `json:"num_computed_licences"`
+	NumAcquiredLicences int32           `json:"num_acquired_licences"`
+	TotalCost           decimal.Decimal `json:"total_cost"`
+	PurchaseCost        decimal.Decimal `json:"purchase_cost"`
+	ComputedCost        decimal.Decimal `json:"computed_cost"`
+	DeltaNumber         int32           `json:"delta_number"`
+	DeltaCost           decimal.Decimal `json:"delta_cost"`
+	AvgUnitPrice        decimal.Decimal `json:"avg_unit_price"`
+	ComputedDetails     string          `json:"computed_details"`
+	MeticNotDefined     sql.NullBool    `json:"metic_not_defined"`
+	NotDeployed         sql.NullBool    `json:"not_deployed"`
+	Editor              string          `json:"editor"`
 }
 
 type Product struct {

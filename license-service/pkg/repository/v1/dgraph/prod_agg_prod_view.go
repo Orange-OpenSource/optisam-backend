@@ -11,12 +11,12 @@ import (
 	"go.uber.org/zap"
 )
 
-// ProductAggregationDetails ...
-// nolint: funlen
-func (l *LicenseRepository) GetAggregationDetails(ctx context.Context, name string, scopes ...string) (*v1.AggregationInfo, error) {
+// AggregationDetails gives aggregatation info along with it's associated rights
+func (l *LicenseRepository) AggregationDetails(ctx context.Context, name string, metrics []*v1.Metric, isSimulation bool, scopes ...string) (*v1.AggregationInfo, []*v1.ProductAcquiredRight, error) {
 	q := `{
 			var(func:eq(aggregation.name,"` + name + `")) ` + agregateFilters(scopeFilters(scopes)) + ` {
-				AggUID as uid
+				aggUID as uid
+				aggregationID as aggregation.id
 				aggregation.products{
 					apps as count(~application.product)
 					equips as count(product.equipment)
@@ -24,90 +24,72 @@ func (l *LicenseRepository) GetAggregationDetails(ctx context.Context, name stri
 				tapps as sum(val(apps))
 				tequips as sum(val(equips))
 			}
-			AggregatedRight(func: uid(AggUID)){
-				ID						:aggregation.id                           
-				Name					:aggregation.name                         
-				SKU						:aggregation.SKU 
+			var(func:eq(aggregatedRights.aggregationId,val(aggregationID))) ` + agregateFilters(scopeFilters(scopes)) + ` {
+				aggRights as uid
+			}
+			Aggregation(func:uid(aggUID)) {
+				ID						:aggregation.id
+				Name					:aggregation.name   
 				ProductNames			:aggregation.product_names
 				Swidtags				:aggregation.swidtags
-				Editor					:aggregation.editor         
-				Metric					:aggregation.metric                                           
-				Licenses				:aggregation.numOfAcqLicences             
-				MaintenanceLicenses		:aggregation.numOfLicencesUnderMaintenance
-				UnitPrice				:aggregation.averageUnitPrice             
-				MaintenanceUnitPrice	:aggregation.averageMaintenananceUnitPrice   
-				PurchaseCost			:aggregation.totalPurchaseCost            
-				MaintenanceCost			:aggregation.totalMaintenanceCost         
-				TotalCost				:aggregation.totalCost   
-				StartOfMaintenance		:aggregation.startOfMaintenance                 
-				EndOfMaintenance		:aggregation.endOfMaintenance 
+				Editor					:aggregation.editor   
 				NumOfApplications		:val(tapps)
 				NumOfEquipments			:val(tequips)
-				ProductIDs				:aggregation.products{uid}
+				ProductIDs				:aggregation.products{uid}  
+			}
+			AggregatedRight(func: uid(aggRights)){                                
+				SKU						:aggregatedRights.SKU
+		 		Metric					:aggregatedRights.metric
+		  		AcqLicenses				:aggregatedRights.numOfAcqLicences
+		  		TotalCost				:aggregatedRights.totalCost
+		  		TotalPurchaseCost		:aggregatedRights.totalPurchaseCost
+		  		AvgUnitPrice			:aggregatedRights.averageUnitPrice
 			}
 	}
 	`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
 	if err != nil {
 		logger.Log.Error("GetAggregationDetails - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("repo/GetAggregationDetails - cannot complete query")
+		return nil, nil, fmt.Errorf("repo/GetAggregationDetails - cannot complete query")
 	}
 
 	type aggregation struct {
-		ID                   int
-		Name                 string
-		SKU                  string
-		ProductNames         []string
-		Swidtags             []string
-		Editor               string
-		Metric               []string
-		Licenses             int32
-		MaintenanceLicenses  int32
-		UnitPrice            float64
-		MaintenanceUnitPrice float64
-		PurchaseCost         float64
-		MaintenanceCost      float64
-		TotalCost            float64
-		StartOfMaintenance   string
-		EndOfMaintenance     string
-		NumOfApplications    int32
-		NumOfEquipments      int32
-		ProductIDs           []*id
+		ID                int
+		Name              string
+		ProductNames      []string
+		Swidtags          []string
+		Editor            string
+		NumOfApplications int32
+		NumOfEquipments   int32
+		ProductIDs        []*id
 	}
 
 	type dataTemp struct {
-		AggregatedRight []*aggregation
+		Aggregation     []*aggregation
+		AggregatedRight []*productAcquiredRight
 	}
 	data := dataTemp{}
 	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
 		logger.Log.Error("GetAggregationDetails - ", zap.String("reason", err.Error()), zap.String("query", q))
-		return nil, fmt.Errorf("repo/GetAggregationDetails - cannot unmarshal Json object")
+		return nil, nil, fmt.Errorf("repo/GetAggregationDetails - cannot unmarshal Json object")
+	}
+	if len(data.Aggregation) == 0 {
+		return nil, nil, v1.ErrNodeNotFound
+	}
+	respAggInfo := &v1.AggregationInfo{
+		ID:                data.Aggregation[0].ID,
+		Name:              data.Aggregation[0].Name,
+		ProductNames:      data.Aggregation[0].ProductNames,
+		Swidtags:          data.Aggregation[0].Swidtags,
+		Editor:            data.Aggregation[0].Editor,
+		NumOfApplications: data.Aggregation[0].NumOfApplications,
+		NumOfEquipments:   data.Aggregation[0].NumOfEquipments,
+		ProductIDs:        convertUIDToString(data.Aggregation[0].ProductIDs),
 	}
 	if len(data.AggregatedRight) == 0 {
-		return nil, v1.ErrNodeNotFound
+		return respAggInfo, nil, nil
 	}
-	aggresp := &v1.AggregationInfo{
-		ID:                   data.AggregatedRight[0].ID,
-		Name:                 data.AggregatedRight[0].Name,
-		SKU:                  data.AggregatedRight[0].SKU,
-		ProductNames:         data.AggregatedRight[0].ProductNames,
-		Swidtags:             data.AggregatedRight[0].Swidtags,
-		Editor:               data.AggregatedRight[0].Editor,
-		Metric:               data.AggregatedRight[0].Metric,
-		Licenses:             data.AggregatedRight[0].Licenses,
-		MaintenanceLicenses:  data.AggregatedRight[0].MaintenanceLicenses,
-		UnitPrice:            data.AggregatedRight[0].UnitPrice,
-		MaintenanceUnitPrice: data.AggregatedRight[0].MaintenanceUnitPrice,
-		PurchaseCost:         data.AggregatedRight[0].PurchaseCost,
-		MaintenanceCost:      data.AggregatedRight[0].MaintenanceCost,
-		TotalCost:            data.AggregatedRight[0].TotalCost,
-		StartOfMaintenance:   data.AggregatedRight[0].StartOfMaintenance,
-		EndOfMaintenance:     data.AggregatedRight[0].EndOfMaintenance,
-		NumOfApplications:    data.AggregatedRight[0].NumOfApplications,
-		NumOfEquipments:      data.AggregatedRight[0].NumOfEquipments,
-		ProductIDs:           convertUIDToString(data.AggregatedRight[0].ProductIDs),
-	}
-	return aggresp, nil
+	return respAggInfo, concatAcqRightForSameMetric(metrics, data.AggregatedRight, isSimulation), nil
 }
 
 func (l *LicenseRepository) AggregationIndividualRights(ctx context.Context, productIDs, metrics []string, scopes ...string) ([]*v1.AcqRightsInfo, error) {

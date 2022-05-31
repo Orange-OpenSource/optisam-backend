@@ -17,6 +17,10 @@ service DpsService {
     };
   }
 
+  rpc GetAnalysisFileInfo(GetAnalysisFileInfoRequest) returns (GetAnalysisFileInfoResponse) {
+
+  }
+
   rpc ViewFactorReference(ViewReferenceDataRequest) returns (ViewReferenceDataResponse) {
     option (google.api.http) = {
       get : "/api/v1/dps/corefactor"
@@ -99,6 +103,19 @@ service DpsService {
       get : "/api/v1/dps/deletions"
     };
   }
+}
+
+
+message GetAnalysisFileInfoRequest{
+  int32  upload_id = 1;
+  string scope = 2;
+  string fileType =3;
+}
+
+message GetAnalysisFileInfoResponse{
+  string file_name =1;
+  string scope_type =2;
+  bool is_older_generic = 3;
 }
 
 message ViewCoreFactorLogsRequest{
@@ -243,7 +260,7 @@ message NotifyUploadRequest {
     SPECIFIC = 1;
   };
   scope_types scope_type = 6;
-  string analyzed_error_file = 7;
+  string analysis_id = 7;
 }
 
 message NotifyUploadResponse {

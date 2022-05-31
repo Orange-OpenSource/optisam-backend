@@ -12,7 +12,8 @@ func buildQueryIPS(metric *v1.MetricIPSComputed, scopes []string, id ...string) 
 		product.equipment @filter(eq(equipment.type,$BaseType) AND eq(scopes,[$Scopes])) {
 		   cn as equipment.$BaseType.$NumCores
 		   cf as equipment.$BaseType.$CoreFactor
-		   comp as  math (cn*cf)
+		   cpu as equipment.$BaseType.$NumCPU
+		   comp as  math (cn*cf*cpu)
 		}
 	}
 	Licenses(){
@@ -24,6 +25,7 @@ func buildQueryIPS(metric *v1.MetricIPSComputed, scopes []string, id ...string) 
 		"$ID":         strings.Join(id, ","),
 		"$BaseType":   metric.BaseType.Type,
 		"$NumCores":   metric.NumCoresAttr.Name,
+		"$NumCPU":     metric.NumCPUAttr.Name,
 		"$CoreFactor": metric.CoreFactorAttr.Name,
 		"$Scopes":     strings.Join(scopes, ","),
 	})

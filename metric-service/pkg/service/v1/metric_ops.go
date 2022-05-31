@@ -37,6 +37,9 @@ func (s *metricServiceServer) CreateMetricOracleProcessorStandard(ctx context.Co
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
 
+	// if metricTypeExistsAll(metrics, repo.MetricOPSOracleProcessorStandard) != -1 {
+	// 	return nil, status.Error(codes.InvalidArgument, "metric ops already exists")
+	// }
 	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - fetching equipments", zap.String("reason", err.Error()))

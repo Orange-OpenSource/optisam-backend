@@ -175,6 +175,26 @@ func (mr *MockMetricServiceClientMockRecorder) CreateMetricSAGProcessorStandard(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricSAGProcessorStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetricSAGProcessorStandard), varargs...)
 }
 
+// CreateMetricStaticStandard mocks base method
+func (m *MockMetricServiceClient) CreateMetricStaticStandard(arg0 context.Context, arg1 *v1.MetricSS, arg2 ...grpc.CallOption) (*v1.MetricSS, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateMetricStaticStandard", varargs...)
+	ret0, _ := ret[0].(*v1.MetricSS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetricStaticStandard indicates an expected call of CreateMetricStaticStandard
+func (mr *MockMetricServiceClientMockRecorder) CreateMetricStaticStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricStaticStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetricStaticStandard), varargs...)
+}
+
 // CreateMetricUserSumStandard mocks base method
 func (m *MockMetricServiceClient) CreateMetricUserSumStandard(arg0 context.Context, arg1 *v1.MetricUSS, arg2 ...grpc.CallOption) (*v1.MetricUSS, error) {
 	m.ctrl.T.Helper()
@@ -433,4 +453,24 @@ func (mr *MockMetricServiceClientMockRecorder) UpdateMetricSAGProcessorStandard(
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricSAGProcessorStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).UpdateMetricSAGProcessorStandard), varargs...)
+}
+
+// UpdateMetricStaticStandard mocks base method
+func (m *MockMetricServiceClient) UpdateMetricStaticStandard(arg0 context.Context, arg1 *v1.MetricSS, arg2 ...grpc.CallOption) (*v1.UpdateMetricResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateMetricStaticStandard", varargs...)
+	ret0, _ := ret[0].(*v1.UpdateMetricResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMetricStaticStandard indicates an expected call of UpdateMetricStaticStandard
+func (mr *MockMetricServiceClientMockRecorder) UpdateMetricStaticStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricStaticStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).UpdateMetricStaticStandard), varargs...)
 }

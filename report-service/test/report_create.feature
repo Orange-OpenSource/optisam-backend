@@ -2,7 +2,7 @@
 Feature: Report Service Test - Create Report : Admin
 
   Background:
-    # * def reportServiceUrl = "https://optisam-report-int.kermit-noprod-b.itn.intraorange"
+    # * def reportServiceUrl = "https://optisam-report-int.apps.fr01.paas.tech.orange"
     * url reportServiceUrl+'/api/v1'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

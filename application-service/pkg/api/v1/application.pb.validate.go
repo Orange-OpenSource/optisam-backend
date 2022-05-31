@@ -183,6 +183,155 @@ var _ interface {
 	ErrorName() string
 } = GetEquipmentsByApplicationResponseValidationError{}
 
+// Validate checks the field values on GetProductsByApplicationInstanceRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *GetProductsByApplicationInstanceRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_GetProductsByApplicationInstanceRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetProductsByApplicationInstanceRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for ApplicationId
+
+	// no validation rules for InstanceId
+
+	return nil
+}
+
+// GetProductsByApplicationInstanceRequestValidationError is the validation
+// error returned by GetProductsByApplicationInstanceRequest.Validate if the
+// designated constraints aren't met.
+type GetProductsByApplicationInstanceRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductsByApplicationInstanceRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductsByApplicationInstanceRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductsByApplicationInstanceRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductsByApplicationInstanceRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductsByApplicationInstanceRequestValidationError) ErrorName() string {
+	return "GetProductsByApplicationInstanceRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductsByApplicationInstanceRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductsByApplicationInstanceRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductsByApplicationInstanceRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductsByApplicationInstanceRequestValidationError{}
+
+var _GetProductsByApplicationInstanceRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on GetProductsByApplicationInstanceResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *GetProductsByApplicationInstanceResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// GetProductsByApplicationInstanceResponseValidationError is the validation
+// error returned by GetProductsByApplicationInstanceResponse.Validate if the
+// designated constraints aren't met.
+type GetProductsByApplicationInstanceResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductsByApplicationInstanceResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductsByApplicationInstanceResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductsByApplicationInstanceResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductsByApplicationInstanceResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductsByApplicationInstanceResponseValidationError) ErrorName() string {
+	return "GetProductsByApplicationInstanceResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductsByApplicationInstanceResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductsByApplicationInstanceResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductsByApplicationInstanceResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductsByApplicationInstanceResponseValidationError{}
+
 // Validate checks the field values on DropObscolenscenceDataRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

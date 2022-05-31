@@ -39,10 +39,16 @@ const (
 	// DeleteAggregation is request to delete aggregation from dgraph
 	DeleteAggregation MessageType = "DeleteAggregation"
 	// DropProductDataRequest is request to drop complete products, acquired rights,
-	// aggregation, editors, linked applications,linked equipments of a particular scope from Dgraph
+	// aggregated rights, editors, linked applications,linked equipments of a particular scope from Dgraph
 	DropProductDataRequest MessageType = "DropProductData"
+	// DropAggregationData is request to drop complete aggregations of a particular scope from Dgraph
+	DropAggregationData MessageType = "DropAggregationData"
 	// DeleteAcqrightRequest is request to delete acqright from dgraph
 	DeleteAcqright MessageType = "DeleteAcqright"
+	// UpsertAggregationRights is to upsert aggregation rights in dgraph
+	UpsertAggregatedRights MessageType = "UpsertAggregatedRights"
+	// DeleteAggregationRights is to delete aggregation rights in dgraph
+	DeleteAggregatedRights MessageType = "DeleteAggregatedRights"
 )
 
 // Envelope ...
@@ -99,6 +105,18 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			Cond: `@if(NOT eq(len(acqright),0))`,
 			SetNquads: []byte(`
 				uid(product)  <product.acqRights> uid(acqright) .
+			`),
+			CommitNow: true,
+		})
+		// re-establish the link between product and aggregations
+		query = `var(func: eq(aggregation.swidtags,[` + upr.GetSwidTag() + `])) @filter(eq(type_name,"aggregation") AND eq(scopes,"` + upr.Scope + `")){
+			aggregation as uid
+		}`
+		queries = append(queries, query)
+		mutations = append(mutations, &api.Mutation{
+			Cond: `@if(NOT eq(len(aggregation),0))`,
+			SetNquads: []byte(`
+				uid(aggregation)  <aggregation.products> uid(product) .
 			`),
 			CommitNow: true,
 		})
@@ -177,7 +195,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					if equipUser.GetNumUser() > 0 {
 						userID := `user_` + upr.GetSwidTag() + equipUser.GetEquipmentId()
 						userUID := `users` + strconv.Itoa(i)
-						query = `var(func: eq(users.id,"` + userID + `")) @filter(eq(type_name,"users") AND eq(scopes,"` + upr.Scope + `")){
+						query = `var(func: eq(users.id,"` + userID + `")) @filter(eq(type_name,"instance_users") AND eq(scopes,"` + upr.Scope + `")){
 							` + userUID + ` as uid
 						}`
 						queries = append(queries, query)
@@ -314,13 +332,20 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			uid(acRights) <acqRights.productName> "` + uar.ProductName + `" .
 			uid(acRights) <acqRights.editor> "` + uar.ProductEditor + `" .
 			uid(acRights) <acqRights.numOfAcqLicences> "` + strconv.Itoa(int(uar.NumLicensesAcquired)) + `" .
-			uid(acRights) <acqRights.averageUnitPrice> "` + strconv.Itoa(int(uar.AvgUnitPrice)) + `" .
-			uid(acRights) <acqRights.averageMaintenantUnitPrice> "` + strconv.Itoa(int(uar.AvgMaintenanceUnitPrice)) + `" .
-			uid(acRights) <acqRights.totalPurchaseCost> "` + strconv.Itoa(int(uar.TotalPurchaseCost)) + `" .
-			uid(acRights) <acqRights.totalMaintenanceCost> "` + strconv.Itoa(int(uar.TotalMaintenanceCost)) + `" .
-			uid(acRights) <acqRights.totalCost> "` + strconv.Itoa(int(uar.TotalCost)) + `" .
+			uid(acRights) <acqRights.numOfLicencesUnderMaintenance> "` + strconv.Itoa(int(uar.NumLicencesMaintenance)) + `" .
+			uid(acRights) <acqRights.averageUnitPrice> "` + fmt.Sprintf("%.2f", uar.AvgUnitPrice) + `" .
+			uid(acRights) <acqRights.averageMaintenantUnitPrice> "` + fmt.Sprintf("%.2f", uar.AvgMaintenanceUnitPrice) + `" .
+			uid(acRights) <acqRights.totalPurchaseCost> "` + fmt.Sprintf("%.2f", uar.TotalPurchaseCost) + `" .
+			uid(acRights) <acqRights.totalMaintenanceCost> "` + fmt.Sprintf("%.2f", uar.TotalMaintenanceCost) + `" .
+			uid(acRights) <acqRights.totalCost> "` + fmt.Sprintf("%.2f", uar.TotalCost) + `" .
 			uid(acRights) <acqRights.startOfMaintenance> "` + uar.StartOfMaintenance + `" .
 			uid(acRights) <acqRights.endOfMaintenance> "` + uar.EndOfMaintenance + `" .
+			uid(acRights) <acqRights.orderingDate> "` + uar.OrderingDate + `" .
+			uid(acRights) <acqRights.corporateSourcingContract> "` + uar.CorporateSourcingContract + `" .
+			uid(acRights) <acqRights.softwareProvider> "` + uar.SoftwareProvider + `" .
+			uid(acRights) <acqRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
+			uid(acRights) <acqRights.supportNumber> "` + uar.SupportNumber + `" .
+			uid(acRights) <acqRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
 			uid(product) <product.swidtag> "` + uar.Swidtag + `" .
 			uid(product) <product.acqRights> uid(acRights) .
 		`
@@ -344,7 +369,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			return errors.New("RETRY")
 		}
 	case UpsertAggregation:
-		var uar UpsertAggregatedRightsRequest
+		var uar UpsertAggregationRequest
 		_ = json.Unmarshal(e.JSON, &uar)
 		query := `query {
 			var(func: eq(aggregation.name,"` + uar.Name + `")) @filter(eq(type_name,"aggregation") AND eq(scopes,"` + uar.Scope + `") ){
@@ -355,26 +380,11 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		set := `
 		uid(aggregation) <aggregation.id> "` + strconv.Itoa(int(uar.ID)) + `" .
 		uid(aggregation) <aggregation.name> "` + uar.Name + `" .
-		uid(aggregation) <aggregation.SKU> "` + uar.Sku + `" .
 		uid(aggregation) <type_name> "aggregation" .
 		uid(aggregation) <dgraph.type> "Aggregation" .
 		uid(aggregation) <scopes> "` + uar.Scope + `" .
 		uid(aggregation) <aggregation.editor> "` + uar.ProductEditor + `" .
-		uid(aggregation) <aggregation.numOfAcqLicences> "` + strconv.Itoa(int(uar.NumLicensesAcquired)) + `" .
-		uid(aggregation) <aggregation.averageUnitPrice> "` + strconv.Itoa(int(uar.AvgUnitPrice)) + `" .
-		uid(aggregation) <aggregation.averageMaintenanceUnitPrice> "` + strconv.Itoa(int(uar.AvgMaintenanceUnitPrice)) + `" .
-		uid(aggregation) <aggregation.totalPurchaseCost> "` + strconv.Itoa(int(uar.TotalPurchaseCost)) + `" .
-		uid(aggregation) <aggregation.totalMaintenanceCost> "` + strconv.Itoa(int(uar.TotalMaintenanceCost)) + `" .
-		uid(aggregation) <aggregation.totalCost> "` + strconv.Itoa(int(uar.TotalCost)) + `" .
-		uid(aggregation) <aggregation.startOfMaintenance> "` + uar.StartOfMaintenance + `" .
-		uid(aggregation) <aggregation.endOfMaintenance> "` + uar.EndOfMaintenance + `" .
 		`
-		reqmetrics := strings.Split(uar.Metric, ",")
-		for _, met := range reqmetrics {
-			set += `
-				uid(aggregation) <aggregation.metric> "` + met + `" .
-			`
-		}
 		for _, prodname := range uar.Products {
 			set += `
 				uid(aggregation) <aggregation.product_names> "` + prodname + `" .
@@ -393,37 +403,98 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 		query += `}`
 		logger.Log.Info(query)
-		muUpsert := &api.Mutation{
-			DelNquads: []byte(`
-			uid(aggregation) * * .
-			`),
-			SetNquads: []byte(set),
-		}
 		upsertreq := &api.Request{
-			Query:     query,
-			Mutations: []*api.Mutation{muUpsert},
+			Query: query,
+			Mutations: []*api.Mutation{
+				{
+					DelNquads: []byte(`uid(aggregation) * * .`),
+				},
+				{
+					SetNquads: []byte(set),
+				},
+			},
 			CommitNow: true,
 		}
 		if _, err := w.dg.NewTxn().Do(ctx, upsertreq); err != nil {
 			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err))
 			return errors.New("RETRY")
 		}
+
+	case UpsertAggregatedRights:
+		var uar UpsertAggregatedRight
+		_ = json.Unmarshal(e.JSON, &uar)
+		query := `query {
+			var(func: eq(aggregatedRights.SKU,"` + uar.Sku + `")) @filter(eq(type_name,"aggregatedRights") AND eq(scopes,"` + uar.Scope + `") ){
+				aggregatedRights as uid
+				}
+			
+			`
+		set := `
+		uid(aggregatedRights) <aggregatedRights.SKU> "` + uar.Sku + `" .
+		uid(aggregatedRights) <aggregatedRights.aggregationId> "` + strconv.Itoa(int(uar.AggregationID)) + `" .
+		uid(aggregatedRights) <type_name> "aggregatedRights" .
+		uid(aggregatedRights) <dgraph.type> "AggregatedRights" .
+		uid(aggregatedRights) <scopes> "` + uar.Scope + `" .
+		uid(aggregatedRights) <aggregatedRights.numOfAcqLicences> "` + strconv.Itoa(int(uar.NumLicensesAcquired)) + `" .
+		uid(aggregatedRights) <aggregatedRights.numOfLicencesUnderMaintenance> "` + strconv.Itoa(int(uar.NumLicencesMaintenance)) + `" .
+		uid(aggregatedRights) <aggregatedRights.averageUnitPrice> "` + fmt.Sprintf("%.2f", uar.AvgUnitPrice) + `" .
+		uid(aggregatedRights) <aggregatedRights.averageMaintenanceUnitPrice> "` + fmt.Sprintf("%.2f", uar.AvgMaintenanceUnitPrice) + `" .
+		uid(aggregatedRights) <aggregatedRights.totalPurchaseCost> "` + fmt.Sprintf("%.2f", uar.TotalPurchaseCost) + `" .
+		uid(aggregatedRights) <aggregatedRights.totalMaintenanceCost> "` + fmt.Sprintf("%.2f", uar.TotalMaintenanceCost) + `" .
+		uid(aggregatedRights) <aggregatedRights.totalCost> "` + fmt.Sprintf("%.2f", uar.TotalCost) + `" .
+		uid(aggregatedRights) <aggregatedRights.startOfMaintenance> "` + uar.StartOfMaintenance + `" .
+		uid(aggregatedRights) <aggregatedRights.endOfMaintenance> "` + uar.EndOfMaintenance + `" .
+		uid(aggregatedRights) <aggregatedRights.orderingDate> "` + uar.OrderingDate + `" .
+		uid(aggregatedRights) <aggregatedRights.corporateSourcingContract> "` + uar.CorporateSourcingContract + `" .
+		uid(aggregatedRights) <aggregatedRights.softwareProvider> "` + uar.SoftwareProvider + `" .
+		uid(aggregatedRights) <aggregatedRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
+		uid(aggregatedRights) <aggregatedRights.supportNumber> "` + uar.SupportNumber + `" .
+		uid(aggregatedRights) <aggregatedRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
+		`
+		reqmetrics := strings.Split(uar.Metric, ",")
+		for _, met := range reqmetrics {
+			set += `
+				uid(aggregatedRights) <aggregatedRights.metric> "` + met + `" .
+			`
+		}
+		query += `}`
+		logger.Log.Info(query)
+		upsertreq := &api.Request{
+			Query: query,
+			Mutations: []*api.Mutation{
+				{
+					DelNquads: []byte(`uid(aggregatedRights) * * .`),
+				},
+				{
+					SetNquads: []byte(set),
+				},
+			},
+			CommitNow: true,
+		}
+		if _, err := w.dg.NewTxn().Do(ctx, upsertreq); err != nil {
+			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+
 	case DeleteAggregation:
-		var dar v1.DeleteProductAggregationRequest
+		var dar v1.DeleteAggregationRequest
 		_ = json.Unmarshal(e.JSON, &dar)
 		query := `query {
 			var(func: eq(aggregation.id,"` + strconv.Itoa(int(dar.GetID())) + `")) @filter(eq(type_name,"aggregation") AND eq(scopes,` + dar.Scope + `) ){
-				aggregation as uid
+					aggregation as uid
 				}
-			`
+			var(func: eq(aggregatedRights.aggregationId,"` + strconv.Itoa(int(dar.GetID())) + `")) @filter(eq(type_name,"aggregatedRights") AND eq(scopes,` + dar.Scope + `) ){
+					aggRights as uid
+				}
+			}`
 		delete := `
 				uid(aggregation) * * .
+				uid(aggRights) * * .
 		`
 		set := `
 				uid(aggregation) <Recycle> "true" .
+				uid(aggRights) <Recycle> "true" .
 		`
-		query += `
-		}`
 		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
 		logger.Log.Info(query)
 		req := &api.Request{
@@ -451,9 +522,6 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				editorType as var(func: type(Editor)) @filter(eq(scopes,` + dar.Scope + `)){
 					editors as editor.name
 				}
-				aggregationType as var(func: type(Aggregation)) @filter(eq(scopes,` + dar.Scope + `)){
-					aggregations as aggregation.id
-				}
 				var(func: type(User)) @filter(eq(scopes,` + dar.Scope + `)){
 					userId as  uid
 				}
@@ -463,7 +531,10 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			query += ` 
 				acqrightsType as var(func: type(AcquiredRights)) @filter(eq(scopes,` + dar.Scope + `)){
 				acqrights as acqRights.SKU
-			}
+				}
+				aggrightsType as var(func: type(AggregatedRights)) @filter(eq(scopes,` + dar.Scope + `)){
+					aggrights as aggregatedRights.SKU
+				}
 			`
 		}
 		query += `}`
@@ -479,14 +550,14 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(productApplications) * * .
 				uid(editorType) * * .
 				uid(editors) * * .
-				uid(aggregationType) * * .
-				uid(aggregations) * * .
 			`
 		}
 		if dar.DeletionType == v1.DropProductDataRequest_ACQRIGHTS || dar.DeletionType == v1.DropProductDataRequest_FULL {
 			delete += `
 					uid(acqrightsType) * * .
 					uid(acqrights) * * .
+					uid(aggrightsType) * * .
+					uid(aggrights) * * .
 					`
 		}
 		set := ``
@@ -500,14 +571,14 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(productApplications) <Recycle> "true" .
 				uid(editorType) <Recycle> "true" .
 				uid(editors) <Recycle> "true" .
-				uid(aggregationType) <Recycle> "true" .
-				uid(aggregations) <Recycle> "true" .
 		`
 		}
 		if dar.DeletionType == v1.DropProductDataRequest_ACQRIGHTS || dar.DeletionType == v1.DropProductDataRequest_FULL {
 			set += `
 			uid(acqrightsType) <Recycle> "true" .
 			uid(acqrights) <Recycle> "true" .
+			uid(aggrightsType) <Recycle> "true" .
+			uid(aggrights) <Recycle> "true" .
 			`
 		}
 		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
@@ -545,6 +616,60 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
 			logger.Log.Error("Failed to delete acqight from Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case DropAggregationData:
+		var dagg v1.DropAggregationDataRequest
+		_ = json.Unmarshal(e.JSON, &dagg)
+		query := `query { 
+				aggregationType as var(func: type(Aggregation)) @filter(eq(scopes,` + dagg.Scope + `)){
+					aggregation as aggregation.id
+				}
+			}`
+
+		delete := `
+				uid(aggregationType) * * .
+				uid(aggregation) * * .
+			`
+		set := `
+				uid(aggregationType) <Recycle> "true" .
+				uid(aggregation) <Recycle> "true" .
+		`
+		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+		logger.Log.Info(query, zap.Any("set", set), zap.Any("delete", delete))
+		req := &api.Request{
+			Query:     query,
+			Mutations: []*api.Mutation{muDelete},
+			CommitNow: true,
+		}
+		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
+			logger.Log.Error("Failed to drop aggregation data from Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case DeleteAggregatedRights:
+		var dar DeleteAggregatedRightRequest
+		_ = json.Unmarshal(e.JSON, &dar)
+		query := `query {
+			var(func: eq(aggregatedRights.SKU,"` + dar.Sku + `")) @filter(eq(scopes,` + dar.Scope + `)){
+				aggregatedRights as uid
+				}
+			}
+			`
+		delete := `
+				uid(aggregatedRights) * * .
+		`
+		set := `
+				uid(aggregatedRights) <Recycle> "true" .
+		`
+		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+		logger.Log.Info(query)
+		req := &api.Request{
+			Query:     query,
+			Mutations: []*api.Mutation{muDelete},
+			CommitNow: true,
+		}
+		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
+			logger.Log.Error("Failed to delete aggregatedRights from Dgraph", zap.Error(err))
 			return errors.New("RETRY")
 		}
 	default:

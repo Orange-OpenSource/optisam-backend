@@ -38,6 +38,9 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
 
+	// if metricTypeExistsAll(metrics, repo.MetricOracleNUPStandard) != -1 {
+	// 	return nil, status.Error(codes.InvalidArgument, "metric NUP already exists")
+	// }
 	eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - fetching equipments", zap.String("reason", err.Error()))

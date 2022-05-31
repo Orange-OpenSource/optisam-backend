@@ -168,12 +168,12 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 					ScopeName:  "France",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT"},
-					ScopeType: "GENERIC",
+					ScopeType:  "GENERIC",
 				},
 				{
 					ScopeCode:  "O2",
 					ScopeName:  "India",
-					ScopeType: "GENERIC",
+					ScopeType:  "GENERIC",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT", "India"},
 				},
@@ -192,7 +192,7 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy ,scope1.ScopeType)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -235,12 +235,12 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 				if err != nil {
 					return nil, err
 				}
-				err = a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
+				err = a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -275,14 +275,14 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 					ScopeName:  "France",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT"},
-					ScopeType: "GENERIC",
+					ScopeType:  "GENERIC",
 				},
 				{
 					ScopeCode:  "O2",
 					ScopeName:  "India",
 					CreatedBy:  "admin@test.com",
 					GroupNames: []string{"ROOT", "India"},
-					ScopeType: "GENERIC",
+					ScopeType:  "GENERIC",
 				},
 				{
 					ScopeCode: "O3",
@@ -356,12 +356,12 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 				scopeCode: "O1",
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
@@ -380,12 +380,12 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 				scopeCode: "O3",
 			},
 			setup: func(a *AccountRepository) (func() error, error) {
-				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy,scope1.ScopeType)
+				err := a.CreateScope(context.Background(), scope1.ScopeName, scope1.ScopeCode, scope1.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}
 
-				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy,scope1.ScopeType)
+				err = a.CreateScope(context.Background(), scope2.ScopeName, scope2.ScopeCode, scope2.CreatedBy, scope1.ScopeType)
 				if err != nil {
 					return nil, err
 				}

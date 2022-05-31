@@ -14,7 +14,7 @@ waitlimitcount = 3
 #format-2 : "s m h d M W" as cron standard "sec min hour day Mon Week" -> "0 0 0 1 * 0" for 1sday of every month for more details follow 
 #https://pkg.go.dev/github.com/robfig/cron
 [cron]
-time = "@every 100000s"
+time = "@every 1000s"
 
 [httpservers.Address]
 auth = "localhost:9093"

@@ -2,7 +2,7 @@
 Feature: Product Aggregation Test - Normal user
 
   Background:
-  # * def productServiceUrl = "https://optisam-product-int.kermit-noprod-b.itn.intraorange"
+  # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('../common.feature') credentials

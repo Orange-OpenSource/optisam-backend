@@ -14,21 +14,17 @@ import (
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	repo "optisam-backend/product-service/pkg/repository/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
-	mock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
+func Test_productServiceServer_ListAggregationProducts(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
@@ -40,23 +36,22 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.ListAggregatedRightsProductsRequest
+		req *v1.ListAggregationProductsRequest
 	}
 	tests := []struct {
 		name    string
 		s       *productServiceServer
 		args    args
 		setup   func()
-		want    *v1.ListAggregatedRightsProductsResponse
+		want    *v1.ListAggregationProductsResponse
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsProductsRequest{
+				req: &v1.ListAggregationProductsRequest{
 					ID:     1,
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				},
 			},
@@ -70,7 +65,6 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 				met = mockMetric
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{
 					{
@@ -100,8 +94,8 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 					},
 				}, nil)
 			},
-			want: &v1.ListAggregatedRightsProductsResponse{
-				AggrightsProducts: []*v1.AggregatedRightsProducts{
+			want: &v1.ListAggregationProductsResponse{
+				AggrightsProducts: []*v1.AggregationProducts{
 					{
 						ProductName: "pro1",
 						Swidtag:     "swid1",
@@ -113,7 +107,7 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 						Editor:      "abc",
 					},
 				},
-				SelectedProducts: []*v1.AggregatedRightsProducts{
+				SelectedProducts: []*v1.AggregationProducts{
 					{
 						ProductName: "pro2",
 						Swidtag:     "swid1",
@@ -130,9 +124,8 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 		{name: "FAILURE-can not find claims in context",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.ListAggregatedRightsProductsRequest{
+				req: &v1.ListAggregationProductsRequest{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope4",
 				},
 			},
@@ -142,22 +135,20 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 		{name: "FAILURE-Scope Validation error",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsProductsRequest{
+				req: &v1.ListAggregationProductsRequest{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope4",
 				},
 			},
 			setup:   func() {},
-			want:    &v1.ListAggregatedRightsProductsResponse{},
+			want:    &v1.ListAggregationProductsResponse{},
 			wantErr: true,
 		},
 		{name: "FAILURE-db/ListProductsForAggregation-no data",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsProductsRequest{
+				req: &v1.ListAggregationProductsRequest{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				},
 			},
@@ -171,19 +162,17 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 				met = mockMetric
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{}, sql.ErrNoRows)
 			},
-			want:    &v1.ListAggregatedRightsProductsResponse{},
+			want:    &v1.ListAggregationProductsResponse{},
 			wantErr: false,
 		},
 		{name: "FAILURE-db/ListProductsForAggregation",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsProductsRequest{
+				req: &v1.ListAggregationProductsRequest{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				},
 			},
@@ -197,11 +186,10 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 				met = mockMetric
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Editor: "editor",
-					Metric: "metric",
 					Scope:  "scope1",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{}, errors.New("internal"))
 			},
-			want:    &v1.ListAggregatedRightsProductsResponse{},
+			want:    &v1.ListAggregationProductsResponse{},
 			wantErr: true,
 		},
 	}
@@ -213,19 +201,19 @@ func Test_productServiceServer_ListAggregatedRightsProducts(t *testing.T) {
 				queue:       queue,
 				metric:      met,
 			}
-			got, err := tt.s.ListAggregatedRightsProducts(tt.args.ctx, tt.args.req)
+			got, err := tt.s.ListAggregationProducts(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("productServiceServer.ListAggregatedRightsProducts() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("productServiceServer.ListAggregationProducts() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("productServiceServer.ListAggregatedRightsProducts() = %v, want %v", got, tt.want)
+				t.Errorf("productServiceServer.ListAggregationProducts() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
+func Test_productServiceServer_ListAggregationEditors(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
@@ -237,20 +225,20 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.ListAggregatedRightsEditorsRequest
+		req *v1.ListAggregationEditorsRequest
 	}
 	tests := []struct {
 		name    string
 		s       *productServiceServer
 		args    args
 		setup   func()
-		want    *v1.ListAggregatedRightsEditorsResponse
+		want    *v1.ListAggregationEditorsResponse
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsEditorsRequest{
+				req: &v1.ListAggregationEditorsRequest{
 					Scope: "scope1",
 				},
 			},
@@ -264,14 +252,14 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 				met = mockMetric
 				mockRepo.EXPECT().ListEditorsForAggregation(ctx, "scope1").Times(1).Return([]string{"e1", "e2", "e3"}, nil)
 			},
-			want: &v1.ListAggregatedRightsEditorsResponse{
+			want: &v1.ListAggregationEditorsResponse{
 				Editor: []string{"e1", "e2", "e3"},
 			},
 		},
 		{name: "FAILURE-can not find claims in context",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.ListAggregatedRightsEditorsRequest{
+				req: &v1.ListAggregationEditorsRequest{
 					Scope: "scope4",
 				},
 			},
@@ -281,18 +269,18 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 		{name: "FAILURE-Scope Validation error",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsEditorsRequest{
+				req: &v1.ListAggregationEditorsRequest{
 					Scope: "scope4",
 				},
 			},
 			setup:   func() {},
-			want:    &v1.ListAggregatedRightsEditorsResponse{},
+			want:    &v1.ListAggregationEditorsResponse{},
 			wantErr: true,
 		},
 		{name: "FAILURE-db/ListEditorsForAggregation-no data",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsEditorsRequest{
+				req: &v1.ListAggregationEditorsRequest{
 					Scope: "scope1",
 				},
 			},
@@ -306,13 +294,13 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 				met = mockMetric
 				mockRepo.EXPECT().ListEditorsForAggregation(ctx, "scope1").Times(1).Return([]string{}, sql.ErrNoRows)
 			},
-			want:    &v1.ListAggregatedRightsEditorsResponse{},
+			want:    &v1.ListAggregationEditorsResponse{},
 			wantErr: false,
 		},
 		{name: "FAILURE-db/ListEditorsForAggregation",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListAggregatedRightsEditorsRequest{
+				req: &v1.ListAggregationEditorsRequest{
 					Scope: "scope1",
 				},
 			},
@@ -327,7 +315,7 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 				mockRepo.EXPECT().ListEditorsForAggregation(ctx, "scope1").Times(1).Return([]string{}, errors.New("internal"))
 
 			},
-			want:    &v1.ListAggregatedRightsEditorsResponse{},
+			want:    &v1.ListAggregationEditorsResponse{},
 			wantErr: true,
 		},
 	}
@@ -339,13 +327,13 @@ func Test_productServiceServer_ListAggregatedRightsEditors(t *testing.T) {
 				queue:       queue,
 				metric:      met,
 			}
-			got, err := tt.s.ListAggregatedRightsEditors(tt.args.ctx, tt.args.req)
+			got, err := tt.s.ListAggregationEditors(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("productServiceServer.ListAggregatedRightsEditors() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("productServiceServer.ListAggregationEditors() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("productServiceServer.ListAggregatedRightsEditors() = %v, want %v", got, tt.want)
+				t.Errorf("productServiceServer.ListAggregationEditors() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -357,10 +345,6 @@ func Test_productServiceServer_ListAggregations(t *testing.T) {
 		Role:   "Admin",
 		Socpes: []string{"scope1", "scope2", "scope3"},
 	})
-	timeStart := time.Now()
-	timeEnd := timeStart.Add(10 * time.Hour)
-	timestampStart, _ := ptypes.TimestampProto(timeStart)
-	timestampEnd, _ := ptypes.TimestampProto(timeEnd)
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
 	var queue workerqueue.Workerqueue
@@ -392,79 +376,47 @@ func Test_productServiceServer_ListAggregations(t *testing.T) {
 				rep = mockRepo
 				queue = mockQueue
 				met = mockMetric
-				mockRepo.EXPECT().ListAggregations(ctx, "scope1").Times(1).Return([]db.ListAggregationsRow{
+				mockRepo.EXPECT().ListAggregations(ctx, db.ListAggregationsParams{
+					Scope: "scope1",
+				}).Times(1).Return([]db.ListAggregationsRow{
 					{
-						ID:                      1,
-						AggregationName:         "agg1",
-						Sku:                     "aggsku1",
-						ProductEditor:           "aggedit1",
-						Metric:                  "aggmet1",
-						Products:                []string{"prod1", "prod2"},
-						Swidtags:                []string{"swid1", "swid2", "swid3"},
-						Scope:                   "scope1",
-						NumLicensesAcquired:     10,
-						NumLicencesComputed:     0,
-						NumLicencesMaintainance: 5,
-						AvgUnitPrice:            decimal.NewFromFloat(10),
-						AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
-						TotalPurchaseCost:       decimal.NewFromFloat(100),
-						TotalComputedCost:       decimal.NewFromFloat(0),
-						TotalMaintenanceCost:    decimal.NewFromFloat(10),
-						TotalCost:               decimal.NewFromFloat(110),
-						StartOfMaintenance:      sql.NullTime{Time: timeStart, Valid: true},
-						EndOfMaintenance:        sql.NullTime{Time: timeEnd, Valid: true},
-						Comment:                 sql.NullString{String: "aggregation 1"},
+
+						ID:              1,
+						AggregationName: "agg1",
+						ProductEditor:   "aggedit1",
+						Products:        []string{"prod1", "prod2"},
+						Swidtags:        []string{"swid1", "swid2", "swid3"},
+						Scope:           "scope1",
 					},
 					{
-						ID:                  2,
-						AggregationName:     "agg2",
-						Sku:                 "aggsku2",
-						ProductEditor:       "aggedit1",
-						Metric:              "aggmet1",
-						Products:            []string{"prod1", "prod2"},
-						Swidtags:            []string{"swid4", "swid5", "swid6"},
-						Scope:               "scope1",
-						NumLicensesAcquired: 10,
-						NumLicencesComputed: 0,
-						AvgUnitPrice:        decimal.NewFromFloat(10),
-						TotalPurchaseCost:   decimal.NewFromFloat(100),
-						TotalComputedCost:   decimal.NewFromFloat(0),
-						TotalCost:           decimal.NewFromFloat(100),
-						Comment:             sql.NullString{String: "aggregation 2"},
+
+						ID:              2,
+						AggregationName: "agg2",
+						ProductEditor:   "aggedit1",
+						Products:        []string{"prod1", "prod2"},
+						Swidtags:        []string{"swid4", "swid5", "swid6"},
+						Scope:           "scope1",
 					},
 				}, nil)
 			},
 			want: &v1.ListAggregationsResponse{
-				Aggregations: []*v1.ListAggregatedRights{
+				TotalRecords: 2,
+				Aggregations: []*v1.Aggregation{
 					{
-						ID:                      1,
-						AggregationName:         "agg1",
-						Sku:                     "aggsku1",
-						ProductEditor:           "aggedit1",
-						MetricName:              "aggmet1",
-						ProductNames:            []string{"prod1", "prod2"},
-						Swidtags:                []string{"swid1", "swid2", "swid3"},
-						Scope:                   "scope1",
-						NumLicensesAcquired:     10,
-						AvgUnitPrice:            10,
-						StartOfMaintenance:      timestampStart,
-						EndOfMaintenance:        timestampEnd,
-						NumLicencesMaintainance: 5,
-						AvgMaintenanceUnitPrice: 2,
-						Comment:                 "aggregation 1",
+						ID:              1,
+						AggregationName: "agg1",
+						ProductEditor:   "aggedit1",
+						ProductNames:    []string{"prod1", "prod2"},
+						Swidtags:        []string{"swid1", "swid2", "swid3"},
+						Scope:           "scope1",
 					},
 					{
-						ID:                  2,
-						AggregationName:     "agg2",
-						Sku:                 "aggsku2",
-						ProductEditor:       "aggedit1",
-						MetricName:          "aggmet1",
-						ProductNames:        []string{"prod1", "prod2"},
-						Swidtags:            []string{"swid4", "swid5", "swid6"},
-						Scope:               "scope1",
-						NumLicensesAcquired: 10,
-						AvgUnitPrice:        10,
-						Comment:             "aggregation 2",
+						ID:              2,
+						AggregationName: "agg2",
+						ProductEditor:   "aggedit1",
+						ProductNames:    []string{"prod1", "prod2"},
+						Swidtags:        []string{"swid4", "swid5", "swid6"},
+						Scope:           "scope1",
 					},
 				},
 			},
@@ -505,7 +457,9 @@ func Test_productServiceServer_ListAggregations(t *testing.T) {
 				rep = mockRepo
 				queue = mockQueue
 				met = mockMetric
-				mockRepo.EXPECT().ListAggregations(ctx, "scope1").Times(1).Return([]db.ListAggregationsRow{}, sql.ErrNoRows)
+				mockRepo.EXPECT().ListAggregations(ctx, db.ListAggregationsParams{
+					Scope: "scope1",
+				}).Times(1).Return([]db.ListAggregationsRow{}, sql.ErrNoRows)
 			},
 			want:    &v1.ListAggregationsResponse{},
 			wantErr: false,
@@ -525,7 +479,9 @@ func Test_productServiceServer_ListAggregations(t *testing.T) {
 				rep = mockRepo
 				queue = mockQueue
 				met = mockMetric
-				mockRepo.EXPECT().ListAggregations(ctx, "scope1").Times(1).Return([]db.ListAggregationsRow{}, errors.New("internal"))
+				mockRepo.EXPECT().ListAggregations(ctx, db.ListAggregationsParams{
+					Scope: "scope1",
+				}).Times(1).Return([]db.ListAggregationsRow{}, errors.New("internal"))
 			},
 			want:    &v1.ListAggregationsResponse{},
 			wantErr: true,
@@ -563,78 +519,40 @@ func Test_productServiceServer_CreateAggregation(t *testing.T) {
 	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.AggregatedRights
+		req *v1.Aggregation
 	}
 	tests := []struct {
 		name    string
 		s       *productServiceServer
 		args    args
 		setup   func()
-		want    *v1.AggregatedRightsResponse
+		want    *v1.AggregationResponse
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.AggregatedRights{
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					MetricName:              "met1,met2",
-					ProductNames:            []string{"prod1", "prod2"},
-					Swidtags:                []string{"swid1", "swid2", "swid3"},
-					NumLicensesAcquired:     10,
-					AvgUnitPrice:            2,
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicencesMaintainance: 2,
-					AvgMaintenanceUnitPrice: 2,
-					Scope:                   "scope1",
-					Comment:                 "aggregation 1",
+				req: &v1.Aggregation{
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					ProductNames:    []string{"prod1", "prod2"},
+					Swidtags:        []string{"swid1", "swid2", "swid3"},
+					Scope:           "scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
-				met = mockMetric
-				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
-				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
 				mockRepo.EXPECT().GetAggregationByName(ctx, db.GetAggregationByNameParams{
 					AggregationName: "aggname",
 					Scope:           "scope1",
-				}).Times(1).Return(db.AggregatedRight{}, sql.ErrNoRows)
-				mockRepo.EXPECT().GetAggregationBySKU(ctx, db.GetAggregationBySKUParams{
-					Sku:   "aggsku",
-					Scope: "scope1",
-				}).Times(1).Return(db.AggregatedRight{}, sql.ErrNoRows)
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "met1",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "met2",
-							Description: "metricNup description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "met3",
-							Description: "metricNup description",
-						},
-					}}, nil)
+				}).Times(1).Return(db.Aggregation{}, sql.ErrNoRows)
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Scope:  "scope1",
 					Editor: "aggeditor",
-					Metric: "met1,met2",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{
 					{
 						ProductName: "prod1",
@@ -649,44 +567,21 @@ func Test_productServiceServer_CreateAggregation(t *testing.T) {
 						Swidtag:     "swid3",
 					},
 				}, nil)
-				mockRepo.EXPECT().UpsertAggregation(ctx, db.UpsertAggregationParams{
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					Metric:                  "met1,met2",
-					Products:                []string{"prod1", "prod2"},
-					Swidtags:                []string{"swid1", "swid2", "swid3"},
-					Scope:                   "scope1",
-					NumLicensesAcquired:     10,
-					NumLicencesMaintainance: 2,
-					AvgUnitPrice:            decimal.NewFromFloat(2),
-					AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
-					TotalPurchaseCost:       decimal.NewFromFloat(20),
-					TotalMaintenanceCost:    decimal.NewFromFloat(4),
-					TotalCost:               decimal.NewFromFloat(24),
-					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
-					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
-					Comment:                 sql.NullString{String: "aggregation 1", Valid: true},
-					CreatedBy:               "admin@superuser.com",
+				mockRepo.EXPECT().InsertAggregation(ctx, db.InsertAggregationParams{
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					Products:        []string{"prod1", "prod2"},
+					Swidtags:        []string{"swid1", "swid2", "swid3"},
+					Scope:           "scope1",
+					CreatedBy:       "admin@superuser.com",
 				}).Times(1).Return(int32(1), nil)
-				jsonData, err := json.Marshal(&dgworker.UpsertAggregatedRightsRequest{
-					ID:                      1,
-					Name:                    "aggname",
-					Sku:                     "aggsku",
-					Swidtags:                []string{"swid1", "swid2", "swid3"},
-					Products:                []string{"prod1", "prod2"},
-					ProductEditor:           "aggeditor",
-					Metric:                  "met1,met2",
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicensesAcquired:     10,
-					AvgUnitPrice:            2,
-					AvgMaintenanceUnitPrice: 2,
-					TotalPurchaseCost:       20,
-					TotalMaintenanceCost:    4,
-					TotalCost:               24,
-					Scope:                   "scope1",
-					NumLicencesMaintenance:  2,
+				jsonData, err := json.Marshal(&dgworker.UpsertAggregationRequest{
+					ID:            1,
+					Name:          "aggname",
+					Swidtags:      []string{"swid1", "swid2", "swid3"},
+					Products:      []string{"prod1", "prod2"},
+					ProductEditor: "aggeditor",
+					Scope:         "scope1",
 				})
 				if err != nil {
 					t.Errorf("Failed to do json marshalling in test %v", err)
@@ -703,19 +598,19 @@ func Test_productServiceServer_CreateAggregation(t *testing.T) {
 					Data:   envolveData,
 				}, "aw").Times(1).Return(int32(1000), nil)
 			},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: true,
 			},
 		},
 		{name: "FAILURE-can not find claims in context",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.AggregatedRights{
+				req: &v1.Aggregation{
 					Scope: "scope1",
 				},
 			},
 			setup: func() {},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
@@ -723,12 +618,12 @@ func Test_productServiceServer_CreateAggregation(t *testing.T) {
 		{name: "FAILURE-Scope Validation error",
 			args: args{
 				ctx: ctx,
-				req: &v1.AggregatedRights{
+				req: &v1.Aggregation{
 					Scope: "scope4",
 				},
 			},
 			setup: func() {},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
@@ -766,73 +661,43 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.AggregatedRights
+		req *v1.Aggregation
 	}
 	tests := []struct {
 		name    string
 		s       *productServiceServer
 		args    args
 		setup   func()
-		want    *v1.AggregatedRightsResponse
+		want    *v1.AggregationResponse
 		wantErr bool
 	}{
 		{name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.AggregatedRights{
-					ID:                      1,
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					MetricName:              "met1,met2",
-					ProductNames:            []string{"prod1", "prod2", "prod3", "prod4"},
-					Swidtags:                []string{"swid1", "swid2", "swid3", "swid4"},
-					NumLicensesAcquired:     10,
-					AvgUnitPrice:            2,
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicencesMaintainance: 2,
-					AvgMaintenanceUnitPrice: 2,
-					Scope:                   "scope1",
-					Comment:                 "aggregation 1",
+				req: &v1.Aggregation{
+					ID:              1,
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					ProductNames:    []string{"prod1", "prod2", "prod3", "prod4"},
+					Swidtags:        []string{"swid1", "swid2", "swid3", "swid4"},
+					Scope:           "scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
-				met = mockMetric
-				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
-				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
 				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
 					ID:    1,
 					Scope: "scope1",
-				}).Times(1).Return(db.AggregatedRight{
+				}).Times(1).Return(db.Aggregation{
 					AggregationName: "aggname",
-					Sku:             "aggsku",
 				}, nil)
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "met1",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "met2",
-							Description: "metricNup description",
-						},
-					}}, nil)
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Scope:  "scope1",
 					Editor: "aggeditor",
-					Metric: "met1,met2",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{
 					{
 						ProductName: "prod1",
@@ -856,44 +721,22 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 						Swidtag:     "swid3",
 					},
 				}, nil)
-				mockRepo.EXPECT().UpsertAggregation(ctx, db.UpsertAggregationParams{
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					Metric:                  "met1,met2",
-					Products:                []string{"prod1", "prod2", "prod3", "prod4"},
-					Swidtags:                []string{"swid1", "swid2", "swid3", "swid4"},
-					Scope:                   "scope1",
-					NumLicensesAcquired:     10,
-					NumLicencesMaintainance: 2,
-					AvgUnitPrice:            decimal.NewFromFloat(2),
-					AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
-					TotalPurchaseCost:       decimal.NewFromFloat(20),
-					TotalMaintenanceCost:    decimal.NewFromFloat(4),
-					TotalCost:               decimal.NewFromFloat(24),
-					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
-					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
-					Comment:                 sql.NullString{String: "aggregation 1", Valid: true},
-					CreatedBy:               "admin@superuser.com",
-				}).Times(1).Return(int32(1), nil)
-				jsonData, err := json.Marshal(&dgworker.UpsertAggregatedRightsRequest{
-					ID:                      1,
-					Name:                    "aggname",
-					Sku:                     "aggsku",
-					Swidtags:                []string{"swid1", "swid2", "swid3", "swid4"},
-					Products:                []string{"prod1", "prod2", "prod3", "prod4"},
-					ProductEditor:           "aggeditor",
-					Metric:                  "met1,met2",
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicensesAcquired:     10,
-					AvgUnitPrice:            2,
-					AvgMaintenanceUnitPrice: 2,
-					TotalPurchaseCost:       20,
-					TotalMaintenanceCost:    4,
-					TotalCost:               24,
-					Scope:                   "scope1",
-					NumLicencesMaintenance:  2,
+				mockRepo.EXPECT().UpdateAggregation(ctx, db.UpdateAggregationParams{
+					ID:              1,
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					ProductNames:    []string{"prod1", "prod2", "prod3", "prod4"},
+					Swidtags:        []string{"swid1", "swid2", "swid3", "swid4"},
+					Scope:           "scope1",
+					UpdatedBy:       sql.NullString{String: "admin@superuser.com", Valid: true},
+				}).Times(1).Return(nil)
+				jsonData, err := json.Marshal(&dgworker.UpsertAggregationRequest{
+					ID:            1,
+					Name:          "aggname",
+					Swidtags:      []string{"swid1", "swid2", "swid3", "swid4"},
+					Products:      []string{"prod1", "prod2", "prod3", "prod4"},
+					ProductEditor: "aggeditor",
+					Scope:         "scope1",
 				})
 				if err != nil {
 					t.Errorf("Failed to do json marshalling in test %v", err)
@@ -910,19 +753,19 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 					Data:   envolveData,
 				}, "aw").Times(1).Return(int32(1000), nil)
 			},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: true,
 			},
 		},
 		{name: "FAILURE-can not find claims in context",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.AggregatedRights{
+				req: &v1.Aggregation{
 					Scope: "scope1",
 				},
 			},
 			setup: func() {},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
@@ -930,71 +773,44 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 		{name: "FAILURE-Scope Validation error",
 			args: args{
 				ctx: ctx,
-				req: &v1.AggregatedRights{
+				req: &v1.Aggregation{
 					Scope: "scope4",
 				},
 			},
 			setup: func() {},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
 		},
-		{name: "FAILURE-InsertAcqRight-DBError",
+		{name: "FAILURE-UpdateAggregation-DBError",
 			args: args{
 				ctx: ctx,
-				req: &v1.AggregatedRights{
-					ID:                      1,
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					MetricName:              "met1,met2",
-					ProductNames:            []string{"prod1", "prod2", "prod3"},
-					Swidtags:                []string{"swid1", "swid2", "swid3"},
-					NumLicensesAcquired:     10,
-					AvgUnitPrice:            2,
-					StartOfMaintenance:      "2020-01-01T10:58:56.026008Z",
-					EndOfMaintenance:        "2023-01-01T05:40:56.026008Z",
-					NumLicencesMaintainance: 2,
-					AvgMaintenanceUnitPrice: 2,
-					Scope:                   "scope1",
-					Comment:                 "aggregation 1",
+				req: &v1.Aggregation{
+					ID:              1,
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					ProductNames:    []string{"prod1", "prod2", "prod3"},
+					Swidtags:        []string{"swid1", "swid2", "swid3"},
+					Scope:           "scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
-				met = mockMetric
 				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
 					ID:    1,
 					Scope: "scope1",
-				}).Times(1).Return(db.AggregatedRight{
+				}).Times(1).Return(db.Aggregation{
+					ID:              1,
 					AggregationName: "aggname",
-					Sku:             "aggsku",
 				}, nil)
-				mockMetric.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
-					Scopes: []string{"scope1"},
-				}).Times(1).Return(&metv1.ListMetricResponse{
-					Metrices: []*metv1.Metric{
-						{
-							Type:        "oracle.processor.standard",
-							Name:        "met1",
-							Description: "metric description",
-						},
-						{
-							Type:        "NUP",
-							Name:        "met2",
-							Description: "metricNup description",
-						},
-					}}, nil)
 				mockRepo.EXPECT().ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 					Scope:  "scope1",
 					Editor: "aggeditor",
-					Metric: "met1,met2",
 				}).Times(1).Return([]db.ListProductsForAggregationRow{
 					{
 						ProductName: "prod1",
@@ -1014,30 +830,17 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 						Swidtag:     "swid3",
 					},
 				}, nil)
-				starttime, _ := time.Parse(time.RFC3339Nano, "2020-01-01T10:58:56.026008Z")
-				endtime, _ := time.Parse(time.RFC3339Nano, "2023-01-01T05:40:56.026008Z")
-				mockRepo.EXPECT().UpsertAggregation(ctx, db.UpsertAggregationParams{
-					AggregationName:         "aggname",
-					Sku:                     "aggsku",
-					ProductEditor:           "aggeditor",
-					Metric:                  "met1,met2",
-					Products:                []string{"prod1", "prod2", "prod3"},
-					Swidtags:                []string{"swid1", "swid2", "swid3"},
-					Scope:                   "scope1",
-					NumLicensesAcquired:     10,
-					NumLicencesMaintainance: 2,
-					AvgUnitPrice:            decimal.NewFromFloat(2),
-					AvgMaintenanceUnitPrice: decimal.NewFromFloat(2),
-					TotalPurchaseCost:       decimal.NewFromFloat(20),
-					TotalMaintenanceCost:    decimal.NewFromFloat(4),
-					TotalCost:               decimal.NewFromFloat(24),
-					StartOfMaintenance:      sql.NullTime{Time: starttime, Valid: true},
-					EndOfMaintenance:        sql.NullTime{Time: endtime, Valid: true},
-					Comment:                 sql.NullString{String: "aggregation 1", Valid: true},
-					CreatedBy:               "admin@superuser.com",
-				}).Times(1).Return(int32(0), errors.New("Internal"))
+				mockRepo.EXPECT().UpdateAggregation(ctx, db.UpdateAggregationParams{
+					ID:              1,
+					AggregationName: "aggname",
+					ProductEditor:   "aggeditor",
+					ProductNames:    []string{"prod1", "prod2", "prod3"},
+					Swidtags:        []string{"swid1", "swid2", "swid3"},
+					Scope:           "scope1",
+					UpdatedBy:       sql.NullString{String: "admin@superuser.com", Valid: true},
+				}).Times(1).Return(errors.New("Internal"))
 			},
-			want: &v1.AggregatedRightsResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
@@ -1063,7 +866,7 @@ func Test_productServiceServer_UpdateAggregation(t *testing.T) {
 	}
 }
 
-func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
+func Test_productServiceServer_DeleteAggregation(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
@@ -1075,35 +878,42 @@ func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
 	var met metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.DeleteProductAggregationRequest
+		req *v1.DeleteAggregationRequest
 	}
 	tests := []struct {
 		name    string
 		s       *productServiceServer
 		args    args
 		setup   func()
-		want    *v1.DeleteProductAggregationResponse
+		want    *v1.AggregationResponse
 		wantErr bool
 	}{
-		{name: "Success-Delete Product Aggregations",
+		{name: "Success-Delete Aggregations",
 			args: args{
 				ctx: ctx,
-				req: &v1.DeleteProductAggregationRequest{
+				req: &v1.DeleteAggregationRequest{
 					ID:    1,
 					Scope: "scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
-				mockRepo := mock.NewMockProduct(mockCtrl)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
+				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
+					ID:    1,
+					Scope: "scope1",
+				}).Times(1).Return(db.Aggregation{
+					ID:              1,
+					AggregationName: "aggname",
+				}, nil)
 				mockRepo.EXPECT().DeleteAggregation(ctx, db.DeleteAggregationParams{
-					AggregationID: 1,
-					Scope:         "scope1",
+					ID:    1,
+					Scope: "scope1",
 				}).Return(nil).Times(1)
-				jsonData, err := json.Marshal(&v1.DeleteProductAggregationRequest{
+				jsonData, err := json.Marshal(&v1.DeleteAggregationRequest{
 					ID:    1,
 					Scope: "scope1",
 				})
@@ -1122,19 +932,19 @@ func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
 					Data:   envolveData,
 				}, "aw").Times(1).Return(int32(1000), nil)
 			},
-			want: &v1.DeleteProductAggregationResponse{
+			want: &v1.AggregationResponse{
 				Success: true,
 			},
 		},
 		{name: "FAILURE-Claims Not Found",
 			args: args{
 				ctx: context.Background(),
-				req: &v1.DeleteProductAggregationRequest{
+				req: &v1.DeleteAggregationRequest{
 					Scope: "scope1",
 				},
 			},
 			setup: func() {},
-			want: &v1.DeleteProductAggregationResponse{
+			want: &v1.AggregationResponse{
 				Success: false,
 			},
 			wantErr: true,
@@ -1142,18 +952,18 @@ func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
 		{name: "FAILURE-Scope Validation error",
 			args: args{
 				ctx: ctx,
-				req: &v1.DeleteProductAggregationRequest{
+				req: &v1.DeleteAggregationRequest{
 					Scope: "scope4",
 				},
 			},
 			setup:   func() {},
-			want:    &v1.DeleteProductAggregationResponse{},
+			want:    &v1.AggregationResponse{},
 			wantErr: true,
 		},
-		{name: "FAILURE-Delete Aggregation",
+		{name: "FAILURE-aggregation does not exist",
 			args: args{
 				ctx: ctx,
-				req: &v1.DeleteProductAggregationRequest{
+				req: &v1.DeleteAggregationRequest{
 					ID:    1,
 					Scope: "scope1",
 				},
@@ -1166,12 +976,67 @@ func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
 				rep = mockRepo
 				queue = mockQueue
 				met = mockMetric
+				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
+					ID:    1,
+					Scope: "scope1",
+				}).Times(1).Return(db.Aggregation{}, sql.ErrNoRows)
+			},
+			want:    &v1.AggregationResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-db/GetAggregationByID",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAggregationRequest{
+					ID:    1,
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
+					ID:    1,
+					Scope: "scope1",
+				}).Times(1).Return(db.Aggregation{}, errors.New("internal"))
+			},
+			want:    &v1.AggregationResponse{},
+			wantErr: true,
+		},
+		{name: "FAILURE-Delete Aggregation",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteAggregationRequest{
+					ID:    1,
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetAggregationByID(ctx, db.GetAggregationByIDParams{
+					ID:    1,
+					Scope: "scope1",
+				}).Times(1).Return(db.Aggregation{
+					ID:              1,
+					AggregationName: "aggname",
+				}, nil)
 				mockRepo.EXPECT().DeleteAggregation(ctx, db.DeleteAggregationParams{
-					AggregationID: 1,
-					Scope:         "scope1",
+					ID:    1,
+					Scope: "scope1",
 				}).Times(1).Return(errors.New("internal"))
 			},
-			want:    &v1.DeleteProductAggregationResponse{},
+			want:    &v1.AggregationResponse{},
 			wantErr: true,
 		},
 	}
@@ -1183,13 +1048,13 @@ func Test_productServiceServer_DeleteProductAggregation(t *testing.T) {
 				queue:       queue,
 				metric:      met,
 			}
-			got, err := tt.s.DeleteProductAggregation(tt.args.ctx, tt.args.req)
+			got, err := tt.s.DeleteAggregation(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("productServiceServer.DeleteProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("productServiceServer.DeleteAggregation() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("productServiceServer.DeleteProductAggregation() = %v, want %v", got, tt.want)
+				t.Errorf("productServiceServer.DeleteAggregation() = %v, want %v", got, tt.want)
 			}
 		})
 	}

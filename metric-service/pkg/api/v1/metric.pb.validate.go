@@ -705,6 +705,108 @@ var _ interface {
 
 var _MetricINM_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
 
+// Validate checks the field values on MetricSS with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *MetricSS) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		return MetricSSValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_MetricSS_Name_Pattern.MatchString(m.GetName()) {
+		return MetricSSValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[.-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	if m.GetReferenceValue() < 0 {
+		return MetricSSValidationError{
+			field:  "ReferenceValue",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return MetricSSValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+// MetricSSValidationError is the validation error returned by
+// MetricSS.Validate if the designated constraints aren't met.
+type MetricSSValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricSSValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricSSValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricSSValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricSSValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricSSValidationError) ErrorName() string { return "MetricSSValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricSSValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricSS.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricSSValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricSSValidationError{}
+
+var _MetricSS_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
+
 // Validate checks the field values on UpdateMetricResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -906,6 +1008,8 @@ func (m *MetricIPS) Validate() error {
 
 	// no validation rules for NumCoreAttrId
 
+	// no validation rules for NumCPUAttrId
+
 	// no validation rules for CoreFactorAttrId
 
 	// no validation rules for BaseEqTypeId
@@ -1006,6 +1110,8 @@ func (m *MetricSPS) Validate() error {
 	}
 
 	// no validation rules for NumCoreAttrId
+
+	// no validation rules for NumCPUAttrId
 
 	// no validation rules for CoreFactorAttrId
 

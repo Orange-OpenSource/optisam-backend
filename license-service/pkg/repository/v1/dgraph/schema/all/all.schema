@@ -11,26 +11,32 @@ instance.product    : [uid] @count @reverse .
 instance.equipment  : [uid] @count @reverse .
 
 
-acqRights.SKU:                           string @index(exact,trigram) .
-acqRights.swidtag:                       string @index(exact,trigram) .
-acqRights.productName:                   string @index(trigram) .
-acqRights.editor:                        string @index(trigram) .
-acqRights.metric:                        [string] @index(trigram,exact) .
-acqRights.numOfAcqLicences:              int .
-acqRights.numOfLicencesUnderMaintenance: int .
-acqRights.averageUnitPrice:              float .
-acqRights.averageMaintenantUnitPrice:    float .
-acqRights.totalPurchaseCost:             float .
-acqRights.totalMaintenanceCost:          float .
-acqRights.totalCost:                     float .
-acqRights.startOfMaintenance:            string .
-acqRights.endOfMaintenance:              string . 
-acqRights.version:                       string .
+acqRights.SKU                           : string @index(exact,trigram) .
+acqRights.swidtag                       : string @index(exact,trigram) .
+acqRights.productName                   : string @index(trigram) .
+acqRights.editor                        : string @index(trigram) .
+acqRights.metric                        : [string] @index(trigram,exact) .
+acqRights.numOfAcqLicences              : int .
+acqRights.numOfLicencesUnderMaintenance : int .
+acqRights.averageUnitPrice              : float .
+acqRights.averageMaintenantUnitPrice    : float .
+acqRights.totalPurchaseCost             : float .
+acqRights.totalMaintenanceCost          : float .
+acqRights.totalCost                     : float .
+acqRights.startOfMaintenance            : string .
+acqRights.endOfMaintenance              : string . 
+acqRights.version                       : string .
+acqRights.orderingDate                  : string .
+acqRights.corporateSourcingContract     : string .
+acqRights.softwareProvider              : string .
+acqRights.lastPurchasedOrder            : string .
+acqRights.supportNumber                 : string .
+acqRights.maintenanceProvider           : string .
 
 product.name     : string @index(trigram,exact) .
 product.version  : string .
 product.category : string .
-product.editor   : string @index(trigram) .
+product.editor   : string @index(trigram,exact) .
 product.swidtag  : string @index(trigram,exact) @upsert .
 product.child    : [uid] @count @reverse .
 product.equipment: [uid] @count @reverse .
@@ -40,23 +46,32 @@ product.users    :  [uid] @reverse .
 editor.name: string @index(exact,trigram) @upsert .
 editor.product: [uid] @reverse .
 
-aggregation.id                            : int @index(int) .
-aggregation.name                          : string @index(trigram,exact) .
-aggregation.SKU                           : string @index(exact,trigram) .
-aggregation.editor                        : string @index(trigram,exact) .
-aggregation.product_names                 : string @index(trigram,exact) .
-aggregation.swidtags                      : [string] @index(trigram,exact) .
-aggregation.metric                        : [string] @index(trigram,exact) .
-aggregation.products                      : [uid] @count @reverse .
-aggregation.numOfAcqLicences              : int .
-aggregation.numOfLicencesUnderMaintenance : int .
-aggregation.averageUnitPrice              : float .
-aggregation.averageMaintenanceUnitPrice   : float .
-aggregation.totalPurchaseCost             : float .
-aggregation.totalMaintenanceCost          : float .
-aggregation.totalCost                     : float .
-aggregation.startOfMaintenance            : string .
-aggregation.endOfMaintenance              : string . 
+aggregation.id               : int @index(int) .
+aggregation.name             : string @index(trigram,exact) .
+aggregation.editor           : string @index(trigram,exact) .
+aggregation.product_names    : [string] @index(trigram,exact) .
+aggregation.swidtags         : [string] @index(trigram,exact) .
+aggregation.products         : [uid] @count @reverse .
+
+
+aggregatedRights.SKU                           : string @index(exact,trigram) .
+aggregatedRights.aggregationId                 : int @index(int) .
+aggregatedRights.metric                        : [string] @index(trigram,exact) .
+aggregatedRights.numOfAcqLicences              : int .
+aggregatedRights.numOfLicencesUnderMaintenance : int .
+aggregatedRights.averageUnitPrice              : float .
+aggregatedRights.averageMaintenanceUnitPrice   : float .
+aggregatedRights.totalPurchaseCost             : float .
+aggregatedRights.totalMaintenanceCost          : float .
+aggregatedRights.totalCost                     : float .
+aggregatedRights.startOfMaintenance            : string .
+aggregatedRights.endOfMaintenance              : string . 
+aggregatedRights.orderingDate                 : string .
+aggregatedRights.corporateSourcingContract   : string .
+aggregatedRights.softwareProvider             : string .
+aggregatedRights.lastPurchasedOrder          : string .
+aggregatedRights.supportNumber                : string .
+aggregatedRights.maintenanceProvider          : string .
 
 type_name: string @index(exact) .
 updated  : string .
@@ -102,10 +117,12 @@ metric.ops.attr_num_cpu     : [uid] @count @reverse .
 metric.ips.base             : [uid] @count @reverse .
 metric.ips.attr_core_factor : [uid] @count @reverse .
 metric.ips.attr_num_cores   : [uid] @count @reverse .
+metric.ips.attr_num_cpu     : [uid] @count @reverse .
 
 metric.sps.base             : [uid] @count @reverse .
 metric.sps.attr_core_factor : [uid] @count @reverse .
 metric.sps.attr_num_cores   : [uid] @count @reverse .
+metric.sps.attr_num_cpu     : [uid] @count @reverse .
 
 metric.oracle_nup.bottom           : [uid] @count @reverse .
 metric.oracle_nup.base             : [uid] @count @reverse .
@@ -125,3 +142,5 @@ metric.instancenumber.coefficient       : int .
 metric.attr_sum.equipment_type       : string .
 metric.attr_sum.attr_name            : string .
 metric.attr_sum.reference_value      : float .
+
+metric.static.reference_value       : int .

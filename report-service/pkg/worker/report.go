@@ -40,27 +40,28 @@ type Envelope struct {
 }
 
 type productEquipmentsReportStruct struct {
-	SwidTag   []string `json:"swidtag"`
-	EquipType string   `json:"equipType"`
-	Editor    string   `json:"editor"`
+	// SwidTag   []string `json:"swidtag"`
+	EquipType string `json:"equipType"`
+	Editor    string `json:"editor"`
 }
 
 type AcqRightsStruct struct {
-	SKU            string  `json:"sku"`
-	SwidTag        string  `json:"swidtag"`
-	Editor         string  `json:"editor"`
-	Metric         string  `json:"metric"`
-	NumCptLicences int32   `json:"computedLicenses"`
-	NumAcqLicences int32   `json:"acquiredLicenses"`
-	DeltaNumber    int32   `json:"delta(number)"`
-	DeltaCost      float64 `json:"delta(cost)"`
-	TotalCost      float64 `json:"totalcost"`
-	AvgUnitPrice   float64 `json:"avgunitprice"`
+	SKU                string  `json:"sku"`
+	AggregationName    string  `json:"aggregationName"`
+	SwidTag            string  `json:"swidtags"`
+	Editor             string  `json:"editor"`
+	Metric             string  `json:"metric"`
+	NumCptLicences     int32   `json:"computedLicenses"`
+	ComputationDetails string  `json:"computationDetails"`
+	NumAcqLicences     int32   `json:"acquiredLicenses"`
+	DeltaNumber        int32   `json:"delta(licenses)"`
+	DeltaCost          float64 `json:"delta(cost)"`
+	TotalCost          float64 `json:"totalcost"`
+	AvgUnitPrice       float64 `json:"avgunitprice"`
 }
 
 type AcqRightsReportStruct struct {
-	SwidTag []string `json:"swidtag"`
-	Editor  string   `json:"editor"`
+	Editor string `json:"editor"`
 }
 
 func NewWorker(id string, reportRepo repo.Report, grpcServers map[string]*grpc.ClientConn, dgraphRepo repo.DgraphReport, retries int) *Worker {
@@ -100,45 +101,52 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			return handleReportFailure(ctx, j, fmt.Errorf("worker - AcqRightsReport - Json Marshalling failed"), w, e.ReportID)
 		}
 		var complianceObjects []string
-		for _, swidtag := range r.SwidTag {
-			resp, error := w.licenseClient.ListAcqRightsForProduct(ctx, &l_v1.ListAcquiredRightsForProductRequest{SwidTag: swidtag, Scope: e.Scope})
+		resp, err := w.licenseClient.GetOverAllCompliance(ctx, &l_v1.GetOverAllComplianceRequest{
+			Scope:  e.Scope,
+			Editor: r.Editor,
+		})
+		if err != nil {
+			logger.Log.Error("worker - acqrights report - LicenseService - GetOverAllCompliance", zap.Error(err))
+			return handleReportFailure(ctx, j, fmt.Errorf("worker - acqrights report - LicenseService - GetOverAllCompliance failed"), w, e.ReportID)
+		}
+		// fmt.Println("resp", resp.AcqRights)
+		for _, a := range resp.AcqRights {
+			workerAcqRights := &AcqRightsStruct{
+				SKU:                a.SKU,
+				AggregationName:    a.AggregationName,
+				SwidTag:            a.SwidTags,
+				Editor:             r.Editor,
+				Metric:             a.Metric,
+				NumCptLicences:     a.NumCptLicences,
+				ComputationDetails: a.ComputedDetails,
+				NumAcqLicences:     a.NumAcqLicences,
+				TotalCost:          a.TotalCost,
+				DeltaNumber:        a.DeltaNumber,
+				DeltaCost:          a.DeltaCost,
+				AvgUnitPrice:       a.AvgUnitPrice,
+			}
+			if a.MetricNotDefined {
+				workerAcqRights.ComputationDetails = "Metric Not Defined"
+			}
+			if a.NotDeployed {
+				workerAcqRights.ComputationDetails = "Product Not Deployed"
+			}
+			var acqJSON json.RawMessage
+			acqJSON, error := json.Marshal(workerAcqRights)
 			if error != nil {
-				logger.Log.Error("worker - acqrights report - LicenseService - ListAcquiredRightsForProduct", zap.Error(error))
-				return handleReportFailure(ctx, j, fmt.Errorf("worker - acqrights report - LicenseService - ListAcquiredRightsForProduct failed"), w, e.ReportID)
+				logger.Log.Error("worker - AcqRightsReport -  json marshall error", zap.Error(error))
+				return handleReportFailure(ctx, j, fmt.Errorf("worker - AcqRightsReport - Json Marshalling failed"), w, e.ReportID)
 			}
-			if len(resp.AcqRights) == 0 {
-				continue
-			}
-			for _, a := range resp.AcqRights {
-				workerAcqRights := &AcqRightsStruct{
-					SKU:            a.SKU,
-					SwidTag:        a.SwidTag,
-					Editor:         r.Editor,
-					Metric:         a.Metric,
-					NumCptLicences: a.NumCptLicences,
-					NumAcqLicences: a.NumAcqLicences,
-					TotalCost:      a.TotalCost,
-					DeltaNumber:    a.DeltaNumber,
-					DeltaCost:      a.DeltaCost,
-					AvgUnitPrice:   a.AvgUnitPrice,
-				}
-				var acqJSON json.RawMessage
-				acqJSON, error := json.Marshal(workerAcqRights)
-				if error != nil {
-					logger.Log.Error("worker - ProductEquipmentsReport -  json marshall error", zap.Error(error))
-					return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport - Json Marshalling failed"), w, e.ReportID)
-				}
-				complianceObjects = append(complianceObjects, string(acqJSON))
-
-			}
+			// fmt.Println("acqjson string", string(acqJSON))
+			complianceObjects = append(complianceObjects, string(acqJSON))
 		}
 		complianceJSONArray := "[" + strings.Join(complianceObjects, ",") + "]"
-		fmt.Println(complianceJSONArray)
+		// fmt.Println("compliance array", complianceJSONArray)
 		rawJSON := json.RawMessage(complianceJSONArray)
 		bytes, err := rawJSON.MarshalJSON()
 		if err != nil {
-			logger.Log.Error("worker - ProductEquipmentsReport -  json marshall error", zap.Error(err))
-			return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport - Json Marshalling failed"), w, e.ReportID)
+			logger.Log.Error("worker - AcqRightsReport -  json marshall error", zap.Error(err))
+			return handleReportFailure(ctx, j, fmt.Errorf("worker - AcqRightsReport - Json Marshalling failed"), w, e.ReportID)
 		}
 		err = w.reportRepo.InsertReportData(ctx, db.InsertReportDataParams{
 			ReportDataJson: bytes,
@@ -177,19 +185,21 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 
 		var jsonProductArray []string
 
-		for _, swidtag := range r.SwidTag {
+		// for _, swidtag := range r.SwidTag {
 
-			// Find Equipments in which the product is installed
-			productEquipments, error := w.dgraphRepo.ProductEquipments(ctx, swidtag, e.Scope, r.EquipType)
-			if error != nil && error != repo.ErrNoData {
-				logger.Log.Error("worker - ProductEquipmentsReport -  ProductEquipments", zap.Error(error))
-				return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport - ProductEquipments failed"), w, e.ReportID)
-			}
-			// If there are equipments attached with the product
-			if error != repo.ErrNoData {
-				for _, equipment := range productEquipments {
+		// Find Equipments on which the product is installed
+		productEquipments, err := w.dgraphRepo.ProductEquipments(ctx, r.Editor, e.Scope, r.EquipType)
+		if err != nil && err != repo.ErrNoData {
+			logger.Log.Error("worker - ProductEquipmentsReport -  ProductEquipments", zap.Error(err))
+			return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport - ProductEquipments failed"), w, e.ReportID)
+		}
+		// If there are equipments attached with the product
+		if err != repo.ErrNoData {
+			for _, pro := range productEquipments {
+
+				for _, equipment := range pro.Equipments {
 					var jsonValues []string
-					swidtagString := `"swidtag":"` + swidtag + `"`
+					swidtagString := `"swidtag":"` + pro.Swidtag + `"`
 					editorString := `"editor":"` + r.Editor + `"`
 					jsonValues = append(jsonValues, swidtagString, editorString)
 					directEquipmentString := `"` + equipment.EquipmentType + `":"` + equipment.EquipmentID + `"`
@@ -207,7 +217,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					// Find parentsIDs if there are parents exists
 					if parents != nil {
 						equipmentParents, error := w.dgraphRepo.EquipmentParents(ctx, equipment.EquipmentID, equipment.EquipmentType, e.Scope)
-						if error != nil {
+						if error != nil && error != repo.ErrNoData {
 							logger.Log.Error("worker - ProductEquipmentsReport -  EquipmentParents", zap.Error(error))
 							return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport - EquipmentParents failed"), w, e.ReportID)
 						}
@@ -224,7 +234,6 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					jsonProductArray = append(jsonProductArray, "{"+strings.Join(jsonValues, ",")+"}")
 				}
 			}
-
 		}
 		finalJSONRes := "[" + strings.Join(jsonProductArray, ",") + "]"
 		rawJSON := json.RawMessage(finalJSONRes)
@@ -250,7 +259,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 	return nil
 }
 
-func findEquipmentID(typ string, equipmentParents []*repo.ProductEquipment) string {
+func findEquipmentID(typ string, equipmentParents []*repo.Equipment) string {
 
 	for _, parent := range equipmentParents {
 		if typ == parent.EquipmentType {

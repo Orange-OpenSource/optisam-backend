@@ -45,6 +45,12 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "simulation",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -84,6 +90,55 @@
           },
           {
             "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/license/computationdetails": {
+      "get": {
+        "summary": "ListComputationDetails",
+        "operationId": "LicenseService_ListComputationDetails",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListComputationDetailsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "swid_tag",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "agg_name",
             "in": "query",
             "required": false,
             "type": "string"
@@ -150,6 +205,48 @@
         ]
       }
     },
+    "/api/v1/license/overall/compliance": {
+      "get": {
+        "operationId": "LicenseService_GetOverAllCompliance",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetOverAllComplianceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "simulation",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
     "/api/v1/license/product/{swid_tag}/acquiredrights": {
       "get": {
         "operationId": "LicenseService_ListAcqRightsForProduct",
@@ -179,50 +276,12 @@
             "in": "query",
             "required": false,
             "type": "string"
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
-    "/api/v1/license/product/{swid_tag}/computationdetails": {
-      "get": {
-        "summary": "ListComputationDetails",
-        "operationId": "LicenseService_ListComputationDetails",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1ListComputationDetailsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "swid_tag",
-            "in": "path",
-            "required": true,
-            "type": "string"
           },
           {
-            "name": "sku",
-            "description": "repeated string metric_name = 2 [(validate.rules).repeated = {min_items: 1}];.",
+            "name": "simulation",
             "in": "query",
             "required": false,
-            "type": "string"
-          },
-          {
-            "name": "scope",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -350,6 +409,20 @@
         },
         "metricNotDefined": {
           "type": "boolean"
+        },
+        "notDeployed": {
+          "type": "boolean"
+        },
+        "productNames": {
+          "type": "string"
+        },
+        "purchaseCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "computedCost": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -443,6 +516,17 @@
         "FLOAT"
       ],
       "default": "UNKNOWN"
+    },
+    "v1GetOverAllComplianceResponse": {
+      "type": "object",
+      "properties": {
+        "acq_rights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AggregationAcquiredRights"
+          }
+        }
+      }
     },
     "v1LicensesForEquipAndMetricRequest": {
       "type": "object",
@@ -620,6 +704,20 @@
         },
         "metricNotDefined": {
           "type": "boolean"
+        },
+        "notDeployed": {
+          "type": "boolean"
+        },
+        "productName": {
+          "type": "string"
+        },
+        "purchaseCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "computedCost": {
+          "type": "number",
+          "format": "double"
         }
       }
     },

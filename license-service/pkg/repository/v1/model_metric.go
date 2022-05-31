@@ -16,6 +16,8 @@ const (
 	MetricAttrCounterStandard MetricType = "attribute.counter.standard"
 	// MetricInstanceNumberStandard is instance.number.metric
 	MetricInstanceNumberStandard MetricType = "instance.number.standard"
+	// MetricStaticStandard is static.metric
+	MetricStaticStandard MetricType = "static.standard"
 	// MetricAttrSumStandard is attribute.sum.standard
 	MetricAttrSumStandard MetricType = "attribute.sum.standard"
 	// MetricUserSumStandard is user.sum.standard
@@ -53,6 +55,7 @@ const (
 	MetricInstanceNumber  MetricTypeID = 6
 	MetricAttrSum         MetricTypeID = 7
 	MetricUserSum         MetricTypeID = 8
+	MetricStatic          MetricTypeID = 9
 )
 
 // MetricDescription provide description
@@ -73,12 +76,14 @@ const (
 	MetricDescriptionOracleNUPStandard MetricDescription = "Named User Plus licenses required = MAX(A,B) : A = CPU nb x Core(per CPU) nb x CoreFactor x minimum number of NUP per processor, B = total number of current users with access to the Oracle product"
 	// MetricDescriptionAttrCounterStandard provides description of attribute.counter.standard
 	MetricDescriptionAttrCounterStandard MetricDescription = "Number of licenses required = Number of equipment of a specific type containing a specific attribute set to a specific value."
-	// MetricDescriptionAttrCounterStandard provides description of attribute.counter.standard
+	// MetricDescriptionInstanceNumberStandard provides description of attribute.counter.standard
 	MetricDescriptionInstanceNumberStandard MetricDescription = "Number of licenses required = Number of instances where product has been installed divided by the number of deployments authorized per license."
 	// MetricDescriptionAttrSumStandard provides description of attribute.sum.standard
 	MetricDescriptionAttrSumStandard MetricDescription = "Number of licenses required = Ceil( Sum( on all equipments of the chosen Equipment type) of the attribute values)/Reference value (present in the metric)"
 	// MetricDescriptionAttrCounterStandard provides description of user.sum.standard
 	MetricDescriptionUserSumStandard MetricDescription = "Number of licenses required = Sum of all users using the product."
+	// MetricDescriptionStaticStandard provides description of static.standard
+	MetricDescriptionStaticStandard MetricDescription = "Number of licenses required = Reference Value."
 )
 
 var (
@@ -131,6 +136,12 @@ var (
 			Description: MetricDescriptionUserSumStandard.String(),
 			Href:        "/api/v1/metric/uss",
 			MetricType:  MetricUserSum,
+		},
+		{
+			Name:        MetricStaticStandard,
+			Description: MetricDescriptionStaticStandard.String(),
+			Href:        "/api/v1/metric/ss",
+			MetricType:  MetricStatic,
 		},
 	}
 )

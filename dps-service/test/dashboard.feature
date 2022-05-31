@@ -3,7 +3,7 @@ Feature: Dashboard Test on dps: admin user
 
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
-  # * def dpsServiceUrl = "https://optisam-product-int.kermit-noprod-b.itn.intraorange"
+  # * def dpsServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token

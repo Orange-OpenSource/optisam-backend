@@ -35,28 +35,28 @@ func TestSimulationServiceRepo_DeleteConfig(t *testing.T) {
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -148,35 +148,35 @@ func TestSimulationServiceRepo_DeleteConfigData(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             1,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -258,35 +258,35 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             3,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             4,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -304,35 +304,35 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData1 := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             1,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -350,35 +350,35 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData2 := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             5,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             6,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -425,7 +425,7 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 				}, nil
 			},
 			want: []db.ConfigMaster{
-				db.ConfigMaster{
+				{
 					ID:            2,
 					Name:          "server_1",
 					EquipmentType: "Server",
@@ -463,7 +463,7 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 				}, nil
 			},
 			want: []db.ConfigMaster{
-				db.ConfigMaster{
+				{
 					ID:            1,
 					Name:          "server_2",
 					Status:        1,
@@ -471,7 +471,7 @@ func TestSimulationServiceRepo_ListConfig(t *testing.T) {
 					CreatedBy:     "admin@superuser.com",
 					UpdatedBy:     "admin@superuser.com",
 				},
-				db.ConfigMaster{
+				{
 					ID:            2,
 					Name:          "server_1",
 					EquipmentType: "Server",
@@ -518,35 +518,35 @@ func TestSimulationServiceRepo_GetMetadatabyConfigID(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData1 := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             1,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -582,13 +582,13 @@ func TestSimulationServiceRepo_GetMetadatabyConfigID(t *testing.T) {
 				}, nil
 			},
 			want: []db.GetMetadatabyConfigIDRow{
-				db.GetMetadatabyConfigIDRow{
+				{
 					ID:             1,
 					AttributeName:  "cpu",
 					EquipmentType:  "Server",
 					ConfigFilename: "1.csv",
 				},
-				db.GetMetadatabyConfigIDRow{
+				{
 					ID:             2,
 					AttributeName:  "cf",
 					EquipmentType:  "Server",
@@ -632,35 +632,35 @@ func TestSimulationServiceRepo_GetDatabyMetadataID(t *testing.T) {
 		UpdatedOn:     time.Now().UTC(),
 	}
 	createData1 := []*v1.ConfigData{
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             1,
 				AttributeName:  "cpu",
 				ConfigFileName: "1.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "xenon",
 					Value: []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "phenon",
 					Value: []byte(`{"cpu":"phenon","cf":"2"}`),
 				},
 			},
 		},
-		&v1.ConfigData{
+		{
 			ConfigMetadata: &v1.Metadata{
 				ID:             2,
 				AttributeName:  "cf",
 				ConfigFileName: "2.csv",
 			},
 			ConfigValues: []*v1.ConfigValue{
-				&v1.ConfigValue{
+				{
 					Key:   "1",
 					Value: []byte(`{"cf":"1"}`),
 				},
-				&v1.ConfigValue{
+				{
 					Key:   "2",
 					Value: []byte(`{"cf":"2"}`),
 				},
@@ -696,11 +696,11 @@ func TestSimulationServiceRepo_GetDatabyMetadataID(t *testing.T) {
 				}, nil
 			},
 			want: []db.GetDataByMetadataIDRow{
-				db.GetDataByMetadataIDRow{
+				{
 					AttributeValue: "xenon",
 					JsonData:       []byte(`{"cpu":"xenon","cf":"1"}`),
 				},
-				db.GetDataByMetadataIDRow{
+				{
 					AttributeValue: "phenon",
 					JsonData:       []byte(`{"cpu":"phenon","cf":"2"}`),
 				},

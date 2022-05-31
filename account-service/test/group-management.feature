@@ -2,7 +2,7 @@
 Feature: Account Service Test for Group Management : admin User
 
   Background:
-  # * def accountServiceUrl = "https://optisam-account-int.kermit-noprod-b.itn.intraorange"
+  # * def accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
     * def credentials = {username:'admin@test.com', password: 'admin'}
     * callonce read('common.feature') credentials

@@ -15,6 +15,7 @@ type metricIPS struct {
 	Name           string `json:"metric.name"`
 	Base           []*id  `json:"metric.ips.base"`
 	AttrNumCores   []*id  `json:"metric.ips.attr_num_cores"`
+	AttrNumCPU     []*id  `json:"metric.ips.attr_num_cpu"`
 	AtrrCoreFactor []*id  `json:"metric.ips.attr_core_factor"`
 }
 
@@ -67,11 +68,16 @@ func converMetricToModelMetricIPS(m *metricIPS) (*v1.MetricIPS, error) {
 		return nil, errors.New("dgraph converMetricToModelMetricIPS - AttrNumCores not found")
 	}
 
+	if len(m.AttrNumCPU) == 0 {
+		return nil, errors.New("dgraph converMetricToModelMetricIPS - AttrNumCPU not found")
+	}
+
 	return &v1.MetricIPS{
 		ID:               m.ID,
 		Name:             m.Name,
 		BaseEqTypeID:     m.Base[0].ID,
 		CoreFactorAttrID: m.AtrrCoreFactor[0].ID,
 		NumCoreAttrID:    m.AttrNumCores[0].ID,
+		NumCPUAttrID:     m.AttrNumCPU[0].ID,
 	}, nil
 }

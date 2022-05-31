@@ -843,6 +843,20 @@
         }
       }
     },
+    "v1GetAnalysisFileInfoResponse": {
+      "type": "object",
+      "properties": {
+        "file_name": {
+          "type": "string"
+        },
+        "scope_type": {
+          "type": "string"
+        },
+        "is_older_generic": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1ListDeletionRequestSortBy": {
       "type": "string",
       "enum": [
@@ -950,7 +964,7 @@
         "scope_type": {
           "$ref": "#/definitions/NotifyUploadRequestscope_types"
         },
-        "analyzed_error_file": {
+        "analysis_id": {
           "type": "string"
         }
       }

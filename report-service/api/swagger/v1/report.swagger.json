@@ -4,6 +4,11 @@
     "title": "report.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "ReportService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -235,12 +240,6 @@
       "properties": {
         "editor": {
           "type": "string"
-        },
-        "swidtag": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },
@@ -293,14 +292,9 @@
         "editor": {
           "type": "string"
         },
-        "swidtag": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "equip_type": {
-          "type": "string"
+          "type": "string",
+          "title": "repeated string swidtag = 2;"
         }
       }
     },

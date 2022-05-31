@@ -369,6 +369,34 @@ func (q *Queries) GetFileStatus(ctx context.Context, arg GetFileStatusParams) (U
 	return status, err
 }
 
+const getGlobalFileInfo = `-- name: GetGlobalFileInfo :one
+select analysis_id, file_name,scope_type, upload_id from uploaded_data_files where data_type = 'GLOBALDATA' and  scope = $1 and upload_id = $2
+`
+
+type GetGlobalFileInfoParams struct {
+	Scope    string `json:"scope"`
+	UploadID int32  `json:"upload_id"`
+}
+
+type GetGlobalFileInfoRow struct {
+	AnalysisID sql.NullString `json:"analysis_id"`
+	FileName   string         `json:"file_name"`
+	ScopeType  ScopeTypes     `json:"scope_type"`
+	UploadID   int32          `json:"upload_id"`
+}
+
+func (q *Queries) GetGlobalFileInfo(ctx context.Context, arg GetGlobalFileInfoParams) (GetGlobalFileInfoRow, error) {
+	row := q.db.QueryRowContext(ctx, getGlobalFileInfo, arg.Scope, arg.UploadID)
+	var i GetGlobalFileInfoRow
+	err := row.Scan(
+		&i.AnalysisID,
+		&i.FileName,
+		&i.ScopeType,
+		&i.UploadID,
+	)
+	return i, err
+}
+
 const getInjectionStatus = `-- name: GetInjectionStatus :one
 select count(file_name) from uploaded_data_files where scope = $1 and status in ('PENDING', 'INPROGRESS','UPLOADED' , 'PROCESSED')
 `
@@ -422,8 +450,8 @@ func (q *Queries) GetTransformedGlobalFileInfo(ctx context.Context) ([]GetTransf
 }
 
 const insertUploadedData = `-- name: InsertUploadedData :one
-INSERT INTO uploaded_data_files (scope,data_type,file_name,uploaded_by,gid,status,scope_type, error_file)
-VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, error_file
+INSERT INTO uploaded_data_files (scope,data_type,file_name,uploaded_by,gid,status,scope_type, analysis_id)
+VALUES($1,$2,$3,$4,$5,$6,$7,$8) returning upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, analysis_id
 `
 
 type InsertUploadedDataParams struct {
@@ -434,7 +462,7 @@ type InsertUploadedDataParams struct {
 	Gid        int32          `json:"gid"`
 	Status     UploadStatus   `json:"status"`
 	ScopeType  ScopeTypes     `json:"scope_type"`
-	ErrorFile  sql.NullString `json:"error_file"`
+	AnalysisID sql.NullString `json:"analysis_id"`
 }
 
 func (q *Queries) InsertUploadedData(ctx context.Context, arg InsertUploadedDataParams) (UploadedDataFile, error) {
@@ -446,7 +474,7 @@ func (q *Queries) InsertUploadedData(ctx context.Context, arg InsertUploadedData
 		arg.Gid,
 		arg.Status,
 		arg.ScopeType,
-		arg.ErrorFile,
+		arg.AnalysisID,
 	)
 	var i UploadedDataFile
 	err := row.Scan(
@@ -464,14 +492,14 @@ func (q *Queries) InsertUploadedData(ctx context.Context, arg InsertUploadedData
 		&i.FailedRecords,
 		&i.Comments,
 		&i.ScopeType,
-		&i.ErrorFile,
+		&i.AnalysisID,
 	)
 	return i, err
 }
 
 const insertUploadedMetaData = `-- name: InsertUploadedMetaData :one
 INSERT INTO uploaded_data_files (file_name,uploaded_by)
-VALUES($1,$2) returning upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, error_file
+VALUES($1,$2) returning upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, analysis_id
 `
 
 type InsertUploadedMetaDataParams struct {
@@ -497,7 +525,7 @@ func (q *Queries) InsertUploadedMetaData(ctx context.Context, arg InsertUploaded
 		&i.FailedRecords,
 		&i.Comments,
 		&i.ScopeType,
-		&i.ErrorFile,
+		&i.AnalysisID,
 	)
 	return i, err
 }
@@ -591,7 +619,7 @@ func (q *Queries) ListDeletionRecrods(ctx context.Context, arg ListDeletionRecro
 }
 
 const listUploadedDataFiles = `-- name: ListUploadedDataFiles :many
-SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, error_file from
+SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, analysis_id from
 uploaded_data_files
 WHERE
     scope = ANY($1::TEXT[])
@@ -652,7 +680,7 @@ type ListUploadedDataFilesRow struct {
 	FailedRecords  int32          `json:"failed_records"`
 	Comments       sql.NullString `json:"comments"`
 	ScopeType      ScopeTypes     `json:"scope_type"`
-	ErrorFile      sql.NullString `json:"error_file"`
+	AnalysisID     sql.NullString `json:"analysis_id"`
 }
 
 func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDataFilesParams) ([]ListUploadedDataFilesRow, error) {
@@ -697,7 +725,7 @@ func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDat
 			&i.FailedRecords,
 			&i.Comments,
 			&i.ScopeType,
-			&i.ErrorFile,
+			&i.AnalysisID,
 		); err != nil {
 			return nil, err
 		}
@@ -713,7 +741,7 @@ func (q *Queries) ListUploadedDataFiles(ctx context.Context, arg ListUploadedDat
 }
 
 const listUploadedGlobalDataFiles = `-- name: ListUploadedGlobalDataFiles :many
-SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, error_file from
+SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, analysis_id from
 uploaded_data_files
 WHERE
   scope = ANY($1::TEXT[])
@@ -768,7 +796,7 @@ type ListUploadedGlobalDataFilesRow struct {
 	FailedRecords  int32          `json:"failed_records"`
 	Comments       sql.NullString `json:"comments"`
 	ScopeType      ScopeTypes     `json:"scope_type"`
-	ErrorFile      sql.NullString `json:"error_file"`
+	AnalysisID     sql.NullString `json:"analysis_id"`
 }
 
 func (q *Queries) ListUploadedGlobalDataFiles(ctx context.Context, arg ListUploadedGlobalDataFilesParams) ([]ListUploadedGlobalDataFilesRow, error) {
@@ -812,7 +840,7 @@ func (q *Queries) ListUploadedGlobalDataFiles(ctx context.Context, arg ListUploa
 			&i.FailedRecords,
 			&i.Comments,
 			&i.ScopeType,
-			&i.ErrorFile,
+			&i.AnalysisID,
 		); err != nil {
 			return nil, err
 		}
@@ -828,7 +856,7 @@ func (q *Queries) ListUploadedGlobalDataFiles(ctx context.Context, arg ListUploa
 }
 
 const listUploadedMetaDataFiles = `-- name: ListUploadedMetaDataFiles :many
-SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, error_file from
+SELECT count(*) OVER() AS totalRecords,upload_id, gid, scope, data_type, file_name, status, uploaded_by, uploaded_on, updated_on, total_records, success_records, failed_records, comments, scope_type, analysis_id from
 uploaded_data_files
 WHERE
   scope = ANY($1::TEXT[])
@@ -883,7 +911,7 @@ type ListUploadedMetaDataFilesRow struct {
 	FailedRecords  int32          `json:"failed_records"`
 	Comments       sql.NullString `json:"comments"`
 	ScopeType      ScopeTypes     `json:"scope_type"`
-	ErrorFile      sql.NullString `json:"error_file"`
+	AnalysisID     sql.NullString `json:"analysis_id"`
 }
 
 func (q *Queries) ListUploadedMetaDataFiles(ctx context.Context, arg ListUploadedMetaDataFilesParams) ([]ListUploadedMetaDataFilesRow, error) {
@@ -927,7 +955,7 @@ func (q *Queries) ListUploadedMetaDataFiles(ctx context.Context, arg ListUploade
 			&i.FailedRecords,
 			&i.Comments,
 			&i.ScopeType,
-			&i.ErrorFile,
+			&i.AnalysisID,
 		); err != nil {
 			return nil, err
 		}

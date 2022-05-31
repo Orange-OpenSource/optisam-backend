@@ -23,110 +23,96 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation", zap.String("reason", "ScopeError"))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	repoAgg, err := s.licenseRepo.GetAggregationDetails(ctx, req.Name, req.GetScope())
-	if err != nil {
-		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - repo/GetAggregationDetails - failed to get aggregation details", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "failed to get aggregation details")
-	}
-	// fmt.Println("rero agg:", repoAgg)
-	aggAcqRights := &v1.AggregationAcquiredRights{
-		SKU:             repoAgg.SKU,
-		AggregationName: repoAgg.Name,
-		SwidTags:        strings.Join(repoAgg.Swidtags, ","),
-		Metric:          strings.Join(repoAgg.Metric, ","),
-		NumAcqLicences:  repoAgg.Licenses,
-		TotalCost:       repoAgg.TotalCost,
-		AvgUnitPrice:    repoAgg.UnitPrice,
-	}
-	indvRights, err := s.licenseRepo.AggregationIndividualRights(ctx, repoAgg.ProductIDs, repoAgg.Metric, req.GetScope())
-	if err != nil && err != repo.ErrNodeNotFound {
-		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - repo/AggregationIndividualRights - failed to get aggregation individual details", zap.String("reason", err.Error()))
-		return nil, status.Error(codes.Internal, "failed to get aggregation individual rights")
-	}
-	for _, indacq := range indvRights {
-		aggAcqRights.NumAcqLicences += indacq.Licenses
-	}
-	if repoAgg.NumOfEquipments == 0 {
-		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - no equipments linked with product")
-		aggAcqRights.DeltaNumber = aggAcqRights.NumAcqLicences
-		aggAcqRights.DeltaCost = aggAcqRights.TotalCost
-		return &v1.ListAcqRightsForAggregationResponse{
-			AcqRights: []*v1.AggregationAcquiredRights{
-				aggAcqRights,
-			},
-		}, nil
-	}
 	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil && err != repo.ErrNoData {
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
+	}
+	repoAgg, aggRights, err := s.licenseRepo.AggregationDetails(ctx, req.Name, metrics, req.Simulation, req.GetScope())
+	if err != nil {
+		logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - repo/AggregationDetails - failed to get aggregation details", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "failed to get aggregation details")
+	}
+	if len(repoAgg.ProductIDs) == 0 {
+		return &v1.ListAcqRightsForAggregationResponse{}, status.Error(codes.InvalidArgument, "Inventory Park is not present")
 	}
 	eqTypes, err := s.licenseRepo.EquipmentTypes(ctx, req.GetScope())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
+	aggCompLicenses := make([]*v1.AggregationAcquiredRights, len(aggRights))
 	ind := 0
 	input := make(map[string]interface{})
 	input[ProdAggName] = repoAgg.Name
 	input[SCOPES] = []string{req.Scope}
 	input[IsAgg] = true
-	var maxComputed uint64
-	var computedDetails string
-	metricExists := false
-	for _, met := range repoAgg.Metric {
-		if ind = metricNameExistsAll(metrics, met); ind == -1 {
-			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - metric name doesnt exist - " + met)
+	for i, aggRight := range aggRights {
+		aggCompLicenses[i] = &v1.AggregationAcquiredRights{
+			SKU:             aggRight.SKU,
+			AggregationName: req.Name,
+			SwidTags:        strings.Join(repoAgg.Swidtags, ","),
+			ProductNames:    strings.Join(repoAgg.ProductNames, ","),
+			Metric:          aggRight.Metric,
+			NumAcqLicences:  int32(aggRight.AcqLicenses),
+			TotalCost:       aggRight.TotalCost,
+			PurchaseCost:    aggRight.TotalPurchaseCost,
+			AvgUnitPrice:    aggRight.AvgUnitPrice,
+		}
+		if repoAgg.NumOfEquipments == 0 {
+			logger.Log.Error("service/v1 - ListAcqRightsForProduct - no equipments linked with product")
+			aggCompLicenses[i].DeltaNumber = int32(aggRight.AcqLicenses)
+			aggCompLicenses[i].DeltaCost = aggCompLicenses[i].TotalCost
+			aggCompLicenses[i].NotDeployed = true
 			continue
 		}
-		input[MetricName] = metrics[ind].Name
-		if _, ok := MetricCalculation[metrics[ind].Type]; !ok {
-			return nil, status.Error(codes.Internal, "this metricType is not supported")
+		rightsMetrics := strings.Split(aggRight.Metric, ",")
+		indvRights, err := s.licenseRepo.AggregationIndividualRights(ctx, repoAgg.ProductIDs, rightsMetrics, req.Scope)
+		if err != nil && err != repo.ErrNodeNotFound {
+			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - repo/AggregationIndividualRights - failed to get aggregation individual details", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "failed to get aggregation individual rights")
 		}
-		resp, err := MetricCalculation[metrics[ind].Type](ctx, s, eqTypes, input)
-		if err != nil {
-			logger.Log.Error("service/v1 - Failed ListAcqRightsForProductAggregation  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
-			continue
+		for _, indacq := range indvRights {
+			aggCompLicenses[i].NumAcqLicences += indacq.Licenses
+			aggCompLicenses[i].TotalCost += indacq.TotalCost
 		}
-		computedLicenses := resp[ComputedLicenses].(uint64)
-		if computedLicenses >= maxComputed {
-			metricExists = true
-			maxComputed = computedLicenses
-			if _, ok := resp[ComputedDetails]; ok {
-				computedDetails = resp[ComputedDetails].(string)
+		// fmt.Printf("acq[%d]: %v", i, aggCompLicenses[i])
+		var maxComputed uint64
+		var computedDetails string
+		metricExists := false
+		for _, met := range rightsMetrics {
+			if ind = metricNameExistsAll(metrics, met); ind == -1 {
+				logger.Log.Error("service/v1 - ListAcqRightsForProduct - metric name doesnt exist - " + met)
+				continue
+			}
+			input[MetricName] = metrics[ind].Name
+			input[SCOPES] = []string{req.GetScope()}
+			if _, ok := MetricCalculation[metrics[ind].Type]; !ok {
+				return nil, status.Error(codes.Internal, "this metricType is not supported")
+			}
+			resp, err := MetricCalculation[metrics[ind].Type](ctx, s, eqTypes, input)
+			if err != nil {
+				logger.Log.Error("service/v1 - Failed ListAcqRightsForProduct  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
+				continue
+			}
+			computedLicenses := resp[ComputedLicenses].(uint64)
+			if computedLicenses >= maxComputed {
+				metricExists = true
+				maxComputed = computedLicenses
+				if _, ok := resp[ComputedDetails]; ok {
+					computedDetails = resp[ComputedDetails].(string)
+				}
 			}
 		}
-	}
-	if metricExists {
-		aggAcqRights.NumCptLicences = int32(maxComputed)
-		aggAcqRights.DeltaNumber = aggAcqRights.NumAcqLicences - int32(maxComputed)
-		aggAcqRights.DeltaCost = aggAcqRights.TotalCost - aggAcqRights.AvgUnitPrice*float64(maxComputed)
-		aggAcqRights.ComputedDetails = computedDetails
-	} else {
-		aggAcqRights.MetricNotDefined = true
+		if metricExists {
+			aggCompLicenses[i].NumCptLicences = int32(maxComputed)
+			aggCompLicenses[i].DeltaNumber = aggCompLicenses[i].NumAcqLicences - int32(maxComputed)
+			aggCompLicenses[i].DeltaCost = aggCompLicenses[i].TotalCost - aggRight.AvgUnitPrice*float64(int32(maxComputed))
+			aggCompLicenses[i].ComputedDetails = computedDetails
+			aggCompLicenses[i].ComputedCost = aggRight.AvgUnitPrice * float64(int32(maxComputed))
+		} else {
+			aggCompLicenses[i].MetricNotDefined = true
+		}
 	}
 	return &v1.ListAcqRightsForAggregationResponse{
-		AcqRights: []*v1.AggregationAcquiredRights{
-			aggAcqRights,
-		},
+		AcqRights: aggCompLicenses,
 	}, nil
 }
-
-// func convertRepoToSrvProductAll(prods []*repo.ProductData) []*v1.Product {
-// 	products := make([]*v1.Product, len(prods))
-// 	for i := range prods {
-// 		products[i] = convertRepoToSrvProduct(prods[i])
-// 	}
-// 	return products
-// }
-
-// func convertRepoToSrvProduct(prod *repo.ProductData) *v1.Product {
-// 	return &v1.Product{
-// 		SwidTag:           prod.Swidtag,
-// 		Name:              prod.Name,
-// 		Version:           prod.Version,
-// 		Category:          prod.Category,
-// 		Editor:            prod.Editor,
-// 		NumOfApplications: prod.NumOfApplications,
-// 		NumofEquipments:   prod.NumOfEquipments,
-// 		TotalCost:         float64(prod.TotalCost),
-// 	}
-// }

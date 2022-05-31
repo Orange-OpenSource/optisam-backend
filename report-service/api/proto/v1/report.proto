@@ -74,11 +74,11 @@ message SubmitReportRequest {
 
 message AcqRightsReport {
   string editor = 1;
-  repeated string swidtag = 2;
+  // repeated string swidtag = 2;
 }
 message ProductEquipmentsReport{
   string editor = 1;
-  repeated string swidtag = 2;
+  // repeated string swidtag = 2;
   string equip_type = 3;
 }
 message SubmitReportResponse { bool success = 1; }

@@ -20,10 +20,12 @@ type ProductServiceClient interface {
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsResponse, error)
 	DashboardOverview(ctx context.Context, in *DashboardOverviewRequest, opts ...grpc.CallOption) (*DashboardOverviewResponse, error)
 	ProductsPerEditor(ctx context.Context, in *ProductsPerEditorRequest, opts ...grpc.CallOption) (*ProductsPerEditorResponse, error)
+	GetRightsInfoByEditor(ctx context.Context, in *GetRightsInfoByEditorRequest, opts ...grpc.CallOption) (*GetRightsInfoByEditorResponse, error)
 	GetProductDetail(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
 	GetProductOptions(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductOptionsResponse, error)
 	ListProductAggregationView(ctx context.Context, in *ListProductAggregationViewRequest, opts ...grpc.CallOption) (*ListProductAggregationViewResponse, error)
-	ProductAggregationProductViewDetails(ctx context.Context, in *ProductAggregationProductViewDetailsRequest, opts ...grpc.CallOption) (*ProductAggregationProductViewDetailsResponse, error)
+	AggregatedRightDetails(ctx context.Context, in *AggregatedRightDetailsRequest, opts ...grpc.CallOption) (*AggregatedRightDetailsResponse, error)
+	ListDeployedAndAcquiredEditors(ctx context.Context, in *ListDeployedAndAcquiredEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error)
 	ListEditors(ctx context.Context, in *ListEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error)
 	ListEditorProducts(ctx context.Context, in *ListEditorProductsRequest, opts ...grpc.CallOption) (*ListEditorProductsResponse, error)
 	UpsertProduct(ctx context.Context, in *UpsertProductRequest, opts ...grpc.CallOption) (*UpsertProductResponse, error)
@@ -35,22 +37,25 @@ type ProductServiceClient interface {
 	DashboardQualityProducts(ctx context.Context, in *DashboardQualityProductsRequest, opts ...grpc.CallOption) (*DashboardQualityProductsResponse, error)
 	ListAcqRights(ctx context.Context, in *ListAcqRightsRequest, opts ...grpc.CallOption) (*ListAcqRightsResponse, error)
 	ListAggregatedAcqRights(ctx context.Context, in *ListAggregatedAcqRightsRequest, opts ...grpc.CallOption) (*ListAggregatedAcqRightsResponse, error)
-	ListAcqRightsAggregationRecords(ctx context.Context, in *ListAcqRightsAggregationRecordsRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationRecordsResponse, error)
-	ProductAggregationProductViewOptions(ctx context.Context, in *ProductAggregationProductViewOptionsRequest, opts ...grpc.CallOption) (*ProductAggregationProductViewOptionsResponse, error)
-	CreateAggregation(ctx context.Context, in *AggregatedRights, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
-	ListAggregatedRightsEditors(ctx context.Context, in *ListAggregatedRightsEditorsRequest, opts ...grpc.CallOption) (*ListAggregatedRightsEditorsResponse, error)
-	ListAggregatedRightsProducts(ctx context.Context, in *ListAggregatedRightsProductsRequest, opts ...grpc.CallOption) (*ListAggregatedRightsProductsResponse, error)
+	CreateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error)
+	CreateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
+	UpdateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
+	DeleteAggregatedRights(ctx context.Context, in *DeleteAggregatedRightsRequest, opts ...grpc.CallOption) (*DeleteAggregatedRightsResponse, error)
+	DownloadAggregatedRightsFile(ctx context.Context, in *DownloadAggregatedRightsFileRequest, opts ...grpc.CallOption) (*DownloadAggregatedRightsFileResponse, error)
+	ListAggregationEditors(ctx context.Context, in *ListAggregationEditorsRequest, opts ...grpc.CallOption) (*ListAggregationEditorsResponse, error)
+	ListAggregationProducts(ctx context.Context, in *ListAggregationProductsRequest, opts ...grpc.CallOption) (*ListAggregationProductsResponse, error)
 	ListAggregations(ctx context.Context, in *ListAggregationsRequest, opts ...grpc.CallOption) (*ListAggregationsResponse, error)
-	// update product aggregation
-	UpdateAggregation(ctx context.Context, in *AggregatedRights, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
-	DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*DeleteProductAggregationResponse, error)
+	UpdateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error)
+	DeleteAggregation(ctx context.Context, in *DeleteAggregationRequest, opts ...grpc.CallOption) (*AggregationResponse, error)
 	OverviewProductQuality(ctx context.Context, in *OverviewProductQualityRequest, opts ...grpc.CallOption) (*OverviewProductQualityResponse, error)
 	DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error)
+	DropAggregationData(ctx context.Context, in *DropAggregationDataRequest, opts ...grpc.CallOption) (*DropAggregationDataResponse, error)
 	CreateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(ctx context.Context, in *CreateDashboardUpdateJobRequest, opts ...grpc.CallOption) (*CreateDashboardUpdateJobResponse, error)
 	GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error)
 	UpdateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	DeleteAcqRight(ctx context.Context, in *DeleteAcqRightRequest, opts ...grpc.CallOption) (*DeleteAcqRightResponse, error)
+	DownloadAcqRightFile(ctx context.Context, in *DownloadAcqRightFileRequest, opts ...grpc.CallOption) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(ctx context.Context, in *GetEquipmentsByProductRequest, opts ...grpc.CallOption) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(ctx context.Context, in *GetAggregationAcqrightsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationAcqrightsExpandedViewResponse, error)
 	GetAggregationProductsExpandedView(ctx context.Context, in *GetAggregationProductsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationProductsExpandedViewResponse, error)
@@ -91,6 +96,15 @@ func (c *productServiceClient) ProductsPerEditor(ctx context.Context, in *Produc
 	return out, nil
 }
 
+func (c *productServiceClient) GetRightsInfoByEditor(ctx context.Context, in *GetRightsInfoByEditorRequest, opts ...grpc.CallOption) (*GetRightsInfoByEditorResponse, error) {
+	out := new(GetRightsInfoByEditorResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetRightsInfoByEditor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetProductDetail(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
 	out := new(ProductResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductDetail", in, out, opts...)
@@ -118,9 +132,18 @@ func (c *productServiceClient) ListProductAggregationView(ctx context.Context, i
 	return out, nil
 }
 
-func (c *productServiceClient) ProductAggregationProductViewDetails(ctx context.Context, in *ProductAggregationProductViewDetailsRequest, opts ...grpc.CallOption) (*ProductAggregationProductViewDetailsResponse, error) {
-	out := new(ProductAggregationProductViewDetailsResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductAggregationProductViewDetails", in, out, opts...)
+func (c *productServiceClient) AggregatedRightDetails(ctx context.Context, in *AggregatedRightDetailsRequest, opts ...grpc.CallOption) (*AggregatedRightDetailsResponse, error) {
+	out := new(AggregatedRightDetailsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/AggregatedRightDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListDeployedAndAcquiredEditors(ctx context.Context, in *ListDeployedAndAcquiredEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error) {
+	out := new(ListEditorsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListDeployedAndAcquiredEditors", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -226,26 +249,8 @@ func (c *productServiceClient) ListAggregatedAcqRights(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *productServiceClient) ListAcqRightsAggregationRecords(ctx context.Context, in *ListAcqRightsAggregationRecordsRequest, opts ...grpc.CallOption) (*ListAcqRightsAggregationRecordsResponse, error) {
-	out := new(ListAcqRightsAggregationRecordsResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *productServiceClient) ProductAggregationProductViewOptions(ctx context.Context, in *ProductAggregationProductViewOptionsRequest, opts ...grpc.CallOption) (*ProductAggregationProductViewOptionsResponse, error) {
-	out := new(ProductAggregationProductViewOptionsResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductAggregationProductViewOptions", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *productServiceClient) CreateAggregation(ctx context.Context, in *AggregatedRights, opts ...grpc.CallOption) (*AggregatedRightsResponse, error) {
-	out := new(AggregatedRightsResponse)
+func (c *productServiceClient) CreateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error) {
+	out := new(AggregationResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/CreateAggregation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -253,18 +258,54 @@ func (c *productServiceClient) CreateAggregation(ctx context.Context, in *Aggreg
 	return out, nil
 }
 
-func (c *productServiceClient) ListAggregatedRightsEditors(ctx context.Context, in *ListAggregatedRightsEditorsRequest, opts ...grpc.CallOption) (*ListAggregatedRightsEditorsResponse, error) {
-	out := new(ListAggregatedRightsEditorsResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAggregatedRightsEditors", in, out, opts...)
+func (c *productServiceClient) CreateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error) {
+	out := new(AggregatedRightsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/CreateAggregatedRights", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *productServiceClient) ListAggregatedRightsProducts(ctx context.Context, in *ListAggregatedRightsProductsRequest, opts ...grpc.CallOption) (*ListAggregatedRightsProductsResponse, error) {
-	out := new(ListAggregatedRightsProductsResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAggregatedRightsProducts", in, out, opts...)
+func (c *productServiceClient) UpdateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error) {
+	out := new(AggregatedRightsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpdateAggregatedRights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteAggregatedRights(ctx context.Context, in *DeleteAggregatedRightsRequest, opts ...grpc.CallOption) (*DeleteAggregatedRightsResponse, error) {
+	out := new(DeleteAggregatedRightsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteAggregatedRights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DownloadAggregatedRightsFile(ctx context.Context, in *DownloadAggregatedRightsFileRequest, opts ...grpc.CallOption) (*DownloadAggregatedRightsFileResponse, error) {
+	out := new(DownloadAggregatedRightsFileResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DownloadAggregatedRightsFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAggregationEditors(ctx context.Context, in *ListAggregationEditorsRequest, opts ...grpc.CallOption) (*ListAggregationEditorsResponse, error) {
+	out := new(ListAggregationEditorsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAggregationEditors", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListAggregationProducts(ctx context.Context, in *ListAggregationProductsRequest, opts ...grpc.CallOption) (*ListAggregationProductsResponse, error) {
+	out := new(ListAggregationProductsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAggregationProducts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,8 +321,8 @@ func (c *productServiceClient) ListAggregations(ctx context.Context, in *ListAgg
 	return out, nil
 }
 
-func (c *productServiceClient) UpdateAggregation(ctx context.Context, in *AggregatedRights, opts ...grpc.CallOption) (*AggregatedRightsResponse, error) {
-	out := new(AggregatedRightsResponse)
+func (c *productServiceClient) UpdateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error) {
+	out := new(AggregationResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpdateAggregation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -289,9 +330,9 @@ func (c *productServiceClient) UpdateAggregation(ctx context.Context, in *Aggreg
 	return out, nil
 }
 
-func (c *productServiceClient) DeleteProductAggregation(ctx context.Context, in *DeleteProductAggregationRequest, opts ...grpc.CallOption) (*DeleteProductAggregationResponse, error) {
-	out := new(DeleteProductAggregationResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteProductAggregation", in, out, opts...)
+func (c *productServiceClient) DeleteAggregation(ctx context.Context, in *DeleteAggregationRequest, opts ...grpc.CallOption) (*AggregationResponse, error) {
+	out := new(AggregationResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteAggregation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +351,15 @@ func (c *productServiceClient) OverviewProductQuality(ctx context.Context, in *O
 func (c *productServiceClient) DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error) {
 	out := new(DropProductDataResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DropProductData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DropAggregationData(ctx context.Context, in *DropAggregationDataRequest, opts ...grpc.CallOption) (*DropAggregationDataResponse, error) {
+	out := new(DropAggregationDataResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DropAggregationData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -361,6 +411,15 @@ func (c *productServiceClient) DeleteAcqRight(ctx context.Context, in *DeleteAcq
 	return out, nil
 }
 
+func (c *productServiceClient) DownloadAcqRightFile(ctx context.Context, in *DownloadAcqRightFileRequest, opts ...grpc.CallOption) (*DownloadAcqRightFileResponse, error) {
+	out := new(DownloadAcqRightFileResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DownloadAcqRightFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetEquipmentsByProduct(ctx context.Context, in *GetEquipmentsByProductRequest, opts ...grpc.CallOption) (*GetEquipmentsByProductResponse, error) {
 	out := new(GetEquipmentsByProductResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetEquipmentsByProduct", in, out, opts...)
@@ -395,10 +454,12 @@ type ProductServiceServer interface {
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsResponse, error)
 	DashboardOverview(context.Context, *DashboardOverviewRequest) (*DashboardOverviewResponse, error)
 	ProductsPerEditor(context.Context, *ProductsPerEditorRequest) (*ProductsPerEditorResponse, error)
+	GetRightsInfoByEditor(context.Context, *GetRightsInfoByEditorRequest) (*GetRightsInfoByEditorResponse, error)
 	GetProductDetail(context.Context, *ProductRequest) (*ProductResponse, error)
 	GetProductOptions(context.Context, *ProductRequest) (*ProductOptionsResponse, error)
 	ListProductAggregationView(context.Context, *ListProductAggregationViewRequest) (*ListProductAggregationViewResponse, error)
-	ProductAggregationProductViewDetails(context.Context, *ProductAggregationProductViewDetailsRequest) (*ProductAggregationProductViewDetailsResponse, error)
+	AggregatedRightDetails(context.Context, *AggregatedRightDetailsRequest) (*AggregatedRightDetailsResponse, error)
+	ListDeployedAndAcquiredEditors(context.Context, *ListDeployedAndAcquiredEditorsRequest) (*ListEditorsResponse, error)
 	ListEditors(context.Context, *ListEditorsRequest) (*ListEditorsResponse, error)
 	ListEditorProducts(context.Context, *ListEditorProductsRequest) (*ListEditorProductsResponse, error)
 	UpsertProduct(context.Context, *UpsertProductRequest) (*UpsertProductResponse, error)
@@ -410,22 +471,25 @@ type ProductServiceServer interface {
 	DashboardQualityProducts(context.Context, *DashboardQualityProductsRequest) (*DashboardQualityProductsResponse, error)
 	ListAcqRights(context.Context, *ListAcqRightsRequest) (*ListAcqRightsResponse, error)
 	ListAggregatedAcqRights(context.Context, *ListAggregatedAcqRightsRequest) (*ListAggregatedAcqRightsResponse, error)
-	ListAcqRightsAggregationRecords(context.Context, *ListAcqRightsAggregationRecordsRequest) (*ListAcqRightsAggregationRecordsResponse, error)
-	ProductAggregationProductViewOptions(context.Context, *ProductAggregationProductViewOptionsRequest) (*ProductAggregationProductViewOptionsResponse, error)
-	CreateAggregation(context.Context, *AggregatedRights) (*AggregatedRightsResponse, error)
-	ListAggregatedRightsEditors(context.Context, *ListAggregatedRightsEditorsRequest) (*ListAggregatedRightsEditorsResponse, error)
-	ListAggregatedRightsProducts(context.Context, *ListAggregatedRightsProductsRequest) (*ListAggregatedRightsProductsResponse, error)
+	CreateAggregation(context.Context, *Aggregation) (*AggregationResponse, error)
+	CreateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error)
+	UpdateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error)
+	DeleteAggregatedRights(context.Context, *DeleteAggregatedRightsRequest) (*DeleteAggregatedRightsResponse, error)
+	DownloadAggregatedRightsFile(context.Context, *DownloadAggregatedRightsFileRequest) (*DownloadAggregatedRightsFileResponse, error)
+	ListAggregationEditors(context.Context, *ListAggregationEditorsRequest) (*ListAggregationEditorsResponse, error)
+	ListAggregationProducts(context.Context, *ListAggregationProductsRequest) (*ListAggregationProductsResponse, error)
 	ListAggregations(context.Context, *ListAggregationsRequest) (*ListAggregationsResponse, error)
-	// update product aggregation
-	UpdateAggregation(context.Context, *AggregatedRights) (*AggregatedRightsResponse, error)
-	DeleteProductAggregation(context.Context, *DeleteProductAggregationRequest) (*DeleteProductAggregationResponse, error)
+	UpdateAggregation(context.Context, *Aggregation) (*AggregationResponse, error)
+	DeleteAggregation(context.Context, *DeleteAggregationRequest) (*AggregationResponse, error)
 	OverviewProductQuality(context.Context, *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error)
 	DropProductData(context.Context, *DropProductDataRequest) (*DropProductDataResponse, error)
+	DropAggregationData(context.Context, *DropAggregationDataRequest) (*DropAggregationDataResponse, error)
 	CreateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(context.Context, *CreateDashboardUpdateJobRequest) (*CreateDashboardUpdateJobResponse, error)
 	GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error)
 	UpdateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error)
+	DownloadAcqRightFile(context.Context, *DownloadAcqRightFileRequest) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(context.Context, *GetEquipmentsByProductRequest) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(context.Context, *GetAggregationAcqrightsExpandedViewRequest) (*GetAggregationAcqrightsExpandedViewResponse, error)
 	GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error)
@@ -444,6 +508,9 @@ func (UnimplementedProductServiceServer) DashboardOverview(context.Context, *Das
 func (UnimplementedProductServiceServer) ProductsPerEditor(context.Context, *ProductsPerEditorRequest) (*ProductsPerEditorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProductsPerEditor not implemented")
 }
+func (UnimplementedProductServiceServer) GetRightsInfoByEditor(context.Context, *GetRightsInfoByEditorRequest) (*GetRightsInfoByEditorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRightsInfoByEditor not implemented")
+}
 func (UnimplementedProductServiceServer) GetProductDetail(context.Context, *ProductRequest) (*ProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductDetail not implemented")
 }
@@ -453,8 +520,11 @@ func (UnimplementedProductServiceServer) GetProductOptions(context.Context, *Pro
 func (UnimplementedProductServiceServer) ListProductAggregationView(context.Context, *ListProductAggregationViewRequest) (*ListProductAggregationViewResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProductAggregationView not implemented")
 }
-func (UnimplementedProductServiceServer) ProductAggregationProductViewDetails(context.Context, *ProductAggregationProductViewDetailsRequest) (*ProductAggregationProductViewDetailsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProductAggregationProductViewDetails not implemented")
+func (UnimplementedProductServiceServer) AggregatedRightDetails(context.Context, *AggregatedRightDetailsRequest) (*AggregatedRightDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AggregatedRightDetails not implemented")
+}
+func (UnimplementedProductServiceServer) ListDeployedAndAcquiredEditors(context.Context, *ListDeployedAndAcquiredEditorsRequest) (*ListEditorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListDeployedAndAcquiredEditors not implemented")
 }
 func (UnimplementedProductServiceServer) ListEditors(context.Context, *ListEditorsRequest) (*ListEditorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEditors not implemented")
@@ -489,35 +559,44 @@ func (UnimplementedProductServiceServer) ListAcqRights(context.Context, *ListAcq
 func (UnimplementedProductServiceServer) ListAggregatedAcqRights(context.Context, *ListAggregatedAcqRightsRequest) (*ListAggregatedAcqRightsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAggregatedAcqRights not implemented")
 }
-func (UnimplementedProductServiceServer) ListAcqRightsAggregationRecords(context.Context, *ListAcqRightsAggregationRecordsRequest) (*ListAcqRightsAggregationRecordsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAcqRightsAggregationRecords not implemented")
-}
-func (UnimplementedProductServiceServer) ProductAggregationProductViewOptions(context.Context, *ProductAggregationProductViewOptionsRequest) (*ProductAggregationProductViewOptionsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProductAggregationProductViewOptions not implemented")
-}
-func (UnimplementedProductServiceServer) CreateAggregation(context.Context, *AggregatedRights) (*AggregatedRightsResponse, error) {
+func (UnimplementedProductServiceServer) CreateAggregation(context.Context, *Aggregation) (*AggregationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAggregation not implemented")
 }
-func (UnimplementedProductServiceServer) ListAggregatedRightsEditors(context.Context, *ListAggregatedRightsEditorsRequest) (*ListAggregatedRightsEditorsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAggregatedRightsEditors not implemented")
+func (UnimplementedProductServiceServer) CreateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAggregatedRights not implemented")
 }
-func (UnimplementedProductServiceServer) ListAggregatedRightsProducts(context.Context, *ListAggregatedRightsProductsRequest) (*ListAggregatedRightsProductsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListAggregatedRightsProducts not implemented")
+func (UnimplementedProductServiceServer) UpdateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAggregatedRights not implemented")
+}
+func (UnimplementedProductServiceServer) DeleteAggregatedRights(context.Context, *DeleteAggregatedRightsRequest) (*DeleteAggregatedRightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAggregatedRights not implemented")
+}
+func (UnimplementedProductServiceServer) DownloadAggregatedRightsFile(context.Context, *DownloadAggregatedRightsFileRequest) (*DownloadAggregatedRightsFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadAggregatedRightsFile not implemented")
+}
+func (UnimplementedProductServiceServer) ListAggregationEditors(context.Context, *ListAggregationEditorsRequest) (*ListAggregationEditorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAggregationEditors not implemented")
+}
+func (UnimplementedProductServiceServer) ListAggregationProducts(context.Context, *ListAggregationProductsRequest) (*ListAggregationProductsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAggregationProducts not implemented")
 }
 func (UnimplementedProductServiceServer) ListAggregations(context.Context, *ListAggregationsRequest) (*ListAggregationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAggregations not implemented")
 }
-func (UnimplementedProductServiceServer) UpdateAggregation(context.Context, *AggregatedRights) (*AggregatedRightsResponse, error) {
+func (UnimplementedProductServiceServer) UpdateAggregation(context.Context, *Aggregation) (*AggregationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAggregation not implemented")
 }
-func (UnimplementedProductServiceServer) DeleteProductAggregation(context.Context, *DeleteProductAggregationRequest) (*DeleteProductAggregationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteProductAggregation not implemented")
+func (UnimplementedProductServiceServer) DeleteAggregation(context.Context, *DeleteAggregationRequest) (*AggregationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAggregation not implemented")
 }
 func (UnimplementedProductServiceServer) OverviewProductQuality(context.Context, *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OverviewProductQuality not implemented")
 }
 func (UnimplementedProductServiceServer) DropProductData(context.Context, *DropProductDataRequest) (*DropProductDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropProductData not implemented")
+}
+func (UnimplementedProductServiceServer) DropAggregationData(context.Context, *DropAggregationDataRequest) (*DropAggregationDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DropAggregationData not implemented")
 }
 func (UnimplementedProductServiceServer) CreateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAcqRight not implemented")
@@ -533,6 +612,9 @@ func (UnimplementedProductServiceServer) UpdateAcqRight(context.Context, *AcqRig
 }
 func (UnimplementedProductServiceServer) DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAcqRight not implemented")
+}
+func (UnimplementedProductServiceServer) DownloadAcqRightFile(context.Context, *DownloadAcqRightFileRequest) (*DownloadAcqRightFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DownloadAcqRightFile not implemented")
 }
 func (UnimplementedProductServiceServer) GetEquipmentsByProduct(context.Context, *GetEquipmentsByProductRequest) (*GetEquipmentsByProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEquipmentsByProduct not implemented")
@@ -609,6 +691,24 @@ func _ProductService_ProductsPerEditor_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GetRightsInfoByEditor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRightsInfoByEditorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetRightsInfoByEditor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetRightsInfoByEditor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetRightsInfoByEditor(ctx, req.(*GetRightsInfoByEditorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetProductDetail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ProductRequest)
 	if err := dec(in); err != nil {
@@ -663,20 +763,38 @@ func _ProductService_ListProductAggregationView_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_ProductAggregationProductViewDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductAggregationProductViewDetailsRequest)
+func _ProductService_AggregatedRightDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AggregatedRightDetailsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).ProductAggregationProductViewDetails(ctx, in)
+		return srv.(ProductServiceServer).AggregatedRightDetails(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/ProductAggregationProductViewDetails",
+		FullMethod: "/optisam.products.v1.ProductService/AggregatedRightDetails",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).ProductAggregationProductViewDetails(ctx, req.(*ProductAggregationProductViewDetailsRequest))
+		return srv.(ProductServiceServer).AggregatedRightDetails(ctx, req.(*AggregatedRightDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListDeployedAndAcquiredEditors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeployedAndAcquiredEditorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListDeployedAndAcquiredEditors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListDeployedAndAcquiredEditors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListDeployedAndAcquiredEditors(ctx, req.(*ListDeployedAndAcquiredEditorsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -879,44 +997,8 @@ func _ProductService_ListAggregatedAcqRights_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_ListAcqRightsAggregationRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAcqRightsAggregationRecordsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductServiceServer).ListAcqRightsAggregationRecords(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/ListAcqRightsAggregationRecords",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).ListAcqRightsAggregationRecords(ctx, req.(*ListAcqRightsAggregationRecordsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ProductService_ProductAggregationProductViewOptions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProductAggregationProductViewOptionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductServiceServer).ProductAggregationProductViewOptions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/ProductAggregationProductViewOptions",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).ProductAggregationProductViewOptions(ctx, req.(*ProductAggregationProductViewOptionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ProductService_CreateAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AggregatedRights)
+	in := new(Aggregation)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -928,43 +1010,115 @@ func _ProductService_CreateAggregation_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/optisam.products.v1.ProductService/CreateAggregation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).CreateAggregation(ctx, req.(*AggregatedRights))
+		return srv.(ProductServiceServer).CreateAggregation(ctx, req.(*Aggregation))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_ListAggregatedRightsEditors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAggregatedRightsEditorsRequest)
+func _ProductService_CreateAggregatedRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AggregatedRightsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).ListAggregatedRightsEditors(ctx, in)
+		return srv.(ProductServiceServer).CreateAggregatedRights(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/ListAggregatedRightsEditors",
+		FullMethod: "/optisam.products.v1.ProductService/CreateAggregatedRights",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).ListAggregatedRightsEditors(ctx, req.(*ListAggregatedRightsEditorsRequest))
+		return srv.(ProductServiceServer).CreateAggregatedRights(ctx, req.(*AggregatedRightsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_ListAggregatedRightsProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListAggregatedRightsProductsRequest)
+func _ProductService_UpdateAggregatedRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AggregatedRightsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).ListAggregatedRightsProducts(ctx, in)
+		return srv.(ProductServiceServer).UpdateAggregatedRights(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/ListAggregatedRightsProducts",
+		FullMethod: "/optisam.products.v1.ProductService/UpdateAggregatedRights",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).ListAggregatedRightsProducts(ctx, req.(*ListAggregatedRightsProductsRequest))
+		return srv.(ProductServiceServer).UpdateAggregatedRights(ctx, req.(*AggregatedRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteAggregatedRights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAggregatedRightsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteAggregatedRights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteAggregatedRights",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteAggregatedRights(ctx, req.(*DeleteAggregatedRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DownloadAggregatedRightsFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadAggregatedRightsFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DownloadAggregatedRightsFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DownloadAggregatedRightsFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DownloadAggregatedRightsFile(ctx, req.(*DownloadAggregatedRightsFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAggregationEditors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAggregationEditorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAggregationEditors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAggregationEditors",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAggregationEditors(ctx, req.(*ListAggregationEditorsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListAggregationProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAggregationProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListAggregationProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListAggregationProducts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListAggregationProducts(ctx, req.(*ListAggregationProductsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -988,7 +1142,7 @@ func _ProductService_ListAggregations_Handler(srv interface{}, ctx context.Conte
 }
 
 func _ProductService_UpdateAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AggregatedRights)
+	in := new(Aggregation)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1000,25 +1154,25 @@ func _ProductService_UpdateAggregation_Handler(srv interface{}, ctx context.Cont
 		FullMethod: "/optisam.products.v1.ProductService/UpdateAggregation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).UpdateAggregation(ctx, req.(*AggregatedRights))
+		return srv.(ProductServiceServer).UpdateAggregation(ctx, req.(*Aggregation))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ProductService_DeleteProductAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteProductAggregationRequest)
+func _ProductService_DeleteAggregation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAggregationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProductServiceServer).DeleteProductAggregation(ctx, in)
+		return srv.(ProductServiceServer).DeleteAggregation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/DeleteProductAggregation",
+		FullMethod: "/optisam.products.v1.ProductService/DeleteAggregation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).DeleteProductAggregation(ctx, req.(*DeleteProductAggregationRequest))
+		return srv.(ProductServiceServer).DeleteAggregation(ctx, req.(*DeleteAggregationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1055,6 +1209,24 @@ func _ProductService_DropProductData_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).DropProductData(ctx, req.(*DropProductDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DropAggregationData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropAggregationDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DropAggregationData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DropAggregationData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DropAggregationData(ctx, req.(*DropAggregationDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1149,6 +1321,24 @@ func _ProductService_DeleteAcqRight_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_DownloadAcqRightFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DownloadAcqRightFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DownloadAcqRightFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DownloadAcqRightFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DownloadAcqRightFile(ctx, req.(*DownloadAcqRightFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetEquipmentsByProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetEquipmentsByProductRequest)
 	if err := dec(in); err != nil {
@@ -1220,6 +1410,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_ProductsPerEditor_Handler,
 		},
 		{
+			MethodName: "GetRightsInfoByEditor",
+			Handler:    _ProductService_GetRightsInfoByEditor_Handler,
+		},
+		{
 			MethodName: "GetProductDetail",
 			Handler:    _ProductService_GetProductDetail_Handler,
 		},
@@ -1232,8 +1426,12 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_ListProductAggregationView_Handler,
 		},
 		{
-			MethodName: "ProductAggregationProductViewDetails",
-			Handler:    _ProductService_ProductAggregationProductViewDetails_Handler,
+			MethodName: "AggregatedRightDetails",
+			Handler:    _ProductService_AggregatedRightDetails_Handler,
+		},
+		{
+			MethodName: "ListDeployedAndAcquiredEditors",
+			Handler:    _ProductService_ListDeployedAndAcquiredEditors_Handler,
 		},
 		{
 			MethodName: "ListEditors",
@@ -1280,24 +1478,32 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_ListAggregatedAcqRights_Handler,
 		},
 		{
-			MethodName: "ListAcqRightsAggregationRecords",
-			Handler:    _ProductService_ListAcqRightsAggregationRecords_Handler,
-		},
-		{
-			MethodName: "ProductAggregationProductViewOptions",
-			Handler:    _ProductService_ProductAggregationProductViewOptions_Handler,
-		},
-		{
 			MethodName: "CreateAggregation",
 			Handler:    _ProductService_CreateAggregation_Handler,
 		},
 		{
-			MethodName: "ListAggregatedRightsEditors",
-			Handler:    _ProductService_ListAggregatedRightsEditors_Handler,
+			MethodName: "CreateAggregatedRights",
+			Handler:    _ProductService_CreateAggregatedRights_Handler,
 		},
 		{
-			MethodName: "ListAggregatedRightsProducts",
-			Handler:    _ProductService_ListAggregatedRightsProducts_Handler,
+			MethodName: "UpdateAggregatedRights",
+			Handler:    _ProductService_UpdateAggregatedRights_Handler,
+		},
+		{
+			MethodName: "DeleteAggregatedRights",
+			Handler:    _ProductService_DeleteAggregatedRights_Handler,
+		},
+		{
+			MethodName: "DownloadAggregatedRightsFile",
+			Handler:    _ProductService_DownloadAggregatedRightsFile_Handler,
+		},
+		{
+			MethodName: "ListAggregationEditors",
+			Handler:    _ProductService_ListAggregationEditors_Handler,
+		},
+		{
+			MethodName: "ListAggregationProducts",
+			Handler:    _ProductService_ListAggregationProducts_Handler,
 		},
 		{
 			MethodName: "ListAggregations",
@@ -1308,8 +1514,8 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_UpdateAggregation_Handler,
 		},
 		{
-			MethodName: "DeleteProductAggregation",
-			Handler:    _ProductService_DeleteProductAggregation_Handler,
+			MethodName: "DeleteAggregation",
+			Handler:    _ProductService_DeleteAggregation_Handler,
 		},
 		{
 			MethodName: "OverviewProductQuality",
@@ -1318,6 +1524,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DropProductData",
 			Handler:    _ProductService_DropProductData_Handler,
+		},
+		{
+			MethodName: "DropAggregationData",
+			Handler:    _ProductService_DropAggregationData_Handler,
 		},
 		{
 			MethodName: "CreateAcqRight",
@@ -1338,6 +1548,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAcqRight",
 			Handler:    _ProductService_DeleteAcqRight_Handler,
+		},
+		{
+			MethodName: "DownloadAcqRightFile",
+			Handler:    _ProductService_DownloadAcqRightFile_Handler,
 		},
 		{
 			MethodName: "GetEquipmentsByProduct",

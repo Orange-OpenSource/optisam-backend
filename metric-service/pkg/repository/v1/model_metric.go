@@ -20,6 +20,8 @@ const (
 	MetricAttrSumStandard MetricType = "attribute.sum.standard"
 	// MetricUserSumStandard is user.sum.standard
 	MetricUserSumStandard MetricType = "user.sum.standard"
+	// MetricStaticStandard is static.standard
+	MetricStaticStandard MetricType = "static.standard"
 )
 
 // String implements Stringer interface
@@ -53,6 +55,7 @@ const (
 	MetricInstanceNumber  MetricTypeID = 6
 	MetricAttrSum         MetricTypeID = 7
 	MetricUserSum         MetricTypeID = 8
+	MetricStatic          MetricTypeID = 9
 )
 
 // MetricDescription provide description
@@ -79,6 +82,8 @@ const (
 	MetricDescriptionAttrSumStandard MetricDescription = "Number of licenses required = Ceil( Sum( on all equipments of type Equipment_type) of attribute_value)/ Reference_value"
 	// MetricDescriptionAttrCounterStandard provides description of user.sum.standard
 	MetricDescriptionUserSumStandard MetricDescription = "Number of licenses required = Sum of all users using the product."
+	// MetricDescriptionStaticStandard provides description of static.standard
+	MetricDescriptionStaticStandard MetricDescription = "Number of licenses required = Reference_value"
 )
 
 var (
@@ -132,6 +137,12 @@ var (
 			Href:        "/api/v1/metric/uss",
 			MetricType:  MetricUserSum,
 		},
+		{
+			Name:        MetricStaticStandard,
+			Description: MetricDescriptionStaticStandard.String(),
+			Href:        "/api/v1/metric/ss",
+			MetricType:  MetricStatic,
+		},
 	}
 	// MetricTypesGeneric is a slice of MetricTypeInfo for generic scopes
 	MetricTypesGeneric = []*MetricTypeInfo{
@@ -183,6 +194,12 @@ var (
 			Href:        "/api/v1/metric/uss",
 			MetricType:  MetricUserSum,
 		},
+		{
+			Name:        MetricStaticStandard,
+			Description: MetricDescriptionStaticStandard.String(),
+			Href:        "/api/v1/metric/ss",
+			MetricType:  MetricStatic,
+		},
 	}
 	// MetricTypesSpecific is a slice of MetricTypeInfo for specific scopes
 	MetricTypesSpecific = []*MetricTypeInfo{
@@ -227,6 +244,12 @@ var (
 			Description: MetricDescriptionAttrSumStandard.String(),
 			Href:        "/api/v1/metric/attr_sum",
 			MetricType:  MetricAttrSum,
+		},
+		{
+			Name:        MetricStaticStandard,
+			Description: MetricDescriptionStaticStandard.String(),
+			Href:        "/api/v1/metric/ss",
+			MetricType:  MetricStatic,
 		},
 	}
 )

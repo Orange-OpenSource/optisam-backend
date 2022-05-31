@@ -20,6 +20,7 @@ type Querier interface {
 	GetFailedRecord(ctx context.Context, arg GetFailedRecordParams) ([]GetFailedRecordRow, error)
 	GetFailureReasons(ctx context.Context, arg GetFailureReasonsParams) ([]GetFailureReasonsRow, error)
 	GetFileStatus(ctx context.Context, arg GetFileStatusParams) (UploadStatus, error)
+	GetGlobalFileInfo(ctx context.Context, arg GetGlobalFileInfoParams) (GetGlobalFileInfoRow, error)
 	GetInjectionStatus(ctx context.Context, scope string) (int64, error)
 	GetTransformedGlobalFileInfo(ctx context.Context) ([]GetTransformedGlobalFileInfoRow, error)
 	InsertUploadedData(ctx context.Context, arg InsertUploadedDataParams) (UploadedDataFile, error)

@@ -131,13 +131,28 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 					GroupNames: []string{"ROOT"},
 					ScopeType:  accv1.ScopeType_GENERIC.String(),
 				}, nil)
+				// mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+				// 	{
+				// 		Name: "acs",
+				// 		Type: repo.MetricAttrCounterStandard,
+				// 	},
+				// 	{
+				// 		Name: "ibm",
+				// 		Type: repo.MetricIPSIbmPvuStandard,
+				// 	},
+				// 	{
+				// 		Name: "sps",
+				// 		Type: repo.MetricSPSSagProcessorStandard,
+				// 	},
+				// }, nil)
+
 				mockRepo.EXPECT().ListMetricTypeInfo(ctx, repo.GetScopeType(accv1.ScopeType_GENERIC.String()), "Scope1").Times(1).Return(repo.MetricTypesGeneric, nil)
 			},
 			want: &v1.ListMetricTypeResponse{
 				Types: []*v1.MetricType{
 					{
 						Name:        string(repo.MetricOPSOracleProcessorStandard),
-						Description: string(repo.MetricDescriptionOracleProcessorStandard),
+						Description: repo.MetricDescriptionOracleProcessorStandard.String(),
 						Href:        "/api/v1/metric/ops",
 						TypeId:      v1.MetricType_Oracle_Processor,
 					},
@@ -206,6 +221,20 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 					GroupNames: []string{"ROOT"},
 					ScopeType:  accv1.ScopeType_SPECIFIC.String(),
 				}, nil)
+				// mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+				// 	{
+				// 		Name: "acs",
+				// 		Type: repo.MetricAttrCounterStandard,
+				// 	},
+				// 	{
+				// 		Name: "ibm",
+				// 		Type: repo.MetricIPSIbmPvuStandard,
+				// 	},
+				// 	{
+				// 		Name: "sps",
+				// 		Type: repo.MetricSPSSagProcessorStandard,
+				// 	},
+				// }, nil)
 				mockRepo.EXPECT().ListMetricTypeInfo(ctx, repo.GetScopeType(accv1.ScopeType_SPECIFIC.String()), "Scope1").Times(1).Return(repo.MetricTypesSpecific, nil)
 			},
 			want: &v1.ListMetricTypeResponse{
@@ -255,6 +284,88 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 				},
 			},
 		},
+		// {name: "SUCCESS: specific scope with NUP metric already present",
+		// 	args: args{
+		// 		ctx: ctx,
+		// 		req: &v1.ListMetricTypeRequest{
+		// 			Scopes: []string{"Scope1"},
+		// 		},
+		// 	},
+		// 	setup: func() {
+		// 		mockCtrl = gomock.NewController(t)
+		// 		mockRepo := mock.NewMockMetric(mockCtrl)
+		// 		mockAcc := accmock.NewMockAccountServiceClient(mockCtrl)
+		// 		acc = mockAcc
+		// 		rep = mockRepo
+		// 		mockAcc.EXPECT().GetScope(ctx, &accv1.GetScopeRequest{Scope: "Scope1"}).Times(1).Return(&accv1.Scope{
+		// 			ScopeCode:  "Scope1",
+		// 			ScopeName:  "Scope 1",
+		// 			CreatedBy:  "admin@test.com",
+		// 			GroupNames: []string{"ROOT"},
+		// 			ScopeType:  accv1.ScopeType_SPECIFIC.String(),
+		// 		}, nil)
+		// 		mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+		// 			{
+		// 				Name: "acs",
+		// 				Type: repo.MetricAttrCounterStandard,
+		// 			},
+		// 			{
+		// 				Name: "ibm",
+		// 				Type: repo.MetricIPSIbmPvuStandard,
+		// 			},
+		// 			{
+		// 				Name: "sps",
+		// 				Type: repo.MetricSPSSagProcessorStandard,
+		// 			},
+		// 			{
+		// 				Name: "nup",
+		// 				Type: repo.MetricOracleNUPStandard,
+		// 			},
+		// 		}, nil)
+
+		// 		mockRepo.EXPECT().ListMetricTypeInfo(ctx, repo.GetScopeType(accv1.ScopeType_SPECIFIC.String()), false, true, "Scope1").Times(1).Return(append(repo.MetricTypesSpecific, repo.MertricTypeOPS), nil)
+		// 	},
+		// 	want: &v1.ListMetricTypeResponse{
+		// 		Types: []*v1.MetricType{
+		// 			{
+		// 				Name:        string(repo.MetricSPSSagProcessorStandard),
+		// 				Description: repo.MetricDescriptionSagProcessorStandard.String(),
+		// 				Href:        "/api/v1/metric/sps",
+		// 				TypeId:      v1.MetricType_SAG_Processor,
+		// 			},
+		// 			{
+		// 				Name:        string(repo.MetricIPSIbmPvuStandard),
+		// 				Description: repo.MetricDescriptionIbmPvuStandard.String(),
+		// 				Href:        "/api/v1/metric/ips",
+		// 				TypeId:      v1.MetricType_IBM_PVU,
+		// 			},
+		// 			{
+		// 				Name:        string(repo.MetricAttrCounterStandard),
+		// 				Description: repo.MetricDescriptionAttrCounterStandard.String(),
+		// 				Href:        "/api/v1/metric/acs",
+		// 				TypeId:      v1.MetricType_Attr_Counter,
+		// 			},
+		// 			{
+		// 				Name:        string(repo.MetricInstanceNumberStandard),
+		// 				Description: repo.MetricDescriptionInstanceNumberStandard.String(),
+		// 				Href:        "/api/v1/metric/inm",
+		// 				TypeId:      v1.MetricType_Instance_Number,
+		// 			},
+		// 			{
+		// 				Name:        repo.MetricAttrSumStandard.String(),
+		// 				Description: repo.MetricDescriptionAttrSumStandard.String(),
+		// 				Href:        "/api/v1/metric/attr_sum",
+		// 				TypeId:      v1.MetricType_Attr_Sum,
+		// 			},
+		// 			{
+		// 				Name:        string(repo.MetricOPSOracleProcessorStandard),
+		// 				Description: string(repo.MetricDescriptionOracleProcessorStandard),
+		// 				Href:        "/api/v1/metric/ops",
+		// 				TypeId:      v1.MetricType_Oracle_Processor,
+		// 			},
+		// 		},
+		// 	},
+		// },
 		{name: "FAILURE - cannot retrieve claims",
 			args: args{
 				ctx: context.Background(),
@@ -292,6 +403,30 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		// {name: "FAILURE - repo/ListMetrices cannot fetch list metrics",
+		// 	args: args{
+		// 		ctx: ctx,
+		// 		req: &v1.ListMetricTypeRequest{
+		// 			Scopes: []string{"Scope1"},
+		// 		},
+		// 	},
+		// 	setup: func() {
+		// 		mockCtrl = gomock.NewController(t)
+		// 		mockRepo := mock.NewMockMetric(mockCtrl)
+		// 		mockAcc := accmock.NewMockAccountServiceClient(mockCtrl)
+		// 		acc = mockAcc
+		// 		rep = mockRepo
+		// 		mockAcc.EXPECT().GetScope(ctx, &accv1.GetScopeRequest{Scope: "Scope1"}).Times(1).Return(&accv1.Scope{
+		// 			ScopeCode:  "Scope1",
+		// 			ScopeName:  "Scope 1",
+		// 			CreatedBy:  "admin@test.com",
+		// 			GroupNames: []string{"ROOT"},
+		// 			ScopeType:  accv1.ScopeType_GENERIC.String(),
+		// 		}, nil)
+		// 		mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return(nil, errors.New("FAILURE - cannot fetch list metrics"))
+		// 	},
+		// 	wantErr: true,
+		// },
 		{name: "FAILURE - cannot fetch metric types info",
 			args: args{
 				ctx: ctx,
@@ -312,6 +447,20 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 					GroupNames: []string{"ROOT"},
 					ScopeType:  accv1.ScopeType_GENERIC.String(),
 				}, nil)
+				// mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+				// 	{
+				// 		Name: "acs",
+				// 		Type: repo.MetricAttrCounterStandard,
+				// 	},
+				// 	{
+				// 		Name: "ibm",
+				// 		Type: repo.MetricIPSIbmPvuStandard,
+				// 	},
+				// 	{
+				// 		Name: "sps",
+				// 		Type: repo.MetricSPSSagProcessorStandard,
+				// 	},
+				// }, nil)
 				mockRepo.EXPECT().ListMetricTypeInfo(ctx, repo.GetScopeType(accv1.ScopeType_GENERIC.String()), "Scope1").Times(1).Return(nil, errors.New("FAILURE - cannot fetch metric types info"))
 			},
 			wantErr: true,
@@ -718,6 +867,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 					ID:             "SPSID",
 					Name:           "SPS",
 					NumCoreAttr:    "coreattr",
+					NumCPUAttr:     "cpuattr",
 					CoreFactorAttr: "corefactorattr",
 					BaseEqType:     "s1",
 				}, nil).Times(1)
@@ -727,6 +877,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 					"ID":                  "SPSID",
 					"Name":                "SPS",
 					"NumCoreAttr":         "coreattr",
+					"NumCPUAttr":          "cpuattr",
 					"CoreFactorAttr":      "corefactorattr",
 					"BaseEqType":          "s1"
 				}`,
@@ -768,6 +919,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 					ID:             "IPSID",
 					Name:           "IPS",
 					NumCoreAttr:    "coreattr",
+					NumCPUAttr:     "cpuattr",
 					CoreFactorAttr: "corefactorattr",
 					BaseEqType:     "s1",
 				}, nil).Times(1)
@@ -777,6 +929,7 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 					"ID":                  "IPSID",
 					"Name":                "IPS",
 					"NumCoreAttr":         "coreattr",
+					"NumCPUAttr":          "cpuattr",
 					"CoreFactorAttr":      "corefactorattr",
 					"BaseEqType":          "s1"
 				}`,

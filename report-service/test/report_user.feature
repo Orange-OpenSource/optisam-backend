@@ -2,7 +2,7 @@
 Feature: Report Service Test : Normal User
 
   Background:
-    # * def reportServiceUrl = "https://optisam-report-int.kermit-noprod-b.itn.intraorange"
+    # * def reportServiceUrl = "https://optisam-report-int.apps.fr01.paas.tech.orange"
     * url reportServiceUrl+'/api/v1'
     * def credentials = {username:'testuser@test.com', password: 'password'}
     * callonce read('common.feature') credentials

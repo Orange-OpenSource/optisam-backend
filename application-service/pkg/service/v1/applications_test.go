@@ -1095,3 +1095,117 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 		})
 	}
 }
+
+func Test_applicationServiceServer_GetProductsByApplicationInstance(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Application
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.GetProductsByApplicationInstanceRequest
+	}
+	tests := []struct {
+		name    string
+		s       *applicationServiceServer
+		args    args
+		setup   func()
+		want    *v1.GetProductsByApplicationInstanceResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetProductsByApplicationInstanceRequest{
+					Scope:         "Scope1",
+					ApplicationId: "App_3",
+					InstanceId:    "Ins_1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockApplication(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
+					Scope:         "Scope1",
+					ApplicationID: "App_3",
+					InstanceID:    "Ins_1",
+				}).Times(1).Return([]string{"a1", "a2", "a3"}, nil)
+			},
+			want: &v1.GetProductsByApplicationInstanceResponse{
+				ProductId: []string{"a1", "a2", "a3"},
+			},
+			wantErr: false,
+		},
+		{name: "FAILURE - ClaimsNotFound",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetProductsByApplicationInstanceRequest{
+					Scope:         "Scope1",
+					ApplicationId: "App_3",
+					InstanceId:    "Ins_1",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - ScopeValidationError",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetProductsByApplicationInstanceRequest{
+					Scope:         "Scope4",
+					ApplicationId: "App_3",
+					InstanceId:    "Ins_1",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - GetProductsByApplicationInstanceID - DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetProductsByApplicationInstanceRequest{
+					Scope:         "Scope1",
+					ApplicationId: "App_3",
+					InstanceId:    "Ins_1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockApplication(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
+					Scope:         "Scope1",
+					ApplicationID: "App_3",
+					InstanceID:    "Ins_1",
+				}).Times(1).Return([]string{}, errors.New("Internal"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &applicationServiceServer{
+				applicationRepo: rep,
+				queue:           queue,
+			}
+			got, err := tt.s.GetProductsByApplicationInstance(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

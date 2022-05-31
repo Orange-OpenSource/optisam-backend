@@ -4,11 +4,6 @@
     "title": "application.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "ApplicationService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -1098,6 +1093,17 @@
       "type": "object",
       "properties": {
         "equipment_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1GetProductsByApplicationInstanceResponse": {
+      "type": "object",
+      "properties": {
+        "product_id": {
           "type": "array",
           "items": {
             "type": "string"
