@@ -4,6 +4,11 @@
     "title": "simulation.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "SimulationService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -31,6 +36,12 @@
         "parameters": [
           {
             "name": "equipment_type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
             "in": "query",
             "required": false,
             "type": "string"
@@ -65,6 +76,12 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -103,6 +120,44 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SimulationService"
+        ]
+      }
+    },
+    "/api/v1/simulation/cost": {
+      "post": {
+        "operationId": "SimulationService_SimulationByCost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByCostResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SimulationByCostRequest"
+            }
           }
         ],
         "tags": [
@@ -261,6 +316,62 @@
         }
       }
     },
+    "v1CostSimDetails": {
+      "type": "object",
+      "properties": {
+        "swidtag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "metric_name": {
+          "type": "string"
+        },
+        "unit_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "sku": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CostSimulationResult": {
+      "type": "object",
+      "properties": {
+        "swidtag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "metric_name": {
+          "type": "string"
+        },
+        "num_cpt_licences": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "old_total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "new_total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "not_deployed": {
+          "type": "boolean"
+        },
+        "metric_not_defined": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1CreateConfigResponse": {
       "type": "object"
     },
@@ -379,66 +490,33 @@
     "v1MetricSimDetails": {
       "type": "object",
       "properties": {
-        "swidtag": {
-          "type": "string"
-        },
-        "aggregation_name": {
-          "type": "string"
-        },
         "metric_name": {
           "type": "string"
         },
         "unit_cost": {
           "type": "number",
           "format": "double"
-        },
-        "sku": {
-          "type": "string"
         }
       }
     },
     "v1MetricSimulationResult": {
       "type": "object",
       "properties": {
-        "swidtag": {
-          "type": "string"
-        },
-        "aggregation_name": {
-          "type": "string"
-        },
-        "metric_name": {
-          "type": "string"
+        "success": {
+          "type": "boolean"
         },
         "num_cpt_licences": {
           "type": "string",
           "format": "uint64"
         },
-        "old_total_cost": {
+        "total_cost": {
           "type": "number",
           "format": "double"
-        },
-        "new_total_cost": {
-          "type": "number",
-          "format": "double"
-        },
-        "sku": {
-          "type": "string"
-        },
-        "not_deployed": {
-          "type": "boolean"
-        },
-        "metric_not_defined": {
-          "type": "boolean"
-        }
-      }
-    },
-    "v1SimMetricDetails": {
-      "type": "object",
-      "properties": {
-        "metric_type": {
-          "type": "string"
         },
         "metric_name": {
+          "type": "string"
+        },
+        "sim_failure_reason": {
           "type": "string"
         }
       }
@@ -446,6 +524,15 @@
     "v1SimulatedProductLicense": {
       "type": "object",
       "properties": {
+        "swid_tag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
         "old_licences": {
           "type": "string",
           "format": "int64"
@@ -457,19 +544,10 @@
         "delta": {
           "type": "string",
           "format": "int64"
-        },
-        "swid_tag": {
-          "type": "string"
-        },
-        "product_name": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
         }
       }
     },
-    "v1SimulatedProductsLicenses": {
+    "v1SimulatedProductLicenses": {
       "type": "object",
       "properties": {
         "success": {
@@ -481,10 +559,47 @@
             "$ref": "#/definitions/v1SimulatedProductLicense"
           }
         },
-        "sim_failure_reason": {
+        "metric_name": {
           "type": "string"
         },
-        "metric_name": {
+        "metric_type": {
+          "type": "string"
+        },
+        "sim_failure_reason": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimulationByCostRequest": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "cost_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1CostSimDetails"
+          }
+        },
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SimulationByCostResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "cost_sim_result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1CostSimulationResult"
+          }
+        },
+        "sim_failure_reason": {
           "type": "string"
         }
       }
@@ -504,12 +619,6 @@
             "$ref": "#/definitions/v1EquipAttribute"
           }
         },
-        "metric_details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1SimMetricDetails"
-          }
-        },
         "scope": {
           "type": "string"
         }
@@ -518,10 +627,10 @@
     "v1SimulationByHardwareResponse": {
       "type": "object",
       "properties": {
-        "simulation_result": {
+        "simulated_results": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1SimulatedProductsLicenses"
+            "$ref": "#/definitions/v1SimulatedProductLicenses"
           }
         }
       }
@@ -529,7 +638,10 @@
     "v1SimulationByMetricRequest": {
       "type": "object",
       "properties": {
-        "editor": {
+        "swid_tag": {
+          "type": "string"
+        },
+        "aggregation_name": {
           "type": "string"
         },
         "metric_details": {
@@ -546,17 +658,11 @@
     "v1SimulationByMetricResponse": {
       "type": "object",
       "properties": {
-        "success": {
-          "type": "boolean"
-        },
         "metric_sim_result": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1MetricSimulationResult"
           }
-        },
-        "sim_failure_reason": {
-          "type": "string"
         }
       }
     },

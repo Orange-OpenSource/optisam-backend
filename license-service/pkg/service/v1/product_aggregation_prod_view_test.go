@@ -1,13 +1,183 @@
 package v1
 
 import (
+	"context"
 	"fmt"
+	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
+	"optisam-backend/license-service/pkg/repository/v1/mock"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
+
+func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1"},
+	})
+
+	var mockCtrl *gomock.Controller
+	var rep repo.License
+
+	type args struct {
+		ctx context.Context
+		req *v1.ListAcqRightsForAggregationRequest
+	}
+	tests := []struct {
+		name    string
+		s       *licenseServiceServer
+		args    args
+		setup   func()
+		want    *v1.ListAcqRightsForAggregationResponse
+		wantErr bool
+	}{
+		{
+			name: "SUCCESS - metric type OPS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
+					{
+						Name: "OPS",
+						Type: "oracle.processor.standard",
+					},
+					{
+						Name: "WS",
+						Type: "oracle.processor.standard",
+					},
+				}, nil).Times(1)
+				mockLicense.EXPECT().AggregationDetails(ctx, "OPS", []*repo.Metric{
+					{
+						Name: "OPS",
+						Type: "oracle.processor.standard",
+					},
+					{
+						Name: "WS",
+						Type: "oracle.processor.standard",
+					},
+				}, true, []string{"Scope1"}).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+					},
+				}, nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "OPS",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  " ",
+						MetricNotDefined: true,
+						NotDeployed:      true,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewLicenseServiceServer(rep)
+			got, err := s.ListAcqRightsForAggregation(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("licenseServiceServer.ListAcqRightsForAggregation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				compareAcqRightforProAggResponse(t, "ListAcqRightsForAggregation", tt.want, got)
+			} else {
+				fmt.Println("test case passed : [", tt.name, "]")
+			}
+		})
+	}
+}
 
 // func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) {
 // 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
@@ -1742,17 +1912,17 @@ import (
 // 	}
 // }
 
-// func compareAcqRightforProAggResponse(t *testing.T, name string, exp *v1.ListAcqRightsForProductAggregationResponse, act *v1.ListAcqRightsForProductAggregationResponse) {
-// 	if exp == nil && act == nil {
-// 		return
-// 	}
-// 	if exp == nil {
-// 		assert.Nil(t, act, "attribute is expected to be nil")
-// 	}
-// 	compareAcqRightforProAggAll(t, name+".AcqRights", exp.AcqRights, act.AcqRights)
-// }
+func compareAcqRightforProAggResponse(t *testing.T, name string, exp *v1.ListAcqRightsForAggregationResponse, act *v1.ListAcqRightsForAggregationResponse) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "attribute is expected to be nil")
+	}
+	compareAcqRightforProAggAll(t, name+".AcqRights", exp.AcqRights, act.AcqRights)
+}
 
-func compareAcqRightforProAggAll(t *testing.T, name string, exp []*v1.ProductAcquiredRights, act []*v1.ProductAcquiredRights) {
+func compareAcqRightforProAggAll(t *testing.T, name string, exp []*v1.AggregationAcquiredRights, act []*v1.AggregationAcquiredRights) {
 	if !assert.Lenf(t, act, len(exp), "expected number of elemnts are: %d", len(exp)) {
 		return
 	}
@@ -1762,7 +1932,7 @@ func compareAcqRightforProAggAll(t *testing.T, name string, exp []*v1.ProductAcq
 	}
 }
 
-func compareAcqRightforProAgg(t *testing.T, name string, exp *v1.ProductAcquiredRights, act *v1.ProductAcquiredRights) {
+func compareAcqRightforProAgg(t *testing.T, name string, exp *v1.AggregationAcquiredRights, act *v1.AggregationAcquiredRights) {
 	if exp == nil && act == nil {
 		return
 	}
@@ -1771,7 +1941,7 @@ func compareAcqRightforProAgg(t *testing.T, name string, exp *v1.ProductAcquired
 	}
 	assert.Equalf(t, exp.SKU, act.SKU, "%s.SKU are not same", name)
 	assert.Equalf(t, exp.Metric, act.Metric, "%s.Metric are not same", name)
-	assert.Equalf(t, exp.SwidTag, act.SwidTag, "%s.SwidTag are not same", name)
+	assert.Equalf(t, exp.SwidTags, act.SwidTags, "%s.SwidTag are not same", name)
 	assert.Equalf(t, exp.NumCptLicences, act.NumCptLicences, "%s.NumCptLicences are not same", name)
 	assert.Equalf(t, exp.NumAcqLicences, act.NumAcqLicences, "%s.NumAcqLicences are not same", name)
 	assert.Equalf(t, exp.TotalCost, act.TotalCost, "%s.TotalCost are not same", name)

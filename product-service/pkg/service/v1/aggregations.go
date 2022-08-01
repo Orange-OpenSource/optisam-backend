@@ -141,7 +141,11 @@ func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.Lis
 	}
 	dbresp, err := s.productRepo.ListAggregations(ctx, db.ListAggregationsParams{
 		IsAggName:       !req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
+		LsAggName:       req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
+		AggregationName: req.GetSearchParams().GetAggregationName().GetFilteringkey(),
 		IsProductEditor: !req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
+		LkProductEditor: req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
+		ProductEditor:   req.GetSearchParams().GetProductEditor().GetFilteringkey(),
 		Scope:           req.Scope,
 		PageNum:         req.GetPageSize() * (req.GetPageNum() - 1),
 		PageSize:        req.GetPageSize(),

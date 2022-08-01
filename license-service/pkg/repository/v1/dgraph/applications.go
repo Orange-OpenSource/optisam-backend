@@ -53,7 +53,7 @@ func (l *LicenseRepository) ProductApplicationEquipments(ctx context.Context, pr
 		 app_inst as  application.instance
 		}
 	  
-		 var(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
+		 var(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
 		  prod_inst as ~instance.product@filter(uid(app_inst))
 		}
 	  
@@ -61,7 +61,7 @@ func (l *LicenseRepository) ProductApplicationEquipments(ctx context.Context, pr
 		  ins_equip as instance.equipment
 		}
 	  
-		Equipments(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
+		Equipments(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
 		  Equipment: product.equipment@filter(uid(ins_equip)) {
 			uid
 			EquipID: equipment.id

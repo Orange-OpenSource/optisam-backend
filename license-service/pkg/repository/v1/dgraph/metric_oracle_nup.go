@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
 
@@ -11,16 +12,18 @@ import (
 )
 
 type metricOracleNUP struct {
-	ID             string `json:"uid"`
-	Name           string `json:"metric.name"`
-	Bottom         []*id  `json:"metric.oracle_nup.bottom"`
-	Base           []*id  `json:"metric.oracle_nup.base"`
-	Aggregate      []*id  `json:"metric.oracle_nup.aggregate"`
-	Top            []*id  `json:"metric.oracle_nup.top"`
-	AttrNumCores   []*id  `json:"metric.oracle_nup.attr_num_cores"`
-	AttrNumCPU     []*id  `json:"metric.oracle_nup.attr_num_cpu"`
-	AtrrCoreFactor []*id  `json:"metric.oracle_nup.attr_core_factor"`
-	NumberOfUsers  uint32 `json:"metric.oracle_nup.num_users"`
+	ID                  string `json:"uid"`
+	Name                string `json:"metric.name"`
+	Bottom              []*id  `json:"metric.oracle_nup.bottom"`
+	Base                []*id  `json:"metric.oracle_nup.base"`
+	Aggregate           []*id  `json:"metric.oracle_nup.aggregate"`
+	Top                 []*id  `json:"metric.oracle_nup.top"`
+	AttrNumCores        []*id  `json:"metric.oracle_nup.attr_num_cores"`
+	AttrNumCPU          []*id  `json:"metric.oracle_nup.attr_num_cpu"`
+	AtrrCoreFactor      []*id  `json:"metric.oracle_nup.attr_core_factor"`
+	NumberOfUsers       uint32 `json:"metric.oracle_nup.num_users"`
+	Transform           bool   `json:"metric.oracle_nup.transform"`
+	TransformMetricName string `json:"metric.oracle_nup.transform_metric_name"`
 }
 
 // ListMetricNUP implements Licence ListMetricNUP function
@@ -97,5 +100,47 @@ func converMetricToModelMetricNUP(m *metricOracleNUP) (*v1.MetricNUPOracle, erro
 		NumCoreAttrID:         m.AttrNumCores[0].ID,
 		NumCPUAttrID:          m.AttrNumCPU[0].ID,
 		NumberOfUsers:         m.NumberOfUsers,
+		Transform:             m.Transform,
+		TransformMetricName:   m.TransformMetricName,
 	}, nil
+}
+
+func (l *LicenseRepository) GetMetricConfigNUPID(ctx context.Context, metName string, scope string) (*v1.MetricNUPOracle, error) {
+	q := `{
+		Data(func: eq(metric.name,` + metName + `)) @filter(eq(scopes,` + scope + `)){
+			 uid
+			 metric.name
+			 metric.oracle_nup.base{uid}
+			 metric.oracle_nup.top{uid}
+			 metric.oracle_nup.bottom{uid}
+			 metric.oracle_nup.aggregate{uid}
+			 metric.oracle_nup.attr_core_factor{uid}
+			 metric.oracle_nup.attr_num_cores{uid}
+		     metric.oracle_nup.attr_num_cpu{uid}
+			 metric.oracle_nup.num_users
+			 metric.oracle_nup.transform
+			 metric.oracle_nup.transform_metric_name
+		} 
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/GetMetricConfigNUP - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type nup")
+	}
+	type Resp struct {
+		Metric []metricOracleNUP `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/GetMetricConfigNUP - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetricNUP(&data.Metric[0])
 }

@@ -16,7 +16,7 @@ import (
 // 	})), nil
 // }
 
-func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...string) string {
+func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, allotedMetricsEq map[string]interface{}, id ...string) string {
 	index := -1
 	aggregateIndex := -1
 	for i := range ops.EqTypeTree {
@@ -29,7 +29,7 @@ func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...str
 	}
 
 	return "{\n\t" + replacer(strings.Join([]string{
-		getToBase(ops.EqTypeTree[:index+1]),
+		getToBase(ops.EqTypeTree[:index+1], allotedMetricsEq),
 		getToTop(ops.EqTypeTree[index:], index > 0),
 		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),

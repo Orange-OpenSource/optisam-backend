@@ -250,6 +250,9 @@ service ProductService {
   rpc CreateDashboardUpdateJob(CreateDashboardUpdateJobRequest) returns (CreateDashboardUpdateJobResponse) {
   }
 
+  rpc UpsertAllocatedMetricEquipment(UpsertAllocateMetricEquipementRequest) returns (UpsertAllocateMetricEquipementResponse) {
+  }
+
   rpc GetBanner(GetBannerRequest) returns (GetBannerResponse) {
     option (google.api.http) = {
       get : "/api/v1/product/banner"
@@ -376,7 +379,20 @@ message CreateDashboardUpdateJobRequest{
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
+message UpsertAllocateMetricEquipementRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string swidtag = 2;
+  string equipment_id = 3;
+  string eq_type = 4;
+  int32 equipment_user = 5;
+  string allocated_metrics = 6;
+}
+
 message CreateDashboardUpdateJobResponse{
+  bool success = 1;
+}
+
+message UpsertAllocateMetricEquipementResponse{
   bool success = 1;
 }
 
@@ -414,6 +430,7 @@ message AcqRightRequest {
   string software_provider = 19 [(validate.rules).string.max_len = 16 ];
   string file_name = 20;
   bytes file_data = 21;
+  bool repartition = 22;
 }
 
 message AcqRightResponse { 
@@ -453,6 +470,7 @@ message AggregatedRightsRequest {
   string software_provider= 17 [(validate.rules).string.max_len = 16 ];
   string file_name = 18;
   bytes file_data = 19;
+  bool repartition = 20;
 }
 
 message AggregatedRightsView {
@@ -483,6 +501,7 @@ message AggregatedRightsView {
   string support_number = 25;
   string maintenance_provider = 26;
   string file_name = 27;
+  bool repartition = 28;
 }
 
 message AggregatedRightsResponse { 
@@ -638,6 +657,8 @@ message Product {
   double totalCost = 7;
   int32 numOfApplications = 8;
   int32 numofEquipments = 9;
+  int32 equipmentUser = 10;
+  string allocatedMetric = 11;
 }
 
 message ListProductsResponse {
@@ -885,6 +906,8 @@ message UpsertAcqRightsRequest {
   string maintenance_provider = 20 [(validate.rules).string.max_len = 100 ];
   string last_purchased_order = 21 [(validate.rules).string.max_len = 16 ];
   string support_number = 22;
+  bool repartition = 23;
+  string comment = 24;
 }
 
 
@@ -964,6 +987,7 @@ message AcqRights {
   string support_number = 22;
   string maintenance_provider = 23;
   string file_name = 24;
+  bool repartition = 25;
 }
 
 message ListAggregatedAcqRightsRequest {

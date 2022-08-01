@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS config_master (
   created_by VARCHAR NOT NULL,
   created_on TIMESTAMP NOT NULL,
   updated_by VARCHAR NOT NULL,
-  updated_on TIMESTAMP NOT NULL DEFAULT now()
+  updated_on TIMESTAMP NOT NULL DEFAULT now(),
+  scope VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS config_metadata (

@@ -61,8 +61,8 @@ func RunServer() error {
 	pflag.Parse()
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
-	} else if os.Getenv("ENV") == "pprod" {
-		viper.SetConfigName("config-pprod")
+	} else if os.Getenv("ENV") == "performance" {
+		viper.SetConfigName("config-performance")
 	} else if os.Getenv("ENV") == "int" {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
@@ -235,7 +235,8 @@ func RunServer() error {
 	for _, conn := range grpcClientMap {
 		defer conn.Close()
 	}
-	v1API := v1.NewSimulationService(repo.NewSimulationServiceRepository(db), grpcClientMap)
+	rep := repo.NewSimulationServiceRepository(db)
+	v1API := v1.NewSimulationService(rep, grpcClientMap)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
@@ -250,6 +251,11 @@ func RunServer() error {
 
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Sugar().Debug("Recovered in RunServer", r)
+		}
+	}()
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()

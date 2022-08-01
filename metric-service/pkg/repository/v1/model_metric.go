@@ -22,6 +22,8 @@ const (
 	MetricUserSumStandard MetricType = "user.sum.standard"
 	// MetricStaticStandard is static.standard
 	MetricStaticStandard MetricType = "static.standard"
+	// MetricEquipAttrStandard is equipment.attribute.standard
+	MetricEquipAttrStandard MetricType = "equipment.attribute.standard"
 )
 
 // String implements Stringer interface
@@ -56,6 +58,7 @@ const (
 	MetricAttrSum         MetricTypeID = 7
 	MetricUserSum         MetricTypeID = 8
 	MetricStatic          MetricTypeID = 9
+	MetricEquipAttr       MetricTypeID = 10
 )
 
 // MetricDescription provide description
@@ -84,6 +87,8 @@ const (
 	MetricDescriptionUserSumStandard MetricDescription = "Number of licenses required = Sum of all users using the product."
 	// MetricDescriptionStaticStandard provides description of static.standard
 	MetricDescriptionStaticStandard MetricDescription = "Number of licenses required = Reference_value"
+	// MetricDescriptionEquipAttrStandard provides description of static.standard
+	MetricDescriptionEquipAttrStandard MetricDescription = "Number of licenses required = SUM (each [equipment] on environments [environment]) / [number] [attribute]"
 )
 
 var (
@@ -143,6 +148,12 @@ var (
 			Href:        "/api/v1/metric/ss",
 			MetricType:  MetricStatic,
 		},
+		{
+			Name:        MetricEquipAttrStandard,
+			Description: MetricDescriptionEquipAttrStandard.String(),
+			Href:        "/api/v1/metric/equip_attr",
+			MetricType:  MetricEquipAttr,
+		},
 	}
 	// MetricTypesGeneric is a slice of MetricTypeInfo for generic scopes
 	MetricTypesGeneric = []*MetricTypeInfo{
@@ -200,6 +211,12 @@ var (
 			Href:        "/api/v1/metric/ss",
 			MetricType:  MetricStatic,
 		},
+		{
+			Name:        MetricEquipAttrStandard,
+			Description: MetricDescriptionEquipAttrStandard.String(),
+			Href:        "/api/v1/metric/equip_attr",
+			MetricType:  MetricEquipAttr,
+		},
 	}
 	// MetricTypesSpecific is a slice of MetricTypeInfo for specific scopes
 	MetricTypesSpecific = []*MetricTypeInfo{
@@ -250,6 +267,12 @@ var (
 			Description: MetricDescriptionStaticStandard.String(),
 			Href:        "/api/v1/metric/ss",
 			MetricType:  MetricStatic,
+		},
+		{
+			Name:        MetricEquipAttrStandard,
+			Description: MetricDescriptionEquipAttrStandard.String(),
+			Href:        "/api/v1/metric/equip_attr",
+			MetricType:  MetricEquipAttr,
 		},
 	}
 )

@@ -81,6 +81,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -125,7 +126,8 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{}, nil).Times(1)
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{}, nil).Times(1)
 				mockRepository.EXPECT().CreateConfig(
 					ctx,
 					&masterdataMatcher{
@@ -174,6 +176,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 							},
 						},
 					},
+					"Scope1",
 				).Return(nil).Times(1)
 
 			},
@@ -185,6 +188,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -229,6 +233,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -239,6 +244,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -283,7 +289,8 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{}, nil).Times(1)
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{}, nil).Times(1)
 				mockRepository.EXPECT().CreateConfig(
 					ctx,
 					&masterdataMatcher{
@@ -332,6 +339,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 							},
 						},
 					},
+					"Scope1",
 				).Return(errors.New("Internal")).Times(1)
 
 			},
@@ -343,6 +351,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -392,6 +401,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -441,6 +451,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -486,6 +497,7 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 				req: &v1.CreateConfigRequest{
 					ConfigName:    "server_1",
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -530,7 +542,8 @@ func TestSimulationService_CreateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:   1,
 						Name: "server_1",
@@ -582,6 +595,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -626,7 +640,8 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -650,6 +665,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					ctx,
 					int32(1),
 					"Server",
+					"admin@superuser.com",
 					[]int32{1, 2},
 					[]*repo.ConfigData{
 						{
@@ -685,6 +701,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 							},
 						},
 					},
+					"Scope1",
 				).Return(nil).Times(1)
 
 			},
@@ -696,6 +713,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -740,6 +758,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -750,6 +769,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -794,7 +814,8 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -813,6 +834,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 3},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -857,7 +879,8 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -887,6 +910,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -931,7 +955,8 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            1,
 						Name:          "server_1",
@@ -953,6 +978,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					ctx,
 					int32(1),
 					"Server",
+					"admin@superuser.com",
 					[]int32{1, 2},
 					[]*repo.ConfigData{
 						{
@@ -988,6 +1014,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 							},
 						},
 					},
+					"Scope1",
 				).Return(errors.New("Internal")).Times(1)
 
 			},
@@ -999,6 +1026,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -1048,6 +1076,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -1097,6 +1126,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -1142,6 +1172,7 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 				req: &v1.UpdateConfigRequest{
 					ConfigId:           1,
 					DeletedMetadataIds: []int32{1, 2},
+					Scope:              "Scope1",
 					Data: []*v1.Data{
 						{
 							Metadata: &v1.Metadata{
@@ -1186,7 +1217,8 @@ func TestSimulationService_UpdateConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            2,
 						EquipmentType: "Server",
@@ -1237,6 +1269,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup: func() {
@@ -1248,6 +1281,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 					db.DeleteConfigParams{
 						Status: 2,
 						ID:     int32(1),
+						Scope:  "Scope1",
 					},
 				).Return(nil).Times(1)
 				mockRepository.EXPECT().DeleteConfigData(
@@ -1262,6 +1296,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup: func() {
@@ -1273,6 +1308,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 					db.DeleteConfigParams{
 						Status: 2,
 						ID:     int32(1),
+						Scope:  "Scope1",
 					},
 				).Return(nil).Times(1)
 				mockRepository.EXPECT().DeleteConfigData(ctx, int32(1)).Return(errors.New("Internal")).Times(1)
@@ -1284,13 +1320,14 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := mock.NewMockRepository(mockCtrl)
 				rep = mockRepository
-				mockRepository.EXPECT().DeleteConfig(ctx, db.DeleteConfigParams{Status: 2, ID: int32(1)}).Return(errors.New("Internal")).Times(1)
+				mockRepository.EXPECT().DeleteConfig(ctx, db.DeleteConfigParams{Status: 2, ID: int32(1), Scope: "Scope1"}).Return(errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
 		},
@@ -1299,6 +1336,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				ctx: context.Background(),
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup:   func() {},
@@ -1313,6 +1351,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				}),
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup:   func() {},
@@ -1327,6 +1366,7 @@ func TestSimulationService_DeleteConfig(t *testing.T) {
 				}),
 				req: &v1.DeleteConfigRequest{
 					ConfigId: 1,
+					Scope:    "Scope1",
 				},
 			},
 			setup:   func() {},
@@ -1372,7 +1412,9 @@ func TestSimulationService_ListConfig(t *testing.T) {
 		{name: "SUCCESS - Without Equipment Type",
 			args: args{
 				ctx: ctx,
-				req: &v1.ListConfigRequest{},
+				req: &v1.ListConfigRequest{
+					Scope: "Scope1",
+				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
@@ -1382,7 +1424,8 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            1,
 						Name:          "server_1",
@@ -1427,6 +1470,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.ListConfigRequest{
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -1437,7 +1481,8 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   true,
 					EquipmentType: "Server",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            1,
 						Name:          "server_1",
@@ -1482,6 +1527,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.ListConfigRequest{
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -1492,6 +1538,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   true,
 					EquipmentType: "Server",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -1501,6 +1548,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.ListConfigRequest{
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -1511,6 +1559,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   true,
 					EquipmentType: "Server",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -1520,6 +1569,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.ListConfigRequest{
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -1530,7 +1580,8 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   true,
 					EquipmentType: "Server",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            1,
 						Name:          "server_1",
@@ -1551,6 +1602,7 @@ func TestSimulationService_ListConfig(t *testing.T) {
 				ctx: ctx,
 				req: &v1.ListConfigRequest{
 					EquipmentType: "Server",
+					Scope:         "Scope1",
 				},
 			},
 			setup: func() {
@@ -1561,7 +1613,8 @@ func TestSimulationService_ListConfig(t *testing.T) {
 					IsEquipType:   true,
 					EquipmentType: "Server",
 					Status:        1,
-				}).Return([]db.ConfigMaster{}, nil).Times(1)
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{}, nil).Times(1)
 			},
 			want: &v1.ListConfigResponse{
 				Configurations: []*v1.Configuration{},
@@ -1610,6 +1663,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1620,7 +1674,8 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -1658,6 +1713,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1668,6 +1724,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -1678,6 +1735,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1688,7 +1746,8 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -1717,6 +1776,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1727,6 +1787,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
+					Scope:         "Scope1",
 				}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -1737,6 +1798,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1747,7 +1809,8 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -1766,6 +1829,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   2,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1776,7 +1840,8 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",
@@ -1794,6 +1859,7 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 				req: &v1.GetConfigDataRequest{
 					ConfigId:   1,
 					MetadataId: 1,
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
@@ -1804,7 +1870,8 @@ func TestSimulationService_GetConfigData(t *testing.T) {
 					IsEquipType:   false,
 					EquipmentType: "",
 					Status:        1,
-				}).Return([]db.ConfigMaster{
+					Scope:         "Scope1",
+				}).Return([]db.ListConfigRow{
 					{
 						ID:            int32(1),
 						Name:          "server_1",

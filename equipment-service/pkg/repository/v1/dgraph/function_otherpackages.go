@@ -94,3 +94,7 @@ func stringFilterValString(typ v1.Filtertype, pred string, val string) string {
 		return fmt.Sprintf(" (regexp(%v,/^%v/i)) ", pred, val)
 	}
 }
+
+func typeFilters(typeName, typeValue string) []string {
+	return []string{fmt.Sprintf("eq("+typeName+",%s)", typeValue)}
+}

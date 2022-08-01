@@ -4,6 +4,11 @@
     "title": "metric.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "MetricService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -253,6 +258,101 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/equip_attr": {
+      "post": {
+        "summary": "CreateMetricEquipAttrStandard will create an equipment.attribute.standard metric",
+        "operationId": "MetricService_CreateMetricEquipAttrStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricEquipAtt"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricEquipAtt"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric",
+        "operationId": "MetricService_UpdateMetricEquipAttrStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricEquipAtt"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric",
+        "operationId": "MetricService_UpdateMetricEquipAttrStandard2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricEquipAtt"
+            }
           }
         ],
         "tags": [
@@ -1147,6 +1247,37 @@
         }
       }
     },
+    "v1MetricEquipAtt": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "name": {
+          "type": "string"
+        },
+        "eq_type": {
+          "type": "string"
+        },
+        "attribute_name": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1MetricINM": {
       "type": "object",
       "properties": {
@@ -1239,6 +1370,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "transform": {
+          "type": "boolean"
+        },
+        "transform_metric_name": {
+          "type": "string"
         }
       }
     },
@@ -1362,7 +1499,8 @@
         "Instance_Number",
         "Attr_Sum",
         "User_Sum",
-        "Static_Standard"
+        "Static_Standard",
+        "Equip_Attr"
       ],
       "default": "Unknown"
     },

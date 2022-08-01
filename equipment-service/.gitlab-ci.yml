@@ -1,0 +1,167 @@
+.equipment-template:
+  before_script:
+    - ls -lash
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - cd equipment-service
+
+
+.equipment-lint:
+  extends: .equipment-template
+  image: ${DOCKER_PROXY_HOST}/golangci/golangci-lint:latest-alpine
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/license-service/code-quality-report.json 
+    reports:
+      codequality: ${CI_PROJECT_DIR}/license-service/code-quality-report.json
+      # junit: ${CI_PROJECT_DIR}/license-service/build/tests/lint-results.xml
+    expire_in: 2d
+  script:
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - golangci-lint run | tee code-quality-report.json  
+    - ls -alSh
+  allow_failure: true
+
+.equipment-test:
+  extends: .equipment-template
+  services:
+    - name: ${DOCKER_PROXY_HOST}/postgres:${POSTGRES_VERSION}-alpine
+      alias: postgres
+    - name: ${DOCKER_PROXY_HOST}/dgraph/standalone:${DGRAPH_VERSION}
+      alias: dgraph
+  variables:
+      POSTGRES_DB: optisam
+      POSTGRES_USER: optisam
+      POSTGRES_PASSWORD: "optisam"
+  image: ${DOCKER_PROXY_HOST}/golang:${GO_VERSION}
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/equipment-service/build/tests/test-results.xml
+      - ${CI_PROJECT_DIR}/equipment-service/build/tests/cover.out
+      - ${CI_PROJECT_DIR}/equipment-service/build/tests/cover.html
+    reports:
+      junit: ${CI_PROJECT_DIR}/equipment-service/build/tests/test-results.xml
+    expire_in: 3d
+  script:
+    - export GOPATH="${CI_PROJECT_DIR}/equipment_service"
+    - export GOGC=off
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - mkdir -p build/tests
+    - go get gotest.tools/gotestsum@v1.7.0
+    - ../equipment_service/bin/gotestsum --junitfile build/tests/test-results.xml -- -coverprofile=build/tests/cover.out ./...
+    - go tool cover -html=build/tests/cover.out -o build/tests/cover.html
+    - ls -alSh build/tests/
+
+.equipment-sonar:
+  extends: .equipment-template
+  image: 
+    name: ${DOCKER_PROXY_HOST}/sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  script:
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - sonar-scanner -Dsonar.projectName=equipment-service -Dsonar.projectKey=equipment-service -Dsonar.login=${SONAR_TOKEN} ${SONAR_ARGS} -X
+  allow_failure: true
+
+.equipment-build:
+  extends: .equipment-template
+  image: ${DOCKER_PROXY_HOST}/golang:${GO_VERSION}-alpine
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/equipment_service/bin/
+    expire_in: 3d
+  script:
+    - export GOPATH="${CI_PROJECT_DIR}/equipment_service"
+    - export GOGC=off
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - export CI_BUILD_DATE=$(date +%FT%T%z)
+    - (cd cmd/server; go install -v -ldflags="-X optisam-backend/equipment-service/pkg/cmd.version=${CI_COMMIT_SHA} -X optisam-backend/equipment-service/pkg/cmd.commitHash=${CI_COMMIT_SHA} -X optisam-backend/equipment-service/pkg/cmd.buildDate=${CI_BUILD_DATE}" .)
+    - ls -alSh ../equipment_service/bin
+
+.equipment-package:
+  extends: .equipment-template
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - cd ..
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/equipment-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/equipment-service:$TAG
+
+
+.equipment-deploy_noprod:
+  extends: .equipment-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT}
+    - oc create configmap config-equipment-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc delete deploymentconfig optisam-equipment
+    - oc process -f equipment-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-equipment
+    - |
+      end=$((SECONDS+300))
+      while [ "$(oc get pods -l=app='optisam-equipment' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+        sleep 8
+        echo "Waiting for pod to be ready."
+      done
+
+
+.equipment-deploy_prod:
+  extends: .equipment-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  environment:
+    name: prod
+    url: https://optisam-equipment-prod.apps.fr01.paas.tech.orange
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT_PROD}
+    - oc create configmap config-equipment-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f equipment-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-equipment
+    
+
+.equipment-integration_test:
+  extends: .equipment-template
+  image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/karate:latest
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/equipment-service/surefire-reports
+      - ${CI_PROJECT_DIR}/equipment-service/cucumber-html-reports
+    reports:
+      junit: ${CI_PROJECT_DIR}/equipment-service/surefire-reports/equipment.xml
+    expire_in: 3d
+  script:
+    - cd test
+    - java -Dkarate.config.dir=${CI_PROJECT_DIR} -jar /opt/karate/karate.jar -t ~@ignore -o ${CI_PROJECT_DIR}/equipment-service/ .
+    - ls -alSh
+  allow_failure: true
+
+
+.equipment-performance_test:
+  image:
+    name: ${DOCKER_PROXY_HOST}/loadimpact/k6:latest
+    entrypoint: ['']
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/equipment-service/build/tests/perf_report.json
+      - ${CI_PROJECT_DIR}/equipment-service/build/tests/summary_export.json
+    expire_in: 2d
+  script:
+    - ls -lash
+    - cd equipment-service
+    - mkdir -p build/tests
+    - echo "executing performance test in k6 container..."
+    - k6 run --out json=build/tests/perf_report.json --summary-export=build/tests/summary_export.json ./test/perf/script.js
+  allow_failure: true
+  

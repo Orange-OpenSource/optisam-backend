@@ -44,6 +44,31 @@ func NewProductServiceServer(productRepo repo.Product, queue workerqueue.Workerq
 	}
 }
 
+func (s *productServiceServer) UpsertAllocatedMetricEquipment(ctx context.Context, req *v1.UpsertAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	err := s.productRepo.UpsertProductEquipments(ctx, db.UpsertProductEquipmentsParams{
+		Swidtag: req.Swidtag, EquipmentID: req.EquipmentId, NumOfUsers: sql.NullInt32{Int32: req.EquipmentUser,
+			Valid: true}, Scope: req.Scope,
+		AllocatedMetric: req.AllocatedMetrics,
+	})
+
+	if err != nil {
+		logger.Log.Error("UpsertProductUpsertAllocatedMetricEquipment UpsertProductEquipments Failed", zap.Error(err))
+		return &v1.UpsertAllocateMetricEquipementResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+
+	return &v1.UpsertAllocateMetricEquipementResponse{Success: true}, nil
+
+}
+
 func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.UpsertProductRequest) (*v1.UpsertProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -394,7 +419,8 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
 		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
 		apiresp.Products[i].TotalCost = dbresp[i].Cost
-
+		apiresp.Products[i].EquipmentUser = dbresp[i].EquipmentUsers
+		apiresp.Products[i].AllocatedMetric = dbresp[i].AllocatedMetric
 	}
 	return &apiresp, nil
 }

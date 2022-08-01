@@ -85,6 +85,7 @@ func convertEquipType(eq *equipmentType) *v1.EquipmentType {
 }
 
 // CreateEquipmentType implements Licence CreateEquipmentType function
+// nolint: unused
 func (r *EquipmentRepository) CreateEquipmentType(ctx context.Context, eqType *v1.EquipmentType, scopes []string) (retType *v1.EquipmentType, retErr error) {
 	nquads := nquadsForEquipment(eqType)
 	mu := &api.Mutation{
@@ -335,7 +336,7 @@ func (r *EquipmentRepository) DeleteEquipmentType(ctx context.Context, eqType, s
 
 // UpdateEquipmentType implements Licence UpdateEquipmentType function
 func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string, typ string, parentID string, req *v1.UpdateEquipmentRequest, scopes []string) (retType []*v1.Attribute, retErr error) {
-	nquads := nquadsForAllAttributes(id, req.Attr)
+	nquads := nquadsForAllAttributes(id, req.AddAttr)
 	nquads = append(nquads, scopesNquad(scopes, id)...)
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -388,15 +389,43 @@ func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string
 			zap.String("ID", id),
 			zap.String("ParentID", req.ParentID),
 		}
-		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.Attr)...)
+		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.AddAttr)...)
 		logger.Log.Error("dgraph/UpdateEquipmentType -Mutate ", fields...)
 		return nil, fmt.Errorf("dgraph/UpdateEquipmentType - cannot create equipment type :%s", typ)
 	}
 
-	assignIDsEquipmentAttributes(assigned.Uids, typ, req.Attr)
-	schema := schemaForEquipmentType(typ, req.Attr)
+	if len(req.UpdateAttr) != 0 {
+		for _, attr := range req.UpdateAttr {
+			q := `query {
+				var(func: uid(` + attr.ID + `))  {
+					ID as uid
+				}
+				}
+				`
+			set := `
+			uid(ID) <attribute.searchable> "` + strconv.FormatBool(attr.IsSearchable) + `" .
+			uid(ID) <attribute.displayed> "` + strconv.FormatBool(attr.IsDisplayed) + `" .
+			`
+			req := &api.Request{
+				Query: q,
+				Mutations: []*api.Mutation{
+					{
+						SetNquads: []byte(set),
+					},
+				},
+				CommitNow: true,
+			}
+			if _, err := r.dg.NewTxn().Do(ctx, req); err != nil {
+				logger.Log.Error("dgraph/UpdateAttr - failed to mutate", zap.Error(err), zap.String("query", req.Query))
+				return nil, errors.New("dgraph/UpdateAttr - failed to mutuate")
+			}
+		}
+	}
+
+	assignIDsEquipmentAttributes(assigned.Uids, typ, req.AddAttr)
+	schema := schemaForEquipmentType(typ, req.AddAttr)
 	if schema == "" {
-		return req.Attr, nil
+		return req.AddAttr, nil
 	}
 	if err := r.dg.Alter(context.Background(), &api.Operation{
 		Schema: schema,
@@ -407,12 +436,12 @@ func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string
 			zap.String("ID", id),
 			zap.String("ParentID", req.ParentID),
 		}
-		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.Attr)...)
+		fields = append(fields, attributesZapFields("EquipmentType.Attributes", req.AddAttr)...)
 		logger.Log.Error("dgraph/UpdateEquipmentType - Alter ", fields...)
 		return nil, fmt.Errorf("dgraph/UpdateEquipmentType - cannot create schema for equipment type type :%s", typ)
 	}
 
-	return req.Attr, nil
+	return req.AddAttr, nil
 
 }
 
@@ -650,7 +679,7 @@ func schemaForAttribute(name string, attr *v1.Attribute) string {
 		name += " string "
 		if attr.IsSearchable {
 			// check data Type
-			name += " @index(trigram) "
+			name += " @index(trigram,exact) "
 		}
 	case v1.DataTypeInt:
 		name += " int "
@@ -742,4 +771,260 @@ func scopeNquad(scope, uid string) []*api.NQuad {
 			ObjectValue: stringObjectValue(scope),
 		},
 	}
+}
+
+// ParentsHirerachyForEquipment ...
+func (r *EquipmentRepository) ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) ([]*v1.EquipmentInfo, error) {
+
+	s1 := stringFilterSingle(v1.EqFilter, "equipment.type", equipType)
+
+	q := `{
+		ParentsHirerachy(func: uid(` + equipID + `)) @recurse(depth: ` + strconv.Itoa(int(hirearchyLevel)) + `) ` + agregateFilters(scopeFilters(scopes), []string{s1}) + ` {
+			ID: uid
+		 	EquipID: equipment.id
+			Type: equipment.type
+			Parent:equipment.parent
+		}
+	}`
+
+	resp, err := r.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/parentsHirerachyForEquipment - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, fmt.Errorf("dgraph/parentsHirerachyForEquipment - cannot complete query transaction")
+	}
+
+	type data struct {
+		ParentsHirerachy []*v1.EquipmentInfo
+	}
+
+	d := &data{}
+
+	if err := json.Unmarshal(resp.GetJson(), &d); err != nil {
+		logger.Log.Error("dgraph/parentsHirerachyForEquipment - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, fmt.Errorf("dgraph/parentsHirerachyForEquipment - cannot unmarshal Json object")
+	}
+	return d.ParentsHirerachy, nil
+}
+
+func (r *EquipmentRepository) GetAllEquipmentsInHierarchy(ctx context.Context, equipType, endEquID string, scopes ...string) (*v1.EquipmentHierarchy, error) {
+	query := BuildQueryForEquipmentParentHierarchy([]string{equipType}, scopes, endEquID)
+
+	resp, err := r.dg.NewTxn().Query(ctx, query)
+	if err != nil {
+		logger.Log.Error("dgraph/getAllEquipmentsInHierarchy - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return nil, fmt.Errorf("dgraph/getAllEquipmentsInHierarchy -  cannot complete query transaction")
+	}
+
+	d := &v1.EquipmentHierarchy{}
+
+	if err := json.Unmarshal(resp.GetJson(), &d); err != nil {
+		logger.Log.Error("dgraph/getAllEquipmentsInHierarchy -  ", zap.String("reason", err.Error()), zap.String("query", query))
+		return nil, fmt.Errorf("dgraph/getAllEquipmentsInHierarchy - cannot unmarshal Json object")
+	}
+
+	return d, nil
+}
+
+func (r *EquipmentRepository) GetAllEquipmentForSpecifiedProduct(ctx context.Context, swidTag string, scopes ...string) (*v1.DeployedProducts, error) {
+	query := BuildQueryForAllDeployedProducts([]string{swidTag}, scopes)
+
+	resp, err := r.dg.NewTxn().Query(ctx, query)
+	if err != nil {
+		logger.Log.Error("dgraph/getAllEquipmentForSpecifiedProduct - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return nil, fmt.Errorf("dgraph/getAllEquipmentForSpecifiedProduct -  cannot complete query transaction")
+	}
+
+	fmt.Println(string(resp.Json))
+
+	d := &v1.DeployedProducts{}
+
+	if err := json.Unmarshal(resp.GetJson(), &d); err != nil {
+		logger.Log.Error("dgraph/getAllEquipmentForSpecifiedProduct - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return nil, fmt.Errorf("dgraph/getAllEquipmentForSpecifiedProduct -  cannot unmarshal Json object")
+	}
+
+	return d, nil
+}
+
+func BuildQueryForEquipmentParentHierarchy(endEquipmentType []string, scopes []string, id ...string) string {
+
+	q := `{
+	
+		VcenterEquipments(func:uid($ID))@filter(eq(scopes,[$Scopes])){ 
+			id as uid
+			equipment.id
+	  		equipment.type
+		}
+
+ 		ClusterEquipments(func:uid(id)){
+			~equipment.parent @filter(eq(equipment.type, cluster)){
+	  			cid as uid
+	  			equipment.id
+	  			equipment.type
+			}
+ 		}
+
+		ServerEquipments(func:uid(cid)){
+	  		~equipment.parent @filter(eq(equipment.type, server)){
+				sid as uid
+				equipment.id
+				equipment.type
+   			}
+  		}
+
+		SoftPartitionEquipments(func:uid(sid)){
+	  		~equipment.parent @filter(eq(equipment.type, softpartition)){
+				uid
+				equipment.id
+				equipment.type
+  			}
+  		}  
+	}
+	`
+
+	return replacer(q, map[string]string{
+		"$ID":        strings.Join(id, ","),
+		"$Scopes":    strings.Join(scopes, ","),
+		"$EndEqType": strings.Join(endEquipmentType, ","),
+	})
+
+}
+
+func BuildQueryForAllDeployedProducts(swidTag []string, scopes []string) string {
+
+	q := `{
+			Products(func: eq(product.swidtag, $SWIDTAG))@filter( eq(scopes,[$Scopes]) AND eq(type_name,"product")) {    
+	   			Swidtag : 		   product.swidtag
+	   			Name :    		   product.name
+	   			Version : 		   product.version
+	   			Editor :  		   product.editor
+ 				product.equipment {
+		   				uid
+			   			equipment.id
+	   					equipment.uid
+
+ 				}
+			}
+		}
+	`
+
+	return replacer(q, map[string]string{
+		"$SWIDTAG": strings.Join(swidTag, ","),
+		"$Scopes":  strings.Join(scopes, ","),
+	})
+
+}
+
+func replacer(q string, params map[string]string) string {
+	for key, val := range params {
+		q = strings.Replace(q, key, val, -1) // nolint: gocritic
+	}
+	return q
+}
+
+func (r *EquipmentRepository) UpsertAllocateMetricInEquipmentHierarchy(ctx context.Context, mat *v1.MetricAllocationRequest, scope string) error {
+
+	q := `query {
+		var(func: eq(equipment.id,"` + mat.EquipmentID + `")) @filter(eq(scopes,[` + scope + `]) AND eq(product.swidtag, ` + mat.Swidtag + `) AND eq(type_name,"metricallocation")){
+			ID as uid
+		}
+	}`
+	set := `
+	    uid(ID) <allocation.metric> "` + mat.AllocationMetric + `" .
+		uid(ID) <product.swidtag> "` + mat.Swidtag + `" .
+		uid(ID) <equipment.id> "` + mat.EquipmentID + `" .
+		uid(ID) <scopes> "` + scope + `" .
+		uid(ID) <type_name> "metricallocation" .
+		uid(ID) <dgraph.type> "MetricAllocation" .
+	`
+
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+	_, err := r.dg.NewTxn().Do(ctx, req)
+	if err != nil {
+		logger.Log.Error("dgraph/upsertAllocateMetricInEquipmentHierarchy - failed to create Allocation Matric", zap.Error(err), zap.String("query", req.Query))
+		return err
+	}
+	return err
+
+}
+
+func (r *EquipmentRepository) GetAllocatedMetrics(ctx context.Context, swidtag string, scopes ...string) (*v1.AllocatedMetrics, error) {
+
+	q := BuildQueryToGetAllocatedMetrics([]string{swidtag}, scopes)
+
+	resp, err := r.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/getAllocatedMetrics - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, fmt.Errorf("dgraph/getAllocatedMetrics - cannot complete query transaction")
+	}
+
+	fmt.Println(string(resp.Json))
+
+	d := &v1.AllocatedMetrics{}
+
+	if err = json.Unmarshal(resp.GetJson(), &d); err != nil {
+		logger.Log.Error("dgraph/getAllocatedMetrics -", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, fmt.Errorf("dgraph/getAllocatedMetrics - cannot unmarshal Json object")
+	}
+
+	return d, err
+}
+
+func BuildQueryToGetAllocatedMetrics(swidTag []string, scopes []string) string {
+
+	q := ` {
+		allocatedMetricList(func: eq(type_name,"metricallocation")) @filter(eq(scopes,$SCOPES) AND eq(product.swidtag, $SWIDTAG)){
+			uid
+      		expand(_all_) 
+		}
+	}
+	`
+
+	return replacer(q, map[string]string{
+		"$SWIDTAG": strings.Join(swidTag, ","),
+		"$SCOPES":  strings.Join(scopes, ","),
+	})
+
+}
+
+func (r *EquipmentRepository) UpsertAllocateMetricInProduct(ctx context.Context, swidTag string, metUids []string, scope string) error {
+
+	q := `query {
+		var(func: eq(type_name,"product")) @filter(eq(scopes,[` + scope + `]) AND eq(product.swidtag, ` + swidTag + `)){
+			ID as uid
+		}
+	}`
+	var set string
+	for _, metuid := range metUids {
+		set += `
+				uid(ID) <product.allocation> <` + metuid + `> .
+		`
+	}
+
+	req := &api.Request{
+		Query: q,
+		Mutations: []*api.Mutation{
+
+			{
+				SetNquads: []byte(set),
+			},
+		},
+		CommitNow: true,
+	}
+
+	_, err := r.dg.NewTxn().Do(ctx, req)
+	if err != nil {
+		logger.Log.Error("dgraph/upsertAllocateMetricInProduct - failed to create Allocation Matric", zap.Error(err), zap.String("query", req.Query))
+		return err
+	}
+	return err
+
 }

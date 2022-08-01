@@ -149,11 +149,11 @@ SELECT swidtags as swid_tags,
 product_names as product_names,
 aggregation_name as aggregation_name,
 computed_cost::Numeric(15,2) as computed_cost,
-total_cost::Numeric(15,2) as purchase_cost,
+purchase_cost::Numeric(15,2) as purchase_cost,
 (delta_cost)::Numeric(15,2) as delta_cost
 FROM overall_computed_licences
-WHERE scope = $1 AND editor = $2
-GROUP BY swidtags,product_names,aggregation_name,total_cost,computed_cost,delta_cost
+WHERE scope = $1 AND editor = $2 AND cost_optimization= FALSE
+GROUP BY swidtags,product_names,aggregation_name,purchase_cost,computed_cost,delta_cost
 HAVING
     (delta_cost) < 0
 ORDER BY
@@ -214,7 +214,7 @@ num_computed_licences::Numeric(15,2) as num_computed_licences,
 num_acquired_licences::Numeric(15,2) as num_acquired_licences,
 (delta_number)::Numeric(15,2) as delta
 FROM overall_computed_licences
-WHERE scope = $1 AND editor = $2
+WHERE scope = $1 AND editor = $2 AND cost_optimization= FALSE
 GROUP BY swidtags,product_names,aggregation_name,num_acquired_licences,num_computed_licences,delta_number
 HAVING
     (delta_number) < 0
@@ -411,7 +411,7 @@ func (q *Queries) DeleteProductsByScope(ctx context.Context, scope string) error
 }
 
 const equipmentProducts = `-- name: EquipmentProducts :many
-SELECT swidtag, equipment_id, num_of_users, scope from products_equipments
+SELECT swidtag, equipment_id, num_of_users, allocated_metric, scope from products_equipments
 WHERE
 equipment_id = $1
 `
@@ -429,6 +429,7 @@ func (q *Queries) EquipmentProducts(ctx context.Context, equipmentID string) ([]
 			&i.Swidtag,
 			&i.EquipmentID,
 			&i.NumOfUsers,
+			&i.AllocatedMetric,
 			&i.Scope,
 		); err != nil {
 			return nil, err
@@ -1448,20 +1449,33 @@ func (q *Queries) GetProductsByEditor(ctx context.Context, arg GetProductsByEdit
 }
 
 const getTotalCounterfietAmount = `-- name: GetTotalCounterfietAmount :one
-select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as underusage_amount from overall_computed_licences ocl
-where ocl.scope = $1 AND ocl.delta_cost < 0
+select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as counterfiet_amount from overall_computed_licences ocl
+where ocl.scope = $1 AND ocl.delta_cost < 0 AND cost_optimization = FALSE
 `
 
 func (q *Queries) GetTotalCounterfietAmount(ctx context.Context, scope string) (float64, error) {
 	row := q.db.QueryRowContext(ctx, getTotalCounterfietAmount, scope)
-	var underusage_amount float64
-	err := row.Scan(&underusage_amount)
-	return underusage_amount, err
+	var counterfiet_amount float64
+	err := row.Scan(&counterfiet_amount)
+	return counterfiet_amount, err
+}
+
+const getTotalDeltaCost = `-- name: GetTotalDeltaCost :one
+select coalesce(sum(ocl.delta_cost),0.0)::FLOAT
+FROM overall_computed_licences ocl
+where cost_optimization = TRUE AND ocl.scope = $1
+`
+
+func (q *Queries) GetTotalDeltaCost(ctx context.Context, scope string) (float64, error) {
+	row := q.db.QueryRowContext(ctx, getTotalDeltaCost, scope)
+	var column_1 float64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getTotalUnderusageAmount = `-- name: GetTotalUnderusageAmount :one
 select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as underusage_amount from overall_computed_licences ocl
-where ocl.scope = $1 AND ocl.delta_cost > 0
+where ocl.scope = $1 AND ocl.delta_cost > 0 AND cost_optimization = FALSE
 `
 
 func (q *Queries) GetTotalUnderusageAmount(ctx context.Context, scope string) (float64, error) {
@@ -1518,13 +1532,14 @@ INSERT INTO overall_computed_licences (
     purchase_cost,
     computed_cost,
     delta_number,
+    cost_optimization,
     delta_cost,
     avg_unit_price,
     computed_details,
     metic_not_defined,
     not_deployed,
     editor)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
 `
 
 type InsertOverAllComputedLicencesParams struct {
@@ -1540,6 +1555,7 @@ type InsertOverAllComputedLicencesParams struct {
 	PurchaseCost        decimal.Decimal `json:"purchase_cost"`
 	ComputedCost        decimal.Decimal `json:"computed_cost"`
 	DeltaNumber         int32           `json:"delta_number"`
+	CostOptimization    sql.NullBool    `json:"cost_optimization"`
 	DeltaCost           decimal.Decimal `json:"delta_cost"`
 	AvgUnitPrice        decimal.Decimal `json:"avg_unit_price"`
 	ComputedDetails     string          `json:"computed_details"`
@@ -1562,6 +1578,7 @@ func (q *Queries) InsertOverAllComputedLicences(ctx context.Context, arg InsertO
 		arg.PurchaseCost,
 		arg.ComputedCost,
 		arg.DeltaNumber,
+		arg.CostOptimization,
 		arg.DeltaCost,
 		arg.AvgUnitPrice,
 		arg.ComputedDetails,
@@ -1601,6 +1618,7 @@ SELECT count(*) OVER() AS totalRecords,
     a.updated_on,
     a.updated_by,
     a.file_name,
+    a.repartition,
     agg.aggregation_name,
     agg.product_editor,
     agg.products,
@@ -1749,6 +1767,7 @@ type ListAcqRightsAggregationRow struct {
 	UpdatedOn                 time.Time       `json:"updated_on"`
 	UpdatedBy                 sql.NullString  `json:"updated_by"`
 	FileName                  string          `json:"file_name"`
+	Repartition               bool            `json:"repartition"`
 	AggregationName           string          `json:"aggregation_name"`
 	ProductEditor             string          `json:"product_editor"`
 	Products                  []string        `json:"products"`
@@ -1844,6 +1863,7 @@ func (q *Queries) ListAcqRightsAggregation(ctx context.Context, arg ListAcqRight
 			&i.UpdatedOn,
 			&i.UpdatedBy,
 			&i.FileName,
+			&i.Repartition,
 			&i.AggregationName,
 			&i.ProductEditor,
 			pq.Array(&i.Products),
@@ -1863,7 +1883,7 @@ func (q *Queries) ListAcqRightsAggregation(ctx context.Context, arg ListAcqRight
 }
 
 const listAcqRightsIndividual = `-- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition
 FROM 
 acqrights a
 WHERE 
@@ -1992,6 +2012,7 @@ type ListAcqRightsIndividualRow struct {
 	SupportNumber             string          `json:"support_number"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	FileName                  string          `json:"file_name"`
+	Repartition               bool            `json:"repartition"`
 }
 
 func (q *Queries) ListAcqRightsIndividual(ctx context.Context, arg ListAcqRightsIndividualParams) ([]ListAcqRightsIndividualRow, error) {
@@ -2080,6 +2101,7 @@ func (q *Queries) ListAcqRightsIndividual(ctx context.Context, arg ListAcqRights
 			&i.SupportNumber,
 			&i.MaintenanceProvider,
 			&i.FileName,
+			&i.Repartition,
 		); err != nil {
 			return nil, err
 		}
@@ -2537,7 +2559,7 @@ func (q *Queries) ListProductAggregation(ctx context.Context, arg ListProductAgg
 }
 
 const listProductsAggregationIndividual = `-- name: ListProductsAggregationIndividual :many
-SELECT p.swidtag, product_name, product_version, product_edition, product_category, p.product_editor, p.scope, option_of, aggregation_id, p.aggregation_name, p.created_on, p.created_by, p.updated_on, p.updated_by, pa.swidtag, num_of_applications, products_applications.swidtag, application_id, products_applications.scope, pe.swidtag, num_of_equipments, products_equipments.swidtag, equipment_id, num_of_users, products_equipments.scope, ar.id, ar.aggregation_name, ar.scope, ar.product_editor, ar.products, ar.swidtags, ar.created_on, ar.created_by, ar.updated_on, ar.updated_by, aggregations.id, aggregations.aggregation_name, aggregations.scope, aggregations.product_editor, aggregations.products, aggregations.swidtags, aggregations.created_on, aggregations.created_by, aggregations.updated_on, aggregations.updated_by ,COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications,COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments
+SELECT p.swidtag, product_name, product_version, product_edition, product_category, p.product_editor, p.scope, option_of, aggregation_id, p.aggregation_name, p.created_on, p.created_by, p.updated_on, p.updated_by, pa.swidtag, num_of_applications, products_applications.swidtag, application_id, products_applications.scope, pe.swidtag, num_of_equipments, products_equipments.swidtag, equipment_id, num_of_users, allocated_metric, products_equipments.scope, ar.id, ar.aggregation_name, ar.scope, ar.product_editor, ar.products, ar.swidtags, ar.created_on, ar.created_by, ar.updated_on, ar.updated_by, aggregations.id, aggregations.aggregation_name, aggregations.scope, aggregations.product_editor, aggregations.products, aggregations.swidtags, aggregations.created_on, aggregations.created_by, aggregations.updated_on, aggregations.updated_by ,COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications,COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments
 FROM products p 
 LEFT JOIN 
 (SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = p.scope  GROUP BY swidtag) pa
@@ -2581,6 +2603,7 @@ type ListProductsAggregationIndividualRow struct {
 	Swidtag_5           string         `json:"swidtag_5"`
 	EquipmentID         string         `json:"equipment_id"`
 	NumOfUsers          sql.NullInt32  `json:"num_of_users"`
+	AllocatedMetric     string         `json:"allocated_metric"`
 	Scope_3             string         `json:"scope_3"`
 	ID                  int32          `json:"id"`
 	AggregationName_2   string         `json:"aggregation_name_2"`
@@ -2640,6 +2663,7 @@ func (q *Queries) ListProductsAggregationIndividual(ctx context.Context, arg Lis
 			&i.Swidtag_5,
 			&i.EquipmentID,
 			&i.NumOfUsers,
+			&i.AllocatedMetric,
 			&i.Scope_3,
 			&i.ID,
 			&i.AggregationName_2,
@@ -3187,13 +3211,13 @@ func (q *Queries) ListProductsViewRedirectedApplication(ctx context.Context, arg
 }
 
 const listProductsViewRedirectedEquipment = `-- name: ListProductsViewRedirectedEquipment :many
-SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments ,COALESCE(acq.total_cost,0)::FLOAT as cost 
+SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, pe.allocated_metric, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.equipment_users,0)::INTEGER as equipment_users, COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments, COALESCE(acq.total_cost,0)::FLOAT as cost 
 FROM products p 
 LEFT JOIN 
 (SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = ANY($1::TEXT[]) AND (CASE WHEN $2::bool THEN application_id = $3 ELSE TRUE END)  GROUP BY swidtag) pa
 ON p.swidtag = pa.swidtag
 INNER JOIN 
-(SELECT swidtag, count(equipment_id) as num_of_equipments FROM products_equipments WHERE  scope = ANY($1::TEXT[]) AND (CASE WHEN $4::bool THEN equipment_id = $5 ELSE TRUE END)  GROUP BY swidtag) pe
+(SELECT swidtag, count(equipment_id) as num_of_equipments, sum(num_of_users) as equipment_users, allocated_metric FROM products_equipments WHERE  scope = ANY($1::TEXT[]) AND (CASE WHEN $4::bool THEN equipment_id = $5 ELSE TRUE END)  GROUP BY swidtag, allocated_metric) pe
 ON p.swidtag = pe.swidtag
 LEFT JOIN
 (SELECT swidtag, sum(total_cost) as total_cost FROM acqrights WHERE scope = ANY($1::TEXT[]) GROUP BY swidtag) acq
@@ -3206,7 +3230,7 @@ WHERE
   AND (CASE WHEN $11::bool THEN lower(p.product_name) = lower($10) ELSE TRUE END)
   AND (CASE WHEN $12::bool THEN lower(p.product_editor) LIKE '%' || lower($13::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN $14::bool THEN lower(p.product_editor) = lower($13) ELSE TRUE END)
-  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments, acq.total_cost
+  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.equipment_users, pe.allocated_metric, pe.num_of_equipments, acq.total_cost
   ORDER BY
   CASE WHEN $15::bool THEN p.swidtag END asc,
   CASE WHEN $16::bool THEN p.swidtag END desc,
@@ -3274,7 +3298,9 @@ type ListProductsViewRedirectedEquipmentRow struct {
 	ProductCategory   string  `json:"product_category"`
 	ProductEditor     string  `json:"product_editor"`
 	ProductEdition    string  `json:"product_edition"`
+	AllocatedMetric   string  `json:"allocated_metric"`
 	NumOfApplications int32   `json:"num_of_applications"`
+	EquipmentUsers    int32   `json:"equipment_users"`
 	NumOfEquipments   int32   `json:"num_of_equipments"`
 	Cost              float64 `json:"cost"`
 }
@@ -3331,7 +3357,9 @@ func (q *Queries) ListProductsViewRedirectedEquipment(ctx context.Context, arg L
 			&i.ProductCategory,
 			&i.ProductEditor,
 			&i.ProductEdition,
+			&i.AllocatedMetric,
 			&i.NumOfApplications,
+			&i.EquipmentUsers,
 			&i.NumOfEquipments,
 			&i.Cost,
 		); err != nil {
@@ -3399,11 +3427,11 @@ SELECT swidtags as swid_tags,
 product_names as product_names,
 aggregation_name as aggregation_name,
 computed_cost::Numeric(15,2) as computed_cost,
-total_cost::Numeric(15,2) as purchase_cost,
+purchase_cost::Numeric(15,2) as purchase_cost,
 (delta_cost)::Numeric(15,2) as delta_cost
 FROM overall_computed_licences
-WHERE scope = $1 AND editor = $2
-GROUP BY swidtags,product_names,aggregation_name,total_cost,computed_cost,delta_cost
+WHERE scope = $1 AND editor = $2 AND cost_optimization= FALSE
+GROUP BY swidtags,product_names,aggregation_name,purchase_cost,computed_cost,delta_cost
 HAVING
     (delta_cost) > 0
 ORDER BY
@@ -3464,7 +3492,7 @@ num_computed_licences::Numeric(15,2) as num_computed_licences,
 num_acquired_licences::Numeric(15,2) as num_acquired_licences,
 (delta_number)::Numeric(15,2) as delta
 FROM overall_computed_licences
-WHERE scope = $1 AND editor = $2
+WHERE scope = $1 AND editor = $2 AND cost_optimization= FALSE
 GROUP BY swidtags,product_names,aggregation_name,num_acquired_licences,num_computed_licences,delta_number
 HAVING
     (delta_number) > 0
@@ -3724,8 +3752,9 @@ INSERT INTO acqrights (
     corporate_sourcing_contract,
     software_provider,
     file_name,
-    file_data)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) ON CONFLICT (sku,scope) DO
+    file_data,
+    repartition)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) ON CONFLICT (sku,scope) DO
 UPDATE
 SET swidtag = $2,
     product_name = $3,
@@ -3751,7 +3780,8 @@ SET swidtag = $2,
     corporate_sourcing_contract = $23,
     software_provider = $24,
     file_name = $25,
-    file_data = $26
+    file_data = $26,
+    repartition = $27
 `
 
 type UpsertAcqRightsParams struct {
@@ -3781,6 +3811,7 @@ type UpsertAcqRightsParams struct {
 	SoftwareProvider          string          `json:"software_provider"`
 	FileName                  string          `json:"file_name"`
 	FileData                  []byte          `json:"file_data"`
+	Repartition               bool            `json:"repartition"`
 }
 
 func (q *Queries) UpsertAcqRights(ctx context.Context, arg UpsertAcqRightsParams) error {
@@ -3811,6 +3842,7 @@ func (q *Queries) UpsertAcqRights(ctx context.Context, arg UpsertAcqRightsParams
 		arg.SoftwareProvider,
 		arg.FileName,
 		arg.FileData,
+		arg.Repartition,
 	)
 	return err
 }
@@ -3839,8 +3871,9 @@ INSERT INTO aggregated_rights (
   num_licences_maintenance,
   comment,
   file_name,
-  file_data)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) ON CONFLICT (sku,scope) DO
+  file_data,
+  repartition)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) ON CONFLICT (sku,scope) DO
 UPDATE
 SET aggregation_id = $3,
     metric = $4,
@@ -3862,7 +3895,8 @@ SET aggregation_id = $3,
     num_licences_maintenance = $20,
     comment = $21,
     file_name = $22,
-    file_data = $23
+    file_data = $23,
+    repartition = $24
 `
 
 type UpsertAggregatedRightsParams struct {
@@ -3889,6 +3923,7 @@ type UpsertAggregatedRightsParams struct {
 	Comment                   sql.NullString  `json:"comment"`
 	FileName                  string          `json:"file_name"`
 	FileData                  []byte          `json:"file_data"`
+	Repartition               bool            `json:"repartition"`
 }
 
 func (q *Queries) UpsertAggregatedRights(ctx context.Context, arg UpsertAggregatedRightsParams) error {
@@ -3916,6 +3951,7 @@ func (q *Queries) UpsertAggregatedRights(ctx context.Context, arg UpsertAggregat
 		arg.Comment,
 		arg.FileName,
 		arg.FileData,
+		arg.Repartition,
 	)
 	return err
 }
@@ -4012,15 +4048,16 @@ func (q *Queries) UpsertProductApplications(ctx context.Context, arg UpsertProdu
 }
 
 const upsertProductEquipments = `-- name: UpsertProductEquipments :exec
-Insert into products_equipments (swidtag, equipment_id, num_of_users,scope ) Values ($1,$2,$3,$4 ) ON CONFLICT  (swidtag, equipment_id, scope)
-Do Update set num_of_users = $3
+Insert into products_equipments (swidtag, equipment_id, num_of_users,scope, allocated_metric ) Values ($1,$2,$3,$4,$5 ) ON CONFLICT  (swidtag, equipment_id, scope)
+Do Update set num_of_users = $3, allocated_metric = $5
 `
 
 type UpsertProductEquipmentsParams struct {
-	Swidtag     string        `json:"swidtag"`
-	EquipmentID string        `json:"equipment_id"`
-	NumOfUsers  sql.NullInt32 `json:"num_of_users"`
-	Scope       string        `json:"scope"`
+	Swidtag         string        `json:"swidtag"`
+	EquipmentID     string        `json:"equipment_id"`
+	NumOfUsers      sql.NullInt32 `json:"num_of_users"`
+	Scope           string        `json:"scope"`
+	AllocatedMetric string        `json:"allocated_metric"`
 }
 
 func (q *Queries) UpsertProductEquipments(ctx context.Context, arg UpsertProductEquipmentsParams) error {
@@ -4029,6 +4066,7 @@ func (q *Queries) UpsertProductEquipments(ctx context.Context, arg UpsertProduct
 		arg.EquipmentID,
 		arg.NumOfUsers,
 		arg.Scope,
+		arg.AllocatedMetric,
 	)
 	return err
 }

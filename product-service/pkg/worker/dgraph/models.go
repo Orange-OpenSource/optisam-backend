@@ -1,5 +1,6 @@
 package dgraph
 
+// nolint: maligned
 type UpsertAcqRightsRequest struct {
 	Sku                       string  `json:"sku,omitempty"`
 	Swidtag                   string  `json:"swidtag,omitempty"`
@@ -25,6 +26,7 @@ type UpsertAcqRightsRequest struct {
 	LastPurchasedOrder        string  `json:"lastPurchasedOrder"`
 	SupportNumber             string  `json:"supportNumber"`
 	MaintenanceProvider       string  `json:"maintenanceProvider"`
+	Repartition               bool    `json:"repartition"`
 }
 
 type DeleteAcqRightRequest struct {
@@ -63,6 +65,7 @@ type UpsertAggregatedRight struct {
 	LastPurchasedOrder        string  `json:"lastPurchasedOrder"`
 	SupportNumber             string  `json:"supportNumber"`
 	MaintenanceProvider       string  `json:"maintenanceProvider"`
+	Repartition               bool    `json:"repartition"`
 }
 
 type DeleteAggregatedRightRequest struct {

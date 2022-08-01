@@ -75,13 +75,13 @@ func GetGenericScopeMetadata(scope string) []Metadata {
 		{
 			MetadataType: "equipment",
 			Source:       "metadata_server.csv",
-			Attributes:   []string{"hyperthreading", "datacenter_name", "server_id", "server_name", "cores_per_processor", "oracle_core_factor", "cpu_manufacturer", "ibm_pvu", "sag_uvu", "server_type", "parent_id", "cpu_model", "server_os", "server_processors_numbers"},
+			Attributes:   []string{"hyperthreading", "datacenter_name", "server_id", "server_name", "environment", "cores_per_processor", "oracle_core_factor", "cpu_manufacturer", "ibm_pvu", "sag_uvu", "server_type", "parent_id", "cpu_model", "server_os", "server_processors_numbers"},
 			Scope:        scope,
 		},
 		{
 			MetadataType: "equipment",
 			Source:       "metadata_softpartition.csv",
-			Attributes:   []string{"softpartition_id", "softpartition_name", "parent_id"},
+			Attributes:   []string{"softpartition_id", "softpartition_name", "environment", "vcpu", "parent_id"},
 			Scope:        scope,
 		},
 		// {

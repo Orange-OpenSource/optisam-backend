@@ -121,11 +121,11 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "400m"
-                  memory: "400Mi"
+                  cpu: "800m"
+                  memory: "2800Mi"
                 limits:
-                  cpu: "500m"
-                  memory: "600Mi"
+                  cpu: "1000m"
+                  memory: "3000Mi"
               volumeMounts:
                 - name: config-volume
                   mountPath: /opt/config/

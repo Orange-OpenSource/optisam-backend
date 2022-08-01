@@ -1398,6 +1398,93 @@ var _ interface {
 
 var _CreateDashboardUpdateJobRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
+// Validate checks the field values on UpsertAllocateMetricEquipementRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertAllocateMetricEquipementRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UpsertAllocateMetricEquipementRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return UpsertAllocateMetricEquipementRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for EquipmentId
+
+	// no validation rules for EqType
+
+	// no validation rules for EquipmentUser
+
+	// no validation rules for AllocatedMetrics
+
+	return nil
+}
+
+// UpsertAllocateMetricEquipementRequestValidationError is the validation error
+// returned by UpsertAllocateMetricEquipementRequest.Validate if the
+// designated constraints aren't met.
+type UpsertAllocateMetricEquipementRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertAllocateMetricEquipementRequestValidationError) ErrorName() string {
+	return "UpsertAllocateMetricEquipementRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertAllocateMetricEquipementRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertAllocateMetricEquipementRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertAllocateMetricEquipementRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertAllocateMetricEquipementRequestValidationError{}
+
+var _UpsertAllocateMetricEquipementRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on CreateDashboardUpdateJobResponse with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, an error is returned.
@@ -1467,6 +1554,76 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateDashboardUpdateJobResponseValidationError{}
+
+// Validate checks the field values on UpsertAllocateMetricEquipementResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertAllocateMetricEquipementResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// UpsertAllocateMetricEquipementResponseValidationError is the validation
+// error returned by UpsertAllocateMetricEquipementResponse.Validate if the
+// designated constraints aren't met.
+type UpsertAllocateMetricEquipementResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertAllocateMetricEquipementResponseValidationError) ErrorName() string {
+	return "UpsertAllocateMetricEquipementResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertAllocateMetricEquipementResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertAllocateMetricEquipementResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertAllocateMetricEquipementResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertAllocateMetricEquipementResponseValidationError{}
 
 // Validate checks the field values on GetBannerRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1755,6 +1912,8 @@ func (m *AcqRightRequest) Validate() error {
 	// no validation rules for FileName
 
 	// no validation rules for FileData
+
+	// no validation rules for Repartition
 
 	return nil
 }
@@ -2174,6 +2333,8 @@ func (m *AggregatedRightsRequest) Validate() error {
 
 	// no validation rules for FileData
 
+	// no validation rules for Repartition
+
 	return nil
 }
 
@@ -2371,6 +2532,8 @@ func (m *AggregatedRightsView) Validate() error {
 	// no validation rules for MaintenanceProvider
 
 	// no validation rules for FileName
+
+	// no validation rules for Repartition
 
 	return nil
 }
@@ -4264,6 +4427,10 @@ func (m *Product) Validate() error {
 	// no validation rules for NumOfApplications
 
 	// no validation rules for NumofEquipments
+
+	// no validation rules for EquipmentUser
+
+	// no validation rules for AllocatedMetric
 
 	return nil
 }
@@ -6723,6 +6890,10 @@ func (m *UpsertAcqRightsRequest) Validate() error {
 
 	// no validation rules for SupportNumber
 
+	// no validation rules for Repartition
+
+	// no validation rules for Comment
+
 	return nil
 }
 
@@ -7288,6 +7459,8 @@ func (m *AcqRights) Validate() error {
 	// no validation rules for MaintenanceProvider
 
 	// no validation rules for FileName
+
+	// no validation rules for Repartition
 
 	return nil
 }

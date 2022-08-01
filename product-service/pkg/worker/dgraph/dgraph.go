@@ -346,6 +346,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			uid(acRights) <acqRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
 			uid(acRights) <acqRights.supportNumber> "` + uar.SupportNumber + `" .
 			uid(acRights) <acqRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
+			uid(acRights) <acqRights.repartition> "` + strconv.FormatBool(uar.Repartition) + `" .
 			uid(product) <product.swidtag> "` + uar.Swidtag + `" .
 			uid(product) <product.acqRights> uid(acRights) .
 		`
@@ -450,6 +451,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		uid(aggregatedRights) <aggregatedRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
 		uid(aggregatedRights) <aggregatedRights.supportNumber> "` + uar.SupportNumber + `" .
 		uid(aggregatedRights) <aggregatedRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
+		uid(aggregatedRights) <aggregatedRights.repartition> "` + strconv.FormatBool(uar.Repartition) + `" .
 		`
 		reqmetrics := strings.Split(uar.Metric, ",")
 		for _, met := range reqmetrics {

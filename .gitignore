@@ -9,7 +9,7 @@ gomock_*
 badger
 mapping_badger
 study
-
+Dockerfile
 # sensitive info 
 # **/cert.pem
 # **/key.pem

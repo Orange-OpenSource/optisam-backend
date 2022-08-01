@@ -52,7 +52,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
 					{
 						Name: "OPS",
@@ -101,6 +100,8 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
+
 				mockLicense.EXPECT().MetricOPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricOPS(ctx, "Scope1").Times(1).Return([]*repo.MetricOPS{
 					{
@@ -228,7 +229,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
 					{
 						Name: "SPS",
@@ -279,6 +279,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricSPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(8), uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricSPS(ctx, "Scope1").Times(1).Return([]*repo.MetricSPS{
 					{
@@ -320,7 +321,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
 					{
 						Name: "IPS",
@@ -367,6 +367,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricIPSComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricIPS(ctx, "Scope1").Times(1).Return([]*repo.MetricIPS{
 					{
@@ -408,7 +409,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.Metric{
 					{
 						Name: "NUP",
@@ -461,6 +461,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, "Scope1").Return(uint64(10), uint64(0), nil).Times(1)
 				mockLicense.EXPECT().ListMetricNUP(ctx, "Scope1").Times(1).Return([]*repo.MetricNUPOracle{
 					{
@@ -498,7 +499,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockLicense(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ProductIDForSwidtag(ctx, "ORAC001", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.Metric{
 					{
 						Name: "oracle.processor.standard",
@@ -550,6 +550,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				}
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockRepo.EXPECT().ProductIDForSwidtag(ctx, "ORAC001", &repo.QueryProducts{}, "Scope1").Return("ID1", nil).Times(1)
 				mockRepo.EXPECT().ListMetricACS(ctx, "Scope1").Times(1).Return([]*repo.MetricACS{
 					{
 						Name:          "ACS",
@@ -623,7 +624,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Internal")).Times(1)
 			},
 			wantErr: true,
@@ -642,7 +642,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "SPS",
@@ -670,7 +669,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "SPS",
@@ -699,7 +697,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "OPS",
@@ -761,7 +758,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "OPS",
@@ -814,6 +810,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricOPSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), nil).Times(1)
 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Intenal")).Times(1)
 			},
@@ -833,7 +830,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "SPS",
@@ -883,6 +879,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricSPSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(12), uint64(10), nil).Times(1)
 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return(nil, errors.New("Internal"))
 			},
@@ -902,7 +899,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "SPS",
@@ -952,6 +948,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCoresAttr:   cores,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricIPSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), errors.New("Internal")).Times(1)
 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricIPS{
 					{
@@ -987,7 +984,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "NUP",
@@ -1040,6 +1036,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					NumCPUAttr:     cpu,
 					CoreFactorAttr: corefactor,
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricNUPComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), uint64(0), nil).Times(1)
 				mockLicense.EXPECT().ListMetricNUP(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return(nil, errors.New("Intenal")).Times(1)
 			},
@@ -1059,7 +1056,6 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1", "Scope2", "Scope3"}).Return([]*repo.Metric{
 					{
 						Name: "NUP",
@@ -1110,6 +1106,7 @@ func Test_licenseServiceServer_ProductLicensesForMetric(t *testing.T) {
 					Attribute: corefactor,
 					Value:     "2",
 				}
+				mockLicense.EXPECT().ProductIDForSwidtag(ctx, "swidTag1", &repo.QueryProducts{}, []string{"Scope1", "Scope2", "Scope3"}).Return("ID1", nil).Times(1)
 				mockLicense.EXPECT().MetricACSComputedLicenses(ctx, "ID1", mat, []string{"Scope1", "Scope2", "Scope3"}).Return(uint64(0), errors.New("Internal")).Times(1)
 				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1", "Scope2", "Scope3"}).Times(1).Return([]*repo.MetricACS{
 					{

@@ -622,6 +622,21 @@ func (mr *MockProductMockRecorder) GetTotalCounterfietAmount(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalCounterfietAmount", reflect.TypeOf((*MockProduct)(nil).GetTotalCounterfietAmount), arg0, arg1)
 }
 
+// GetTotalDeltaCost mocks base method
+func (m *MockProduct) GetTotalDeltaCost(arg0 context.Context, arg1 string) (float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalDeltaCost", arg0, arg1)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalDeltaCost indicates an expected call of GetTotalDeltaCost
+func (mr *MockProductMockRecorder) GetTotalDeltaCost(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalDeltaCost", reflect.TypeOf((*MockProduct)(nil).GetTotalDeltaCost), arg0, arg1)
+}
+
 // GetTotalUnderusageAmount mocks base method
 func (m *MockProduct) GetTotalUnderusageAmount(arg0 context.Context, arg1 string) (float64, error) {
 	m.ctrl.T.Helper()

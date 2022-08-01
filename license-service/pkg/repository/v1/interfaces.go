@@ -13,6 +13,8 @@ type License interface {
 
 	GetProductInformation(ctx context.Context, swidtag string, scopes ...string) (*ProductAdditionalInfo, error)
 
+	GetProdAllocatedMetric(ctx context.Context, swidTag string, scopes ...string) ([]*ProductAllocationEquipmentMetrics, error)
+
 	// CreateProductAggregation creates aggregations of a product
 	// CreateProductAggregation(ctx context.Context, pa *ProductAggregation, scopes []string) (*ProductAggregation, error)
 	AggregationDetails(ctx context.Context, name string, metrics []*Metric, isSimulation bool, scopes ...string) (*AggregationInfo, []*ProductAcquiredRight, error)
@@ -80,6 +82,9 @@ type License interface {
 	// MetricAttrSumComputedLicenses returns the computed licenses for attribute.sum.standard metric
 	MetricAttrSumComputedLicenses(ctx context.Context, id string, mat *MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error)
 
+	// MetricEquipAttrComputedLicenses returns the computed licenses for equipment.attribute.standard metric
+	MetricEquipAttrComputedLicenses(ctx context.Context, id string, mat *MetricEquipAttrStandComputed, scopes ...string) (uint64, error)
+
 	// MetricACSComputedLicensesAgg returns the computed licenses for product aggregation for attribute.counter.standard metric
 	MetricACSComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricACSComputed, scopes ...string) (uint64, error)
 
@@ -88,6 +93,9 @@ type License interface {
 
 	// MetricAttrSumComputedLicensesAgg returns the computed licenses for product aggregation for attribute.sum.standard metric
 	MetricAttrSumComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error)
+
+	// MetricEquipAttrComputedLicensesAgg returns the computed licenses for product aggregation for equipment.attribute.standard metric
+	MetricEquipAttrComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricEquipAttrStandComputed, scopes ...string) (uint64, error)
 
 	// MetricUserSumComputedLicenses returns the computed licenses for user.sum.standard metric
 	MetricUserSumComputedLicenses(ctx context.Context, id string, scopes ...string) (uint64, uint64, error)
@@ -107,23 +115,35 @@ type License interface {
 	// ListMetricAttrSum returns all metrics of type attribute.sum.standard metric
 	ListMetricAttrSum(ctx context.Context, scopes ...string) ([]*MetricAttrSumStand, error)
 
+	// ListMetricEquipAttr returns all metrics of type equipment.attribute.standard metric
+	ListMetricEquipAttr(ctx context.Context, scopes ...string) ([]*MetricEquipAttrStand, error)
+
 	// ListMetricUserSum returns all metrics of type user.sum.standard metric
 	ListMetricUserSum(ctx context.Context, scopes ...string) ([]*MetricUserSumStand, error)
 
 	// ParentHirearchy gives equipment along with parent hierarchy
 	ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) (*Equipment, error)
 
-	// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle processor.standard
+	// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle.processor.standard
 	ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricOPSComputed, scopes ...string) ([]*ProductData, error)
 
 	// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle.nup.standard
 	ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricNUPComputed, scopes ...string) ([]*ProductData, error)
 
-	// ProductsForEquipmentForMetricIPSStandard gives products for oracle.nup.standard
+	// ProductsForEquipmentForMetricIPSStandard gives products for ibm.pvu.standard
 	ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricIPSComputed, scopes ...string) ([]*ProductData, error)
 
-	// ProductsForEquipmentForMetricSAGStandard gives products for oracle.nup.standard
+	// ProductsForEquipmentForMetricSAGStandard gives products for sag.processor.standard
 	ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricSPSComputed, scopes ...string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricAttrCounterStandard gives products for attribute.counter.standard
+	ProductsForEquipmentForMetricAttrCounterStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricACSComputed, scopes ...string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricAttrSumStandard gives products for attribute.sum.standard
+	ProductsForEquipmentForMetricAttrSumStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricAttrSumStandComputed, scopes ...string) ([]*ProductData, error)
+
+	// ProductsForEquipmentForMetricEquipAttrStandard gives products for equipment.attribute.standard
+	ProductsForEquipmentForMetricEquipAttrStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *MetricEquipAttrStandComputed, scopes ...string) ([]*ProductData, error)
 
 	// ComputedLicensesForEquipmentForMetricOracleProcessorStandard gives licenses for product
 	ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, metric *MetricOPSComputed, scopes ...string) (int64, error)

@@ -36,17 +36,17 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // CreateConfig mocks base method
-func (m *MockRepository) CreateConfig(arg0 context.Context, arg1 *v1.MasterData, arg2 []*v1.ConfigData) error {
+func (m *MockRepository) CreateConfig(arg0 context.Context, arg1 *v1.MasterData, arg2 []*v1.ConfigData, arg3 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateConfig", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateConfig", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateConfig indicates an expected call of CreateConfig
-func (mr *MockRepositoryMockRecorder) CreateConfig(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) CreateConfig(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConfig", reflect.TypeOf((*MockRepository)(nil).CreateConfig), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConfig", reflect.TypeOf((*MockRepository)(nil).CreateConfig), arg0, arg1, arg2, arg3)
 }
 
 // DeleteConfig mocks base method
@@ -123,10 +123,10 @@ func (mr *MockRepositoryMockRecorder) GetMetadatabyConfigID(arg0, arg1 interface
 }
 
 // ListConfig mocks base method
-func (m *MockRepository) ListConfig(arg0 context.Context, arg1 db.ListConfigParams) ([]db.ConfigMaster, error) {
+func (m *MockRepository) ListConfig(arg0 context.Context, arg1 db.ListConfigParams) ([]db.ListConfigRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListConfig", arg0, arg1)
-	ret0, _ := ret[0].([]db.ConfigMaster)
+	ret0, _ := ret[0].([]db.ListConfigRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -138,15 +138,15 @@ func (mr *MockRepositoryMockRecorder) ListConfig(arg0, arg1 interface{}) *gomock
 }
 
 // UpdateConfig mocks base method
-func (m *MockRepository) UpdateConfig(arg0 context.Context, arg1 int32, arg2 string, arg3 []int32, arg4 []*v1.ConfigData) error {
+func (m *MockRepository) UpdateConfig(arg0 context.Context, arg1 int32, arg2, arg3 string, arg4 []int32, arg5 []*v1.ConfigData, arg6 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateConfig", arg0, arg1, arg2, arg3, arg4)
+	ret := m.ctrl.Call(m, "UpdateConfig", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateConfig indicates an expected call of UpdateConfig
-func (mr *MockRepositoryMockRecorder) UpdateConfig(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpdateConfig(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConfig", reflect.TypeOf((*MockRepository)(nil).UpdateConfig), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConfig", reflect.TypeOf((*MockRepository)(nil).UpdateConfig), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }

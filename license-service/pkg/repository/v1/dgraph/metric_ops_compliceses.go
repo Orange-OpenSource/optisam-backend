@@ -12,8 +12,13 @@ import (
 
 // MetricOPSComputedLicenses implements Licence MetricOPSComputedLicenses function
 func (l *LicenseRepository) MetricOPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricOPSComputed, scopes ...string) (uint64, error) {
-	q := queryBuilder(mat, scopes, id)
-	// fmt.Println(q)
+	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, id, scopes...)
+	if err != nil {
+		logger.Log.Error("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments", zap.Error(err))
+		return 0, errors.New("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments")
+	}
+	equipIDs := filterMetricEquipments(mat.Name, prodAllocatMetricEquipment)
+	q := queryBuilder(mat, scopes, equipIDs, id)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicenses - query failed", zap.Error(err), zap.String("query", q))
@@ -46,7 +51,8 @@ func (l *LicenseRepository) MetricOPSComputedLicensesAgg(ctx context.Context, na
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	q := queryBuilder(mat, scopes, ids...)
+	allotedMetricsEq := make(map[string]interface{})
+	q := queryBuilder(mat, scopes, allotedMetricsEq, ids...)
 	// fmt.Println(q)
 	// fmt.Println("we will sleep now")
 	// time.Sleep(1 * time.Minute)

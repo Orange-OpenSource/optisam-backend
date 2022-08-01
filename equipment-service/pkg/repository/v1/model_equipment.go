@@ -93,7 +93,66 @@ type EquipmentInfo struct {
 	ID      string
 	EquipID string
 	Type    string
-	Parent  *EquipmentInfo
+	Parent  *[]EquipmentInfo
+}
+
+type ProductEquipment struct {
+	UID         string `json:"uid"`
+	EquipmentID string `json:"equipment.id"`
+}
+type Products struct {
+	Swidtag          string              `json:"Swidtag"`
+	Name             string              `json:"Name"`
+	Version          string              `json:"Version"`
+	Editor           string              `json:"Editor"`
+	ProductEquipment []*ProductEquipment `json:"product.equipment"`
+}
+type DeployedProducts struct {
+	Products []Products `json:"Products"`
+}
+
+type EquipmentHierarchy struct {
+	VcenterEquipments       []*VcenterEquipments       `json:"VcenterEquipments,omitempty"`
+	ClusterEquipments       []*ClusterEquipments       `json:"ClusterEquipments,omitempty"`
+	ServerEquipments        []*ServerEquipments        `json:"ServerEquipments,omitempty"`
+	SoftPartitionEquipments []*SoftPartitionEquipments `json:"SoftPartitionEquipments,omitempty"`
+}
+type VcenterEquipments struct {
+	UID           string `json:"uid,omitempty"`
+	EquipmentID   string `json:"equipment.id,omitempty"`
+	EquipmentType string `json:"equipment.type,omitempty"`
+}
+type EquipmentParent struct {
+	UID           string `json:"uid,omitempty"`
+	EquipmentID   string `json:"equipment.id,omitempty"`
+	EquipmentType string `json:"equipment.type,omitempty"`
+}
+type ClusterEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+type ServerEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+type SoftPartitionEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+
+type MetricAllocationRequest struct {
+	AllocationMetric string
+	Swidtag          string
+	EquipmentID      string
+}
+
+type AllocatedMetric struct {
+	UID              string   `json:"uid,omitempty"`
+	TypeName         string   `json:"type_name,omitempty"`
+	Scopes           []string `json:"scopes,omitempty"`
+	AllocationMetric string   `json:"allocation.metric,omitempty"`
+	EquipmentID      string   `json:"equipment.id,omitempty"`
+	ProductSwidtag   string   `json:"product.swidtag,omitempty"`
+}
+type AllocatedMetrics struct {
+	AllocatedMetricList []*AllocatedMetric `json:"allocatedMetricList,omitempty"`
 }
 
 // PrimaryKeyAttribute returns primary key attribute of equipment type
@@ -130,8 +189,9 @@ type QueryEquipments struct {
 
 // UpdateEquipmentRequest ...
 type UpdateEquipmentRequest struct {
-	ParentID string
-	Attr     []*Attribute
+	ParentID   string
+	AddAttr    []*Attribute
+	UpdateAttr []*Attribute
 }
 
 func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //nolint
@@ -289,6 +349,13 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsDisplayed:  true,
 					IsSearchable: true,
 				},
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
 			},
 		},
 		"metadata_softpartition.csv": {
@@ -309,6 +376,20 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					Name:         "softpartition_name",
 					Type:         DataTypeString,
 					MappedTo:     "softpartition_name",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "vcpu",
+					Type:         DataTypeInt,
+					MappedTo:     "vcpu",
 					IsDisplayed:  true,
 					IsSearchable: true,
 				},

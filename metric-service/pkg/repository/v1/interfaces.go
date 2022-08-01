@@ -41,6 +41,9 @@ type Metric interface {
 	// CreateMetricAttrSum creates an attribute.sum.standard metric
 	CreateMetricAttrSum(ctx context.Context, mat *MetricAttrSumStand, attr *Attribute, scopes string) (*MetricAttrSumStand, error)
 
+	// CreateMetricAttrSum creates an equip.att.standard metric
+	CreateMetricEquipAttrStandard(ctx context.Context, met *MetricEquipAttrStand, attribute *Attribute, scope string) (*MetricEquipAttrStand, error)
+
 	// ListMetricAttrSum returns all metrics of type attribute.sum.standard metric
 	ListMetricAttrSum(ctx context.Context, scopes string) ([]*MetricAttrSumStand, error)
 
@@ -85,6 +88,9 @@ type Metric interface {
 	// GetMetricConfigNUPID return metric configuration of type oracle.nup.standard
 	GetMetricConfigNUPID(ctx context.Context, metName string, scope string) (*MetricNUPOracle, error)
 
+	// GetMetricNUPByTransformMetricName return metric configuration of type oracle.nup.standard
+	GetMetricNUPByTransformMetricName(ctx context.Context, transformMetricName string, scope string) (*MetricNUPOracle, error)
+
 	// GetMetricConfigSPS return metric configuration of type sag.processor.standard
 	GetMetricConfigSPS(ctx context.Context, metName string, scopes string) (*MetricSPSConfig, error)
 
@@ -102,6 +108,9 @@ type Metric interface {
 
 	// GetMetricConfigAttrSum return metric configuration of type attribute.sum.standard
 	GetMetricConfigAttrSum(ctx context.Context, metName string, scopes string) (*MetricAttrSumStand, error)
+
+	// GetMetricConfigEquipAttr return metric configuration of type equip.attr.standard
+	GetMetricConfigEquipAttr(ctx context.Context, metName string, scopes string) (*MetricEquipAttrStand, error)
 
 	// GetMetricConfigINM return metric configuration of type instance.number.standard
 	GetMetricConfigINM(ctx context.Context, metName string, scopes string) (*MetricINM, error)
@@ -135,6 +144,9 @@ type Metric interface {
 
 	// UpdateMetricNUP updates parameter(StartEqTypeID, AggerateLevelEqTypeID, EndEqTypeID, NumCPUAttrID, NumCoreAttrID, BaseEqTypeID, CoreFactorAttrID, NumberOfUsers) of the metric
 	UpdateMetricNUP(ctx context.Context, met *MetricNUPOracle, scope string) error
+
+	// UpdateMetricEquipAttr updates parameter(metric Value, EqType, AttributeName, Environment) of the metric
+	UpdateMetricEquipAttr(ctx context.Context, met *MetricEquipAttrStand, scope string) error
 }
 
 // Filtertype ...

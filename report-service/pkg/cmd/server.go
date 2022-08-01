@@ -60,8 +60,8 @@ func RunServer() error {
 	pflag.Parse()
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
-	} else if os.Getenv("ENV") == "pprod" {
-		viper.SetConfigName("config-pprod")
+	} else if os.Getenv("ENV") == "performance" {
+		viper.SetConfigName("config-performance")
 	} else if os.Getenv("ENV") == "int" {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
@@ -258,6 +258,11 @@ func RunServer() error {
 
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Sugar().Debug("Recovered in RunServer", r)
+		}
+	}()
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()

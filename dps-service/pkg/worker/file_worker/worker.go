@@ -37,6 +37,11 @@ func (w *worker) ID() string {
 
 // DoWork tell the functionality of worker
 func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Sugar().Debug("Recovered in worker/file_worker/DoWork", r)
+		}
+	}()
 	// defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	dataFromJob := gendb.UploadedDataFile{}
 	var data models.FileData

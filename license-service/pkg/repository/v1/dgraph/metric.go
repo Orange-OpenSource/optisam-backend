@@ -58,3 +58,34 @@ func (l *LicenseRepository) listMetricWithMetricType(ctx context.Context, metTyp
 	}
 	return resp.Json, nil
 }
+
+func filterMetricEquipments(metricName string, prodMetricEquip []*v1.ProductAllocationEquipmentMetrics) map[string]interface{} {
+	resp := make(map[string]interface{})
+
+	// Filter out allocated equipment to metric and not allocated to this metric
+	// Find out the UIDs of those equipments for forcesing to calculate complaince on that equipments only
+	// Find out the UIDs of those equipment which are allocated but not to this metric. These equipment will exclude from calculation
+	//logger.Log.Sugar().Infow("Data for metric alloted", "metricName", metricName, "ProductEquipment", prodMetricEquip[0].ProductEquipment, "AllocatedEquipMetric", prodMetricEquip[0].MetricAllocation)
+	allotedUIDs := ""
+	notAllotedUIDs := ""
+	for _, equip := range prodMetricEquip[0].ProductEquipment {
+		for _, allotedEquip := range prodMetricEquip[0].MetricAllocation {
+			if allotedEquip.EquipmentId == equip.EquipmentId {
+				if allotedEquip.MetricAllocated == metricName {
+					if allotedUIDs != "" {
+						allotedUIDs += " OR "
+					}
+					allotedUIDs += " uid(" + equip.EUID + ") "
+				} else {
+					if notAllotedUIDs != "" {
+						notAllotedUIDs += " AND "
+					}
+					notAllotedUIDs += " uid(" + equip.EUID + ") "
+				}
+			}
+		}
+	}
+	resp["alloted"] = allotedUIDs
+	resp["notAlloted"] = notAllotedUIDs
+	return resp
+}

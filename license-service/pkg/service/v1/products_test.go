@@ -183,7 +183,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, false, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -263,6 +263,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumCptLicences: 8,
 						NumAcqLicences: 5,
@@ -298,7 +299,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "OPS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, false, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1,s2",
 						Metric:            "OPS",
@@ -381,6 +382,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1,s2",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumCptLicences: 8,
 						NumAcqLicences: 0,
@@ -424,7 +426,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -501,6 +503,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -511,6 +514,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s2",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "WS",
 						NumAcqLicences: 10,
 						TotalCost:      50,
@@ -521,6 +525,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s3",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "ONS",
 						NumAcqLicences: 10,
 						TotalCost:      50,
@@ -576,7 +581,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, false, []string{"A"}).Times(1).Return("", nil, errors.New(""))
+				}, false, []string{"A"}).Times(1).Return("", "", nil, errors.New(""))
 
 			},
 			wantErr: true,
@@ -614,7 +619,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("", nil, repo.ErrNodeNotFound)
+				}, false, []string{"A"}).Times(1).Return("", "", nil, repo.ErrNodeNotFound)
 
 			},
 			wantErr: false,
@@ -653,7 +658,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -727,7 +732,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -790,7 +795,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -852,6 +857,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -892,7 +898,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -958,6 +964,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -998,7 +1005,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1084,6 +1091,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1124,7 +1132,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1209,6 +1217,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1249,7 +1258,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1334,6 +1343,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1374,7 +1384,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1459,6 +1469,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1499,7 +1510,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1583,6 +1594,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1623,7 +1635,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1704,6 +1716,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1744,7 +1757,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1827,6 +1840,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1867,7 +1881,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -1948,6 +1962,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -1988,7 +2003,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricOPSOracleProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2083,6 +2098,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -2123,7 +2139,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2247,6 +2263,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumCptLicences: 8,
 						NumAcqLicences: 5,
@@ -2257,6 +2274,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s2",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "WS",
 						NumCptLicences: 6,
 						NumAcqLicences: 10,
@@ -2267,6 +2285,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s3",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "ONS",
 						NumAcqLicences: 10,
 						TotalCost:      50,
@@ -2307,7 +2326,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2431,6 +2450,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumCptLicences: 8,
 						NumAcqLicences: 5,
@@ -2441,6 +2461,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s2",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "WS",
 						NumCptLicences: 6,
 						NumAcqLicences: 10,
@@ -2451,6 +2472,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s3",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "ONS",
 						NumAcqLicences: 10,
 						TotalCost:      50,
@@ -2491,7 +2513,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2553,6 +2575,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -2593,7 +2616,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2659,6 +2682,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -2699,7 +2723,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2777,6 +2801,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -2817,7 +2842,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -2891,6 +2916,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -2931,7 +2957,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3005,6 +3031,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -3045,7 +3072,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricSPSSagProcessorStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3130,6 +3157,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumAcqLicences: 5,
 						TotalCost:      20,
@@ -3170,7 +3198,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3294,6 +3322,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s1",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "OPS",
 						NumCptLicences: 8,
 						NumAcqLicences: 5,
@@ -3304,6 +3333,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s2",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "WS",
 						NumCptLicences: 6,
 						NumAcqLicences: 10,
@@ -3314,6 +3344,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 					{
 						SKU:            "s3",
 						SwidTag:        "P1",
+						ProductName:    "pname",
 						Metric:         "ONS",
 						NumAcqLicences: 10,
 						TotalCost:      50,
@@ -3354,7 +3385,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3456,7 +3487,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3562,7 +3593,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3680,7 +3711,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3794,7 +3825,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",
@@ -3908,7 +3939,7 @@ func Test_licenseServiceServer_ListAcqRightsForProduct(t *testing.T) {
 						Name: "WS",
 						Type: repo.MetricIPSIbmPvuStandard,
 					},
-				}, []string{"A"}).Times(1).Return("pp1", []*repo.ProductAcquiredRight{
+				}, false, []string{"A"}).Times(1).Return("pp1", "pname", []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
 						Metric:            "OPS",

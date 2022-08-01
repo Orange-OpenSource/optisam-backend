@@ -215,6 +215,66 @@ func (mr *MockEquipmentMockRecorder) Equipments(arg0, arg1, arg2, arg3 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Equipments", reflect.TypeOf((*MockEquipment)(nil).Equipments), arg0, arg1, arg2, arg3)
 }
 
+// GetAllEquipmentForSpecifiedProduct mocks base method
+func (m *MockEquipment) GetAllEquipmentForSpecifiedProduct(arg0 context.Context, arg1 string, arg2 ...string) (*v1.DeployedProducts, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllEquipmentForSpecifiedProduct", varargs...)
+	ret0, _ := ret[0].(*v1.DeployedProducts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllEquipmentForSpecifiedProduct indicates an expected call of GetAllEquipmentForSpecifiedProduct
+func (mr *MockEquipmentMockRecorder) GetAllEquipmentForSpecifiedProduct(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEquipmentForSpecifiedProduct", reflect.TypeOf((*MockEquipment)(nil).GetAllEquipmentForSpecifiedProduct), varargs...)
+}
+
+// GetAllEquipmentsInHierarchy mocks base method
+func (m *MockEquipment) GetAllEquipmentsInHierarchy(arg0 context.Context, arg1, arg2 string, arg3 ...string) (*v1.EquipmentHierarchy, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllEquipmentsInHierarchy", varargs...)
+	ret0, _ := ret[0].(*v1.EquipmentHierarchy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllEquipmentsInHierarchy indicates an expected call of GetAllEquipmentsInHierarchy
+func (mr *MockEquipmentMockRecorder) GetAllEquipmentsInHierarchy(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEquipmentsInHierarchy", reflect.TypeOf((*MockEquipment)(nil).GetAllEquipmentsInHierarchy), varargs...)
+}
+
+// GetAllocatedMetrics mocks base method
+func (m *MockEquipment) GetAllocatedMetrics(arg0 context.Context, arg1 string, arg2 ...string) (*v1.AllocatedMetrics, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllocatedMetrics", varargs...)
+	ret0, _ := ret[0].(*v1.AllocatedMetrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllocatedMetrics indicates an expected call of GetAllocatedMetrics
+func (mr *MockEquipmentMockRecorder) GetAllocatedMetrics(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllocatedMetrics", reflect.TypeOf((*MockEquipment)(nil).GetAllocatedMetrics), varargs...)
+}
+
 // ListEquipmentsForProductAggregation mocks base method
 func (m *MockEquipment) ListEquipmentsForProductAggregation(arg0 context.Context, arg1 string, arg2 *v1.EquipmentType, arg3 *v1.QueryEquipments, arg4 []string) (int32, json.RawMessage, error) {
 	m.ctrl.T.Helper()
@@ -261,6 +321,26 @@ func (mr *MockEquipmentMockRecorder) MetadataWithID(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MetadataWithID", reflect.TypeOf((*MockEquipment)(nil).MetadataWithID), arg0, arg1, arg2)
 }
 
+// ParentsHirerachyForEquipment mocks base method
+func (m *MockEquipment) ParentsHirerachyForEquipment(arg0 context.Context, arg1, arg2 string, arg3 byte, arg4 ...string) ([]*v1.EquipmentInfo, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ParentsHirerachyForEquipment", varargs...)
+	ret0, _ := ret[0].([]*v1.EquipmentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ParentsHirerachyForEquipment indicates an expected call of ParentsHirerachyForEquipment
+func (mr *MockEquipmentMockRecorder) ParentsHirerachyForEquipment(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParentsHirerachyForEquipment", reflect.TypeOf((*MockEquipment)(nil).ParentsHirerachyForEquipment), varargs...)
+}
+
 // ProductEquipments mocks base method
 func (m *MockEquipment) ProductEquipments(arg0 context.Context, arg1 string, arg2 *v1.EquipmentType, arg3 *v1.QueryEquipments, arg4 []string) (int32, json.RawMessage, error) {
 	m.ctrl.T.Helper()
@@ -290,6 +370,34 @@ func (m *MockEquipment) UpdateEquipmentType(arg0 context.Context, arg1, arg2, ar
 func (mr *MockEquipmentMockRecorder) UpdateEquipmentType(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEquipmentType", reflect.TypeOf((*MockEquipment)(nil).UpdateEquipmentType), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
+// UpsertAllocateMetricInEquipmentHierarchy mocks base method
+func (m *MockEquipment) UpsertAllocateMetricInEquipmentHierarchy(arg0 context.Context, arg1 *v1.MetricAllocationRequest, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAllocateMetricInEquipmentHierarchy", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAllocateMetricInEquipmentHierarchy indicates an expected call of UpsertAllocateMetricInEquipmentHierarchy
+func (mr *MockEquipmentMockRecorder) UpsertAllocateMetricInEquipmentHierarchy(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocateMetricInEquipmentHierarchy", reflect.TypeOf((*MockEquipment)(nil).UpsertAllocateMetricInEquipmentHierarchy), arg0, arg1, arg2)
+}
+
+// UpsertAllocateMetricInProduct mocks base method
+func (m *MockEquipment) UpsertAllocateMetricInProduct(arg0 context.Context, arg1 string, arg2 []string, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAllocateMetricInProduct", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAllocateMetricInProduct indicates an expected call of UpsertAllocateMetricInProduct
+func (mr *MockEquipmentMockRecorder) UpsertAllocateMetricInProduct(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocateMetricInProduct", reflect.TypeOf((*MockEquipment)(nil).UpsertAllocateMetricInProduct), arg0, arg1, arg2, arg3)
 }
 
 // UpsertEquipment mocks base method

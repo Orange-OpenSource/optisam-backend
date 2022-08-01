@@ -983,6 +983,129 @@ var _ interface {
 
 var _MetricAttrSum_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
 
+// Validate checks the field values on MetricEquipAtt with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *MetricEquipAtt) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		return MetricEquipAttValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_MetricEquipAtt_Name_Pattern.MatchString(m.GetName()) {
+		return MetricEquipAttValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[.-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	// no validation rules for EqType
+
+	// no validation rules for AttributeName
+
+	if utf8.RuneCountInString(m.GetEnvironment()) < 1 {
+		return MetricEquipAttValidationError{
+			field:  "Environment",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_MetricEquipAtt_Environment_Pattern.MatchString(m.GetEnvironment()) {
+		return MetricEquipAttValidationError{
+			field:  "Environment",
+			reason: "value does not match regex pattern \"^[a-zA-Z0-9,]+$\"",
+		}
+	}
+
+	if m.GetValue() <= 0 {
+		return MetricEquipAttValidationError{
+			field:  "Value",
+			reason: "value must be greater than 0",
+		}
+	}
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return MetricEquipAttValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+// MetricEquipAttValidationError is the validation error returned by
+// MetricEquipAtt.Validate if the designated constraints aren't met.
+type MetricEquipAttValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricEquipAttValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricEquipAttValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricEquipAttValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricEquipAttValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricEquipAttValidationError) ErrorName() string { return "MetricEquipAttValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricEquipAttValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricEquipAtt.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricEquipAttValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricEquipAttValidationError{}
+
+var _MetricEquipAtt_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
+
+var _MetricEquipAtt_Environment_Pattern = regexp.MustCompile("^[a-zA-Z0-9,]+$")
+
 // Validate checks the field values on MetricIPS with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *MetricIPS) Validate() error {
@@ -1927,6 +2050,10 @@ func (m *MetricNUP) Validate() error {
 		}
 
 	}
+
+	// no validation rules for Transform
+
+	// no validation rules for TransformMetricName
 
 	return nil
 }

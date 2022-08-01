@@ -181,7 +181,16 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalUnderusageAmount", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-
+	TotalSum, err := s.productRepo.GetTotalDeltaCost(ctx, req.Scope)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalDeltaCost", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	if TotalSum < 0 {
+		cfAmount += TotalSum
+	} else {
+		usAmount += TotalSum
+	}
 	resp.TotalCounterfeitingAmount = cfAmount
 	resp.TotalUnderusageAmount = usAmount
 

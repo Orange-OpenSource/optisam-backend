@@ -101,7 +101,7 @@ func (s *licenseServiceServer) ListAcqRightsForApplicationsProduct(ctx context.C
 
 		prodAcqRights[i].NumCptLicences = int32(computedLicenses)
 		prodAcqRights[i].DeltaNumber = delta
-		prodAcqRights[i].DeltaCost = prodAcqRights[i].TotalCost - prodAcqRights[i].AvgUnitPrice*float64(computedLicenses)
+		prodAcqRights[i].DeltaCost = prodAcqRights[i].PurchaseCost - prodAcqRights[i].AvgUnitPrice*float64(computedLicenses)
 	}
 
 	return &v1.ListAcqRightsForApplicationsProductResponse{

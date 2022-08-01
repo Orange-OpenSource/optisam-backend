@@ -14,16 +14,33 @@ import (
 )
 
 type metricOracleNUP struct {
-	ID             string `json:"uid"`
-	Name           string `json:"metric.name"`
-	Bottom         []*id  `json:"metric.oracle_nup.bottom"`
-	Base           []*id  `json:"metric.oracle_nup.base"`
-	Aggregate      []*id  `json:"metric.oracle_nup.aggregate"`
-	Top            []*id  `json:"metric.oracle_nup.top"`
-	AttrNumCores   []*id  `json:"metric.oracle_nup.attr_num_cores"`
-	AttrNumCPU     []*id  `json:"metric.oracle_nup.attr_num_cpu"`
-	AtrrCoreFactor []*id  `json:"metric.oracle_nup.attr_core_factor"`
-	NumberOfUsers  uint32 `json:"metric.oracle_nup.num_users"`
+	ID                  string `json:"uid"`
+	Name                string `json:"metric.name"`
+	Bottom              []*id  `json:"metric.oracle_nup.bottom"`
+	Base                []*id  `json:"metric.oracle_nup.base"`
+	Aggregate           []*id  `json:"metric.oracle_nup.aggregate"`
+	Top                 []*id  `json:"metric.oracle_nup.top"`
+	AttrNumCores        []*id  `json:"metric.oracle_nup.attr_num_cores"`
+	AttrNumCPU          []*id  `json:"metric.oracle_nup.attr_num_cpu"`
+	AtrrCoreFactor      []*id  `json:"metric.oracle_nup.attr_core_factor"`
+	NumberOfUsers       uint32 `json:"metric.oracle_nup.num_users"`
+	Transform           bool   `json:"metric.oracle_nup.transform"`
+	TransformMetricName string `json:"metric.oracle_nup.transform_metric_name"`
+}
+
+type metricInfoNUP struct {
+	ID                   string
+	Name                 string
+	BottomEqType         []EqField
+	BaseEqType           []EqField
+	AggregateLevelEqType []EqField
+	TopEqType            []EqField
+	NumCoreAttr          []AttrField
+	NumCPUAttr           []AttrField
+	CoreFactorAttr       []AttrField
+	NumOfUsers           uint32
+	Transform            bool
+	TransformMetricName  string
 }
 
 // CreateMetricOracleNUPStandard implements Licence CreateMetricOracleNUPStandard function
@@ -98,6 +115,20 @@ func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, ma
 			Subject:     blankID,
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
+		},
+		{
+			Subject:     blankID,
+			Predicate:   "metric.oracle_nup.transform_metric_name",
+			ObjectValue: stringObjectValue(mat.TransformMetricName),
+		},
+		{
+			Subject:   blankID,
+			Predicate: "metric.oracle_nup.transform",
+			ObjectValue: &api.Value{
+				Val: &api.Value_BoolVal{
+					BoolVal: mat.Transform,
+				},
+			},
 		},
 	}
 
@@ -192,6 +223,8 @@ func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName strin
 				attribute.name
 			}
 			NumOfUsers: metric.oracle_nup.num_users
+			Transform : metric.oracle_nup.transform
+			TransformMetricName : metric.oracle_nup.transform_metric_name
 		} 
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -200,7 +233,7 @@ func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName strin
 		return nil, errors.New("cannot get metrics of type nup")
 	}
 	type Resp struct {
-		Metric []metricInfo `json:"Data"`
+		Metric []metricInfoNUP `json:"Data"`
 	}
 	var data Resp
 	if err := json.Unmarshal(resp.Json, &data); err != nil {
@@ -224,7 +257,9 @@ func (l *MetricRepository) GetMetricConfigNUP(ctx context.Context, metName strin
 		// BaseEqType:          data.Metric[0].BaseEqType[0].MetadtaEquipmentType,
 		// EndEqType:           data.Metric[0].TopEqType[0].MetadtaEquipmentType,
 		// AggerateLevelEqType: data.Metric[0].AggregateLevelEqType[0].MetadtaEquipmentType,
-		NumberOfUsers: data.Metric[0].NumOfUsers,
+		NumberOfUsers:       data.Metric[0].NumOfUsers,
+		Transform:           data.Metric[0].Transform,
+		TransformMetricName: data.Metric[0].TransformMetricName,
 	}
 	if len(data.Metric[0].NumCoreAttr) != 0 {
 		respmet.NumCoreAttr = data.Metric[0].NumCoreAttr[0].AttributeName
@@ -263,6 +298,8 @@ func (l *MetricRepository) GetMetricConfigNUPID(ctx context.Context, metName str
 			 metric.oracle_nup.attr_num_cores{uid}
 		     metric.oracle_nup.attr_num_cpu{uid}
 			 metric.oracle_nup.num_users
+			 metric.oracle_nup.transform
+			 metric.oracle_nup.transform_metric_name
 		} 
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)
@@ -312,6 +349,8 @@ func (l *MetricRepository) UpdateMetricNUP(ctx context.Context, met *v1.MetricNU
 		uid(ID) <metric.oracle_nup.attr_num_cores> <` + met.NumCoreAttrID + `> .
 	    uid(ID) <metric.oracle_nup.attr_num_cpu> <` + met.NumCPUAttrID + `> .	
 		uid(ID) <metric.oracle_nup.num_users> "` + strconv.FormatUint(uint64(met.NumberOfUsers), 10) + `" .	
+		uid(ID) <metric.oracle_nup.transform> "` + strconv.FormatBool(met.Transform) + `" .	
+		uid(ID) <metric.oracle_nup.transform_metric_name> "` + met.TransformMetricName + `" .	
 	`
 	req := &api.Request{
 		Query: q,
@@ -385,5 +424,48 @@ func converMetricToModelMetricNUP(m *metricOracleNUP) (*v1.MetricNUPOracle, erro
 		NumCoreAttrID:         m.AttrNumCores[0].ID,
 		NumCPUAttrID:          m.AttrNumCPU[0].ID,
 		NumberOfUsers:         m.NumberOfUsers,
+		Transform:             m.Transform,
+		TransformMetricName:   m.TransformMetricName,
 	}, nil
+}
+
+// GetMetricNUPByTransformMetricName implements Metric GetMetricNUPByTransformMetricName function
+func (l *MetricRepository) GetMetricNUPByTransformMetricName(ctx context.Context, transformMetricName string, scope string) (*v1.MetricNUPOracle, error) {
+	q := `{
+		Data(func: eq(metric.oracle_nup.transform_metric_name,` + transformMetricName + `)) @filter(eq(scopes,` + scope + `)){
+			 uid
+			 metric.name
+			 metric.oracle_nup.base{uid}
+			 metric.oracle_nup.top{uid}
+			 metric.oracle_nup.bottom{uid}
+			 metric.oracle_nup.aggregate{uid}
+			 metric.oracle_nup.attr_core_factor{uid}
+			 metric.oracle_nup.attr_num_cores{uid}
+		     metric.oracle_nup.attr_num_cpu{uid}
+			 metric.oracle_nup.num_users
+			 metric.oracle_nup.transform
+			 metric.oracle_nup.transform_metric_name
+		} 
+	}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/GetMetricNUPByTransformMetricName - query failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot get metrics of type nup")
+	}
+	type Resp struct {
+		Metric []metricOracleNUP `json:"Data"`
+	}
+	var data Resp
+	if err := json.Unmarshal(resp.Json, &data); err != nil {
+		fmt.Println(string(resp.Json))
+		logger.Log.Error("dgraph/GetMetricNUPByTransformMetricName - Unmarshal failed", zap.Error(err), zap.String("query", q))
+		return nil, errors.New("cannot Unmarshal")
+	}
+	if data.Metric == nil {
+		return nil, v1.ErrNoData
+	}
+	if len(data.Metric) == 0 {
+		return nil, v1.ErrNoData
+	}
+	return converMetricToModelMetricNUP(&data.Metric[0])
 }

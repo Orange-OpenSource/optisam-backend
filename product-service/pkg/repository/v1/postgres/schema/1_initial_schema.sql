@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS acqrights (
     software_provider VARCHAR NOT NULL DEFAULT '',
     file_name VARCHAR NOT NULL DEFAULT '',
     file_data BYTEA,
+    repartition bool NOT NULL DEFAULT FALSE,
     PRIMARY KEY(sku, scope)
 );
 
@@ -149,6 +150,7 @@ CREATE TABLE IF NOT EXISTS aggregated_rights (
     updated_by VARCHAR,
     file_name VARCHAR NOT NULL DEFAULT '',
     file_data BYTEA,
+    repartition bool NOT NULL DEFAULT FALSE,
     FOREIGN KEY (aggregation_id) REFERENCES aggregations ON DELETE CASCADE,
     PRIMARY KEY(sku,scope)
 );
@@ -157,6 +159,7 @@ CREATE TABLE IF NOT EXISTS products_equipments (
     swidtag VARCHAR NOT NULL ,
     equipment_id VARCHAR NOT NULL,
     num_of_users INTEGER,
+    allocated_metric VARCHAR NOT NULL DEFAULT '',
     scope VARCHAR NOT NULL,
     FOREIGN KEY (swidtag, scope) REFERENCES products ON DELETE CASCADE,
     PRIMARY KEY (swidtag,equipment_id,scope)
@@ -195,6 +198,7 @@ CREATE TABLE IF NOT EXISTS overall_computed_licences(
     delta_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
     avg_unit_price NUMERIC(15,2) NOT NULL DEFAULT 0,
     computed_details VARCHAR NOT NULL,
+    cost_optimization BOOLEAN DEFAULT FALSE,
     metic_not_defined BOOLEAN DEFAULT FALSE,
     not_deployed BOOLEAN DEFAULT FALSE,
     editor VARCHAR NOT NULL,

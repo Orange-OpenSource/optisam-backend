@@ -68,23 +68,38 @@ func (l *LicenseRepository) ParentsHirerachyForEquipment(ctx context.Context, eq
 	return equipment, nil
 }
 
-// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle processor.standard
+// ProductsForEquipmentForMetricOracleProcessorStandard gives products for oracle.processor.standard
 func (l *LicenseRepository) ProductsForEquipmentForMetricOracleProcessorStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricOPSComputed, scopes ...string) ([]*v1.ProductData, error) {
 	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
-// ProductsForEquipmentForMetricOracleNUPStandard gives products for oracle processor.standard
+// ProductsForEquipmentForMetricOracleNUPStandard gives products for oracle.nup.standard
 func (l *LicenseRepository) ProductsForEquipmentForMetricOracleNUPStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricNUPComputed, scopes ...string) ([]*v1.ProductData, error) {
 	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
-// ProductsForEquipmentForMetricIPSStandard gives products for oracle processor.standard
+// ProductsForEquipmentForMetricIPSStandard gives products for ibm.pvu.standard
 func (l *LicenseRepository) ProductsForEquipmentForMetricIPSStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricIPSComputed, scopes ...string) ([]*v1.ProductData, error) {
 	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
-// ProductsForEquipmentForMetricSAGStandard gives products for oracle processor.standard
+// ProductsForEquipmentForMetricSAGStandard gives products for sag.processor.standard
 func (l *LicenseRepository) ProductsForEquipmentForMetricSAGStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricSPSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
+}
+
+// ProductsForEquipmentForMetricAttrCounterStandard gives products for attribute.counter.standard
+func (l *LicenseRepository) ProductsForEquipmentForMetricAttrCounterStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricACSComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
+}
+
+// ProductsForEquipmentForMetricAttrSumStandard gives products for attribute.sum.standard
+func (l *LicenseRepository) ProductsForEquipmentForMetricAttrSumStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricAttrSumStandComputed, scopes ...string) ([]*v1.ProductData, error) {
+	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
+}
+
+// ProductsForEquipmentForMetricEquipAttrStandard gives products for equipment.attribute.standard
+func (l *LicenseRepository) ProductsForEquipmentForMetricEquipAttrStandard(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, metric *v1.MetricEquipAttrStandComputed, scopes ...string) ([]*v1.ProductData, error) {
 	return l.productsForEquipmentForMetric(ctx, equipID, hirearchyLevel, metric.Name, scopes...)
 }
 
@@ -161,7 +176,7 @@ func (l *LicenseRepository) UsersForEquipmentForMetricOracleNUP(ctx context.Cont
 		  userIDs as  equipment.users
 		  ~equipment.parent
 		}
-		var(func:eq(product.swidtag,"` + productID + `")){
+		var(func:eq(product.swidtag,"` + productID + `"))  ` + agregateFilters(typeFilters("type_name", "product")) + `{
 		  productUserIDs as product.users
 		}
 	  

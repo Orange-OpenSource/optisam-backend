@@ -17,7 +17,13 @@ func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id st
 	// if !ok {
 	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
 	// }
-	opsq := queryBuilderOPSForNUP(mat, scopes, id)
+	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, id, scopes...)
+	if err != nil {
+		logger.Log.Error("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments", zap.Error(err))
+		return 0, 0, errors.New("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments")
+	}
+	equipIDs := filterMetricEquipments(mat.Name, prodAllocatMetricEquipment)
+	opsq := queryBuilderOPSForNUP(mat, scopes, equipIDs, id)
 	usersq := buildQueryUsersForNUP(scopes, id)
 	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
@@ -47,7 +53,8 @@ func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, na
 	// if !ok {
 	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
 	// }
-	opsq := queryBuilderOPSForNUP(mat, scopes, ids...)
+	allotedMetricsEq := make(map[string]interface{})
+	opsq := queryBuilderOPSForNUP(mat, scopes, allotedMetricsEq, ids...)
 	usersq := buildQueryUsersForNUP(scopes, ids...)
 	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {

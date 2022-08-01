@@ -1,0 +1,43 @@
+.meta-template:
+  before_script:
+    - ls -lash
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - cd meta-service
+   
+
+.meta-package:
+  extends: .meta-template
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - cd ..
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/meta-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/meta-service:$TAG
+
+
+.meta-deploy_noprod:
+  extends: .meta-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT}
+    - oc delete deploymentconfig optisam-meta
+    - oc process -f meta-service.yml -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+
+.meta-deploy_prod:
+  extends: .meta-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  environment:
+    name: prod
+    url: https://optisam-meta-prod.apps.fr01.paas.tech.orange
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT_PROD}
+    - oc process -f meta-service.yml -p TAG=$TAG -p ENV=prod -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+
+

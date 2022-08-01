@@ -4,11 +4,6 @@
     "title": "product.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "ProductService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -2619,6 +2614,9 @@
         "file_data": {
           "type": "string",
           "format": "byte"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2714,6 +2712,9 @@
         },
         "file_name": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2855,6 +2856,9 @@
         "file_data": {
           "type": "string",
           "format": "byte"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2963,6 +2967,9 @@
         },
         "file_name": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -3565,6 +3572,13 @@
         "numofEquipments": {
           "type": "integer",
           "format": "int32"
+        },
+        "equipmentUser": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "allocatedMetric": {
+          "type": "string"
         }
       }
     },
@@ -3925,10 +3939,24 @@
         },
         "support_number": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
+        },
+        "comment": {
+          "type": "string"
         }
       }
     },
     "v1UpsertAcqRightsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1UpsertAllocateMetricEquipementResponse": {
       "type": "object",
       "properties": {
         "success": {

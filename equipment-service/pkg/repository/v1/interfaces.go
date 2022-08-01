@@ -32,6 +32,20 @@ type Equipment interface {
 	// EquipmentTypeChildren fetches all equipment type children from database
 	EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*EquipmentType, error)
 
+	// ParentHirearchy gives equipment along with parent hierarchy
+	ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) ([]*EquipmentInfo, error)
+
+	// GetAllEquipmentsInHierarchy gives all equipments fallen in ancestor
+	GetAllEquipmentsInHierarchy(ctx context.Context, equipType string, endEquID string, scopes ...string) (*EquipmentHierarchy, error)
+
+	GetAllEquipmentForSpecifiedProduct(ctx context.Context, swidtag string, scopes ...string) (*DeployedProducts, error)
+
+	UpsertAllocateMetricInEquipmentHierarchy(ctx context.Context, mat *MetricAllocationRequest, scope string) error
+
+	GetAllocatedMetrics(ctx context.Context, swidtag string, scopes ...string) (*AllocatedMetrics, error)
+
+	UpsertAllocateMetricInProduct(ctx context.Context, swidTag string, metUids []string, scope string) error
+
 	// UpsertMetaData stores metadata in dgrpah
 	UpsertMetadata(ctx context.Context, metadata *Metadata) (string, error)
 

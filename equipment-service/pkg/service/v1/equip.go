@@ -6,12 +6,16 @@ import (
 	"encoding/json"
 	"net/url"
 	accv1 "optisam-backend/account-service/pkg/api/v1"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	prodv1 "optisam-backend/product-service/pkg/api/v1"
+
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/equipment-service/pkg/api/v1"
 	repo "optisam-backend/equipment-service/pkg/repository/v1"
+
 	"reflect"
 
 	// "regexp"
@@ -30,6 +34,8 @@ import (
 type equipmentServiceServer struct {
 	equipmentRepo repo.Equipment
 	account       accv1.AccountServiceClient
+	metricClient  metv1.MetricServiceClient
+	productClient prodv1.ProductServiceClient
 }
 
 // custom json unmarshal
@@ -72,6 +78,8 @@ func NewEquipmentServiceServer(equipmentRepo repo.Equipment, grpcServers map[str
 	return &equipmentServiceServer{
 		equipmentRepo: equipmentRepo,
 		account:       accv1.NewAccountServiceClient(grpcServers["account"]),
+		metricClient:  metv1.NewMetricServiceClient(grpcServers["metric"]),
+		productClient: prodv1.NewProductServiceClient(grpcServers["product"]),
 	}
 }
 
@@ -117,6 +125,7 @@ func (s *equipmentServiceServer) UpsertMetadata(ctx context.Context, req *v1.Ups
 
 // UpsertEquipment to load equipment data
 // uses reflection heavily
+// nolint:staticcheck
 func (s *equipmentServiceServer) UpsertEquipment(ctx context.Context, req *v1.UpsertEquipmentRequest) (*v1.UpsertEquipmentResponse, error) {
 
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)

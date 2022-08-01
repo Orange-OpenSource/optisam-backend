@@ -34,6 +34,7 @@ const (
 	MissingField           string = "missingField"
 	DuplicateHeader        string = "duplicateHeader"
 	BadReference           string = "badReference"
+	BadData                string = "badData"
 
 	// errors
 	BadFile              string = "BadOrCorruptFile"
@@ -73,9 +74,9 @@ var (
 	dataTypes map[int]string = map[int]string{0: "string", 1: "integer", 2: "float", 3: "DD-MM-YYYY or DD/MM/YYYY"}
 
 	sheetsAndHeaders map[string]map[string]Info = map[string]map[string]Info{
-		servers:        {"server_name": Info{MandatoryWithBlank, STRING}, "server_id": Info{Mandatory, STRING}, "server_type": Info{Wished, STRING}, "server_os": Info{Wished, STRING}, "cpu_model": Info{Mandatory, STRING}, "cores_per_processor": Info{Mandatory, INT}, "hyperthreading": Info{Wished, STRING}, "cluster_name": Info{MandatoryWithBlank, STRING}, "vcenter_name": Info{MandatoryWithBlank, STRING}, "vcenter_version": Info{Wished, STRING}, "datacenter_name": Info{Wished, STRING}, "ibm_pvu": Info{MandatoryWithBlank, FLOAT64}, "sag_uvu": Info{MandatoryWithBlank, INT}, "cpu_manufacturer": Info{MandatoryWithBlank, STRING}, "server_processors_numbers": Info{Mandatory, INT}},
+		servers:        {"server_name": Info{MandatoryWithBlank, STRING}, "server_id": Info{Mandatory, STRING}, "environment": Info{Wished, STRING}, "server_type": Info{Wished, STRING}, "server_os": Info{Wished, STRING}, "cpu_model": Info{Mandatory, STRING}, "cores_per_processor": Info{Mandatory, INT}, "hyperthreading": Info{Wished, STRING}, "cluster_name": Info{MandatoryWithBlank, STRING}, "vcenter_name": Info{MandatoryWithBlank, STRING}, "vcenter_version": Info{Wished, STRING}, "datacenter_name": Info{Wished, STRING}, "ibm_pvu": Info{MandatoryWithBlank, FLOAT64}, "sag_uvu": Info{MandatoryWithBlank, INT}, "cpu_manufacturer": Info{MandatoryWithBlank, STRING}, "server_processors_numbers": Info{Mandatory, INT}},
 		acquiredRights: {"maintenance_provider": Info{MandatoryWithBlank, STRING}, "last_po": Info{MandatoryWithBlank, STRING}, "support_number": Info{MandatoryWithBlank, STRING}, "software_provider": Info{MandatoryWithBlank, STRING}, "ordering_date": Info{MandatoryWithBlank, DATE}, "csc": Info{MandatoryWithBlank, STRING}, "sku": Info{Mandatory, STRING}, "product_name": Info{Mandatory, STRING}, "product_version": Info{Mandatory, STRING}, "product_editor": Info{Mandatory, STRING}, "metric": Info{Mandatory, STRING}, "licence_type": Info{Wished, STRING}, "acquired_licenses": Info{Mandatory, INT}, "unit_price": Info{Mandatory, FLOAT64}, "maintenance_licences": Info{MandatoryWithBlank, INT}, "maintenance_unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_start": Info{MandatoryWithBlank, DATE}, "maintenance_end": Info{MandatoryWithBlank, DATE}},
-		softpartitions: {"softpartition_name": Info{MandatoryWithBlank, STRING}, "softpartition_id": Info{Mandatory, STRING}, "server_id": Info{Mandatory, STRING}},
+		softpartitions: {"softpartition_name": Info{MandatoryWithBlank, STRING}, "softpartition_id": Info{Mandatory, STRING}, "environment": Info{Wished, STRING}, "vcpu": Info{Wished, INT}, "server_id": Info{Mandatory, STRING}},
 		products:       {"product_name": Info{Mandatory, STRING}, "product_version": Info{Mandatory, STRING}, "product_editor": Info{Mandatory, STRING}, "host_id": Info{Mandatory, STRING}, "domain": Info{MandatoryWithBlank, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "application_name": Info{MandatoryWithBlank, STRING}, "application_id": Info{MandatoryWithBlank, STRING}, "application_instance_name": Info{MandatoryWithBlank, STRING}, "number_of_access": Info{MandatoryWithBlank, INT}}}
 
 	actionAndColors map[string]string = map[string]string{Inconsistent1: "#FFC0CB", Inconsistent2: "#C0C0C0", WrongTypeField: "#FFA500", DuplicateLine: "#1986EE", MandatoryHeader: "#7FFD4", MissingField: "#008000", DuplicateHeader: "#808000", BadReference: "#F5CBA7"}
@@ -1315,6 +1316,12 @@ func handleMandatoryFieldMissingAndWrongType(fp *excel.File, yLen int, sheetName
 				if err := fp.SetCellValue(sheetName, cell, celVal); err != nil {
 					return nil, isGoodObject, err
 				}
+			}
+		} else if sheetsAndHeaders[sheetName][k].DataType == STRING {
+			if strings.Contains(celVal, ";") { // semi-colon is not allowed
+				msg = "Semi-Colon is not allowed in data"
+				action = BadData
+				column = cell
 			}
 		}
 		if msg != "" {

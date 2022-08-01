@@ -8,6 +8,8 @@ import (
 	"optisam-backend/common/optisam/token/claims"
 	ls "optisam-backend/license-service/pkg/api/v1"
 	mockls "optisam-backend/license-service/pkg/api/v1/mock"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	mockMet "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
 	"reflect"
 	"testing"
@@ -16,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSimulationService_SimulationByMetric(t *testing.T) {
+func TestSimulationService_SimulationByCost(t *testing.T) {
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
@@ -26,23 +28,23 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 	var licenseClient ls.LicenseServiceClient
 	type args struct {
 		ctx context.Context
-		req *v1.SimulationByMetricRequest
+		req *v1.SimulationByCostRequest
 	}
 	tests := []struct {
 		name    string
 		hcs     *SimulationService
 		args    args
 		setup   func()
-		want    *v1.SimulationByMetricResponse
+		want    *v1.SimulationByCostResponse
 		wantErr bool
 	}{
 		{
 			name: "SUCCESS",
 			args: args{
 				ctx: ctx,
-				req: &v1.SimulationByMetricRequest{
+				req: &v1.SimulationByCostRequest{
 					Editor: "Oracle",
-					MetricDetails: []*v1.MetricSimDetails{
+					CostDetails: []*v1.CostSimDetails{
 						{
 							Sku:        "sku1",
 							Swidtag:    "swid3",
@@ -126,9 +128,9 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 					},
 				}, nil)
 			},
-			want: &v1.SimulationByMetricResponse{
+			want: &v1.SimulationByCostResponse{
 				Success: true,
-				MetricSimResult: []*v1.MetricSimulationResult{
+				CostSimResult: []*v1.CostSimulationResult{
 					{
 						Sku:             "sku3",
 						Swidtag:         "swid1,swid2",
@@ -152,7 +154,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 						Swidtag:         "swid3",
 						AggregationName: "",
 						MetricName:      "ibm_pvu",
-						NumCptLicences:  20,
+						NumCptLicences:  10,
 						OldTotalCost:    300,
 						NewTotalCost:    5000,
 					},
@@ -163,8 +165,114 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 			name: "Success - With no metrics",
 			args: args{
 				ctx: ctx,
+				req: &v1.SimulationByCostRequest{
+					Editor:      "Oracle",
+					CostDetails: []*v1.CostSimDetails{},
+					Scope:       "Scope1",
+				},
+			},
+			setup: func() {
+
+			},
+			want: &v1.SimulationByCostResponse{
+				Success: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			hcs := NewSimulationServiceForTest(nil, licenseClient)
+			got, err := hcs.SimulationByCost(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SimulationService.SimulationByCost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr {
+				compareCostSimulationResultAll(t, "SimulationService.SimulationByCost", tt.want.CostSimResult, got.CostSimResult)
+				//t.Errorf("SimulationService.SimulationByCost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSimulationService_SimulationByMetric(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var licenseClient ls.LicenseServiceClient
+	type args struct {
+		ctx context.Context
+		req *v1.SimulationByMetricRequest
+	}
+	tests := []struct {
+		name    string
+		hcs     *SimulationService
+		args    args
+		setup   func()
+		want    *v1.SimulationByMetricResponse
+		wantErr bool
+	}{
+		{
+			name: "SUCCESS",
+			args: args{
+				ctx: ctx,
 				req: &v1.SimulationByMetricRequest{
-					Editor:        "Oracle",
+					SwidTag: "Oracle_Database_11g_Enterprise_Edition_10.3",
+					MetricDetails: []*v1.MetricSimDetails{
+						{
+							MetricName: "ibm_pvu",
+							UnitCost:   200,
+						},
+						{
+							MetricName: "oracle_processor",
+							UnitCost:   300,
+						},
+					},
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicenseClient := mockls.NewMockLicenseServiceClient(mockCtrl)
+				licenseClient = mockLicenseClient
+				gomock.InOrder(
+					mockLicenseClient.EXPECT().ProductLicensesForMetric(ctx, gomock.Any()).Times(2).DoAndReturn(func(ctx context.Context, req *ls.ProductLicensesForMetricRequest) (*ls.ProductLicensesForMetricResponse, error) {
+						if req.MetricName == "ibm_pvu" {
+							return &ls.ProductLicensesForMetricResponse{
+								NumCptLicences: 1200,
+								TotalCost:      240000,
+								MetricName:     "ibm_pvu",
+							}, nil
+						}
+						return nil, errors.New("Internal")
+					}),
+				)
+			},
+			want: &v1.SimulationByMetricResponse{
+				MetricSimResult: []*v1.MetricSimulationResult{
+					{
+						Success:        true,
+						NumCptLicences: 1200,
+						TotalCost:      240000,
+						MetricName:     "ibm_pvu",
+					},
+					{
+						MetricName:       "oracle_processor",
+						SimFailureReason: "Internal",
+					},
+				},
+			},
+		},
+		{
+			name: "Success - With no metrics",
+			args: args{
+				ctx: ctx,
+				req: &v1.SimulationByMetricRequest{
+					SwidTag:       "Oracle_Database_11g_Enterprise_Edition_10.3",
 					MetricDetails: []*v1.MetricSimDetails{},
 					Scope:         "Scope1",
 				},
@@ -172,9 +280,7 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 			setup: func() {
 
 			},
-			want: &v1.SimulationByMetricResponse{
-				Success: true,
-			},
+			want: &v1.SimulationByMetricResponse{},
 		},
 	}
 	for _, tt := range tests {
@@ -186,9 +292,8 @@ func TestSimulationService_SimulationByMetric(t *testing.T) {
 				t.Errorf("SimulationService.SimulationByMetric() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr {
-				compareMetricSimulationResultAll(t, "SimulationService.SimulationByMetric", tt.want.MetricSimResult, got.MetricSimResult)
-				//t.Errorf("SimulationService.SimulationByMetric() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SimulationService.SimulationByMetric() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -259,6 +364,7 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 	}
 	var mockCtrl *gomock.Controller
 	var licenseClient ls.LicenseServiceClient
+	var metricClient metv1.MetricServiceClient
 	type args struct {
 		ctx context.Context
 		req *v1.SimulationByHardwareRequest
@@ -279,114 +385,96 @@ func TestSimulationService_SimulationByHardware(t *testing.T) {
 					EquipType:  "server",
 					EquipId:    "30373237-3132-5a43-3336-32364341424d",
 					Attributes: attributes,
-					MetricDetails: []*v1.SimMetricDetails{
-						{
-							MetricType: "oracle.processor.standard",
-							MetricName: "oracle_processor",
-						},
-						{
-							MetricType: "ibm.pvu.standard",
-							MetricName: "ibm_pvu",
-						},
-					},
-					Scope: "Scope1",
+					Scope:      "Scope1",
 				},
 			},
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockLicenseClient := mockls.NewMockLicenseServiceClient(mockCtrl)
+				mockMetricClient := mockMet.NewMockMetricServiceClient(mockCtrl)
 				licenseClient = mockLicenseClient
+				metricClient = mockMetricClient
+				mockMetricClient.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"Scope1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Name: "oracle_processor",
+							Type: "oracle.processor.standard",
+						},
+					},
+				}, nil)
 				gomock.InOrder(
-					mockLicenseClient.EXPECT().LicensesForEquipAndMetric(ctx, gomock.Any()).Times(2).DoAndReturn(func(ctx context.Context, req *ls.LicensesForEquipAndMetricRequest) (*ls.LicensesForEquipAndMetricResponse, error) {
-						if req.MetricName == "ibm_pvu" {
-							return nil, errors.New("Internal")
-						}
-
-						return &ls.LicensesForEquipAndMetricResponse{
+					mockLicenseClient.EXPECT().LicensesForEquipAndMetric(ctx, &ls.LicensesForEquipAndMetricRequest{
+						EquipType:  "server",
+						EquipId:    "30373237-3132-5a43-3336-32364341424d",
+						MetricName: "oracle_processor",
+						MetricType: "oracle.processor.standard",
+						Attributes: simulationToLicenseAttributesAll(attributes),
+						Scope:      "Scope1",
+					}).Times(1).Return(
+						&ls.LicensesForEquipAndMetricResponse{
 							Licenses: []*ls.ProductLicenseForEquipAndMetric{
 								{
 									MetricName:  "oracle_processor",
 									OldLicences: 120000,
 									NewLicenses: 130000,
 									Delta:       10000,
-									Product: &ls.Product{
-										SwidTag:  "Oracle_Real_Application_Testing_12.1.0.1.0",
-										Name:     "Oracle Real Application Testing",
-										Version:  "12.1.0.1.0",
-										Category: "Other",
-										Editor:   "Oracle",
-									},
+									SwidTag:     "Oracle_Real_Application_Testing_12.1.0.1.0",
+									Editor:      "Oracle",
+									MetricType:  "oracle.processor.standard",
 								},
 							},
-						}, nil
-					}),
+						}, nil),
 				)
 			},
 			want: &v1.SimulationByHardwareResponse{
-				SimulationResult: []*v1.SimulatedProductsLicenses{
+				SimulatedResults: []*v1.SimulatedProductLicenses{
 					{
-						Success:    true,
-						MetricName: "oracle_processor",
+						Success: true,
 						Licenses: []*v1.SimulatedProductLicense{
 							{
 								OldLicences: 120000,
 								NewLicenses: 130000,
 								Delta:       10000,
 								SwidTag:     "Oracle_Real_Application_Testing_12.1.0.1.0",
-								ProductName: "Oracle Real Application Testing",
 								Editor:      "Oracle",
 							},
 						},
-					},
-					{
-						MetricName:       "ibm_pvu",
-						SimFailureReason: "Internal",
+						MetricName: "oracle_processor",
+						MetricType: "oracle.processor.standard",
 					},
 				},
 			},
-		},
-		{
-
-			name: "Success - With no metrics",
-			args: args{
-				ctx: ctx,
-				req: &v1.SimulationByHardwareRequest{
-					EquipType:     "server",
-					EquipId:       "30373237-3132-5a43-3336-32364341424d",
-					MetricDetails: []*v1.SimMetricDetails{},
-					Attributes:    attributes,
-					Scope:         "Scope1",
-				},
-			},
-			setup: func() {
-
-			},
-			want: &v1.SimulationByHardwareResponse{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			hcs := NewSimulationServiceForTest(nil, licenseClient)
+			hcs := &SimulationService{
+				repo:          nil,
+				licenseClient: licenseClient,
+				metricClient:  metricClient,
+			}
 			got, err := hcs.SimulationByHardware(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SimulationService.SimulationByHardware() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SimulationService.SimulationByHardware() got = %v, want = %v", got, tt.want)
+			if !tt.wantErr {
+				compareHardwareSimulationResultAll(t, "SimulationService.SimulationByCost", tt.want.SimulatedResults, got.SimulatedResults)
 			}
 		})
 	}
 }
 
-func compareMetricSimulationResultAll(t *testing.T, name string, exp []*v1.MetricSimulationResult, act []*v1.MetricSimulationResult) {
+func compareCostSimulationResultAll(t *testing.T, name string, exp []*v1.CostSimulationResult, act []*v1.CostSimulationResult) {
 	for i := range exp {
-		compareMetricSimulationResult(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
+		compareCostSimulationResult(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
 	}
 }
 
-func compareMetricSimulationResult(t *testing.T, name string, exp *v1.MetricSimulationResult, act *v1.MetricSimulationResult) {
+func compareCostSimulationResult(t *testing.T, name string, exp *v1.CostSimulationResult, act *v1.CostSimulationResult) {
 	if exp == nil && act == nil {
 		return
 	}
@@ -400,4 +488,35 @@ func compareMetricSimulationResult(t *testing.T, name string, exp *v1.MetricSimu
 	assert.Equalf(t, exp.OldTotalCost, act.OldTotalCost, "%s.OldTotalCost should be same", name)
 	assert.Equalf(t, exp.NewTotalCost, act.NewTotalCost, "%s.NewTotalCost should be same", name)
 	assert.Equalf(t, exp.Sku, act.Sku, "%s.Sku should be same", name)
+}
+
+func compareHardwareSimulationResultAll(t *testing.T, name string, exp []*v1.SimulatedProductLicenses, act []*v1.SimulatedProductLicenses) {
+	for i := range exp {
+		assert.Equalf(t, exp[i].Success, act[i].Success, "%s.Success should be same", "SimulationService.SimulationByHardware()")
+		assert.Equalf(t, exp[i].MetricName, act[i].MetricName, "%s.MetricName should be same", name)
+		assert.Equalf(t, exp[i].MetricType, act[i].MetricType, "%s.MetricType should be same", name)
+		compareHardwareSimulationSimulatedProductLicenses(t, fmt.Sprintf("%s[%d]", name, i), exp[i].Licenses, act[i].Licenses)
+	}
+}
+
+func compareHardwareSimulationSimulatedProductLicenses(t *testing.T, name string, exp []*v1.SimulatedProductLicense, act []*v1.SimulatedProductLicense) {
+	for i := range exp {
+		compareHardwareSimulationResult(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[i])
+	}
+}
+
+func compareHardwareSimulationResult(t *testing.T, name string, exp *v1.SimulatedProductLicense, act *v1.SimulatedProductLicense) {
+	if exp == nil && act == nil {
+		return
+	}
+	if exp == nil {
+		assert.Nil(t, act, "result is expected to be nil")
+	}
+	assert.NotNil(t, act, "result is not expected to be nil but is nil")
+	assert.Equalf(t, exp.SwidTag, act.SwidTag, "%s.SwidTag should be same", name)
+	assert.Equalf(t, exp.AggregationName, act.AggregationName, "%s.AggregationName should be same", name)
+	assert.Equalf(t, exp.OldLicences, act.OldLicences, "%s.OldLicences should be same", name)
+	assert.Equalf(t, exp.NewLicenses, act.NewLicenses, "%s.NewLicenses should be same", name)
+	assert.Equalf(t, exp.Delta, act.Delta, "%s.Delta should be same", name)
+	assert.Equalf(t, exp.Editor, act.Editor, "%s.Editor should be same", name)
 }

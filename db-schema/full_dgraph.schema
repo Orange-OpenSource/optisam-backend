@@ -1,0 +1,608 @@
+<Recycle>: default .
+<acqRights.SKU>: string @index(exact, trigram) .
+<acqRights.averageMaintenantUnitPrice>: float .
+<acqRights.averageUnitPrice>: float .
+<acqRights.corporateSourcingContract>: string .
+<acqRights.editor>: string @index(exact, trigram) .
+<acqRights.endOfMaintenance>: string .
+<acqRights.lastPurchasedOrder>: string .
+<acqRights.maintenanceProvider>: string .
+<acqRights.metric>: [string] @index(exact, trigram) .
+<acqRights.numOfAcqLicences>: int .
+<acqRights.numOfLicencesUnderMaintenance>: int .
+<acqRights.orderingDate>: string .
+<acqRights.productName>: string @index(trigram) .
+<acqRights.repartition>: bool .
+<acqRights.softwareProvider>: string .
+<acqRights.startOfMaintenance>: string .
+<acqRights.supportNumber>: string .
+<acqRights.swidtag>: string @index(exact, trigram) .
+<acqRights.totalCost>: float .
+<acqRights.totalMaintenanceCost>: float .
+<acqRights.totalPurchaseCost>: float .
+<acqRights.version>: string .
+<aggregatedRights.SKU>: string @index(exact, trigram) .
+<aggregatedRights.aggregationId>: int @index(int) .
+<aggregatedRights.averageMaintenanceUnitPrice>: float .
+<aggregatedRights.averageUnitPrice>: float .
+<aggregatedRights.corporateSourcingContract>: string .
+<aggregatedRights.endOfMaintenance>: string .
+<aggregatedRights.lastPurchasedOrder>: string .
+<aggregatedRights.maintenanceProvider>: string .
+<aggregatedRights.metric>: [string] @index(exact, trigram) .
+<aggregatedRights.numOfAcqLicences>: int .
+<aggregatedRights.numOfLicencesUnderMaintenance>: int .
+<aggregatedRights.orderingDate>: string .
+<aggregatedRights.repartition>: bool .
+<aggregatedRights.softwareProvider>: string .
+<aggregatedRights.startOfMaintenance>: string .
+<aggregatedRights.supportNumber>: string .
+<aggregatedRights.totalCost>: float .
+<aggregatedRights.totalMaintenanceCost>: float .
+<aggregatedRights.totalPurchaseCost>: float .
+<aggregation.editor>: string @index(exact, trigram) .
+<aggregation.id>: int @index(int) .
+<aggregation.name>: string @index(exact, trigram) .
+<aggregation.product_names>: [string] @index(exact, trigram) .
+<aggregation.products>: [uid] @count @reverse .
+<aggregation.swidtags>: [string] @index(exact, trigram) .
+<application.domain>: string @index(hash) .
+<application.id>: string @index(exact) @upsert .
+<application.instance>: [uid] @count @reverse .
+<application.name>: string @index(trigram) .
+<application.owner>: string @index(trigram) .
+<application.product>: [uid] @count @reverse .
+<application.version>: string .
+<attibute.mapped_to>: string .
+<attibute.schema_name>: string .
+<attribute.displayed>: bool .
+<attribute.identifier>: bool .
+<attribute.mapped_to>: string .
+<attribute.name>: string @index(exact) .
+<attribute.parentIdentifier>: bool .
+<attribute.schema_name>: string .
+<attribute.searchable>: bool .
+<attribute.type>: int .
+<created>: string .
+<dgraph.acl.rule>: [uid] .
+<dgraph.graphql.schema>: string .
+<dgraph.graphql.xid>: string @index(exact) @upsert .
+<dgraph.rule.permission>: int .
+<dgraph.rule.predicate>: string @index(exact) @upsert .
+<editor.name>: string @index(exact, trigram) @upsert .
+<editor.product>: [uid] @reverse .
+<equipment.Test.environment>: string @index(exact, trigram) .
+<equipment.Test.raw_capacity>: int @index(int) .
+<equipment.cluster.cluster_name>: string @index(exact, trigram) .
+<equipment.cluster.name>: string .
+<equipment.datacenter.datacenter_name>: string @index(trigram) .
+<equipment.hardpartition.aix_entitlement>: int .
+<equipment.hardpartition.aix_lpm>: int .
+<equipment.hardpartition.aix_sharingmode>: string .
+<equipment.hardpartition.sparc_cap>: int .
+<equipment.id>: string @index(exact, trigram) @upsert .
+<equipment.parent>: [uid] @reverse .
+<equipment.partition.environment>: string @index(trigram) .
+<equipment.partition.logical_cpu>: float @index(float) .
+<equipment.partition.partition_hostname>: string @index(trigram) .
+<equipment.partition.partition_role>: string @index(trigram) .
+<equipment.partition.shortOS>: string @index(trigram) .
+<equipment.partition.virtual_cores>: int @index(int) .
+<equipment.partition.virtual_cores_VCPU>: string @index(trigram) .
+<equipment.server.core_factor>: float @index(float) .
+<equipment.server.core_per_processor>: float @index(float) .
+<equipment.server.corefactor>: float .
+<equipment.server.corefactor_oracle>: float @index(float) .
+<equipment.server.cores>: float .
+<equipment.server.cores_per_processor>: int @index(int) .
+<equipment.server.cpu_manufacturer>: string @index(exact, trigram) .
+<equipment.server.cpu_model>: string @index(exact, trigram) .
+<equipment.server.datacenter_name>: string @index(exact, trigram) .
+<equipment.server.environment>: string @index(exact, trigram) .
+<equipment.server.exploitation>: string @index(trigram) .
+<equipment.server.hyperthreading>: string @index(exact, trigram) .
+<equipment.server.ibm_pvu>: float @index(float) .
+<equipment.server.module_name>: string @index(trigram) .
+<equipment.server.oracle_core_factor>: float @index(float) .
+<equipment.server.pvu>: float @index(float) .
+<equipment.server.raw>: int @index(int) .
+<equipment.server.raw_capacity>: int @index(int) .
+<equipment.server.redhat_swidtag>: string .
+<equipment.server.sag>: float @index(float) .
+<equipment.server.sag_uvu>: int @index(int) .
+<equipment.server.server_corePerProcessor>: int @index(int) .
+<equipment.server.server_coresNumber>: float @index(float) .
+<equipment.server.server_coresPerProcessor>: int @index(int) .
+<equipment.server.server_cpu>: string @index(trigram) .
+<equipment.server.server_hostingEntity>: string @index(trigram) .
+<equipment.server.server_hostname>: string @index(trigram) .
+<equipment.server.server_manufacturer>: string @index(trigram) .
+<equipment.server.server_name>: string @index(exact, trigram) .
+<equipment.server.server_os>: string @index(exact, trigram) .
+<equipment.server.server_processorsNumber>: int @index(int) .
+<equipment.server.server_processors_numbers>: int @index(int) .
+<equipment.server.server_type>: string @index(exact, trigram) .
+<equipment.server.socket_num>: string @index(trigram) .
+<equipment.server.type>: string @index(trigram) .
+<equipment.server.used_processor_sockets>: float @index(float) .
+<equipment.server.vm_hostname>: string @index(trigram) .
+<equipment.softpartition.environment>: string @index(exact, trigram) .
+<equipment.softpartition.softpartition_id>: string @index(exact, trigram) .
+<equipment.softpartition.softpartition_name>: string @index(exact, trigram) .
+<equipment.softpartition.vcpu>: int @index(int) .
+<equipment.type>: string @index(exact) .
+<equipment.users>: [uid] @reverse .
+<equipment.vcenter.vcenter_name>: string @index(trigram) .
+<equipment.vcenter.vcenter_version>: string @index(exact, trigram) .
+<equipment.vm.type>: string @index(exact, trigram) .
+<equipment.vm.vcpu>: int @index(int) .
+<equipment.vm.vm_hostname>: string @index(exact, trigram) .
+<equipment.zone.env>: string @index(trigram) .
+<equipment.zone.environment>: string @index(exact, trigram) .
+<instance.environment>: string @index(exact) .
+<instance.equipment>: [uid] @count @reverse .
+<instance.id>: string @index(exact) .
+<instance.product>: [uid] @count @reverse .
+<metadata.attributes>: [string] .
+<metadata.equipment.attribute>: [uid] .
+<metadata.equipment.parent>: uid @reverse .
+<metadata.equipment.source>: uid @reverse .
+<metadata.equipment.type>: string @index(exact) .
+<metadata.source>: string @index(exact) .
+<metadata.type>: string @index(exact) .
+<metric.acs.attr_name>: string .
+<metric.acs.attr_value>: string .
+<metric.acs.equipment_type>: string .
+<metric.attr_sum.attr_name>: string .
+<metric.attr_sum.equipment_type>: string .
+<metric.attr_sum.reference_value>: float .
+<metric.equip_attr.attr_name>: string .
+<metric.equip_attr.environment>: string .
+<metric.equip_attr.equipment_type>: string .
+<metric.equip_attr.value>: int .
+<metric.instancenumber.coefficient>: int .
+<metric.ips.attr_core_factor>: [uid] @count @reverse .
+<metric.ips.attr_num_cores>: [uid] @count @reverse .
+<metric.ips.attr_num_cpu>: [uid] @count @reverse .
+<metric.ips.base>: [uid] @count @reverse .
+<metric.name>: string @index(exact, trigram) .
+<metric.ops.aggregate>: [uid] @count @reverse .
+<metric.ops.attr_core_factor>: [uid] @count @reverse .
+<metric.ops.attr_num_cores>: [uid] @count @reverse .
+<metric.ops.attr_num_cpu>: [uid] @count @reverse .
+<metric.ops.base>: [uid] @count @reverse .
+<metric.ops.bottom>: [uid] @count @reverse .
+<metric.ops.top>: [uid] @count @reverse .
+<metric.oracle_nup.aggregate>: [uid] @count @reverse .
+<metric.oracle_nup.attr_core_factor>: [uid] @count @reverse .
+<metric.oracle_nup.attr_num_cores>: [uid] @count @reverse .
+<metric.oracle_nup.attr_num_cpu>: [uid] @count @reverse .
+<metric.oracle_nup.base>: [uid] @count @reverse .
+<metric.oracle_nup.bottom>: [uid] @count @reverse .
+<metric.oracle_nup.num_users>: int .
+<metric.oracle_nup.top>: [uid] @count @reverse .
+<metric.sps.attr_core_factor>: [uid] @count @reverse .
+<metric.sps.attr_num_cores>: [uid] @count @reverse .
+<metric.sps.attr_num_cpu>: [uid] @count @reverse .
+<metric.sps.base>: [uid] @count @reverse .
+<metric.static.reference_value>: int .
+<metric.type>: string @index(exact) .
+<product.acqRights>: [uid] @count @reverse .
+<product.category>: string .
+<product.child>: [uid] @count @reverse .
+<product.editor>: string @index(exact, trigram) .
+<product.equipment>: [uid] @count @reverse .
+<product.name>: string @index(exact, trigram) .
+<product.swidtag>: string @index(exact, trigram) @upsert .
+<product.users>: [uid] @reverse .
+<product.version>: string .
+<product_aggregation.editor>: string @index(exact, trigram) .
+<product_aggregation.id>: int @index(int) .
+<product_aggregation.metric>: uid @reverse .
+<product_aggregation.name>: string @index(exact, trigram) .
+<product_aggregation.product_name>: string @index(exact, trigram) .
+<product_aggregation.products>: [uid] @count @reverse .
+<scopes>: [string] @index(exact) .
+<server_name>: default .
+<type_name>: string @index(exact) .
+<updated>: string .
+<users.count>: int .
+<users.id>: string @index(exact, trigram) @upsert .
+type <AcquiredRights> {
+	type_name
+	scopes
+	updated
+	created
+	acqRights.SKU
+	acqRights.swidtag
+	acqRights.productName
+	acqRights.editor
+	acqRights.metric
+	acqRights.numOfAcqLicences
+	acqRights.numOfLicencesUnderMaintenance
+	acqRights.averageUnitPrice
+	acqRights.averageMaintenantUnitPrice
+	acqRights.totalPurchaseCost
+	acqRights.totalMaintenanceCost
+	acqRights.totalCost
+	acqRights.startOfMaintenance
+	acqRights.endOfMaintenance
+	acqRights.version
+	acqRights.orderingDate
+	acqRights.corporateSourcingContract
+	acqRights.softwareProvider
+	acqRights.lastPurchasedOrder
+	acqRights.supportNumber
+	acqRights.maintenanceProvider
+	acqRights.repartition
+}
+type <AggregatedRights> {
+	type_name
+	scopes
+	updated
+	created
+	aggregatedRights.SKU
+	aggregatedRights.aggregationId
+	aggregatedRights.averageMaintenanceUnitPrice
+	aggregatedRights.averageUnitPrice
+	aggregatedRights.corporateSourcingContract
+	aggregatedRights.endOfMaintenance
+	aggregatedRights.lastPurchasedOrder
+	aggregatedRights.maintenanceProvider
+	aggregatedRights.metric
+	aggregatedRights.numOfAcqLicences
+	aggregatedRights.numOfLicencesUnderMaintenance
+	aggregatedRights.orderingDate
+	aggregatedRights.softwareProvider
+	aggregatedRights.startOfMaintenance
+	aggregatedRights.totalCost
+	aggregatedRights.supportNumber
+	aggregatedRights.totalMaintenanceCost
+	aggregatedRights.totalPurchaseCost
+	aggregatedRights.repartition
+}
+type <Aggregation> {
+	type_name
+	scopes
+	updated
+	created
+	aggregation.id
+	aggregation.name
+	aggregation.editor
+	aggregation.product_names
+	aggregation.swidtags
+	aggregation.products
+}
+type <Application> {
+	type_name
+	scopes
+	updated
+	created
+	application.id
+	application.name
+	application.version
+	application.owner
+	application.domain
+	application.instance
+	application.product
+}
+type <Attribute> {
+	type_name
+	scopes
+	updated
+	created
+	attribute.name
+	attribute.searchable
+	attribute.identifier
+	attribute.displayed
+	attribute.parentIdentifier
+	attibute.mapped_to
+	attibute.schema_name
+}
+type <Editor> {
+	type_name
+	scopes
+	updated
+	created
+	editor.name
+	editor.product
+}
+type <Equipment> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.type
+	equipment.id
+	equipment.parent
+	equipment.users
+	~equipment.parent
+	~instance.equipment
+	~product.equipment
+}
+type <EquipmentTest> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.Test.environment
+}
+type <Equipmentcluster> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.parent
+}
+type <Equipmentdatacenter> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+}
+type <Equipmentpartition> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.partition.virtual_cores
+	equipment.parent
+}
+type <Equipmentserver> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.server.hyperthreading
+	equipment.server.datacenter_name
+	equipment.id
+	equipment.server.server_name
+	equipment.server.cores_per_processor
+	equipment.server.oracle_core_factor
+	equipment.server.cpu_manufacturer
+	equipment.server.ibm_pvu
+	equipment.server.sag_uvu
+	equipment.server.server_type
+	equipment.parent
+	equipment.server.cpu_model
+	equipment.server.server_os
+	equipment.server.server_processors_numbers
+}
+type <Equipmentsoftpartition> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.softpartition.softpartition_name
+	equipment.parent
+}
+type <Equipmentvcenter> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.vcenter.vcenter_version
+}
+type <Equipmentvm> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.vm.vm_hostname
+	equipment.vm.type
+	equipment.vm.vcpu
+	equipment.parent
+}
+type <Equipmentzone> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.zone.environment
+}
+type <Instance> {
+	type_name
+	scopes
+	updated
+	created
+	instance.id
+	instance.environment
+	instance.product
+	instance.equipment
+	~application.instance
+}
+type <Metadata> {
+	type_name
+	scopes
+	updated
+	created
+	metadata.type
+	metadata.source
+	metadata.attributes
+}
+type <MetadataEquipment> {
+	type_name
+	scopes
+	updated
+	created
+	metadata.equipment.type
+	metadata.equipment.attribute
+	metadata.equipment.parent
+	metadata.equipment.source
+}
+type <MetricACS> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.acs.equipment_type
+	metric.acs.attr_name
+	metric.acs.attr_value
+}
+type <MetricAttrSum> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.attr_sum.equipment_type
+	metric.attr_sum.attr_name
+	metric.attr_sum.reference_value
+}
+type <MetricEquipAttr> {
+	type_name
+	updated
+	scopes
+	metric.type
+	metric.name
+	metric.equip_attr.value
+	metric.equip_attr.equipment_type
+	metric.equip_attr.environment
+	metric.equip_attr.attr_name
+	created
+}
+type <MetricINM> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.instancenumber.coefficient
+}
+type <MetricIPS> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.ips.base
+	metric.ips.attr_core_factor
+	metric.ips.attr_num_cores
+	metric.ips.attr_num_cpu
+}
+type <MetricOracleNUP> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.oracle_nup.bottom
+	metric.oracle_nup.base
+	metric.oracle_nup.aggregate
+	metric.oracle_nup.top
+	metric.oracle_nup.attr_core_factor
+	metric.oracle_nup.attr_num_cores
+	metric.oracle_nup.attr_num_cpu
+	metric.oracle_nup.num_users
+}
+type <MetricOracleOPS> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.ops.bottom
+	metric.ops.base
+	metric.ops.aggregate
+	metric.ops.top
+	metric.ops.attr_core_factor
+	metric.ops.attr_num_cores
+	metric.ops.attr_num_cpu
+}
+type <MetricSPS> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+	metric.sps.base
+	metric.sps.attr_core_factor
+	metric.sps.attr_num_cores
+	metric.sps.attr_num_cpu
+}
+type <MetricSS> {
+	type_name
+	scopes
+	updated
+	metric.type
+	metric.static.reference_value
+	metric.name
+	created
+}
+type <MetricUSS> {
+	type_name
+	scopes
+	updated
+	created
+	metric.type
+	metric.name
+}
+type <Product> {
+	type_name
+	scopes
+	updated
+	created
+	product.name
+	product.version
+	product.category
+	product.editor
+	product.swidtag
+	product.child
+	product.equipment
+	product.acqRights
+	product.users
+	~application.product
+	~instance.product
+	~editor.product
+}
+type <ProductAggregation> {
+	type_name
+	scopes
+	updated
+	created
+	product_aggregation.id
+	product_aggregation.name
+	product_aggregation.editor
+	product_aggregation.product_name
+	product_aggregation.metric
+	product_aggregation.products
+}
+type <User> {
+	type_name
+	scopes
+	updated
+	created
+	users.count
+	users.id
+	~equipment.users
+	~product.users
+}
+type <dgraph.graphql> {
+	dgraph.graphql.schema
+	dgraph.graphql.xid
+}

@@ -46,6 +46,7 @@ type Querier interface {
 	GetProductOptions(ctx context.Context, arg GetProductOptionsParams) ([]GetProductOptionsRow, error)
 	GetProductsByEditor(ctx context.Context, arg GetProductsByEditorParams) ([]GetProductsByEditorRow, error)
 	GetTotalCounterfietAmount(ctx context.Context, scope string) (float64, error)
+	GetTotalDeltaCost(ctx context.Context, scope string) (float64, error)
 	GetTotalUnderusageAmount(ctx context.Context, scope string) (float64, error)
 	InsertAggregation(ctx context.Context, arg InsertAggregationParams) (int32, error)
 	InsertOverAllComputedLicences(ctx context.Context, arg InsertOverAllComputedLicencesParams) error

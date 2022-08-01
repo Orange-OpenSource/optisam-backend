@@ -796,6 +796,92 @@ var _ interface {
 	ErrorName() string
 } = UpsertEquipmentRequestValidationError{}
 
+// Validate checks the field values on UpsertEquipmentAllocatedMetricRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertEquipmentAllocatedMetricRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if utf8.RuneCountInString(m.GetScope()) != 3 {
+		return UpsertEquipmentAllocatedMetricRequestValidationError{
+			field:  "Scope",
+			reason: "value length must be 3 runes",
+		}
+
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for EquipmentId
+
+	// no validation rules for EqType
+
+	// no validation rules for EquipmentUser
+
+	// no validation rules for AllocatedMetrics
+
+	return nil
+}
+
+// UpsertEquipmentAllocatedMetricRequestValidationError is the validation error
+// returned by UpsertEquipmentAllocatedMetricRequest.Validate if the
+// designated constraints aren't met.
+type UpsertEquipmentAllocatedMetricRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) ErrorName() string {
+	return "UpsertEquipmentAllocatedMetricRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertEquipmentAllocatedMetricRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertEquipmentAllocatedMetricRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertEquipmentAllocatedMetricRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertEquipmentAllocatedMetricRequestValidationError{}
+
 // Validate checks the field values on UpsertEquipmentResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1950,6 +2036,23 @@ func (m *UpdateEquipmentTypeRequest) Validate() error {
 
 	}
 
+	for idx, item := range m.GetUpdattr() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return UpdateEquipmentTypeRequestValidationError{
+					field:  fmt.Sprintf("Updattr[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	for idx, item := range m.GetScopes() {
 		_, _ = idx, item
 
@@ -2934,6 +3037,86 @@ var _Attribute_DataType_InLookup = map[DataTypes]struct{}{
 	2: {},
 	3: {},
 }
+
+// Validate checks the field values on UpdAttribute with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *UpdAttribute) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	if !_UpdAttribute_Name_Pattern.MatchString(m.GetName()) {
+		return UpdAttributeValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"^[-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	// no validation rules for Displayed
+
+	// no validation rules for Searchable
+
+	return nil
+}
+
+// UpdAttributeValidationError is the validation error returned by
+// UpdAttribute.Validate if the designated constraints aren't met.
+type UpdAttributeValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdAttributeValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdAttributeValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdAttributeValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdAttributeValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdAttributeValidationError) ErrorName() string { return "UpdAttributeValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UpdAttributeValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdAttribute.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdAttributeValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdAttributeValidationError{}
+
+var _UpdAttribute_Name_Pattern = regexp.MustCompile("^[-_A-Za-z0-9]+$")
 
 // Validate checks the field values on StringFilter with the rules defined in
 // the proto definition for this message. If any rules are violated, an error

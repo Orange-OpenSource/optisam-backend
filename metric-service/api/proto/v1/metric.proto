@@ -198,6 +198,26 @@ service MetricService {
     };
   }
 
+  // CreateMetricEquipAttrStandard will create an equipment.attribute.standard metric
+  rpc CreateMetricEquipAttrStandard(MetricEquipAtt)returns (MetricEquipAtt){
+    option (google.api.http) = {
+      post : "/api/v1/metric/equip_attr"
+      body : "*"
+    };
+  }
+
+    // UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
+  rpc UpdateMetricEquipAttrStandard(MetricEquipAtt)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/equip_attr"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/equip_attr"
+        body : "*"
+      }
+    };
+  }
+
   //GetMetricConfiguration will get configuration of a metric
   rpc GetMetricConfiguration(GetMetricConfigurationRequest)returns (GetMetricConfigurationResponse){
     option (google.api.http) = {
@@ -282,6 +302,17 @@ message MetricAttrSum {
   repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
 }
 
+message MetricEquipAtt {
+  // ID is not required for creation
+  string ID = 1;
+  string name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string eq_type = 3;
+  string attribute_name = 4;
+  string environment = 5 [(validate.rules).string = { min_len : 1, pattern : "^[a-zA-Z0-9,]+$"}];
+  int32 value = 6 [(validate.rules).int32 = { gt: 0}];
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
+}
+
 message MetricIPS {
   // ID is not required for creation
   string ID = 1;
@@ -351,6 +382,7 @@ message MetricType {
     Attr_Sum = 7;
     User_Sum = 8;
     Static_Standard = 9;
+    Equip_Attr = 10;
   }
   string name = 1;
   string description = 2;
@@ -385,7 +417,8 @@ message MetricNUP {
   string end_eq_type_id = 9;
   uint32  number_of_users = 10 [(validate.rules).uint32.gt  = 0];
   repeated string scopes = 11 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool transform = 12;
+  string transform_metric_name = 13;
 }
 
 message ScopeFilter{

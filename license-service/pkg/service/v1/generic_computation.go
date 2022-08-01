@@ -17,6 +17,7 @@ var (
 	ProdAggName      string = "PROD_AGG_NAME"
 	IsAgg            string = "IS_AGG"
 	SCOPES           string = "SCOPES"
+	SWIDTAG          string = "SWIDTAG"
 )
 
 /* Map based metric handling , define new metric and handle here
@@ -33,6 +34,7 @@ func init() {
 	MetricCalculation[repo.MetricAttrSumStandard] = attrSumMetricCalulation
 	MetricCalculation[repo.MetricUserSumStandard] = userSumMetricCalulation
 	MetricCalculation[repo.MetricStaticStandard] = ssMetricCalulation
+	MetricCalculation[repo.MetricEquipAttrStandard] = equipAttrMetricCalulation
 }
 
 func opsMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
@@ -131,5 +133,15 @@ func userSumMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTyp
 	}
 	resp[ComputedLicenses] = computedLicences
 	resp[ComputedDetails] = computedDetails
+	return resp, nil
+}
+
+func equipAttrMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
+	resp := make(map[string]interface{})
+	computedLicences, err := s.computedLicensesEquipAttr(ctx, eqTypes, input)
+	if err != nil {
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
 	return resp, nil
 }

@@ -21,6 +21,7 @@ type EquipmentServiceClient interface {
 	UpsertMetadata(ctx context.Context, in *UpsertMetadataRequest, opts ...grpc.CallOption) (*UpsertMetadataResponse, error)
 	EquipmentsPerEquipmentType(ctx context.Context, in *EquipmentsPerEquipmentTypeRequest, opts ...grpc.CallOption) (*EquipmentsPerEquipmentTypeResponse, error)
 	UpsertEquipment(ctx context.Context, in *UpsertEquipmentRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error)
+	UpsertEquipmentAllocatedMetric(ctx context.Context, in *UpsertEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error)
 	ListEquipmentsMetadata(ctx context.Context, in *ListEquipmentMetadataRequest, opts ...grpc.CallOption) (*ListEquipmentMetadataResponse, error)
 	GetEquipmentMetadata(ctx context.Context, in *EquipmentMetadataRequest, opts ...grpc.CallOption) (*EquipmentMetadata, error)
 	EquipmentsTypes(ctx context.Context, in *EquipmentTypesRequest, opts ...grpc.CallOption) (*EquipmentTypesResponse, error)
@@ -78,6 +79,15 @@ func (c *equipmentServiceClient) EquipmentsPerEquipmentType(ctx context.Context,
 func (c *equipmentServiceClient) UpsertEquipment(ctx context.Context, in *UpsertEquipmentRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error) {
 	out := new(UpsertEquipmentResponse)
 	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpsertEquipment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *equipmentServiceClient) UpsertEquipmentAllocatedMetric(ctx context.Context, in *UpsertEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error) {
+	out := new(UpsertEquipmentResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpsertEquipmentAllocatedMetric", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -218,6 +228,7 @@ type EquipmentServiceServer interface {
 	UpsertMetadata(context.Context, *UpsertMetadataRequest) (*UpsertMetadataResponse, error)
 	EquipmentsPerEquipmentType(context.Context, *EquipmentsPerEquipmentTypeRequest) (*EquipmentsPerEquipmentTypeResponse, error)
 	UpsertEquipment(context.Context, *UpsertEquipmentRequest) (*UpsertEquipmentResponse, error)
+	UpsertEquipmentAllocatedMetric(context.Context, *UpsertEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error)
 	ListEquipmentsMetadata(context.Context, *ListEquipmentMetadataRequest) (*ListEquipmentMetadataResponse, error)
 	GetEquipmentMetadata(context.Context, *EquipmentMetadataRequest) (*EquipmentMetadata, error)
 	EquipmentsTypes(context.Context, *EquipmentTypesRequest) (*EquipmentTypesResponse, error)
@@ -252,6 +263,9 @@ func (UnimplementedEquipmentServiceServer) EquipmentsPerEquipmentType(context.Co
 }
 func (UnimplementedEquipmentServiceServer) UpsertEquipment(context.Context, *UpsertEquipmentRequest) (*UpsertEquipmentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertEquipment not implemented")
+}
+func (UnimplementedEquipmentServiceServer) UpsertEquipmentAllocatedMetric(context.Context, *UpsertEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertEquipmentAllocatedMetric not implemented")
 }
 func (UnimplementedEquipmentServiceServer) ListEquipmentsMetadata(context.Context, *ListEquipmentMetadataRequest) (*ListEquipmentMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEquipmentsMetadata not implemented")
@@ -375,6 +389,24 @@ func _EquipmentService_UpsertEquipment_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EquipmentServiceServer).UpsertEquipment(ctx, req.(*UpsertEquipmentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EquipmentService_UpsertEquipmentAllocatedMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertEquipmentAllocatedMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).UpsertEquipmentAllocatedMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/UpsertEquipmentAllocatedMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).UpsertEquipmentAllocatedMetric(ctx, req.(*UpsertEquipmentAllocatedMetricRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -650,6 +682,10 @@ var _EquipmentService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertEquipment",
 			Handler:    _EquipmentService_UpsertEquipment_Handler,
+		},
+		{
+			MethodName: "UpsertEquipmentAllocatedMetric",
+			Handler:    _EquipmentService_UpsertEquipmentAllocatedMetric_Handler,
 		},
 		{
 			MethodName: "ListEquipmentsMetadata",

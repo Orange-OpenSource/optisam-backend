@@ -1,0 +1,2099 @@
+variables:
+  # ARTIFACTORY by INFRA
+  # ======================================================
+  ARTIFACTORY_INFRA: "tech.orange"
+  #ARTIFACTORY_INFRA: "iva.si.francetelecom.fr"
+  # ARTIFACTORY_INFRA: "cwfr1.rd.francetelecom.fr"
+  DOCKER_VERSION: "17.12"
+  DOCKER_HEALTHCHECK_TIMEOUT: "60"
+  # Because we use a private Registry to pull the dind image. Explanation: https://gitlab.com/gitlab-org/gitlab-ci-multi-runner/issues/1676#note_15233339
+  DOCKER_HOST: tcp://dockerproxy.${ARTIFACTORY_INFRA}-docker:2375
+  # Force a better storage driver because we use dind (https://docs.gitlab.com/ce/ci/docker/using_docker_build.html#using-the-overlayfs-driver)
+  DOCKER_DRIVER: overlay2
+  DOCKER_PROXY_HOST: dockerproxy.${ARTIFACTORY_INFRA}
+  DOCKER_LOGIN: $ARTIFACTORY_USERNAME
+  DOCKER_PASSWORD: $ARTIFACTORY_PASSWORD
+  DOCKER_REGISTRY_UNSTABLE: "dockerfactory-unstable.${ARTIFACTORY_INFRA}"
+  DOCKER_REGISTRY_STABLE: "dockerfactory.${ARTIFACTORY_INFRA}"  
+  GOPROXY: "https://artifactory.${ARTIFACTORY_INFRA}/artifactory/api/go/go-virt-orange-project-devops"
+  GO_VERSION: "1.17"
+  DGRAPH_VERSION: "v20.03.3"
+  POSTGRES_VERSION: "9.6.5"
+  TEST_ONLY: "false"
+  CUSTOM_CA_CERTS: $SONAR_CA_CERTS
+  SONAR_TOKEN: $SONAR_TOKEN
+  SONAR_ARGS: >-
+    -Dsonar.host.url=https://faas-gw.innov.intraorange/optisam/sonar
+    -Dsonar.sourceEncoding=UTF-8
+    -Dsonar.analysis.mode=publish
+    -Dsonar.projectBaseDir=.
+    -Dsonar.sources=.
+    -Dsonar.sources.inclusions="**/**.go"
+    -Dsonar.go.exclusions="**/vendor/**,**/test/**,**docs/**,**api/**"
+    -Dsonar.tests=.
+    -Dsonar.language=go
+    -Dsonar.go.coverage.reportPaths=build/tests/cover.out
+    -Dsonar.go.tests.reportPaths=build/tests/test-results.xml
+    -Dsonar.go.golangci-lint.reportPaths=build/tests/lint-results.xml
+  DEFECTDOJO_SERVER_URL: "https://defectdojo.dos.tech.orange"
+  DEFECTDOJO_API_KEY: "f5da7d6e48ce1da8885cd98d2560bdfad565b0c0"
+  DEFECTDOJO_SONARQUBE_APPLICATION: Optisam-backend-sonar
+  DEFECTDOJO_SONARQUBE_PROJECT_KEY: Optisam-backend-sonar
+  DEFECTDOJO_NOTIFICATION: "true"
+  DEFECTDOJO_NOTIFICATION_SEVERITIES: "Critical,High"
+  DEFECTDOJO_GITLEAKS_REPORT: gitleaks/gitleaks-report.json
+  GITLEAKS_IMAGE: "zricethezav/gitleaks:v7.6.1"    
+
+
+sonarqube-check:
+  image: 
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script: 
+    - sonar-scanner
+  allow_failure: true
+  only:
+    - merge_requests
+    - /^release-.*$/i
+    - /^develop-.*$/i
+    - /^performance-.*$/i
+
+
+defectdojo:
+  rules:
+# exclude merge requests 
+    - if: $CI_MERGE_REQUEST_ID 
+      when: never 
+    - when: always
+
+stages:
+  - init
+  - lint
+  - test
+  - build
+  - package
+  - deploy
+  - integration_test
+  - performance_test
+  - deploy_prod
+  - publish     # Sonar, pages
+
+
+include:
+  - local: 'account-service/.gitlab-ci.yml'
+  - local: 'application-service/.gitlab-ci.yml'
+  - local: 'auth-service/.gitlab-ci.yml'
+  - local: 'simulation-service/.gitlab-ci.yml'
+  - local: 'import-service/.gitlab-ci.yml'
+  - local: 'license-service/.gitlab-ci.yml'
+  - local: 'metric-service/.gitlab-ci.yml'
+  - local: 'product-service/.gitlab-ci.yml'
+  - local: 'equipment-service/.gitlab-ci.yml'
+  - local: 'dps-service/.gitlab-ci.yml'
+  - local: 'report-service/.gitlab-ci.yml'
+  - local: 'meta-service/.gitlab-ci.yml'
+  - local: 'nifi-service/.gitlab-ci.yml'
+
+
+.ng-scripts: &ng-scripts | 
+  # BEGSCRIPT
+  set -e 
+
+  function log_info() {
+      echo -e "[\\e[1;94mINFO\\e[0m] $*"
+  }
+
+  function log_warn() {
+      echo -e "[\\e[1;93mWARN\\e[0m] $*"
+  }
+
+  function log_error() {
+      echo -e "[\\e[1;91mERROR\\e[0m] $*"
+  }
+
+  function install_ca_certs() {
+      certs=$1
+      if [[ -z "$certs" ]]
+      then
+        return
+      fi
+      # import in system
+      if echo "$certs" >> /etc/ssl/certs/ca-certificates.crt
+      then
+        log_info "CA certificates imported in \\e[33;1m/etc/ssl/certs/ca-certificates.crt\\e[0m"
+      fi
+      if echo "$certs" >> /etc/ssl/cert.pem
+      then
+        log_info "CA certificates imported in \\e[33;1m/etc/ssl/cert.pem\\e[0m"
+      fi
+
+      # import in Java keystore (if keytool command found)
+      if command -v keytool > /dev/null
+      then
+        # shellcheck disable=SC2046
+        javahome=${JAVA_HOME:-$(dirname $(readlink -f $(command -v java)))/..}
+        # shellcheck disable=SC2086
+        keystore=${JAVA_KEYSTORE_PATH:-$(ls -1 $javahome/jre/lib/security/cacerts 2>/dev/null || ls -1 $javahome/lib/security/cacerts 2>/dev/null || echo "")}
+        if [[ -f "$keystore" ]]
+        then
+          storepass=${JAVA_KEYSTORE_PASSWORD:-changeit}
+          nb_certs=$(echo "$certs" | grep -c 'END CERTIFICATE')
+          log_info "importing $nb_certs certificates in Java keystore \\e[33;1m$keystore\\e[0m..."
+          for idx in $(seq 0 $((nb_certs - 1)))
+          do
+            # TODO: use keytool option -trustcacerts ?
+            if echo "$certs" | awk "n==$idx { print }; /END CERTIFICATE/ { n++ }" | keytool -noprompt -import -alias "imported CA Cert $idx" -keystore "$keystore" -storepass "$storepass"
+            then
+              log_info "... CA certificate [$idx] successfully imported"
+            else
+              log_warn "... Failed importing CA certificate [$idx]: abort"
+              return
+            fi
+          done
+        else
+          log_warn "Java keystore \\e[33;1m$keystore\\e[0m not found: could not import CA certificates"
+        fi
+      fi
+    } 
+
+  # ENDSCRIPT
+
+
+init-job:
+  stage: init
+  image: dockerfactory-unstable.${ARTIFACTORY_INFRA}/optisam/git-bash
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    paths:
+      - shared-vars.sh
+  script:
+    - >
+      echo "$CI_COMMIT_REF_NAME";
+      if [[ "$CI_COMMIT_REF_NAME" = performance-v* ]]; then
+        echo "export ENV=performance;" >> shared-vars.sh
+        echo "export TAG=performance;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_UNSTABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_PERFORMANCE;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_PERFORMANCE;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_PERFORMANCE;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_PERFORMANCE;" >> shared-vars.sh
+      elif [[ "$CI_COMMIT_REF_NAME" = develop-v* ]]; then
+        echo "export ENV=dev;" >> shared-vars.sh
+        echo "export TAG=dev;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_UNSTABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_DEV;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_DEV;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_DEV;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_DEV;" >> shared-vars.sh
+      elif [[ "$CI_COMMIT_REF_NAME" = release-v* ]]; then
+        echo "export ENV=int;" >> shared-vars.sh
+        echo "export TAG=latest;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_UNSTABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_INT;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_INT;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_INT;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_INT;" >> shared-vars.sh
+      elif [ "$CI_COMMIT_TAG" != "" ]; then
+        echo "export ENV=int;" >> shared-vars.sh
+        echo "export TAG=$CI_COMMIT_TAG;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_STABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_INT;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_INT;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_INT;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_INT;" >> shared-vars.sh
+      else
+        echo "export ENV=dev;" >> shared-vars.sh
+        echo "export TAG=dev;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_UNSTABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_DEV;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_DEV;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_DEV;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_DEV;" >> shared-vars.sh
+      fi
+  only:
+    refs:
+      - merge_requests
+      - /^performance-.*$/i
+      - /^develop-.*$/i
+      - tags
+      - /^release-.*$/i
+    variables:
+      - $TEST_ONLY == "false"
+
+license-service-lint:
+  stage: lint
+  extends: .license-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - license-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+license-service-test:
+  stage: test
+  extends: .license-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - license-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+license-service-sonar:
+  stage: publish
+  extends: .license-sonar
+  dependencies:
+    - init-job
+    - license-service-lint
+    - license-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - license-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+license-service-build:
+  stage: build
+  extends: .license-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - license-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+license-service-package:
+  stage: package
+  extends: .license-package
+  dependencies:
+    - init-job
+    - license-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+
+    changes:
+      - license-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+license-service-deploy_noprod:
+  stage: deploy
+  extends: .license-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - license-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+license-service-deploy_prod:
+  stage: deploy_prod
+  extends: .license-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+license-service-integration_test:
+  stage: integration_test
+  extends: .license-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - license-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+# license-service-performance_test:
+#   stage: performance_test
+#   extends: .license-performance_test
+#   dependencies:
+#     - init-job
+#   only:
+#     refs:
+#       - /^develop-.*$/i
+#       - /^release-.*$/i
+
+
+auth-service-lint:
+  stage: lint
+  extends: .auth-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - auth-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+auth-service-test:
+  stage: test
+  extends: .auth-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+auth-service-sonar:
+  stage: publish
+  extends: .auth-sonar
+  dependencies:
+    - init-job
+    - auth-service-lint
+    - auth-service-test  
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+auth-service-build:
+  stage: build
+  extends: .auth-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+auth-service-package:
+  stage: package
+  extends: .auth-package
+  dependencies:
+    - init-job
+    - auth-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^release-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+auth-service-deploy_noprod:
+  stage: deploy
+  extends: .auth-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+auth-service-deploy_prod:
+  stage: deploy_prod
+  extends: .auth-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    refs:
+      - tags
+    variables:
+      - $TEST_ONLY == "false"
+
+auth-service-integration_test:
+  stage: integration_test
+  extends: .auth-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - auth-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+account-service-lint:
+  stage: lint
+  extends: .account-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - account-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+account-service-test:
+  stage: test
+  extends: .account-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+account-service-sonar:
+  stage: publish
+  extends: .account-sonar
+  dependencies:
+    - init-job
+    - account-service-lint
+    - account-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+account-service-build:
+  stage: build
+  extends: .account-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+account-service-package:
+  stage: package
+  extends: .account-package
+  dependencies:
+    - init-job
+    - account-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+account-service-deploy_noprod:
+  stage: deploy
+  extends: .account-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+account-service-deploy_prod:
+  stage: deploy_prod
+  extends: .account-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+account-service-integration_test:
+  stage: integration_test
+  extends: .account-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - account-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+import-service-lint:
+  stage: lint
+  extends: .import-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    variables:
+      - $TEST_ONLY == "false"
+    changes:
+      - import-service/**/*
+      - common/**/*
+
+import-service-test:
+  stage: test
+  extends: .import-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    variables:
+      - $TEST_ONLY == "false"
+    changes:
+      - import-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+import-service-sonar:
+  stage: publish
+  extends: .import-sonar
+  dependencies:
+    - init-job
+    - import-service-lint
+    - import-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - import-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+import-service-build:
+  stage: build
+  extends: .import-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - import-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+import-service-package:
+  stage: package
+  extends: .import-package
+  dependencies:
+    - init-job
+    - import-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - import-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+import-service-deploy_noprod:
+  stage: deploy
+  extends: .import-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^release-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - import-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+import-service-deploy_prod:
+  stage: deploy_prod
+  extends: .import-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs: 
+      - tags
+
+
+simulation-service-lint:
+  stage: lint
+  extends: .simulation-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+  
+simulation-service-test:
+  stage: test
+  extends: .simulation-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+simulation-service-sonar:
+  stage: publish
+  extends: .simulation-sonar
+  dependencies:
+    - init-job
+    - simulation-service-lint
+    - simulation-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+simulation-service-build:
+  stage: build
+  extends: .simulation-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+simulation-service-package:
+  stage: package
+  extends: .simulation-package
+  dependencies:
+    - init-job
+    - simulation-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+simulation-service-deploy_noprod:
+  stage: deploy
+  extends: .simulation-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+simulation-service-deploy_prod:
+  stage: deploy_prod
+  extends: .simulation-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+simulation-service-integration_test:
+  stage: integration_test
+  extends: .simulation-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - simulation-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+application-service-lint:
+  stage: lint
+  extends: .application-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - application-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+application-service-test:
+  stage: test
+  extends: .application-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+application-service-sonar:
+  stage: publish
+  extends: .application-sonar
+  dependencies:
+    - init-job
+    - application-service-lint
+    - application-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+application-service-build:
+  stage: build
+  extends: .application-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+application-service-package:
+  stage: package
+  extends: .application-package
+  dependencies:
+    - init-job
+    - application-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+application-service-deploy_noprod:
+  stage: deploy
+  extends: .application-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+application-service-deploy_prod:
+  stage: deploy_prod
+  extends: .application-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+application-service-integration_test:
+  stage: integration_test
+  extends: .application-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+application-service-performance_test:
+  stage: performance_test
+  extends: .application-performance_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+    changes:
+      - application-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+metric-service-lint:
+  stage: lint
+  extends: .metric-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - metric-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+metric-service-test:
+  stage: test
+  extends: .metric-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+metric-service-sonar:
+  stage: publish
+  extends: .metric-sonar
+  dependencies:
+    - init-job
+    - metric-service-lint
+    - metric-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+metric-service-build:
+  stage: build
+  extends: .metric-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^release-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+metric-service-package:
+  stage: package
+  extends: .metric-package
+  dependencies:
+    - init-job
+    - metric-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+metric-service-deploy_noprod:
+  stage: deploy
+  extends: .metric-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+metric-service-deploy_prod:
+  stage: deploy_prod
+  extends: .metric-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs: 
+      - tags
+
+metric-service-integration_test:
+  stage: integration_test
+  extends: .metric-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - metric-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+product-service-lint:
+  stage: lint
+  extends: .product-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - product-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+product-service-test:
+  stage: test
+  extends: .product-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+product-service-sonar:
+  stage: publish
+  extends: .product-sonar
+  dependencies:
+    - init-job
+    - product-service-lint
+    - product-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+product-service-build:
+  stage: build
+  extends: .product-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+product-service-package:
+  stage: package
+  extends: .product-package
+  dependencies:
+    - init-job
+    - product-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+product-service-deploy_noprod:
+  stage: deploy
+  extends: .product-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^release-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+product-service-deploy_prod:
+  stage: deploy_prod
+  extends: .product-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+product-service-integration_test:
+  stage: integration_test
+  extends: .product-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+product-service-performance_test:
+  stage: performance_test
+  extends: .product-performance_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+    changes:
+      - product-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+  
+
+equipment-service-lint:
+  stage: lint
+  extends: .equipment-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+equipment-service-test:
+  stage: test
+  extends: .equipment-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+equipment-service-sonar:
+  stage: publish
+  extends: .equipment-sonar
+  dependencies:
+    - init-job
+    - equipment-service-lint
+    - equipment-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+equipment-service-build:
+  stage: build
+  extends: .equipment-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+equipment-service-package:
+  stage: package
+  extends: .equipment-package
+  dependencies:
+    - init-job
+    - equipment-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+equipment-service-deploy_noprod:
+  stage: deploy
+  extends: .equipment-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+equipment-service-deploy_prod:
+  stage: deploy_prod
+  extends: .equipment-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+equipment-service-integration_test:
+  stage: integration_test
+  extends: .equipment-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+equipment-service-performance_test:
+  stage: performance_test
+  extends: .equipment-performance_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+    changes:
+      - equipment-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+      
+
+dps-service-lint:
+  stage: lint
+  extends: .dps-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+dps-service-test:
+  stage: test
+  extends: .dps-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+dps-service-sonar:
+  stage: publish
+  extends: .dps-sonar
+  dependencies:
+    - init-job
+    - dps-service-lint
+    - dps-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+dps-service-build:
+  stage: build
+  extends: .dps-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+dps-service-package:
+  stage: package
+  extends: .dps-package
+  dependencies:
+    - init-job
+    - dps-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+dps-service-deploy_noprod:
+  stage: deploy
+  extends: .dps-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+dps-service-deploy_prod:
+  stage: deploy_prod
+  extends: .dps-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+dps-service-integration_test:
+  stage: integration_test
+  extends: .dps-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - dps-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+report-service-lint:
+  stage: lint
+  extends: .dps-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - report-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+report-service-test:
+  stage: test
+  extends: .report-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+report-service-sonar:
+  stage: publish
+  extends: .report-sonar
+  dependencies:
+    - init-job
+    - report-service-lint
+    - report-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+report-service-build:
+  stage: build
+  extends: .report-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+report-service-package:
+  stage: package
+  extends: .report-package
+  dependencies:
+    - init-job
+    - report-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - tags
+      - /^performance-.*$/i
+      - /^release-.*$/i
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+report-service-deploy_noprod:
+  stage: deploy
+  extends: .report-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+report-service-deploy_prod:
+  stage: deploy_prod
+  extends: .report-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+report-service-integration_test:
+  stage: integration_test
+  extends: .report-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - report-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+
+meta-service-package:
+  stage: package
+  extends: .meta-package
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    variables:
+      - $TEST_ONLY == "false"
+    changes:
+      - meta-service/**/*
+
+meta-service-deploy_noprod:
+  stage: deploy
+  extends: .meta-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^release-.*$/i
+      - tags
+    changes:
+      - meta-service/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+meta-service-deploy_prod:
+  stage: deploy_prod
+  extends: .meta-deploy_prod
+  dependencies:
+    - init-job
+  when: manual  
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+# nifi-service-package:
+#   stage: package
+#   extends: .nifi-package
+#   dependencies:
+#     - init-job
+#   only:
+#     refs:
+#       - /^develop-.*$/i
+#       - /^release-.*$/i
+#       - tags
+#     changes:
+#       - nifi-service/**/*
+#     variables:
+#       - $TEST_ONLY == "false"
+
+# nifi-service-deploy_noprod:
+#   stage: deploy
+#   extends: .nifi-deploy_noprod
+#   dependencies:
+#     - init-job
+#   only:
+#     refs:
+#       - /^develop-.*$/i
+#       - /^release-.*$/i
+#       - tags
+#     changes:
+#       - nifi-service/**/*
+#     variables:
+#       - $TEST_ONLY == "false"
+
+# nifi-service-deploy_prod:
+#   stage: deploy_prod
+#   extends: .nifi-deploy_prod
+#   dependencies:
+#     - init-job
+#   when: manual  
+#   only:
+#     variables:
+#       - $TEST_ONLY == "false"
+#     refs:
+#        - tags
+
+
+integration-test-scheduled:
+  stage: integration_test
+  image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/karate:latest
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/surefire-reports
+      - ${CI_PROJECT_DIR}/cucumber-html-reports
+    reports:
+      junit: ${CI_PROJECT_DIR}/surefire-reports/*.xml
+    expire_in: 5d
+  variables:
+    cucumber_report_link: "https://optisam.pages.gitlab.tech.orange/optisam-it/optisam-backend/-/jobs/${CI_JOB_ID}/artifacts/cucumber-html-reports/overview-features.html"
+    gitlab_report_link: "https://gitlab.tech.orange/optisam/optisam-it/optisam-backend/-/pipelines/${CI_PIPELINE_ID}/test_report"
+  script:
+    - java -Dkarate.config.dir=${CI_PROJECT_DIR} -jar /opt/karate/karate.jar -e=${ENV} -t "~@ignore" -o ${CI_PROJECT_DIR}/ .
+  after_script: 
+    - ls -alSh
+    - apk update && apk upgrade && apk add curl
+    - touch data.json
+    - >
+      echo '{"channel": "test-automation","username": "api-test-automation","icon_url": "https://mattermost.org/wp-content/uploads/2016/04/icon.png","text": "#### OPTISAM-IT API Automation Test results \n<!channel> please verify the test report on below mentioned link \n\n\n | Project | OPTISAM-IT | \n |:-------------:|:----------------| \n| Environment | **${ENV}** | \n | Date | ${CI_JOB_STARTED_AT} | \n | status | **${CI_JOB_STATUS}** | \n | cucumber_report_link | ${cucumber_report_link} | \n | gitlab_report_link | ${gitlab_report_link} | \n "}' >> data.json
+    - sed -e 's@\${ENV}'@$ENV'@g' -e 's@\${CI_JOB_STARTED_AT}'@$CI_JOB_STARTED_AT'@g' -e 's@\${CI_JOB_STATUS}'@$CI_JOB_STATUS'@g' -e 's@\${cucumber_report_link}'@$cucumber_report_link'@g' -e 's@\${gitlab_report_link}'@$gitlab_report_link'@g' data.json | tee data.json
+    - - cat data.json
+    - |
+      curl --show-error \
+      --data @data.json \
+      --header 'Content-Type: application/json' \
+      --request POST \
+      "https://mattermost.tech.orange/hooks/gyw8o3mch7yibk7zkuzx1q9w1e"  
+  allow_failure: true
+  only:
+    - schedules
+    
+pages:
+  stage: publish
+  image: ${DOCKER_PROXY_HOST}/alpine:latest
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    expire_in: 1d
+    paths:
+      - public
+  script:
+    - mkdir pub
+    - find . -type f -name "cover.out" -exec cp --parents {} pub \;
+    - find . -type f -name "cover.html" -exec cp --parents {} pub \;
+    # - find . -type f -name "test-results.xml" -exec cp --parents {} pub \;
+    # - find . -type f -name "lint-results.xml" -exec cp --parents {} pub \;
+    - find . -type f -name "code-quality-report.json" -exec cp --parents {} pub \;
+    - find . -type d -name "cucumber-html-reports" -exec cp -R --parents {} pub \;
+    - find . -type f -name "perf_report.json" -exec cp --parents {} pub \;
+    - find . -type f -name "summary_export.json" -exec cp --parents {} pub \;
+    # - find . -type f -name "cover.out" | xargs tar cvf - | (cd pub ; tar xfp -)
+    - mv pub public
+  only:
+    - /^develop-.*$/i
+    - tags
+    - /^release-.*$/i
+    - /^performance-.*$/i
+    - schedules
+  except:
+    changes:
+      - meta-service/**/*
+      - nifi-service/**/*
+      - .gitlab-ci.yml
+

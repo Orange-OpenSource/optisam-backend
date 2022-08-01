@@ -375,6 +375,26 @@ func (mr *MockEquipmentServiceClientMockRecorder) UpsertEquipment(arg0, arg1 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertEquipment", reflect.TypeOf((*MockEquipmentServiceClient)(nil).UpsertEquipment), varargs...)
 }
 
+// UpsertEquipmentAllocatedMetric mocks base method
+func (m *MockEquipmentServiceClient) UpsertEquipmentAllocatedMetric(arg0 context.Context, arg1 *v1.UpsertEquipmentAllocatedMetricRequest, arg2 ...grpc.CallOption) (*v1.UpsertEquipmentResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertEquipmentAllocatedMetric", varargs...)
+	ret0, _ := ret[0].(*v1.UpsertEquipmentResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertEquipmentAllocatedMetric indicates an expected call of UpsertEquipmentAllocatedMetric
+func (mr *MockEquipmentServiceClientMockRecorder) UpsertEquipmentAllocatedMetric(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertEquipmentAllocatedMetric", reflect.TypeOf((*MockEquipmentServiceClient)(nil).UpsertEquipmentAllocatedMetric), varargs...)
+}
+
 // UpsertMetadata mocks base method
 func (m *MockEquipmentServiceClient) UpsertMetadata(arg0 context.Context, arg1 *v1.UpsertMetadataRequest, arg2 ...grpc.CallOption) (*v1.UpsertMetadataResponse, error) {
 	m.ctrl.T.Helper()

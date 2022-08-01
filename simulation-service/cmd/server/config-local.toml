@@ -30,6 +30,7 @@ timeout = 10
 
 [grpcservers.address]
 license = "localhost:19091"
+metric = "localhost:18090"
 
 
 [iam]

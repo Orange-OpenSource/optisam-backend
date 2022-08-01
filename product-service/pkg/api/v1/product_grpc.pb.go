@@ -52,6 +52,7 @@ type ProductServiceClient interface {
 	DropAggregationData(ctx context.Context, in *DropAggregationDataRequest, opts ...grpc.CallOption) (*DropAggregationDataResponse, error)
 	CreateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(ctx context.Context, in *CreateDashboardUpdateJobRequest, opts ...grpc.CallOption) (*CreateDashboardUpdateJobResponse, error)
+	UpsertAllocatedMetricEquipment(ctx context.Context, in *UpsertAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error)
 	UpdateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	DeleteAcqRight(ctx context.Context, in *DeleteAcqRightRequest, opts ...grpc.CallOption) (*DeleteAcqRightResponse, error)
@@ -384,6 +385,15 @@ func (c *productServiceClient) CreateDashboardUpdateJob(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *productServiceClient) UpsertAllocatedMetricEquipment(ctx context.Context, in *UpsertAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error) {
+	out := new(UpsertAllocateMetricEquipementResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertAllocatedMetricEquipment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error) {
 	out := new(GetBannerResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetBanner", in, out, opts...)
@@ -486,6 +496,7 @@ type ProductServiceServer interface {
 	DropAggregationData(context.Context, *DropAggregationDataRequest) (*DropAggregationDataResponse, error)
 	CreateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(context.Context, *CreateDashboardUpdateJobRequest) (*CreateDashboardUpdateJobResponse, error)
+	UpsertAllocatedMetricEquipment(context.Context, *UpsertAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error)
 	UpdateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error)
@@ -603,6 +614,9 @@ func (UnimplementedProductServiceServer) CreateAcqRight(context.Context, *AcqRig
 }
 func (UnimplementedProductServiceServer) CreateDashboardUpdateJob(context.Context, *CreateDashboardUpdateJobRequest) (*CreateDashboardUpdateJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDashboardUpdateJob not implemented")
+}
+func (UnimplementedProductServiceServer) UpsertAllocatedMetricEquipment(context.Context, *UpsertAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertAllocatedMetricEquipment not implemented")
 }
 func (UnimplementedProductServiceServer) GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBanner not implemented")
@@ -1267,6 +1281,24 @@ func _ProductService_CreateDashboardUpdateJob_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpsertAllocatedMetricEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertAllocateMetricEquipementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpsertAllocatedMetricEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpsertAllocatedMetricEquipment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpsertAllocatedMetricEquipment(ctx, req.(*UpsertAllocateMetricEquipementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetBanner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBannerRequest)
 	if err := dec(in); err != nil {
@@ -1536,6 +1568,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateDashboardUpdateJob",
 			Handler:    _ProductService_CreateDashboardUpdateJob_Handler,
+		},
+		{
+			MethodName: "UpsertAllocatedMetricEquipment",
+			Handler:    _ProductService_UpsertAllocatedMetricEquipment_Handler,
 		},
 		{
 			MethodName: "GetBanner",

@@ -34,6 +34,19 @@ service EquipmentService {
       body : "*"
     };
   }
+
+  rpc UpsertEquipmentAllocatedMetric(UpsertEquipmentAllocatedMetricRequest)
+      returns (UpsertEquipmentResponse) {
+        option (google.api.http) = {
+          put : "/api/v1/equipment/allocatedmetric"
+          body : "*"
+          additional_bindings {
+            patch : "/api/v1/equipment/allocatedmetric" 
+            body : "*"
+          }
+        };
+    }
+  
   
   rpc ListEquipmentsMetadata(ListEquipmentMetadataRequest)
       returns (ListEquipmentMetadataResponse) {
@@ -173,6 +186,15 @@ message UpsertEquipmentRequest {
   google.protobuf.Struct eq_data = 3;
 }
 
+message UpsertEquipmentAllocatedMetricRequest {
+  string scope = 1 [(validate.rules).string.len = 3] ;
+  string swidtag = 2;
+  string equipment_id = 3;
+  string eq_type = 4;
+  int32 equipment_user = 5;
+  string allocated_metrics = 6;
+}
+
 message UpsertEquipmentResponse {bool success = 1;}
 message ListEquipmentsForProductAggregationRequest {
   string name = 1;
@@ -290,7 +312,8 @@ message UpdateEquipmentTypeRequest {
   // Only send parent id if equipment type does not have a parent.
   string parent_id = 2;
   repeated Attribute attributes = 3;
-  repeated string scopes = 4  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  repeated UpdAttribute updattr = 4;
+  repeated string scopes = 5  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message DeleteEquipmentTypeRequest{
@@ -377,6 +400,13 @@ message Attribute {
     float float_val_old = 14;
     string string_val_old = 15;
   }
+}
+
+message UpdAttribute {
+  string ID = 1;
+  string name = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  bool displayed = 3;
+  bool searchable = 4;
 }
 
 message StringFilter {

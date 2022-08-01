@@ -352,16 +352,6 @@ func request_LicenseService_ProductLicensesForMetric_0(ctx context.Context, mars
 		_   = err
 	)
 
-	val, ok = pathParams["swid_tag"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "swid_tag")
-	}
-
-	protoReq.SwidTag, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "swid_tag", err)
-	}
-
 	val, ok = pathParams["metric_name"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metric_name")
@@ -395,16 +385,6 @@ func local_request_LicenseService_ProductLicensesForMetric_0(ctx context.Context
 		err error
 		_   = err
 	)
-
-	val, ok = pathParams["swid_tag"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "swid_tag")
-	}
-
-	protoReq.SwidTag, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "swid_tag", err)
-	}
 
 	val, ok = pathParams["metric_name"]
 	if !ok {
@@ -460,26 +440,6 @@ func request_LicenseService_LicensesForEquipAndMetric_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
 	}
 
-	val, ok = pathParams["metric_type"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metric_type")
-	}
-
-	protoReq.MetricType, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metric_type", err)
-	}
-
-	val, ok = pathParams["metric_name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metric_name")
-	}
-
-	protoReq.MetricName, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metric_name", err)
-	}
-
 	msg, err := client.LicensesForEquipAndMetric(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -522,26 +482,6 @@ func local_request_LicenseService_LicensesForEquipAndMetric_0(ctx context.Contex
 	protoReq.EquipId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "equip_id", err)
-	}
-
-	val, ok = pathParams["metric_type"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metric_type")
-	}
-
-	protoReq.MetricType, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metric_type", err)
-	}
-
-	val, ok = pathParams["metric_name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "metric_name")
-	}
-
-	protoReq.MetricName, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "metric_name", err)
 	}
 
 	msg, err := server.LicensesForEquipAndMetric(ctx, &protoReq)
@@ -911,9 +851,9 @@ var (
 
 	pattern_LicenseService_ListAcqRightsForAggregation_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "license", "aggregation", "name", "acquiredrights"}, ""))
 
-	pattern_LicenseService_ProductLicensesForMetric_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "license", "product", "swid_tag", "metric", "metric_name"}, ""))
+	pattern_LicenseService_ProductLicensesForMetric_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "license", "simulation", "metric", "metric_name"}, ""))
 
-	pattern_LicenseService_LicensesForEquipAndMetric_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 4, 1, 0, 4, 1, 5, 8, 1, 0, 4, 1, 5, 9}, []string{"api", "v1", "license", "equipments", "types", "equip_type", "equip_id", "metric", "metric_type", "metric_name"}, ""))
+	pattern_LicenseService_LicensesForEquipAndMetric_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "license", "simulation", "hardware", "equipments", "types", "equip_type", "equip_id"}, ""))
 )
 
 var (

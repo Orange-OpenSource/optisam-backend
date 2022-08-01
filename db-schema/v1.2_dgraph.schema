@@ -1,0 +1,11 @@
+<Predicates>
+
+metric.oracle_nup.transform : bool .
+metric.oracle_nup.transform_metric_name : string .
+
+metric.oracle_nup.transform_metric_name: string @index(exact) .
+
+<Types>
+MetricOracleNUP - 
+metric.oracle_nup.transform
+metric.oracle_nup.transform_metric_name     

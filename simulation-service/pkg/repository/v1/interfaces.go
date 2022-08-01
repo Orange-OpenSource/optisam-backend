@@ -12,8 +12,8 @@ type Repository interface {
 	db.Querier
 
 	// CreateConfig will insert the config data into the system
-	CreateConfig(ctx context.Context, masterData *MasterData, configData []*ConfigData) error
+	CreateConfig(ctx context.Context, masterData *MasterData, configData []*ConfigData, scope string) error
 
 	// UpdateConfig updates the configuration
-	UpdateConfig(ctx context.Context, configID int32, eqType string, metadataIDs []int32, data []*ConfigData) error
+	UpdateConfig(ctx context.Context, configID int32, eqType, updatedBy string, metadataIDs []int32, data []*ConfigData, scope string) error
 }
