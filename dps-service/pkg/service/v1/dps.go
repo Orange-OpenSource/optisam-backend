@@ -8,6 +8,7 @@ import (
 	accv1 "optisam-backend/account-service/pkg/api/v1"
 	appV1 "optisam-backend/application-service/pkg/api/v1"
 	equipV1 "optisam-backend/equipment-service/pkg/api/v1"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
 	prodV1 "optisam-backend/product-service/pkg/api/v1"
 	"os"
 	"strconv"
@@ -41,6 +42,7 @@ type dpsServiceServer struct {
 	equipment   equipV1.EquipmentServiceClient
 	product     prodV1.ProductServiceClient
 	account     accv1.AccountServiceClient
+	metric      metv1.MetricServiceClient
 }
 
 const (
@@ -58,6 +60,7 @@ func NewDpsServiceServer(dpsRepo repo.Dps, queue workerqueue.Workerqueue, grpcSe
 		equipment:   equipV1.NewEquipmentServiceClient(grpcServers["equipment"]),
 		product:     prodV1.NewProductServiceClient(grpcServers["product"]),
 		account:     accv1.NewAccountServiceClient(grpcServers["account"]),
+		metric:      metv1.NewMetricServiceClient(grpcServers["metric"]),
 	}
 }
 
@@ -135,6 +138,28 @@ func (d *dpsServiceServer) DropUploadedFileData(ctx context.Context, req *v1.Dro
 	return &v1.DropUploadedFileDataResponse{
 		Success: true,
 	}, nil
+}
+
+func (d *dpsServiceServer) GetAllocMetricDetails(ctx context.Context, req *v1.GetAllocMetricDetailsRequest) (*v1.GetAllocMetricDetailsResponse, error) {
+	metrics, err := d.equipment.GetMetrics(ctx, &equipV1.GetMetricsRequest{
+		Scope: req.Scope,
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorw("dpsservice/v1 - GetAllocMetricDetails - Error while getting metrics ",
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, "unable to get metrics")
+	}
+	apiresp := &v1.GetAllocMetricDetailsResponse{}
+	apiresp.Name = make([]string, len(metrics.Name))
+	apiresp.Type = make([]string, len(metrics.Type))
+
+	for i := range metrics.Name {
+		apiresp.Name[i] = metrics.Name[i]
+		apiresp.Type[i] = metrics.Type[i]
+	}
+	return apiresp, nil
 }
 
 // ListFailedRecord

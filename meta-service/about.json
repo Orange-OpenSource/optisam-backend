@@ -1,50 +1,49 @@
 {
-	"copyright": "Copyright © Orange 2021",
+	"copyright": "Copyright © Orange 2022",
 	"release_notes": [
-		"As an admin or user the list of products for a chosen application instance is visible",
-		"Users can ask for the report generation by the editor",
-		"Admin and users can see the detail of each metric computation in the reports",
-		"Admin and User are able to simulate metric cost changes for an editor",
-		"Admin can create update and delete the new metric type static.standard",
-		"Admin/User can check the compliance for metrics from the new metric type static.standard",
-		"Admin can search his/her acquired rights in the acquired rights management for the licensed products and aggregations",
-		"The new help manual is integrated into Optisam-UI",
-		"Fixed: Getting 500 on dashboard Banner API where there is no data in scope",
-		"Fixed: Getting Trouble while creating Acquiredrights (individual)",
-		"Fixed: Dashboard Compliance issues",
-		"Fixed: Individual rights with different metric should not be visible on \"+\" if the aggregated rights are purchased with other metric in acquired rights aggregation",
-		"Fixed: Relink the Products with aggregation after the data reupload",
-		"Fixed: Detail Information is getting failed for Aggregation for non_deployed as well non_acquired products. Also In case of non-deployed products when we click on + button API is getting failed",
-		"Fixed: On Product aggregation page  Application and equipments counts are coming wrong",
-		"Fixed: API for Aggregation Compliance delta is not coming right",
-		"Fixed: On Aggregation Management page Header should be shown on the page with no data available message when there is no data. Also the products list should be sorted when user creates aggregation",
-		"Fixed: Not able to login into the application with the user who does not have the groups",
-		"Fixed: Aggregation detail API is getting failed after license deletion and non-acquired product message is not coming on compliance",
-		"Fixed: Alignment issue when user see the reason for failed records on data mgmt",
-		"Fixed: When there is no data on scope we see server error on dashboard",
-		"Fixed: Reports are getting failed for Product equipment type on all scope",
-		"Fixed: reports for OLN miss one raw",
-		"Fixed: Admin adding user to child shows user added but user not added to the group"
+		"Allowed 0 in unit cost of acquired rights.",
+		"Admin can choose only reference equipment type which itself or parent has attribute environment, in order to create a metric of type equipment.attribute.standard.",
+		"For Admin, optisam to find the best repartition of licences amongst SKUs (for same product or aggregation).",
+		"Configure Prometheus and grafana in dev env for Diod setup.",
+		"Add 3 node cluster for INT environment (similar like dev and prod)",
+		"Fixed: Bug_UI: Metric details are not populating from UI while editing metrics(NUP/OPS/IBM/SAG)",
+		"Fixed: Bug_OLN - Cannot download server file (all platforms).",
+		"Fixed: Bug-Dashboard compliance overview and Counterfeiting/Underusage Amount is not getting updated on data upload on prod after aggregation creation",
+		"Fixed: Bug:- Aggregation Compliance getting failed on Production Platform.",
+		"Fixed: Bug- File is getting stuck in Processed status , impacting DPS service",
+		"Fixed: Getting \"internal Server Error \" on file upload with 10k records.",
+		"Translate NUP into Processor metric during metric creation or updation",
+		"Allocate metric from UI to product equipment and calculate compliance for products with allocated metric. Allocation will be till the last equipment of defined Metric.",
+		"Cost optimization improvements delta cost is negative then delta cost is summed up with the counterfeiting amount. If it is positive it is summed up with the under usage amount. The popup for compliance will show the total cost acquired by summing each total cost by skus and also show the sum of the delta cost.",
+		"Allow admin to delete allocation metric from UI",
+		"Allow admin to allocate metric from data import",
+		"Allow to add allocated users to individual equipment, not to other equipment under same parent. Fix equipment users count issue while compliance calculation ",
+		"A NUP metric is transalted into OPS then added a transaltion text on compliance details.",
+		"Allocated metric compliance changes equipment which are having parent also restricted to allocated metric computation only. Equipment which are avaliable will be part of both computation metrics allocated and non-allocated.",
+		"Creation for logins on prod to do ",
+		"Dgraph query for Equipment type update(Generic scope)",
+		"Update dashboard overview Alert compliance calculation",
+		"A NUP metric is transalted to OPS then all the equipment where NUP is allocatd those will be part of OPS calculation.",
+		"Fixed: Bug- Cost optimization check is getting removed from ACQ rights if the admin reload the data after inventory park deletion not the acquired right.",
+		"Fixed: Bug- Corefactor management default values should be picked from file if present rather than fixed value.",
+		"As optisam user, I want to simulate a change in hardware configuration and get the results.",
+		"Error while uploading Large File"
 	],
 	"future": [
-
 		{
-			"version": "1.1.0 ",
-			"date_month": "June",
+			"version": "1.3.0 ",
+			"date_month": "October",
 			"date_year": "2022",
 			"bullets": [
-				"Openshift metric",
-				"Multiple metrics computation for several SKUs"
-
+				"Metric changes"
 			]
 		},
 		{
-			"version": "1.2.0 ",
+			"version": "1.4.0 ",
 			"date_month": "",
 			"date_year": "",
 			"bullets": [
-				"Metric allocation to product installation"
-
+				"Product catalog changes"
 			]
 		}
 	]

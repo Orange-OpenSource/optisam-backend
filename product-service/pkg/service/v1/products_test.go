@@ -500,8 +500,8 @@ func TestUpsertProduct(t *testing.T) {
 					Operation: "add",
 					Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
 						{
-							EquipmentId: "e1",
-							NumUser:     int32(1),
+							EquipmentId:    "e1",
+							AllocatedUsers: int32(1),
 						},
 					},
 				},

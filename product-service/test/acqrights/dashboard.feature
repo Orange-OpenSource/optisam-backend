@@ -4,12 +4,12 @@ Feature: Dashboard  Test
   Background:
   # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 
  @get
@@ -37,25 +37,53 @@ Feature: Dashboard  Test
     Then status 200
     And match response.metrics_products[*] contains data.metrics_products
    
-
-   @get @ignore
+# TBD Value is not showing on UI
+   @get 
   Scenario: Get compliance counterfeiting
     Given path 'dashboard/compliance/counterfeiting'
-    And params {editor:'IBM' , scope:'#(scope)', }
+    And params {editor:'Adobe' , scope:'#(scope)', }
     When method get
     Then status 200
-    And match response.products_licenses[*] contains data.counterfeit_products_licenses
-    And match response.products_costs[*] contains data.counterfeit_products_costs
+    #And match response.products_licenses[*] contains data.counterfeit_products_licenses
+    #And match response.products_costs[*] contains data.counterfeit_products_costs
 
 
   @get
   Scenario: Get compliance Overdeployment
     Given path 'dashboard/compliance/overdeployment'
-    And params {editor:'Micro Focus' , scope:'#(scope)', }
+    And params {editor:'Adobe' , scope:'#(scope)', }
     When method get
     Then status 200
     And match response.products_licenses[*] contains data.overdeployed_products_licenses
     And match response.products_costs[*] contains data.overdeployed_products_costs
     
+  @get
+  Scenario: To verify Details of Not Licenced product
+    Given path 'dashboard/quality/products'
+    And params {scope:'#(scope)'}
+    When method get
+    Then status 200
+
   
-   
+  @pegination
+  Scenario Outline: To verify pagination on Not Licenced product
+    Given path 'dashboard/quality/products'
+    And params {scope:'#(scope)'}
+    And params { page_num:1, page_size:'<page_size>'}
+    When method get
+    Then status 200
+    And response.products_not_deployed > 0
+
+    Examples:
+    | page_size |
+    | 200 |
+    | 100 |
+    | 50 |
+
+  @get
+  Scenario: To verify Editor for Not Licenced product 
+    Given path 'dashboard/quality/products'
+    And params {scope:'#(scope)'}
+    When method get
+    Then status 200
+    And match response.products_not_acquired[*].editor contains data.products_not_acquired.editor

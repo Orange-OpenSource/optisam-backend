@@ -27,6 +27,12 @@ service DpsService {
     };
   }
 
+  rpc GetAllocMetricDetails(GetAllocMetricDetailsRequest) returns (GetAllocMetricDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/metrics"
+    };
+  }
+
   rpc ViewCoreFactorLogs(ViewCoreFactorLogsRequest) returns (ViewCoreFactorLogsResponse) {
     option (google.api.http) = {
       get : "/api/v1/dps/corefactorlogs"
@@ -145,6 +151,15 @@ message ViewReferenceDataRequest{
 message ViewReferenceDataResponse{
   repeated CoreFactorReference references = 1;
   int32 totalRecord = 2;
+}
+
+message GetAllocMetricDetailsRequest{
+  string scope = 1;
+}
+
+message GetAllocMetricDetailsResponse{
+  repeated string name = 1;
+  repeated string type = 2;
 }
 
 message StoreReferenceDataRequest{

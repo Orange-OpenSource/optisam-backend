@@ -181,6 +181,41 @@ func (mr *MockLicenseMockRecorder) GetAggregations(arg0, arg1, arg2 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregations", reflect.TypeOf((*MockLicense)(nil).GetAggregations), arg0, arg1, arg2)
 }
 
+// GetMetricNUPByTransformMetricName mocks base method
+func (m *MockLicense) GetMetricNUPByTransformMetricName(arg0 context.Context, arg1, arg2 string) (*v1.MetricNUPOracle, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricNUPByTransformMetricName", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.MetricNUPOracle)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricNUPByTransformMetricName indicates an expected call of GetMetricNUPByTransformMetricName
+func (mr *MockLicenseMockRecorder) GetMetricNUPByTransformMetricName(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricNUPByTransformMetricName", reflect.TypeOf((*MockLicense)(nil).GetMetricNUPByTransformMetricName), arg0, arg1, arg2)
+}
+
+// GetProdAllocatedMetric mocks base method
+func (m *MockLicense) GetProdAllocatedMetric(arg0 context.Context, arg1 []string, arg2 ...string) ([]*v1.ProductAllocationEquipmentMetrics, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetProdAllocatedMetric", varargs...)
+	ret0, _ := ret[0].([]*v1.ProductAllocationEquipmentMetrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProdAllocatedMetric indicates an expected call of GetProdAllocatedMetric
+func (mr *MockLicenseMockRecorder) GetProdAllocatedMetric(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProdAllocatedMetric", reflect.TypeOf((*MockLicense)(nil).GetProdAllocatedMetric), varargs...)
+}
+
 // GetProductInformation mocks base method
 func (m *MockLicense) GetProductInformation(arg0 context.Context, arg1 string, arg2 ...string) (*v1.ProductAdditionalInfo, error) {
 	m.ctrl.T.Helper()
@@ -254,6 +289,26 @@ func (mr *MockLicenseMockRecorder) ListMetricAttrSum(arg0 interface{}, arg1 ...i
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMetricAttrSum", reflect.TypeOf((*MockLicense)(nil).ListMetricAttrSum), varargs...)
+}
+
+// ListMetricEquipAttr mocks base method
+func (m *MockLicense) ListMetricEquipAttr(arg0 context.Context, arg1 ...string) ([]*v1.MetricEquipAttrStand, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListMetricEquipAttr", varargs...)
+	ret0, _ := ret[0].([]*v1.MetricEquipAttrStand)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMetricEquipAttr indicates an expected call of ListMetricEquipAttr
+func (mr *MockLicenseMockRecorder) ListMetricEquipAttr(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMetricEquipAttr", reflect.TypeOf((*MockLicense)(nil).ListMetricEquipAttr), varargs...)
 }
 
 // ListMetricINM mocks base method
@@ -516,6 +571,46 @@ func (mr *MockLicenseMockRecorder) MetricAttrSumComputedLicensesAgg(arg0, arg1, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MetricAttrSumComputedLicensesAgg", reflect.TypeOf((*MockLicense)(nil).MetricAttrSumComputedLicensesAgg), varargs...)
+}
+
+// MetricEquipAttrComputedLicenses mocks base method
+func (m *MockLicense) MetricEquipAttrComputedLicenses(arg0 context.Context, arg1 string, arg2 *v1.MetricEquipAttrStandComputed, arg3 ...string) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MetricEquipAttrComputedLicenses", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MetricEquipAttrComputedLicenses indicates an expected call of MetricEquipAttrComputedLicenses
+func (mr *MockLicenseMockRecorder) MetricEquipAttrComputedLicenses(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MetricEquipAttrComputedLicenses", reflect.TypeOf((*MockLicense)(nil).MetricEquipAttrComputedLicenses), varargs...)
+}
+
+// MetricEquipAttrComputedLicensesAgg mocks base method
+func (m *MockLicense) MetricEquipAttrComputedLicensesAgg(arg0 context.Context, arg1, arg2 string, arg3 *v1.MetricEquipAttrStandComputed, arg4 ...string) (uint64, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MetricEquipAttrComputedLicensesAgg", varargs...)
+	ret0, _ := ret[0].(uint64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MetricEquipAttrComputedLicensesAgg indicates an expected call of MetricEquipAttrComputedLicensesAgg
+func (mr *MockLicenseMockRecorder) MetricEquipAttrComputedLicensesAgg(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MetricEquipAttrComputedLicensesAgg", reflect.TypeOf((*MockLicense)(nil).MetricEquipAttrComputedLicensesAgg), varargs...)
 }
 
 // MetricINMComputedLicenses mocks base method
@@ -886,6 +981,66 @@ func (mr *MockLicenseMockRecorder) ProductIDForSwidtag(arg0, arg1, arg2 interfac
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductIDForSwidtag", reflect.TypeOf((*MockLicense)(nil).ProductIDForSwidtag), varargs...)
+}
+
+// ProductsForEquipmentForMetricAttrCounterStandard mocks base method
+func (m *MockLicense) ProductsForEquipmentForMetricAttrCounterStandard(arg0 context.Context, arg1, arg2 string, arg3 byte, arg4 *v1.MetricACSComputed, arg5 ...string) ([]*v1.ProductData, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
+	for _, a := range arg5 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ProductsForEquipmentForMetricAttrCounterStandard", varargs...)
+	ret0, _ := ret[0].([]*v1.ProductData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ProductsForEquipmentForMetricAttrCounterStandard indicates an expected call of ProductsForEquipmentForMetricAttrCounterStandard
+func (mr *MockLicenseMockRecorder) ProductsForEquipmentForMetricAttrCounterStandard(arg0, arg1, arg2, arg3, arg4 interface{}, arg5 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4}, arg5...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsForEquipmentForMetricAttrCounterStandard", reflect.TypeOf((*MockLicense)(nil).ProductsForEquipmentForMetricAttrCounterStandard), varargs...)
+}
+
+// ProductsForEquipmentForMetricAttrSumStandard mocks base method
+func (m *MockLicense) ProductsForEquipmentForMetricAttrSumStandard(arg0 context.Context, arg1, arg2 string, arg3 byte, arg4 *v1.MetricAttrSumStandComputed, arg5 ...string) ([]*v1.ProductData, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
+	for _, a := range arg5 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ProductsForEquipmentForMetricAttrSumStandard", varargs...)
+	ret0, _ := ret[0].([]*v1.ProductData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ProductsForEquipmentForMetricAttrSumStandard indicates an expected call of ProductsForEquipmentForMetricAttrSumStandard
+func (mr *MockLicenseMockRecorder) ProductsForEquipmentForMetricAttrSumStandard(arg0, arg1, arg2, arg3, arg4 interface{}, arg5 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4}, arg5...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsForEquipmentForMetricAttrSumStandard", reflect.TypeOf((*MockLicense)(nil).ProductsForEquipmentForMetricAttrSumStandard), varargs...)
+}
+
+// ProductsForEquipmentForMetricEquipAttrStandard mocks base method
+func (m *MockLicense) ProductsForEquipmentForMetricEquipAttrStandard(arg0 context.Context, arg1, arg2 string, arg3 byte, arg4 *v1.MetricEquipAttrStandComputed, arg5 ...string) ([]*v1.ProductData, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
+	for _, a := range arg5 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ProductsForEquipmentForMetricEquipAttrStandard", varargs...)
+	ret0, _ := ret[0].([]*v1.ProductData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ProductsForEquipmentForMetricEquipAttrStandard indicates an expected call of ProductsForEquipmentForMetricEquipAttrStandard
+func (mr *MockLicenseMockRecorder) ProductsForEquipmentForMetricEquipAttrStandard(arg0, arg1, arg2, arg3, arg4 interface{}, arg5 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3, arg4}, arg5...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsForEquipmentForMetricEquipAttrStandard", reflect.TypeOf((*MockLicense)(nil).ProductsForEquipmentForMetricEquipAttrStandard), varargs...)
 }
 
 // ProductsForEquipmentForMetricIPSStandard mocks base method

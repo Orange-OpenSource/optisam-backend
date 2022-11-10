@@ -4,12 +4,12 @@ Feature: Metric Service Test
   Background:
   # * def metricServiceUrl = "https://optisam-metric-int.apps.fr01.paas.tech.orange"
     * url metricServiceUrl+'/api/v1'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
   @get
   Scenario: Get metric types

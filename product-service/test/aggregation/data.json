@@ -1,20 +1,19 @@
 {
     "schema_agg": {
         "ID": "#number",
-        "name": "#string",
-        "editor": "#string",
+        "aggregation_name": "#string",
+        "product_editor": "#string",
         "product_names": "#[] #string",
-        "products": "#[] #string",
-        "metric": "#string",
+        "swidtags": "#[] #string",
         "scope": "#string"
     },
     "getAgg": {
         "ID": "#number",
-        "name": "apitest_agg_oracleWL",
-        "editor": "Oracle",
+        "aggregation_name": "apitest_agg_adobe",
+        "product_editor": "Adobe",
         "product_names": [
-            "Oracle Weblogic Server 12",
-            "Oracle Weblogic Server 10"
+            "Adobe Media Server"
+            
         ],
         "products": [
             "oracle_wl_1",
@@ -25,26 +24,77 @@
     },
     "createAgg": {
         "ID": 0,
-        "name": "apitest_agg_ibm",
-        "editor": "IBM",
-        "metric": "ibm_pvu",
-        "products": [
-            "ibm_websphere_1",
-            "ibm_websphere_2"
-        ]
+        "aggregation_name": "apitest_agg_adobe",
+        "product_editor": "Adobe",
+        "product_names": [
+            "Adobe Media Server" 
+        ],
+        "swidtags":[
+             "Adobe_Media_Server_Adobe_5.0.16"
+        ],
+        "scope": "#string"
     },
+
+    "updateAgg": {
+        "ID": 0,
+        "aggregation_name": "api_update_test_agg_oracle",
+        "product_editor": "Oracle",
+        "product_names": [
+            "Oracle Micros 11"
+        ],
+        "swidtags":[
+            "Oracle_Micros_11_Oracle_15.0.0"
+            
+        ],
+        "scope": "#string"
+    },
+
+    "updateAggPATCH": {
+        "ID": 0,
+        "aggregation_name": "api_update_test_agg_oracle_Patch",
+        "product_editor": "Oracle",
+        "product_names": [
+            "Oracle Micros 11"
+        ],
+        "swidtags": [
+            "Oracle_Micros_11_Oracle_15.0.0"
+            
+        ],
+        "scope": "#string"
+    },
+   "Response_Message": {
+             "message": "aggregation name already exists",
+             "prd_message": "ProductNotAvailable"
+    },
+
+    "Aggregation_name": {
+        "agg_name": "test_agg_product_duplicate"
+},
     "schema_prod_agg": {
         "ID": "#number",
-        "name": "#string",
+        "aggregation_name": "#string",
         "editor": "#string",
         "swidtags": "#[] #string",
         "num_applications": "##number",
         "num_equipments": "##number",
-        "total_cost": "##number"
+        "total_cost": "##number",
+        "individual_product_exists": "#boolean"
     },
     "getProdAgg": {
         "ID": "#number",
-        "name": "apitest_agg_oracleWL",
+        "aggregation_name": "apitest_agg_adobe",
+        "editor": "Oracle",
+        "num_applications": 2,
+        "num_equipments": 13,
+        "total_cost": 60200,
+        "swidtags": [
+            "oracle_wl_1",
+            "oracle_wl_2"
+        ]
+    },
+    "getProdAgg1": {
+        "ID": "#number",
+        "aggregation_name": "Oracle_enterprise_database",
         "editor": "Oracle",
         "num_applications": 2,
         "num_equipments": 13,
@@ -56,13 +106,34 @@
     },
     "schema_acqrights_agg" : {
         "ID": "#number",
-        "name": "#string",
-        "scope": "#string",
-        "editor": "#string",
+        "aggregation_name": "#string",
+        "sku": "#string",
+        "product_editor": "#string",
+        "metric_name": "#string",
+        "product_names": "#[] #string",
         "swidtags": "#[] #string",
-        "skus": "#[] #string",
-        "metric": "#string",
-        "total_cost": "#number"
+        "num_licenses_acquired": "#number",
+        "avg_unit_price": "#number",
+        "start_of_maintenance": "#string",
+        "end_of_maintenance": "#string",
+        "num_licences_maintenance": "#number",
+        "avg_maintenance_unit_price": "#number",
+        "scope": "#string",
+        "comment": "#string",
+        "is_individual_right_exists": "#boolean",
+        "total_purchase_cost": "#number",
+        "total_cost": "##number",
+        "total_maintenance_cost": "##number",
+        "licence_under_maintenance": "#string",
+        "ordering_date": "#string",
+        "corporate_sourcing_contract": "#string",
+        "software_provider": "#string",
+        "last_purchased_order": "#string",
+        "support_number": "#string",
+        "maintenance_provider": "#string",
+        "file_name": "#string",
+        "repartition": "#boolean"
+
       },
     "getAcqrightsAgg": {
         "SKU": "oracle_wl_1_ops",

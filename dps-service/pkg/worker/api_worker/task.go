@@ -26,7 +26,7 @@ func init() {
 	dataToRPCMappings[constants.APPLICATIONS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.ApplicationsInstances] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.InstancesProducts] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
-	dataToRPCMappings[constants.InstancesEquipments] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
+	dataToRPCMappings[constants.ApplicationEquipments] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.PRODUCTS] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.ApplicationsProducts] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
 	dataToRPCMappings[constants.ProductsEquipments] = make(map[string]func(context.Context, models.Envlope, grpc.ClientConnInterface) error)
@@ -43,7 +43,7 @@ func init() {
 	dataToRPCMappings[constants.ApplicationsInstances][constants.UPSERT] = sendUpsertInstanceReq
 	dataToRPCMappings[constants.ApplicationsInstances][constants.DELETE] = sendDeleteInstanceReq
 	dataToRPCMappings[constants.InstancesProducts][constants.UPSERT] = sendUpsertInstanceReq
-	dataToRPCMappings[constants.InstancesEquipments][constants.UPSERT] = sendUpsertInstanceReq
+	dataToRPCMappings[constants.ApplicationEquipments][constants.UPSERT] = sendUpsertApplicationEquipReq
 	dataToRPCMappings[constants.PRODUCTS][constants.UPSERT] = sendUpsertProductReq
 	dataToRPCMappings[constants.PRODUCTS][constants.DROP] = sendDropProductDataReq
 	dataToRPCMappings[constants.ApplicationsProducts][constants.UPSERT] = sendUpsertProductReq
@@ -92,8 +92,8 @@ func GetDataCountInPayload(data []byte, fileType string) int32 {
 		}
 		count = int32(len(temp.Products.ProductId))
 
-	case constants.InstancesEquipments:
-		var temp application.UpsertInstanceRequest
+	case constants.ApplicationEquipments:
+		var temp application.UpsertApplicationEquipRequest
 		err := json.Unmarshal(data, &temp)
 		if err != nil {
 			log.Println("Failed to unmarshal for success/failed count calculation , err:", err)
@@ -205,6 +205,28 @@ func sendUpsertApplicationReq(ctx context.Context, data models.Envlope, cc grpc.
 	resp, err := application.NewApplicationServiceClient(cc).UpsertApplication(ctx, &appData)
 	if err != nil {
 		log.Println("FAILED sendUpsertApplicationReq err :", err, " for data ", appData)
+		return err
+	}
+
+	if resp.Success == false {
+		log.Println("FAILEDTOSEND")
+	}
+	return
+}
+
+func sendUpsertApplicationEquipReq(ctx context.Context, data models.Envlope, cc grpc.ClientConnInterface) (err error) {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithDeadline(ctx, time.Now().Add(time.Second*rpcTimeOut))
+	defer cancel()
+	appData := application.UpsertApplicationEquipRequest{}
+	err = json.Unmarshal(data.Data, &appData)
+	if err != nil {
+		log.Println("Failed to marshal data ")
+		return status.Error(codes.Internal, "ParsingError")
+	}
+	resp, err := application.NewApplicationServiceClient(cc).UpsertApplicationEquip(ctx, &appData)
+	if err != nil {
+		log.Println("FAILED sendUpsertApplicationEquipReq err :", err, " for data ", appData)
 		return err
 	}
 

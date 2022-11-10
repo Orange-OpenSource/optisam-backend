@@ -6,7 +6,8 @@ Feature: Account Service Test
 
   Scenario: Superadmin user is able to login
     Given path 'token'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * form field grant_type = 'password'
     * form fields credentials
     When method post

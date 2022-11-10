@@ -48,6 +48,13 @@ INSERT INTO users(username,first_name,last_name,password,locale,role)
 VALUES 
 ('admin@test.com','super','admin','$2a$11$su8WpIWDzAoOhrvsm2U83OXW8JDs36BJNGVhJgnUIOyZW6DolRJSK','en','SuperAdmin');
 
+INSERT INTO users(username,first_name,last_name,password,locale,role)
+VALUES 
+('service@test.com','super','admin','$2a$11$su8WpIWDzAoOhrvsm2U83OXW8JDs36BJNGVhJgnUIOyZW6DolRJSK','en','SuperAdmin'),
+('anjali.katariya@orange.com','super','admin','$2a$11$su8WpIWDzAoOhrvsm2U83OXW8JDs36BJNGVhJgnUIOyZW6DolRJSK','en','SuperAdmin'),
+('charlotte.declercq@orange.com','super','admin','$2a$11$su8WpIWDzAoOhrvsm2U83OXW8JDs36BJNGVhJgnUIOyZW6DolRJSK','en','SuperAdmin');
+
+
 -- select control_extension('create','ltree');
 
 CREATE TABLE IF NOT EXISTS groups (
@@ -70,6 +77,12 @@ DELETE FROM groups ;
 INSERT INTO groups(name, fully_qualified_name, created_by)
 VALUES ('ROOT', 'ROOT', 'admin@test.com');
 
+INSERT INTO groups(name, fully_qualified_name, created_by)
+VALUES 
+('ROOT', 'ROOT', 'service@test.com'),
+('ROOT', 'ROOT', 'anjali.katariya@orange.com'),
+('ROOT', 'ROOT', 'charlotte.declercq@orange.com');
+
 
 CREATE TABLE IF NOT EXISTS group_ownership (
     group_id INTEGER REFERENCES groups(id) ON DELETE CASCADE, 
@@ -81,6 +94,12 @@ CREATE TABLE IF NOT EXISTS group_ownership (
 DELETE FROM group_ownership;
 
 INSERT INTO group_ownership(group_id,user_id) VALUES(1,'admin@test.com');
+
+INSERT INTO group_ownership(group_id,user_id) 
+VALUES
+(853,'service@test.com'),
+(854,'anjali.katariya@orange.com'),
+(855,'charlotte.declercq@orange.com');
 
 create type scope_types as enum('GENERIC','SPECIFIC');
 

@@ -121,11 +121,11 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "400m"
-                  memory: "400Mi"
+                  cpu: "1200m"
+                  memory: "1900Mi"
                 limits:
-                  cpu: "500m"
-                  memory: "600Mi"
+                  cpu: "1500m"
+                  memory: "2900Mi"
               volumeMounts:
                 - name: config-volume
                   mountPath: /opt/config/
@@ -161,5 +161,5 @@ parameters:
     required: true
   - name: DOCKER_REGISTRY
     description: Artifactory URL to download images
-    value: "dockerfactory-unstable-iva.si.francetelecom.fr"
+    value: "optisam-it-virt-docker-unstable.repos.tech.orange"
     required: true

@@ -22,6 +22,7 @@ type SimulationServiceClient interface {
 	CreateConfig(ctx context.Context, in *CreateConfigRequest, opts ...grpc.CallOption) (*CreateConfigResponse, error)
 	ListConfig(ctx context.Context, in *ListConfigRequest, opts ...grpc.CallOption) (*ListConfigResponse, error)
 	GetConfigData(ctx context.Context, in *GetConfigDataRequest, opts ...grpc.CallOption) (*GetConfigDataResponse, error)
+	SimulationByCost(ctx context.Context, in *SimulationByCostRequest, opts ...grpc.CallOption) (*SimulationByCostResponse, error)
 	SimulationByMetric(ctx context.Context, in *SimulationByMetricRequest, opts ...grpc.CallOption) (*SimulationByMetricResponse, error)
 	SimulationByHardware(ctx context.Context, in *SimulationByHardwareRequest, opts ...grpc.CallOption) (*SimulationByHardwareResponse, error)
 }
@@ -79,6 +80,15 @@ func (c *simulationServiceClient) GetConfigData(ctx context.Context, in *GetConf
 	return out, nil
 }
 
+func (c *simulationServiceClient) SimulationByCost(ctx context.Context, in *SimulationByCostRequest, opts ...grpc.CallOption) (*SimulationByCostResponse, error) {
+	out := new(SimulationByCostResponse)
+	err := c.cc.Invoke(ctx, "/optisam.simulation.v1.SimulationService/SimulationByCost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *simulationServiceClient) SimulationByMetric(ctx context.Context, in *SimulationByMetricRequest, opts ...grpc.CallOption) (*SimulationByMetricResponse, error) {
 	out := new(SimulationByMetricResponse)
 	err := c.cc.Invoke(ctx, "/optisam.simulation.v1.SimulationService/SimulationByMetric", in, out, opts...)
@@ -106,6 +116,7 @@ type SimulationServiceServer interface {
 	CreateConfig(context.Context, *CreateConfigRequest) (*CreateConfigResponse, error)
 	ListConfig(context.Context, *ListConfigRequest) (*ListConfigResponse, error)
 	GetConfigData(context.Context, *GetConfigDataRequest) (*GetConfigDataResponse, error)
+	SimulationByCost(context.Context, *SimulationByCostRequest) (*SimulationByCostResponse, error)
 	SimulationByMetric(context.Context, *SimulationByMetricRequest) (*SimulationByMetricResponse, error)
 	SimulationByHardware(context.Context, *SimulationByHardwareRequest) (*SimulationByHardwareResponse, error)
 }
@@ -128,6 +139,9 @@ func (UnimplementedSimulationServiceServer) ListConfig(context.Context, *ListCon
 }
 func (UnimplementedSimulationServiceServer) GetConfigData(context.Context, *GetConfigDataRequest) (*GetConfigDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigData not implemented")
+}
+func (UnimplementedSimulationServiceServer) SimulationByCost(context.Context, *SimulationByCostRequest) (*SimulationByCostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimulationByCost not implemented")
 }
 func (UnimplementedSimulationServiceServer) SimulationByMetric(context.Context, *SimulationByMetricRequest) (*SimulationByMetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SimulationByMetric not implemented")
@@ -237,6 +251,24 @@ func _SimulationService_GetConfigData_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SimulationService_SimulationByCost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimulationByCostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SimulationServiceServer).SimulationByCost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.simulation.v1.SimulationService/SimulationByCost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SimulationServiceServer).SimulationByCost(ctx, req.(*SimulationByCostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SimulationService_SimulationByMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SimulationByMetricRequest)
 	if err := dec(in); err != nil {
@@ -296,6 +328,10 @@ var _SimulationService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConfigData",
 			Handler:    _SimulationService_GetConfigData_Handler,
+		},
+		{
+			MethodName: "SimulationByCost",
+			Handler:    _SimulationService_SimulationByCost_Handler,
 		},
 		{
 			MethodName: "SimulationByMetric",

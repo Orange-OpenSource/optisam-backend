@@ -58,3 +58,57 @@ func (l *LicenseRepository) listMetricWithMetricType(ctx context.Context, metTyp
 	}
 	return resp.Json, nil
 }
+
+func filterMetricEquipments(prodMetricEquip []*v1.ProductAllocationEquipmentMetrics, metricName ...string) map[string]interface{} {
+	resp := make(map[string]interface{})
+
+	// Filter out allocated equipment to metric and not allocated to this metric
+	// Find out the UIDs of those equipments for forcesing to calculate complaince on that equipments only
+	// Find out the UIDs of those equipment which are allocated but not to this metric. These equipment will exclude from calculation
+	//logger.Log.Sugar().Infow("Data for metric alloted", "metricName", metricName, "ProductEquipment", prodMetricEquip[0].ProductEquipment, "AllocatedEquipMetric", prodMetricEquip[0].MetricAllocation)
+	allotedUIDs := ""
+	notAllotedUIDs := ""
+	notAllotedSoftpartionUIDs := ""
+	notAllocatedUserID := ""
+	if len(prodMetricEquip) > 0 {
+		for index := range prodMetricEquip {
+			for _, equip := range prodMetricEquip[index].ProductEquipment {
+				if prodMetricEquip[index].MetricAllocation != nil {
+					for _, allotedEquip := range prodMetricEquip[index].MetricAllocation {
+						if allotedEquip.EquipmentId == equip.EquipmentId {
+							if allotedEquip.MetricAllocated == metricName[0] || (len(metricName[1]) > 0 && allotedEquip.MetricAllocated == metricName[1]) {
+								if allotedUIDs != "" {
+									allotedUIDs += " OR "
+								}
+								allotedUIDs += " uid(" + equip.EUID + ") "
+							} else {
+								if equip.EquipmentType == "server" {
+									if notAllotedUIDs != "" {
+										notAllotedUIDs += " , "
+									}
+									notAllotedUIDs += " " + equip.EUID + " "
+								}
+								if equip.EquipmentType == "softpartition" {
+									if notAllotedSoftpartionUIDs != "" {
+										notAllotedSoftpartionUIDs += " , "
+									}
+									notAllotedSoftpartionUIDs += " " + equip.EUID + " "
+								}
+								if notAllocatedUserID != "" {
+									notAllocatedUserID += " , "
+								}
+								notAllocatedUserID += "\"user_" + prodMetricEquip[index].SwidTag + "" + equip.EquipmentId + "\""
+
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	resp["notAllotedSoftpartition"] = notAllotedSoftpartionUIDs
+	resp["alloted"] = allotedUIDs
+	resp["notAlloted"] = notAllotedUIDs
+	resp["notAllocatedUserID"] = notAllocatedUserID
+	return resp
+}

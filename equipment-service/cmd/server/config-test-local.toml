@@ -1,0 +1,33 @@
+environment = "Development"
+debug = false
+INITWAITTIME = 10
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+#[database]
+#host = "127.0.0.1"
+#port = 5432
+#user = "optisam"
+#pass = "optisam"
+#name = "optisam"
+
+[dgraph]
+hosts = ["127.0.0.1:9080"]
+
+#[[dockers]]
+#host = "127.0.0.1"
+#name = "postgres"
+#image = "postgres"
+#bindings = ["5432:5432"]
+#env = ["user=optisam" ,  "pass=optisam", "name=optisam"]
+
+
+[[dockers]]
+host = "127.0.0.1"
+name = "dgraph"
+image = "dgraph/standalone:latest"
+bindings = ["8000:8000","9080:9080" , "8080:8080", "5080:5080", "6080:6080", "7080:7080"]
+tty = true
+

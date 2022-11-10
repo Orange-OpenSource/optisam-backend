@@ -1,0 +1,57 @@
+environment = "PRODUCTION"
+debug = false
+httpport = "8080"
+maxfilesize = 13
+#file size in Mbs
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = 0
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = false
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "import-service"
+collectorEndpoint = "http://jaeger-collector.prod-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.prod-optisam.svc:6831"
+# username = ""
+# password = ""
+
+
+[database]
+host = "svc-optisam-postgres.prod-optisam.svc"
+port = 5432
+user = "optisam"
+#pass = ""
+name = "dps"
+
+[grpcservers]
+apiKey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+dps = "svc-optisam-dps.prod-optisam.svc:8090"
+simulation = "svc-optisam-simulation.prod-optisam.svc:8090"
+account = "svc-optisam-account.prod-optisam.svc:8090"
+
+
+[upload]
+uploadDir = "/optisam_dir/optisam_data"
+RawdataUploadDir = "/optisam_dir/optisam_rawdata"
+DatafileAllowedRegex = ['''^products\.csv$''','''^products_equipments\.csv$''','''^applications_products\.csv$''',
+               '''^products_acquiredRights\.csv$''',
+               '''^applications\.csv$''','''^applications_instances\.csv$''','''^instances_equipments\.csv$''','''^instances_products\.csv$'''
+                ,'''^equipment_[a-zA-Z]*\.csv$''']
+MetaDatafileAllowedRegex = ['''^metadata_[a-zA-Z]*\.csv$''']
+
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"

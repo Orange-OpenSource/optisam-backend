@@ -6,19 +6,21 @@ package db
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 const deleteConfig = `-- name: DeleteConfig :exec
-UPDATE config_master SET status=$1 where id=$2
+UPDATE config_master SET status = $1 where id = $2 AND scope = $3
 `
 
 type DeleteConfigParams struct {
-	Status int32 `json:"status"`
-	ID     int32 `json:"id"`
+	Status int32  `json:"status"`
+	ID     int32  `json:"id"`
+	Scope  string `json:"scope"`
 }
 
 func (q *Queries) DeleteConfig(ctx context.Context, arg DeleteConfigParams) error {
-	_, err := q.db.ExecContext(ctx, deleteConfig, arg.Status, arg.ID)
+	_, err := q.db.ExecContext(ctx, deleteConfig, arg.Status, arg.ID, arg.Scope)
 	return err
 }
 
@@ -32,16 +34,17 @@ func (q *Queries) DeleteConfigData(ctx context.Context, configID int32) error {
 }
 
 const getConfig = `-- name: GetConfig :one
-SELECT id,name,equipment_type,status,created_by,created_on,updated_by,updated_on from config_master where id=$1 AND status=$2
+SELECT id,name,equipment_type,status,created_by,created_on,updated_by,updated_on,scope from config_master where id = $1 AND status = $2 AND scope = $3
 `
 
 type GetConfigParams struct {
-	ID     int32 `json:"id"`
-	Status int32 `json:"status"`
+	ID     int32  `json:"id"`
+	Status int32  `json:"status"`
+	Scope  string `json:"scope"`
 }
 
 func (q *Queries) GetConfig(ctx context.Context, arg GetConfigParams) (ConfigMaster, error) {
-	row := q.db.QueryRowContext(ctx, getConfig, arg.ID, arg.Status)
+	row := q.db.QueryRowContext(ctx, getConfig, arg.ID, arg.Status, arg.Scope)
 	var i ConfigMaster
 	err := row.Scan(
 		&i.ID,
@@ -52,6 +55,7 @@ func (q *Queries) GetConfig(ctx context.Context, arg GetConfigParams) (ConfigMas
 		&i.CreatedOn,
 		&i.UpdatedBy,
 		&i.UpdatedOn,
+		&i.Scope,
 	)
 	return i, err
 }
@@ -130,24 +134,41 @@ func (q *Queries) GetMetadatabyConfigID(ctx context.Context, configID int32) ([]
 const listConfig = `-- name: ListConfig :many
 SELECT id,name,equipment_type,status,created_by,created_on,updated_by,updated_on from config_master 
 WHERE (CASE WHEN $1::bool THEN equipment_type = $2 ELSE TRUE END) AND
-status = $3
+status = $3 AND scope = $4
 `
 
 type ListConfigParams struct {
 	IsEquipType   bool   `json:"is_equip_type"`
 	EquipmentType string `json:"equipment_type"`
 	Status        int32  `json:"status"`
+	Scope         string `json:"scope"`
 }
 
-func (q *Queries) ListConfig(ctx context.Context, arg ListConfigParams) ([]ConfigMaster, error) {
-	rows, err := q.db.QueryContext(ctx, listConfig, arg.IsEquipType, arg.EquipmentType, arg.Status)
+type ListConfigRow struct {
+	ID            int32     `json:"id"`
+	Name          string    `json:"name"`
+	EquipmentType string    `json:"equipment_type"`
+	Status        int32     `json:"status"`
+	CreatedBy     string    `json:"created_by"`
+	CreatedOn     time.Time `json:"created_on"`
+	UpdatedBy     string    `json:"updated_by"`
+	UpdatedOn     time.Time `json:"updated_on"`
+}
+
+func (q *Queries) ListConfig(ctx context.Context, arg ListConfigParams) ([]ListConfigRow, error) {
+	rows, err := q.db.QueryContext(ctx, listConfig,
+		arg.IsEquipType,
+		arg.EquipmentType,
+		arg.Status,
+		arg.Scope,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ConfigMaster
+	var items []ListConfigRow
 	for rows.Next() {
-		var i ConfigMaster
+		var i ListConfigRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

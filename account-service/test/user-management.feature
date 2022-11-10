@@ -1,10 +1,12 @@
 @account
+
 Feature: Account Service Test
 
   Background:
   # * def accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
@@ -27,28 +29,20 @@ Feature: Account Service Test
     Then status 200
      And match response.users[*] contains data.testadmin
     
-  @schema
-  Scenario: Schema validation for get User by UserID
-    Given path 'admin@test.com'
-    * def schema = {role:'#string' , user_id: '#string', first_name: '#string', last_name: '##string', locale:'#string', "profile_pic":'##',"first_login":'##boolean'}
-    When method get
-    Then status 200
-  * match response == schema
 
-  @get
-  Scenario: Verify Get user by userID
-    Given path 'admin@test.com'
-    When method get
-    Then status 200
-    * match response.user_id == 'admin@test.com'
-    * match response.role == 'SUPER_ADMIN'
+  # @get
+  # Scenario: Verify Get user by userID
+  #   Given path 'admin@test.com'
+  #   When method get
+  #   Then status 200
+    
     
   @create
   Scenario: Create User account with Admin role and delete it
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='AUT')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createAdminAccount.groups[0] = group_id
@@ -68,7 +62,7 @@ Feature: Account Service Test
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='AUT')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createUserAccount.groups[0] = group_id
@@ -83,25 +77,32 @@ Feature: Account Service Test
     Then status 200
     And match response.success == true
 
-  # @update
-  # Scenario: Verify user can Update the account
-  #   Given path 'accounts' 
-  #   And request data.createUserAccount
-  #   When method post
-  #   Then status 200
-  #   Given path 'accounts' ,data.createUserAccount.user_id
-  #   * header Authorization = 'Bearer '+access_token
-  #   * set data.createUserAccount.role = 'ADMIN'
-  #   * remove data.createUserAccount.groups
-  #   And request data.createUserAccount
-  #   When method put
-  #   Then status 200
-  #   # * match response == data.createUserAccount
-  #   * path 'accounts' ,data.createAdminAccount.user_id
-  #   * header Authorization = 'Bearer '+access_token
-  #   * method delete
-  #   * status 200
-  #   * match response.success == true
+  @update
+  Scenario: Verify admin can Update user role to admin for the account 
+    Given path 'admin/groups'
+    When method get
+    Then status 200
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    Given path 'user' 
+    * header Authorization = 'Bearer '+access_token
+    * set data.createUserAccount.groups[0] = group_id
+    * set data.createUserAccount.user_id = now() + "@test.com"
+    And request data.createUserAccount
+    When method post
+    Then status 200
+    And match response == data.createUserAccount
+    Given path  data.createUserAccount.user_id
+     * header Authorization = 'Bearer '+access_token
+     * remove data.createUserAccount.groups
+     * set data.createUserAccount.role = "ADMIN"
+     And request data.createUserAccount
+     When method put
+     Then status 200
+     Given path  data.createUserAccount.user_id
+     * header Authorization = 'Bearer '+access_token
+     When method delete
+     Then status 200
+     And match response.success == true
 
 
 # TODO: get account uses token info and not path parameter
@@ -140,29 +141,29 @@ Feature: Account Service Test
     * response.error = "only admin and user roles are allowed"
 
 
-   @create
-  Scenario: Verify user role is updated by admin
+    @update
+  Scenario: Verify admin can Update admin to user role for the account 
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='AUT')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
-    * set data.createUserAccount.groups[0] = group_id
-    * set data.createUserAccount.user_id = now() + "@test.com"
-    And request data.createUserAccount
+    * set data.createAdminAccount.groups[0] = group_id
+    * set data.createAdminAccount.user_id = now() + "@test.com"
+    And request data.createAdminAccount
     When method post
     Then status 200
-    And match response == data.createUserAccount
-    Given  path  data.createUserAccount.user_id
-    * header Authorization = 'Bearer '+access_token
-    * set data.createUserAccount.groups[0] = group_id
-     * set data.createUserAccount.role = 'ADMIN'
-    And request data.createUserAccount
-    When method put
-    Then status 200
-    Given  path  data.createUserAccount.user_id
-    * header Authorization = 'Bearer '+access_token
-    When method delete
-    Then status 200
-    And match response.success == true  
+    And match response == data.createAdminAccount
+    Given path  data.createAdminAccount.user_id
+     * header Authorization = 'Bearer '+access_token
+     * remove data.createAdminAccount.groups
+     * set data.createAdminAccountt.role = "USER"
+     And request data.createAdminAccount
+     When method put
+     Then status 200
+     Given path  data.createAdminAccount.user_id
+     * header Authorization = 'Bearer '+access_token
+     When method delete
+     Then status 200
+     And match response.success == true

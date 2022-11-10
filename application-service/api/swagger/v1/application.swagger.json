@@ -74,6 +74,38 @@
         ]
       }
     },
+    "/api/v1/application/equip": {
+      "post": {
+        "operationId": "ApplicationService_UpsertApplicationEquip",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertApplicationEquipResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertApplicationEquipRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ApplicationService"
+        ]
+      }
+    },
     "/api/v1/application/equipments": {
       "get": {
         "operationId": "ApplicationService_GetEquipmentsByApplication",
@@ -699,7 +731,8 @@
               "num_of_equipments",
               "domain",
               "total_cost",
-              "obsolescence_risk"
+              "obsolescence_risk",
+              "environment"
             ],
             "default": "name"
           },
@@ -860,6 +893,12 @@
             "collectionFormat": "multi"
           },
           {
+            "name": "search_params.environment",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "scopes",
             "in": "query",
             "required": false,
@@ -877,20 +916,6 @@
     }
   },
   "definitions": {
-    "UpsertInstanceRequestequipment": {
-      "type": "object",
-      "properties": {
-        "operation": {
-          "type": "string"
-        },
-        "equipment_id": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "UpsertInstanceRequestproduct": {
       "type": "object",
       "properties": {
@@ -971,6 +996,9 @@
         "num_of_equipments": {
           "type": "integer",
           "format": "int32"
+        },
+        "environment": {
+          "type": "string"
         }
       }
     },
@@ -1002,6 +1030,9 @@
         },
         "obsolescence_risk": {
           "$ref": "#/definitions/v1StringFilter"
+        },
+        "environment": {
+          "type": "string"
         }
       }
     },
@@ -1097,17 +1128,10 @@
           "items": {
             "type": "string"
           }
-        }
-      }
-    },
-    "v1GetProductsByApplicationInstanceResponse": {
-      "type": "object",
-      "properties": {
-        "product_id": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        },
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -1151,7 +1175,8 @@
         "num_of_equipments",
         "domain",
         "total_cost",
-        "obsolescence_risk"
+        "obsolescence_risk",
+        "environment"
       ],
       "default": "name"
     },
@@ -1412,6 +1437,42 @@
         }
       }
     },
+    "v1UpsertApplicationEquipRequest": {
+      "type": "object",
+      "properties": {
+        "application_id": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "equipments": {
+          "$ref": "#/definitions/v1UpsertApplicationEquipRequestequipment"
+        }
+      }
+    },
+    "v1UpsertApplicationEquipRequestequipment": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string"
+        },
+        "equipment_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1UpsertApplicationEquipResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1UpsertApplicationRequest": {
       "type": "object",
       "properties": {
@@ -1421,10 +1482,7 @@
         "name": {
           "type": "string"
         },
-        "version": {
-          "type": "string"
-        },
-        "owner": {
+        "environment": {
           "type": "string"
         },
         "domain": {
@@ -1459,11 +1517,25 @@
           "$ref": "#/definitions/UpsertInstanceRequestproduct"
         },
         "equipments": {
-          "$ref": "#/definitions/UpsertInstanceRequestequipment"
+          "$ref": "#/definitions/v1UpsertInstanceRequestequipment"
         },
         "scope": {
           "type": "string",
           "title": "SCOPE BASED CHANGE"
+        }
+      }
+    },
+    "v1UpsertInstanceRequestequipment": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "type": "string"
+        },
+        "equipment_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

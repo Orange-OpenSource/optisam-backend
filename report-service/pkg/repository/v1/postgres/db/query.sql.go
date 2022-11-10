@@ -21,8 +21,11 @@ func (q *Queries) DeleteReportsByScope(ctx context.Context, scope string) error 
 }
 
 const downloadReport = `-- name: DownloadReport :one
-SELECT report_data
+SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name
 FROM report r
+JOIN
+report_type rt 
+ON r.report_type_id = rt.report_type_id
 WHERE r.report_id = $1
 AND r.scope = ANY($2::TEXT[])
 `
@@ -32,15 +35,29 @@ type DownloadReportParams struct {
 	Scope    []string `json:"scope"`
 }
 
-func (q *Queries) DownloadReport(ctx context.Context, arg DownloadReportParams) (json.RawMessage, error) {
+type DownloadReportRow struct {
+	ReportData     json.RawMessage `json:"report_data"`
+	CreatedBy      string          `json:"created_by"`
+	CreatedOn      time.Time       `json:"created_on"`
+	Scope          string          `json:"scope"`
+	ReportTypeName string          `json:"report_type_name"`
+}
+
+func (q *Queries) DownloadReport(ctx context.Context, arg DownloadReportParams) (DownloadReportRow, error) {
 	row := q.db.QueryRowContext(ctx, downloadReport, arg.ReportID, pq.Array(arg.Scope))
-	var report_data json.RawMessage
-	err := row.Scan(&report_data)
-	return report_data, err
+	var i DownloadReportRow
+	err := row.Scan(
+		&i.ReportData,
+		&i.CreatedBy,
+		&i.CreatedOn,
+		&i.Scope,
+		&i.ReportTypeName,
+	)
+	return i, err
 }
 
 const getReport = `-- name: GetReport :many
-SELECT count(*) OVER() AS totalRecords,r.report_id,rt.report_type_name,r.report_status,r.created_by,r.created_on FROM
+SELECT count(*) OVER() AS totalRecords,r.report_id,rt.report_type_name,r.report_status,r.report_metadata,r.created_by,r.created_on FROM
 report r
 JOIN
 report_type rt 
@@ -77,12 +94,13 @@ type GetReportParams struct {
 }
 
 type GetReportRow struct {
-	Totalrecords   int64        `json:"totalrecords"`
-	ReportID       int32        `json:"report_id"`
-	ReportTypeName string       `json:"report_type_name"`
-	ReportStatus   ReportStatus `json:"report_status"`
-	CreatedBy      string       `json:"created_by"`
-	CreatedOn      time.Time    `json:"created_on"`
+	Totalrecords   int64           `json:"totalrecords"`
+	ReportID       int32           `json:"report_id"`
+	ReportTypeName string          `json:"report_type_name"`
+	ReportStatus   ReportStatus    `json:"report_status"`
+	ReportMetadata json.RawMessage `json:"report_metadata"`
+	CreatedBy      string          `json:"created_by"`
+	CreatedOn      time.Time       `json:"created_on"`
 }
 
 func (q *Queries) GetReport(ctx context.Context, arg GetReportParams) ([]GetReportRow, error) {
@@ -113,6 +131,7 @@ func (q *Queries) GetReport(ctx context.Context, arg GetReportParams) ([]GetRepo
 			&i.ReportID,
 			&i.ReportTypeName,
 			&i.ReportStatus,
+			&i.ReportMetadata,
 			&i.CreatedBy,
 			&i.CreatedOn,
 		); err != nil {

@@ -23,11 +23,7 @@ func (s *licenseServiceServer) ProductLicensesForMetric(ctx context.Context, req
 		logger.Log.Error("service/v1 - ProductLicensesForMetric", zap.String("reason", "ScopeError"))
 		return nil, status.Error(codes.Unknown, "ScopeValidationError")
 	}
-	proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, req.SwidTag, &repo.QueryProducts{}, req.GetScope())
-	if err != nil {
-		logger.Log.Error("service/v1 - ProductLicensesForMetric - ProductIDForSwidtag", zap.Error(err))
-		return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
-	}
+
 	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil {
 		logger.Log.Error("service/v1 - ProductLicensesForMetric - ListMetrices", zap.String("reason", err.Error()))
@@ -43,10 +39,32 @@ func (s *licenseServiceServer) ProductLicensesForMetric(ctx context.Context, req
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cannot fetch equipment types")
 	}
-	input[ProdID] = proID
-	input[MetricName] = metricInfo.Name
-	input[SCOPES] = []string{req.GetScope()}
-	input[IsAgg] = false
+	if req.AggregationName == "" {
+		proID, err := s.licenseRepo.ProductIDForSwidtag(ctx, req.SwidTag, &repo.QueryProducts{}, req.GetScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - ProductLicensesForMetric - ProductIDForSwidtag", zap.Error(err))
+			return nil, status.Error(codes.NotFound, "cannot get product id for swid tag")
+		}
+		input[ProdID] = proID
+		input[IsAgg] = false
+		input[MetricName] = metricInfo.Name
+		input[SCOPES] = []string{req.GetScope()}
+	} else {
+		repoAgg, _, err := s.licenseRepo.AggregationDetails(ctx, req.AggregationName, metrics, true, req.GetScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - repo/AggregationDetails - failed to get aggregation details", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "failed to get aggregation details")
+		}
+		if len(repoAgg.ProductIDs) == 0 {
+			return &v1.ProductLicensesForMetricResponse{}, status.Error(codes.InvalidArgument, "Inventory Park is not present")
+		}
+
+		input[IsAgg] = true
+		input[ProdAggName] = repoAgg.Name
+		input[MetricName] = metricInfo.Name
+		input[SCOPES] = []string{req.GetScope()}
+
+	}
 	if _, ok := MetricCalculation[metricInfo.Type]; !ok {
 		logger.Log.Error("service/v1 - Failed ProductLicensesForMetric for  - ", zap.String("metric :", metricInfo.Name), zap.Any("metricType", metricInfo.Type))
 		return nil, status.Error(codes.Internal, "this metricType is not supported")

@@ -4,7 +4,8 @@ Feature: Simulation Service Test for Normal User
   Background:
   # * def simulationServiceUrl = "https://optisam-simulation-int.apps.fr01.paas.tech.orange"
     * url simulationServiceUrl+'/api/v1'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    #* def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token

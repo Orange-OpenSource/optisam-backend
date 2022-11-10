@@ -42,15 +42,14 @@ service LicenseService {
 
   rpc ProductLicensesForMetric(ProductLicensesForMetricRequest)returns (ProductLicensesForMetricResponse) {
     option (google.api.http) = {
-      post : "/api/v1/license/product/{swid_tag}/metric/{metric_name}"
+      post : "/api/v1/license/simulation/metric/{metric_name}"
       body : "*"
     };
   }
 
-  rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)
-      returns (LicensesForEquipAndMetricResponse) {
+  rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)returns (LicensesForEquipAndMetricResponse) {
     option (google.api.http) = {
-      post : "/api/v1/license/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}"
+      post : "/api/v1/license/simulation/hardware/equipments/types/{equip_type}/{equip_id}"
       body : "*"
     };
   }
@@ -99,8 +98,8 @@ message ListAcqRightsForApplicationsProductResponse {
 message LicensesForEquipAndMetricRequest {
   string equip_type = 1;
   string equip_id = 2;
-  string metric_type = 3;
-  string metric_name = 4;
+  string metric_name = 3;
+  string metric_type = 4;
   repeated Attribute attributes = 5;
   string scope = 6 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
@@ -110,18 +109,22 @@ message LicensesForEquipAndMetricResponse {
 }
 
 message ProductLicenseForEquipAndMetric {
-  string metric_name = 1;
-  int64 old_licences = 2;
-  int64 new_licenses = 3;
-  int64 delta = 4;
-  Product product = 5;
+  string swid_tag = 1;
+  string aggregation_name = 2;
+  string editor = 3;
+  string metric_name = 4;
+  string metric_type = 5;
+  int64 old_licences = 6;
+  int64 new_licenses = 7;
+  int64 delta = 8;
 }
 
 message ProductLicensesForMetricRequest {
   string swid_tag = 1;
-  string metric_name = 2;
-  double unit_cost = 3;
-  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  string aggregation_name = 2;
+  string metric_name = 3;
+  double unit_cost = 4;
+  string scope = 5 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message ProductLicensesForMetricResponse {
@@ -202,6 +205,7 @@ message ProductAcquiredRights {
   string productName = 14;
   double purchaseCost = 15;
   double computedCost = 16;
+  bool costOptimization = 17;
 }
 
 message AggregationAcquiredRights {
@@ -221,6 +225,7 @@ message AggregationAcquiredRights {
   string productNames = 14;
   double purchaseCost = 15;
   double computedCost = 16;
+  bool costOptimization = 17;
 }
 
 message Attribute {

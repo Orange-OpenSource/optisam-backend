@@ -19,11 +19,17 @@ const _ = grpc.SupportPackageIsVersion7
 type EquipmentServiceClient interface {
 	CreateGenericScopeEquipmentTypes(ctx context.Context, in *CreateGenericScopeEquipmentTypesRequest, opts ...grpc.CallOption) (*CreateGenericScopeEquipmentTypesResponse, error)
 	UpsertMetadata(ctx context.Context, in *UpsertMetadataRequest, opts ...grpc.CallOption) (*UpsertMetadataResponse, error)
+	UpsertAllocMetricByFile(ctx context.Context, in *UpsertAllocMetricByFileRequest, opts ...grpc.CallOption) (*UpsertAllocMetricByFileResponse, error)
+	// UpdateAtrributeOldScope appends attribute nodes to equipments in old scopes
+	UpdateAtrributeOldScope(ctx context.Context, in *UpdateAtrributeOldScopeRequest, opts ...grpc.CallOption) (*UpdateAtrributeOldScopeResponse, error)
 	EquipmentsPerEquipmentType(ctx context.Context, in *EquipmentsPerEquipmentTypeRequest, opts ...grpc.CallOption) (*EquipmentsPerEquipmentTypeResponse, error)
 	UpsertEquipment(ctx context.Context, in *UpsertEquipmentRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error)
+	UpsertEquipmentAllocatedMetric(ctx context.Context, in *UpsertEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error)
+	DeleteEquipmentAllocatedMetric(ctx context.Context, in *DeleteEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error)
 	ListEquipmentsMetadata(ctx context.Context, in *ListEquipmentMetadataRequest, opts ...grpc.CallOption) (*ListEquipmentMetadataResponse, error)
 	GetEquipmentMetadata(ctx context.Context, in *EquipmentMetadataRequest, opts ...grpc.CallOption) (*EquipmentMetadata, error)
 	EquipmentsTypes(ctx context.Context, in *EquipmentTypesRequest, opts ...grpc.CallOption) (*EquipmentTypesResponse, error)
+	GetMetrics(ctx context.Context, in *GetMetricsRequest, opts ...grpc.CallOption) (*GetMetricsResponse, error)
 	CreateEquipmentType(ctx context.Context, in *EquipmentType, opts ...grpc.CallOption) (*EquipmentType, error)
 	DeleteEquipmentType(ctx context.Context, in *DeleteEquipmentTypeRequest, opts ...grpc.CallOption) (*DeleteEquipmentTypeResponse, error)
 	// UpdateEquipmentType provides support for updating equipment
@@ -66,6 +72,24 @@ func (c *equipmentServiceClient) UpsertMetadata(ctx context.Context, in *UpsertM
 	return out, nil
 }
 
+func (c *equipmentServiceClient) UpsertAllocMetricByFile(ctx context.Context, in *UpsertAllocMetricByFileRequest, opts ...grpc.CallOption) (*UpsertAllocMetricByFileResponse, error) {
+	out := new(UpsertAllocMetricByFileResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpsertAllocMetricByFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *equipmentServiceClient) UpdateAtrributeOldScope(ctx context.Context, in *UpdateAtrributeOldScopeRequest, opts ...grpc.CallOption) (*UpdateAtrributeOldScopeResponse, error) {
+	out := new(UpdateAtrributeOldScopeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpdateAtrributeOldScope", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *equipmentServiceClient) EquipmentsPerEquipmentType(ctx context.Context, in *EquipmentsPerEquipmentTypeRequest, opts ...grpc.CallOption) (*EquipmentsPerEquipmentTypeResponse, error) {
 	out := new(EquipmentsPerEquipmentTypeResponse)
 	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/EquipmentsPerEquipmentType", in, out, opts...)
@@ -78,6 +102,24 @@ func (c *equipmentServiceClient) EquipmentsPerEquipmentType(ctx context.Context,
 func (c *equipmentServiceClient) UpsertEquipment(ctx context.Context, in *UpsertEquipmentRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error) {
 	out := new(UpsertEquipmentResponse)
 	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpsertEquipment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *equipmentServiceClient) UpsertEquipmentAllocatedMetric(ctx context.Context, in *UpsertEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error) {
+	out := new(UpsertEquipmentResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpsertEquipmentAllocatedMetric", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *equipmentServiceClient) DeleteEquipmentAllocatedMetric(ctx context.Context, in *DeleteEquipmentAllocatedMetricRequest, opts ...grpc.CallOption) (*UpsertEquipmentResponse, error) {
+	out := new(UpsertEquipmentResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/DeleteEquipmentAllocatedMetric", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +147,15 @@ func (c *equipmentServiceClient) GetEquipmentMetadata(ctx context.Context, in *E
 func (c *equipmentServiceClient) EquipmentsTypes(ctx context.Context, in *EquipmentTypesRequest, opts ...grpc.CallOption) (*EquipmentTypesResponse, error) {
 	out := new(EquipmentTypesResponse)
 	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/EquipmentsTypes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *equipmentServiceClient) GetMetrics(ctx context.Context, in *GetMetricsRequest, opts ...grpc.CallOption) (*GetMetricsResponse, error) {
+	out := new(GetMetricsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/GetMetrics", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -216,11 +267,17 @@ func (c *equipmentServiceClient) DropMetaData(ctx context.Context, in *DropMetaD
 type EquipmentServiceServer interface {
 	CreateGenericScopeEquipmentTypes(context.Context, *CreateGenericScopeEquipmentTypesRequest) (*CreateGenericScopeEquipmentTypesResponse, error)
 	UpsertMetadata(context.Context, *UpsertMetadataRequest) (*UpsertMetadataResponse, error)
+	UpsertAllocMetricByFile(context.Context, *UpsertAllocMetricByFileRequest) (*UpsertAllocMetricByFileResponse, error)
+	// UpdateAtrributeOldScope appends attribute nodes to equipments in old scopes
+	UpdateAtrributeOldScope(context.Context, *UpdateAtrributeOldScopeRequest) (*UpdateAtrributeOldScopeResponse, error)
 	EquipmentsPerEquipmentType(context.Context, *EquipmentsPerEquipmentTypeRequest) (*EquipmentsPerEquipmentTypeResponse, error)
 	UpsertEquipment(context.Context, *UpsertEquipmentRequest) (*UpsertEquipmentResponse, error)
+	UpsertEquipmentAllocatedMetric(context.Context, *UpsertEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error)
+	DeleteEquipmentAllocatedMetric(context.Context, *DeleteEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error)
 	ListEquipmentsMetadata(context.Context, *ListEquipmentMetadataRequest) (*ListEquipmentMetadataResponse, error)
 	GetEquipmentMetadata(context.Context, *EquipmentMetadataRequest) (*EquipmentMetadata, error)
 	EquipmentsTypes(context.Context, *EquipmentTypesRequest) (*EquipmentTypesResponse, error)
+	GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error)
 	CreateEquipmentType(context.Context, *EquipmentType) (*EquipmentType, error)
 	DeleteEquipmentType(context.Context, *DeleteEquipmentTypeRequest) (*DeleteEquipmentTypeResponse, error)
 	// UpdateEquipmentType provides support for updating equipment
@@ -247,11 +304,23 @@ func (UnimplementedEquipmentServiceServer) CreateGenericScopeEquipmentTypes(cont
 func (UnimplementedEquipmentServiceServer) UpsertMetadata(context.Context, *UpsertMetadataRequest) (*UpsertMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertMetadata not implemented")
 }
+func (UnimplementedEquipmentServiceServer) UpsertAllocMetricByFile(context.Context, *UpsertAllocMetricByFileRequest) (*UpsertAllocMetricByFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertAllocMetricByFile not implemented")
+}
+func (UnimplementedEquipmentServiceServer) UpdateAtrributeOldScope(context.Context, *UpdateAtrributeOldScopeRequest) (*UpdateAtrributeOldScopeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAtrributeOldScope not implemented")
+}
 func (UnimplementedEquipmentServiceServer) EquipmentsPerEquipmentType(context.Context, *EquipmentsPerEquipmentTypeRequest) (*EquipmentsPerEquipmentTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EquipmentsPerEquipmentType not implemented")
 }
 func (UnimplementedEquipmentServiceServer) UpsertEquipment(context.Context, *UpsertEquipmentRequest) (*UpsertEquipmentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertEquipment not implemented")
+}
+func (UnimplementedEquipmentServiceServer) UpsertEquipmentAllocatedMetric(context.Context, *UpsertEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertEquipmentAllocatedMetric not implemented")
+}
+func (UnimplementedEquipmentServiceServer) DeleteEquipmentAllocatedMetric(context.Context, *DeleteEquipmentAllocatedMetricRequest) (*UpsertEquipmentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEquipmentAllocatedMetric not implemented")
 }
 func (UnimplementedEquipmentServiceServer) ListEquipmentsMetadata(context.Context, *ListEquipmentMetadataRequest) (*ListEquipmentMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEquipmentsMetadata not implemented")
@@ -261,6 +330,9 @@ func (UnimplementedEquipmentServiceServer) GetEquipmentMetadata(context.Context,
 }
 func (UnimplementedEquipmentServiceServer) EquipmentsTypes(context.Context, *EquipmentTypesRequest) (*EquipmentTypesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EquipmentsTypes not implemented")
+}
+func (UnimplementedEquipmentServiceServer) GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMetrics not implemented")
 }
 func (UnimplementedEquipmentServiceServer) CreateEquipmentType(context.Context, *EquipmentType) (*EquipmentType, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEquipmentType not implemented")
@@ -343,6 +415,42 @@ func _EquipmentService_UpsertMetadata_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EquipmentService_UpsertAllocMetricByFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertAllocMetricByFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).UpsertAllocMetricByFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/UpsertAllocMetricByFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).UpsertAllocMetricByFile(ctx, req.(*UpsertAllocMetricByFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EquipmentService_UpdateAtrributeOldScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAtrributeOldScopeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).UpdateAtrributeOldScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/UpdateAtrributeOldScope",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).UpdateAtrributeOldScope(ctx, req.(*UpdateAtrributeOldScopeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _EquipmentService_EquipmentsPerEquipmentType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EquipmentsPerEquipmentTypeRequest)
 	if err := dec(in); err != nil {
@@ -375,6 +483,42 @@ func _EquipmentService_UpsertEquipment_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EquipmentServiceServer).UpsertEquipment(ctx, req.(*UpsertEquipmentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EquipmentService_UpsertEquipmentAllocatedMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertEquipmentAllocatedMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).UpsertEquipmentAllocatedMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/UpsertEquipmentAllocatedMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).UpsertEquipmentAllocatedMetric(ctx, req.(*UpsertEquipmentAllocatedMetricRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EquipmentService_DeleteEquipmentAllocatedMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteEquipmentAllocatedMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).DeleteEquipmentAllocatedMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/DeleteEquipmentAllocatedMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).DeleteEquipmentAllocatedMetric(ctx, req.(*DeleteEquipmentAllocatedMetricRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -429,6 +573,24 @@ func _EquipmentService_EquipmentsTypes_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(EquipmentServiceServer).EquipmentsTypes(ctx, req.(*EquipmentTypesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EquipmentService_GetMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMetricsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).GetMetrics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/GetMetrics",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).GetMetrics(ctx, req.(*GetMetricsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -644,12 +806,28 @@ var _EquipmentService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _EquipmentService_UpsertMetadata_Handler,
 		},
 		{
+			MethodName: "UpsertAllocMetricByFile",
+			Handler:    _EquipmentService_UpsertAllocMetricByFile_Handler,
+		},
+		{
+			MethodName: "UpdateAtrributeOldScope",
+			Handler:    _EquipmentService_UpdateAtrributeOldScope_Handler,
+		},
+		{
 			MethodName: "EquipmentsPerEquipmentType",
 			Handler:    _EquipmentService_EquipmentsPerEquipmentType_Handler,
 		},
 		{
 			MethodName: "UpsertEquipment",
 			Handler:    _EquipmentService_UpsertEquipment_Handler,
+		},
+		{
+			MethodName: "UpsertEquipmentAllocatedMetric",
+			Handler:    _EquipmentService_UpsertEquipmentAllocatedMetric_Handler,
+		},
+		{
+			MethodName: "DeleteEquipmentAllocatedMetric",
+			Handler:    _EquipmentService_DeleteEquipmentAllocatedMetric_Handler,
 		},
 		{
 			MethodName: "ListEquipmentsMetadata",
@@ -662,6 +840,10 @@ var _EquipmentService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EquipmentsTypes",
 			Handler:    _EquipmentService_EquipmentsTypes_Handler,
+		},
+		{
+			MethodName: "GetMetrics",
+			Handler:    _EquipmentService_GetMetrics_Handler,
 		},
 		{
 			MethodName: "CreateEquipmentType",

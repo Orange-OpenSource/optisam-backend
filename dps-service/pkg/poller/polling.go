@@ -240,7 +240,7 @@ func createSharedContext(api string) (*context.Context, error) {
 	respMap := make(map[string]interface{})
 	data := url.Values{
 		"username":   {"admin@test.com"},
-		"password":   {"admin"},
+		"password":   {"Welcome@123"},
 		"grant_type": {"password"},
 	}
 

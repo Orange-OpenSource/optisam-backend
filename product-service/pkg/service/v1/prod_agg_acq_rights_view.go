@@ -109,15 +109,15 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.AggregationName = dbresp[i].AggregationName
 		temp.Sku = dbresp[i].Sku
 		temp.Swidtags = dbresp[i].Swidtags
-		resp, err := s.productRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
-			Swidtag: dbresp[i].Swidtags,
-			Scope:   dbresp[i].Scope,
-		})
-		if err != nil {
-			logger.Log.Error("Failed to get individual acqrights", zap.Any("swidtags", dbresp[i].Swidtags), zap.Error(err))
-		} else if len(resp) > 0 {
-			temp.IsIndividualRightExists = true
-		}
+		// resp, err := s.productRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
+		// 	Swidtag: dbresp[i].Swidtags,
+		// 	Scope:   dbresp[i].Scope,
+		// })
+		// if err != nil {
+		// 	logger.Log.Error("Failed to get individual acqrights", zap.Any("swidtags", dbresp[i].Swidtags), zap.Error(err))
+		// } else if len(resp) > 0 {
+		// 	temp.IsIndividualRightExists = true
+		// }
 		temp.ProductEditor = dbresp[i].ProductEditor
 		temp.ProductNames = dbresp[i].Products
 		temp.MetricName = dbresp[i].Metric
@@ -132,6 +132,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.SupportNumber = dbresp[i].SupportNumber
 		temp.MaintenanceProvider = dbresp[i].MaintenanceProvider
 		temp.FileName = dbresp[i].FileName
+		temp.Repartition = dbresp[i].Repartition
 		if dbresp[i].StartOfMaintenance.Valid {
 			temp.StartOfMaintenance = dbresp[i].StartOfMaintenance.Time.Format(time.RFC3339)
 		}

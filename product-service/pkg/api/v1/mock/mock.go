@@ -275,6 +275,26 @@ func (mr *MockProductServiceClientMockRecorder) DeleteAggregation(arg0, arg1 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAggregation", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteAggregation), varargs...)
 }
 
+// DeleteAllocatedMetricEquipment mocks base method
+func (m *MockProductServiceClient) DeleteAllocatedMetricEquipment(arg0 context.Context, arg1 *v1.DropAllocateMetricEquipementRequest, arg2 ...grpc.CallOption) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteAllocatedMetricEquipment", varargs...)
+	ret0, _ := ret[0].(*v1.UpsertAllocateMetricEquipementResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAllocatedMetricEquipment indicates an expected call of DeleteAllocatedMetricEquipment
+func (mr *MockProductServiceClientMockRecorder) DeleteAllocatedMetricEquipment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllocatedMetricEquipment", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteAllocatedMetricEquipment), varargs...)
+}
+
 // DownloadAcqRightFile mocks base method
 func (m *MockProductServiceClient) DownloadAcqRightFile(arg0 context.Context, arg1 *v1.DownloadAcqRightFileRequest, arg2 ...grpc.CallOption) (*v1.DownloadAcqRightFileResponse, error) {
 	m.ctrl.T.Helper()
@@ -395,6 +415,26 @@ func (mr *MockProductServiceClientMockRecorder) GetAggregationProductsExpandedVi
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationProductsExpandedView", reflect.TypeOf((*MockProductServiceClient)(nil).GetAggregationProductsExpandedView), varargs...)
 }
 
+// GetApplicationsByProduct mocks base method
+func (m *MockProductServiceClient) GetApplicationsByProduct(arg0 context.Context, arg1 *v1.GetApplicationsByProductRequest, arg2 ...grpc.CallOption) (*v1.GetApplicationsByProductResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetApplicationsByProduct", varargs...)
+	ret0, _ := ret[0].(*v1.GetApplicationsByProductResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApplicationsByProduct indicates an expected call of GetApplicationsByProduct
+func (mr *MockProductServiceClientMockRecorder) GetApplicationsByProduct(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsByProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GetApplicationsByProduct), varargs...)
+}
+
 // GetBanner mocks base method
 func (m *MockProductServiceClient) GetBanner(arg0 context.Context, arg1 *v1.GetBannerRequest, arg2 ...grpc.CallOption) (*v1.GetBannerResponse, error) {
 	m.ctrl.T.Helper()
@@ -433,6 +473,26 @@ func (mr *MockProductServiceClientMockRecorder) GetEquipmentsByProduct(arg0, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEquipmentsByProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GetEquipmentsByProduct), varargs...)
+}
+
+// GetProductCountByApp mocks base method
+func (m *MockProductServiceClient) GetProductCountByApp(arg0 context.Context, arg1 *v1.GetProductCountByAppRequest, arg2 ...grpc.CallOption) (*v1.GetProductCountByAppResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetProductCountByApp", varargs...)
+	ret0, _ := ret[0].(*v1.GetProductCountByAppResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductCountByApp indicates an expected call of GetProductCountByApp
+func (mr *MockProductServiceClientMockRecorder) GetProductCountByApp(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCountByApp", reflect.TypeOf((*MockProductServiceClient)(nil).GetProductCountByApp), varargs...)
 }
 
 // GetProductDetail mocks base method
@@ -853,6 +913,26 @@ func (mr *MockProductServiceClientMockRecorder) UpsertAcqRights(arg0, arg1 inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAcqRights", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertAcqRights), varargs...)
+}
+
+// UpsertAllocatedMetricEquipment mocks base method
+func (m *MockProductServiceClient) UpsertAllocatedMetricEquipment(arg0 context.Context, arg1 *v1.UpsertAllocateMetricEquipementRequest, arg2 ...grpc.CallOption) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertAllocatedMetricEquipment", varargs...)
+	ret0, _ := ret[0].(*v1.UpsertAllocateMetricEquipementResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertAllocatedMetricEquipment indicates an expected call of UpsertAllocatedMetricEquipment
+func (mr *MockProductServiceClientMockRecorder) UpsertAllocatedMetricEquipment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocatedMetricEquipment", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertAllocatedMetricEquipment), varargs...)
 }
 
 // UpsertProduct mocks base method

@@ -131,6 +131,10 @@ func (i *importServiceServer) UploadFiles(res http.ResponseWriter, req *http.Req
 
 func saveCoreFactorReference(i *importServiceServer, req *http.Request) (interface{}, int, error) {
 	file, fileInfo, err := req.FormFile("file")
+	if fileInfo.Size > i.config.MaxFileSize*1024*1024 {
+		logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+		return nil, http.StatusBadRequest, errors.New("maximum file allowded is :" + strconv.FormatInt(i.config.MaxFileSize, 10) + "Mbs")
+	}
 	if err != nil {
 		logger.Log.Error("Failed to read reference file", zap.Error(err))
 		return nil, http.StatusBadRequest, err
@@ -201,6 +205,10 @@ func uploadFileForAnalysis(i *importServiceServer, req *http.Request, scope, dst
 	fileName := ""
 	for _, fheaders := range req.MultipartForm.File {
 		for _, hdr := range fheaders {
+			if hdr.Size > i.config.MaxFileSize*1024*1024 {
+				logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+				return nil, http.StatusBadRequest, errors.New("maximum file allowded is :" + strconv.FormatInt(i.config.MaxFileSize, 10) + "Mbs")
+			}
 			if !strings.Contains(hdr.Filename, XLSX) {
 				err = errors.New("InvalidFileExtension") //nolint
 				return nil, http.StatusBadRequest, err
@@ -234,8 +242,9 @@ func uploadFileForAnalysis(i *importServiceServer, req *http.Request, scope, dst
 				logger.Log.Error("FileCloseFailure", zap.Error(err))
 				return nil, http.StatusInternalServerError, err
 			}
+			infile.Close()
 		}
-		ctx1, cancel := context.WithDeadline(req.Context(), time.Now().Add(time.Second*300))
+		ctx1, cancel := context.WithDeadline(req.Context(), time.Now().Add(time.Second*600))
 		defer cancel()
 		resp, err = i.dpsClient.DataAnalysis(ctx1, &v1.DataAnalysisRequest{
 			Scope: scope,
@@ -298,6 +307,11 @@ func (i *importServiceServer) UploadDataHandler(res http.ResponseWriter, req *ht
 	var filenames []string
 	for _, fheaders := range req.MultipartForm.File {
 		for _, hdr := range fheaders {
+			if hdr.Size > i.config.MaxFileSize*1024*1024 {
+				logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+				http.Error(res, "maximum file allowded is :"+strconv.FormatInt(i.config.MaxFileSize, 10)+"Mbs", http.StatusBadRequest)
+				return
+			}
 			logger.Log.Info("Import File Handler", zap.String("File", hdr.Filename), zap.String("uploadedBy", uploadedBy))
 			if !helper.RegexContains(i.config.Upload.DataFileAllowedRegex, hdr.Filename) {
 				logger.Log.Error("Validation Error-File Not allowed", zap.String("File", hdr.Filename))
@@ -414,6 +428,11 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 
 	for _, fheaders := range req.MultipartForm.File {
 		for _, hdr := range fheaders {
+			if hdr.Size > i.config.MaxFileSize*1024*1024 {
+				logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+				http.Error(res, "maximum file allowded is :"+strconv.FormatInt(i.config.MaxFileSize, 10)+"Mbs", http.StatusBadRequest)
+				return
+			}
 			logger.Log.Info("Import MetaData File Handler", zap.String("File", hdr.Filename), zap.String("uploadedBy", uploadedBy))
 			if !helper.RegexContains(i.config.Upload.MetaDatafileAllowedRegex, hdr.Filename) {
 				logger.Log.Error("Validation Error-File Not allowed", zap.Any("Regex", i.config.Upload.MetaDatafileAllowedRegex), zap.String("File", hdr.Filename))
@@ -473,34 +492,39 @@ func (i *importServiceServer) UploadMetaDataHandler(res http.ResponseWriter, req
 }
 
 func (i *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-
-	// Extract scopes from request
-	scopesString := req.FormValue("scopes")
-
-	if scopesString == "" {
-		logger.Log.Error("Scopes were empty")
-		// Ques : Is this error code right?
-		http.Error(res, "Can not find scopes", http.StatusBadRequest)
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		http.Error(res, "import/CreateConfigHandler - cannot retrieve claims", http.StatusInternalServerError)
 		return
 	}
-
-	// // convert it into an array of scopes
-	// scopes := strings.Split(scopesString, ",")
-
+	if userClaims.Role == claims.RoleUser {
+		http.Error(res, "import/CreateConfigHandler - RoleValidationFailed", http.StatusForbidden)
+		return
+	}
+	// Extract scopes from request
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("import/CreateConfigHandler - scope was empty")
+		http.Error(res, "import/CreateConfigHandler - Can not find scope", http.StatusBadRequest)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		http.Error(res, "import/CreateConfigHandler - Admin does not have access to scope", http.StatusUnauthorized)
+		return
+	}
 	// Extract config_name from request
 	configName := req.FormValue("config_name")
-
 	if configName == "" {
-		logger.Log.Error("Config_name is required")
-		http.Error(res, "Config name is required", http.StatusBadRequest)
+		logger.Log.Error("import/CreateConfigHandler - Config_name is required")
+		http.Error(res, "import/CreateConfigHandler - Config name is required", http.StatusBadRequest)
 		return
 	}
 
 	var IsLetter = regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString
 
 	if !IsLetter(configName) || len(configName) > 50 {
-		logger.Log.Error("ConfigName has not followed validation")
-		http.Error(res, "Invalid Configuration name", http.StatusBadRequest)
+		logger.Log.Error("import/CreateConfigHandler - ConfigName has not followed validation")
+		http.Error(res, "import/CreateConfigHandler - Invalid Configuration name", http.StatusBadRequest)
 		return
 	}
 
@@ -510,8 +534,8 @@ func (i *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 	equipType := req.FormValue("equipment_type")
 
 	if equipType == "" {
-		logger.Log.Error("EquipType is required")
-		http.Error(res, "EquipType is required", http.StatusBadRequest)
+		logger.Log.Error("import/CreateConfigHandler - EquipType is required")
+		http.Error(res, "import/CreateConfigHandler - EquipType is required", http.StatusBadRequest)
 		return
 	}
 
@@ -523,7 +547,7 @@ func (i *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 
 	// If there is no file uploaded
 	if len(req.MultipartForm.File) == 0 {
-		http.Error(res, "No files found", http.StatusBadRequest)
+		http.Error(res, "import/CreateConfigHandler - No files found", http.StatusBadRequest)
 		return
 	}
 
@@ -537,41 +561,50 @@ func (i *importServiceServer) CreateConfigHandler(res http.ResponseWriter, req *
 		ConfigName:    configName,
 		EquipmentType: equipType,
 		Data:          configData,
+		Scope:         scope,
 	})
 
 	if err != nil {
-		logger.Log.Error("could not insert config data - CreateConfig()", zap.Error(err))
-		http.Error(res, "Could not create configuration", http.StatusInternalServerError)
+		logger.Log.Error("import/CreateConfigHandler - simulation/CreateConfig - could not insert config data - CreateConfig()", zap.Error(err))
+		http.Error(res, "import/CreateConfigHandler - simulation/CreateConfig - Could not create configuration", http.StatusInternalServerError)
 		return
 	}
 
 }
 
 func (i *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
-
-	// Extract scopes from request
-	scopesString := req.FormValue("scopes")
-
-	if scopesString == "" {
-		logger.Log.Error("Scopes were empty")
-		// Ques : Is this error code right?
-		http.Error(res, "Can not find scopes", http.StatusBadRequest)
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		http.Error(res, "import/UpdateConfigHandler - cannot retrieve claims", http.StatusInternalServerError)
 		return
 	}
-	// // convert it into an array of scopes
-	// scopes := strings.Split(scopesString, ",")
+	if userClaims.Role == claims.RoleUser {
+		http.Error(res, "import/UpdateConfigHandler - RoleValidationFailed", http.StatusForbidden)
+		return
+	}
+	// Extract scopes from request
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("import/UpdateConfigHandler - scope was empty")
+		http.Error(res, "import/UpdateConfigHandler - Can not find scope", http.StatusBadRequest)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		http.Error(res, "import/UpdateConfigHandler - Admin does not have access to scope", http.StatusUnauthorized)
+		return
+	}
 
 	configIDStr := param.ByName("config_id")
 
 	if configIDStr == "" {
-		logger.Log.Error("Config_id is required")
-		http.Error(res, "Config ID is required", http.StatusBadRequest)
+		logger.Log.Error("import/UpdateConfigHandler - Config_id is required")
+		http.Error(res, "import/UpdateConfigHandler - Config ID is required", http.StatusBadRequest)
 		return
 	}
 	configID, err := strconv.Atoi(configIDStr) // nolint: gosec
 	if err != nil {
-		logger.Log.Error("Can not convert string to int")
-		http.Error(res, "Internal error", http.StatusInternalServerError)
+		logger.Log.Error("import/UpdateConfigHandler - Can not convert string to int")
+		http.Error(res, "import/UpdateConfigHandler - Internal error", http.StatusInternalServerError)
 		return
 	}
 
@@ -583,7 +616,7 @@ func (i *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 	deletedMetadataIDs := req.FormValue("deletedMetadataIDs")
 	// If the request is empty
 	if len(req.MultipartForm.File) == 0 && deletedMetadataIDs == "" {
-		logger.Log.Error("Request is Empty!!")
+		logger.Log.Error("import/UpdateConfigHandler - Request is Empty!!")
 		return
 	}
 
@@ -593,8 +626,8 @@ func (i *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 		deletedMetadataIDsArray := strings.Split(deletedMetadataIDs, ",")
 		deletedMetadataIDsInt, err = convertStringArrayToInt(deletedMetadataIDsArray)
 		if err != nil {
-			logger.Log.Error("Can not convert string to int")
-			http.Error(res, "Internal error", http.StatusInternalServerError)
+			logger.Log.Error("import/UpdateConfigHandler - Can not convert string to int")
+			http.Error(res, "import/UpdateConfigHandler - Internal error", http.StatusInternalServerError)
 			return
 		}
 		deletedMetadataIDsInt = removeRepeatedElem(deletedMetadataIDsInt)
@@ -610,11 +643,12 @@ func (i *importServiceServer) UpdateConfigHandler(res http.ResponseWriter, req *
 		ConfigId:           int32(configID),
 		DeletedMetadataIds: deletedMetadataIDsInt,
 		Data:               configData,
+		Scope:              scope,
 	})
 
 	if err != nil {
-		logger.Log.Error("could not update config - UpdateConfig()", zap.Error(err))
-		http.Error(res, "Internal Error", http.StatusInternalServerError)
+		logger.Log.Error("import/UpdateConfigHandler - simulation/UpdateConfig - could not update config - UpdateConfig()", zap.Error(err))
+		http.Error(res, "import/UpdateConfigHandler - simulation/UpdateConfig - Internal Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -699,7 +733,7 @@ func removeRepeatedElem(array []int32) []int32 {
 
 	}
 
-	fmt.Println(res)
+	// fmt.Println(res)
 	return res
 
 }
@@ -838,6 +872,11 @@ func (i *importServiceServer) UploadGlobalDataHandler(res http.ResponseWriter, r
 		}
 		for _, fheaders := range req.MultipartForm.File {
 			for _, hdr := range fheaders {
+				if hdr.Size > i.config.MaxFileSize*1024*1024 {
+					logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+					http.Error(res, "maximum file allowded is :"+strconv.FormatInt(i.config.MaxFileSize, 10)+"Mbs", http.StatusBadRequest)
+					return
+				}
 				ext := getglobalFileExtension(hdr.Filename)
 				if stype == v1.NotifyUploadRequest_GENERIC {
 					if !strings.Contains(ext, XLSX) {

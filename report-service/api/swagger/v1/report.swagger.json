@@ -4,11 +4,6 @@
     "title": "report.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "ReportService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -246,9 +241,22 @@
     "v1DownloadReportResponse": {
       "type": "object",
       "properties": {
+        "report_type": {
+          "type": "string"
+        },
         "report_data": {
           "type": "string",
           "format": "byte"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -317,6 +325,9 @@
         "created_on": {
           "type": "string",
           "format": "date-time"
+        },
+        "editor": {
+          "type": "string"
         }
       }
     },

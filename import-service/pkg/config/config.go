@@ -47,6 +47,9 @@ type Config struct {
 
 	// IAM Configuration
 	IAM iam.Config
+
+	// Maximum file size to be uploaded
+	MaxFileSize int64
 }
 
 type UploadConfig struct {

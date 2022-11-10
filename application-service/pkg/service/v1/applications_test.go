@@ -119,20 +119,20 @@ func TestUpsertApplication(t *testing.T) {
 			input: &v1.UpsertApplicationRequest{
 				ApplicationId: "a1",
 				Name:          "a1name",
-				Version:       "a1version",
-				Owner:         "a1owner",
-				Scope:         "Scope1",
-				Domain:        "Payments",
+				// Version:       "a1version",
+				// Owner:         "a1owner",
+				Scope:  "Scope1",
+				Domain: "Payments",
 			},
 			output: &v1.UpsertApplicationResponse{Success: true},
 			mock: func(input *v1.UpsertApplicationRequest) {
 				firstCall := dbObj.EXPECT().UpsertApplication(ctx, db.UpsertApplicationParams{
-					ApplicationID:      "a1",
-					ApplicationName:    "a1name",
-					ApplicationOwner:   "a1owner",
-					ApplicationVersion: "a1version",
-					Scope:              "Scope1",
-					ApplicationDomain:  "Payments",
+					ApplicationID:   "a1",
+					ApplicationName: "a1name",
+					// ApplicationOwner:   "a1owner",
+					// ApplicationVersion: "a1version",
+					Scope:             "Scope1",
+					ApplicationDomain: "Payments",
 				}).Return(nil).Times(1)
 				jsonData, err := json.Marshal(input)
 				if err != nil {
@@ -165,19 +165,19 @@ func TestUpsertApplication(t *testing.T) {
 		{
 			name: "UpsertApplicationWithMissingapplicationID",
 			input: &v1.UpsertApplicationRequest{
-				Name:    "a1name",
-				Owner:   "a1owner",
-				Version: "a1version",
-				Scope:   "Scope1",
+				Name: "a1name",
+				// Owner:   "a1owner",
+				// Version: "a1version",
+				Scope: "Scope1",
 			},
 			output: &v1.UpsertApplicationResponse{Success: false},
 			mock: func(input *v1.UpsertApplicationRequest) {
 				dbObj.EXPECT().UpsertApplication(ctx, db.UpsertApplicationParams{
-					ApplicationName:    "a1name",
-					ApplicationVersion: "a1version",
-					ApplicationOwner:   "a1owner",
-					ApplicationDomain:  "Not specified",
-					Scope:              "Scope1",
+					ApplicationName: "a1name",
+					// ApplicationVersion: "a1version",
+					// ApplicationOwner:   "a1owner",
+					ApplicationDomain: "Not specified",
+					Scope:             "Scope1",
 				}).Return(errors.New("rpc error: code = Internal desc = DBError")).Times(1)
 			},
 			outErr: true,
@@ -258,8 +258,6 @@ func TestListApplications(t *testing.T) {
 						ApplicationID:     "a1",
 						ApplicationName:   "a1name",
 						ApplicationOwner:  "a1owner",
-						NumOfInstances:    int32(5),
-						NumOfProducts:     int32(5),
 						NumOfEquipments:   int32(5),
 						ApplicationDomain: "Payments",
 						ObsolescenceRisk:  sql.NullString{String: "Risk1", Valid: true},
@@ -269,8 +267,6 @@ func TestListApplications(t *testing.T) {
 						ApplicationID:    "a2",
 						ApplicationName:  "a2name",
 						ApplicationOwner: "a2owner",
-						NumOfInstances:   int32(3),
-						NumOfProducts:    int32(3),
 						NumOfEquipments:  int32(3),
 					}}, nil).Times(1)
 			},
@@ -313,7 +309,7 @@ func TestListApplications(t *testing.T) {
 			mock: func(input *v1.ListApplicationsRequest) {
 				dbObj.EXPECT().GetApplicationsByProduct(ctx, db.GetApplicationsByProductParams{
 					Scope:              []string{"Scope1"},
-					Productswidtags:    []string{"swid1", "swid2"},
+					ApplicationID:      []string{"a1", "a2"},
 					ApplicationNameAsc: true,
 					PageNum:            input.PageSize * (input.PageNum - 1),
 					PageSize:           input.PageSize}).Return([]db.GetApplicationsByProductRow{
@@ -322,7 +318,6 @@ func TestListApplications(t *testing.T) {
 						ApplicationID:     "a1",
 						ApplicationName:   "a1name",
 						ApplicationOwner:  "a1owner",
-						NumOfInstances:    int32(5),
 						NumOfEquipments:   int32(5),
 						ApplicationDomain: "Payments",
 						ObsolescenceRisk:  sql.NullString{String: "Risk1", Valid: true},
@@ -332,7 +327,6 @@ func TestListApplications(t *testing.T) {
 						ApplicationID:    "a2",
 						ApplicationName:  "a2name",
 						ApplicationOwner: "a2owner",
-						NumOfInstances:   int32(3),
 						NumOfEquipments:  int32(3),
 					}}, nil).Times(1)
 			},
@@ -409,7 +403,7 @@ func TestListApplications(t *testing.T) {
 			mock: func(input *v1.ListApplicationsRequest) {
 				dbObj.EXPECT().GetApplicationsByProduct(ctx, db.GetApplicationsByProductParams{
 					Scope:              []string{"Scope1"},
-					Productswidtags:    []string{"swid1", "swid2"},
+					ApplicationID:      []string{"a1", "a2"},
 					ApplicationNameAsc: true,
 					PageNum:            input.PageSize * (input.PageNum - 1),
 					PageSize:           input.PageSize,
@@ -1096,116 +1090,116 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 	}
 }
 
-func Test_applicationServiceServer_GetProductsByApplicationInstance(t *testing.T) {
-	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
-		UserID: "admin@superuser.com",
-		Role:   "Admin",
-		Socpes: []string{"Scope1", "Scope2", "Scope3"},
-	})
-	var mockCtrl *gomock.Controller
-	var rep repo.Application
-	var queue workerqueue.Workerqueue
-	type args struct {
-		ctx context.Context
-		req *v1.GetProductsByApplicationInstanceRequest
-	}
-	tests := []struct {
-		name    string
-		s       *applicationServiceServer
-		args    args
-		setup   func()
-		want    *v1.GetProductsByApplicationInstanceResponse
-		wantErr bool
-	}{
-		{name: "SUCCESS",
-			args: args{
-				ctx: ctx,
-				req: &v1.GetProductsByApplicationInstanceRequest{
-					Scope:         "Scope1",
-					ApplicationId: "App_3",
-					InstanceId:    "Ins_1",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := dbmock.NewMockApplication(mockCtrl)
-				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				rep = mockRepo
-				queue = mockQueue
-				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
-					Scope:         "Scope1",
-					ApplicationID: "App_3",
-					InstanceID:    "Ins_1",
-				}).Times(1).Return([]string{"a1", "a2", "a3"}, nil)
-			},
-			want: &v1.GetProductsByApplicationInstanceResponse{
-				ProductId: []string{"a1", "a2", "a3"},
-			},
-			wantErr: false,
-		},
-		{name: "FAILURE - ClaimsNotFound",
-			args: args{
-				ctx: context.Background(),
-				req: &v1.GetProductsByApplicationInstanceRequest{
-					Scope:         "Scope1",
-					ApplicationId: "App_3",
-					InstanceId:    "Ins_1",
-				},
-			},
-			setup:   func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE - ScopeValidationError",
-			args: args{
-				ctx: ctx,
-				req: &v1.GetProductsByApplicationInstanceRequest{
-					Scope:         "Scope4",
-					ApplicationId: "App_3",
-					InstanceId:    "Ins_1",
-				},
-			},
-			setup:   func() {},
-			wantErr: true,
-		},
-		{name: "FAILURE - GetProductsByApplicationInstanceID - DBError",
-			args: args{
-				ctx: ctx,
-				req: &v1.GetProductsByApplicationInstanceRequest{
-					Scope:         "Scope1",
-					ApplicationId: "App_3",
-					InstanceId:    "Ins_1",
-				},
-			},
-			setup: func() {
-				mockCtrl = gomock.NewController(t)
-				mockRepo := dbmock.NewMockApplication(mockCtrl)
-				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
-				rep = mockRepo
-				queue = mockQueue
-				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
-					Scope:         "Scope1",
-					ApplicationID: "App_3",
-					InstanceID:    "Ins_1",
-				}).Times(1).Return([]string{}, errors.New("Internal"))
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setup()
-			tt.s = &applicationServiceServer{
-				applicationRepo: rep,
-				queue:           queue,
-			}
-			got, err := tt.s.GetProductsByApplicationInstance(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+// func Test_applicationServiceServer_GetProductsByApplication(t *testing.T) {
+// 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+// 		UserID: "admin@superuser.com",
+// 		Role:   "Admin",
+// 		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+// 	})
+// 	var mockCtrl *gomock.Controller
+// 	var rep repo.Application
+// 	var queue workerqueue.Workerqueue
+// 	type args struct {
+// 		ctx context.Context
+// 		req *v1.GetProductsByApplicationRequest
+// 	}
+// 	tests := []struct {
+// 		name    string
+// 		s       *applicationServiceServer
+// 		args    args
+// 		setup   func()
+// 		want    *v1.GetProductsByApplicationResponse
+// 		wantErr bool
+// 	}{
+// 		{name: "SUCCESS",
+// 			args: args{
+// 				ctx: ctx,
+// 				req: &v1.GetProductsByApplicationInstanceRequest{
+// 					Scope:         "Scope1",
+// 					ApplicationId: "App_3",
+// 					InstanceId:    "Ins_1",
+// 				},
+// 			},
+// 			setup: func() {
+// 				mockCtrl = gomock.NewController(t)
+// 				mockRepo := dbmock.NewMockApplication(mockCtrl)
+// 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+// 				rep = mockRepo
+// 				queue = mockQueue
+// 				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
+// 					Scope:         "Scope1",
+// 					ApplicationID: "App_3",
+// 					InstanceID:    "Ins_1",
+// 				}).Times(1).Return([]string{"a1", "a2", "a3"}, nil)
+// 			},
+// 			want: &v1.GetProductsByApplicationInstanceResponse{
+// 				ProductId: []string{"a1", "a2", "a3"},
+// 			},
+// 			wantErr: false,
+// 		},
+// 		{name: "FAILURE - ClaimsNotFound",
+// 			args: args{
+// 				ctx: context.Background(),
+// 				req: &v1.GetProductsByApplicationInstanceRequest{
+// 					Scope:         "Scope1",
+// 					ApplicationId: "App_3",
+// 					InstanceId:    "Ins_1",
+// 				},
+// 			},
+// 			setup:   func() {},
+// 			wantErr: true,
+// 		},
+// 		{name: "FAILURE - ScopeValidationError",
+// 			args: args{
+// 				ctx: ctx,
+// 				req: &v1.GetProductsByApplicationInstanceRequest{
+// 					Scope:         "Scope4",
+// 					ApplicationId: "App_3",
+// 					InstanceId:    "Ins_1",
+// 				},
+// 			},
+// 			setup:   func() {},
+// 			wantErr: true,
+// 		},
+// 		{name: "FAILURE - GetProductsByApplicationInstanceID - DBError",
+// 			args: args{
+// 				ctx: ctx,
+// 				req: &v1.GetProductsByApplicationInstanceRequest{
+// 					Scope:         "Scope1",
+// 					ApplicationId: "App_3",
+// 					InstanceId:    "Ins_1",
+// 				},
+// 			},
+// 			setup: func() {
+// 				mockCtrl = gomock.NewController(t)
+// 				mockRepo := dbmock.NewMockApplication(mockCtrl)
+// 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+// 				rep = mockRepo
+// 				queue = mockQueue
+// 				mockRepo.EXPECT().GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
+// 					Scope:         "Scope1",
+// 					ApplicationID: "App_3",
+// 					InstanceID:    "Ins_1",
+// 				}).Times(1).Return([]string{}, errors.New("Internal"))
+// 			},
+// 			wantErr: true,
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			tt.setup()
+// 			tt.s = &applicationServiceServer{
+// 				applicationRepo: rep,
+// 				queue:           queue,
+// 			}
+// 			got, err := tt.s.GetProductsByApplicationInstance(tt.args.ctx, tt.args.req)
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
+// 			if !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("applicationServiceServer.GetProductsByApplicationInstance() = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
+// }

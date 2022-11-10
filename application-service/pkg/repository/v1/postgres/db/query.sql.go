@@ -30,6 +30,16 @@ func (q *Queries) AddApplicationbsolescenceRisk(ctx context.Context, arg AddAppl
 	return err
 }
 
+const deleteApplicationEquip = `-- name: DeleteApplicationEquip :exec
+DELETE FROM applications_equipments 
+WHERE scope = $1
+`
+
+func (q *Queries) DeleteApplicationEquip(ctx context.Context, scope string) error {
+	_, err := q.db.ExecContext(ctx, deleteApplicationEquip, scope)
+	return err
+}
+
 const deleteApplicationsByScope = `-- name: DeleteApplicationsByScope :exec
 DELETE FROM applications WHERE scope = $1
 `
@@ -92,6 +102,52 @@ func (q *Queries) GetApplicationDomains(ctx context.Context, scope string) ([]st
 			return nil, err
 		}
 		items = append(items, application_domain)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getApplicationEquip = `-- name: GetApplicationEquip :many
+SELECT count(*) OVER() AS totalRecords, application_id, equipment_id, scope from applications_equipments
+WHERE application_id = $1
+AND scope = $2
+`
+
+type GetApplicationEquipParams struct {
+	ApplicationID string `json:"application_id"`
+	Scope         string `json:"scope"`
+}
+
+type GetApplicationEquipRow struct {
+	Totalrecords  int64  `json:"totalrecords"`
+	ApplicationID string `json:"application_id"`
+	EquipmentID   string `json:"equipment_id"`
+	Scope         string `json:"scope"`
+}
+
+func (q *Queries) GetApplicationEquip(ctx context.Context, arg GetApplicationEquipParams) ([]GetApplicationEquipRow, error) {
+	rows, err := q.db.QueryContext(ctx, getApplicationEquip, arg.ApplicationID, arg.Scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetApplicationEquipRow
+	for rows.Next() {
+		var i GetApplicationEquipRow
+		if err := rows.Scan(
+			&i.Totalrecords,
+			&i.ApplicationID,
+			&i.EquipmentID,
+			&i.Scope,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -168,95 +224,102 @@ func (q *Queries) GetApplicationInstances(ctx context.Context, arg GetApplicatio
 }
 
 const getApplicationsByProduct = `-- name: GetApplicationsByProduct :many
-SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk,COUNT(DISTINCT(ai.instance_id))::INTEGER as num_of_instances,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments
-FROM applications a INNER JOIN 
-(select application_id,instance_id,UNNEST(coalesce(equipments,'{null}')) as equipment FROM applications_instances, UNNEST(products) as product_swidtags WHERE scope = ANY($1::TEXT[]) 
-  AND product_swidtags = ANY($2::TEXT[])
-) ai
+SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner, a.application_environment, a.application_domain ,a.obsolescence_risk,COUNT(Distinct(ai.equipment_Id))::INTEGER as num_of_equipments
+FROM applications a LEFT JOIN 
+(select application_id,equipment_Id FROM applications_equipments WHERE  scope = ANY($1::TEXT[])) ai
 ON a.application_id = ai.application_id
 WHERE 
   a.scope = ANY($1::TEXT[])
+  AND a.application_id = ANY($2::TEXT[])
   AND (CASE WHEN $3::bool THEN lower(a.application_name) LIKE '%' || lower($4::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN $5::bool THEN lower(a.application_name) = lower($4) ELSE TRUE END)
   AND (CASE WHEN $6::bool THEN lower(a.application_owner) LIKE '%' || lower($7::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN $8::bool THEN lower(a.application_owner) = lower($7) ELSE TRUE END)
-  AND (CASE WHEN $9::bool THEN lower(a.application_domain) LIKE '%' || lower($10::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN $11::bool THEN lower(a.application_domain) = lower($10) ELSE TRUE END)
-  AND (CASE WHEN $12::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower($13::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN $14::bool THEN lower(a.obsolescence_risk) = lower($13) ELSE TRUE END)
-  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk
+  AND (CASE WHEN $9::bool THEN lower(a.application_environment) LIKE '%' || lower($10::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $11::bool THEN lower(a.application_environment) = lower($10) ELSE TRUE END)
+  AND (CASE WHEN $12::bool THEN lower(a.application_domain) LIKE '%' || lower($13::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $14::bool THEN lower(a.application_domain) = lower($13) ELSE TRUE END)
+  AND (CASE WHEN $15::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower($16::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $17::bool THEN lower(a.obsolescence_risk) = lower($16) ELSE TRUE END)
+  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,application_environment,a.obsolescence_risk
   ORDER BY
-  CASE WHEN $15::bool THEN a.application_id END asc,
-  CASE WHEN $16::bool THEN a.application_id END desc,
-  CASE WHEN $17::bool THEN application_name END asc,
-  CASE WHEN $18::bool THEN application_name END desc,
-  CASE WHEN $19::bool THEN application_owner END asc,
-  CASE WHEN $20::bool THEN application_owner END desc,
-  CASE WHEN $21::bool THEN application_domain END desc,
-  CASE WHEN $22::bool THEN application_domain END asc,
-  CASE WHEN $23::bool THEN obsolescence_risk END desc,
-  CASE WHEN $24::bool THEN obsolescence_risk END asc,
-  CASE WHEN $25::bool THEN count(ai.instance_id) END asc,
-  CASE WHEN $26::bool THEN count(ai.instance_id) END desc,
-  CASE WHEN $27::bool THEN COUNT(DISTINCT(ai.equipment)) END asc,
-  CASE WHEN $28::bool THEN COUNT(DISTINCT(ai.equipment)) END desc
-  LIMIT $30 OFFSET $29
+  CASE WHEN $18::bool THEN a.application_id END asc,
+  CASE WHEN $19::bool THEN a.application_id END desc,
+  CASE WHEN $20::bool THEN application_name END asc,
+  CASE WHEN $21::bool THEN application_name END desc,
+  CASE WHEN $22::bool THEN application_owner END asc,
+  CASE WHEN $23::bool THEN application_owner END desc,
+  CASE WHEN $24::bool THEN application_environment END desc,
+  CASE WHEN $25::bool THEN application_environment END asc,
+  CASE WHEN $26::bool THEN application_domain END desc,
+  CASE WHEN $27::bool THEN application_domain END asc,
+  CASE WHEN $28::bool THEN obsolescence_risk END desc,
+  CASE WHEN $29::bool THEN obsolescence_risk END asc,
+  CASE WHEN $30::bool THEN COUNT(Distinct(ai.equipment_Id)) END asc,
+  CASE WHEN $31::bool THEN COUNT(Distinct(ai.equipment_Id)) END desc
+  LIMIT $33 OFFSET $32
 `
 
 type GetApplicationsByProductParams struct {
-	Scope                 []string `json:"scope"`
-	Productswidtags       []string `json:"productswidtags"`
-	LkApplicationName     bool     `json:"lk_application_name"`
-	ApplicationName       string   `json:"application_name"`
-	IsApplicationName     bool     `json:"is_application_name"`
-	LkApplicationOwner    bool     `json:"lk_application_owner"`
-	ApplicationOwner      string   `json:"application_owner"`
-	IsApplicationOwner    bool     `json:"is_application_owner"`
-	LkApplicationDomain   bool     `json:"lk_application_domain"`
-	ApplicationDomain     string   `json:"application_domain"`
-	IsApplicationDomain   bool     `json:"is_application_domain"`
-	LkObsolescenceRisk    bool     `json:"lk_obsolescence_risk"`
-	ObsolescenceRisk      string   `json:"obsolescence_risk"`
-	IsObsolescenceRisk    bool     `json:"is_obsolescence_risk"`
-	ApplicationIDAsc      bool     `json:"application_id_asc"`
-	ApplicationIDDesc     bool     `json:"application_id_desc"`
-	ApplicationNameAsc    bool     `json:"application_name_asc"`
-	ApplicationNameDesc   bool     `json:"application_name_desc"`
-	ApplicationOwnerAsc   bool     `json:"application_owner_asc"`
-	ApplicationOwnerDesc  bool     `json:"application_owner_desc"`
-	ApplicationDomainDesc bool     `json:"application_domain_desc"`
-	ApplicationDomainAsc  bool     `json:"application_domain_asc"`
-	ObsolescenceRiskDesc  bool     `json:"obsolescence_risk_desc"`
-	ObsolescenceRiskAsc   bool     `json:"obsolescence_risk_asc"`
-	NumOfInstancesAsc     bool     `json:"num_of_instances_asc"`
-	NumOfInstancesDesc    bool     `json:"num_of_instances_desc"`
-	NumOfEquipmentsAsc    bool     `json:"num_of_equipments_asc"`
-	NumOfEquipmentsDesc   bool     `json:"num_of_equipments_desc"`
-	PageNum               int32    `json:"page_num"`
-	PageSize              int32    `json:"page_size"`
+	Scope                      []string `json:"scope"`
+	ApplicationID              []string `json:"application_id"`
+	LkApplicationName          bool     `json:"lk_application_name"`
+	ApplicationName            string   `json:"application_name"`
+	IsApplicationName          bool     `json:"is_application_name"`
+	LkApplicationOwner         bool     `json:"lk_application_owner"`
+	ApplicationOwner           string   `json:"application_owner"`
+	IsApplicationOwner         bool     `json:"is_application_owner"`
+	LkApplicationEnvironment   bool     `json:"lk_application_environment"`
+	ApplicationEnvironment     string   `json:"application_environment"`
+	IsApplicationEnvironment   bool     `json:"is_application_environment"`
+	LkApplicationDomain        bool     `json:"lk_application_domain"`
+	ApplicationDomain          string   `json:"application_domain"`
+	IsApplicationDomain        bool     `json:"is_application_domain"`
+	LkObsolescenceRisk         bool     `json:"lk_obsolescence_risk"`
+	ObsolescenceRisk           string   `json:"obsolescence_risk"`
+	IsObsolescenceRisk         bool     `json:"is_obsolescence_risk"`
+	ApplicationIDAsc           bool     `json:"application_id_asc"`
+	ApplicationIDDesc          bool     `json:"application_id_desc"`
+	ApplicationNameAsc         bool     `json:"application_name_asc"`
+	ApplicationNameDesc        bool     `json:"application_name_desc"`
+	ApplicationOwnerAsc        bool     `json:"application_owner_asc"`
+	ApplicationOwnerDesc       bool     `json:"application_owner_desc"`
+	ApplicationEnvironmentDesc bool     `json:"application_environment_desc"`
+	ApplicationEnvironmentAsc  bool     `json:"application_environment_asc"`
+	ApplicationDomainDesc      bool     `json:"application_domain_desc"`
+	ApplicationDomainAsc       bool     `json:"application_domain_asc"`
+	ObsolescenceRiskDesc       bool     `json:"obsolescence_risk_desc"`
+	ObsolescenceRiskAsc        bool     `json:"obsolescence_risk_asc"`
+	NumOfEquipmentsAsc         bool     `json:"num_of_equipments_asc"`
+	NumOfEquipmentsDesc        bool     `json:"num_of_equipments_desc"`
+	PageNum                    int32    `json:"page_num"`
+	PageSize                   int32    `json:"page_size"`
 }
 
 type GetApplicationsByProductRow struct {
-	Totalrecords      int64          `json:"totalrecords"`
-	ApplicationID     string         `json:"application_id"`
-	ApplicationName   string         `json:"application_name"`
-	ApplicationOwner  string         `json:"application_owner"`
-	ApplicationDomain string         `json:"application_domain"`
-	ObsolescenceRisk  sql.NullString `json:"obsolescence_risk"`
-	NumOfInstances    int32          `json:"num_of_instances"`
-	NumOfEquipments   int32          `json:"num_of_equipments"`
+	Totalrecords           int64          `json:"totalrecords"`
+	ApplicationID          string         `json:"application_id"`
+	ApplicationName        string         `json:"application_name"`
+	ApplicationOwner       string         `json:"application_owner"`
+	ApplicationEnvironment string         `json:"application_environment"`
+	ApplicationDomain      string         `json:"application_domain"`
+	ObsolescenceRisk       sql.NullString `json:"obsolescence_risk"`
+	NumOfEquipments        int32          `json:"num_of_equipments"`
 }
 
 func (q *Queries) GetApplicationsByProduct(ctx context.Context, arg GetApplicationsByProductParams) ([]GetApplicationsByProductRow, error) {
 	rows, err := q.db.QueryContext(ctx, getApplicationsByProduct,
 		pq.Array(arg.Scope),
-		pq.Array(arg.Productswidtags),
+		pq.Array(arg.ApplicationID),
 		arg.LkApplicationName,
 		arg.ApplicationName,
 		arg.IsApplicationName,
 		arg.LkApplicationOwner,
 		arg.ApplicationOwner,
 		arg.IsApplicationOwner,
+		arg.LkApplicationEnvironment,
+		arg.ApplicationEnvironment,
+		arg.IsApplicationEnvironment,
 		arg.LkApplicationDomain,
 		arg.ApplicationDomain,
 		arg.IsApplicationDomain,
@@ -269,12 +332,12 @@ func (q *Queries) GetApplicationsByProduct(ctx context.Context, arg GetApplicati
 		arg.ApplicationNameDesc,
 		arg.ApplicationOwnerAsc,
 		arg.ApplicationOwnerDesc,
+		arg.ApplicationEnvironmentDesc,
+		arg.ApplicationEnvironmentAsc,
 		arg.ApplicationDomainDesc,
 		arg.ApplicationDomainAsc,
 		arg.ObsolescenceRiskDesc,
 		arg.ObsolescenceRiskAsc,
-		arg.NumOfInstancesAsc,
-		arg.NumOfInstancesDesc,
 		arg.NumOfEquipmentsAsc,
 		arg.NumOfEquipmentsDesc,
 		arg.PageNum,
@@ -292,9 +355,9 @@ func (q *Queries) GetApplicationsByProduct(ctx context.Context, arg GetApplicati
 			&i.ApplicationID,
 			&i.ApplicationName,
 			&i.ApplicationOwner,
+			&i.ApplicationEnvironment,
 			&i.ApplicationDomain,
 			&i.ObsolescenceRisk,
-			&i.NumOfInstances,
 			&i.NumOfEquipments,
 		); err != nil {
 			return nil, err
@@ -317,6 +380,7 @@ SELECT
   application_version,
   application_owner,
   application_domain,
+  application_environment,
   scope
 FROM 
   applications
@@ -326,16 +390,18 @@ GROUP BY
   application_version,
   application_owner,
   application_domain,
+  application_environment,
   scope
 `
 
 type GetApplicationsDetailsRow struct {
-	ApplicationID      string `json:"application_id"`
-	ApplicationName    string `json:"application_name"`
-	ApplicationVersion string `json:"application_version"`
-	ApplicationOwner   string `json:"application_owner"`
-	ApplicationDomain  string `json:"application_domain"`
-	Scope              string `json:"scope"`
+	ApplicationID          string `json:"application_id"`
+	ApplicationName        string `json:"application_name"`
+	ApplicationVersion     string `json:"application_version"`
+	ApplicationOwner       string `json:"application_owner"`
+	ApplicationDomain      string `json:"application_domain"`
+	ApplicationEnvironment string `json:"application_environment"`
+	Scope                  string `json:"scope"`
 }
 
 func (q *Queries) GetApplicationsDetails(ctx context.Context) ([]GetApplicationsDetailsRow, error) {
@@ -353,6 +419,7 @@ func (q *Queries) GetApplicationsDetails(ctx context.Context) ([]GetApplications
 			&i.ApplicationVersion,
 			&i.ApplicationOwner,
 			&i.ApplicationDomain,
+			&i.ApplicationEnvironment,
 			&i.Scope,
 		); err != nil {
 			return nil, err
@@ -369,9 +436,9 @@ func (q *Queries) GetApplicationsDetails(ctx context.Context) ([]GetApplications
 }
 
 const getApplicationsView = `-- name: GetApplicationsView :many
-SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner,a.application_domain ,a.obsolescence_risk,COUNT(DISTINCT(ai.instance_id))::INTEGER as num_of_instances,COUNT(DISTINCT(ai.product))::INTEGER as num_of_products,COUNT(DISTINCT(ai.equipment))::INTEGER as num_of_equipments
+SELECT count(*) OVER() AS totalRecords,a.application_id,a.application_name,a.application_owner, a.application_environment, a.application_domain ,a.obsolescence_risk,COUNT(Distinct(ai.equipment_Id))::INTEGER as num_of_equipments
 FROM applications a LEFT JOIN 
-(select application_id,instance_id, products, UNNEST(coalesce(products,'{null}')) as product,UNNEST(coalesce(equipments,'{null}')) as equipment FROM applications_instances WHERE  scope = ANY($1::TEXT[])) ai
+(select application_id,equipment_Id FROM applications_equipments WHERE  scope = ANY($1::TEXT[])) ai
 ON a.application_id = ai.application_id
 WHERE 
   a.scope = ANY($1::TEXT[])
@@ -379,78 +446,75 @@ WHERE
   AND (CASE WHEN $4::bool THEN lower(a.application_name) = lower($3) ELSE TRUE END)
   AND (CASE WHEN $5::bool THEN lower(a.application_owner) LIKE '%' || lower($6::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN $7::bool THEN lower(a.application_owner) = lower($6) ELSE TRUE END)
-  AND (CASE WHEN $8::bool THEN $9::TEXT = ANY(ai.products) ELSE TRUE END)
-  AND (CASE WHEN $10::bool THEN lower(a.application_domain) LIKE '%' || lower($11::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN $12::bool THEN lower(a.application_domain) = lower($11) ELSE TRUE END)
-  AND (CASE WHEN $13::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower($14::TEXT) || '%' ELSE TRUE END)
-  AND (CASE WHEN $15::bool THEN lower(a.obsolescence_risk) = lower($14) ELSE TRUE END)
-  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,a.obsolescence_risk
+  AND (CASE WHEN $8::bool THEN lower(a.application_environment) LIKE '%' || lower($9::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $10::bool THEN lower(a.application_environment) = lower($9) ELSE TRUE END)
+  AND (CASE WHEN $11::bool THEN lower(a.application_domain) LIKE '%' || lower($12::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $13::bool THEN lower(a.application_domain) = lower($12) ELSE TRUE END)
+  AND (CASE WHEN $14::bool THEN lower(a.obsolescence_risk) LIKE '%' || lower($15::TEXT) || '%' ELSE TRUE END)
+  AND (CASE WHEN $16::bool THEN lower(a.obsolescence_risk) = lower($15) ELSE TRUE END)
+  GROUP BY a.application_id,a.application_name,a.application_owner,a.application_domain,application_environment,a.obsolescence_risk
   ORDER BY
-  CASE WHEN $16::bool THEN a.application_id END asc,
-  CASE WHEN $17::bool THEN a.application_id END desc,
-  CASE WHEN $18::bool THEN application_name END asc,
-  CASE WHEN $19::bool THEN application_name END desc,
-  CASE WHEN $20::bool THEN application_owner END asc,
-  CASE WHEN $21::bool THEN application_owner END desc,
-  CASE WHEN $22::bool THEN application_domain END desc,
-  CASE WHEN $23::bool THEN application_domain END asc,
-  CASE WHEN $24::bool THEN obsolescence_risk END desc,
-  CASE WHEN $25::bool THEN obsolescence_risk END asc,
-  CASE WHEN $26::bool THEN count(ai.instance_id) END asc,
-  CASE WHEN $27::bool THEN count(ai.instance_id) END desc,
-  CASE WHEN $28::bool THEN COUNT(DISTINCT(ai.product)) END asc,
-  CASE WHEN $29::bool THEN COUNT(DISTINCT(ai.product)) END desc,
-  CASE WHEN $30::bool THEN COUNT(DISTINCT(ai.equipment)) END asc,
-  CASE WHEN $31::bool THEN COUNT(DISTINCT(ai.equipment)) END desc
-  LIMIT $33 OFFSET $32
+  CASE WHEN $17::bool THEN a.application_id END asc,
+  CASE WHEN $18::bool THEN a.application_id END desc,
+  CASE WHEN $19::bool THEN application_name END asc,
+  CASE WHEN $20::bool THEN application_name END desc,
+  CASE WHEN $21::bool THEN application_owner END asc,
+  CASE WHEN $22::bool THEN application_owner END desc,
+  CASE WHEN $23::bool THEN application_environment END desc,
+  CASE WHEN $24::bool THEN application_environment END asc,
+  CASE WHEN $25::bool THEN application_domain END desc,
+  CASE WHEN $26::bool THEN application_domain END asc,
+  CASE WHEN $27::bool THEN obsolescence_risk END desc,
+  CASE WHEN $28::bool THEN obsolescence_risk END asc,
+  CASE WHEN $29::bool THEN COUNT(Distinct(ai.equipment_Id)) END asc,
+  CASE WHEN $30::bool THEN COUNT(Distinct(ai.equipment_Id)) END desc
+  LIMIT $32 OFFSET $31
 `
 
 type GetApplicationsViewParams struct {
-	Scope                 []string `json:"scope"`
-	LkApplicationName     bool     `json:"lk_application_name"`
-	ApplicationName       string   `json:"application_name"`
-	IsApplicationName     bool     `json:"is_application_name"`
-	LkApplicationOwner    bool     `json:"lk_application_owner"`
-	ApplicationOwner      string   `json:"application_owner"`
-	IsApplicationOwner    bool     `json:"is_application_owner"`
-	IsProductID           bool     `json:"is_product_id"`
-	ProductID             string   `json:"product_id"`
-	LkApplicationDomain   bool     `json:"lk_application_domain"`
-	ApplicationDomain     string   `json:"application_domain"`
-	IsApplicationDomain   bool     `json:"is_application_domain"`
-	LkObsolescenceRisk    bool     `json:"lk_obsolescence_risk"`
-	ObsolescenceRisk      string   `json:"obsolescence_risk"`
-	IsObsolescenceRisk    bool     `json:"is_obsolescence_risk"`
-	ApplicationIDAsc      bool     `json:"application_id_asc"`
-	ApplicationIDDesc     bool     `json:"application_id_desc"`
-	ApplicationNameAsc    bool     `json:"application_name_asc"`
-	ApplicationNameDesc   bool     `json:"application_name_desc"`
-	ApplicationOwnerAsc   bool     `json:"application_owner_asc"`
-	ApplicationOwnerDesc  bool     `json:"application_owner_desc"`
-	ApplicationDomainDesc bool     `json:"application_domain_desc"`
-	ApplicationDomainAsc  bool     `json:"application_domain_asc"`
-	ObsolescenceRiskDesc  bool     `json:"obsolescence_risk_desc"`
-	ObsolescenceRiskAsc   bool     `json:"obsolescence_risk_asc"`
-	NumOfInstancesAsc     bool     `json:"num_of_instances_asc"`
-	NumOfInstancesDesc    bool     `json:"num_of_instances_desc"`
-	NumOfProductsAsc      bool     `json:"num_of_products_asc"`
-	NumOfProductsDesc     bool     `json:"num_of_products_desc"`
-	NumOfEquipmentsAsc    bool     `json:"num_of_equipments_asc"`
-	NumOfEquipmentsDesc   bool     `json:"num_of_equipments_desc"`
-	PageNum               int32    `json:"page_num"`
-	PageSize              int32    `json:"page_size"`
+	Scope                      []string `json:"scope"`
+	LkApplicationName          bool     `json:"lk_application_name"`
+	ApplicationName            string   `json:"application_name"`
+	IsApplicationName          bool     `json:"is_application_name"`
+	LkApplicationOwner         bool     `json:"lk_application_owner"`
+	ApplicationOwner           string   `json:"application_owner"`
+	IsApplicationOwner         bool     `json:"is_application_owner"`
+	LkApplicationEnvironment   bool     `json:"lk_application_environment"`
+	ApplicationEnvironment     string   `json:"application_environment"`
+	IsApplicationEnvironment   bool     `json:"is_application_environment"`
+	LkApplicationDomain        bool     `json:"lk_application_domain"`
+	ApplicationDomain          string   `json:"application_domain"`
+	IsApplicationDomain        bool     `json:"is_application_domain"`
+	LkObsolescenceRisk         bool     `json:"lk_obsolescence_risk"`
+	ObsolescenceRisk           string   `json:"obsolescence_risk"`
+	IsObsolescenceRisk         bool     `json:"is_obsolescence_risk"`
+	ApplicationIDAsc           bool     `json:"application_id_asc"`
+	ApplicationIDDesc          bool     `json:"application_id_desc"`
+	ApplicationNameAsc         bool     `json:"application_name_asc"`
+	ApplicationNameDesc        bool     `json:"application_name_desc"`
+	ApplicationOwnerAsc        bool     `json:"application_owner_asc"`
+	ApplicationOwnerDesc       bool     `json:"application_owner_desc"`
+	ApplicationEnvironmentDesc bool     `json:"application_environment_desc"`
+	ApplicationEnvironmentAsc  bool     `json:"application_environment_asc"`
+	ApplicationDomainDesc      bool     `json:"application_domain_desc"`
+	ApplicationDomainAsc       bool     `json:"application_domain_asc"`
+	ObsolescenceRiskDesc       bool     `json:"obsolescence_risk_desc"`
+	ObsolescenceRiskAsc        bool     `json:"obsolescence_risk_asc"`
+	NumOfEquipmentsAsc         bool     `json:"num_of_equipments_asc"`
+	NumOfEquipmentsDesc        bool     `json:"num_of_equipments_desc"`
+	PageNum                    int32    `json:"page_num"`
+	PageSize                   int32    `json:"page_size"`
 }
 
 type GetApplicationsViewRow struct {
-	Totalrecords      int64          `json:"totalrecords"`
-	ApplicationID     string         `json:"application_id"`
-	ApplicationName   string         `json:"application_name"`
-	ApplicationOwner  string         `json:"application_owner"`
-	ApplicationDomain string         `json:"application_domain"`
-	ObsolescenceRisk  sql.NullString `json:"obsolescence_risk"`
-	NumOfInstances    int32          `json:"num_of_instances"`
-	NumOfProducts     int32          `json:"num_of_products"`
-	NumOfEquipments   int32          `json:"num_of_equipments"`
+	Totalrecords           int64          `json:"totalrecords"`
+	ApplicationID          string         `json:"application_id"`
+	ApplicationName        string         `json:"application_name"`
+	ApplicationOwner       string         `json:"application_owner"`
+	ApplicationEnvironment string         `json:"application_environment"`
+	ApplicationDomain      string         `json:"application_domain"`
+	ObsolescenceRisk       sql.NullString `json:"obsolescence_risk"`
+	NumOfEquipments        int32          `json:"num_of_equipments"`
 }
 
 func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsViewParams) ([]GetApplicationsViewRow, error) {
@@ -462,8 +526,9 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 		arg.LkApplicationOwner,
 		arg.ApplicationOwner,
 		arg.IsApplicationOwner,
-		arg.IsProductID,
-		arg.ProductID,
+		arg.LkApplicationEnvironment,
+		arg.ApplicationEnvironment,
+		arg.IsApplicationEnvironment,
 		arg.LkApplicationDomain,
 		arg.ApplicationDomain,
 		arg.IsApplicationDomain,
@@ -476,14 +541,12 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 		arg.ApplicationNameDesc,
 		arg.ApplicationOwnerAsc,
 		arg.ApplicationOwnerDesc,
+		arg.ApplicationEnvironmentDesc,
+		arg.ApplicationEnvironmentAsc,
 		arg.ApplicationDomainDesc,
 		arg.ApplicationDomainAsc,
 		arg.ObsolescenceRiskDesc,
 		arg.ObsolescenceRiskAsc,
-		arg.NumOfInstancesAsc,
-		arg.NumOfInstancesDesc,
-		arg.NumOfProductsAsc,
-		arg.NumOfProductsDesc,
 		arg.NumOfEquipmentsAsc,
 		arg.NumOfEquipmentsDesc,
 		arg.PageNum,
@@ -501,10 +564,9 @@ func (q *Queries) GetApplicationsView(ctx context.Context, arg GetApplicationsVi
 			&i.ApplicationID,
 			&i.ApplicationName,
 			&i.ApplicationOwner,
+			&i.ApplicationEnvironment,
 			&i.ApplicationDomain,
 			&i.ObsolescenceRisk,
-			&i.NumOfInstances,
-			&i.NumOfProducts,
 			&i.NumOfEquipments,
 		); err != nil {
 			return nil, err
@@ -942,7 +1004,7 @@ func (q *Queries) GetObsolescenceRiskForApplication(ctx context.Context, arg Get
 	return risk_name, err
 }
 
-const getProductsByApplicationInstanceID = `-- name: GetProductsByApplicationInstanceID :one
+const getProductsByApplicationID = `-- name: GetProductsByApplicationID :one
 SELECT
     DISTINCT products
 from
@@ -953,14 +1015,14 @@ WHERE
     AND instance_id = $3
 `
 
-type GetProductsByApplicationInstanceIDParams struct {
+type GetProductsByApplicationIDParams struct {
 	Scope         string `json:"scope"`
 	ApplicationID string `json:"application_id"`
 	InstanceID    string `json:"instance_id"`
 }
 
-func (q *Queries) GetProductsByApplicationInstanceID(ctx context.Context, arg GetProductsByApplicationInstanceIDParams) ([]string, error) {
-	row := q.db.QueryRowContext(ctx, getProductsByApplicationInstanceID, arg.Scope, arg.ApplicationID, arg.InstanceID)
+func (q *Queries) GetProductsByApplicationID(ctx context.Context, arg GetProductsByApplicationIDParams) ([]string, error) {
+	row := q.db.QueryRowContext(ctx, getProductsByApplicationID, arg.Scope, arg.ApplicationID, arg.InstanceID)
 	var products []string
 	err := row.Scan(pq.Array(&products))
 	return products, err
@@ -1201,21 +1263,22 @@ func (q *Queries) InsertRiskMatrixConfig(ctx context.Context, arg InsertRiskMatr
 }
 
 const upsertApplication = `-- name: UpsertApplication :exec
-INSERT INTO applications (application_id, application_name, application_version, application_owner,application_domain, scope, created_on)
-VALUES ($1,$2,$3,$4,$5,$6,$7)
+INSERT INTO applications (application_id, application_name, application_version, application_owner, application_domain, application_environment, scope, created_on)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
 ON CONFLICT (application_id ,scope)
 DO
- UPDATE SET application_name = $2, application_version = $3, application_owner = $4,application_domain = $5
+ UPDATE SET application_name = $2, application_version = $3, application_owner = $4,application_domain = $5, application_environment = $6
 `
 
 type UpsertApplicationParams struct {
-	ApplicationID      string    `json:"application_id"`
-	ApplicationName    string    `json:"application_name"`
-	ApplicationVersion string    `json:"application_version"`
-	ApplicationOwner   string    `json:"application_owner"`
-	ApplicationDomain  string    `json:"application_domain"`
-	Scope              string    `json:"scope"`
-	CreatedOn          time.Time `json:"created_on"`
+	ApplicationID          string    `json:"application_id"`
+	ApplicationName        string    `json:"application_name"`
+	ApplicationVersion     string    `json:"application_version"`
+	ApplicationOwner       string    `json:"application_owner"`
+	ApplicationDomain      string    `json:"application_domain"`
+	ApplicationEnvironment string    `json:"application_environment"`
+	Scope                  string    `json:"scope"`
+	CreatedOn              time.Time `json:"created_on"`
 }
 
 func (q *Queries) UpsertApplication(ctx context.Context, arg UpsertApplicationParams) error {
@@ -1225,9 +1288,29 @@ func (q *Queries) UpsertApplication(ctx context.Context, arg UpsertApplicationPa
 		arg.ApplicationVersion,
 		arg.ApplicationOwner,
 		arg.ApplicationDomain,
+		arg.ApplicationEnvironment,
 		arg.Scope,
 		arg.CreatedOn,
 	)
+	return err
+}
+
+const upsertApplicationEquip = `-- name: UpsertApplicationEquip :exec
+INSERT INTO applications_equipments (application_id, equipment_Id, scope)
+VALUES ($1,$2,$3)
+ON CONFLICT (application_id, equipment_Id, scope)
+DO NOTHING
+`
+
+type UpsertApplicationEquipParams struct {
+	ApplicationID string `json:"application_id"`
+	EquipmentID   string `json:"equipment_id"`
+	Scope         string `json:"scope"`
+}
+
+// SCOPE BASED CHANGE
+func (q *Queries) UpsertApplicationEquip(ctx context.Context, arg UpsertApplicationEquipParams) error {
+	_, err := q.db.ExecContext(ctx, upsertApplicationEquip, arg.ApplicationID, arg.EquipmentID, arg.Scope)
 	return err
 }
 

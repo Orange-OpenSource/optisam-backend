@@ -12,6 +12,7 @@ import (
 // Application interface
 type Application interface {
 	gendb.Querier
+	UpsertApplicationEquipTx(ctx context.Context, req *v1.UpsertApplicationEquipRequest) error
 	UpsertInstanceTX(ctx context.Context, req *v1.UpsertInstanceRequest) error
 	DropApplicationDataTX(ctx context.Context, scope string) error
 	DropObscolenscenceDataTX(ctx context.Context, scope string) error

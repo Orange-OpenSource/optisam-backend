@@ -4,7 +4,7 @@ Feature: Account Service Test
   Background:
   # * def accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1'
-     * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
      * callonce read('common.feature') credentials
      * def access_token = response.access_token
      * header Authorization = 'Bearer '+access_token

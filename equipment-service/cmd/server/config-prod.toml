@@ -1,0 +1,53 @@
+environment = "PRODUCTION"
+debug = false
+grpcport = "8090"
+httpport = "8080"
+maxapiworker = 25
+
+[workerqueue]
+retries = 3
+basedelay = 1
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = false
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "equipment-service"
+collectorEndpoint = "http://jaeger-collector.prod-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.prod-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[dgraph]
+hosts = [
+    "svc-optisam-dgraph.prod-optisam.svc:9080"
+]
+
+[grpcservers]
+apikey = "12345678"
+timeout = 1000
+
+[grpcservers.Address]
+account = "svc-optisam-account.prod-optisam.svc:8090"
+metric = "svc-optisam-metric.prod-optisam.svc:8090"
+product = "svc-optisam-product.prod-optisam.svc:8090"
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"

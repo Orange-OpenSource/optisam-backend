@@ -93,7 +93,75 @@ type EquipmentInfo struct {
 	ID      string
 	EquipID string
 	Type    string
-	Parent  *EquipmentInfo
+	Parent  *[]EquipmentInfo
+}
+
+type EquipInfo struct {
+	UID  string
+	Type string
+}
+
+type MetricAllocated struct {
+	AllocatedMetric string
+}
+
+type ProductEquipment struct {
+	UID         string `json:"uid"`
+	EquipmentID string `json:"equipment.id"`
+}
+type Products struct {
+	Swidtag          string              `json:"Swidtag"`
+	Name             string              `json:"Name"`
+	Version          string              `json:"Version"`
+	Editor           string              `json:"Editor"`
+	ProductEquipment []*ProductEquipment `json:"product.equipment"`
+}
+type DeployedProducts struct {
+	Products []Products `json:"Products"`
+}
+
+type EquipmentHierarchy struct {
+	VcenterEquipments       []*VcenterEquipments       `json:"VcenterEquipments,omitempty"`
+	ClusterEquipments       []*ClusterEquipments       `json:"ClusterEquipments,omitempty"`
+	ServerEquipments        []*ServerEquipments        `json:"ServerEquipments,omitempty"`
+	SoftPartitionEquipments []*SoftPartitionEquipments `json:"SoftPartitionEquipments,omitempty"`
+}
+type VcenterEquipments struct {
+	UID           string `json:"uid,omitempty"`
+	EquipmentID   string `json:"equipment.id,omitempty"`
+	EquipmentType string `json:"equipment.type,omitempty"`
+}
+type EquipmentParent struct {
+	UID           string `json:"uid,omitempty"`
+	EquipmentID   string `json:"equipment.id,omitempty"`
+	EquipmentType string `json:"equipment.type,omitempty"`
+}
+type ClusterEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+type ServerEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+type SoftPartitionEquipments struct {
+	EquipmentParent []EquipmentParent `json:"~equipment.parent,omitempty"`
+}
+
+type MetricAllocationRequest struct {
+	AllocationMetric string
+	Swidtag          string
+	EquipmentID      string
+}
+
+type AllocatedMetric struct {
+	UID              string   `json:"uid,omitempty"`
+	TypeName         string   `json:"type_name,omitempty"`
+	Scopes           []string `json:"scopes,omitempty"`
+	AllocationMetric string   `json:"allocation.metric,omitempty"`
+	EquipmentID      string   `json:"equipment.id,omitempty"`
+	ProductSwidtag   string   `json:"product.swidtag,omitempty"`
+}
+type AllocatedMetrics struct {
+	AllocatedMetricList []*AllocatedMetric `json:"allocatedMetricList,omitempty"`
 }
 
 // PrimaryKeyAttribute returns primary key attribute of equipment type
@@ -130,8 +198,9 @@ type QueryEquipments struct {
 
 // UpdateEquipmentRequest ...
 type UpdateEquipmentRequest struct {
-	ParentID string
-	Attr     []*Attribute
+	ParentID   string
+	AddAttr    []*Attribute
+	UpdateAttr []*Attribute
 }
 
 func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //nolint
@@ -149,13 +218,16 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsIdentifier: true,
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Name",
 				},
 				{
 					Name:         "vcenter_version",
 					Type:         DataTypeString,
 					MappedTo:     "vcenter_version",
 					IsDisplayed:  true,
-					IsSearchable: true},
+					IsSearchable: true,
+					SchemaName:   "Version",
+				},
 			},
 			Scopes: scopes,
 		},
@@ -172,6 +244,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsIdentifier: true,
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Name",
 				},
 				{
 					Name:               "parent_id",
@@ -180,6 +253,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsParentIdentifier: true,
 					IsDisplayed:        true,
 					IsSearchable:       true,
+					SchemaName:         "Vcenter",
 				},
 			},
 		},
@@ -195,6 +269,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "hyperthreading",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Hyperthreading",
 				},
 				{
 					Name:         "datacenter_name",
@@ -202,6 +277,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "datacenter_name",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Datacenter",
 				},
 				{
 					Name:         "server_id",
@@ -210,6 +286,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsIdentifier: true,
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "ID",
 				},
 				{
 					Name:         "server_name",
@@ -217,6 +294,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "server_name",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Name",
 				},
 				{
 					Name:         "cores_per_processor",
@@ -224,6 +302,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "cores_per_processor",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Cores per processor",
 				},
 				{
 					Name:         "oracle_core_factor",
@@ -231,6 +310,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "oracle_core_factor",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Oracle core factor",
 				},
 				{
 					Name:         "cpu_manufacturer",
@@ -238,6 +318,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "cpu_manufacturer",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "CPU manufacturer",
 				},
 				{
 					Name:         "ibm_pvu",
@@ -245,6 +326,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "ibm_pvu",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "IBM PVU",
 				},
 				{
 					Name:         "sag_uvu",
@@ -252,6 +334,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "sag_uvu",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "SAG UVU",
 				},
 				{
 					Name:         "server_type",
@@ -259,6 +342,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "server_type",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Type of server",
 				},
 				{
 					Name:               "parent_id",
@@ -267,6 +351,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsParentIdentifier: true,
 					IsDisplayed:        true,
 					IsSearchable:       true,
+					SchemaName:         "Cluster",
 				},
 				{
 					Name:         "cpu_model",
@@ -274,6 +359,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "cpu_model",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "CPU model",
 				},
 				{
 					Name:         "server_os",
@@ -281,6 +367,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "server_os",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "OS",
 				},
 				{
 					Name:         "server_processors_numbers",
@@ -288,6 +375,15 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "server_processors_numbers",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Processors",
+				},
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+					SchemaName:   "Environment",
 				},
 			},
 		},
@@ -304,6 +400,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsIdentifier: true,
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "ID",
 				},
 				{
 					Name:         "softpartition_name",
@@ -311,6 +408,23 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					MappedTo:     "softpartition_name",
 					IsDisplayed:  true,
 					IsSearchable: true,
+					SchemaName:   "Name",
+				},
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+					SchemaName:   "Environment",
+				},
+				{
+					Name:         "vcpu",
+					Type:         DataTypeInt,
+					MappedTo:     "vcpu",
+					IsDisplayed:  true,
+					IsSearchable: true,
+					SchemaName:   "VCPU",
 				},
 				{
 					Name:               "parent_id",
@@ -319,6 +433,7 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 					IsParentIdentifier: true,
 					IsDisplayed:        true,
 					IsSearchable:       true,
+					SchemaName:         "Server",
 				},
 			},
 		},
@@ -402,6 +517,51 @@ func GetGenericScopeEquipmentTypes(scope string) map[string]*EquipmentType { //n
 		// 		},
 		// 	},
 		// },
+	}
+	return data
+}
+
+func GetGenericScopeEquipmentTypesOldScope(scope string) map[string]*EquipmentType { //nolint
+	var scopes []string
+	scopes = append(scopes, scope)
+	data := map[string]*EquipmentType{
+		"metadata_server.csv": {
+			SourceName: "metadata_server.csv",
+			Scopes:     scopes,
+			Type:       "server",
+			ParentType: "cluster",
+			Attributes: []*Attribute{
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+			},
+		},
+		"metadata_softpartition.csv": {
+			SourceName: "metadata_softpartition.csv",
+			Type:       "softpartition",
+			Scopes:     scopes,
+			ParentType: "server",
+			Attributes: []*Attribute{
+				{
+					Name:         "environment",
+					Type:         DataTypeString,
+					MappedTo:     "environment",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+				{
+					Name:         "vcpu",
+					Type:         DataTypeInt,
+					MappedTo:     "vcpu",
+					IsDisplayed:  true,
+					IsSearchable: true,
+				},
+			},
+		},
 	}
 	return data
 }

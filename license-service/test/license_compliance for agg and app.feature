@@ -4,12 +4,12 @@ Feature: License Service Test - Compliance for application and aggregation : adm
   Background:
   # * def licenseServiceUrl = "https://optisam-license-int.apps.fr01.paas.tech.orange"
     * url licenseServiceUrl+'/api/v1/license'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 
   Scenario: Validate Compliance of an application

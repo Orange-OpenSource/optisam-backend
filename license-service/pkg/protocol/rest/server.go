@@ -22,6 +22,7 @@ import (
 )
 
 // RunServer runs HTTP/REST gateway
+// nolint: funlen, gocyclo, gosec
 func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.PublicKey) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

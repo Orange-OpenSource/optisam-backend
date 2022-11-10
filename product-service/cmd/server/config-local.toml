@@ -63,6 +63,7 @@ license = "localhost:19091"
 metric = "localhost:18090"
 application = "localhost:11090"
 account = "localhost:20000"
+equipment = "localhost:14090"
 
 [httpservers.Address]
 auth = "localhost:9093"

@@ -643,6 +643,144 @@ var _ interface {
 	ErrorName() string
 } = ViewReferenceDataResponseValidationError{}
 
+// Validate checks the field values on GetAllocMetricDetailsRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAllocMetricDetailsRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Scope
+
+	return nil
+}
+
+// GetAllocMetricDetailsRequestValidationError is the validation error returned
+// by GetAllocMetricDetailsRequest.Validate if the designated constraints
+// aren't met.
+type GetAllocMetricDetailsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAllocMetricDetailsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAllocMetricDetailsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAllocMetricDetailsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAllocMetricDetailsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAllocMetricDetailsRequestValidationError) ErrorName() string {
+	return "GetAllocMetricDetailsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAllocMetricDetailsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAllocMetricDetailsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAllocMetricDetailsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAllocMetricDetailsRequestValidationError{}
+
+// Validate checks the field values on GetAllocMetricDetailsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetAllocMetricDetailsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// GetAllocMetricDetailsResponseValidationError is the validation error
+// returned by GetAllocMetricDetailsResponse.Validate if the designated
+// constraints aren't met.
+type GetAllocMetricDetailsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAllocMetricDetailsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAllocMetricDetailsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAllocMetricDetailsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAllocMetricDetailsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAllocMetricDetailsResponseValidationError) ErrorName() string {
+	return "GetAllocMetricDetailsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAllocMetricDetailsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAllocMetricDetailsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAllocMetricDetailsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAllocMetricDetailsResponseValidationError{}
+
 // Validate checks the field values on StoreReferenceDataRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

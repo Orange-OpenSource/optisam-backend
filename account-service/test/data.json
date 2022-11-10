@@ -3,7 +3,7 @@
     "role": "#string",
     "user_id": "#string",
     "first_name": "#string",
-    "last_name": "##string",
+    "last_name": "#string",
     "locale": "#string",
     "groups": "##[]"
   },
@@ -22,7 +22,7 @@
     "first_name": "Test",
     "last_name": "Admin",
     "locale": "en",
-    "groups": ["CLR", "AUT"],
+    "groups": ["API","CLR"],
     "role": "ADMIN"
   },
   "createUserAccount": {
@@ -30,9 +30,7 @@
     "first_name": "dummy",
     "last_name": "Userrole",
     "locale": "en",
-    "groups": [
-      "4"
-    ],
+    "groups":[],
     "role": "USER"
   },
   "createAdminAccount": {
@@ -40,11 +38,13 @@
     "first_name": "dummy",
     "last_name": "Admin",
     "locale": "en",
-    "groups": [
-      "8"
-    ],
+    "groups": [ ],
     "role": "ADMIN"
   },
+  "adduser" :{
+      "group_id" :"#string",
+      "user_id":  "#string"},
+
   "schema_grp": {
     "ID": "#notnull",
     "name": "#string",
@@ -56,10 +56,10 @@
   },
   "group" : {
       "ID": "#notnull",
-      "name": "AUT",
-      "fully_qualified_name": "ROOT.AUT",
+      "name": "API",
+      "fully_qualified_name": "ROOT.API",
       "scopes": [
-        "AUT"
+        "API"
       ],
       "parent_id": "1",
       "num_of_child_groups": "##number",
@@ -68,7 +68,7 @@
   "createGroup": {
     "name": "API_dummy",
     "scopes": [
-      "AUT"
+      "API"
     ],
     "parent_id": "1"
   },
@@ -87,5 +87,14 @@
   "createScope": {
     "scope_code": "DUM",
     "scope_name": "DummyScope"
+  },
+  "UserId_schema" : {
+    "role":"#string" ,
+    "user_id": "#string",
+    "first_name":"#string",
+    "last_name": "##string",
+    "locale":"#string", 
+    "profile_pic":"#string",
+    "first_login":"##boolean"
   }
 }

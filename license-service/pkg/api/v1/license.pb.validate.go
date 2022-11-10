@@ -632,9 +632,9 @@ func (m *LicensesForEquipAndMetricRequest) Validate() error {
 
 	// no validation rules for EquipId
 
-	// no validation rules for MetricType
-
 	// no validation rules for MetricName
+
+	// no validation rules for MetricType
 
 	for idx, item := range m.GetAttributes() {
 		_, _ = idx, item
@@ -815,25 +815,21 @@ func (m *ProductLicenseForEquipAndMetric) Validate() error {
 		return nil
 	}
 
+	// no validation rules for SwidTag
+
+	// no validation rules for AggregationName
+
+	// no validation rules for Editor
+
 	// no validation rules for MetricName
+
+	// no validation rules for MetricType
 
 	// no validation rules for OldLicences
 
 	// no validation rules for NewLicenses
 
 	// no validation rules for Delta
-
-	if v, ok := interface{}(m.GetProduct()).(interface {
-		Validate() error
-	}); ok {
-		if err := v.Validate(); err != nil {
-			return ProductLicenseForEquipAndMetricValidationError{
-				field:  "Product",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
 
 	return nil
 }
@@ -904,6 +900,8 @@ func (m *ProductLicensesForMetricRequest) Validate() error {
 	}
 
 	// no validation rules for SwidTag
+
+	// no validation rules for AggregationName
 
 	// no validation rules for MetricName
 
@@ -1814,6 +1812,8 @@ func (m *ProductAcquiredRights) Validate() error {
 
 	// no validation rules for ComputedCost
 
+	// no validation rules for CostOptimization
+
 	return nil
 }
 
@@ -1912,6 +1912,8 @@ func (m *AggregationAcquiredRights) Validate() error {
 	// no validation rules for PurchaseCost
 
 	// no validation rules for ComputedCost
+
+	// no validation rules for CostOptimization
 
 	return nil
 }

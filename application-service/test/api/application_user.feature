@@ -4,12 +4,12 @@ Feature: Application Service Test
   Background:
   # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
     * url applicationServiceUrl+'/api/v1'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
   @schema
   Scenario: Schema validation for get Applications
@@ -57,8 +57,8 @@ Feature: Application Service Test
     And match response.applications[*].<searchBy> contains '<searchValue>'
   Examples:
     | searchBy | searchValue |
-    | name | General Application 1 |
-    | owner | Orange Money |
+    | name | carala |
+    | domain | mobile |
     | obsolescence_risk | Medium | 
 
 
@@ -75,8 +75,8 @@ Feature: Application Service Test
     And match response.applications[*].<searchBy2> contains '<searchValue2>'
   Examples:
     | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
-    | name | Random Application 1| owner | Random |
-    | domain | Payment | owner | Orange Money |
+    | name | carala |domain | internet |
+    | domain | internet | obsolescence_risk  | High |
 
 
   @sort
@@ -122,14 +122,14 @@ Feature: Application Service Test
   @search
   Scenario: Searching_Filter Instances by Application Id
     Given path 'application/instances'
-    And params { page_num:1, page_size:10, sort_by:'instance_environment', sort_order:'desc', scopes:'#(scope)'}
+    And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
+    And params {search_params.application_id.filter_type: 1 }
     And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
     When method get
     Then status 200
     And response.totalRecords > 0
-    # And match each response.instances[*].name == data.getInstance.name
     * remove data.getInstance.application_id
-    And match response.instances contains data.getInstance
+    And match response.instances[*] contains data.getInstance
 
   # @search
   # Scenario: Searching_Filter Instances by product Id

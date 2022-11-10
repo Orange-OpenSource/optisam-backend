@@ -1472,8 +1472,8 @@ func Test_acqRightsServiceServer_ComplianceAlert(t *testing.T) {
 				}, nil)
 			},
 			want: &v1.ComplianceAlertResponse{
-				CounterfeitingPercentage: float64(1),
-				OverdeploymentPercentage: float64(1),
+				CounterfeitingPercentage: float64(0.5),
+				OverdeploymentPercentage: float64(0.5),
 			},
 		},
 		{

@@ -87,9 +87,9 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 			logger.Log.Error("service/v1 - validateAggregatedRights - metric does not exist", zap.String("metric:", met))
 			return db.UpsertAggregatedRightsParams{}, nil, status.Error(codes.InvalidArgument, "MetricNotExists")
 		}
-		if err := s.metricCheckForProcessorAndNup(ctx, metrics.Metrices, idx, req.AggregationID, "", req.Scope); err != nil {
-			return db.UpsertAggregatedRightsParams{}, nil, err
-		}
+		// if err := s.metricCheckForProcessorAndNup(ctx, metrics.Metrices, idx, req.AggregationID, "", req.Scope); err != nil {
+		// 	return db.UpsertAggregatedRightsParams{}, nil, err
+		// }
 	}
 	var totalPurchaseCost, totalMaintenanceCost float64
 	totalPurchaseCost = req.AvgUnitPrice * float64(req.NumLicensesAcquired)
@@ -170,6 +170,7 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 			MaintenanceProvider:       req.MaintenanceProvider,
 			FileName:                  req.FileName,
 			FileData:                  req.FileData,
+			Repartition:               req.Repartition,
 		}, &dgworker.UpsertAggregatedRight{
 			Sku:                       req.Sku,
 			AggregationID:             req.AggregationID,
@@ -190,6 +191,7 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 			LastPurchasedOrder:        req.LastPurchasedOrder,
 			SupportNumber:             req.SupportNumber,
 			MaintenanceProvider:       req.MaintenanceProvider,
+			Repartition:               req.Repartition,
 		}, nil
 }
 

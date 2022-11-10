@@ -32,14 +32,21 @@ func (e *JobStatus) Scan(src interface{}) error {
 }
 
 type Application struct {
-	ApplicationID      string         `json:"application_id"`
-	ApplicationName    string         `json:"application_name"`
-	ApplicationVersion string         `json:"application_version"`
-	ApplicationOwner   string         `json:"application_owner"`
-	ApplicationDomain  string         `json:"application_domain"`
-	Scope              string         `json:"scope"`
-	ObsolescenceRisk   sql.NullString `json:"obsolescence_risk"`
-	CreatedOn          time.Time      `json:"created_on"`
+	ApplicationID          string         `json:"application_id"`
+	ApplicationName        string         `json:"application_name"`
+	ApplicationVersion     string         `json:"application_version"`
+	ApplicationOwner       string         `json:"application_owner"`
+	ApplicationEnvironment string         `json:"application_environment"`
+	ApplicationDomain      string         `json:"application_domain"`
+	Scope                  string         `json:"scope"`
+	ObsolescenceRisk       sql.NullString `json:"obsolescence_risk"`
+	CreatedOn              time.Time      `json:"created_on"`
+}
+
+type ApplicationsEquipment struct {
+	ApplicationID string `json:"application_id"`
+	EquipmentID   string `json:"equipment_id"`
+	Scope         string `json:"scope"`
 }
 
 type ApplicationsInstance struct {

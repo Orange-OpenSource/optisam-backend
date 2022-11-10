@@ -52,6 +52,8 @@ type ProductServiceClient interface {
 	DropAggregationData(ctx context.Context, in *DropAggregationDataRequest, opts ...grpc.CallOption) (*DropAggregationDataResponse, error)
 	CreateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(ctx context.Context, in *CreateDashboardUpdateJobRequest, opts ...grpc.CallOption) (*CreateDashboardUpdateJobResponse, error)
+	UpsertAllocatedMetricEquipment(ctx context.Context, in *UpsertAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error)
+	DeleteAllocatedMetricEquipment(ctx context.Context, in *DropAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error)
 	UpdateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
 	DeleteAcqRight(ctx context.Context, in *DeleteAcqRightRequest, opts ...grpc.CallOption) (*DeleteAcqRightResponse, error)
@@ -59,6 +61,8 @@ type ProductServiceClient interface {
 	GetEquipmentsByProduct(ctx context.Context, in *GetEquipmentsByProductRequest, opts ...grpc.CallOption) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(ctx context.Context, in *GetAggregationAcqrightsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationAcqrightsExpandedViewResponse, error)
 	GetAggregationProductsExpandedView(ctx context.Context, in *GetAggregationProductsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationProductsExpandedViewResponse, error)
+	GetApplicationsByProduct(ctx context.Context, in *GetApplicationsByProductRequest, opts ...grpc.CallOption) (*GetApplicationsByProductResponse, error)
+	GetProductCountByApp(ctx context.Context, in *GetProductCountByAppRequest, opts ...grpc.CallOption) (*GetProductCountByAppResponse, error)
 }
 
 type productServiceClient struct {
@@ -384,6 +388,24 @@ func (c *productServiceClient) CreateDashboardUpdateJob(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *productServiceClient) UpsertAllocatedMetricEquipment(ctx context.Context, in *UpsertAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error) {
+	out := new(UpsertAllocateMetricEquipementResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertAllocatedMetricEquipment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteAllocatedMetricEquipment(ctx context.Context, in *DropAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error) {
+	out := new(UpsertAllocateMetricEquipementResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteAllocatedMetricEquipment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error) {
 	out := new(GetBannerResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetBanner", in, out, opts...)
@@ -447,6 +469,24 @@ func (c *productServiceClient) GetAggregationProductsExpandedView(ctx context.Co
 	return out, nil
 }
 
+func (c *productServiceClient) GetApplicationsByProduct(ctx context.Context, in *GetApplicationsByProductRequest, opts ...grpc.CallOption) (*GetApplicationsByProductResponse, error) {
+	out := new(GetApplicationsByProductResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetApplicationsByProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetProductCountByApp(ctx context.Context, in *GetProductCountByAppRequest, opts ...grpc.CallOption) (*GetProductCountByAppResponse, error) {
+	out := new(GetProductCountByAppResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductCountByApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
@@ -486,6 +526,8 @@ type ProductServiceServer interface {
 	DropAggregationData(context.Context, *DropAggregationDataRequest) (*DropAggregationDataResponse, error)
 	CreateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	CreateDashboardUpdateJob(context.Context, *CreateDashboardUpdateJobRequest) (*CreateDashboardUpdateJobResponse, error)
+	UpsertAllocatedMetricEquipment(context.Context, *UpsertAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error)
+	DeleteAllocatedMetricEquipment(context.Context, *DropAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error)
 	UpdateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
 	DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error)
@@ -493,6 +535,8 @@ type ProductServiceServer interface {
 	GetEquipmentsByProduct(context.Context, *GetEquipmentsByProductRequest) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(context.Context, *GetAggregationAcqrightsExpandedViewRequest) (*GetAggregationAcqrightsExpandedViewResponse, error)
 	GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error)
+	GetApplicationsByProduct(context.Context, *GetApplicationsByProductRequest) (*GetApplicationsByProductResponse, error)
+	GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error)
 }
 
 // UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
@@ -604,6 +648,12 @@ func (UnimplementedProductServiceServer) CreateAcqRight(context.Context, *AcqRig
 func (UnimplementedProductServiceServer) CreateDashboardUpdateJob(context.Context, *CreateDashboardUpdateJobRequest) (*CreateDashboardUpdateJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDashboardUpdateJob not implemented")
 }
+func (UnimplementedProductServiceServer) UpsertAllocatedMetricEquipment(context.Context, *UpsertAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertAllocatedMetricEquipment not implemented")
+}
+func (UnimplementedProductServiceServer) DeleteAllocatedMetricEquipment(context.Context, *DropAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAllocatedMetricEquipment not implemented")
+}
 func (UnimplementedProductServiceServer) GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBanner not implemented")
 }
@@ -624,6 +674,12 @@ func (UnimplementedProductServiceServer) GetAggregationAcqrightsExpandedView(con
 }
 func (UnimplementedProductServiceServer) GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAggregationProductsExpandedView not implemented")
+}
+func (UnimplementedProductServiceServer) GetApplicationsByProduct(context.Context, *GetApplicationsByProductRequest) (*GetApplicationsByProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApplicationsByProduct not implemented")
+}
+func (UnimplementedProductServiceServer) GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductCountByApp not implemented")
 }
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -1267,6 +1323,42 @@ func _ProductService_CreateDashboardUpdateJob_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpsertAllocatedMetricEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertAllocateMetricEquipementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpsertAllocatedMetricEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpsertAllocatedMetricEquipment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpsertAllocatedMetricEquipment(ctx, req.(*UpsertAllocateMetricEquipementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteAllocatedMetricEquipment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DropAllocateMetricEquipementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteAllocatedMetricEquipment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteAllocatedMetricEquipment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteAllocatedMetricEquipment(ctx, req.(*DropAllocateMetricEquipementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetBanner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBannerRequest)
 	if err := dec(in); err != nil {
@@ -1389,6 +1481,42 @@ func _ProductService_GetAggregationProductsExpandedView_Handler(srv interface{},
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).GetAggregationProductsExpandedView(ctx, req.(*GetAggregationProductsExpandedViewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetApplicationsByProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApplicationsByProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetApplicationsByProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetApplicationsByProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetApplicationsByProduct(ctx, req.(*GetApplicationsByProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetProductCountByApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductCountByAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetProductCountByApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetProductCountByApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetProductCountByApp(ctx, req.(*GetProductCountByAppRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1538,6 +1666,14 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_CreateDashboardUpdateJob_Handler,
 		},
 		{
+			MethodName: "UpsertAllocatedMetricEquipment",
+			Handler:    _ProductService_UpsertAllocatedMetricEquipment_Handler,
+		},
+		{
+			MethodName: "DeleteAllocatedMetricEquipment",
+			Handler:    _ProductService_DeleteAllocatedMetricEquipment_Handler,
+		},
+		{
 			MethodName: "GetBanner",
 			Handler:    _ProductService_GetBanner_Handler,
 		},
@@ -1564,6 +1700,14 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAggregationProductsExpandedView",
 			Handler:    _ProductService_GetAggregationProductsExpandedView_Handler,
+		},
+		{
+			MethodName: "GetApplicationsByProduct",
+			Handler:    _ProductService_GetApplicationsByProduct_Handler,
+		},
+		{
+			MethodName: "GetProductCountByApp",
+			Handler:    _ProductService_GetProductCountByApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

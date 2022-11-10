@@ -57,6 +57,10 @@ type MetricServiceClient interface {
 	CreateMetricAttrSumStandard(ctx context.Context, in *MetricAttrSum, opts ...grpc.CallOption) (*MetricAttrSum, error)
 	// UpdateMetricAttrSumStandard will update an instance.number.standard metric
 	UpdateMetricAttrSumStandard(ctx context.Context, in *MetricAttrSum, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
+	// CreateMetricEquipAttrStandard will create an equipment.attribute.standard metric
+	CreateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*MetricEquipAtt, error)
+	// UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
+	UpdateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
 	//GetMetricConfiguration will get configuration of a metric
 	GetMetricConfiguration(ctx context.Context, in *GetMetricConfigurationRequest, opts ...grpc.CallOption) (*GetMetricConfigurationResponse, error)
 	DropMetricData(ctx context.Context, in *DropMetricDataRequest, opts ...grpc.CallOption) (*DropMetricDataResponse, error)
@@ -250,6 +254,24 @@ func (c *metricServiceClient) UpdateMetricAttrSumStandard(ctx context.Context, i
 	return out, nil
 }
 
+func (c *metricServiceClient) CreateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*MetricEquipAtt, error) {
+	out := new(MetricEquipAtt)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetricEquipAttrStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) UpdateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*UpdateMetricResponse, error) {
+	out := new(UpdateMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/UpdateMetricEquipAttrStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *metricServiceClient) GetMetricConfiguration(ctx context.Context, in *GetMetricConfigurationRequest, opts ...grpc.CallOption) (*GetMetricConfigurationResponse, error) {
 	out := new(GetMetricConfigurationResponse)
 	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/GetMetricConfiguration", in, out, opts...)
@@ -312,6 +334,10 @@ type MetricServiceServer interface {
 	CreateMetricAttrSumStandard(context.Context, *MetricAttrSum) (*MetricAttrSum, error)
 	// UpdateMetricAttrSumStandard will update an instance.number.standard metric
 	UpdateMetricAttrSumStandard(context.Context, *MetricAttrSum) (*UpdateMetricResponse, error)
+	// CreateMetricEquipAttrStandard will create an equipment.attribute.standard metric
+	CreateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*MetricEquipAtt, error)
+	// UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
+	UpdateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*UpdateMetricResponse, error)
 	//GetMetricConfiguration will get configuration of a metric
 	GetMetricConfiguration(context.Context, *GetMetricConfigurationRequest) (*GetMetricConfigurationResponse, error)
 	DropMetricData(context.Context, *DropMetricDataRequest) (*DropMetricDataResponse, error)
@@ -380,6 +406,12 @@ func (UnimplementedMetricServiceServer) CreateMetricAttrSumStandard(context.Cont
 }
 func (UnimplementedMetricServiceServer) UpdateMetricAttrSumStandard(context.Context, *MetricAttrSum) (*UpdateMetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricAttrSumStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) CreateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*MetricEquipAtt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricEquipAttrStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) UpdateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*UpdateMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricEquipAttrStandard not implemented")
 }
 func (UnimplementedMetricServiceServer) GetMetricConfiguration(context.Context, *GetMetricConfigurationRequest) (*GetMetricConfigurationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMetricConfiguration not implemented")
@@ -759,6 +791,42 @@ func _MetricService_UpdateMetricAttrSumStandard_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetricService_CreateMetricEquipAttrStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricEquipAtt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).CreateMetricEquipAttrStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/CreateMetricEquipAttrStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).CreateMetricEquipAttrStandard(ctx, req.(*MetricEquipAtt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_UpdateMetricEquipAttrStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricEquipAtt)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).UpdateMetricEquipAttrStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/UpdateMetricEquipAttrStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).UpdateMetricEquipAttrStandard(ctx, req.(*MetricEquipAtt))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MetricService_GetMetricConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMetricConfigurationRequest)
 	if err := dec(in); err != nil {
@@ -878,6 +946,14 @@ var _MetricService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMetricAttrSumStandard",
 			Handler:    _MetricService_UpdateMetricAttrSumStandard_Handler,
+		},
+		{
+			MethodName: "CreateMetricEquipAttrStandard",
+			Handler:    _MetricService_CreateMetricEquipAttrStandard_Handler,
+		},
+		{
+			MethodName: "UpdateMetricEquipAttrStandard",
+			Handler:    _MetricService_UpdateMetricEquipAttrStandard_Handler,
 		},
 		{
 			MethodName: "GetMetricConfiguration",

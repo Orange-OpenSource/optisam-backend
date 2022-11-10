@@ -23,7 +23,8 @@ type AcquiredRights {
     acqRights.softwareProvider         
     acqRights.lastPurchasedOrder       
     acqRights.supportNumber            
-    acqRights.maintenanceProvider      
+    acqRights.maintenanceProvider  
+    acqRights.repartition    
     <~product.acqRights>                  
 }
 
@@ -164,6 +165,19 @@ type MetricAttrSum {
     metric.attr_sum.reference_value                           
 }
 
+type MetricEquipAttr {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.equip_attr.equipment_type      
+    metric.equip_attr.attr_name        
+    metric.equip_attr.environment        
+    metric.equip_attr.value                           
+} 
+
 type MetricIPS {
     type_name
     scopes
@@ -207,7 +221,9 @@ type MetricOracleNUP {
     metric.oracle_nup.attr_core_factor
     metric.oracle_nup.attr_num_cores  
     metric.oracle_nup.attr_num_cpu    
-    metric.oracle_nup.num_users                        
+    metric.oracle_nup.num_users     
+    metric.oracle_nup.transform
+    metric.oracle_nup.transform_metric_name              
 }
 
 type MetricSPS {
@@ -258,7 +274,8 @@ type AggregatedRights{
     aggregatedRights.softwareProvider             
     aggregatedRights.lastPurchasedOrder         
     aggregatedRights.supportNumber               
-    aggregatedRights.maintenanceProvider  
+    aggregatedRights.maintenanceProvider
+    aggregatedRights.repartition
 }
 
 type Product {
@@ -275,6 +292,7 @@ type Product {
     product.equipment
     product.acqRights
     product.users
+    product.allocation
     <~application.product>
     <~instance.product>
     <~editor.product>                         
@@ -289,4 +307,14 @@ type User {
     users.id
     <~equipment.users>
     <~product.users>               
+}
+
+type MetricAllocation {
+    type_name
+    scopes
+    updated
+    created
+    allocation.metric
+    product.swidtag
+    equipment.id               
 }

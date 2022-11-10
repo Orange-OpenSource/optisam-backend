@@ -8,18 +8,65 @@
         "version": "##string",
         "numOfApplications": "##number",
         "numofEquipments": "##number",
-        "totalCost": "##number"
+        "totalCost": "##number",
+        "allocatedMetric":"##string",
+        "equipmentUser":"##number",
+        "allocatedUser": "##number"
     },
     "getProduct": {
-        "swidTag": "ibm_cognos_1",
-        "product_name": "IBM Cognos Analytics 11",
+        "swidTag": "IBM_Websphere_IBM_9.0.5",
+        "name": "IBM Websphere",
         "editor": "IBM",
-        "version": "11.1.7",
-        "num_applications": 1,
-        "num_equipments": 2,
-        "defined_metrics": [
-    "ibm_pvu_75" ]
+        "version": "9.0.5",
+        "numOfApplications": 1,
+        "edition": "#string",
+        "numofEquipments": 2,
+        "category": "#string",
+        "totalCost": 0,
+        "allocatedMetric": "#string",
+        "allocatedUser": 0
+        
     },
+    "get_productDetail":{
+        "SKU": "adobe_media_instance_1_1,adobe_media_instance_1_2",
+        "avgUnitPrice": 196,
+        "computedCost": 9800,
+        "computedDetails": "Total instances: 50",
+        "costOptimization": false,
+        "deltaCost": 14700,
+        "deltaNumber": 75,
+        "metric": "instance_1",
+        "metricNotDefined": false,
+        "notDeployed": false,
+        "numAcqLicences": 125,
+        "numCptLicences": 50,
+        "productName": "Adobe Media Server",
+        "purchaseCost": 24500,
+        "swidTag": "Adobe_Media_Server_Adobe_5.0.16",
+        "totalCost": 24500
+
+    },
+    "get_Aggregation_product_Details":{
+
+    "SKU": "Oracle_enterprise_database_nup",
+    "aggregationName": "Oracle_enterprise_database",
+    "avgUnitPrice": 300,
+    "computedCost": 23700,
+    "computedDetails": "Total users: 79",
+    "costOptimization": false,
+    "deltaCost": -20700,
+    "deltaNumber": -69,
+    "metric": "oracle.nup",
+    "metricNotDefined": false,
+    "notDeployed": false,
+    "numAcqLicences": 10,
+    "numCptLicences": 79,
+    "productNames": "Oracle Enterprise Database 9,Oracle Enterprise Database 18,Oracle Enterprise Database 11,Oracle Enterprise Database 21,Oracle Enterprise Database 10",
+    "purchaseCost": 3000,
+    "swidTags": "Oracle_Enterprise_Database_11_Oracle_11.2.0.4,Oracle_Enterprise_Database_18_Oracle_18.14.0,Oracle_Enterprise_Database_9_Oracle_9.2.0.8,Oracle_Enterprise_Database_21_Oracle_21.3.0,Oracle_Enterprise_Database_10_Oracle_10.2.0.5",
+    "totalCost": 3500
+    },
+
     "createProduct": {
         "swidTag": "p3",
         "name": "prod3",
@@ -51,68 +98,58 @@
         }
     },
     "overview": {
-        "num_editors": 6,
-        "num_products": 28
+        "num_editors": 8,
+        "num_products": 36,
+        "counterfeiting_percentage_val": 525,
+        "overdeployment_percentage": 90.16,
+        "total_counterfeiting_amount": -73260,
+        "total_license_cost": 1372275,
+        "total_maintenance_cost": 185230,
+        "total_underusage_amount": 884612
+    },
+    "compliance": {
+        "counterfeiting_percentage": "#number",
+        "overdeployment_percentage": "#number"
+    },
+    "Metric_product":{
+        "metric_name": "#string",
+        "num_products": "#number"
     },
     "schema_overview": {
         "num_editors": "#number",
-        "num_products": "#number"
+        "num_products": "#number",
+        "total_counterfeiting_amount": "#number",
+        "total_license_cost": "#number",
+        "total_maintenance_cost": "#number",
+        "total_underusage_amount": "##number"
     },
     "dashboard_products": {
-        "not_acquired_products": 5,
-        "not_deployed_products": 3,
-        "not_acquired_products_percentage": 20,
-        "not_deployed_products_percentage": 12,
+        "not_acquired_products": 4,
+        "not_deployed_products": 2,
+        "not_acquired_products_percentage": 11.11,
+        "not_deployed_products_percentage": 5.56,
+
         "products_not_deployed": [
             {
-                "swid_tag": "oracle_micros_notdeployed",
-                "product_name": "Oracle Micros",
+                "swid_tag": "Oracle_Micros_11_Oracle_15.0.0",
+                "product_name": "Oracle Micros 11",
                 "editor": "Oracle",
-                 "version": "6.1"
+                 "version": "15.0.0"
             },
             {
-                "swid_tag": "oracle_mysql_1",
-                "product_name": "Oracle Mysql 10",
-                "editor": "Oracle",
-                "version": "10.1.1"
-            },
-            {   "swid_tag": "oracle_micros_2",
-                "product_name": "Oracle Micros",
-                "editor": "Oracle",
-                "version": "11.1.1"
-                    
+                "swid_tag": "Board_Klaxoon_1.17.2",
+                "product_name": "Board",
+                "editor": "Klaxoon",
+                "version": "1.17.2"
             }
+            
         ],
         "products_not_acquired": [
             {
-                "swid_tag": "ibm_db2_1_notacquired",
-                "product_name": "IBM DB2 11",
-                "version": "11.5",
-                "editor": "IBM",
-            },
-            {
-                "swid_tag": "without_app_1",
-                "product_name": "Without application prod 1",
-                "version": "",
-                "editor": ""
-            },
-            {
-                "swid_tag": "random_prod_2",
+                "swid_tag": "Random_product_2_Random_x.y.z",
                 "product_name": "Random product 2",
-                "editor": "Random",
-                 "version": "x.y.z"
-            },
-            {
-                "swid_tag": "without_inst_1",
-                "product_name": "Without instance prod 1",
-                "editor": "",
-                "version": ""
-            },
-            {
-                "swid_tag": "random_prod_1",
-                "product_name": "Random product 1",
                 "version": "x.y.z",
-                "editor": "Random",
+                "editor": "Random"
             }
         ]
     }

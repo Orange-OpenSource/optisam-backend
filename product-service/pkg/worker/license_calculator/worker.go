@@ -148,6 +148,7 @@ func (w *LicenseCalWorker) addComputedLicences(ctx context.Context, resp []*l_v1
 			PurchaseCost:        decimal.NewFromFloat(helper.ToFixed(compLic.PurchaseCost, 2)),
 			ComputedCost:        decimal.NewFromFloat(helper.ToFixed(compLic.ComputedCost, 2)),
 			DeltaNumber:         compLic.DeltaNumber,
+			CostOptimization:    sql.NullBool{Bool: compLic.CostOptimization, Valid: true},
 			DeltaCost:           decimal.NewFromFloat(helper.ToFixed(compLic.DeltaCost, 2)),
 			AvgUnitPrice:        decimal.NewFromFloat(helper.ToFixed(compLic.AvgUnitPrice, 2)),
 			ComputedDetails:     compLic.ComputedDetails,

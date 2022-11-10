@@ -4,12 +4,12 @@ Feature: License Service Test
   Background:
   # * def licenseServiceUrl = "https://optisam-license-int.apps.fr01.paas.tech.orange"
     * url licenseServiceUrl+'/api/v1/license'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 # Oracle
   Scenario: Validate License for ops metric : oracle.processor.standard with base equipment type Partition 

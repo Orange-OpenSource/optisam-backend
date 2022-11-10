@@ -49,6 +49,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					EndEqTypeId:           "e4",
 					NumberOfUsers:         2,
 					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				},
 			},
 			setup: func() {
@@ -98,6 +100,16 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 						ID: "e4",
 					},
 				}, nil)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Times(1).Return(&repo.MetricOPSConfig{
+					Name:                "OPS",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+				}, nil)
 
 				mockRepo.EXPECT().CreateMetricOracleNUPStandard(ctx, &repo.MetricNUPOracle{
 					Name:                  "NUP",
@@ -109,6 +121,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e4",
 					NumberOfUsers:         2,
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				}, "Scope1").Times(1).Return(&repo.MetricNUPOracle{
 					ID:                    "m1",
 					Name:                  "NUP",
@@ -120,6 +134,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e4",
 					NumberOfUsers:         2,
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				}, nil)
 			},
 			want: &v1.MetricNUP{
@@ -133,6 +149,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				BaseEqTypeId:          "e2",
 				EndEqTypeId:           "e4",
 				NumberOfUsers:         2,
+				Transform:             true,
+				TransformMetricName:   "OPS",
 			},
 		},
 		{name: "SUCCESS - only one level present",
@@ -149,6 +167,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					EndEqTypeId:           "e2",
 					NumberOfUsers:         2,
 					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				},
 			},
 			setup: func() {
@@ -196,7 +216,16 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 						ID: "e4",
 					},
 				}, nil)
-
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Times(1).Return(&repo.MetricOPSConfig{
+					Name:                "OPS",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+				}, nil)
 				mockRepo.EXPECT().CreateMetricOracleNUPStandard(ctx, &repo.MetricNUPOracle{
 					Name:                  "NUP",
 					NumCoreAttrID:         "a1",
@@ -207,6 +236,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e2",
 					NumberOfUsers:         2,
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				}, "Scope1").Times(1).Return(&repo.MetricNUPOracle{
 					ID:                    "m1",
 					Name:                  "NUP",
@@ -218,6 +249,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e2",
 					NumberOfUsers:         2,
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				}, nil)
 			},
 			want: &v1.MetricNUP{
@@ -231,6 +264,8 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 				BaseEqTypeId:          "e2",
 				EndEqTypeId:           "e2",
 				NumberOfUsers:         2,
+				Transform:             true,
+				TransformMetricName:   "OPS",
 			},
 		},
 		{name: "FAILURE - can not retrieve claims",
@@ -1577,6 +1612,273 @@ func Test_metricServiceServer_CreateMetricOracleNUPStandard(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "FAILURE - transform metric name cannot fetch metrics",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name not exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, repo.ErrNoData).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name cannot be empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name should be empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             false,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Times(1).Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Times(1).Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
+			},
+			wantErr: true,
+		},
 		{name: "FAILURE - cannot create metric",
 			args: args{
 				ctx: ctx,
@@ -1706,6 +2008,8 @@ func Test_metricServiceServer_UpdateMetricNUP(t *testing.T) {
 					EndEqTypeId:           "e4",
 					NumberOfUsers:         2,
 					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				},
 			},
 			setup: func() {
@@ -1756,7 +2060,16 @@ func Test_metricServiceServer_UpdateMetricNUP(t *testing.T) {
 						ID: "e4",
 					},
 				}, nil).Times(1)
-
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Times(1).Return(&repo.MetricOPSConfig{
+					Name:                "OPS",
+					NumCoreAttr:         "server.cores.number",
+					NumCPUAttr:          "server.processors.number",
+					CoreFactorAttr:      "server.corefactor",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+				}, nil)
 				mockRepo.EXPECT().UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
 					Name:                  "NUP",
 					NumCoreAttrID:         "a1",
@@ -1767,6 +2080,8 @@ func Test_metricServiceServer_UpdateMetricNUP(t *testing.T) {
 					BaseEqTypeID:          "e2",
 					EndEqTypeID:           "e4",
 					NumberOfUsers:         2,
+					Transform:             true,
+					TransformMetricName:   "OPS",
 				}, "Scope1").Return(nil).Times(1)
 			},
 			want: &v1.UpdateMetricResponse{
@@ -3265,6 +3580,326 @@ func Test_metricServiceServer_UpdateMetricNUP(t *testing.T) {
 					EndEqTypeID:           "e4",
 					NumberOfUsers:         2,
 				}, "Scope1").Return(errors.New("test error")).Times(1)
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name cannot fetch metrics",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name not exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, repo.ErrNoData).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name cannot be empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             true,
+					TransformMetricName:   "",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
+			},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - transform metric name should be empty",
+			args: args{
+				ctx: ctx,
+				req: &v1.MetricNUP{
+					Name:                  "NUP",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					NumberOfUsers:         2,
+					Scopes:                []string{"Scope1"},
+					Transform:             false,
+					TransformMetricName:   "OPS",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetMetricConfigNUP(ctx, "NUP", "Scope1").Return(&repo.MetricNUPConfig{
+					Name:                "NUP",
+					NumCoreAttr:         "a1",
+					NumCPUAttr:          "a2",
+					CoreFactorAttr:      "a3",
+					StartEqType:         "e9",
+					AggerateLevelEqType: "e8",
+					BaseEqType:          "e7",
+					EndEqType:           "e6",
+					NumberOfUsers:       2,
+				}, nil).Times(1)
+				mockRepo.EXPECT().ListMetrices(ctx, "Scope1").Return([]*repo.MetricInfo{
+					{
+						Name: "ONS",
+					},
+					{
+						Name: "WS",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
+					{
+						ID:       "e1",
+						ParentID: "e2",
+					},
+					{
+						ID:       "e2",
+						ParentID: "e3",
+						Attributes: []*repo.Attribute{
+							{
+								ID:   "a1",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a2",
+								Type: repo.DataTypeInt,
+							},
+							{
+								ID:   "a3",
+								Type: repo.DataTypeInt,
+							},
+						},
+					},
+					{
+						ID:       "e3",
+						ParentID: "e4",
+					},
+					{
+						ID: "e4",
+					},
+				}, nil).Times(1)
+				mockRepo.EXPECT().GetMetricConfigOPS(ctx, "OPS", "Scope1").Return(nil, errors.New("test error")).Times(1)
+
 			},
 			want: &v1.UpdateMetricResponse{
 				Success: false,

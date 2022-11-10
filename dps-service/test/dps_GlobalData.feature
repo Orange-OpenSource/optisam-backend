@@ -3,12 +3,12 @@ Feature: DPS Service Test - Global Data : admin user
 
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = "AUT"
+    * def scope = "API"
 
 
 

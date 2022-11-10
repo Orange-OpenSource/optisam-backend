@@ -15,6 +15,7 @@ import (
 	repo "optisam-backend/report-service/pkg/repository/v1"
 	"optisam-backend/report-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/report-service/pkg/worker"
+	"regexp"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb" // nolint: staticcheck
@@ -23,7 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
+// for report service deployment
 type ReportServiceServer struct {
 	reportRepo repo.Report
 	queue      workerqueue.Workerqueue
@@ -214,9 +215,18 @@ func (r *ReportServiceServer) ListReport(ctx context.Context, req *v1.ListReport
 		apiresp.Reports[i].ReportStatus = string(dbresp[i].ReportStatus)
 		apiresp.Reports[i].CreatedBy = dbresp[i].CreatedBy
 		apiresp.Reports[i].CreatedOn = createdOn
+		apiresp.Reports[i].Editor = extractValue(string(dbresp[i].ReportMetadata), "editor")
 	}
 	return &apiresp, nil
 
+}
+
+func extractValue(body string, key string) string {
+	keystr := "\"" + key + "\":[^,;\\]}]*"
+	r, _ := regexp.Compile(keystr)
+	match := r.FindString(body)
+	keyValMatch := strings.Split(match, ":")
+	return strings.ReplaceAll(keyValMatch[1], "\"", "")
 }
 
 func (r *ReportServiceServer) DownloadReport(ctx context.Context, req *v1.DownloadReportRequest) (*v1.DownloadReportResponse, error) {
@@ -236,8 +246,14 @@ func (r *ReportServiceServer) DownloadReport(ctx context.Context, req *v1.Downlo
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to get Reports-> "+err.Error())
 	}
-	dbrespBytes := dbresp
+	createdOn, _ := ptypes.TimestampProto(dbresp.CreatedOn)
 
-	apiresp := v1.DownloadReportResponse{ReportData: dbrespBytes}
+	apiresp := v1.DownloadReportResponse{
+		ReportType: dbresp.ReportTypeName,
+		ReportData: dbresp.ReportData,
+		Scope:      dbresp.Scope,
+		CreatedBy:  dbresp.CreatedBy,
+		CreatedOn:  createdOn,
+	}
 	return &apiresp, nil
 }

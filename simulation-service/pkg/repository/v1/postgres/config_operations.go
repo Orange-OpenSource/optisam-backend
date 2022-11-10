@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"optisam-backend/common/optisam/ctxmanage"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/simulation-service/pkg/repository/v1"
 	"strings"
@@ -17,12 +16,12 @@ const (
 	insertMetadata   = `INSERT INTO config_metadata (config_id,equipment_type,attribute_name, config_filename) VALUES($1,$2,$3,$4) RETURNING id`
 	insertData       = `INSERT INTO config_data (metadata_id,attribute_value,json_data) VALUES`
 	deleteMetadata   = `DELETE FROM config_metadata WHERE config_id=$1 AND id IN (`
-	insertMasterdata = `INSERT INTO config_master (name,equipment_type,status,created_by,created_on,updated_by,updated_on) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`
-	updateMasterData = `UPDATE config_master SET updated_by = $1, updated_on = $2`
+	insertMasterdata = `INSERT INTO config_master (name,equipment_type,status,created_by,created_on,updated_by,updated_on,scope) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`
+	updateMasterData = `UPDATE config_master SET updated_by = $1, updated_on = $2 WHERE id = $3 AND scope = $4`
 )
 
 // CreateConfig implements SimulationService CreateConfig function
-func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1.MasterData, data []*v1.ConfigData) (retErr error) {
+func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1.MasterData, data []*v1.ConfigData, scope string) (retErr error) {
 	// initiating  a database transaction
 	txn, err := r.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
@@ -44,7 +43,7 @@ func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1
 
 	var configID int32
 	// Insert into master table
-	err = txn.QueryRowContext(ctx, insertMasterdata, masterData.Name, masterData.EquipmentType, masterData.Status, masterData.CreatedBy, masterData.CreatedOn, masterData.UpdatedBy, masterData.UpdatedOn).Scan(&configID)
+	err = txn.QueryRowContext(ctx, insertMasterdata, masterData.Name, masterData.EquipmentType, masterData.Status, masterData.CreatedBy, masterData.CreatedOn, masterData.UpdatedBy, masterData.UpdatedOn, scope).Scan(&configID)
 
 	if err != nil {
 		return err
@@ -63,7 +62,7 @@ func (r *SimulationServiceRepo) CreateConfig(ctx context.Context, masterData *v1
 }
 
 // UpdateConfig implements SimulationService UpdateConfig function
-func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32, eqType string, metadataIDs []int32, data []*v1.ConfigData) (retErr error) {
+func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32, eqType, updatedBy string, metadataIDs []int32, data []*v1.ConfigData, scope string) (retErr error) {
 	// initiating  a database transaction
 	txn, err := r.db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
@@ -102,14 +101,8 @@ func (r *SimulationServiceRepo) UpdateConfig(ctx context.Context, configID int32
 			}
 		}
 	}
-
-	userClaims, ok := ctxmanage.RetrieveClaims(ctx)
-	if !ok {
-		return fmt.Errorf("cannot find claims in context")
-	}
-
 	// Update master data
-	_, err = txn.ExecContext(ctx, updateMasterData, userClaims.UserID, time.Now().UTC())
+	_, err = txn.ExecContext(ctx, updateMasterData, updatedBy, time.Now().UTC(), configID, scope)
 	if err != nil {
 		return err
 	}

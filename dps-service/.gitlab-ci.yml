@@ -1,0 +1,145 @@
+.dps-template:
+  before_script:
+    - ls -alsh
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - cd dps-service
+   
+
+.dps-lint:
+  extends: .dps-template
+  image: ${DOCKER_PROXY_HOST}/golangci/golangci-lint:latest-alpine
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/license-service/code-quality-report.json 
+    reports:
+      codequality: ${CI_PROJECT_DIR}/license-service/code-quality-report.json
+      # #junit: ${CI_PROJECT_DIR}/license-service/build/tests/lint-results.xml
+    expire_in: 2d
+  script:
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - unset HTTPS_PROXY
+    - golangci-lint run | tee code-quality-report.json  
+    - ls -alSh
+  allow_failure: true
+
+.dps-test:
+  extends: .dps-template
+  services:
+    - name: ${DOCKER_PROXY_HOST}/postgres:latest
+      alias: postgres
+  variables:
+      POSTGRES_DB: optisam
+      POSTGRES_USER: optisam
+      POSTGRES_PASSWORD: "optisam"
+  image: ${DOCKER_PROXY_HOST}/golang:${GO_VERSION}
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/dps-service/build/tests/test-results.xml
+      - ${CI_PROJECT_DIR}/dps-service/build/tests/cover.out
+      - ${CI_PROJECT_DIR}/dps-service/build/tests/cover.html
+    reports:
+      junit: ${CI_PROJECT_DIR}/dps-service/build/tests/test-results.xml
+    expire_in: 3d
+  script:
+    - export GOPATH="${CI_PROJECT_DIR}/dps_service"
+    - export GOGC=off
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - mkdir -p build/tests
+    - go get gotest.tools/gotestsum@v1.7.0
+    - ../dps_service/bin/gotestsum --junitfile build/tests/test-results.xml -- -coverprofile=build/tests/cover.out ./...
+    - go tool cover -html=build/tests/cover.out -o build/tests/cover.html
+    - ls -alSh build/tests/ 
+
+.dps-sonar:
+  extends: .dps-template
+  image: 
+    name: ${DOCKER_PROXY_HOST}/sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  script:
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - cd dps-service
+    - sonar-scanner -Dsonar.projectName=dps-service -Dsonar.projectKey=dps-service -Dsonar.login=${SONAR_TOKEN} ${SONAR_ARGS} -X
+  allow_failure: true
+  
+.dps-build:
+  extends: .dps-template
+  image: ${DOCKER_PROXY_HOST}/golang:${GO_VERSION}-alpine
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/dps_service/bin/
+    expire_in: 3d
+  script:
+    - export GOPATH="${CI_PROJECT_DIR}/dps_service"
+    - export GOGC=off
+    - export GO111MODULE="on"
+    - export GOPROXY="${GOPROXY}"
+    - export CI_BUILD_DATE=$(date +%FT%T%z)
+    - (cd cmd/server; go install -v -ldflags="-X optisam-backend/dps-service/pkg/cmd.version=${CI_COMMIT_SHA} -X optisam-backend/dps-service/pkg/cmd.commitHash=${CI_COMMIT_SHA} -X optisam-backend/dps-service/pkg/cmd.buildDate=${CI_BUILD_DATE}" .)
+    - ls -alSh ../dps_service/bin
+
+.dps-package:
+  extends: .dps-template
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - cd ..
+    - mkdir -p /kaniko/.docker
+    - echo $DOCKER_AUTH_CONFIG > /kaniko/.docker/config.json
+  # - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/dps-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/dps-service:$TAG  
+
+.dps-deploy_noprod:
+  extends: .dps-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT}
+    - oc create configmap config-dps-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc delete deploymentconfig optisam-dps
+    - oc process -f dps-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-dps --watch=true
+    - |
+      end=$((SECONDS+300))
+      while [ "$(oc get pods -l=app='optisam-dps' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+        sleep 8
+        echo "Waiting for dps pod to be ready."
+      done
+
+.dps-deploy_prod:
+  extends: .dps-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  environment:
+    name: prod
+    url: https://optisam-dps-prod.apps.fr01.paas.tech.orange
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT_PROD}
+    - oc create configmap config-dps-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f dps-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-dps --watch=true
+    
+
+.dps-integration_test:
+  extends: .dps-template
+  image: optisam-it-virt-docker-stable.repos.tech.orange/optisam/karate:latest
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/dps-service/surefire-reports
+      - ${CI_PROJECT_DIR}/dps-service/cucumber-html-reports
+    reports:
+      junit: ${CI_PROJECT_DIR}/dps-service/surefire-reports/dps.xml
+    expire_in: 3d
+  script:
+    - java -Dkarate.config.dir=${CI_PROJECT_DIR} -jar /opt/karate/karate.jar -e=${ENV} -t ~@ignore -o ${CI_PROJECT_DIR}/dps-service/ .
+    - ls -alSh
+  allow_failure: true

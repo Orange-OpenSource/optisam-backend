@@ -12,7 +12,7 @@ type Querier interface {
 	GetConfig(ctx context.Context, arg GetConfigParams) (ConfigMaster, error)
 	GetDataByMetadataID(ctx context.Context, metadataID int32) ([]GetDataByMetadataIDRow, error)
 	GetMetadatabyConfigID(ctx context.Context, configID int32) ([]GetMetadatabyConfigIDRow, error)
-	ListConfig(ctx context.Context, arg ListConfigParams) ([]ConfigMaster, error)
+	ListConfig(ctx context.Context, arg ListConfigParams) ([]ListConfigRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

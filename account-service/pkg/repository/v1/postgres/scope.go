@@ -13,7 +13,7 @@ import (
 
 const (
 	insertScope       = `INSERT INTO scopes (scope_code,scope_name,created_by,scope_type) VALUES ($1,$2,$3,$4)`
-	updateScopeInRoot = `UPDATE groups SET scopes = array_append(scopes, $1) WHERE id = 1`
+	updateScopeInRoot = `UPDATE groups SET scopes = array_append(scopes, $1) WHERE fully_qualified_name = 'ROOT'`
 	getScope          = `SELECT scope_code,scope_name,created_by,created_on,scope_type from scopes WHERE scope_code = $1`
 	getGroupNames     = `Select ARRAY_AGG(name) from groups where $1 = Any (scopes);`
 )

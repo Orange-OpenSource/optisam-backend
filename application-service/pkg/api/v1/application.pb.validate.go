@@ -123,6 +123,8 @@ func (m *GetEquipmentsByApplicationResponse) Validate() error {
 		return nil
 	}
 
+	// no validation rules for TotalRecords
+
 	return nil
 }
 
@@ -182,155 +184,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetEquipmentsByApplicationResponseValidationError{}
-
-// Validate checks the field values on GetProductsByApplicationInstanceRequest
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, an error is returned.
-func (m *GetProductsByApplicationInstanceRequest) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	if !_GetProductsByApplicationInstanceRequest_Scope_Pattern.MatchString(m.GetScope()) {
-		return GetProductsByApplicationInstanceRequestValidationError{
-			field:  "Scope",
-			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
-		}
-	}
-
-	// no validation rules for ApplicationId
-
-	// no validation rules for InstanceId
-
-	return nil
-}
-
-// GetProductsByApplicationInstanceRequestValidationError is the validation
-// error returned by GetProductsByApplicationInstanceRequest.Validate if the
-// designated constraints aren't met.
-type GetProductsByApplicationInstanceRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetProductsByApplicationInstanceRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetProductsByApplicationInstanceRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetProductsByApplicationInstanceRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetProductsByApplicationInstanceRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetProductsByApplicationInstanceRequestValidationError) ErrorName() string {
-	return "GetProductsByApplicationInstanceRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetProductsByApplicationInstanceRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetProductsByApplicationInstanceRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetProductsByApplicationInstanceRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetProductsByApplicationInstanceRequestValidationError{}
-
-var _GetProductsByApplicationInstanceRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
-
-// Validate checks the field values on GetProductsByApplicationInstanceResponse
-// with the rules defined in the proto definition for this message. If any
-// rules are violated, an error is returned.
-func (m *GetProductsByApplicationInstanceResponse) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	return nil
-}
-
-// GetProductsByApplicationInstanceResponseValidationError is the validation
-// error returned by GetProductsByApplicationInstanceResponse.Validate if the
-// designated constraints aren't met.
-type GetProductsByApplicationInstanceResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetProductsByApplicationInstanceResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetProductsByApplicationInstanceResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetProductsByApplicationInstanceResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetProductsByApplicationInstanceResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetProductsByApplicationInstanceResponseValidationError) ErrorName() string {
-	return "GetProductsByApplicationInstanceResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetProductsByApplicationInstanceResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetProductsByApplicationInstanceResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetProductsByApplicationInstanceResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetProductsByApplicationInstanceResponseValidationError{}
 
 // Validate checks the field values on DropObscolenscenceDataRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -491,9 +344,7 @@ func (m *UpsertApplicationRequest) Validate() error {
 
 	// no validation rules for Name
 
-	// no validation rules for Version
-
-	// no validation rules for Owner
+	// no validation rules for Environment
 
 	// no validation rules for Domain
 
@@ -633,6 +484,160 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpsertApplicationResponseValidationError{}
+
+// Validate checks the field values on UpsertApplicationEquipRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpsertApplicationEquipRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ApplicationId
+
+	// no validation rules for Scope
+
+	if v, ok := interface{}(m.GetEquipments()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return UpsertApplicationEquipRequestValidationError{
+				field:  "Equipments",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// UpsertApplicationEquipRequestValidationError is the validation error
+// returned by UpsertApplicationEquipRequest.Validate if the designated
+// constraints aren't met.
+type UpsertApplicationEquipRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertApplicationEquipRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertApplicationEquipRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertApplicationEquipRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertApplicationEquipRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertApplicationEquipRequestValidationError) ErrorName() string {
+	return "UpsertApplicationEquipRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertApplicationEquipRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertApplicationEquipRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertApplicationEquipRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertApplicationEquipRequestValidationError{}
+
+// Validate checks the field values on UpsertApplicationEquipResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpsertApplicationEquipResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// UpsertApplicationEquipResponseValidationError is the validation error
+// returned by UpsertApplicationEquipResponse.Validate if the designated
+// constraints aren't met.
+type UpsertApplicationEquipResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertApplicationEquipResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertApplicationEquipResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertApplicationEquipResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertApplicationEquipResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertApplicationEquipResponseValidationError) ErrorName() string {
+	return "UpsertApplicationEquipResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertApplicationEquipResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertApplicationEquipResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertApplicationEquipResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertApplicationEquipResponseValidationError{}
 
 // Validate checks the field values on DropApplicationDataRequest with the
 // rules defined in the proto definition for this message. If any rules are
@@ -1465,6 +1470,8 @@ func (m *Application) Validate() error {
 
 	// no validation rules for NumOfEquipments
 
+	// no validation rules for Environment
+
 	return nil
 }
 
@@ -1589,6 +1596,8 @@ func (m *ApplicationSearchParams) Validate() error {
 			}
 		}
 	}
+
+	// no validation rules for Environment
 
 	return nil
 }
@@ -4088,6 +4097,86 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = PostRiskMatrixResponseValidationError{}
+
+// Validate checks the field values on UpsertApplicationEquipRequestEquipment
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertApplicationEquipRequestEquipment) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if _, ok := _UpsertApplicationEquipRequestEquipment_Operation_InLookup[m.GetOperation()]; !ok {
+		return UpsertApplicationEquipRequestEquipmentValidationError{
+			field:  "Operation",
+			reason: "value must be in list [add delete]",
+		}
+	}
+
+	return nil
+}
+
+// UpsertApplicationEquipRequestEquipmentValidationError is the validation
+// error returned by UpsertApplicationEquipRequestEquipment.Validate if the
+// designated constraints aren't met.
+type UpsertApplicationEquipRequestEquipmentValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertApplicationEquipRequestEquipmentValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertApplicationEquipRequestEquipmentValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertApplicationEquipRequestEquipmentValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertApplicationEquipRequestEquipmentValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertApplicationEquipRequestEquipmentValidationError) ErrorName() string {
+	return "UpsertApplicationEquipRequestEquipmentValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertApplicationEquipRequestEquipmentValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertApplicationEquipRequestEquipment.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertApplicationEquipRequestEquipmentValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertApplicationEquipRequestEquipmentValidationError{}
+
+var _UpsertApplicationEquipRequestEquipment_Operation_InLookup = map[string]struct{}{
+	"add":    {},
+	"delete": {},
+}
 
 // Validate checks the field values on UpsertInstanceRequestProduct with the
 // rules defined in the proto definition for this message. If any rules are

@@ -43,6 +43,154 @@
         ]
       }
     },
+    "/api/v1/equipment/allocatedmetric": {
+      "put": {
+        "operationId": "EquipmentService_UpsertEquipmentAllocatedMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentAllocatedMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      },
+      "patch": {
+        "operationId": "EquipmentService_UpsertEquipmentAllocatedMetric2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentAllocatedMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipment/allocatedmetric/{equipment_id}": {
+      "delete": {
+        "operationId": "EquipmentService_DeleteEquipmentAllocatedMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertEquipmentResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "equipment_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "swidtag",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "eq_type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "allocated_metrics",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipment/allocation/metric": {
+      "post": {
+        "operationId": "EquipmentService_UpsertAllocMetricByFile",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpsertAllocMetricByFileResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertAllocMetricByFileRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipment/dashboard/types/equipments": {
       "get": {
         "operationId": "EquipmentService_EquipmentsPerEquipmentType",
@@ -149,6 +297,39 @@
         ]
       }
     },
+    "/api/v1/equipment/metadata/oldScope": {
+      "post": {
+        "summary": "UpdateAtrributeOldScope appends attribute nodes to equipments in old scopes",
+        "operationId": "EquipmentService_UpdateAtrributeOldScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAtrributeOldScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAtrributeOldScopeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipment/metadata/{ID}": {
       "get": {
         "operationId": "EquipmentService_GetEquipmentMetadata",
@@ -223,6 +404,36 @@
             "name": "scope",
             "in": "path",
             "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
+    "/api/v1/equipment/metrics": {
+      "get": {
+        "operationId": "EquipmentService_GetMetrics",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMetricsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -1061,6 +1272,9 @@
         "simulated": {
           "type": "boolean"
         },
+        "schema_name": {
+          "type": "string"
+        },
         "int_val": {
           "type": "integer",
           "format": "int32"
@@ -1229,6 +1443,23 @@
         }
       }
     },
+    "v1GetMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1ListEquipmentMetadataRequestType": {
       "type": "string",
       "enum": [
@@ -1313,6 +1544,42 @@
         }
       }
     },
+    "v1UpdAttribute": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "schema_name": {
+          "type": "string"
+        },
+        "displayed": {
+          "type": "boolean"
+        },
+        "searchable": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateAtrributeOldScopeRequest": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateAtrributeOldScopeResponse": {
+      "type": "object",
+      "properties": {
+        "Success": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1UpdateEquipmentTypeRequest": {
       "type": "object",
       "properties": {
@@ -1329,11 +1596,70 @@
             "$ref": "#/definitions/v1Attribute"
           }
         },
+        "updattr": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1UpdAttribute"
+          }
+        },
         "scopes": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1UpsertAllocMetricByFileRequest": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "swidtag": {
+          "type": "string"
+        },
+        "equipment_id": {
+          "type": "string"
+        },
+        "allocated_metrics": {
+          "type": "string"
+        },
+        "allocated_users": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1UpsertAllocMetricByFileResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1UpsertEquipmentAllocatedMetricRequest": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "swidtag": {
+          "type": "string"
+        },
+        "equipment_id": {
+          "type": "string"
+        },
+        "eq_type": {
+          "type": "string"
+        },
+        "equipment_user": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "allocated_metrics": {
+          "type": "string"
         }
       }
     },

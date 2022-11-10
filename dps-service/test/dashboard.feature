@@ -4,12 +4,13 @@ Feature: Dashboard Test on dps: admin user
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
   # * def dpsServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT' 
+    * def scope = 'API' 
 
   # TODO: update dashboard tests for cron handling 
   @get
@@ -27,43 +28,6 @@ Feature: Dashboard Test on dps: admin user
     * def schema = data.schema_quality
     When method get
     Then status 200
-
-
-  @get  @ignore
-  
-  # Scenario: Data Failure Rate
-  #   Given path 'dashboard/quality/datafailurerate'
-  #   * params {scope:'#(scope)'}
-  #   When method get
-  #   Then status 200
-
-  # @get
-  # Scenario: Data Failure Ratio
-  #   Given path 'dashboard/quality/failurereasonsratio'
-  #   * params {scope:'#(scope)'}
-  #   When method get 
-  #   * call pause 2000
-  #   Then status 200 
-    
-
-
-# Handling of new scope - CLR for different environments
-
-  @ignore @dev
-
-  Scenario: Data Failure Rate when there is no data in scope
-    Given path 'dashboard/quality/datafailurerate'
-    * params {scope:'CLR'}
-    When method get
-    Then status 404
-
-  @ignore @dev
-
-  Scenario: Data Failure Ratio when there is no data in scope
-    Given path 'dashboard/quality/failurereasonsratio'
-    * params {scope:'CLR'}
-    When method get
-    Then status 404
 
 
  

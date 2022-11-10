@@ -12,9 +12,12 @@ import (
 	"strings"
 	"sync"
 
+	e_v1 "optisam-backend/equipment-service/pkg/api/v1"
+
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 var errRetry = errors.New("RETRY")
@@ -22,8 +25,9 @@ var mu sync.Mutex
 
 // Worker ...
 type Worker struct {
-	id string
-	dg *dgo.Dgraph
+	id              string
+	dg              *dgo.Dgraph
+	equipmentClient e_v1.EquipmentServiceClient
 }
 
 // MessageType ...
@@ -58,8 +62,8 @@ type Envelope struct {
 }
 
 // NewWorker ...
-func NewWorker(id string, dg *dgo.Dgraph) *Worker {
-	return &Worker{id: id, dg: dg}
+func NewWorker(id string, dg *dgo.Dgraph, grpcServers map[string]*grpc.ClientConn) *Worker {
+	return &Worker{id: id, dg: dg, equipmentClient: e_v1.NewEquipmentServiceClient(grpcServers["equipment"])}
 }
 
 // ID gives worker id
@@ -192,7 +196,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					mutations = append(mutations, &api.Mutation{
 						SetNquads: []byte(`uid(product) <product.equipment> uid(` + eqUID + `) .`),
 					})
-					if equipUser.GetNumUser() > 0 {
+					if equipUser.GetAllocatedUsers() > 0 {
 						userID := `user_` + upr.GetSwidTag() + equipUser.GetEquipmentId()
 						userUID := `users` + strconv.Itoa(i)
 						query = `var(func: eq(users.id,"` + userID + `")) @filter(eq(type_name,"instance_users") AND eq(scopes,"` + upr.Scope + `")){
@@ -214,7 +218,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 							SetNquads: []byte(`
 							uid(product) <product.users> uid(` + userUID + `) .
 							uid(` + eqUID + `) <equipment.users>  uid(` + userUID + `) .
-							uid(` + userUID + `) <users.count> "` + strconv.Itoa(int(equipUser.GetNumUser())) + `" .
+							uid(` + userUID + `) <users.count> "` + strconv.Itoa(int(equipUser.GetAllocatedUsers())) + `" .
 							`),
 							CommitNow: true,
 						})
@@ -259,6 +263,19 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
 			return errRetry
 		}
+		for _, v := range upr.GetEquipments().GetEquipmentusers() {
+			_, err := w.equipmentClient.UpsertAllocMetricByFile(ctx, &e_v1.UpsertAllocMetricByFileRequest{
+				Scope:            upr.GetScope(),
+				Swidtag:          upr.GetSwidTag(),
+				EquipmentId:      v.GetEquipmentId(),
+				AllocatedMetrics: v.GetAllocatedMetrics(),
+			})
+			if err != nil {
+				logger.Log.Error("Failed to allocate metric by file upload", zap.Error(err))
+				return err
+			}
+		}
+
 	case UpsertAcqRights:
 		var uar UpsertAcqRightsRequest
 		_ = json.Unmarshal(e.JSON, &uar)
@@ -346,6 +363,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			uid(acRights) <acqRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
 			uid(acRights) <acqRights.supportNumber> "` + uar.SupportNumber + `" .
 			uid(acRights) <acqRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
+			uid(acRights) <acqRights.repartition> "` + strconv.FormatBool(uar.Repartition) + `" .
 			uid(product) <product.swidtag> "` + uar.Swidtag + `" .
 			uid(product) <product.acqRights> uid(acRights) .
 		`
@@ -450,6 +468,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		uid(aggregatedRights) <aggregatedRights.lastPurchasedOrder> "` + uar.LastPurchasedOrder + `" .
 		uid(aggregatedRights) <aggregatedRights.supportNumber> "` + uar.SupportNumber + `" .
 		uid(aggregatedRights) <aggregatedRights.maintenanceProvider> "` + uar.MaintenanceProvider + `" .
+		uid(aggregatedRights) <aggregatedRights.repartition> "` + strconv.FormatBool(uar.Repartition) + `" .
 		`
 		reqmetrics := strings.Split(uar.Metric, ",")
 		for _, met := range reqmetrics {
@@ -516,6 +535,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					productType as var(func: type(Product)) @filter(eq(scopes,` + dar.Scope + `)){
 					products as product.swidtag
 					productEquipments as product.equipment
+					productAllocations as product.allocation
 					productEditors as product.editor
 					productApplications as ~product.application
 				}
@@ -547,6 +567,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(products) * * .
 				uid(productEditors) * * .
 				uid(productEquipments) * * .
+				uid(productAllocations) * * .
 				uid(productApplications) * * .
 				uid(editorType) * * .
 				uid(editors) * * .
@@ -568,6 +589,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(products) <Recycle> "true" .
 				uid(productEditors) <Recycle> "true" .
 				uid(productEquipments) <Recycle> "true" .
+				uid(productAllocations) <Recycle> "true" .
 				uid(productApplications) <Recycle> "true" .
 				uid(editorType) <Recycle> "true" .
 				uid(editors) <Recycle> "true" .

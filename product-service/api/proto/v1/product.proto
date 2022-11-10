@@ -250,6 +250,12 @@ service ProductService {
   rpc CreateDashboardUpdateJob(CreateDashboardUpdateJobRequest) returns (CreateDashboardUpdateJobResponse) {
   }
 
+  rpc UpsertAllocatedMetricEquipment(UpsertAllocateMetricEquipementRequest) returns (UpsertAllocateMetricEquipementResponse) {
+  }
+  rpc DeleteAllocatedMetricEquipment(DropAllocateMetricEquipementRequest) returns (UpsertAllocateMetricEquipementResponse) {
+  }
+
+  
   rpc GetBanner(GetBannerRequest) returns (GetBannerResponse) {
     option (google.api.http) = {
       get : "/api/v1/product/banner"
@@ -296,9 +302,35 @@ service ProductService {
       get : "/api/v1/product/expand/aggregation_products"
     };
   }
+
+  rpc GetApplicationsByProduct(GetApplicationsByProductRequest)returns (GetApplicationsByProductResponse) {  
+  }
+
+  rpc GetProductCountByApp(GetProductCountByAppRequest)returns (GetProductCountByAppResponse) {   
+  }
+  
 }
 
+message GetProductCountByAppRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
 
+message GetProductCountByAppResponse { 
+  repeated applications app_data = 1;
+  message applications {
+    string application_id = 1;
+    int64 num_of_products = 2;
+    }
+}
+
+message GetApplicationsByProductRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string swidtag = 2;
+}
+
+message GetApplicationsByProductResponse { 
+  repeated string application_id = 1; 
+}
 
 message GetAggregationAcqrightsExpandedViewRequest{
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
@@ -376,7 +408,27 @@ message CreateDashboardUpdateJobRequest{
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
+message UpsertAllocateMetricEquipementRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string swidtag = 2;
+  string equipment_id = 3;
+  string eq_type = 4;
+  int32 allocated_users = 5;
+  string allocated_metrics = 6;
+}
+
+message DropAllocateMetricEquipementRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string swidtag = 2;
+  string equipment_id = 3;
+  string allocated_metrics = 4;
+}
+
 message CreateDashboardUpdateJobResponse{
+  bool success = 1;
+}
+
+message UpsertAllocateMetricEquipementResponse{
   bool success = 1;
 }
 
@@ -414,6 +466,7 @@ message AcqRightRequest {
   string software_provider = 19 [(validate.rules).string.max_len = 16 ];
   string file_name = 20;
   bytes file_data = 21;
+  bool repartition = 22;
 }
 
 message AcqRightResponse { 
@@ -453,6 +506,7 @@ message AggregatedRightsRequest {
   string software_provider= 17 [(validate.rules).string.max_len = 16 ];
   string file_name = 18;
   bytes file_data = 19;
+  bool repartition = 20;
 }
 
 message AggregatedRightsView {
@@ -483,6 +537,7 @@ message AggregatedRightsView {
   string support_number = 25;
   string maintenance_provider = 26;
   string file_name = 27;
+  bool repartition = 28;
 }
 
 message AggregatedRightsResponse { 
@@ -638,6 +693,8 @@ message Product {
   double totalCost = 7;
   int32 numOfApplications = 8;
   int32 numofEquipments = 9;
+  int32 allocatedUser = 10;
+  string allocatedMetric = 11;
 }
 
 message ListProductsResponse {
@@ -763,7 +820,8 @@ message UpsertProductRequest {
     repeated equipmentuser equipmentusers = 2;
     message equipmentuser {
       string equipment_id = 1;
-      int32 num_user = 2;
+      string allocated_metrics = 2;
+      int32 allocated_users = 3;
     }
   }
 }
@@ -885,6 +943,8 @@ message UpsertAcqRightsRequest {
   string maintenance_provider = 20 [(validate.rules).string.max_len = 100 ];
   string last_purchased_order = 21 [(validate.rules).string.max_len = 16 ];
   string support_number = 22;
+  bool repartition = 23;
+  string comment = 24;
 }
 
 
@@ -898,7 +958,7 @@ message ListAcqRightsRequest {
         {description : "Page number", minimum : 1, maximum : 1000}
   ];
   int32 page_size = 2 [
-    (validate.rules).int32 = {gte : 10, lte : 200},
+    (validate.rules).int32 = {gte : 10},
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
         {description : "Items per page", minimum : 10, maximum : 200}
   ];
@@ -964,6 +1024,7 @@ message AcqRights {
   string support_number = 22;
   string maintenance_provider = 23;
   string file_name = 24;
+  bool repartition = 25;
 }
 
 message ListAggregatedAcqRightsRequest {

@@ -385,7 +385,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
-					Attr: []*v1.Attribute{
+					AddAttr: []*v1.Attribute{
 						{
 							Name:               "attr4",
 							Type:               1,
@@ -409,6 +409,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
 							MappedTo:     "mapping_6",
+						},
+					},
+					UpdateAttr: []*v1.Attribute{
+						{
+							Name:         "attr4",
+							IsDisplayed:  false,
+							IsSearchable: false,
 						},
 					},
 				},
@@ -535,7 +542,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
 					ParentID: blankID("parent"),
-					Attr: []*v1.Attribute{
+					AddAttr: []*v1.Attribute{
 						{
 							Name:               "attr3",
 							Type:               v1.DataTypeString,
@@ -548,7 +555,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							Type:               v1.DataTypeInt,
 							IsIdentifier:       false,
 							IsDisplayed:        true,
-							IsSearchable:       false,
+							IsSearchable:       true,
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_4",
 						},
@@ -557,6 +564,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
 							MappedTo:     "mapping_5",
+						},
+					},
+					UpdateAttr: []*v1.Attribute{
+						{
+							Name:         "attr4",
+							IsSearchable: false,
+							IsDisplayed:  false,
 						},
 					},
 				},
@@ -691,7 +705,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 				ctx: context.Background(),
 				req: &v1.UpdateEquipmentRequest{
 					ParentID: blankID("parent"),
-					Attr: []*v1.Attribute{
+					AddAttr: []*v1.Attribute{
 						{
 							Name:               "attr3",
 							Type:               v1.DataTypeString,
@@ -704,7 +718,7 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							Type:               v1.DataTypeInt,
 							IsIdentifier:       false,
 							IsDisplayed:        true,
-							IsSearchable:       false,
+							IsSearchable:       true,
 							IsParentIdentifier: false,
 							MappedTo:           "mapping_4",
 						},
@@ -713,6 +727,13 @@ func TestEquipmentRepository_UpdateEquipmentType(t *testing.T) {
 							Type:         v1.DataTypeFloat,
 							IsSearchable: true,
 							MappedTo:     "mapping_5",
+						},
+					},
+					UpdateAttr: []*v1.Attribute{
+						{
+							Name:         "attr4",
+							IsDisplayed:  false,
+							IsSearchable: false,
 						},
 					},
 				},

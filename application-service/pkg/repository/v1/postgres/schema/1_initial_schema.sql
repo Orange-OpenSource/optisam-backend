@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS applications (
     application_name VARCHAR NOT NULL,
     application_version VARCHAR NOT NULL,
     application_owner VARCHAR NOT NULL,
+    application_environment VARCHAR NOT NULL,
     application_domain VARCHAR NOT NULL,
     scope VARCHAR NOT NULL,
     obsolescence_risk VARCHAR,
@@ -29,6 +30,14 @@ CREATE TABLE IF NOT EXISTS applications (
 );
 
 CREATE INDEX scope_index ON applications (scope);
+
+CREATE TABLE IF NOT EXISTS applications_equipments (
+    application_id VARCHAR NOT NULL,
+    equipment_Id VARCHAR NOT NULL,
+    scope VARCHAR NOT NULL,
+    -- SCOPE BASED CHANGE
+    PRIMARY KEY (application_id,equipment_Id,scope)
+);
 
 CREATE TABLE IF NOT EXISTS applications_instances (
     application_id VARCHAR NOT NULL,

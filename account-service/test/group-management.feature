@@ -1,15 +1,17 @@
 @account @group
+
 Feature: Account Service Test for Group Management : admin User
 
   Background:
   # * def accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}  
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
     # * def err = {"error": "string","code": 0,"message": "string","details": [{"type_url": "string","value": "string"}]}
 
 
@@ -55,7 +57,7 @@ Feature: Account Service Test for Group Management : admin User
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='AUT')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
     * header Authorization = 'Bearer '+access_token 
     Given path 'admin/groups',group_id,'users'
     When method get
@@ -80,50 +82,52 @@ Feature: Account Service Test for Group Management : admin User
     * response.success == true
 
 
-  @create
-  Scenario: Verify admin user can add and remove user from a group
-  # create group
-    Given path 'admin/groups' 
-    * def createGroup = {"scopes": ['#(scope)'],"parent_id": "1"}
-    * set createGroup.name = "apitest_grp_" + now()
-    And request createGroup
-    When method post
-    Then status 200
-    * match response contains createGroup
-    * def group_id = response.ID
-    # create user
-    Given path 'user'
-    * header Authorization = 'Bearer '+access_token
-    * set data.createUserAccount.user_id = now() + "@test.com"
-    * set data.createUserAccount.groups = null
-    And request data.createUserAccount
-    When method post
-    Then status 200
-    # add user to group
-    Given path 'admin/groups/' + group_id , 'users/add'
-    * header Authorization = 'Bearer '+access_token
-    * set data.adduser.group_id = group_id 
-    And request data.adduser
-    When method put
-    Then status 200
-    # delete user from group
-    Given path 'admin/groups/' + group_id , 'users/delete'
-    * header Authorization = 'Bearer '+access_token
-    And request data.adduser
-    When method put
-    Then status 200
-    # delete user
-    Given path data.createUserAccount.user_id
-    * header Authorization = 'Bearer '+access_token
-    When method delete
-    Then status 200
-    * response.success == true 
-    # delete group
-    Given path 'admin/groups/' + group_id 
-    * header Authorization = 'Bearer '+access_token
-    When method delete
-    Then status 200
-    * response.success == true 
+  # @create
+  # Scenario: Verify admin user can add and remove user from a group
+  # # create group
+  #   Given path 'admin/groups' 
+  #   * def createGroup = {"scopes": ['#(scope)'],"parent_id": "1"}
+  #   * set createGroup.name = "apitest_grp_" + now()
+  #   And request createGroup
+  #   When method post
+  #   Then status 200
+  #   * match response contains createGroup
+  #   * def group_id = response.ID
+  #   * set data.adduser.group_id = group_id
+  #   # create user
+  #   Given path 'user'
+  #   * header Authorization = 'Bearer '+access_token
+  #   * set data.createUserAccount.user_id = now() + "@test.com"
+  #   * set data.createUserAccount.groups = null
+  #   And request data.createUserAccount
+  #   When method post
+  #   Then status 200
+  #   * def newuser_id = response.user_id
+  #    # add user to group
+  #   Given path 'admin/groups/' + group_id , 'users/add'
+  #   * header Authorization = 'Bearer '+access_token
+  #   * set data.adduser.user_id = newuser_id 
+  #   And request data.adduser
+  #   When method put
+  #   Then status 200
+  #   # # delete user from group
+  #   # Given path 'admin/groups/' + group_id , 'users/delete'
+  #   # * header Authorization = 'Bearer '+access_token
+  #   # And request data.adduser
+  #   # When method put
+  #   # Then status 200
+  #   # # delete user
+  #   # Given path data.createUserAccount.user_id
+  #   # * header Authorization = 'Bearer '+access_token
+  #   # When method delete
+  #   # Then status 200
+  #   # * response.success == true 
+  #   # # delete group
+  #   # Given path 'admin/groups/' + group_id 
+  #   # * header Authorization = 'Bearer '+access_token
+  #   # When method delete
+  #   # Then status 200
+  #   # * response.success == true 
     
 
   # @delete

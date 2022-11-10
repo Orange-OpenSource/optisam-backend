@@ -1,7 +1,9 @@
 function fn() {
   var env = karate.env; // get system property 'karate.env'
+
   if (!env) {
     env = 'dev'; //dev,int
+
   }
   karate.log('karate.env system property:', env);
 
@@ -9,7 +11,9 @@ function fn() {
   karate.configure('logPrettyRequest', true)
   karate.configure('logPrettyResponse', true)
   karate.configure('ssl', true)
+  // karate.configure('ssl', { trustAll: true });
   karate.configure('abortedStepsShouldPass', true)
+  
 
   // karate.configure('connectTimeout', 5000);
   // karate.configure('readTimeout', 5000);
@@ -18,7 +22,12 @@ function fn() {
   var config = {
     env: env,
     access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJyZWcudXNlckB0ZXN0LmNvbSIsIkxvY2FsZSI6ImVuIiwiUm9sZSI6IkFkbWluIiwiU29jcGVzIjpbIk9TUCIsIlRTVCJdLCJleHAiOjE2MDY5ODMzMTcsImlhdCI6MTYwNjk3NjExNywiaXNzIjoiT3JhbmdlIiwic3ViIjoiQWNjZXNzIFRva2VuIn0.OfxXAQP1EU-9sWhqCj_0My3hp4lxnNxyUk3FjjyzQMOArbM3Y6yjb1lKWSZoK6TlWJbzZRaritzBDhVBOGb0BLXmRCIRXCywqojrdNtSXe_cBKe1Ohrfdg4V-8Vy5Ip4cW5wg8Yx7-Bn40Wl_39X3a8XOkTUWvcbDsZ8uPUsDQ56h4-VUNNT6FMF0zmo4HE45MdZITGezUoth2dn7b6I9TC49RtgKkuXWJ5BiB5zio2aRFpZDAYKc9BC4MWfbfuTG6qJ3RcMBm1yW5pbtQMy03QM7OJXG8ZzLE2E5fzXwFyTXRUzbtRKE9RZhrJSpYn1jjJS6CGAWwEYqU8v2C0wrA",
-    authServiceUrl: "" 
+    authServiceUrl: "",
+    AdminAccount_UserName: "admin@test.com",
+    AdminAccount_Password: "Welcome@123",
+    UserAccount_Username: "UserAccount1@gmail.com",
+    UserAccount_password: "password"
+
   };
 
   if (env == 'local') {
@@ -28,6 +37,18 @@ function fn() {
     config.dpsServiceUrl = "http://localhost:10001"
     config.simulationServiceUrl = "http://localhost:22091"
     config.importServiceUrl = "http://localhost:9092"
+   } else if (env == 'performance') {
+    config.authServiceUrl = "https://optisam-auth-performance.apps.fr01.paas.tech.orange"
+    config.accountServiceUrl = "https://optisam-account-performance.apps.fr01.paas.tech.orange"
+    config.applicationServiceUrl = "https://optisam-application-performance.apps.fr01.paas.tech.orange"
+    config.productServiceUrl = "https://optisam-product-performance.apps.fr01.paas.tech.orange"
+    config.dpsServiceUrl = "https://optisam-dps-performance.apps.fr01.paas.tech.orange"
+    config.importServiceUrl = "https://optisam-import-performance.apps.fr01.paas.tech.orange"
+    config.equipmentServiceUrl = "https://optisam-equipment-performance.apps.fr01.paas.tech.orange"
+    config.licenseServiceUrl = "https://optisam-license-performance.apps.fr01.paas.tech.orange"
+    config.reportServiceUrl = "https://optisam-report-performance.apps.fr01.paas.tech.orange"
+    config.metricServiceUrl = "https://optisam-metric-performance.apps.fr01.paas.tech.orange"
+    config.simulationServiceUrl = "https://optisam-simulation-performance.apps.fr01.paas.tech.orange"
   } else if (env == 'dev') {
     config.authServiceUrl = "https://optisam-auth-dev.apps.fr01.paas.tech.orange" 
     config.accountServiceUrl = "https://optisam-account-dev.apps.fr01.paas.tech.orange"

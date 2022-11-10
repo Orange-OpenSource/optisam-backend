@@ -21,14 +21,7 @@
         "num_of_products": 4,
         "num_of_equipments": 4,
         "total_cost": 0
-    },
-    "createApp": {
-        "application_id": "a3",
-        "name": "bos",
-        "version": "0.1.2",
-        "owner": "Orange",
-        "domain": "payment",
-        "scope": "France"
+    
     },
     "schema_instance": {
         "id": "#string",
@@ -37,53 +30,34 @@
         "num_of_equipments": "##number"
     },
     "getInstance": {
-        "application_id": "App_6",
-        "id": "App_6_inst_int",
-        "environment": "integration",
-        "num_of_products": 2,
-        "num_of_equipments": 1
-    },
-    "createInstance": {
-        "application_id": "a3",
-        "instance_id": "a3_i1",
-        "instance_name": "Production",
-        "scope": "France",
-        "products": {
-            "operation": "add",
-            "product_id": [
-                "p11",
-                "p12"
-            ]
-        },
-        "equipments": {
-            "operation": "add",
-            "equipment_id": [
-                "e11"
-            ]
-        }
+        "application_id": "car",
+        "id": "carala9",
+        "environment": "Production",
+        "num_of_equipments": 1,
+        "num_of_products": 1
+        
     },
     "domains":
-    {"scope":"AUT",
-    "domains_criticity":[{"domain_critic_id":1,"domain_critic_name":"Critical","domains":["HealthCare","Random"]},
-    {"domain_critic_id":2,"domain_critic_name":"Non Critical","domains":["Healthcare"]},
-    {"domain_critic_id":3,"domain_critic_name":"Neutral","domains":["E-Commerce"]}]
+    {"scope":"API",
+    "domains_criticity":[{"domain_critic_id":1,"domain_critic_name":"Critical","domains":["internet"]},
+    {"domain_critic_id":2,"domain_critic_name":"Non Critical","domains":["mobile"]},{"domain_critic_id":3,"domain_critic_name":"Neutral","domains":["ftth"]}]
     },
 
 
     "maintenance":
     {
-        "scope":"AUT",
+        "scope":"API",
         "maintenance_criticy":[{"maintenance_level_id":1,
             "maintenance_level_name":"Level 1",
             "start_month":48,
             "end_month":72},
             {"maintenance_level_id":2,
             "maintenance_level_name":"Level 2",
-            "start_month":25,
+            "start_month":36,
             "end_month":47},
             {"maintenance_level_id":3,
             "maintenance_level_name":"Level 3",
-            "start_month":12,"end_month":24},
+            "start_month":12,"end_month":35},
             {"maintenance_level_id":4,
             "maintenance_level_name":"Level 4",
             "start_month":0,
@@ -91,14 +65,14 @@
     },
     "matrix":{
     
-	"scope": "AUT",
+	"scope": "API",
 	"risk_matrix": [{
 		"domain_critic_id": 1,
 		"domain_critic_name": "Critical",
 		"maintenance_critic_id": 1,
 		"maintenance_critic_name": "Level 1",
 		"risk_id": 1,
-		"risk_name": "Low"
+		"risk_name": "Medium"
 	}, {
 		"domain_critic_id": 2,
 		"domain_critic_name": "Non Critical",
@@ -168,14 +142,14 @@
 		"maintenance_critic_id": 4,
 		"maintenance_critic_name": "Level 4",
 		"risk_id": 3,
-		"risk_name": "High"
+		"risk_name": "Medium"
 	}, {
 		"domain_critic_id": 3,
 		"domain_critic_name": "Neutral",
 		"maintenance_critic_id": 4,
 		"maintenance_critic_name": "Level 4",
 		"risk_id": 2,
-		"risk_name": "Medium"
+		"risk_name": "Low"
 	}]
     }
 

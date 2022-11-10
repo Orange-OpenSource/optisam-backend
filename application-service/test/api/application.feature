@@ -4,14 +4,15 @@ Feature: Application Service Test
   Background:
   # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
     * url applicationServiceUrl+'/api/v1'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
-  @schema
+    @schema
   Scenario: Schema validation for get Applications
     Given path 'applications'
     * params { page_num:1, page_size:10, sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
@@ -35,8 +36,8 @@ Feature: Application Service Test
     | 100 |
     | 200 |
 
-  Scenario Outline: To verify Pagination on Application Page with Invalid inputs
-    Given path  'applications'
+    Scenario Outline: To verify Pagination on Application Page with Invalid inputs
+    Given path   'applications'
     And params { page_num:'<page_num>', page_size:'<page_size>', sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
     When method get
     Then status 400
@@ -46,10 +47,10 @@ Feature: Application Service Test
     | 10 | 0 |
     | "A" | 5 |  
 
-    @search
+
   Scenario Outline: Search Applications by single column
     Given path 'applications' 
-    And params { page_num:1, page_size:10, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
+    And params { page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
     And params {search_params.<searchBy>.filteringkey: '<searchValue>'}
     When method get
     Then status 200
@@ -57,15 +58,15 @@ Feature: Application Service Test
     And match response.applications[*].<searchBy> contains '<searchValue>'
   Examples:
     | searchBy | searchValue |
-    | name | General Application 1 |
-    | owner | Orange Money |
-    | obsolescence_risk | Medium |  
+    | name | carala |
+    | domain | mobile |
+    | obsolescence_risk | Medium | 
 
 
  @search
   Scenario Outline: Search Applications by Multiple columns
     Given path 'applications' 
-    And params { page_num:1, page_size:10, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
+    And params { page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
     And params {search_params.<searchBy1>.filteringkey: '<searchValue1>'}
     And params {search_params.<searchBy2>.filteringkey: '<searchValue2>'}
     When method get
@@ -75,11 +76,11 @@ Feature: Application Service Test
     And match response.applications[*].<searchBy2> contains '<searchValue2>'
   Examples:
     | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
-    | name | Random Application 1| owner | Random |
-    | domain | Payment | owner | Orange Money |
+    | name | carala |domain | internet |
+    | domain | internet | obsolescence_risk  | High |
 
 
- @sort
+  @sort
   Scenario Outline: Sorting_sort Applications data 
     Given path 'applications'
     And params { page_num:1, page_size:10, sort_by:'<sortBy>', sort_order:'<sortOrder>', scopes:'#(scope)'}
@@ -96,26 +97,53 @@ Feature: Application Service Test
       | domain | asc |
       | obsolescence_risk | desc|
     
-     
-    
+
 
   @get
-  Scenario: get Applications
+  Scenario: get Application
     Given path 'applications'
-    And params { page_num:1, page_size:10, sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
+    And params { page_num:1, page_size:100, sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
     # And match response.applications[*].application_id contains data.getApp.application_id
+    
 
-  @get
-  Scenario: get Application Domains
-    Given path 'application/domains'
-    And params {scope:'#(scope)'}
+## Instances 
+
+  @schema
+  Scenario: Schema validation for get Instances
+    Given path 'application/instances'
+    * params { page_num:1, page_size:10, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
     When method get
     Then status 200
-    And match response.domains contains data.getApp.domain
- 
+    * response.totalRecords == '#number? _ >= 0'
+    * match response.instances == '#[] data.schema_instance'
+
+  @search
+  Scenario: Searching_Filter Instances by Application Id
+    Given path 'application/instances'
+    And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
+    And params {search_params.application_id.filter_type: 1 }
+    And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
+    When method get
+    Then status 200
+    And response.totalRecords > 0
+    * remove data.getInstance.application_id
+    And match response.instances[*] contains data.getInstance
+
+  # @search
+  # Scenario: Searching_Filter Instances by product Id
+  #   Given path 'instances'
+  #   And params { page_num:1, page_size:10, sort_by:'instance_environment', sort_order:'desc', scopes:'#(scope)'}
+  #   And params {search_params.product_id.filteringkey: '#(data.getInstance.products[0])'}
+  #   When method get
+  #   Then status 200
+  #   And response.totalRecords > 0
+  #   * remove data.getInstance.application_id
+  #   And match  response.instances contains data.getInstance
+
+
 
 ## Creation API
 
@@ -165,4 +193,3 @@ Feature: Application Service Test
   #   Given path 'applications',application_id
   #   When method delete
   #   Then status 200
-

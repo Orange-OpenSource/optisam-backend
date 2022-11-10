@@ -30,6 +30,8 @@ type MessageType string
 const (
 	// UpsertApplicationRequest is request type for upsert application in dgraph
 	UpsertApplicationRequest MessageType = "UpsertApplication"
+	// UpsertApplicationEquipRequest is request type for upsert application equipment in dgraph
+	UpsertApplicationEquipRequest MessageType = "UpsertApplicationEquip"
 	// UpsertInstanceRequest is request type for upsert instances in dgraph
 	UpsertInstanceRequest MessageType = "UpsertInstance"
 	// DropApplicationDataRequest is request type for delete applications and applications instances in dgraph for a particular scope
@@ -71,8 +73,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		mu := &api.Mutation{SetNquads: []byte(`
 		uid(application) <application.id> "` + uar.GetApplicationId() + `" .
 		uid(application) <application.name>"` + uar.GetName() + `" .
-		uid(application) <application.version>"` + uar.GetVersion() + `" .
-		uid(application) <application.owner>"` + uar.GetOwner() + `" .
+		uid(application) <application.environment>"` + uar.GetEnvironment() + `" .
 		uid(application) <application.domain>"` + uar.GetDomain() + `" .
 		uid(application) <scopes> "` + uar.GetScope() + `" .
 		uid(application) <type_name> "application" .
@@ -88,6 +89,57 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
 			return errors.New("RETRY")
 		}
+	case UpsertApplicationEquipRequest:
+		var mutations []*api.Mutation
+		var uer v1.UpsertApplicationEquipRequest
+		_ = json.Unmarshal(e.JSON, &uer)
+		// SCOPE BASED CHANGE
+		query := `query {application as var(func: eq(application.id,"` + uer.GetApplicationId() + `")) @filter(eq(type_name,"application") AND eq(scopes,"` + uer.GetScope() + `"))}`
+		mu := &api.Mutation{SetNquads: []byte(`
+		uid(application) <application.id> "` + uer.GetApplicationId() + `" .
+		uid(application) <scopes> "` + uer.GetScope() + `" .
+		uid(application) <type_name> "application" .
+		uid(application) <dgraph.type> "Application" .
+		`)}
+		mutations = append(mutations, mu)
+		if uer.Equipments.GetOperation() == "add" {
+			for i, equipment := range uer.GetEquipments().GetEquipmentId() {
+				eqUID := `equipment` + strconv.Itoa(i)
+
+				// SCOPE BASED CHANGE
+				query += `
+				var(func: eq(equipment.id,"` + equipment + `")) @filter(eq(type_name,"equipment") AND eq(scopes,"` + uer.GetScope() + `")){
+					equipment` + strconv.Itoa(i) + ` as uid
+				}
+				`
+				// queries = append(queries, query)
+				mutations = append(mutations, &api.Mutation{
+					Cond: "@if(eq(len(" + eqUID + "),0))",
+					SetNquads: []byte(`
+					uid(` + eqUID + `) <equipment.id> "` + equipment + `" .
+					uid(` + eqUID + `) <type_name> "equipment" .
+					uid(` + eqUID + `) <dgraph.type> "Equipment" .
+					uid(` + eqUID + `) <scopes> "` + uer.GetScope() + `" .
+					`),
+				})
+				mutations = append(mutations, &api.Mutation{
+					SetNquads: []byte(`
+					uid(application) <application.equipment> uid(` + eqUID + `) .
+					`),
+				})
+			}
+		}
+		req := &api.Request{
+			Query:     query,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+
+		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
+			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
+			return errors.New("RETRY")
+		}
+
 	case UpsertInstanceRequest:
 		var mutations []*api.Mutation
 		var uir v1.UpsertInstanceRequest

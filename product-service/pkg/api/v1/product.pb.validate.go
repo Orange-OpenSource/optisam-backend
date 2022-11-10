@@ -36,6 +36,315 @@ var (
 // define the regex for a UUID once up-front
 var _product_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on GetProductCountByAppRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetProductCountByAppRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_GetProductCountByAppRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetProductCountByAppRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// GetProductCountByAppRequestValidationError is the validation error returned
+// by GetProductCountByAppRequest.Validate if the designated constraints
+// aren't met.
+type GetProductCountByAppRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductCountByAppRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductCountByAppRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductCountByAppRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductCountByAppRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductCountByAppRequestValidationError) ErrorName() string {
+	return "GetProductCountByAppRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductCountByAppRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductCountByAppRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductCountByAppRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductCountByAppRequestValidationError{}
+
+var _GetProductCountByAppRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on GetProductCountByAppResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetProductCountByAppResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetAppData() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return GetProductCountByAppResponseValidationError{
+					field:  fmt.Sprintf("AppData[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// GetProductCountByAppResponseValidationError is the validation error returned
+// by GetProductCountByAppResponse.Validate if the designated constraints
+// aren't met.
+type GetProductCountByAppResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductCountByAppResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductCountByAppResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductCountByAppResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductCountByAppResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductCountByAppResponseValidationError) ErrorName() string {
+	return "GetProductCountByAppResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductCountByAppResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductCountByAppResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductCountByAppResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductCountByAppResponseValidationError{}
+
+// Validate checks the field values on GetApplicationsByProductRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *GetApplicationsByProductRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_GetApplicationsByProductRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetApplicationsByProductRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Swidtag
+
+	return nil
+}
+
+// GetApplicationsByProductRequestValidationError is the validation error
+// returned by GetApplicationsByProductRequest.Validate if the designated
+// constraints aren't met.
+type GetApplicationsByProductRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetApplicationsByProductRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetApplicationsByProductRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetApplicationsByProductRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetApplicationsByProductRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetApplicationsByProductRequestValidationError) ErrorName() string {
+	return "GetApplicationsByProductRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetApplicationsByProductRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetApplicationsByProductRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetApplicationsByProductRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetApplicationsByProductRequestValidationError{}
+
+var _GetApplicationsByProductRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on GetApplicationsByProductResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *GetApplicationsByProductResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	return nil
+}
+
+// GetApplicationsByProductResponseValidationError is the validation error
+// returned by GetApplicationsByProductResponse.Validate if the designated
+// constraints aren't met.
+type GetApplicationsByProductResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetApplicationsByProductResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetApplicationsByProductResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetApplicationsByProductResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetApplicationsByProductResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetApplicationsByProductResponseValidationError) ErrorName() string {
+	return "GetApplicationsByProductResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetApplicationsByProductResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetApplicationsByProductResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetApplicationsByProductResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetApplicationsByProductResponseValidationError{}
+
 // Validate checks the field values on
 // GetAggregationAcqrightsExpandedViewRequest with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
@@ -1398,6 +1707,176 @@ var _ interface {
 
 var _CreateDashboardUpdateJobRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
+// Validate checks the field values on UpsertAllocateMetricEquipementRequest
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertAllocateMetricEquipementRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UpsertAllocateMetricEquipementRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return UpsertAllocateMetricEquipementRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for EquipmentId
+
+	// no validation rules for EqType
+
+	// no validation rules for AllocatedUsers
+
+	// no validation rules for AllocatedMetrics
+
+	return nil
+}
+
+// UpsertAllocateMetricEquipementRequestValidationError is the validation error
+// returned by UpsertAllocateMetricEquipementRequest.Validate if the
+// designated constraints aren't met.
+type UpsertAllocateMetricEquipementRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertAllocateMetricEquipementRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertAllocateMetricEquipementRequestValidationError) ErrorName() string {
+	return "UpsertAllocateMetricEquipementRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertAllocateMetricEquipementRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertAllocateMetricEquipementRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertAllocateMetricEquipementRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertAllocateMetricEquipementRequestValidationError{}
+
+var _UpsertAllocateMetricEquipementRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on DropAllocateMetricEquipementRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *DropAllocateMetricEquipementRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_DropAllocateMetricEquipementRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DropAllocateMetricEquipementRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for EquipmentId
+
+	// no validation rules for AllocatedMetrics
+
+	return nil
+}
+
+// DropAllocateMetricEquipementRequestValidationError is the validation error
+// returned by DropAllocateMetricEquipementRequest.Validate if the designated
+// constraints aren't met.
+type DropAllocateMetricEquipementRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DropAllocateMetricEquipementRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DropAllocateMetricEquipementRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DropAllocateMetricEquipementRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DropAllocateMetricEquipementRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DropAllocateMetricEquipementRequestValidationError) ErrorName() string {
+	return "DropAllocateMetricEquipementRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DropAllocateMetricEquipementRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDropAllocateMetricEquipementRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DropAllocateMetricEquipementRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DropAllocateMetricEquipementRequestValidationError{}
+
+var _DropAllocateMetricEquipementRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
 // Validate checks the field values on CreateDashboardUpdateJobResponse with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, an error is returned.
@@ -1467,6 +1946,76 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateDashboardUpdateJobResponseValidationError{}
+
+// Validate checks the field values on UpsertAllocateMetricEquipementResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *UpsertAllocateMetricEquipementResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// UpsertAllocateMetricEquipementResponseValidationError is the validation
+// error returned by UpsertAllocateMetricEquipementResponse.Validate if the
+// designated constraints aren't met.
+type UpsertAllocateMetricEquipementResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertAllocateMetricEquipementResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertAllocateMetricEquipementResponseValidationError) ErrorName() string {
+	return "UpsertAllocateMetricEquipementResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertAllocateMetricEquipementResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertAllocateMetricEquipementResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertAllocateMetricEquipementResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertAllocateMetricEquipementResponseValidationError{}
 
 // Validate checks the field values on GetBannerRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an
@@ -1755,6 +2304,8 @@ func (m *AcqRightRequest) Validate() error {
 	// no validation rules for FileName
 
 	// no validation rules for FileData
+
+	// no validation rules for Repartition
 
 	return nil
 }
@@ -2174,6 +2725,8 @@ func (m *AggregatedRightsRequest) Validate() error {
 
 	// no validation rules for FileData
 
+	// no validation rules for Repartition
+
 	return nil
 }
 
@@ -2371,6 +2924,8 @@ func (m *AggregatedRightsView) Validate() error {
 	// no validation rules for MaintenanceProvider
 
 	// no validation rules for FileName
+
+	// no validation rules for Repartition
 
 	return nil
 }
@@ -4264,6 +4819,10 @@ func (m *Product) Validate() error {
 	// no validation rules for NumOfApplications
 
 	// no validation rules for NumofEquipments
+
+	// no validation rules for AllocatedUser
+
+	// no validation rules for AllocatedMetric
 
 	return nil
 }
@@ -6723,6 +7282,10 @@ func (m *UpsertAcqRightsRequest) Validate() error {
 
 	// no validation rules for SupportNumber
 
+	// no validation rules for Repartition
+
+	// no validation rules for Comment
+
 	return nil
 }
 
@@ -6866,10 +7429,10 @@ func (m *ListAcqRightsRequest) Validate() error {
 		}
 	}
 
-	if val := m.GetPageSize(); val < 10 || val > 200 {
+	if m.GetPageSize() < 10 {
 		return ListAcqRightsRequestValidationError{
 			field:  "PageSize",
-			reason: "value must be inside range [10, 200]",
+			reason: "value must be greater than or equal to 10",
 		}
 	}
 
@@ -7288,6 +7851,8 @@ func (m *AcqRights) Validate() error {
 	// no validation rules for MaintenanceProvider
 
 	// no validation rules for FileName
+
+	// no validation rules for Repartition
 
 	return nil
 }
@@ -9188,6 +9753,78 @@ var _ interface {
 	ErrorName() string
 } = DropAggregationDataResponseValidationError{}
 
+// Validate checks the field values on GetProductCountByAppResponseApplications
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *GetProductCountByAppResponseApplications) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ApplicationId
+
+	// no validation rules for NumOfProducts
+
+	return nil
+}
+
+// GetProductCountByAppResponseApplicationsValidationError is the validation
+// error returned by GetProductCountByAppResponseApplications.Validate if the
+// designated constraints aren't met.
+type GetProductCountByAppResponseApplicationsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProductCountByAppResponseApplicationsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProductCountByAppResponseApplicationsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProductCountByAppResponseApplicationsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProductCountByAppResponseApplicationsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProductCountByAppResponseApplicationsValidationError) ErrorName() string {
+	return "GetProductCountByAppResponseApplicationsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProductCountByAppResponseApplicationsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProductCountByAppResponseApplications.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProductCountByAppResponseApplicationsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProductCountByAppResponseApplicationsValidationError{}
+
 // Validate checks the field values on UpsertProductRequestApplication with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -9375,7 +10012,9 @@ func (m *UpsertProductRequestEquipmentEquipmentuser) Validate() error {
 
 	// no validation rules for EquipmentId
 
-	// no validation rules for NumUser
+	// no validation rules for AllocatedMetrics
+
+	// no validation rules for AllocatedUsers
 
 	return nil
 }

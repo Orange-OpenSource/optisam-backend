@@ -441,3 +441,116 @@ func TestEquipmentRepository_UpsertMetadata(t *testing.T) {
 		})
 	}
 }
+
+func TestEquipmentRepository_UpsertMetadataOldScope(t *testing.T) {
+	type args struct {
+		ctx      context.Context
+		metadata *v1.Metadata
+	}
+	tests := []struct {
+		name    string
+		lr      *EquipmentRepository
+		setup   func() (func() error, error)
+		args    args
+		wantErr bool
+	}{
+		{name: "success - does not exists",
+			lr: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx: context.Background(),
+				metadata: &v1.Metadata{
+					Attributes: []string{
+						"col_1",
+						"col_2",
+						"col_3",
+					},
+				},
+			},
+			setup: func() (func() error, error) {
+				id := blankID("source")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_1"),
+						},
+						{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_2"),
+						},
+						{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_3"),
+						},
+					},
+				}
+				res, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+				id, ok := res.Uids["source"]
+				if !ok {
+					return nil, errors.New("no id can be found for mutation")
+				}
+				return func() error {
+					return deleteNodes(id)
+				}, nil
+			},
+		},
+		{name: "success - exists",
+			lr: NewEquipmentRepository(dgClient),
+			args: args{
+				ctx: context.Background(),
+				metadata: &v1.Metadata{
+					Attributes: []string{
+						"col_1",
+						"col_2",
+						"col_3",
+					},
+				},
+			},
+			setup: func() (func() error, error) {
+				id := blankID("source")
+				mu := &api.Mutation{
+					CommitNow: true,
+					Set: []*api.NQuad{
+						{
+							Subject:     id,
+							Predicate:   "metadata.attributes",
+							ObjectValue: stringObjectValue("col_1"),
+						},
+					},
+				}
+				res, err := dgClient.NewTxn().Mutate(context.Background(), mu)
+				if err != nil {
+					return nil, err
+				}
+				id, ok := res.Uids["source"]
+				if !ok {
+					return nil, errors.New("no id can be found for mutation")
+				}
+				return func() error {
+					return deleteNodes(id)
+				}, nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cleanup, err := tt.setup()
+			if !assert.Empty(t, err, "no error is expected from setup") {
+				return
+			}
+			defer func() {
+				assert.Empty(t, cleanup(), "error is not expected from cleanup")
+			}()
+			if _, err := tt.lr.UpsertMetadata(tt.args.ctx, tt.args.metadata); (err != nil) != tt.wantErr {
+				t.Errorf("EquipmentRepository.UpsertMetadata() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

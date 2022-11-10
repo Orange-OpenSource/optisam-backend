@@ -2,10 +2,12 @@ package v1
 
 import (
 	"context"
+	"log"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	l_v1 "optisam-backend/license-service/pkg/api/v1"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
 	v1 "optisam-backend/simulation-service/pkg/api/v1"
 	"sort"
 	"strings"
@@ -16,8 +18,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// SimulationByMetric function implements simulation by metric functionality
-func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.SimulationByMetricRequest) (*v1.SimulationByMetricResponse, error) {
+// SimulationByCost function implements simulation by metric functionality
+func (hcs *SimulationService) SimulationByCost(ctx context.Context, req *v1.SimulationByCostRequest) (*v1.SimulationByCostResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -25,8 +27,8 @@ func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.Si
 	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	if len(req.MetricDetails) == 0 {
-		return &v1.SimulationByMetricResponse{
+	if len(req.CostDetails) == 0 {
+		return &v1.SimulationByCostResponse{
 			Success: true,
 		}, nil
 	}
@@ -36,78 +38,132 @@ func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.Si
 		Simulation: true,
 	})
 	if err != nil {
-		logger.Log.Error("service/v1 - Simulation - SimulationByMetric - l_v1 - GetOverAllCompliance", zap.Error(err))
-		return &v1.SimulationByMetricResponse{
+		logger.Log.Error("service/v1 - Simulation - SimulationByCost - l_v1 - GetOverAllCompliance", zap.Error(err))
+		return &v1.SimulationByCostResponse{
 			Success:          false,
 			SimFailureReason: err.Error(),
 		}, nil
 	}
+	return &v1.SimulationByCostResponse{
+		Success:       true,
+		CostSimResult: convertCompToCostSimResponse(compResp.AcqRights, req.CostDetails),
+	}, nil
+}
+
+// SimulationByMetric function implements simulation by metric functionality
+func (hcs *SimulationService) SimulationByMetric(ctx context.Context, req *v1.SimulationByMetricRequest) (*v1.SimulationByMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	var wg sync.WaitGroup
+	var metricResults []*v1.MetricSimulationResult // nolint: prealloc
+	for _, simDetails := range req.MetricDetails {
+		wg.Add(1)
+		var metricRes v1.MetricSimulationResult
+		req := l_v1.ProductLicensesForMetricRequest{
+			SwidTag:         req.SwidTag,
+			AggregationName: req.AggregationName,
+			MetricName:      simDetails.MetricName,
+			UnitCost:        simDetails.UnitCost,
+			Scope:           req.Scope,
+		}
+		go func(req *l_v1.ProductLicensesForMetricRequest) {
+			log.Printf("Context:%v", ctx)
+			cmptLicense, err := hcs.licenseClient.ProductLicensesForMetric(ctx, req)
+			if err != nil {
+				logger.Log.Error("service/v1 - Simulation - SimulationByMetric - LicenseService - ProductLicensesForMetric", zap.Error(err))
+				metricRes.Success = false
+				metricRes.MetricName = req.MetricName
+				metricRes.SimFailureReason = err.Error()
+			} else {
+				metricRes.Success = true
+				metricRes.NumCptLicences = cmptLicense.NumCptLicences
+				metricRes.TotalCost = cmptLicense.TotalCost
+				metricRes.MetricName = req.MetricName
+			}
+			defer wg.Done()
+		}(&req)
+		metricResults = append(metricResults, &metricRes)
+	}
+	wg.Wait()
+
 	return &v1.SimulationByMetricResponse{
-		Success:         true,
-		MetricSimResult: convertCompToMetricSimResponse(compResp.AcqRights, req.MetricDetails),
+		MetricSimResult: metricResults,
 	}, nil
 }
 
 // SimulationByHardware function implements simulation by hardware functionality
 func (hcs *SimulationService) SimulationByHardware(ctx context.Context, req *v1.SimulationByHardwareRequest) (*v1.SimulationByHardwareResponse, error) {
-	var simulationResults []*v1.SimulatedProductsLicenses // nolint: prealloc
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	metrics, err := hcs.metricClient.ListMetrices(ctx, &metv1.ListMetricRequest{
+		Scopes: []string{req.Scope},
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - Simulation - SimulationByHardware - MetricService - ListMetrices", zap.Error(err))
+		return nil, status.Error(codes.Internal, "unable to fetch metrics")
+	}
+	simResp := &v1.SimulationByHardwareResponse{}
 	var wg sync.WaitGroup
-	for _, simDetails := range req.MetricDetails {
+	for _, met := range metrics.Metrices {
 		wg.Add(1)
-		var simulationResult v1.SimulatedProductsLicenses
-		req := l_v1.LicensesForEquipAndMetricRequest{
+		req := &l_v1.LicensesForEquipAndMetricRequest{
 			EquipType:  req.EquipType,
 			EquipId:    req.EquipId,
-			MetricType: simDetails.MetricType,
-			MetricName: simDetails.MetricName,
+			MetricType: met.Type,
+			MetricName: met.Name,
 			Attributes: simulationToLicenseAttributesAll(req.Attributes),
 			Scope:      req.Scope,
 		}
-
-		go func(req *l_v1.LicensesForEquipAndMetricRequest) {
+		go func(req *l_v1.LicensesForEquipAndMetricRequest, met *metv1.Metric) {
+			simulationResult := &v1.SimulatedProductLicenses{}
 			response, err := hcs.licenseClient.LicensesForEquipAndMetric(ctx, req)
 			if err != nil {
 				logger.Log.Error("service/v1 - Simulation - SimulationByHardware - l_v1 - LicensesForEquipAndMetric", zap.Error(err))
 				simulationResult.Success = false
-				simulationResult.MetricName = req.MetricName
+				simulationResult.MetricName = met.Name
+				simulationResult.MetricType = met.Type
 				simulationResult.SimFailureReason = err.Error()
 			} else {
 				simulationResult.Success = true
 				simulationResult.MetricName = req.MetricName
+				simulationResult.MetricType = met.Type
 				simulationResult.Licenses = licenseServToSimulationServProductLicenseAll(response.Licenses)
 			}
-
+			simResp.SimulatedResults = append(simResp.SimulatedResults, simulationResult)
 			defer wg.Done()
-		}(&req)
-
-		simulationResults = append(simulationResults, &simulationResult)
+		}(req, met)
 	}
 	wg.Wait()
-	return &v1.SimulationByHardwareResponse{
-		SimulationResult: simulationResults,
-	}, nil
+	return simResp, nil
+
 }
 
-func licenseServToSimulationServProductLicenseAll(licenses []*l_v1.ProductLicenseForEquipAndMetric) []*v1.SimulatedProductLicense {
-
+func licenseServToSimulationServProductLicenseAll(hardwareSimResp []*l_v1.ProductLicenseForEquipAndMetric) []*v1.SimulatedProductLicense {
 	simLicenses := make([]*v1.SimulatedProductLicense, 0)
-
-	for _, productLicense := range licenses {
-		simLicense := licenseServToSimulationServProductLicense(productLicense)
-		simLicenses = append(simLicenses, simLicense)
+	for _, productLicense := range hardwareSimResp {
+		simLicenses = append(simLicenses, licenseServToSimulationServProductLicense(productLicense))
 	}
-
 	return simLicenses
 }
 
-func licenseServToSimulationServProductLicense(license *l_v1.ProductLicenseForEquipAndMetric) *v1.SimulatedProductLicense {
+func licenseServToSimulationServProductLicense(hardwareSimResult *l_v1.ProductLicenseForEquipAndMetric) *v1.SimulatedProductLicense {
 	return &v1.SimulatedProductLicense{
-		OldLicences: license.OldLicences,
-		NewLicenses: license.NewLicenses,
-		Delta:       license.Delta,
-		ProductName: license.Product.Name,
-		SwidTag:     license.Product.SwidTag,
-		Editor:      license.Product.Editor,
+		OldLicences:     hardwareSimResult.OldLicences,
+		NewLicenses:     hardwareSimResult.NewLicenses,
+		Delta:           hardwareSimResult.Delta,
+		SwidTag:         hardwareSimResult.SwidTag,
+		Editor:          hardwareSimResult.Editor,
+		AggregationName: hardwareSimResult.AggregationName,
 	}
 }
 
@@ -150,8 +206,8 @@ func simulationToLicenseAttributes(attr *v1.EquipAttribute) *l_v1.Attribute {
 	return lsattr
 }
 
-func convertCompToMetricSimResponse(compliance []*l_v1.AggregationAcquiredRights, metsim []*v1.MetricSimDetails) []*v1.MetricSimulationResult {
-	simresp := []*v1.MetricSimulationResult{}
+func convertCompToCostSimResponse(compliance []*l_v1.AggregationAcquiredRights, metsim []*v1.CostSimDetails) []*v1.CostSimulationResult {
+	simresp := []*v1.CostSimulationResult{}
 	for _, comp := range compliance {
 		for _, ms := range metsim {
 			sliceCompSwidtags := strings.Split(comp.SwidTags, ",")
@@ -163,7 +219,7 @@ func convertCompToMetricSimResponse(compliance []*l_v1.AggregationAcquiredRights
 				sort.Strings(sliceMsSwidtags)
 			}
 			if comp.Metric == ms.MetricName && comp.SKU == ms.Sku && strings.Join(sliceCompSwidtags, ",") == strings.Join(sliceMsSwidtags, ",") && comp.AggregationName == ms.AggregationName {
-				simresp = append(simresp, &v1.MetricSimulationResult{
+				simresp = append(simresp, &v1.CostSimulationResult{
 					Swidtag:          strings.Join(sliceCompSwidtags, ","),
 					AggregationName:  comp.AggregationName,
 					MetricName:       ms.MetricName,
@@ -177,11 +233,11 @@ func convertCompToMetricSimResponse(compliance []*l_v1.AggregationAcquiredRights
 			}
 		}
 	}
-	return concatMetricSimResultForSameSwidtag(simresp)
+	return concatCostSimResultForSameSwidtag(simresp)
 }
 
-func concatMetricSimResultForSameSwidtag(simMet []*v1.MetricSimulationResult) []*v1.MetricSimulationResult {
-	resSimMetric := make([]*v1.MetricSimulationResult, 0, len(simMet))
+func concatCostSimResultForSameSwidtag(simMet []*v1.CostSimulationResult) []*v1.CostSimulationResult {
+	resSimMetric := make([]*v1.CostSimulationResult, 0, len(simMet))
 	encountered := map[string]int{}
 	for i := range simMet {
 		idx, ok := encountered[simMet[i].Swidtag+":"+simMet[i].MetricName]
@@ -194,7 +250,7 @@ func concatMetricSimResultForSameSwidtag(simMet []*v1.MetricSimulationResult) []
 			// Record this element as an encountered element.
 			encountered[simMet[i].Swidtag+":"+simMet[i].MetricName] = len(resSimMetric)
 			// Append to result slice.
-			resSimMetric = append(resSimMetric, &v1.MetricSimulationResult{
+			resSimMetric = append(resSimMetric, &v1.CostSimulationResult{
 				Sku:              simMet[i].Sku,
 				MetricName:       simMet[i].MetricName,
 				NumCptLicences:   simMet[i].NumCptLicences,

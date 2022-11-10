@@ -181,7 +181,16 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalUnderusageAmount", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-
+	TotalSum, err := s.productRepo.GetTotalDeltaCost(ctx, req.Scope)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalDeltaCost", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	if TotalSum < 0 {
+		cfAmount += TotalSum
+	} else {
+		usAmount += TotalSum
+	}
 	resp.TotalCounterfeitingAmount = cfAmount
 	resp.TotalUnderusageAmount = usAmount
 
@@ -416,8 +425,9 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 	}
 	odDeltaRights, _ := odRow.DeltaRights.Float64()
 
-	cfPer := (cfDeltaRights / cfAcq) * 100
-	odPer := (odDeltaRights / odAcq) * 100
+	totalAcq := cfAcq + odAcq
+	cfPer := (cfDeltaRights / totalAcq) * 100
+	odPer := (odDeltaRights / totalAcq) * 100
 
 	cfPercent := helper.ToFixed(cfPer, 2)
 	odPercent := helper.ToFixed(odPer, 2)

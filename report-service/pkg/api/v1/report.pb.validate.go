@@ -742,7 +742,7 @@ func (m *ListReportRequest) Validate() error {
 	if _, ok := _ListReportRequest_SortBy_InLookup[m.GetSortBy()]; !ok {
 		return ListReportRequestValidationError{
 			field:  "SortBy",
-			reason: "value must be in list [report_id report_type report_status created_by created_on]",
+			reason: "value must be in list [report_id report_type report_status editorcreated_by created_on]",
 		}
 	}
 
@@ -820,11 +820,11 @@ var _ interface {
 } = ListReportRequestValidationError{}
 
 var _ListReportRequest_SortBy_InLookup = map[string]struct{}{
-	"report_id":     {},
-	"report_type":   {},
-	"report_status": {},
-	"created_by":    {},
-	"created_on":    {},
+	"report_id":        {},
+	"report_type":      {},
+	"report_status":    {},
+	"editorcreated_by": {},
+	"created_on":       {},
 }
 
 var _ListReportRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
@@ -941,6 +941,8 @@ func (m *Report) Validate() error {
 			}
 		}
 	}
+
+	// no validation rules for Editor
 
 	return nil
 }
@@ -1085,7 +1087,25 @@ func (m *DownloadReportResponse) Validate() error {
 		return nil
 	}
 
+	// no validation rules for ReportType
+
 	// no validation rules for ReportData
+
+	// no validation rules for Scope
+
+	// no validation rules for CreatedBy
+
+	if v, ok := interface{}(m.GetCreatedOn()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return DownloadReportResponseValidationError{
+				field:  "CreatedOn",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	return nil
 }

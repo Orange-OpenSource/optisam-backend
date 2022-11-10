@@ -1,24 +1,23 @@
 {
-    "acqrights_report": {
-        "scope": "AUT",
-        "report_type_id": 1,
-        "acqrights_report": {
-            "editor": "IBM",
-            "swidtag": [
-                "ibm_cognos_1"
-            ]
-        }
+    "compliance_report": {
+        "scope":"API",
+        "report_type_id":1,
+        "acqrights_report":{"editor":"Oracle"}
     },
+    "invalidcompliance_report": {
+        "scope":"API",
+        "report_type_id":1,
+        "acqrights_report":{"editor":"Servertst1@1"}
+    },
+
     "product_equipments_report": {
-        "scope": "AUT",
-        "report_type_id": 2,
-        "product_equipments_report": {
-            "editor": "Micro Focus",
-            "swidtag": [
-                "hpud_1",
-                "hpud_2"
-            ],
-            "equipType": "server"
-        }
+        "scope":"API",
+        "report_type_id":2,
+        "product_equipments_report":{"editor":"Oracle","equipType":"server"}
+    },
+    "invalidproduct_equipments_report": {
+        "scope":"API",
+        "report_type_id":2,
+        "product_equipments_report":{"editor":"Servertst1@12","equipType":"servertst1@123"}
     }
 }

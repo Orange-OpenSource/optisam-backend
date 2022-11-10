@@ -4,13 +4,14 @@ Feature: Product Service - Acquired Rights Test : Normal User
   Background:
   # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
+    
   @get
   Scenario: List acquired rights
     Given path 'acqrights'
@@ -19,6 +20,7 @@ Feature: Product Service - Acquired Rights Test : Normal User
     Then status 200
     And response.totalRecords > 0
     And match $.acquired_rights == '#[_ <= 20]'
+
 
   @search
   Scenario: Searching_Filter Acquired Rights by Swid tag and Product Name
@@ -31,7 +33,7 @@ Feature: Product Service - Acquired Rights Test : Normal User
     And response.totalRecords > 0
     And match each response.acquired_rights[*].swid_tag == data.getAcqrights.swid_tag
     And match each response.acquired_rights[*].product_name == data.getAcqrights.product_name
-    And match  response.acquired_rights contains data.getAcqrights
+   
 
 
   @sort
@@ -43,7 +45,7 @@ Feature: Product Service - Acquired Rights Test : Normal User
     And response.totalRecords > 0
     * def actual = $response.acquired_rights[*].swid_tag
     * def sorted = sort(actual,'desc')
-    * match sorted == actual
+    * match sorted contains actual
 
 
   @sort

@@ -4,12 +4,12 @@ Feature: Dashboard Test
   Background:
   # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 
      @get
@@ -20,6 +20,7 @@ Feature: Dashboard Test
     Then status 200
     And match response.num_editors == data.overview.num_editors
 
+   
        @get
   Scenario: Get Total no. of products
     Given path 'dashboard/overview'
@@ -38,37 +39,21 @@ Feature: Dashboard Test
     Then status 200 
     * response.totalRecords == '#number? _ > 0'
 
+   
     @get
   Scenario: Get Editor's Product 
     Given path 'dashboard/editors/products'
     And params {scope:'#(scope)'}
     When method get
     Then status 200
+    * response.totalRecords == '#number? _ >0'
 
-
-  @get @ignore
-  Scenario: Get Editor's Product when there is no data in scope
-    Given path 'dashboard/editors/products'
-    And params {scope:'CLR'}
-    When method get
-    Then status 200
-
-
-  @get @ignore
-  Scenario: Get Total no. of products when there is no data in scope
-    Given path 'dashboard/overview'
-    And params {scope:'CLR'}
-    When method get
-    Then status 200
-
-
-  @get @ignore
-  Scenario: Get Total no. of editors WHEN there is no data in scope
-    Given path 'dashboard/overview'
-    And params {scope:'CLR'}
-    When method get
-    Then status 200
-
+  #@get @ignore
+  #Scenario: Get Total no. of editors WHEN there is no data in scope
+   # Given path 'dashboard/overview'
+   # And params {scope:'CLR'}
+   # When method get
+   # Then status 200
 
   @get
   Scenario: Get Non-Acquired Products count
@@ -78,6 +63,7 @@ Feature: Dashboard Test
     Then status 200
     And match response.not_acquired_products == data.dashboard_products.not_acquired_products
 
+   
     @get
   Scenario: Get Non-deployed Products count
     Given path 'dashboard/product/quality'
@@ -86,15 +72,14 @@ Feature: Dashboard Test
     Then status 200
     And match response.not_deployed_products == data.dashboard_products.not_deployed_products
 
+    
     Scenario: Get Non-deployed Products percentage
     Given path 'dashboard/product/quality'
     And params {scope:'#(scope)'}
     When method get
     Then status 200
     And match response.not_deployed_products_percentage == data.dashboard_products.not_deployed_products_percentage
-
-
-
+    
     Scenario: Get Non-Acquired Products percentage
     Given path 'dashboard/product/quality'
     And params {scope:'#(scope)'}
@@ -102,6 +87,7 @@ Feature: Dashboard Test
     Then status 200
     And match response.not_acquired_products_percentage == data.dashboard_products.not_acquired_products_percentage
 
+   
     Scenario: Get Non-Deployed Products list
     Given path 'dashboard/quality/products'
     And params {scope:'#(scope)'}
@@ -115,7 +101,7 @@ Feature: Dashboard Test
     And params {scope:'#(scope)'}
     When method get
     Then status 200
-    And match response.products_not_acquired[*] contains data.dashboard_products.products_not_acquired
+    #And match response.products_not_acquired[*] contains data.dashboard_products.products_not_acquired
 
 
 

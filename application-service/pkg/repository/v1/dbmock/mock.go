@@ -49,6 +49,20 @@ func (mr *MockApplicationMockRecorder) AddApplicationbsolescenceRisk(arg0, arg1 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddApplicationbsolescenceRisk", reflect.TypeOf((*MockApplication)(nil).AddApplicationbsolescenceRisk), arg0, arg1)
 }
 
+// DeleteApplicationEquip mocks base method
+func (m *MockApplication) DeleteApplicationEquip(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteApplicationEquip", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteApplicationEquip indicates an expected call of DeleteApplicationEquip
+func (mr *MockApplicationMockRecorder) DeleteApplicationEquip(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApplicationEquip", reflect.TypeOf((*MockApplication)(nil).DeleteApplicationEquip), arg0, arg1)
+}
+
 // DeleteApplicationsByScope mocks base method
 func (m *MockApplication) DeleteApplicationsByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -160,6 +174,21 @@ func (m *MockApplication) GetApplicationDomains(arg0 context.Context, arg1 strin
 func (mr *MockApplicationMockRecorder) GetApplicationDomains(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationDomains", reflect.TypeOf((*MockApplication)(nil).GetApplicationDomains), arg0, arg1)
+}
+
+// GetApplicationEquip mocks base method
+func (m *MockApplication) GetApplicationEquip(arg0 context.Context, arg1 db.GetApplicationEquipParams) ([]db.GetApplicationEquipRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetApplicationEquip", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetApplicationEquipRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApplicationEquip indicates an expected call of GetApplicationEquip
+func (mr *MockApplicationMockRecorder) GetApplicationEquip(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationEquip", reflect.TypeOf((*MockApplication)(nil).GetApplicationEquip), arg0, arg1)
 }
 
 // GetApplicationInstance mocks base method
@@ -432,19 +461,19 @@ func (mr *MockApplicationMockRecorder) GetObsolescenceRiskForApplication(arg0, a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObsolescenceRiskForApplication", reflect.TypeOf((*MockApplication)(nil).GetObsolescenceRiskForApplication), arg0, arg1)
 }
 
-// GetProductsByApplicationInstanceID mocks base method
-func (m *MockApplication) GetProductsByApplicationInstanceID(arg0 context.Context, arg1 db.GetProductsByApplicationInstanceIDParams) ([]string, error) {
+// GetProductsByApplicationID mocks base method
+func (m *MockApplication) GetProductsByApplicationID(arg0 context.Context, arg1 db.GetProductsByApplicationIDParams) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetProductsByApplicationInstanceID", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetProductsByApplicationID", arg0, arg1)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetProductsByApplicationInstanceID indicates an expected call of GetProductsByApplicationInstanceID
-func (mr *MockApplicationMockRecorder) GetProductsByApplicationInstanceID(arg0, arg1 interface{}) *gomock.Call {
+// GetProductsByApplicationID indicates an expected call of GetProductsByApplicationID
+func (mr *MockApplicationMockRecorder) GetProductsByApplicationID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByApplicationInstanceID", reflect.TypeOf((*MockApplication)(nil).GetProductsByApplicationInstanceID), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByApplicationID", reflect.TypeOf((*MockApplication)(nil).GetProductsByApplicationID), arg0, arg1)
 }
 
 // GetRiskLevelMetaIDs mocks base method
@@ -576,6 +605,34 @@ func (m *MockApplication) UpsertApplication(arg0 context.Context, arg1 db.Upsert
 func (mr *MockApplicationMockRecorder) UpsertApplication(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertApplication", reflect.TypeOf((*MockApplication)(nil).UpsertApplication), arg0, arg1)
+}
+
+// UpsertApplicationEquip mocks base method
+func (m *MockApplication) UpsertApplicationEquip(arg0 context.Context, arg1 db.UpsertApplicationEquipParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertApplicationEquip", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertApplicationEquip indicates an expected call of UpsertApplicationEquip
+func (mr *MockApplicationMockRecorder) UpsertApplicationEquip(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertApplicationEquip", reflect.TypeOf((*MockApplication)(nil).UpsertApplicationEquip), arg0, arg1)
+}
+
+// UpsertApplicationEquipTx mocks base method
+func (m *MockApplication) UpsertApplicationEquipTx(arg0 context.Context, arg1 *v1.UpsertApplicationEquipRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertApplicationEquipTx", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertApplicationEquipTx indicates an expected call of UpsertApplicationEquipTx
+func (mr *MockApplicationMockRecorder) UpsertApplicationEquipTx(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertApplicationEquipTx", reflect.TypeOf((*MockApplication)(nil).UpsertApplicationEquipTx), arg0, arg1)
 }
 
 // UpsertApplicationInstance mocks base method

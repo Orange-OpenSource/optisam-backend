@@ -4,12 +4,12 @@ Feature: Metric Service Test - Get metrics and configurations : Normal user
   Background:
   # * def metricServiceUrl = "https://optisam-metric-int.apps.fr01.paas.tech.orange"
     * url metricServiceUrl+'/api/v1'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
   @schema
   Scenario: Validate Schema for get metrics list

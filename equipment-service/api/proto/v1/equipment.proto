@@ -21,6 +21,21 @@ service EquipmentService {
     };
   }
 
+  rpc UpsertAllocMetricByFile(UpsertAllocMetricByFileRequest) returns (UpsertAllocMetricByFileResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/equipment/allocation/metric"
+      body : "*"
+    };
+  }
+  
+  // UpdateAtrributeOldScope appends attribute nodes to equipments in old scopes
+  rpc UpdateAtrributeOldScope(UpdateAtrributeOldScopeRequest) returns (UpdateAtrributeOldScopeResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/equipment/metadata/oldScope"
+      body : "*"
+    };
+  }
+
   rpc EquipmentsPerEquipmentType(EquipmentsPerEquipmentTypeRequest) returns (EquipmentsPerEquipmentTypeResponse) {
     option (google.api.http) = {
       get : "/api/v1/equipment/dashboard/types/equipments"
@@ -34,7 +49,25 @@ service EquipmentService {
       body : "*"
     };
   }
+
+  rpc UpsertEquipmentAllocatedMetric(UpsertEquipmentAllocatedMetricRequest)
+      returns (UpsertEquipmentResponse) {
+        option (google.api.http) = {
+          put : "/api/v1/equipment/allocatedmetric"
+          body : "*"
+          additional_bindings {
+            patch : "/api/v1/equipment/allocatedmetric" 
+            body : "*"
+          }
+        };
+    }
   
+  rpc DeleteEquipmentAllocatedMetric(DeleteEquipmentAllocatedMetricRequest)returns (UpsertEquipmentResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/equipment/allocatedmetric/{equipment_id}"
+    };
+  }
+
   rpc ListEquipmentsMetadata(ListEquipmentMetadataRequest)
       returns (ListEquipmentMetadataResponse) {
     option (google.api.http) = {
@@ -54,6 +87,12 @@ service EquipmentService {
     };
   }
 
+rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/equipment/metrics"
+    };
+  }
+  
   rpc CreateEquipmentType(EquipmentType) returns (EquipmentType) {
     option (google.api.http) = {
       post : "/api/v1/equipment/types"
@@ -129,6 +168,15 @@ service EquipmentService {
   }
 }
 
+message GetMetricsRequest{
+  string scope = 1;
+}
+
+message GetMetricsResponse{
+  repeated string name = 1;
+  repeated string type = 2;
+}
+
 message CreateGenericScopeEquipmentTypesRequest {
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
@@ -167,10 +215,51 @@ message UpsertMetadataRequest {
 
 message UpsertMetadataResponse { bool success = 1; }
 
+message UpdateAtrributeOldScopeRequest{
+  string scope = 1 ;
+}
+
+message UpdateAtrributeOldScopeResponse{
+  bool Success = 1;
+}
+
 message UpsertEquipmentRequest {
   string scope = 1 [(validate.rules).string.len = 3] ;
   string eq_type = 2;
   google.protobuf.Struct eq_data = 3;
+}
+
+message UpsertAllocMetricByFileRequest {
+  string scope = 1;
+  string swidtag = 2;
+  string equipment_id = 3;
+  string allocated_metrics = 4;
+  int32 allocated_users = 5;
+}
+
+message UpsertAllocMetricByFileResponse {
+  bool success = 1;
+}
+
+message UpsertEquipmentAllocatedMetricRequest {
+  string scope = 1 [(validate.rules).string.len = 3] ;
+  string swidtag = 2;
+  string equipment_id = 3;
+  string eq_type = 4;
+  int32 equipment_user = 5;
+  string allocated_metrics = 6;
+}
+
+message DeleteEquipmentAllocatedMetricRequest {
+  string scope = 1 [(validate.rules).string = {
+    pattern : "^[A-Z]+$",
+    min_len : 3,
+    max_len: 3,
+  }];
+  string swidtag = 2;
+  string equipment_id = 3;
+  string eq_type = 4;
+  string allocated_metrics = 5;
 }
 
 message UpsertEquipmentResponse {bool success = 1;}
@@ -290,7 +379,8 @@ message UpdateEquipmentTypeRequest {
   // Only send parent id if equipment type does not have a parent.
   string parent_id = 2;
   repeated Attribute attributes = 3;
-  repeated string scopes = 4  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  repeated UpdAttribute updattr = 4;
+  repeated string scopes = 5  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message DeleteEquipmentTypeRequest{
@@ -365,7 +455,7 @@ message Attribute {
   bool parent_identifier = 7;
   string mapped_to = 8;
   bool simulated = 9;
-
+  string schema_name = 16;
   oneof val {
     int32 int_val = 10;
     float float_val = 11;
@@ -377,6 +467,15 @@ message Attribute {
     float float_val_old = 14;
     string string_val_old = 15;
   }
+}
+
+message UpdAttribute {
+  string ID = 1;
+  string schema_name = 2;
+  bool displayed = 3;
+  bool searchable = 4;
+  string name = 5 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+
 }
 
 message StringFilter {

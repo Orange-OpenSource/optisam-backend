@@ -4,11 +4,6 @@
     "title": "product.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "ProductService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -2476,6 +2471,18 @@
       ],
       "default": "ACQRIGHTS"
     },
+    "GetProductCountByAppResponseapplications": {
+      "type": "object",
+      "properties": {
+        "application_id": {
+          "type": "string"
+        },
+        "num_of_products": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
     "UpsertProductRequestapplication": {
       "type": "object",
       "properties": {
@@ -2510,7 +2517,10 @@
         "equipment_id": {
           "type": "string"
         },
-        "num_user": {
+        "allocated_metrics": {
+          "type": "string"
+        },
+        "allocated_users": {
           "type": "integer",
           "format": "int32"
         }
@@ -2619,6 +2629,9 @@
         "file_data": {
           "type": "string",
           "format": "byte"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2714,6 +2727,9 @@
         },
         "file_name": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2855,6 +2871,9 @@
         "file_data": {
           "type": "string",
           "format": "byte"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -2963,6 +2982,9 @@
         },
         "file_name": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
         }
       }
     },
@@ -3211,6 +3233,17 @@
         }
       }
     },
+    "v1GetApplicationsByProductResponse": {
+      "type": "object",
+      "properties": {
+        "application_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1GetBannerResponse": {
       "type": "object",
       "properties": {
@@ -3229,6 +3262,17 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "v1GetProductCountByAppResponse": {
+      "type": "object",
+      "properties": {
+        "app_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GetProductCountByAppResponseapplications"
           }
         }
       }
@@ -3565,6 +3609,13 @@
         "numofEquipments": {
           "type": "integer",
           "format": "int32"
+        },
+        "allocatedUser": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "allocatedMetric": {
+          "type": "string"
         }
       }
     },
@@ -3925,10 +3976,24 @@
         },
         "support_number": {
           "type": "string"
+        },
+        "repartition": {
+          "type": "boolean"
+        },
+        "comment": {
+          "type": "string"
         }
       }
     },
     "v1UpsertAcqRightsResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1UpsertAllocateMetricEquipementResponse": {
       "type": "object",
       "properties": {
         "success": {

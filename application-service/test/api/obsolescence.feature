@@ -4,12 +4,12 @@ Feature: Application Service Test for Obsolescence
   Background:
   # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
     * url applicationServiceUrl+'/api/v1/application'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 
 

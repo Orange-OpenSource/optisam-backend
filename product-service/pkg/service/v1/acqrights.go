@@ -10,7 +10,6 @@ import (
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue/job"
 	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	metModels "optisam-backend/metric-service/pkg/repository/v1"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
@@ -135,6 +134,7 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 		CreatedBy:                 userClaims.UserID,
 		LastPurchasedOrder:        req.GetLastPurchasedOrder(),
 		SupportNumber:             req.GetSupportNumber(),
+		Repartition:               req.GetRepartition(),
 	}); err != nil {
 		logger.Log.Error("service/v1 - UpsertAcqRights - UpsertAcquiredRights", zap.String("reason", err.Error()))
 		return &v1.UpsertAcqRightsResponse{Success: false}, status.Error(codes.Unknown, "DBError")
@@ -163,6 +163,7 @@ func (s *productServiceServer) UpsertAcqRights(ctx context.Context, req *v1.Upse
 		MaintenanceProvider:       req.MaintenanceProvider,
 		LastPurchasedOrder:        req.LastPurchasedOrder,
 		SupportNumber:             req.SupportNumber,
+		Repartition:               req.Repartition,
 	})
 	return &v1.UpsertAcqRightsResponse{Success: true}, nil
 }
@@ -279,6 +280,7 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 		apiresp.AcquiredRights[i].MaintenanceProvider = dbresp[i].MaintenanceProvider
 		apiresp.AcquiredRights[i].CorporateSourcingContract = dbresp[i].CorporateSourcingContract
 		apiresp.AcquiredRights[i].FileName = dbresp[i].FileName
+		apiresp.AcquiredRights[i].Repartition = dbresp[i].Repartition
 		if dbresp[i].OrderingDate.Valid {
 			apiresp.AcquiredRights[i].OrderingDate, _ = ptypes.TimestampProto(dbresp[i].OrderingDate.Time)
 		}
@@ -478,9 +480,9 @@ func (s *productServiceServer) validateAcqRight(ctx context.Context, req *v1.Acq
 			logger.Log.Error("service/v1 - validateAcqRight - metric does not exist", zap.String("metric:", met))
 			return db.UpsertAcqRightsParams{}, nil, status.Error(codes.InvalidArgument, "MetricNotExists")
 		}
-		if err := s.metricCheckForProcessorAndNup(ctx, metrics.Metrices, idx, 0, swidtag, req.Scope); err != nil {
-			return db.UpsertAcqRightsParams{}, nil, err
-		}
+		// if err := s.metricCheckForProcessorAndNup(ctx, metrics.Metrices, idx, 0, swidtag, req.Scope); err != nil {
+		// 	return db.UpsertAcqRightsParams{}, nil, err
+		// }
 	}
 	var totalPurchaseCost, totalMaintenanceCost float64
 	totalPurchaseCost = req.AvgUnitPrice * float64(req.NumLicensesAcquired)
@@ -565,6 +567,7 @@ func (s *productServiceServer) validateAcqRight(ctx context.Context, req *v1.Acq
 			MaintenanceProvider:       req.MaintenanceProvider,
 			FileName:                  req.FileName,
 			FileData:                  req.FileData,
+			Repartition:               req.Repartition,
 		}, &dgworker.UpsertAcqRightsRequest{
 			Sku:                       req.Sku,
 			Swidtag:                   swidtag,
@@ -588,8 +591,8 @@ func (s *productServiceServer) validateAcqRight(ctx context.Context, req *v1.Acq
 			LastPurchasedOrder:        req.LastPurchasedOrder,
 			SupportNumber:             req.SupportNumber,
 			MaintenanceProvider:       req.MaintenanceProvider,
+			Repartition:               req.Repartition,
 		}, nil
-
 }
 
 func metricExists(metrics []*metv1.Metric, name string) int {
@@ -624,60 +627,60 @@ func (s *productServiceServer) pushUpsertAcqrightsWorkerJob(ctx context.Context,
 	logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
 }
 
-func (s *productServiceServer) metricCheckForProcessorAndNup(ctx context.Context, metrics []*metv1.Metric, idx int, aggid int32, swidtag, scope string) error {
-	switch metrics[idx].Type {
-	case metModels.MetricOPSOracleProcessorStandard.String(), metModels.MetricOracleNUPStandard.String():
-		if aggid != 0 {
-			aggRightsMetrics, err := s.productRepo.GetAggRightMetricsByAggregationId(ctx, db.GetAggRightMetricsByAggregationIdParams{
-				AggID: aggid,
-				Scope: scope,
-			})
-			if err != nil {
-				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAggRightMetricsByAggregationId - unable to get acqrights metrics by aggregation id:%v", zap.Error(err))
-				return status.Error(codes.Internal, "DBError")
-			}
-			for _, acqMetric := range aggRightsMetrics {
-				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
-					return err
-				}
-			}
-		} else {
-			acqMetrics, err := s.productRepo.GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
-				Swidtag: swidtag,
-				Scope:   scope,
-			})
-			if err != nil {
-				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAcqRightMetricsBySwidtag - unable to get acqrights metrics by swidtag:%v", zap.Error(err))
-				return status.Error(codes.Internal, "DBError")
-			}
-			for _, acqMetric := range acqMetrics {
-				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
-					return err
-				}
-			}
-		}
+// func (s *productServiceServer) metricCheckForProcessorAndNup(ctx context.Context, metrics []*metv1.Metric, idx int, aggid int32, swidtag, scope string) error {
+// 	switch metrics[idx].Type {
+// 	case metModels.MetricOPSOracleProcessorStandard.String(), metModels.MetricOracleNUPStandard.String():
+// 		if aggid != 0 {
+// 			aggRightsMetrics, err := s.productRepo.GetAggRightMetricsByAggregationId(ctx, db.GetAggRightMetricsByAggregationIdParams{
+// 				AggID: aggid,
+// 				Scope: scope,
+// 			})
+// 			if err != nil {
+// 				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAggRightMetricsByAggregationId - unable to get acqrights metrics by aggregation id:%v", zap.Error(err))
+// 				return status.Error(codes.Internal, "DBError")
+// 			}
+// 			for _, acqMetric := range aggRightsMetrics {
+// 				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
+// 					return err
+// 				}
+// 			}
+// 		} else {
+// 			acqMetrics, err := s.productRepo.GetAcqRightMetricsBySwidtag(ctx, db.GetAcqRightMetricsBySwidtagParams{
+// 				Swidtag: swidtag,
+// 				Scope:   scope,
+// 			})
+// 			if err != nil {
+// 				logger.Log.Sugar().Errorf("service/v1 - validateAcqRight - metricCheckForProcessorAndNup - repo/GetAcqRightMetricsBySwidtag - unable to get acqrights metrics by swidtag:%v", zap.Error(err))
+// 				return status.Error(codes.Internal, "DBError")
+// 			}
+// 			for _, acqMetric := range acqMetrics {
+// 				if err := metricCheckForProcessorAndNupInRights(metrics, acqMetric.Metric, idx); err != nil {
+// 					return err
+// 				}
+// 			}
+// 		}
 
-		return nil
-	default:
-		return nil
-	}
-}
+// 		return nil
+// 	default:
+// 		return nil
+// 	}
+// }
 
-func metricCheckForProcessorAndNupInRights(metrics []*metv1.Metric, acqmet string, idx int) error {
-	ind := metricExists(metrics, acqmet)
-	if ind == -1 {
-		logger.Log.Error("service/v1 - validateAcqRight - acquired right metric does not exist", zap.String("metric:", acqmet))
-		return status.Error(codes.Internal, "Internal Error")
-	}
-	if metrics[ind].Type == metModels.MetricOPSOracleProcessorStandard.String() && metrics[idx].Type == metModels.MetricOPSOracleProcessorStandard.String() {
-		if metrics[idx].Name != metrics[ind].Name {
-			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.processor.standard for the same product/aggregation.")
-		}
-	}
-	if metrics[ind].Type == metModels.MetricOracleNUPStandard.String() && metrics[idx].Type == metModels.MetricOracleNUPStandard.String() {
-		if metrics[idx].Name != metrics[ind].Name {
-			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.nup.standard for the same product/aggregation.")
-		}
-	}
-	return nil
-}
+// func metricCheckForProcessorAndNupInRights(metrics []*metv1.Metric, acqmet string, idx int) error {
+// 	ind := metricExists(metrics, acqmet)
+// 	if ind == -1 {
+// 		logger.Log.Error("service/v1 - validateAcqRight - acquired right metric does not exist", zap.String("metric:", acqmet))
+// 		return status.Error(codes.Internal, "Internal Error")
+// 	}
+// 	if metrics[ind].Type == metModels.MetricOPSOracleProcessorStandard.String() && metrics[idx].Type == metModels.MetricOPSOracleProcessorStandard.String() {
+// 		if metrics[idx].Name != metrics[ind].Name {
+// 			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.processor.standard for the same product/aggregation.")
+// 		}
+// 	}
+// 	if metrics[ind].Type == metModels.MetricOracleNUPStandard.String() && metrics[idx].Type == metModels.MetricOracleNUPStandard.String() {
+// 		if metrics[idx].Name != metrics[ind].Name {
+// 			return status.Error(codes.InvalidArgument, "You can not use 2 different metrics of type oracle.nup.standard for the same product/aggregation.")
+// 		}
+// 	}
+// 	return nil
+// }

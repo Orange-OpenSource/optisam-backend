@@ -64,6 +64,21 @@ func (mr *MockMetricMockRecorder) CreateMetricAttrSum(arg0, arg1, arg2, arg3 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricAttrSum", reflect.TypeOf((*MockMetric)(nil).CreateMetricAttrSum), arg0, arg1, arg2, arg3)
 }
 
+// CreateMetricEquipAttrStandard mocks base method
+func (m *MockMetric) CreateMetricEquipAttrStandard(arg0 context.Context, arg1 *v1.MetricEquipAttrStand, arg2 *v1.Attribute, arg3 string) (*v1.MetricEquipAttrStand, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateMetricEquipAttrStandard", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*v1.MetricEquipAttrStand)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetricEquipAttrStandard indicates an expected call of CreateMetricEquipAttrStandard
+func (mr *MockMetricMockRecorder) CreateMetricEquipAttrStandard(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricEquipAttrStandard", reflect.TypeOf((*MockMetric)(nil).CreateMetricEquipAttrStandard), arg0, arg1, arg2, arg3)
+}
+
 // CreateMetricIPS mocks base method
 func (m *MockMetric) CreateMetricIPS(arg0 context.Context, arg1 *v1.MetricIPS, arg2 string) (*v1.MetricIPS, error) {
 	m.ctrl.T.Helper()
@@ -242,6 +257,21 @@ func (mr *MockMetricMockRecorder) GetMetricConfigAttrSum(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricConfigAttrSum", reflect.TypeOf((*MockMetric)(nil).GetMetricConfigAttrSum), arg0, arg1, arg2)
 }
 
+// GetMetricConfigEquipAttr mocks base method
+func (m *MockMetric) GetMetricConfigEquipAttr(arg0 context.Context, arg1, arg2 string) (*v1.MetricEquipAttrStand, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricConfigEquipAttr", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.MetricEquipAttrStand)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricConfigEquipAttr indicates an expected call of GetMetricConfigEquipAttr
+func (mr *MockMetricMockRecorder) GetMetricConfigEquipAttr(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricConfigEquipAttr", reflect.TypeOf((*MockMetric)(nil).GetMetricConfigEquipAttr), arg0, arg1, arg2)
+}
+
 // GetMetricConfigINM mocks base method
 func (m *MockMetric) GetMetricConfigINM(arg0 context.Context, arg1, arg2 string) (*v1.MetricINM, error) {
 	m.ctrl.T.Helper()
@@ -407,6 +437,21 @@ func (mr *MockMetricMockRecorder) GetMetricConfigUSS(arg0, arg1, arg2 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricConfigUSS", reflect.TypeOf((*MockMetric)(nil).GetMetricConfigUSS), arg0, arg1, arg2)
 }
 
+// GetMetricNUPByTransformMetricName mocks base method
+func (m *MockMetric) GetMetricNUPByTransformMetricName(arg0 context.Context, arg1, arg2 string) (*v1.MetricNUPOracle, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricNUPByTransformMetricName", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.MetricNUPOracle)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricNUPByTransformMetricName indicates an expected call of GetMetricNUPByTransformMetricName
+func (mr *MockMetricMockRecorder) GetMetricNUPByTransformMetricName(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricNUPByTransformMetricName", reflect.TypeOf((*MockMetric)(nil).GetMetricNUPByTransformMetricName), arg0, arg1, arg2)
+}
+
 // ListMetricACS mocks base method
 func (m *MockMetric) ListMetricACS(arg0 context.Context, arg1 string) ([]*v1.MetricACS, error) {
 	m.ctrl.T.Helper()
@@ -568,6 +613,20 @@ func (m *MockMetric) UpdateMetricAttrSum(arg0 context.Context, arg1 *v1.MetricAt
 func (mr *MockMetricMockRecorder) UpdateMetricAttrSum(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricAttrSum", reflect.TypeOf((*MockMetric)(nil).UpdateMetricAttrSum), arg0, arg1, arg2)
+}
+
+// UpdateMetricEquipAttr mocks base method
+func (m *MockMetric) UpdateMetricEquipAttr(arg0 context.Context, arg1 *v1.MetricEquipAttrStand, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMetricEquipAttr", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMetricEquipAttr indicates an expected call of UpdateMetricEquipAttr
+func (mr *MockMetricMockRecorder) UpdateMetricEquipAttr(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricEquipAttr", reflect.TypeOf((*MockMetric)(nil).UpdateMetricEquipAttr), arg0, arg1, arg2)
 }
 
 // UpdateMetricINM mocks base method

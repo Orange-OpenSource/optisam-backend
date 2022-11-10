@@ -32,6 +32,14 @@ service ApplicationService {
       body : "*"
     };
   }
+
+rpc UpsertApplicationEquip(UpsertApplicationEquipRequest)returns (UpsertApplicationEquipResponse) {
+  option (google.api.http) = {
+      post : "/api/v1/application/equip"
+      body : "*"
+  };
+}
+
   rpc DropApplicationData(DropApplicationDataRequest)returns (DropApplicationDataResponse) {
     option (google.api.http) = {
       delete : "/api/v1/application/{scope}"
@@ -158,10 +166,6 @@ service ApplicationService {
       get : "/api/v1/application/equipments"
     };
   }
-
-  rpc GetProductsByApplicationInstance(GetProductsByApplicationInstanceRequest)returns (GetProductsByApplicationInstanceResponse) {
-    
-  }
 }
 
 message GetEquipmentsByApplicationRequest {  
@@ -171,16 +175,7 @@ message GetEquipmentsByApplicationRequest {
 
 message GetEquipmentsByApplicationResponse { 
   repeated string equipment_id = 1; 
-}
-
-message GetProductsByApplicationInstanceRequest {  
-  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
-  string application_id = 2;
-  string instance_id = 3;
-}
-
-message GetProductsByApplicationInstanceResponse { 
-  repeated string product_id = 1; 
+  int32 totalRecords = 2;
 }
 
 message DropObscolenscenceDataRequest {  
@@ -194,13 +189,26 @@ message DropObscolenscenceDataResponse {
 message UpsertApplicationRequest {
   string application_id = 1;
   string name = 2;
-  string version = 3;
-  string owner = 4; 
-  string domain = 5;
-  string scope = 6 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string environment = 3;
+  string domain = 4;
+  string scope = 5 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
 }
 
 message UpsertApplicationResponse { bool success = 1; }
+
+message UpsertApplicationEquipRequest {
+  string application_id = 1;
+  string scope = 2;
+  equipment equipments = 3;
+
+  message equipment {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string equipment_id = 2;
+    }
+}
+
+message UpsertApplicationEquipResponse { bool success = 1; }
 
 message DropApplicationDataRequest {  
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
@@ -282,6 +290,7 @@ message ListApplicationsRequest {
     domain = 5;
     total_cost = 6;
     obsolescence_risk = 7;
+    environment = 8;
   }
   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
   SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
@@ -304,6 +313,7 @@ message Application {
   string domain = 7;
   string obsolescence_risk = 8;
   int32 num_of_equipments = 9;
+  string environment = 10;
 }
 
 message ApplicationSearchParams {
@@ -312,6 +322,7 @@ message ApplicationSearchParams {
   StringFilter product_id = 3;
   StringFilter domain = 4;
   StringFilter obsolescence_risk = 5;
+  string environment = 6;
 }
 
 message ListInstancesRequest {

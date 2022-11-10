@@ -20,6 +20,7 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 		ctx        context.Context
 		masterData *v1.MasterData
 		data       []*v1.ConfigData
+		scope      string
 	}
 	tests := []struct {
 		name    string
@@ -42,6 +43,7 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 					UpdatedBy:     "admin@superuser.com",
 					UpdatedOn:     time.Now().UTC(),
 				},
+				scope: "scope1",
 				data: []*v1.ConfigData{
 					{
 						ConfigMetadata: &v1.Metadata{
@@ -88,6 +90,7 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 					Status:        1,
 					IsEquipType:   false,
 					EquipmentType: "",
+					Scope:         "scope1",
 				})
 				if err != nil {
 					return err
@@ -163,7 +166,7 @@ func TestSimulationServiceRepo_CreateConfig(t *testing.T) {
 					return
 				}
 			}()
-			if err := tt.r.CreateConfig(tt.args.ctx, tt.args.masterData, tt.args.data); (err != nil) != tt.wantErr {
+			if err := tt.r.CreateConfig(tt.args.ctx, tt.args.masterData, tt.args.data, tt.args.scope); (err != nil) != tt.wantErr {
 				t.Errorf("SimulationServiceRepo.CreateConfig() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
@@ -231,8 +234,10 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 		ctx         context.Context
 		configID    int32
 		eqType      string
+		updatedBy   string
 		metadataIDs []int32
 		data        []*v1.ConfigData
+		scope       string
 	}
 	tests := []struct {
 		name    string
@@ -249,6 +254,8 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 				configID:    1,
 				eqType:      "Server",
 				metadataIDs: []int32{1, 2},
+				scope:       "scope1",
+				updatedBy:   "admin@superuser.com",
 				data: []*v1.ConfigData{
 					{
 						ConfigMetadata: &v1.Metadata{
@@ -285,7 +292,7 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 				},
 			},
 			setup: func(h *SimulationServiceRepo) (func() error, error) {
-				err := createConfig(createMasterData, createData)
+				err := createConfig(createMasterData, createData, "scope1")
 				if err != nil {
 					return nil, err
 				}
@@ -299,6 +306,7 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 					Status:        1,
 					IsEquipType:   false,
 					EquipmentType: "",
+					Scope:         "scope1",
 				})
 				if err != nil {
 					return err
@@ -368,7 +376,7 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 					return
 				}
 			}()
-			if err := tt.r.UpdateConfig(tt.args.ctx, tt.args.configID, tt.args.eqType, tt.args.metadataIDs, tt.args.data); (err != nil) != tt.wantErr {
+			if err := tt.r.UpdateConfig(tt.args.ctx, tt.args.configID, tt.args.eqType, tt.args.updatedBy, tt.args.metadataIDs, tt.args.data, tt.args.scope); (err != nil) != tt.wantErr {
 				t.Errorf("SimulationServiceRepo.UpdateConfig() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
@@ -378,7 +386,7 @@ func TestSimulationServiceRepo_UpdateConfig(t *testing.T) {
 	}
 }
 
-func configByName(configs []db.ConfigMaster, configName string) int {
+func configByName(configs []db.ListConfigRow, configName string) int {
 	for i, config := range configs {
 		if config.Name == configName {
 			return i
@@ -387,23 +395,23 @@ func configByName(configs []db.ConfigMaster, configName string) int {
 	return -1
 }
 
-func compareMasterDataAll(t *testing.T, name string, exp, act []db.ConfigMaster) {
-	if exp == nil && act == nil {
-		return
-	}
-	if exp == nil {
-		assert.Nil(t, act, "Metadata is expected to be nil")
-	}
-	if !assert.Lenf(t, act, len(exp), "expected number of elements are: %d", len(exp)) {
-		return
-	}
-	for i := range exp {
-		if idx := masterDataIndex(exp[i], act); idx != -1 {
-			compareMasterData(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[idx])
-		}
-	}
+// func compareMasterDataAll(t *testing.T, name string, exp, act []db.ConfigMaster) {
+// 	if exp == nil && act == nil {
+// 		return
+// 	}
+// 	if exp == nil {
+// 		assert.Nil(t, act, "Metadata is expected to be nil")
+// 	}
+// 	if !assert.Lenf(t, act, len(exp), "expected number of elements are: %d", len(exp)) {
+// 		return
+// 	}
+// 	for i := range exp {
+// 		if idx := masterDataIndex(exp[i], act); idx != -1 {
+// 			compareMasterData(t, fmt.Sprintf("%s[%d]", name, i), exp[i], act[idx])
+// 		}
+// 	}
 
-}
+// }
 
 func masterDataIndex(exp db.ConfigMaster, act []db.ConfigMaster) int {
 	for i := range act {
@@ -414,7 +422,7 @@ func masterDataIndex(exp db.ConfigMaster, act []db.ConfigMaster) int {
 	return -1
 }
 
-func compareMasterData(t *testing.T, name string, exp, act db.ConfigMaster) {
+func compareMasterData(t *testing.T, name string, exp db.ConfigMaster, act db.ListConfigRow) {
 	assert.Equalf(t, exp.EquipmentType, act.EquipmentType, "%s %s.EquipmentType are not same", name, exp.EquipmentType)
 	assert.Equalf(t, exp.Name, act.Name, "%s %s.ConfigName are not same", name, exp.Name)
 	assert.Equalf(t, exp.Status, act.Status, "%s %s.Status are not same", name, exp.Status)
@@ -477,15 +485,15 @@ func deleteConfig() error {
 	return nil
 }
 
-func createConfig(masterData *v1.MasterData, data []*v1.ConfigData) error {
-	insertMasterdata := `INSERT INTO config_master (id,name,equipment_type,status,created_by,created_on,updated_by,updated_on) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`
+func createConfig(masterData *v1.MasterData, data []*v1.ConfigData, scope string) error {
+	insertMasterdata := `INSERT INTO config_master (id,name,equipment_type,status,created_by,created_on,updated_by,updated_on,scope) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`
 
 	txn, err := sqldb.BeginTx(context.Background(), &sql.TxOptions{})
 	if err != nil {
 		return err
 	}
 	//Insert into master table
-	_, err = txn.ExecContext(context.Background(), insertMasterdata, masterData.ID, masterData.Name, masterData.EquipmentType, masterData.Status, masterData.CreatedBy, masterData.CreatedOn, masterData.UpdatedBy, masterData.UpdatedOn)
+	_, err = txn.ExecContext(context.Background(), insertMasterdata, masterData.ID, masterData.Name, masterData.EquipmentType, masterData.Status, masterData.CreatedBy, masterData.CreatedOn, masterData.UpdatedBy, masterData.UpdatedOn, scope)
 	if err != nil {
 		return err
 	}

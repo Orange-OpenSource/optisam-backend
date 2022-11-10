@@ -874,7 +874,7 @@ func getUIDForProductXID(xid string, scopes []string) (string, error) {
 	}
 
 	resp, err := dgClient.NewTxn().Query(context.Background(), `{
-	        IDs(func: eq(product.swidtag,"`+xid+`")) `+agregateFilters(scopeFilters(scopes))+`{
+	        IDs(func: eq(product.swidtag,"`+xid+`")) `+agregateFilters(scopeFilters(scopes), typeFilters("type_name", "product"))+`{
 				ID:uid
 			}
 	}`)

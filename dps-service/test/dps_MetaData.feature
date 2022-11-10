@@ -3,12 +3,13 @@ Feature: DPS Service Test - Metadata : admin user
 
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = "AUT"
+    * def scope = "API"
 
 
   Scenario: Schema validation for List uploads Metadata 

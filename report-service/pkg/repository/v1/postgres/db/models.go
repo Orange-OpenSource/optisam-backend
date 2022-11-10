@@ -62,6 +62,7 @@ type Job struct {
 	EndTime    sql.NullTime    `json:"end_time"`
 	CreatedAt  time.Time       `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
+	MetaData   json.RawMessage `json:"meta_data"`
 }
 
 type Report struct {

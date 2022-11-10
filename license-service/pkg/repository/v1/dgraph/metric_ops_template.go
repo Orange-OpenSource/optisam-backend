@@ -10,7 +10,7 @@ const opsEquipTemplate templateType = "opsEquipmentTemplate"
 
 const equipProcCalTmpl = `
 {  
-	{{- template "equipUIDFromID" .EquipID }}
+	{{- template "equipUIDFromID" . }}
 	{{ $clOPS := .CalLevelOPS}}
 	{{- template "procCalculation" .CalLevelOPS }}
 	{{- if ceilRequired $.Met $clOPS.Current $clOPS.Parent}}
@@ -39,7 +39,7 @@ const licensesEquipCeilTmpl = `
 
 const equipUIDFromIDTmpl = `
 {{- define "equipUIDFromID" }}
-var(func:eq(equipment.id,"{{$}}")){
+var(func:eq(equipment.id,"{{.EquipID}}")) @filter(eq(scopes,{{.Scopes}})){
 	ID as uid
 }
 {{- end}}`
@@ -122,6 +122,7 @@ var(func:uid({{getProcCalFilter .}})){
 type EquipProcCal struct {
 	EqType  string
 	EquipID string
+	Scopes  string
 	Met     *v1.MetricOPSComputed
 }
 

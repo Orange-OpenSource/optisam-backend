@@ -65,23 +65,6 @@ func (m *SimulationByHardwareRequest) Validate() error {
 
 	}
 
-	for idx, item := range m.GetMetricDetails() {
-		_, _ = idx, item
-
-		if v, ok := interface{}(item).(interface {
-			Validate() error
-		}); ok {
-			if err := v.Validate(); err != nil {
-				return SimulationByHardwareRequestValidationError{
-					field:  fmt.Sprintf("MetricDetails[%v]", idx),
-					reason: "embedded message failed validation",
-					cause:  err,
-				}
-			}
-		}
-
-	}
-
 	if !_SimulationByHardwareRequest_Scope_Pattern.MatchString(m.GetScope()) {
 		return SimulationByHardwareRequestValidationError{
 			field:  "Scope",
@@ -159,7 +142,7 @@ func (m *SimulationByHardwareResponse) Validate() error {
 		return nil
 	}
 
-	for idx, item := range m.GetSimulationResult() {
+	for idx, item := range m.GetSimulatedResults() {
 		_, _ = idx, item
 
 		if v, ok := interface{}(item).(interface {
@@ -167,7 +150,7 @@ func (m *SimulationByHardwareResponse) Validate() error {
 		}); ok {
 			if err := v.Validate(); err != nil {
 				return SimulationByHardwareResponseValidationError{
-					field:  fmt.Sprintf("SimulationResult[%v]", idx),
+					field:  fmt.Sprintf("SimulatedResults[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -236,10 +219,10 @@ var _ interface {
 	ErrorName() string
 } = SimulationByHardwareResponseValidationError{}
 
-// Validate checks the field values on SimulatedProductsLicenses with the rules
+// Validate checks the field values on SimulatedProductLicenses with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
-func (m *SimulatedProductsLicenses) Validate() error {
+func (m *SimulatedProductLicenses) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -253,7 +236,7 @@ func (m *SimulatedProductsLicenses) Validate() error {
 			Validate() error
 		}); ok {
 			if err := v.Validate(); err != nil {
-				return SimulatedProductsLicensesValidationError{
+				return SimulatedProductLicensesValidationError{
 					field:  fmt.Sprintf("Licenses[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -263,16 +246,18 @@ func (m *SimulatedProductsLicenses) Validate() error {
 
 	}
 
-	// no validation rules for SimFailureReason
-
 	// no validation rules for MetricName
+
+	// no validation rules for MetricType
+
+	// no validation rules for SimFailureReason
 
 	return nil
 }
 
-// SimulatedProductsLicensesValidationError is the validation error returned by
-// SimulatedProductsLicenses.Validate if the designated constraints aren't met.
-type SimulatedProductsLicensesValidationError struct {
+// SimulatedProductLicensesValidationError is the validation error returned by
+// SimulatedProductLicenses.Validate if the designated constraints aren't met.
+type SimulatedProductLicensesValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -280,24 +265,24 @@ type SimulatedProductsLicensesValidationError struct {
 }
 
 // Field function returns field value.
-func (e SimulatedProductsLicensesValidationError) Field() string { return e.field }
+func (e SimulatedProductLicensesValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e SimulatedProductsLicensesValidationError) Reason() string { return e.reason }
+func (e SimulatedProductLicensesValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e SimulatedProductsLicensesValidationError) Cause() error { return e.cause }
+func (e SimulatedProductLicensesValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e SimulatedProductsLicensesValidationError) Key() bool { return e.key }
+func (e SimulatedProductLicensesValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e SimulatedProductsLicensesValidationError) ErrorName() string {
-	return "SimulatedProductsLicensesValidationError"
+func (e SimulatedProductLicensesValidationError) ErrorName() string {
+	return "SimulatedProductLicensesValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e SimulatedProductsLicensesValidationError) Error() string {
+func (e SimulatedProductLicensesValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -309,14 +294,14 @@ func (e SimulatedProductsLicensesValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sSimulatedProductsLicenses.%s: %s%s",
+		"invalid %sSimulatedProductLicenses.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = SimulatedProductsLicensesValidationError{}
+var _ error = SimulatedProductLicensesValidationError{}
 
 var _ interface {
 	Field() string
@@ -324,7 +309,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = SimulatedProductsLicensesValidationError{}
+} = SimulatedProductLicensesValidationError{}
 
 // Validate checks the field values on SimulatedProductLicense with the rules
 // defined in the proto definition for this message. If any rules are
@@ -334,17 +319,17 @@ func (m *SimulatedProductLicense) Validate() error {
 		return nil
 	}
 
+	// no validation rules for SwidTag
+
+	// no validation rules for AggregationName
+
+	// no validation rules for Editor
+
 	// no validation rules for OldLicences
 
 	// no validation rules for NewLicenses
 
 	// no validation rules for Delta
-
-	// no validation rules for SwidTag
-
-	// no validation rules for ProductName
-
-	// no validation rules for Editor
 
 	return nil
 }
@@ -609,7 +594,9 @@ func (m *SimulationByMetricRequest) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Editor
+	// no validation rules for SwidTag
+
+	// no validation rules for AggregationName
 
 	for idx, item := range m.GetMetricDetails() {
 		_, _ = idx, item
@@ -704,15 +691,9 @@ func (m *MetricSimDetails) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Swidtag
-
-	// no validation rules for AggregationName
-
 	// no validation rules for MetricName
 
 	// no validation rules for UnitCost
-
-	// no validation rules for Sku
 
 	return nil
 }
@@ -779,8 +760,6 @@ func (m *SimulationByMetricResponse) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Success
-
 	for idx, item := range m.GetMetricSimResult() {
 		_, _ = idx, item
 
@@ -797,8 +776,6 @@ func (m *SimulationByMetricResponse) Validate() error {
 		}
 
 	}
-
-	// no validation rules for SimFailureReason
 
 	return nil
 }
@@ -867,23 +844,15 @@ func (m *MetricSimulationResult) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Swidtag
-
-	// no validation rules for AggregationName
-
-	// no validation rules for MetricName
+	// no validation rules for Success
 
 	// no validation rules for NumCptLicences
 
-	// no validation rules for OldTotalCost
+	// no validation rules for TotalCost
 
-	// no validation rules for NewTotalCost
+	// no validation rules for MetricName
 
-	// no validation rules for Sku
-
-	// no validation rules for NotDeployed
-
-	// no validation rules for MetricNotDefined
+	// no validation rules for SimFailureReason
 
 	return nil
 }
@@ -944,6 +913,349 @@ var _ interface {
 	ErrorName() string
 } = MetricSimulationResultValidationError{}
 
+// Validate checks the field values on SimulationByCostRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *SimulationByCostRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Editor
+
+	for idx, item := range m.GetCostDetails() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return SimulationByCostRequestValidationError{
+					field:  fmt.Sprintf("CostDetails[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if !_SimulationByCostRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return SimulationByCostRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// SimulationByCostRequestValidationError is the validation error returned by
+// SimulationByCostRequest.Validate if the designated constraints aren't met.
+type SimulationByCostRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SimulationByCostRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SimulationByCostRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SimulationByCostRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SimulationByCostRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SimulationByCostRequestValidationError) ErrorName() string {
+	return "SimulationByCostRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SimulationByCostRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSimulationByCostRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SimulationByCostRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SimulationByCostRequestValidationError{}
+
+var _SimulationByCostRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on CostSimDetails with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *CostSimDetails) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for AggregationName
+
+	// no validation rules for MetricName
+
+	// no validation rules for UnitCost
+
+	// no validation rules for Sku
+
+	return nil
+}
+
+// CostSimDetailsValidationError is the validation error returned by
+// CostSimDetails.Validate if the designated constraints aren't met.
+type CostSimDetailsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CostSimDetailsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CostSimDetailsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CostSimDetailsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CostSimDetailsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CostSimDetailsValidationError) ErrorName() string { return "CostSimDetailsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CostSimDetailsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCostSimDetails.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CostSimDetailsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CostSimDetailsValidationError{}
+
+// Validate checks the field values on SimulationByCostResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *SimulationByCostResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	for idx, item := range m.GetCostSimResult() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return SimulationByCostResponseValidationError{
+					field:  fmt.Sprintf("CostSimResult[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for SimFailureReason
+
+	return nil
+}
+
+// SimulationByCostResponseValidationError is the validation error returned by
+// SimulationByCostResponse.Validate if the designated constraints aren't met.
+type SimulationByCostResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SimulationByCostResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SimulationByCostResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SimulationByCostResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SimulationByCostResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SimulationByCostResponseValidationError) ErrorName() string {
+	return "SimulationByCostResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SimulationByCostResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSimulationByCostResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SimulationByCostResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SimulationByCostResponseValidationError{}
+
+// Validate checks the field values on CostSimulationResult with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CostSimulationResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Swidtag
+
+	// no validation rules for AggregationName
+
+	// no validation rules for MetricName
+
+	// no validation rules for NumCptLicences
+
+	// no validation rules for OldTotalCost
+
+	// no validation rules for NewTotalCost
+
+	// no validation rules for Sku
+
+	// no validation rules for NotDeployed
+
+	// no validation rules for MetricNotDefined
+
+	return nil
+}
+
+// CostSimulationResultValidationError is the validation error returned by
+// CostSimulationResult.Validate if the designated constraints aren't met.
+type CostSimulationResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CostSimulationResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CostSimulationResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CostSimulationResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CostSimulationResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CostSimulationResultValidationError) ErrorName() string {
+	return "CostSimulationResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CostSimulationResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCostSimulationResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CostSimulationResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CostSimulationResultValidationError{}
+
 // Validate checks the field values on GetConfigDataRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -955,6 +1267,13 @@ func (m *GetConfigDataRequest) Validate() error {
 	// no validation rules for ConfigId
 
 	// no validation rules for MetadataId
+
+	if !_GetConfigDataRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return GetConfigDataRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
 
 	return nil
 }
@@ -1014,6 +1333,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetConfigDataRequestValidationError{}
+
+var _GetConfigDataRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on GetConfigDataResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1094,6 +1415,13 @@ func (m *ListConfigRequest) Validate() error {
 
 	// no validation rules for EquipmentType
 
+	if !_ListConfigRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return ListConfigRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -1152,6 +1480,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListConfigRequestValidationError{}
+
+var _ListConfigRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ListConfigResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1419,6 +1749,13 @@ func (m *DeleteConfigRequest) Validate() error {
 
 	// no validation rules for ConfigId
 
+	if !_DeleteConfigRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return DeleteConfigRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -1477,6 +1814,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteConfigRequestValidationError{}
+
+var _DeleteConfigRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on DeleteConfigResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1667,6 +2006,13 @@ func (m *CreateConfigRequest) Validate() error {
 
 	}
 
+	if !_CreateConfigRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return CreateConfigRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -1725,6 +2071,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateConfigRequestValidationError{}
+
+var _CreateConfigRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on ConfigValue with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -1957,6 +2305,13 @@ func (m *UpdateConfigRequest) Validate() error {
 
 	}
 
+	if !_UpdateConfigRequest_Scope_Pattern.MatchString(m.GetScope()) {
+		return UpdateConfigRequestValidationError{
+			field:  "Scope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
 	return nil
 }
 
@@ -2015,6 +2370,8 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateConfigRequestValidationError{}
+
+var _UpdateConfigRequest_Scope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
 
 // Validate checks the field values on UpdateConfigResponse with the rules
 // defined in the proto definition for this message. If any rules are

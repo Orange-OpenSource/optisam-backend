@@ -23,6 +23,12 @@ type Equipment interface {
 	// and indexes.
 	CreateEquipmentType(ctx context.Context, eqType *EquipmentType, scopes []string) (*EquipmentType, error)
 
+	// GetOldScope fetches all scope names
+	GetAllOldScopes(ctx context.Context) ([]string, error)
+
+	//CreateAttributeNode create nodes for newly created attributes
+	CreateAttributeNode(ctx context.Context, eqType *EquipmentType, id string, scopes []string) ([]*Attribute, error)
+
 	// EquipmentTypes fetches all equipment types from database
 	EquipmentTypes(ctx context.Context, scopes []string) ([]*EquipmentType, error)
 
@@ -31,6 +37,23 @@ type Equipment interface {
 
 	// EquipmentTypeChildren fetches all equipment type children from database
 	EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*EquipmentType, error)
+
+	// ParentHirearchy gives equipment along with parent hierarchy
+	ParentsHirerachyForEquipment(ctx context.Context, equipID, equipType string, hirearchyLevel uint8, scopes ...string) ([]*EquipmentInfo, error)
+
+	// GetAllEquipmentsInHierarchy gives all equipments fallen in ancestor
+	GetAllEquipmentsInHierarchy(ctx context.Context, equipType string, endEquID string, scopes ...string) (*EquipmentHierarchy, error)
+
+	GetAllEquipmentForSpecifiedProduct(ctx context.Context, swidtag string, scopes ...string) (*DeployedProducts, error)
+
+	UpsertAllocateMetricInEquipmentHierarchy(ctx context.Context, mat *MetricAllocationRequest, scope string) error
+
+	GetAllocatedMetrics(ctx context.Context, swidtag string, scopes ...string) (*AllocatedMetrics, error)
+
+	UpsertAllocateMetricInProduct(ctx context.Context, swidTag string, metUids []string, scope string) error
+
+	// UpsertMetadataOldScope upserts attribute field of metadata in dgraph
+	UpsertMetadataOldScope(ctx context.Context, metadata *Metadata) (string, error)
 
 	// UpsertMetaData stores metadata in dgrpah
 	UpsertMetadata(ctx context.Context, metadata *Metadata) (string, error)
@@ -56,6 +79,19 @@ type Equipment interface {
 	EquipmentTypeByType(ctx context.Context, typ string, scopes []string) (*EquipmentType, error)
 
 	UpsertEquipment(ctx context.Context, scope string, eqType string, parentEqType string, eqData interface{}) error
+
+	GetAllocatedMetricByEquipment(ctx context.Context, swidtag string, equipmentID string, scopes ...string) (*AllocatedMetric, error)
+
+	DeleteAllocateMetricInEquipment(ctx context.Context, uid string) error
+	DeleteAllocationMetricInProduct(ctx context.Context, uid string, swidTag string, scope string) error
+
+	GetMetricAlloc(ctx context.Context, equipmentId string, swidtag string, scope string) (*MetricAllocated, error)
+
+	GetEquipmentInfo(ctx context.Context, EquipmentId string, scope string) (*EquipInfo, error)
+
+	GetEquipmentInfoByID(ctx context.Context, uid string) (*EquipmentInfo, error)
+
+	UpdateEquipmentUser(ctx context.Context, equipUserID string, scope string, equipmentUser int32) error
 }
 
 // Queryable interface provide methods for something that can be queried

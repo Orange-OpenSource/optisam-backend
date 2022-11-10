@@ -33,6 +33,8 @@ timeout = 1000
 
 [grpcservers.Address]
 account = "localhost:20000"
+metric = "localhost:18090"
+product = "localhost:12090"
 
 [app.params]
 pageSize = 20

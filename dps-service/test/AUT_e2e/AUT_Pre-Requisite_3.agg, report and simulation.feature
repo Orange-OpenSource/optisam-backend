@@ -8,7 +8,8 @@ Feature: Pre-Requisite Setup for AUT(Automation) - Aggregation, Report and Simul
 
   Background:
     * url productServiceUrl+'/api/v1'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token

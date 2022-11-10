@@ -69,6 +69,25 @@ func (s *metricServiceServer) CreateMetricOracleNUPStandard(ctx context.Context,
 		return nil, error
 	}
 
+	// for checking TransformMetricName already exists on system or not
+	if req.Transform {
+		if req.TransformMetricName == "" {
+			return nil, status.Error(codes.Internal, "transform metric name cannot be empty")
+		}
+
+		_, err = s.metricRepo.GetMetricConfigOPS(ctx, req.TransformMetricName, req.GetScopes()[0])
+		if err != nil {
+			if err == repo.ErrNoData {
+				return nil, status.Error(codes.InvalidArgument, "metric does not exist")
+			}
+			logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - repo/GetMetricConfigOPS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ops")
+		}
+
+	} else if req.TransformMetricName != "" {
+		return nil, status.Error(codes.Internal, "transform metric name should be empty")
+	}
+
 	met, err := s.metricRepo.CreateMetricOracleNUPStandard(ctx, serverToRepoMetricOracleNUP(req), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateMetricOracleProcessorStandard - fetching equipment", zap.String("reason", err.Error()))
@@ -124,6 +143,27 @@ func (s *metricServiceServer) UpdateMetricOracleNUPStandard(ctx context.Context,
 	if e := validateAttributesOracleNUP(parAncestors[baseLevelIdx].Attributes, req.NumCoreAttrId, req.NumCPUAttrId, req.CoreFactorAttrId); e != nil {
 		return &v1.UpdateMetricResponse{}, e
 	}
+
+	// for checking TransformMetricName already exists on system or not
+	if req.Transform {
+
+		if req.TransformMetricName == "" {
+			return nil, status.Error(codes.Internal, "transform metric name cannot be empty")
+		}
+
+		_, err = s.metricRepo.GetMetricConfigOPS(ctx, req.TransformMetricName, req.GetScopes()[0])
+		if err != nil {
+			if err == repo.ErrNoData {
+				return nil, status.Error(codes.InvalidArgument, "metric does not exist")
+			}
+			logger.Log.Error("service/v1 -CreateMetricOracleProcessorStandard - repo/GetMetricConfigOPS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ops")
+		}
+
+	} else if req.TransformMetricName != "" {
+		return nil, status.Error(codes.Internal, "transform metric name should be empty")
+	}
+
 	err = s.metricRepo.UpdateMetricNUP(ctx, &repo.MetricNUPOracle{
 		Name:                  req.Name,
 		NumCoreAttrID:         req.NumCoreAttrId,
@@ -134,6 +174,8 @@ func (s *metricServiceServer) UpdateMetricOracleNUPStandard(ctx context.Context,
 		AggerateLevelEqTypeID: req.AggerateLevelEqTypeId,
 		EndEqTypeID:           req.EndEqTypeId,
 		NumberOfUsers:         req.NumberOfUsers,
+		Transform:             req.Transform,
+		TransformMetricName:   req.TransformMetricName,
 	}, req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - UpdateMetricOracleNUPStandard - repo/UpdateMetricNUP", zap.String("reason", err.Error()))
@@ -199,6 +241,8 @@ func serverToRepoMetricOracleNUP(met *v1.MetricNUP) *repo.MetricNUPOracle {
 		AggerateLevelEqTypeID: met.AggerateLevelEqTypeId,
 		EndEqTypeID:           met.EndEqTypeId,
 		NumberOfUsers:         met.NumberOfUsers,
+		Transform:             met.Transform,
+		TransformMetricName:   met.TransformMetricName,
 	}
 }
 
@@ -214,6 +258,8 @@ func repoToServerMetricOracleNUP(met *repo.MetricNUPOracle) *v1.MetricNUP {
 		AggerateLevelEqTypeId: met.AggerateLevelEqTypeID,
 		EndEqTypeId:           met.EndEqTypeID,
 		NumberOfUsers:         met.NumberOfUsers,
+		Transform:             met.Transform,
+		TransformMetricName:   met.TransformMetricName,
 	}
 }
 

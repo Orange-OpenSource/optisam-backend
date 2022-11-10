@@ -1,0 +1,80 @@
+{
+    "instance_metric": {
+        "ID": "#string",
+        "Name": "#string",
+        "num_of_deployments": "#number",
+        "scopes": "#[] #string"
+    },
+    "oracle_processor": {
+        "ID": "#string",
+        "Name": "#string",
+        "num_core_attr_id": "#string",
+        "core_factor_attr_id": "#string",
+        "numCPU_attr_id": "#string",
+        "base_eq_type_id": "#string",
+        "start_eq_type_id": "#string",
+        "aggerateLevel_eq_type_id": "#string",
+        "end_eq_type_id": "#string",
+        "scopes": "#[] #string"
+    },
+    "oracle_nup": {
+        "ID": "#string",
+        "Name": "#string",
+        "num_core_attr_id": "#string",
+        "core_factor_attr_id": "#string",
+        "numCPU_attr_id": "#string",
+        "base_eq_type_id": "#string",
+        "start_eq_type_id": "#string",
+        "aggerateLevel_eq_type_id": "#string",
+        "end_eq_type_id": "#string",
+        "number_of_users": "#number",
+        "scopes": "#[] #string",
+        "transform": "#boolean",
+        "transform_metric_name": "#string"
+    },
+    "ibm_metric": {
+        "ID": "#string",
+        "Name": "#string",
+        "num_core_attr_id": "#string",
+        "core_factor_attr_id": "#string",
+        "numCPU_attr_id": "#string",
+        "base_eq_type_id": "#string",
+        "scopes": "#[] #string"
+    },
+    "sag_metric": {
+        "ID": "#string",
+        "Name": "#string",
+        "num_core_attr_id": "#string",
+        "core_factor_attr_id": "#string",
+        "numCPU_attr_id": "#string",
+        "base_eq_type_id": "#string",
+        "scopes": "#[] #string"
+    },
+    "static_std_metric": {
+        "ID": "#string",
+        "Name": "#string",
+        "reference_value": "#number",
+        "scopes": "#[] #string"
+    },
+    "user_sum_metric": {
+        "ID": "#string",
+        "Name": "#string",
+        "scopes": "#[] #string"
+    },
+    "attribute_sum_std_metric": {
+        "ID": "#string",
+        "name": "#string",
+        "eq_type": "#string",
+        "attribute_name": "#string",
+        "reference_value": "#number",
+        "scopes": "#[] #string"
+    },
+    "attribute_counter_metric": {
+        "ID": "#string",
+        "name": "#string",
+        "eq_type": "#string",
+        "attribute_name": "#string",
+        "value": "#string",
+        "scopes": "#[] #string"
+    }
+}

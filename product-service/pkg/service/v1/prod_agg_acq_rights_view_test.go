@@ -90,10 +90,10 @@ func TestListAggregatedAcqRights(t *testing.T) {
 					},
 				}, nil).Times(1)
 
-				dbObj.EXPECT().GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
-					Swidtag: []string{"a", "b"},
-					Scope:   "s1",
-				}).Return([]db.GetAcqBySwidtagsRow{}, nil).Times(1)
+				// dbObj.EXPECT().GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
+				// 	Swidtag: []string{"a", "b"},
+				// 	Scope:   "s1",
+				// }).Return([]db.GetAcqBySwidtagsRow{}, nil).Times(1)
 			},
 			output: &v1.ListAggregatedAcqRightsResponse{
 				TotalRecords: int32(1),

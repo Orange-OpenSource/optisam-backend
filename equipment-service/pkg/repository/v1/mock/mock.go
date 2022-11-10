@@ -35,6 +35,21 @@ func (m *MockEquipment) EXPECT() *MockEquipmentMockRecorder {
 	return m.recorder
 }
 
+// CreateAttributeNode mocks base method
+func (m *MockEquipment) CreateAttributeNode(arg0 context.Context, arg1 *v1.EquipmentType, arg2 string, arg3 []string) ([]*v1.Attribute, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAttributeNode", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]*v1.Attribute)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateAttributeNode indicates an expected call of CreateAttributeNode
+func (mr *MockEquipmentMockRecorder) CreateAttributeNode(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAttributeNode", reflect.TypeOf((*MockEquipment)(nil).CreateAttributeNode), arg0, arg1, arg2, arg3)
+}
+
 // CreateEquipmentType mocks base method
 func (m *MockEquipment) CreateEquipmentType(arg0 context.Context, arg1 *v1.EquipmentType, arg2 []string) (*v1.EquipmentType, error) {
 	m.ctrl.T.Helper()
@@ -48,6 +63,34 @@ func (m *MockEquipment) CreateEquipmentType(arg0 context.Context, arg1 *v1.Equip
 func (mr *MockEquipmentMockRecorder) CreateEquipmentType(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEquipmentType", reflect.TypeOf((*MockEquipment)(nil).CreateEquipmentType), arg0, arg1, arg2)
+}
+
+// DeleteAllocateMetricInEquipment mocks base method
+func (m *MockEquipment) DeleteAllocateMetricInEquipment(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllocateMetricInEquipment", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllocateMetricInEquipment indicates an expected call of DeleteAllocateMetricInEquipment
+func (mr *MockEquipmentMockRecorder) DeleteAllocateMetricInEquipment(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllocateMetricInEquipment", reflect.TypeOf((*MockEquipment)(nil).DeleteAllocateMetricInEquipment), arg0, arg1)
+}
+
+// DeleteAllocationMetricInProduct mocks base method
+func (m *MockEquipment) DeleteAllocationMetricInProduct(arg0 context.Context, arg1, arg2, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllocationMetricInProduct", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllocationMetricInProduct indicates an expected call of DeleteAllocationMetricInProduct
+func (mr *MockEquipmentMockRecorder) DeleteAllocationMetricInProduct(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllocationMetricInProduct", reflect.TypeOf((*MockEquipment)(nil).DeleteAllocationMetricInProduct), arg0, arg1, arg2, arg3)
 }
 
 // DeleteEquipmentType mocks base method
@@ -215,6 +258,146 @@ func (mr *MockEquipmentMockRecorder) Equipments(arg0, arg1, arg2, arg3 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Equipments", reflect.TypeOf((*MockEquipment)(nil).Equipments), arg0, arg1, arg2, arg3)
 }
 
+// GetAllEquipmentForSpecifiedProduct mocks base method
+func (m *MockEquipment) GetAllEquipmentForSpecifiedProduct(arg0 context.Context, arg1 string, arg2 ...string) (*v1.DeployedProducts, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllEquipmentForSpecifiedProduct", varargs...)
+	ret0, _ := ret[0].(*v1.DeployedProducts)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllEquipmentForSpecifiedProduct indicates an expected call of GetAllEquipmentForSpecifiedProduct
+func (mr *MockEquipmentMockRecorder) GetAllEquipmentForSpecifiedProduct(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEquipmentForSpecifiedProduct", reflect.TypeOf((*MockEquipment)(nil).GetAllEquipmentForSpecifiedProduct), varargs...)
+}
+
+// GetAllEquipmentsInHierarchy mocks base method
+func (m *MockEquipment) GetAllEquipmentsInHierarchy(arg0 context.Context, arg1, arg2 string, arg3 ...string) (*v1.EquipmentHierarchy, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllEquipmentsInHierarchy", varargs...)
+	ret0, _ := ret[0].(*v1.EquipmentHierarchy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllEquipmentsInHierarchy indicates an expected call of GetAllEquipmentsInHierarchy
+func (mr *MockEquipmentMockRecorder) GetAllEquipmentsInHierarchy(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEquipmentsInHierarchy", reflect.TypeOf((*MockEquipment)(nil).GetAllEquipmentsInHierarchy), varargs...)
+}
+
+// GetAllOldScopes mocks base method
+func (m *MockEquipment) GetAllOldScopes(arg0 context.Context) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllOldScopes", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllOldScopes indicates an expected call of GetAllOldScopes
+func (mr *MockEquipmentMockRecorder) GetAllOldScopes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOldScopes", reflect.TypeOf((*MockEquipment)(nil).GetAllOldScopes), arg0)
+}
+
+// GetAllocatedMetricByEquipment mocks base method
+func (m *MockEquipment) GetAllocatedMetricByEquipment(arg0 context.Context, arg1, arg2 string, arg3 ...string) (*v1.AllocatedMetric, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllocatedMetricByEquipment", varargs...)
+	ret0, _ := ret[0].(*v1.AllocatedMetric)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllocatedMetricByEquipment indicates an expected call of GetAllocatedMetricByEquipment
+func (mr *MockEquipmentMockRecorder) GetAllocatedMetricByEquipment(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllocatedMetricByEquipment", reflect.TypeOf((*MockEquipment)(nil).GetAllocatedMetricByEquipment), varargs...)
+}
+
+// GetAllocatedMetrics mocks base method
+func (m *MockEquipment) GetAllocatedMetrics(arg0 context.Context, arg1 string, arg2 ...string) (*v1.AllocatedMetrics, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllocatedMetrics", varargs...)
+	ret0, _ := ret[0].(*v1.AllocatedMetrics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllocatedMetrics indicates an expected call of GetAllocatedMetrics
+func (mr *MockEquipmentMockRecorder) GetAllocatedMetrics(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllocatedMetrics", reflect.TypeOf((*MockEquipment)(nil).GetAllocatedMetrics), varargs...)
+}
+
+// GetEquipmentInfo mocks base method
+func (m *MockEquipment) GetEquipmentInfo(arg0 context.Context, arg1, arg2 string) (*v1.EquipInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEquipmentInfo", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*v1.EquipInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEquipmentInfo indicates an expected call of GetEquipmentInfo
+func (mr *MockEquipmentMockRecorder) GetEquipmentInfo(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEquipmentInfo", reflect.TypeOf((*MockEquipment)(nil).GetEquipmentInfo), arg0, arg1, arg2)
+}
+
+// GetEquipmentInfoByID mocks base method
+func (m *MockEquipment) GetEquipmentInfoByID(arg0 context.Context, arg1 string) (*v1.EquipmentInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEquipmentInfoByID", arg0, arg1)
+	ret0, _ := ret[0].(*v1.EquipmentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEquipmentInfoByID indicates an expected call of GetEquipmentInfoByID
+func (mr *MockEquipmentMockRecorder) GetEquipmentInfoByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEquipmentInfoByID", reflect.TypeOf((*MockEquipment)(nil).GetEquipmentInfoByID), arg0, arg1)
+}
+
+// GetMetricAlloc mocks base method
+func (m *MockEquipment) GetMetricAlloc(arg0 context.Context, arg1, arg2, arg3 string) (*v1.MetricAllocated, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricAlloc", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(*v1.MetricAllocated)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricAlloc indicates an expected call of GetMetricAlloc
+func (mr *MockEquipmentMockRecorder) GetMetricAlloc(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricAlloc", reflect.TypeOf((*MockEquipment)(nil).GetMetricAlloc), arg0, arg1, arg2, arg3)
+}
+
 // ListEquipmentsForProductAggregation mocks base method
 func (m *MockEquipment) ListEquipmentsForProductAggregation(arg0 context.Context, arg1 string, arg2 *v1.EquipmentType, arg3 *v1.QueryEquipments, arg4 []string) (int32, json.RawMessage, error) {
 	m.ctrl.T.Helper()
@@ -261,6 +444,26 @@ func (mr *MockEquipmentMockRecorder) MetadataWithID(arg0, arg1, arg2 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MetadataWithID", reflect.TypeOf((*MockEquipment)(nil).MetadataWithID), arg0, arg1, arg2)
 }
 
+// ParentsHirerachyForEquipment mocks base method
+func (m *MockEquipment) ParentsHirerachyForEquipment(arg0 context.Context, arg1, arg2 string, arg3 byte, arg4 ...string) ([]*v1.EquipmentInfo, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ParentsHirerachyForEquipment", varargs...)
+	ret0, _ := ret[0].([]*v1.EquipmentInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ParentsHirerachyForEquipment indicates an expected call of ParentsHirerachyForEquipment
+func (mr *MockEquipmentMockRecorder) ParentsHirerachyForEquipment(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParentsHirerachyForEquipment", reflect.TypeOf((*MockEquipment)(nil).ParentsHirerachyForEquipment), varargs...)
+}
+
 // ProductEquipments mocks base method
 func (m *MockEquipment) ProductEquipments(arg0 context.Context, arg1 string, arg2 *v1.EquipmentType, arg3 *v1.QueryEquipments, arg4 []string) (int32, json.RawMessage, error) {
 	m.ctrl.T.Helper()
@@ -292,6 +495,48 @@ func (mr *MockEquipmentMockRecorder) UpdateEquipmentType(arg0, arg1, arg2, arg3,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEquipmentType", reflect.TypeOf((*MockEquipment)(nil).UpdateEquipmentType), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
+// UpdateEquipmentUser mocks base method
+func (m *MockEquipment) UpdateEquipmentUser(arg0 context.Context, arg1, arg2 string, arg3 int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEquipmentUser", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateEquipmentUser indicates an expected call of UpdateEquipmentUser
+func (mr *MockEquipmentMockRecorder) UpdateEquipmentUser(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEquipmentUser", reflect.TypeOf((*MockEquipment)(nil).UpdateEquipmentUser), arg0, arg1, arg2, arg3)
+}
+
+// UpsertAllocateMetricInEquipmentHierarchy mocks base method
+func (m *MockEquipment) UpsertAllocateMetricInEquipmentHierarchy(arg0 context.Context, arg1 *v1.MetricAllocationRequest, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAllocateMetricInEquipmentHierarchy", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAllocateMetricInEquipmentHierarchy indicates an expected call of UpsertAllocateMetricInEquipmentHierarchy
+func (mr *MockEquipmentMockRecorder) UpsertAllocateMetricInEquipmentHierarchy(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocateMetricInEquipmentHierarchy", reflect.TypeOf((*MockEquipment)(nil).UpsertAllocateMetricInEquipmentHierarchy), arg0, arg1, arg2)
+}
+
+// UpsertAllocateMetricInProduct mocks base method
+func (m *MockEquipment) UpsertAllocateMetricInProduct(arg0 context.Context, arg1 string, arg2 []string, arg3 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAllocateMetricInProduct", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAllocateMetricInProduct indicates an expected call of UpsertAllocateMetricInProduct
+func (mr *MockEquipmentMockRecorder) UpsertAllocateMetricInProduct(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocateMetricInProduct", reflect.TypeOf((*MockEquipment)(nil).UpsertAllocateMetricInProduct), arg0, arg1, arg2, arg3)
+}
+
 // UpsertEquipment mocks base method
 func (m *MockEquipment) UpsertEquipment(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}) error {
 	m.ctrl.T.Helper()
@@ -319,4 +564,19 @@ func (m *MockEquipment) UpsertMetadata(arg0 context.Context, arg1 *v1.Metadata) 
 func (mr *MockEquipmentMockRecorder) UpsertMetadata(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertMetadata", reflect.TypeOf((*MockEquipment)(nil).UpsertMetadata), arg0, arg1)
+}
+
+// UpsertMetadataOldScope mocks base method
+func (m *MockEquipment) UpsertMetadataOldScope(arg0 context.Context, arg1 *v1.Metadata) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertMetadataOldScope", arg0, arg1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertMetadataOldScope indicates an expected call of UpsertMetadataOldScope
+func (mr *MockEquipmentMockRecorder) UpsertMetadataOldScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertMetadataOldScope", reflect.TypeOf((*MockEquipment)(nil).UpsertMetadataOldScope), arg0, arg1)
 }

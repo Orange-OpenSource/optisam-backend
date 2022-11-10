@@ -1,0 +1,34 @@
+environment = "INTEGRATION"
+debug = false
+grpcport = 8090
+httpport = 8080
+jwtprivatekey = "/opt/secret/ssh-privatekey"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = true
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "auth-service"
+collectorEndpoint = "http://jaeger-collector.int-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[database]
+host = "svc-optisam-postgres.int-optisam.svc"
+port = 5432
+user = "optisam"
+#pass = ""
+name = "account"
+
+[dgraph]
+host = "svc-optisam-dgraph.int-optisam.svc:9080"

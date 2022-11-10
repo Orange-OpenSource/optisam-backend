@@ -12,6 +12,8 @@ type MetricNUPOracle struct {
 	AggerateLevelEqTypeID string
 	EndEqTypeID           string
 	NumberOfUsers         uint32
+	Transform             bool
+	TransformMetricName   string
 }
 
 // MetricOPS return metric ops

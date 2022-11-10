@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
@@ -24,6 +25,9 @@ func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteCo
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
 	switch userClaims.Role {
 	case claims.RoleUser:
 		return nil, status.Error(codes.PermissionDenied, "user does not have access to delete config data")
@@ -32,6 +36,7 @@ func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteCo
 		err := hcs.repo.DeleteConfig(ctx, db.DeleteConfigParams{
 			Status: 2,
 			ID:     req.ConfigId,
+			Scope:  req.Scope,
 		})
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - DeleteConfig - Repo - DeleteConfig", zap.Error(err))
@@ -51,6 +56,13 @@ func (hcs *SimulationService) DeleteConfig(ctx context.Context, req *v1.DeleteCo
 
 // ListConfig lists all the configuration with its attributes
 func (hcs *SimulationService) ListConfig(ctx context.Context, req *v1.ListConfigRequest) (*v1.ListConfigResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
 	// Check if the equipment type is present.
 	isEquipType := true
 	if req.EquipmentType == "" {
@@ -61,6 +73,7 @@ func (hcs *SimulationService) ListConfig(ctx context.Context, req *v1.ListConfig
 		IsEquipType:   isEquipType,
 		EquipmentType: req.EquipmentType,
 		Status:        1,
+		Scope:         req.Scope,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - SimulationConfiguration - ListConfig - Repo - ListConfig", zap.Error(err))
@@ -97,6 +110,9 @@ func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateCo
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
 	switch userClaims.Role {
 	case claims.RoleUser:
 		return nil, status.Error(codes.PermissionDenied, "User do not have access to create config")
@@ -105,6 +121,7 @@ func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateCo
 			IsEquipType:   false,
 			EquipmentType: "",
 			Status:        1,
+			Scope:         req.Scope,
 		})
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - CreateConfig - Repo - ListConfig", zap.Error(err))
@@ -118,7 +135,7 @@ func (hcs *SimulationService) CreateConfig(ctx context.Context, req *v1.CreateCo
 			return nil, status.Error(codes.Internal, "Configuration with same name already exists")
 		}
 
-		err = hcs.repo.CreateConfig(ctx, servToRepoMasterData(userClaims.UserID, req.ConfigName, req.EquipmentType), servToRepoConfigDataAll(req.Data))
+		err = hcs.repo.CreateConfig(ctx, servToRepoMasterData(userClaims.UserID, req.ConfigName, req.EquipmentType), servToRepoConfigDataAll(req.Data), req.Scope)
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - CreateConfig", zap.Error(err))
 			return nil, status.Error(codes.Internal, "Internal error")
@@ -136,6 +153,9 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 	if !ok {
 		return nil, status.Error(codes.Unknown, "cannot find claims in context")
 	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
 	switch userClaims.Role {
 	case claims.RoleUser:
 		return nil, status.Error(codes.PermissionDenied, "User do not have access to update configuration")
@@ -145,6 +165,7 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 			IsEquipType:   false,
 			EquipmentType: "",
 			Status:        1,
+			Scope:         req.Scope,
 		})
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - UpdateConfig - Repo - ListConfig", zap.Error(err))
@@ -165,12 +186,12 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 		}
 		// Check if the deletedmetadataIDs are the part of config or not
 		ok := checkIfAlreadyConfigured(req.Data, metadata, req.DeletedMetadataIds)
-		if ok == false {
+		if !ok {
 			logger.Log.Error("service/v1 - SimulationConfiguration - UpdateConfig", zap.Error(err))
 			return nil, status.Error(codes.Internal, "One or more attribute are already configured")
 		}
 		// Calling database function to insert data in master table
-		err = hcs.repo.UpdateConfig(ctx, req.ConfigId, configs[index].EquipmentType, req.DeletedMetadataIds, servToRepoConfigDataAll(req.Data))
+		err = hcs.repo.UpdateConfig(ctx, req.ConfigId, configs[index].EquipmentType, userClaims.UserID, req.DeletedMetadataIds, servToRepoConfigDataAll(req.Data), req.Scope)
 		if err != nil {
 			logger.Log.Error("service/v1 - SimulationConfiguration - UpdateConfig", zap.Error(err))
 			return nil, status.Error(codes.Internal, "Could not update configuration")
@@ -184,11 +205,19 @@ func (hcs *SimulationService) UpdateConfig(ctx context.Context, req *v1.UpdateCo
 
 // GetConfigData sends the config data back per metadataID
 func (hcs *SimulationService) GetConfigData(ctx context.Context, req *v1.GetConfigDataRequest) (*v1.GetConfigDataResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
 	// Call List Configuration Function
 	configs, err := hcs.repo.ListConfig(ctx, db.ListConfigParams{
 		IsEquipType:   false,
 		EquipmentType: "",
 		Status:        1,
+		Scope:         req.Scope,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - SimulationConfiguration - GetConfigData - Repo - ListConfig", zap.Error(err))
@@ -303,7 +332,7 @@ func servToRepoConfigValue(configValue *v1.ConfigValue) *repo.ConfigValue {
 	}
 }
 
-func configByName(configs []db.ConfigMaster, configName string) int {
+func configByName(configs []db.ListConfigRow, configName string) int {
 	for i, config := range configs {
 		if config.Name == configName {
 			return i
@@ -324,7 +353,7 @@ func servToRepoMasterData(userID, configName, equipType string) *repo.MasterData
 	}
 }
 
-func configByID(configs []db.ConfigMaster, configID int32) int {
+func configByID(configs []db.ListConfigRow, configID int32) int {
 	for i, config := range configs {
 		if config.ID == configID {
 			return i
@@ -348,7 +377,7 @@ func servToRepoConfigDataAll(data []*v1.Data) []*repo.ConfigData {
 	return result
 }
 
-func repoToServConfigs(config db.ConfigMaster, metadata []db.GetMetadatabyConfigIDRow, createdOn *tspb.Timestamp) *v1.Configuration {
+func repoToServConfigs(config db.ListConfigRow, metadata []db.GetMetadatabyConfigIDRow, createdOn *tspb.Timestamp) *v1.Configuration {
 	res := &v1.Configuration{
 		ConfigId:      config.ID,
 		ConfigName:    config.Name,

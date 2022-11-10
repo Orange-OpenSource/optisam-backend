@@ -8,7 +8,7 @@
         "metadata_source": "#string",
         "attributes": "#[]",
         "scopes": [
-            "AUT"
+            "API"
         ]
     },
     "equiptype_server": {
@@ -20,29 +20,14 @@
         "metadata_source": "metadata_server.csv",
         "attributes": "#[]",
         "scopes": [
-            "AUT"
-        ]
-    },
-    "metadata_schema": {
-        "ID": "#string",
-        "name": "#string",
-        "attributes": "#[] #string",
-        "scopes": "#[1]"
-    },
-    "getMetadata": {
-        "ID": "0x50a1b",
-        "name": "metadata_datacenterr.csv",
-        "attributes": "#[]",
-        "scopes": [
-            "AUT"
+            "API"
         ]
     },
     "server": {
-        "server_id": "#string",
+        "server_id": "server_aixa",
         "server_parent_id": "#string",
         "server_child_id": "#string",
-        "server_code": "SERV_01",
-        "server_code_id": "0x334ed0",
+        "ID": "0x2482b2",
         "swid_tag": "ibm_websphere_1",
         "agg_name": "Aggregation"
     },
@@ -56,9 +41,10 @@
     },
 
     "equipmentID":
-    { "server_id" : "0x334e54",
-        "cluster_id" :"0x334e50",
-        "vcenter_id" : "0x334e4e"
+    {   "softpartition_id" :"0x24588d",
+         "server_id" : "0x245883",
+        "cluster_id" :"0x245877",
+        "vcenter_id" : "0x245872"
 
 
     }

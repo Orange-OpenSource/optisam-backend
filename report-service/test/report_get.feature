@@ -4,12 +4,12 @@ Feature: Report Service Test - Get Report : Admin
   Background:
     # * def reportServiceUrl = "https://optisam-report-int.apps.fr01.paas.tech.orange"
     * url reportServiceUrl+'/api/v1'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
   @get
   Scenario: Get all report types
@@ -23,7 +23,7 @@ Feature: Report Service Test - Get Report : Admin
    @schema
   Scenario:  Schema validation for get Reports
     Given path 'reports'
-    * def schema = {report_id: '#number', report_type: '#string', report_status: '#string', created_by: '#string', created_on: '##string'}
+    * def schema = {report_id: '#number', report_type: '#string', report_status: '#string', created_by: '#string', created_on: '##string', editor: '##string'}
     * params { page_num:1, page_size:50, sort_order:'desc', sort_by:'created_on',scope:'#(scope)'}
     When method get
     Then status 200
@@ -52,7 +52,7 @@ Feature: Report Service Test - Get Report : Admin
     | page_size |
     | 50 |
     | 100 |
-    | 20 |
+    | 200 |
 
   @get
   Scenario: Sorting_Get all the reports sorted by report_id

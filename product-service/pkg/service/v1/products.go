@@ -44,6 +44,57 @@ func NewProductServiceServer(productRepo repo.Product, queue workerqueue.Workerq
 	}
 }
 
+func (s *productServiceServer) UpsertAllocatedMetricEquipment(ctx context.Context, req *v1.UpsertAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	err := s.productRepo.UpsertProductEquipments(ctx, db.UpsertProductEquipmentsParams{
+		Swidtag: req.Swidtag, EquipmentID: req.EquipmentId, NumOfUsers: sql.NullInt32{Int32: req.AllocatedUsers,
+			Valid: true}, Scope: req.Scope,
+		AllocatedMetric: req.AllocatedMetrics,
+	})
+
+	if err != nil {
+		logger.Log.Error("UpsertProductUpsertAllocatedMetricEquipment UpsertProductEquipments Failed", zap.Error(err))
+		return &v1.UpsertAllocateMetricEquipementResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+
+	return &v1.UpsertAllocateMetricEquipementResponse{Success: true}, nil
+
+}
+
+func (s *productServiceServer) DeleteAllocatedMetricEquipment(ctx context.Context, req *v1.DropAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	err := s.productRepo.DropAllocatedMetricFromEquipment(ctx, db.DropAllocatedMetricFromEquipmentParams{
+		Swidtag:         req.Swidtag,
+		EquipmentID:     req.EquipmentId,
+		Scope:           req.Scope,
+		AllocatedMetric: req.AllocatedMetrics,
+	})
+
+	if err != nil {
+		logger.Log.Error("DeleteAllocatedMetricEquipment DeleteAllocatedMetricEquipment Failed", zap.Error(err))
+		return &v1.UpsertAllocateMetricEquipementResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+
+	return &v1.UpsertAllocateMetricEquipementResponse{Success: true}, nil
+
+}
+
 func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.UpsertProductRequest) (*v1.UpsertProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -90,11 +141,7 @@ func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListPro
 	var err error
 	// nolint: gocritic
 	if req.GetSearchParams().GetApplicationId().GetFilteringkey() != "" {
-		if req.GetSearchParams().GetInstanceId().GetFilteringkey() != "" {
-			apiresp, err = s.listProductViewInApplicationInstance(ctx, req, req.Scopes)
-		} else {
-			apiresp, err = s.listProductViewInApplication(ctx, req, req.Scopes)
-		}
+		apiresp, err = s.listProductViewInApplication(ctx, req, req.Scopes)
 	} else if req.GetSearchParams().GetEquipmentId().GetFilteringkey() != "" {
 		apiresp, err = s.listProductViewInEquipment(ctx, req, req.Scopes)
 	} else {
@@ -169,6 +216,51 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 	return &apiresp, nil
 }
 
+func (s *productServiceServer) GetProductCountByApp(ctx context.Context, req *v1.GetProductCountByAppRequest) (*v1.GetProductCountByAppResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("GetProductCountByApp - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	dbresp, err := s.productRepo.GetProductCount(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetProductCountByApp - error from repo/GetProductCountByApp", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	apiresp := v1.GetProductCountByAppResponse{}
+	apiresp.AppData = make([]*v1.GetProductCountByAppResponseApplications, len(dbresp))
+
+	for i := range dbresp {
+		apiresp.AppData[i] = &v1.GetProductCountByAppResponseApplications{}
+		apiresp.AppData[i].ApplicationId = dbresp[i].ApplicationID
+		apiresp.AppData[i].NumOfProducts = dbresp[i].NumOfProducts
+	}
+	return &apiresp, nil
+}
+
+func (s *productServiceServer) GetApplicationsByProduct(ctx context.Context, req *v1.GetApplicationsByProductRequest) (*v1.GetApplicationsByProductResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("GetApplicationsByProduct - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	app, err := s.productRepo.GetApplicationsByProductID(ctx, db.GetApplicationsByProductIDParams{
+		Scope:   req.Scope,
+		Swidtag: req.Swidtag,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - GetApplicationsByProduct - error from repo/GetApplicationsByProductID", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.GetApplicationsByProductResponse{ApplicationId: app}, nil
+}
+
 func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *v1.GetEquipmentsByProductRequest) (*v1.GetEquipmentsByProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -190,11 +282,10 @@ func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *
 }
 
 // nolint: gocyclo
-func (s *productServiceServer) listProductViewInApplicationInstance(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
-	products, err := s.application.GetProductsByApplicationInstance(ctx, &appv1.GetProductsByApplicationInstanceRequest{
+func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+	products, err := s.productRepo.GetProductsByApplicationID(ctx, db.GetProductsByApplicationIDParams{
 		Scope:         scopes[0],
-		ApplicationId: req.SearchParams.ApplicationId.Filteringkey,
-		InstanceId:    req.SearchParams.InstanceId.Filteringkey,
+		ApplicationID: req.SearchParams.ApplicationId.Filteringkey,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - listProductViewInApplicationInstance - application/GetProductsByApplicationInstance", zap.Error(err))
@@ -202,9 +293,9 @@ func (s *productServiceServer) listProductViewInApplicationInstance(ctx context.
 	}
 	prodFilter := []string{}
 	if products != nil {
-		prodFilter = products.ProductId
+		prodFilter = products
 	}
-	dbresp, err := s.productRepo.ListProductsByApplicationInstance(ctx, db.ListProductsByApplicationInstanceParams{
+	dbresp, err := s.productRepo.ListProductsByApplication(ctx, db.ListProductsByApplicationParams{
 		Scope:               req.Scopes,
 		Swidtag:             prodFilter,
 		ProductName:         req.GetSearchParams().GetName().GetFilteringkey(),
@@ -231,7 +322,7 @@ func (s *productServiceServer) listProductViewInApplicationInstance(ctx context.
 		PageSize:            req.GetPageSize(),
 	})
 	if err != nil {
-		logger.Log.Error("service/v1 - listProductViewInApplicationInstance - db/ListProductsByApplicationInstance", zap.Error(err))
+		logger.Log.Error("service/v1 - listProductViewInApplication - db/ListProductsByApplication", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
@@ -245,92 +336,90 @@ func (s *productServiceServer) listProductViewInApplicationInstance(ctx context.
 		apiresp.Products[i] = &v1.Product{}
 		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
 		apiresp.Products[i].Name = dbresp[i].ProductName
-		apiresp.Products[i].Edition = dbresp[i].ProductEdition
 		apiresp.Products[i].Editor = dbresp[i].ProductEditor
 		apiresp.Products[i].Version = dbresp[i].ProductVersion
-		apiresp.Products[i].Category = dbresp[i].ProductCategory
 		apiresp.Products[i].TotalCost = dbresp[i].TotalCost
 	}
 	return &apiresp, nil
 }
 
 // nolint: gocyclo
-func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
-	appEquipments, err := s.application.GetEquipmentsByApplication(ctx, &appv1.GetEquipmentsByApplicationRequest{
-		Scope:         scopes[0],
-		ApplicationId: req.SearchParams.ApplicationId.Filteringkey,
-	})
-	if err != nil {
-		logger.Log.Error("service/v1 - listProductViewInApplication - application/GetEquipmentsByApplication", zap.Error(err))
-		return nil, status.Error(codes.Internal, "ServiceError")
-	}
-	equipmentFilter := []string{}
-	if appEquipments != nil {
-		equipmentFilter = appEquipments.EquipmentId
-	}
-	dbresp, err := s.productRepo.ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
-		Scope:                 scopes,
-		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
-		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
-		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
-		ProductName:           req.GetSearchParams().GetName().GetFilteringkey(),
-		IsProductName:         req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
-		LkProductName:         !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
-		ProductEditor:         req.GetSearchParams().GetEditor().GetFilteringkey(),
-		IsProductEditor:       req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
-		LkProductEditor:       !req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
-		ApplicationID:         req.GetSearchParams().GetApplicationId().GetFilteringkey(),
-		IsApplicationID:       req.GetSearchParams().GetApplicationId().GetFilterType() && req.GetSearchParams().GetApplicationId().GetFilteringkey() != "",
-		EquipmentIds:          equipmentFilter,
-		IsEquipmentID:         true,
-		ProductNameAsc:        strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ProductNameDesc:       strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		SwidtagAsc:            strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		SwidtagDesc:           strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ProductVersionAsc:     strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ProductVersionDesc:    strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ProductEditionAsc:     strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ProductEditionDesc:    strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ProductCategoryAsc:    strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ProductCategoryDesc:   strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ProductEditorAsc:      strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ProductEditorDesc:     strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfApplicationsAsc:  strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfApplicationsDesc: strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfEquipmentsAsc:    strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfEquipmentsDesc:   strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		CostAsc:               strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		CostDesc:              strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		// API expect pagenum from 1 but the offset in DB starts
-		PageNum:  req.GetPageSize() * (req.GetPageNum() - 1),
-		PageSize: req.GetPageSize(),
-	})
-	if err != nil {
-		logger.Log.Error("service/v1 - listProductViewInApplication - db/ListProductsViewRedirectedApplication", zap.Error(err))
-		return nil, status.Error(codes.Internal, "DBError")
-	}
+// func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+// 	appEquipments, err := s.application.GetEquipmentsByApplication(ctx, &appv1.GetEquipmentsByApplicationRequest{
+// 		Scope:         scopes[0],
+// 		ApplicationId: req.SearchParams.ApplicationId.Filteringkey,
+// 	})
+// 	if err != nil {
+// 		logger.Log.Error("service/v1 - listProductViewInApplication - application/GetEquipmentsByApplication", zap.Error(err))
+// 		return nil, status.Error(codes.Internal, "ServiceError")
+// 	}
+// 	equipmentFilter := []string{}
+// 	if appEquipments != nil {
+// 		equipmentFilter = appEquipments.EquipmentId
+// 	}
+// 	dbresp, err := s.productRepo.ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
+// 		Scope:                 scopes,
+// 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
+// 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
+// 		LkSwidtag:             !req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
+// 		ProductName:           req.GetSearchParams().GetName().GetFilteringkey(),
+// 		IsProductName:         req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+// 		LkProductName:         !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+// 		ProductEditor:         req.GetSearchParams().GetEditor().GetFilteringkey(),
+// 		IsProductEditor:       req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
+// 		LkProductEditor:       !req.GetSearchParams().GetEditor().GetFilterType() && req.GetSearchParams().GetEditor().GetFilteringkey() != "",
+// 		ApplicationID:         req.GetSearchParams().GetApplicationId().GetFilteringkey(),
+// 		IsApplicationID:       req.GetSearchParams().GetApplicationId().GetFilterType() && req.GetSearchParams().GetApplicationId().GetFilteringkey() != "",
+// 		EquipmentIds:          equipmentFilter,
+// 		IsEquipmentID:         true,
+// 		ProductNameAsc:        strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		ProductNameDesc:       strings.Contains(req.GetSortBy(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		SwidtagAsc:            strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		SwidtagDesc:           strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		ProductVersionAsc:     strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		ProductVersionDesc:    strings.Contains(req.GetSortBy(), "version") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		ProductEditionAsc:     strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		ProductEditionDesc:    strings.Contains(req.GetSortBy(), "edition") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		ProductCategoryAsc:    strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		ProductCategoryDesc:   strings.Contains(req.GetSortBy(), "category") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		ProductEditorAsc:      strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		ProductEditorDesc:     strings.Contains(req.GetSortBy(), "editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		NumOfApplicationsAsc:  strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		NumOfApplicationsDesc: strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		NumOfEquipmentsAsc:    strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		NumOfEquipmentsDesc:   strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		CostAsc:               strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "asc"),
+// 		CostDesc:              strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "desc"),
+// 		// API expect pagenum from 1 but the offset in DB starts
+// 		PageNum:  req.GetPageSize() * (req.GetPageNum() - 1),
+// 		PageSize: req.GetPageSize(),
+// 	})
+// 	if err != nil {
+// 		logger.Log.Error("service/v1 - listProductViewInApplication - db/ListProductsViewRedirectedApplication", zap.Error(err))
+// 		return nil, status.Error(codes.Internal, "DBError")
+// 	}
 
-	apiresp := v1.ListProductsResponse{}
-	apiresp.Products = make([]*v1.Product, len(dbresp))
+// 	apiresp := v1.ListProductsResponse{}
+// 	apiresp.Products = make([]*v1.Product, len(dbresp))
 
-	if len(dbresp) > 0 {
-		apiresp.TotalRecords = int32(dbresp[0].Totalrecords)
-	}
+// 	if len(dbresp) > 0 {
+// 		apiresp.TotalRecords = int32(dbresp[0].Totalrecords)
+// 	}
 
-	for i := range dbresp {
-		apiresp.Products[i] = &v1.Product{}
-		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
-		apiresp.Products[i].Name = dbresp[i].ProductName
-		apiresp.Products[i].Edition = dbresp[i].ProductEdition
-		apiresp.Products[i].Editor = dbresp[i].ProductEditor
-		apiresp.Products[i].Version = dbresp[i].ProductVersion
-		apiresp.Products[i].Category = dbresp[i].ProductCategory
-		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
-		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
-		apiresp.Products[i].TotalCost = dbresp[i].Cost
-	}
-	return &apiresp, nil
-}
+// 	for i := range dbresp {
+// 		apiresp.Products[i] = &v1.Product{}
+// 		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
+// 		apiresp.Products[i].Name = dbresp[i].ProductName
+// 		apiresp.Products[i].Edition = dbresp[i].ProductEdition
+// 		apiresp.Products[i].Editor = dbresp[i].ProductEditor
+// 		apiresp.Products[i].Version = dbresp[i].ProductVersion
+// 		apiresp.Products[i].Category = dbresp[i].ProductCategory
+// 		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
+// 		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
+// 		apiresp.Products[i].TotalCost = dbresp[i].Cost
+// 	}
+// 	return &apiresp, nil
+// }
 
 // nolint: gocyclo
 func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
@@ -394,7 +483,8 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
 		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
 		apiresp.Products[i].TotalCost = dbresp[i].Cost
-
+		apiresp.Products[i].AllocatedUser = dbresp[i].EquipmentUsers
+		apiresp.Products[i].AllocatedMetric = dbresp[i].AllocatedMetric
 	}
 	return &apiresp, nil
 }

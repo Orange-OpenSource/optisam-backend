@@ -6,28 +6,30 @@ import (
 
 // ProductInfo will carry prod.csv file content
 type ProductInfo struct {
-	Name       string
-	Version    string
-	Editor     string
-	IsOptionOf string
-	Category   string
-	SwidTag    string
-	Action     string
+	Name    string
+	Version string
+	Editor  string
+	SwidTag string
+	Action  string
 }
 
 type ProdEquipemtInfo struct {
-	EquipID string
-	NbUsers string
+	EquipID         string
+	SwidTag         string
+	AllocatedMetric string
+	AllocatedUsers  string
+	Action          string
 }
 
 // ApplicationInfo will carry application.csv file data
 type ApplicationInfo struct {
-	ID      string
-	Name    string
-	Version string
-	Owner   string
-	Domain  string
-	Action  string // This tells whether this info need to upsert or delete
+	ID          string
+	Name        string
+	Version     string
+	Owner       string
+	Environment string
+	Domain      string
+	Action      string // This tells whether this info need to upsert or delete
 }
 
 // AppInstance for App-instance relation
@@ -70,7 +72,7 @@ type FileData struct {
 	Applications        map[string]ApplicationInfo
 	AppInstances        map[string][]AppInstance
 	ProdInstances       map[string]map[string][]string
-	EquipInstances      map[string]map[string][]string
+	EquipApplications   map[string]map[string][]string
 	AppProducts         map[string]map[string][]string
 	ProdEquipments      map[string]map[string][]ProdEquipemtInfo
 	AcqRights           map[string]AcqRightsInfo
@@ -131,14 +133,15 @@ type AppInstanceLink struct {
 }
 
 type ProductEquipmentLink struct {
-	ProdID  string `json:"prodId"`
-	EquipID string `json:"equipmentId"`
-	NbUser  string `json:"nbUser"`
-	Action  string `json:"action"`
+	ProdID          string `json:"prodId"`
+	EquipID         string `json:"equipmentId"`
+	AllocatedMetric string `json:"allocatedMetric"`
+	AllocatedUsers  string `json:"allocatedUsers"`
+	Action          string `json:"action"`
 }
 
-type EquipmentInstanceLink struct {
-	InstanceID string `json:"intanceId"`
-	EquipID    string `json:"equipmentId"`
-	Action     string `json:"action"`
+type EquipmentApplicationLink struct {
+	AppID   string `json:"applicationId"`
+	EquipID string `json:"equipmentId"`
+	Action  string `json:"action"`
 }

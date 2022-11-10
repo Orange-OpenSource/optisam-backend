@@ -1,0 +1,76 @@
+environment = "DEVELOPMENT"
+debug = false
+grpcport = "8090"
+httpport = "8080"
+fileslocation = "/optisam_dir/optisam_data" 
+archivelocation = "/optisam_dir/optisam_archived"
+rawdatalocation = "/optisam_dir/optisam_rawdata"
+qsize = 1000
+maxfileworker = 2
+maxapiworker = 20
+maxdeferworker = 10
+
+[workerqueue]
+Qsize = 10000
+retries = 2
+basedelay = 1
+ismultiqueue = true
+
+#crontime will be either in 2 formats 
+#foramt-1 : "@every X" where X is any integer value combines with [s:sec,m:min,h:hour,d:day] eg : 5s/30m/20h/2h30m  -> "every 10m" for every 10 minutes
+#format-2 : "s m h d M W" as cron standard "sec min hour day Mon Week" -> "0 0 0 1 * 0" for 1sday of every month for more details follow 
+#https://pkg.go.dev/github.com/robfig/cron
+[cron]
+time = "@every 3m"
+
+[httpservers.Address]
+auth = "svc-optisam-auth.dev-optisam.svc:80"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 1000
+
+[grpcservers.Address]
+product = "svc-optisam-product.dev-optisam.svc:8090"
+application = "svc-optisam-application.dev-optisam.svc:8090"
+acqright = "svc-optisam-acqrights.dev-optisam.svc:8090"
+equipment = "svc-optisam-equipment.dev-optisam.svc:8090"
+account = "svc-optisam-account.dev-optisam.svc:8090"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = true
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "dps-service"
+collectorEndpoint = "http://jaeger-collector.dev-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.dev-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[postgres]
+host = "svc-optisam-postgres.dev-optisam.svc"
+port = 5432
+user = "optisam"
+#pass = ""
+name = "dps"
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"

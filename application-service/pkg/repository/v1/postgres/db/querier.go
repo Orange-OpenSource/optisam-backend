@@ -8,12 +8,14 @@ import (
 
 type Querier interface {
 	AddApplicationbsolescenceRisk(ctx context.Context, arg AddApplicationbsolescenceRiskParams) error
+	DeleteApplicationEquip(ctx context.Context, scope string) error
 	DeleteApplicationsByScope(ctx context.Context, scope string) error
 	DeleteDomainCriticityByScope(ctx context.Context, scope string) error
 	DeleteInstancesByScope(ctx context.Context, scope string) error
 	DeleteMaintenanceCirticityByScope(ctx context.Context, scope string) error
 	DeleteRiskMatricbyScope(ctx context.Context, scope string) error
 	GetApplicationDomains(ctx context.Context, scope string) ([]string, error)
+	GetApplicationEquip(ctx context.Context, arg GetApplicationEquipParams) ([]GetApplicationEquipRow, error)
 	GetApplicationInstance(ctx context.Context, arg GetApplicationInstanceParams) (ApplicationsInstance, error)
 	GetApplicationInstances(ctx context.Context, arg GetApplicationInstancesParams) ([]ApplicationsInstance, error)
 	GetApplicationsByProduct(ctx context.Context, arg GetApplicationsByProductParams) ([]GetApplicationsByProductRow, error)
@@ -32,7 +34,7 @@ type Querier interface {
 	GetMaintenanceLevelByMonthByName(ctx context.Context, levelname string) (MaintenanceLevelMetum, error)
 	GetMaintenanceTimeCriticity(ctx context.Context, scope string) ([]MaintenanceTimeCriticity, error)
 	GetObsolescenceRiskForApplication(ctx context.Context, arg GetObsolescenceRiskForApplicationParams) (string, error)
-	GetProductsByApplicationInstanceID(ctx context.Context, arg GetProductsByApplicationInstanceIDParams) ([]string, error)
+	GetProductsByApplicationID(ctx context.Context, arg GetProductsByApplicationIDParams) ([]string, error)
 	GetRiskLevelMetaIDs(ctx context.Context) ([]int32, error)
 	GetRiskMatrix(ctx context.Context) ([]RiskMatrix, error)
 	GetRiskMatrixConfig(ctx context.Context, scope string) ([]GetRiskMatrixConfigRow, error)
@@ -42,6 +44,7 @@ type Querier interface {
 	InsertRiskMatrix(ctx context.Context, arg InsertRiskMatrixParams) (int32, error)
 	InsertRiskMatrixConfig(ctx context.Context, arg InsertRiskMatrixConfigParams) error
 	UpsertApplication(ctx context.Context, arg UpsertApplicationParams) error
+	UpsertApplicationEquip(ctx context.Context, arg UpsertApplicationEquipParams) error
 	UpsertApplicationInstance(ctx context.Context, arg UpsertApplicationInstanceParams) error
 }
 

@@ -198,6 +198,18 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 						Href:        "/api/v1/metric/uss",
 						TypeId:      v1.MetricType_User_Sum,
 					},
+					{
+						Name:        repo.MetricStaticStandard.String(),
+						Description: repo.MetricDescriptionStaticStandard.String(),
+						Href:        "/api/v1/metric/ss",
+						TypeId:      v1.MetricType_Static_Standard,
+					},
+					{
+						Name:        repo.MetricEquipAttrStandard.String(),
+						Description: repo.MetricDescriptionEquipAttrStandard.String(),
+						Href:        "/api/v1/metric/equip_attr",
+						TypeId:      v1.MetricType_Equip_Attr,
+					},
 				},
 			},
 		},
@@ -280,6 +292,18 @@ func Test_metricServiceServer_ListMetricType(t *testing.T) {
 						Description: repo.MetricDescriptionAttrSumStandard.String(),
 						Href:        "/api/v1/metric/attr_sum",
 						TypeId:      v1.MetricType_Attr_Sum,
+					},
+					{
+						Name:        repo.MetricStaticStandard.String(),
+						Description: repo.MetricDescriptionStaticStandard.String(),
+						Href:        "/api/v1/metric/ss",
+						TypeId:      v1.MetricType_Static_Standard,
+					},
+					{
+						Name:        repo.MetricEquipAttrStandard.String(),
+						Description: repo.MetricDescriptionEquipAttrStandard.String(),
+						Href:        "/api/v1/metric/equip_attr",
+						TypeId:      v1.MetricType_Equip_Attr,
 					},
 				},
 			},
@@ -827,7 +851,9 @@ func Test_metricServiceServer_GetMetricConfiguration(t *testing.T) {
 					"StartEqType":         "p1",
 					"EndEqType":           "d1",
 					"AggerateLevelEqType": "a1",
-					"NumberOfUsers":       10
+					"NumberOfUsers":       10,
+					"Transform": false,
+					"TransformMetricName":""
 				}`,
 			},
 		},
@@ -1517,6 +1543,7 @@ func Test_metricServiceServer_DeleteMetric(t *testing.T) {
 					Name: "Metric1",
 					Type: repo.MetricOPSOracleProcessorStandard,
 				}, nil)
+				mockRepo.EXPECT().GetMetricNUPByTransformMetricName(ctx, "Metric1", "Scope1").Times(1).Return(nil, nil)
 				mockRepo.EXPECT().DeleteMetric(ctx, "Metric1", "Scope1").Times(1).Return(nil)
 			},
 			want: &v1.DeleteMetricResponse{
@@ -1615,6 +1642,32 @@ func Test_metricServiceServer_DeleteMetric(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "FAILURE - metric is being used for transform",
+			args: args{
+				ctx: ctx,
+				req: &v1.DeleteMetricRequest{
+					MetricName: "Metric1",
+					Scope:      "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockMetric(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().MetricInfoWithAcqAndAgg(ctx, "Metric1", "Scope1").Times(1).Return(&repo.MetricInfoFull{
+					ID:   "Metric1ID",
+					Name: "Metric1",
+					Type: repo.MetricOPSOracleProcessorStandard,
+				}, nil)
+				mockRepo.EXPECT().GetMetricNUPByTransformMetricName(ctx, "Metric1", "Scope1").Times(1).Return(&repo.MetricNUPOracle{
+					Name: "Metric1",
+				}, nil)
+			},
+			want: &v1.DeleteMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
 		{name: "FAILURE - unable to delete metric",
 			args: args{
 				ctx: ctx,
@@ -1632,6 +1685,7 @@ func Test_metricServiceServer_DeleteMetric(t *testing.T) {
 					Name: "Metric1",
 					Type: repo.MetricOPSOracleProcessorStandard,
 				}, nil)
+				mockRepo.EXPECT().GetMetricNUPByTransformMetricName(ctx, "Metric1", "Scope1").Times(1).Return(nil, nil)
 				mockRepo.EXPECT().DeleteMetric(ctx, "Metric1", "Scope1").Times(1).Return(errors.New("Internal"))
 			},
 			want: &v1.DeleteMetricResponse{

@@ -4,12 +4,12 @@ Feature: Report Service Test : Normal User
   Background:
     # * def reportServiceUrl = "https://optisam-report-int.apps.fr01.paas.tech.orange"
     * url reportServiceUrl+'/api/v1'
-    * def credentials = {username:'testuser@test.com', password: 'password'}
+    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
   @get
   Scenario: Get all report types
@@ -96,21 +96,40 @@ Feature: Report Service Test : Normal User
     | 10 | 0 |
     | "A" | 5 |   
 
+    @create
+  Scenario: Create the reports type compliance for oracle editor
+    Given path 'report'
+    And request data.compliance_report
+    When method post
+    Then status 200
+    * match response.success == true
 
-  #    @create
-  # Scenario: Create the reports type compliance
-  #   Given path 'reports'
-  #   And request data.Report1
-  #   When method post
-  #   Then status 200
+# Validate this case when issue getting fixed OPTISAM-3679
+  #Scenario: Create the reports type compliance with invalid editor
+   # Given path 'report'
+   # And request data.invalidcompliance_report
+   # When method post
+   # Then status 400
+   # * match response.success == false
 
-  # @create
-  # Scenario: Create the reports type ProductEquipments
-  #   Given path 'reports'
-  #   And request data.Report2
-  #   When method post
-  #   Then status 200
-   
+  @create
+  Scenario: Create the reports type ProductEquipments
+    Given path 'report'
+    And request data.product_equipments_report
+    When method post
+    Then status 200
+    * match response.success == true
+
+    # Validate this case when issue getting fixed OPTISAM-3679
+  #  @create
+  #Scenario: Create the reports type ProductEquipments for invalid editor
+   # Given path 'report'
+    #And request data.invalidproduct_equipments_report
+    #When method post
+    #Then status 400
+    #* match response.success == false
+    
+  
 
 
 

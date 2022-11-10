@@ -160,5 +160,5 @@ parameters:
     required: true
   - name: DOCKER_REGISTRY
     description: Artifactory URL to download images
-    value: "dockerfactory-unstable-iva.si.francetelecom.fr"
+    value: "optisam-it-virt-docker-unstable.repos.tech.orange"
     required: true

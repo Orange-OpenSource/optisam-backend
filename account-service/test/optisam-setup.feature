@@ -1,19 +1,21 @@
 @setup @ignore
-Feature: Setup Pre-requisite for Optisam Test - AUT
+
+Feature: Setup Pre-requisite for Optisam Test - API
 
   Background:
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
-    * def scope = "AUT"
+    * def scope = "API"
 
 
 # Create Test Scopes
-  Scenario: Create AUT scope
+  Scenario: Create API scope
     * url accountServiceUrl+'/api/v1'
     * header Authorization = 'Bearer '+access_token
     Given path 'scopes'
-    And request {"scopeCode": "AUT","scopeName": "AUT"}
+    And request {"scopeCode": "API","scopeName": "API"}
     When method post
     Then eval if (responseStatus  == 409) karate.abort()
     * status 200
@@ -25,7 +27,7 @@ Feature: Setup Pre-requisite for Optisam Test - AUT
     * url accountServiceUrl+'/api/v1'
     * header Authorization = 'Bearer '+access_token
     Given path 'admin/groups' 
-    And request {"name": "AUT","scopes": ["AUT"],"parentId": "1"}
+    And request {"name": "API","scopes": ["API"],"parentId": "1"}
     When method post
     Then eval if (responseStatus == 409) karate.abort()
     Then status 200
@@ -38,7 +40,7 @@ Feature: Setup Pre-requisite for Optisam Test - AUT
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='AUT')].ID")[0]
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]
     * url accountServiceUrl+'/api/v1'
     * header Authorization = 'Bearer '+access_token
     Given path 'accounts' 

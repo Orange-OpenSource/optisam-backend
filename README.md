@@ -50,20 +50,3 @@ you can create and start all the services from your configuration (docker-compos
 docker-compose -f docker-compose.yml pull
 docker-compose -f docker-compose.yml up
 ```
-
----------------------------
-FOr GCP cluster deployment
-Open cloud shell and clone the source code locally
-
-cd ~/optisam-backend 
-export PROJECT_ID=diese-dev-optisam-it
-go build -o account_service/bin/server account-service/cmd/server/main.go
-
-docker build  -t eu.gcr.io/${PROJECT_ID}/optisam/account-service:v1.0.0 -f account-service/Dockerfile .
-docker push  eu.gcr.io/${PROJECT_ID}/optisam/account-service:v1.0.0
-
-## replace with other service names for next docker build
-
---------------------------------------
-
-

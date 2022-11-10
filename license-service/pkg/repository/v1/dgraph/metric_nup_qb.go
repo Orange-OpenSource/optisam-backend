@@ -16,7 +16,7 @@ import (
 // 	})), nil
 // }
 
-func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...string) string {
+func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, allotedMetricsEq map[string]interface{}, id ...string) string {
 	index := -1
 	aggregateIndex := -1
 	for i := range ops.EqTypeTree {
@@ -29,7 +29,7 @@ func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...str
 	}
 
 	return "{\n\t" + replacer(strings.Join([]string{
-		getToBase(ops.EqTypeTree[:index+1]),
+		getToBase(ops.EqTypeTree[:index+1], allotedMetricsEq),
 		getToTop(ops.EqTypeTree[index:], index > 0),
 		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
@@ -38,10 +38,14 @@ func queryBuilderOPSForNUP(ops *v1.MetricNUPComputed, scopes []string, id ...str
 		"$Scopes": strings.Join(scopes, ",")}) + "\n}"
 }
 
-func buildQueryUsersForNUP(scopes []string, id ...string) string {
+func buildQueryUsersForNUP(scopes []string, EquipmentIDs string, id ...string) string {
+	equipmentIdsCondition := `$EquipmentIDs`
+	if EquipmentIDs != "" {
+		equipmentIdsCondition = ` AND NOT eq(users.id,[$EquipmentIDs]) `
+	}
 	q := `{
 		var(func:uid($ID)){
-			product.users @filter(eq(scopes,[$Scopes])){
+			product.users @filter(eq(scopes,[$Scopes]) ` + equipmentIdsCondition + `){
 				uc as users.count
 	 		}
 		}
@@ -50,7 +54,8 @@ func buildQueryUsersForNUP(scopes []string, id ...string) string {
 	  	}
 	  }`
 	return replacer(q, map[string]string{
-		"$ID":     strings.Join(id, ","),
-		"$Scopes": strings.Join(scopes, ","),
+		"$ID":           strings.Join(id, ","),
+		"$Scopes":       strings.Join(scopes, ","),
+		"$EquipmentIDs": strings.Replace(EquipmentIDs, "\\", "", -1),
 	})
 }

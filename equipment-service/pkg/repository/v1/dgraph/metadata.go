@@ -20,10 +20,75 @@ type metadata struct {
 	Scopes     []string
 }
 
+type meta struct {
+	Scopes []string `json:"scopes"`
+}
+
 const (
 	metadataTypeEquipment   metadataType = "equipment"
 	metadataTypeUnsupported metadataType = "unsupported"
 )
+
+// GetAllOldScopes fetches necessary scopes
+func (r *EquipmentRepository) GetAllOldScopes(ctx context.Context) ([]string, error) {
+	q := `{
+			Data(func: eq(metadata.source,"metadata_softpartition.csv")) @filter(eq(count(metadata.attributes),3)){
+				scopes
+					}
+		  }`
+	resp, err := r.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("dgraph/Metadata - ", zap.String("reason", err.Error()), zap.String("query", q))
+		return nil, errors.New("dgraph/GetAllOldScopes - cannot complete query")
+	}
+	type Resp struct {
+		Scope []*meta `json:"Data"`
+	}
+	var data Resp
+	var res []string
+	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
+		logger.Log.Error("dgraph/GetAllOldScopes - ", zap.String("reason", err.Error()))
+		return nil, fmt.Errorf("dgraph/GetAllOldScopes - cannot unmarshal Json object")
+	}
+	for i := 0; i < len(data.Scope); i++ {
+		res = append(res, data.Scope[i].Scopes...)
+	}
+	return res, nil
+
+}
+
+// UpsertMetadataOldScope stores attribute info in metadata
+func (r *EquipmentRepository) UpsertMetadataOldScope(ctx context.Context, metadata *v1.Metadata) (string, error) {
+
+	q := `query {
+		var(func: eq(metadata.source,"` + metadata.Source + `"))  @filter(eq(type_name, "metadata") AND eq(scopes,"` + metadata.Scope + `")){
+			metadata as uid
+			}
+		}
+		`
+	var set string
+	for _, attr := range metadata.Attributes {
+		set += `
+		uid(metadata) <metadata.attributes> "` + attr + `" .
+		`
+	}
+	mu := &api.Mutation{
+		SetNquads: []byte(set),
+		//	CommitNow: true,
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	resp, err := r.dg.NewTxn().Do(ctx, &api.Request{
+		CommitNow: true,
+		Query:     q,
+		Mutations: []*api.Mutation{mu}},
+	)
+	if err != nil {
+		logger.Log.Error("dgraph/UpsertMetadataOldScope - failed to mutate", zap.String("reason", err.Error()))
+		return "", fmt.Errorf("dgraph/UpsertMetadataOldScope - failed to mutuate")
+	}
+	return resp.Uids["uid(metadata)"], nil
+}
 
 // UpsertMetadata ...
 func (r *EquipmentRepository) UpsertMetadata(ctx context.Context, metadata *v1.Metadata) (string, error) {

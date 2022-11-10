@@ -9,6 +9,8 @@ import (
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
+	"strconv"
+	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -125,7 +127,8 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 				OldLicences: oldLicenses,
 				NewLicenses: newLicenses,
 				Delta:       delta,
-				Product:     repoProductToServProduct(product),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
 			})
 		}
 
@@ -215,7 +218,8 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 						OldLicences: oldLicenses,
 						NewLicenses: newLicenses,
 						Delta:       newLicenses - oldLicenses,
-						Product:     repoProductToServProduct(product),
+						SwidTag:     product.Swidtag,
+						Editor:      product.Editor,
 					})
 					continue
 				}
@@ -234,7 +238,8 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 				OldLicences: ol,
 				NewLicenses: nl,
 				Delta:       nl - ol,
-				Product:     repoProductToServProduct(product),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
 			})
 		}
 		return &v1.LicensesForEquipAndMetricResponse{
@@ -274,7 +279,7 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 		}
 
 		oldLicenses := int64(getAttributeValues(metric.CoreFactorAttr, false) * getAttributeValues(metric.NumCoresAttr, false))
-		newLicenses := int64(getAttributeValues(metric.CoreFactorAttr, true) * getAttributeValues(metric.NumCoresAttr, true))
+		newLicenses := int64(getAttributeValues(metric.CoreFactorAttr, true)*getAttributeValues(metric.NumCoresAttr, true)) * int64(getAttributeValues(metric.NumCPUAttr, true))
 		delta := newLicenses - oldLicenses
 		var licenses []*v1.ProductLicenseForEquipAndMetric
 		for _, product := range products {
@@ -283,7 +288,8 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 				OldLicences: oldLicenses,
 				NewLicenses: newLicenses,
 				Delta:       delta,
-				Product:     repoProductToServProduct(product),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
 			})
 		}
 		return &v1.LicensesForEquipAndMetricResponse{
@@ -324,7 +330,7 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 		}
 
 		oldLicenses := int64(getAttributeValues(metric.CoreFactorAttr, false) * getAttributeValues(metric.NumCoresAttr, false))
-		newLicenses := int64(getAttributeValues(metric.CoreFactorAttr, true) * getAttributeValues(metric.NumCoresAttr, true))
+		newLicenses := int64(getAttributeValues(metric.CoreFactorAttr, true)*getAttributeValues(metric.NumCoresAttr, true)) * int64(getAttributeValues(metric.NumCPUAttr, true))
 		delta := newLicenses - oldLicenses
 		var licenses []*v1.ProductLicenseForEquipAndMetric
 		for _, product := range products {
@@ -333,7 +339,167 @@ func (s *licenseServiceServer) LicensesForEquipAndMetric(ctx context.Context, re
 				OldLicences: oldLicenses,
 				NewLicenses: newLicenses,
 				Delta:       delta,
-				Product:     repoProductToServProduct(product),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
+			})
+		}
+		return &v1.LicensesForEquipAndMetricResponse{
+			Licenses: licenses,
+		}, nil
+	case repo.MetricAttrCounterStandard.String():
+		metrics, err := s.licenseRepo.ListMetricACS(ctx, req.GetScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ListMetricACS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch ACS metric")
+		}
+		// Is the given metrics exists or not.
+		index := metricNameExistsACS(metrics, req.MetricName)
+		if index == -1 {
+			return nil, status.Error(codes.NotFound, "metric does not exist")
+		}
+
+		metric, err := computedMetricACS(metrics[index], equipTypes)
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricACS", zap.Error(err))
+			return nil, status.Error(codes.Internal, "cannot compute ACS metric")
+		}
+		if req.EquipType != metric.BaseType.Type {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricACS", zap.Error(err))
+			return nil, status.Error(codes.InvalidArgument, "cannot simulate ACS metric for types other than base type")
+		}
+		metric = getMetricWithNewValuesACS(metric, req.Attributes)
+		// finding the products for the equipment
+		products, err := s.licenseRepo.ProductsForEquipmentForMetricAttrCounterStandard(ctx, req.EquipId, req.EquipType, uint8(1), metric, req.GetScope())
+		if err != nil && err != repo.ErrNoData {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricAttrCounterStandard", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch products for equipment")
+		} else if err == repo.ErrNoData {
+			return &v1.LicensesForEquipAndMetricResponse{}, nil
+		}
+		oldLicenses := boolToInt(getAttributeValuesString(metric.Attribute, false) == metric.Value)
+		newLicenses := boolToInt(getAttributeValuesString(metric.Attribute, true) == metric.Value)
+		delta := newLicenses - oldLicenses
+		var licenses []*v1.ProductLicenseForEquipAndMetric
+		for _, product := range products {
+			licenses = append(licenses, &v1.ProductLicenseForEquipAndMetric{
+				MetricName:  req.MetricName,
+				OldLicences: int64(oldLicenses),
+				NewLicenses: int64(newLicenses),
+				Delta:       int64(delta),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
+			})
+		}
+		return &v1.LicensesForEquipAndMetricResponse{
+			Licenses: licenses,
+		}, nil
+	case repo.MetricAttrSumStandard.String():
+		metrics, err := s.licenseRepo.ListMetricAttrSum(ctx, req.GetScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ListMetricAttrSum", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch Attr sum metric")
+		}
+		// Is the given metrics exists or not.
+		index := metricNameExistsAttrSum(metrics, req.MetricName)
+		if index == -1 {
+			return nil, status.Error(codes.NotFound, "metric does not exist")
+		}
+
+		metric, err := computedMetricAttrSum(metrics[index], equipTypes)
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricAttrSum", zap.Error(err))
+			return nil, status.Error(codes.Internal, "cannot compute Attr sum metric")
+		}
+		if req.EquipType != metric.BaseType.Type {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricAttrSum", zap.Error(err))
+			return nil, status.Error(codes.InvalidArgument, "cannot simulate Attr sum metric for types other than base type")
+		}
+
+		metric = getMetricWithNewValuesAttrSum(metric, req.Attributes)
+
+		// finding the products for the equipment
+		products, err := s.licenseRepo.ProductsForEquipmentForMetricAttrSumStandard(ctx, req.EquipId, req.EquipType, uint8(1), metric, req.GetScope())
+		if err != nil && err != repo.ErrNoData {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricAttrSumStandard", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch products for equipment")
+		} else if err == repo.ErrNoData {
+			return &v1.LicensesForEquipAndMetricResponse{}, nil
+		}
+		oldLicenses := math.Ceil(getAttributeValues(metric.Attribute, false) / metric.ReferenceValue)
+		newLicenses := math.Ceil(getAttributeValues(metric.Attribute, true) / metric.ReferenceValue)
+		delta := newLicenses - oldLicenses
+		var licenses []*v1.ProductLicenseForEquipAndMetric
+		for _, product := range products {
+			licenses = append(licenses, &v1.ProductLicenseForEquipAndMetric{
+				MetricName:  req.MetricName,
+				OldLicences: int64(oldLicenses),
+				NewLicenses: int64(newLicenses),
+				Delta:       int64(delta),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
+			})
+		}
+		return &v1.LicensesForEquipAndMetricResponse{
+			Licenses: licenses,
+		}, nil
+	case repo.MetricEquipAttrStandard.String():
+		metrics, err := s.licenseRepo.ListMetricEquipAttr(ctx, req.GetScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ListMetricEquipAttr", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch Equip attr metric")
+		}
+		// Is the given metrics exists or not.
+		index := metricNameExistsEquipAttr(metrics, req.MetricName)
+		if index == -1 {
+			return nil, status.Error(codes.NotFound, "metric does not exist")
+		}
+
+		metric, err := computedMetricEquipAttr(metrics[index], equipTypes)
+		if err != nil {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricEquipAttr", zap.Error(err))
+			return nil, status.Error(codes.Internal, "cannot compute Equip Attr metric")
+		}
+		if req.EquipType != metric.BaseType.Type {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - computedMetricEquipAttr", zap.Error(err))
+			return nil, status.Error(codes.InvalidArgument, "cannot simulate Equip Attr metric for types other than base type")
+		}
+
+		metric = getMetricWithNewValuesEquipAttr(metric, req.Attributes)
+
+		// finding the products for the equipment
+		products, err := s.licenseRepo.ProductsForEquipmentForMetricEquipAttrStandard(ctx, req.EquipId, req.EquipType, uint8(1), metric, req.GetScope())
+		if err != nil && err != repo.ErrNoData {
+			logger.Log.Error("service/v1 - LicensesForEquipAndMetric - ProductsForEquipmentForMetricEquipAttrStandard", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch products for equipment")
+		} else if err == repo.ErrNoData {
+			return &v1.LicensesForEquipAndMetricResponse{}, nil
+		}
+		var oldLicenses, newLicenses float64
+		metEnvs := strings.Split(metric.Environment, ",")
+		envIndex := containsAttribute(req.Attributes, "environment")
+		if envIndex != -1 && req.Attributes[envIndex].Simulated {
+			for _, metEnv := range metEnvs {
+				if req.Attributes[envIndex].GetStringValOld() == metEnv {
+					oldLicenses = math.Ceil(getAttributeValues(metric.Attribute, false) / metric.Value)
+				}
+				if req.Attributes[envIndex].GetStringVal() == metEnv {
+					newLicenses = math.Ceil(getAttributeValues(metric.Attribute, true) / metric.Value)
+				}
+			}
+		} else {
+			oldLicenses = math.Ceil(getAttributeValues(metric.Attribute, false) / metric.Value)
+			newLicenses = math.Ceil(getAttributeValues(metric.Attribute, true) / metric.Value)
+		}
+		delta := newLicenses - oldLicenses
+		var licenses []*v1.ProductLicenseForEquipAndMetric
+		for _, product := range products {
+			licenses = append(licenses, &v1.ProductLicenseForEquipAndMetric{
+				MetricName:  req.MetricName,
+				OldLicences: int64(oldLicenses),
+				NewLicenses: int64(newLicenses),
+				Delta:       int64(delta),
+				SwidTag:     product.Swidtag,
+				Editor:      product.Editor,
 			})
 		}
 		return &v1.LicensesForEquipAndMetricResponse{
@@ -459,6 +625,27 @@ func getMetricWithNewValuesSPS(computedMetric *repo.MetricSPSComputed, attribute
 	return computedMetric
 }
 
+func getMetricWithNewValuesACS(computedMetric *repo.MetricACSComputed, attributes []*v1.Attribute) *repo.MetricACSComputed {
+	if index := containsAttribute(attributes, computedMetric.Attribute.Name); index != -1 {
+		computedMetric.Attribute = servAttrToRepoAttr(attributes[index])
+	}
+	return computedMetric
+}
+
+func getMetricWithNewValuesAttrSum(computedMetric *repo.MetricAttrSumStandComputed, attributes []*v1.Attribute) *repo.MetricAttrSumStandComputed {
+	if index := containsAttribute(attributes, computedMetric.Attribute.Name); index != -1 {
+		computedMetric.Attribute = servAttrToRepoAttr(attributes[index])
+	}
+	return computedMetric
+}
+
+func getMetricWithNewValuesEquipAttr(computedMetric *repo.MetricEquipAttrStandComputed, attributes []*v1.Attribute) *repo.MetricEquipAttrStandComputed {
+	if index := containsAttribute(attributes, computedMetric.Attribute.Name); index != -1 {
+		computedMetric.Attribute = servAttrToRepoAttr(attributes[index])
+	}
+	return computedMetric
+}
+
 func containsAttribute(attributes []*v1.Attribute, attributeName string) int {
 	for i := 0; i < len(attributes); i++ {
 		if attributes[i].Name == attributeName {
@@ -526,6 +713,34 @@ func getAttributeValues(a *repo.Attribute, useSimulated bool) float64 {
 			return float64(a.IntVal)
 		}
 		return float64(a.IntValOld)
+	}
+	return 0
+}
+
+func getAttributeValuesString(a *repo.Attribute, useSimulated bool) string {
+	switch a.Type {
+	case repo.DataTypeFloat:
+		if useSimulated && a.IsSimulated {
+			return fmt.Sprintf("%f", a.FloatVal)
+		}
+		return fmt.Sprintf("%f", a.FloatValOld)
+	case repo.DataTypeInt:
+		if useSimulated && a.IsSimulated {
+			return strconv.Itoa(a.IntVal)
+		}
+		return strconv.Itoa(a.IntValOld)
+	case repo.DataTypeString:
+		if useSimulated && a.IsSimulated {
+			return a.StringVal
+		}
+		return a.StringValOld
+	}
+	return ""
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
 	}
 	return 0
 }

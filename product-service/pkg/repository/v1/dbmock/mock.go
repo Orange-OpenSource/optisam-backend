@@ -263,6 +263,20 @@ func (mr *MockProductMockRecorder) DeleteProductsByScope(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductsByScope", reflect.TypeOf((*MockProduct)(nil).DeleteProductsByScope), arg0, arg1)
 }
 
+// DropAllocatedMetricFromEquipment mocks base method
+func (m *MockProduct) DropAllocatedMetricFromEquipment(arg0 context.Context, arg1 db.DropAllocatedMetricFromEquipmentParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DropAllocatedMetricFromEquipment", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DropAllocatedMetricFromEquipment indicates an expected call of DropAllocatedMetricFromEquipment
+func (mr *MockProductMockRecorder) DropAllocatedMetricFromEquipment(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropAllocatedMetricFromEquipment", reflect.TypeOf((*MockProduct)(nil).DropAllocatedMetricFromEquipment), arg0, arg1)
+}
+
 // DropProductDataTx mocks base method
 func (m *MockProduct) DropProductDataTx(arg0 context.Context, arg1 string, arg2 v1.DropProductDataRequestDeletionTypes) error {
 	m.ctrl.T.Helper()
@@ -472,6 +486,21 @@ func (mr *MockProductMockRecorder) GetAggregationByName(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationByName", reflect.TypeOf((*MockProduct)(nil).GetAggregationByName), arg0, arg1)
 }
 
+// GetApplicationsByProductID mocks base method
+func (m *MockProduct) GetApplicationsByProductID(arg0 context.Context, arg1 db.GetApplicationsByProductIDParams) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetApplicationsByProductID", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApplicationsByProductID indicates an expected call of GetApplicationsByProductID
+func (mr *MockProductMockRecorder) GetApplicationsByProductID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsByProductID", reflect.TypeOf((*MockProduct)(nil).GetApplicationsByProductID), arg0, arg1)
+}
+
 // GetDashboardUpdates mocks base method
 func (m *MockProduct) GetDashboardUpdates(arg0 context.Context, arg1 db.GetDashboardUpdatesParams) (db.GetDashboardUpdatesRow, error) {
 	m.ctrl.T.Helper()
@@ -547,6 +576,21 @@ func (mr *MockProductMockRecorder) GetLicensesCost(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLicensesCost", reflect.TypeOf((*MockProduct)(nil).GetLicensesCost), arg0, arg1)
 }
 
+// GetProductCount mocks base method
+func (m *MockProduct) GetProductCount(arg0 context.Context, arg1 string) ([]db.GetProductCountRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductCount", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetProductCountRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductCount indicates an expected call of GetProductCount
+func (mr *MockProductMockRecorder) GetProductCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCount", reflect.TypeOf((*MockProduct)(nil).GetProductCount), arg0, arg1)
+}
+
 // GetProductInformation mocks base method
 func (m *MockProduct) GetProductInformation(arg0 context.Context, arg1 db.GetProductInformationParams) (db.GetProductInformationRow, error) {
 	m.ctrl.T.Helper()
@@ -592,6 +636,21 @@ func (mr *MockProductMockRecorder) GetProductOptions(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductOptions", reflect.TypeOf((*MockProduct)(nil).GetProductOptions), arg0, arg1)
 }
 
+// GetProductsByApplicationID mocks base method
+func (m *MockProduct) GetProductsByApplicationID(arg0 context.Context, arg1 db.GetProductsByApplicationIDParams) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductsByApplicationID", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductsByApplicationID indicates an expected call of GetProductsByApplicationID
+func (mr *MockProductMockRecorder) GetProductsByApplicationID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByApplicationID", reflect.TypeOf((*MockProduct)(nil).GetProductsByApplicationID), arg0, arg1)
+}
+
 // GetProductsByEditor mocks base method
 func (m *MockProduct) GetProductsByEditor(arg0 context.Context, arg1 db.GetProductsByEditorParams) ([]db.GetProductsByEditorRow, error) {
 	m.ctrl.T.Helper()
@@ -620,6 +679,21 @@ func (m *MockProduct) GetTotalCounterfietAmount(arg0 context.Context, arg1 strin
 func (mr *MockProductMockRecorder) GetTotalCounterfietAmount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalCounterfietAmount", reflect.TypeOf((*MockProduct)(nil).GetTotalCounterfietAmount), arg0, arg1)
+}
+
+// GetTotalDeltaCost mocks base method
+func (m *MockProduct) GetTotalDeltaCost(arg0 context.Context, arg1 string) (float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalDeltaCost", arg0, arg1)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalDeltaCost indicates an expected call of GetTotalDeltaCost
+func (mr *MockProductMockRecorder) GetTotalDeltaCost(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalDeltaCost", reflect.TypeOf((*MockProduct)(nil).GetTotalDeltaCost), arg0, arg1)
 }
 
 // GetTotalUnderusageAmount mocks base method
@@ -861,19 +935,19 @@ func (mr *MockProductMockRecorder) ListProductsAggregationIndividual(arg0, arg1 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsAggregationIndividual", reflect.TypeOf((*MockProduct)(nil).ListProductsAggregationIndividual), arg0, arg1)
 }
 
-// ListProductsByApplicationInstance mocks base method
-func (m *MockProduct) ListProductsByApplicationInstance(arg0 context.Context, arg1 db.ListProductsByApplicationInstanceParams) ([]db.ListProductsByApplicationInstanceRow, error) {
+// ListProductsByApplication mocks base method
+func (m *MockProduct) ListProductsByApplication(arg0 context.Context, arg1 db.ListProductsByApplicationParams) ([]db.ListProductsByApplicationRow, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListProductsByApplicationInstance", arg0, arg1)
-	ret0, _ := ret[0].([]db.ListProductsByApplicationInstanceRow)
+	ret := m.ctrl.Call(m, "ListProductsByApplication", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListProductsByApplicationRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListProductsByApplicationInstance indicates an expected call of ListProductsByApplicationInstance
-func (mr *MockProductMockRecorder) ListProductsByApplicationInstance(arg0, arg1 interface{}) *gomock.Call {
+// ListProductsByApplication indicates an expected call of ListProductsByApplication
+func (mr *MockProductMockRecorder) ListProductsByApplication(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsByApplicationInstance", reflect.TypeOf((*MockProduct)(nil).ListProductsByApplicationInstance), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsByApplication", reflect.TypeOf((*MockProduct)(nil).ListProductsByApplication), arg0, arg1)
 }
 
 // ListProductsForAggregation mocks base method

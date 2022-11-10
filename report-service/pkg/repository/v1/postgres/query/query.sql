@@ -1,5 +1,5 @@
 -- name: GetReport :many
-SELECT count(*) OVER() AS totalRecords,r.report_id,rt.report_type_name,r.report_status,r.created_by,r.created_on FROM
+SELECT count(*) OVER() AS totalRecords,r.report_id,rt.report_type_name,r.report_status,r.report_metadata,r.created_by,r.created_on FROM
 report r
 JOIN
 report_type rt 
@@ -20,8 +20,11 @@ ORDER BY
 ; 
 
 -- name: DownloadReport :one
-SELECT report_data
+SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name
 FROM report r
+JOIN
+report_type rt 
+ON r.report_type_id = rt.report_type_id
 WHERE r.report_id = @report_id
 AND r.scope = ANY(@scope::TEXT[]);
 

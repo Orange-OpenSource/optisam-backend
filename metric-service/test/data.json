@@ -1,29 +1,104 @@
 {
-    "metric_inm": {
+    "crud_metric_inm": {
         "ID": "",
         "Name": "apitest_instance",
-        "num_of_deployments": "2",
+        "num_of_deployments": "1",
         "scopes": [
-            "AUT"
+            "API"
         ]
     },
-    "metric_acs": {
-        "name": "apitest_attribute_core",
-        "eq_type": "server",
-        "attribute_name": "server_coresNumber",
-        "value": "2",
-        "scopes": ["AUT"]
+    "metric_instance_number_standard_1": {
+        "ID":"",
+        "Name":"instance_1",
+        "num_of_deployments":1,
+        "scopes":[
+            "API"
+        ]
     },
-    "metric_ibm": {
-        "ID": "",
-        "Name": "apitest_ibm_pvu",
-        "num_core_attr_id": "0x162",
-        "core_factor_attr_id": "0x160",
-        "numCPU_attr_id": null,
-        "base_eq_type_id": "0x168",
-        "number_of_users": 0,
-        "scopes": [
-            "AUT"
+    "metric_instance_number_standard_62": {
+        "ID":"",
+        "Name":"instance_62",
+        "num_of_deployments":62,
+        "scopes":[
+            "API"
+        ]
+    },
+    "metric_instance_number_standard_8": {
+        "ID":"",
+        "Name":"instance_8",
+        "num_of_deployments":8,
+        "scopes":[
+            "API"
+        ]
+    },
+    "metric_static_standard":{
+        "ID":"",
+        "Name":"static_1",
+        "reference_value":10,
+        "scopes":[
+            "API"
+        ]
+    },
+    "crud_metric_static_standard":{
+        "ID":"",
+        "Name":"apitest_static_std_metric",
+        "reference_value":10,
+        "scopes":[
+            "API"
+        ]
+    },
+    "metric_user_sum_standard":{
+        "ID":"",
+        "Name":"user",
+        "scopes":[
+            "API"
+        ]
+    },
+    "crud_metric_user_sum_standard":{
+        "ID":"",
+        "Name":"apitest_user_metric",
+        "scopes":[
+            "API"
+        ]
+    },
+    "metric_attribute_sum_standard":{
+        "ID":"",
+        "name":"attribute_sum",
+        "eq_type":"server",
+        "attribute_name":"cores_per_processor",
+        "reference_value":8,
+        "scopes":[
+            "API"
+        ]
+    },
+    "crud_metric_attr_sum_std":{
+        "ID":"",
+        "name":"apitest_attr_sum_std_metric",
+        "eq_type":"server",
+        "attribute_name":"cores_per_processor",
+        "reference_value":8,
+        "scopes":[
+            "API"
+        ]
+    },
+    "metric_attribute_counter_standard":{
+        "ID":"",
+        "name":"hyperthreading",
+        "eq_type":"server",
+        "attribute_name":"hyperthreading",
+        "value":"yes",
+        "scopes":[
+            "API"
+        ]
+    },
+    "crud_metric_attr_counter_std":{
+        "ID":"",
+        "name":"apitest_attr_count_std_metric",
+        "eq_type":"server",
+        "attribute_name":"hyperthreading",
+        "value":"yes",
+        "scopes":[
+            "API"
         ]
     }
 }

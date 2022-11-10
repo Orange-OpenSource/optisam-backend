@@ -4,7 +4,7 @@ Feature: Simulation Service Test : Admin
   Background:
   # * def simulationServiceUrl = "https://optisam-simulation-int.apps.fr01.paas.tech.orange"
     * url simulationServiceUrl+'/api/v1'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token

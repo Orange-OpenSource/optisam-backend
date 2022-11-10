@@ -44,6 +44,7 @@ func (l *LicenseRepository) AggregationDetails(ctx context.Context, name string,
 		  		TotalCost				:aggregatedRights.totalCost
 		  		TotalPurchaseCost		:aggregatedRights.totalPurchaseCost
 		  		AvgUnitPrice			:aggregatedRights.averageUnitPrice
+				Repartition 			:aggregatedRights.repartition 
 			}
 	}
 	`
@@ -89,7 +90,8 @@ func (l *LicenseRepository) AggregationDetails(ctx context.Context, name string,
 	if len(data.AggregatedRight) == 0 {
 		return respAggInfo, nil, nil
 	}
-	return respAggInfo, concatAcqRightForSameMetric(metrics, data.AggregatedRight, isSimulation), nil
+	prodRights := l.ConcatAcqRightForSameMetric(ctx, metrics, data.AggregatedRight, isSimulation, scopes[0])
+	return respAggInfo, prodRights, nil
 }
 
 func (l *LicenseRepository) AggregationIndividualRights(ctx context.Context, productIDs, metrics []string, scopes ...string) ([]*v1.AcqRightsInfo, error) {

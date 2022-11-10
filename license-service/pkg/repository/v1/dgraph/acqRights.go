@@ -75,3 +75,7 @@ func acquiredRightsPredForFilteringKey(key v1.AcquiredRightsSearchKey) (predAcqR
 		return "", fmt.Errorf("acquiredRightsPredForFilteringKey - unknown acquired key")
 	}
 }
+
+func typeFilters(typeName, typeValue string) []string {
+	return []string{fmt.Sprintf("eq("+typeName+",%s)", typeValue)}
+}

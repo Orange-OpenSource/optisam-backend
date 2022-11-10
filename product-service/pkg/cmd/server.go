@@ -55,15 +55,15 @@ func init() {
 }
 
 // RunServer runs gRPC server and HTTP gateway
-// nolint: funlen, gocyclo
+// nolint: funlen, gocyclo, gosec
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
-	} else if os.Getenv("ENV") == "pprod" {
-		viper.SetConfigName("config-pprod")
+	} else if os.Getenv("ENV") == "performance" {
+		viper.SetConfigName("config-performance")
 	} else if os.Getenv("ENV") == "int" {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
@@ -237,7 +237,7 @@ func RunServer() error {
 	}
 	defer q.Close(ctx)
 	for i := 0; i < cfg.MaxAPIWorker; i++ {
-		lWorker := dgworker.NewWorker("aw", dg)
+		lWorker := dgworker.NewWorker("aw", dg, grpcClientMap)
 		q.RegisterWorker(ctx, lWorker)
 	}
 
@@ -267,9 +267,13 @@ func RunServer() error {
 	// Run once the service is up and then once in 12~ hours
 	cronJob.Job()
 	cron.AddCronJob(cronJob.Job)
-
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Sugar().Debug("Recovered in RunServer", r)
+		}
+	}()
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()

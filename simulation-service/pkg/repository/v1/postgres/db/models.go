@@ -23,6 +23,7 @@ type ConfigMaster struct {
 	CreatedOn     time.Time `json:"created_on"`
 	UpdatedBy     string    `json:"updated_by"`
 	UpdatedOn     time.Time `json:"updated_on"`
+	Scope         string    `json:"scope"`
 }
 
 type ConfigMetadatum struct {

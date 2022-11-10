@@ -88,12 +88,12 @@ func do(t *testing.T, i int) {
 			Operation: "add",
 			Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
 				{
-					EquipmentId: "1" + is,
-					NumUser:     10,
+					EquipmentId:    "1" + is,
+					AllocatedUsers: 10,
 				},
 				{
-					EquipmentId: "2" + is,
-					NumUser:     10,
+					EquipmentId:    "2" + is,
+					AllocatedUsers: 10,
 				},
 			},
 		},

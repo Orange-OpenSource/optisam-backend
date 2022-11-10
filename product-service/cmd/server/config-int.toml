@@ -1,0 +1,68 @@
+environment = "INTEGRATION"
+debug = false
+grpcport = "8090"
+httpport = "8080"
+maxapiworker = 25
+
+[workerqueue]
+retries = 3
+basedelay = 1
+
+[cron]
+time = "@every 12h"
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = true
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "product-service"
+collectorEndpoint = "http://jaeger-collector.int-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[dgraph]
+hosts = [
+    "svc-optisam-dgraph.int-optisam.svc:9080"
+]
+
+[database]
+host = "svc-optisam-postgres.int-optisam.svc"
+port = 5432
+user = "optisam"
+#pass = ""
+name = "product"
+
+[app.params]
+pageSize = 20
+pageNum = 1
+sortOrder = "asc"
+sortBy = "name"
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+license = "svc-optisam-license.int-optisam.svc:8090"
+metric = "svc-optisam-metric.int-optisam.svc:8090"
+application = "svc-optisam-application.int-optisam.svc:8090"
+account = "svc-optisam-account.int-optisam.svc:8090"
+equipment = "svc-optisam-equipment.int-optisam.svc:8090"
+
+[httpservers.Address]
+auth = "svc-optisam-auth.int-optisam.svc:80"

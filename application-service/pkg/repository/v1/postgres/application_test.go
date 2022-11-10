@@ -242,9 +242,9 @@ func Test_UpsertApplication(t *testing.T) {
 				arg: &v1.UpsertApplicationRequest{
 					ApplicationId: "a1",
 					Name:          "app1",
-					Version:       "ver1",
-					Owner:         "own1",
-					Scope:         "s1",
+					// Version:       "ver1",
+					// Owner:         "own1",
+					Scope: "s1",
 				},
 			},
 			outErr: false,
@@ -257,9 +257,9 @@ func Test_UpsertApplication(t *testing.T) {
 				arg: &v1.UpsertApplicationRequest{
 					ApplicationId: "a1",
 					Name:          "app1",
-					Version:       "ver1",
-					Owner:         "own1",
-					Scope:         "s1",
+					// Version:       "ver1",
+					// Owner:         "own1",
+					Scope: "s1",
 				},
 			},
 			outErr: false,
@@ -272,9 +272,9 @@ func Test_UpsertApplication(t *testing.T) {
 				arg: &v1.UpsertApplicationRequest{
 					ApplicationId: "a1",
 					Name:          "app1",
-					Version:       "ver1",
-					Owner:         "own1",
-					Scope:         "s2",
+					// Version:       "ver1",
+					// Owner:         "own1",
+					Scope: "s2",
 				},
 			},
 			outErr: false,
@@ -283,11 +283,11 @@ func Test_UpsertApplication(t *testing.T) {
 	for _, test := range tests {
 		t.Run("", func(t *testing.T) {
 			err := test.ob.Queries.UpsertApplication(test.input.ctx, dbm.UpsertApplicationParams{
-				ApplicationID:      test.input.arg.ApplicationId,
-				ApplicationName:    test.input.arg.Name,
-				ApplicationOwner:   test.input.arg.Owner,
-				ApplicationVersion: test.input.arg.Version,
-				Scope:              test.input.arg.Scope,
+				ApplicationID:   test.input.arg.ApplicationId,
+				ApplicationName: test.input.arg.Name,
+				// ApplicationOwner:   test.input.arg.Owner,
+				// ApplicationVersion: test.input.arg.Version,
+				Scope: test.input.arg.Scope,
 			})
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)

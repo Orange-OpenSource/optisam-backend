@@ -22,6 +22,8 @@ const (
 	MetricAttrSumStandard MetricType = "attribute.sum.standard"
 	// MetricUserSumStandard is user.sum.standard
 	MetricUserSumStandard MetricType = "user.sum.standard"
+	// MetricEquipAttrStandard is equipment.attribute.standard
+	MetricEquipAttrStandard MetricType = "equipment.attribute.standard"
 )
 
 // String implements Stringer interface
@@ -56,6 +58,7 @@ const (
 	MetricAttrSum         MetricTypeID = 7
 	MetricUserSum         MetricTypeID = 8
 	MetricStatic          MetricTypeID = 9
+	MetricEquipAttr       MetricTypeID = 10
 )
 
 // MetricDescription provide description

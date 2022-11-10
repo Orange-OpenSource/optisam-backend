@@ -73,12 +73,13 @@ func (s *applicationServiceServer) UpsertApplication(ctx context.Context, req *v
 		appDomain = req.GetDomain()
 	}
 	err := s.applicationRepo.UpsertApplication(ctx, db.UpsertApplicationParams{
-		ApplicationID:      req.GetApplicationId(),
-		ApplicationName:    req.GetName(),
-		ApplicationOwner:   req.GetOwner(),
-		ApplicationVersion: req.GetVersion(),
-		ApplicationDomain:  appDomain,
-		Scope:              req.GetScope(),
+		ApplicationID:   req.GetApplicationId(),
+		ApplicationName: req.GetName(),
+		// ApplicationOwner:   req.GetOwner(),
+		// ApplicationVersion: req.GetVersion(),
+		ApplicationEnvironment: req.GetEnvironment(),
+		ApplicationDomain:      appDomain,
+		Scope:                  req.GetScope(),
 	})
 
 	if err != nil {
@@ -108,6 +109,44 @@ func (s *applicationServiceServer) UpsertApplication(ctx context.Context, req *v
 	}
 
 	return &v1.UpsertApplicationResponse{Success: true}, nil
+}
+
+func (s *applicationServiceServer) UpsertApplicationEquip(ctx context.Context, req *v1.UpsertApplicationEquipRequest) (*v1.UpsertApplicationEquipResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.PermissionDenied, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	err := s.applicationRepo.UpsertApplicationEquipTx(ctx, req)
+	if err != nil {
+		logger.Log.Error("UpsertApplicationEquip Failed", zap.Error(err))
+		return &v1.UpsertApplicationEquipResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+
+	// For dgworker Queue
+	// jsonData, err := json.Marshal(req)
+	// if err != nil {
+	// 	logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	// }
+	// e := dgworker.Envelope{Type: dgworker.UpsertApplicationEquipRequest, JSON: jsonData}
+
+	// envolveData, err := json.Marshal(e)
+	// if err != nil {
+	// 	logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	// }
+
+	// _, err = s.queue.PushJob(ctx, job.Job{
+	// 	Type:   sql.NullString{String: "lw"},
+	// 	Status: job.JobStatusPENDING,
+	// 	Data:   envolveData,
+	// }, "lw")
+	// if err != nil {
+	// 	logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+	// }
+
+	return &v1.UpsertApplicationEquipResponse{Success: true}, nil
 }
 
 func (s *applicationServiceServer) DeleteApplication(ctx context.Context, req *v1.DeleteApplicationRequest) (*v1.DeleteApplicationResponse, error) {
@@ -194,7 +233,7 @@ func (s *applicationServiceServer) ListApplications(ctx context.Context, req *v1
 	}
 	if req.SearchParams != nil {
 		if req.SearchParams.ProductId != nil {
-			if len(req.SearchParams.ProductId.FilteringkeyMultiple) != 0 {
+			if len(req.SearchParams.ProductId.Filteringkey) != 0 {
 				apiresp, err := s.listApplicationsByProductSwidtags(ctx, req)
 				if err != nil {
 					return nil, err
@@ -364,70 +403,75 @@ func (s *applicationServiceServer) GetEquipmentsByApplication(ctx context.Contex
 		logger.Log.Error("GetEquipmentsByApplication - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	equipments, err := s.applicationRepo.GetEquipmentsByApplicationID(ctx, db.GetEquipmentsByApplicationIDParams{
+	application, err := s.applicationRepo.GetApplicationEquip(ctx, db.GetApplicationEquipParams{
 		Scope:         req.Scope,
 		ApplicationID: req.ApplicationId,
 	})
 	if err != nil {
-		logger.Log.Error("service/v1 - GetEquipmentsByApplication - error from repo/GetEquipmentsByApplicationID", zap.Error(err))
+		logger.Log.Error("service/v1 - GetEquipmentsByApplication - error from repo/GetApplicationEquip", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	return &v1.GetEquipmentsByApplicationResponse{EquipmentId: equipments}, nil
+
+	resp := v1.GetEquipmentsByApplicationResponse{}
+
+	if len(application) > 0 {
+		resp.TotalRecords = int32(application[0].Totalrecords)
+	}
+	for i := range application {
+		resp.EquipmentId[i] = application[i].EquipmentID
+	}
+	return &resp, nil
 }
 
-func (s *applicationServiceServer) GetProductsByApplicationInstance(ctx context.Context, req *v1.GetProductsByApplicationInstanceRequest) (*v1.GetProductsByApplicationInstanceResponse, error) {
-	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "ClaimsNotFound")
-	}
-	if !helper.Contains(userClaims.Socpes, req.Scope) {
-		logger.Log.Error("GetProductsByApplicationInstance - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
-		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
-	}
-	products, err := s.applicationRepo.GetProductsByApplicationInstanceID(ctx, db.GetProductsByApplicationInstanceIDParams{
-		Scope:         req.Scope,
-		ApplicationID: req.ApplicationId,
-		InstanceID:    req.InstanceId,
-	})
-	if err != nil {
-		logger.Log.Error("service/v1 - GetProductsByApplicationInstance - error from repo/GetProductsByApplicationInstanceID", zap.Error(err))
-		return nil, status.Error(codes.Internal, "DBError")
-	}
-	return &v1.GetProductsByApplicationInstanceResponse{ProductId: products}, nil
-}
+// func (s *applicationServiceServer) GetProductsByApplication(ctx context.Context, req *v1.GetProductsByApplicationRequest) (*v1.GetProductsByApplicationResponse, error) {
+// 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+// 	if !ok {
+// 		return nil, status.Error(codes.Internal, "ClaimsNotFound")
+// 	}
+// 	if !helper.Contains(userClaims.Socpes, req.Scope) {
+// 		logger.Log.Error("GetProductsByApplication - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+// 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+// 	}
+// 	products, err := s.applicationRepo.GetProductsByApplicationID(ctx, db.GetProductsByApplicationIDParams{
+// 		Scope:         req.Scope,
+// 		ApplicationID: req.ApplicationId,
+// 	})
+// 	if err != nil {
+// 		logger.Log.Error("service/v1 - GetProductsByApplication - error from repo/GetProductsByApplicationID", zap.Error(err))
+// 		return nil, status.Error(codes.Internal, "DBError")
+// 	}
+// 	return &v1.GetProductsByApplicationResponse{ProductId: products}, nil
+// }
 
 // nolint: gocyclo
 func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error) {
 	resp, err := s.applicationRepo.GetApplicationsView(ctx, db.GetApplicationsViewParams{
-		Scope:                 req.GetScopes(),
-		ProductID:             req.GetSearchParams().GetProductId().GetFilteringkey(),
-		IsProductID:           req.GetSearchParams().GetProductId().GetFilteringkey() != "",
-		ApplicationDomain:     req.GetSearchParams().GetDomain().GetFilteringkey(),
-		ApplicationName:       req.GetSearchParams().GetName().GetFilteringkey(),
-		ObsolescenceRisk:      req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey(),
-		IsApplicationName:     req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
-		IsApplicationDomain:   req.GetSearchParams().GetDomain().GetFilterType() && req.GetSearchParams().GetDomain().GetFilteringkey() != "",
-		IsObsolescenceRisk:    req.GetSearchParams().GetObsolescenceRisk().GetFilterType() && req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey() != "",
-		LkApplicationName:     !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
-		LkApplicationDomain:   !req.GetSearchParams().GetDomain().GetFilterType() && req.GetSearchParams().GetDomain().GetFilteringkey() != "",
-		LkObsolescenceRisk:    !req.GetSearchParams().GetObsolescenceRisk().GetFilterType() && req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey() != "",
-		ApplicationOwner:      req.GetSearchParams().GetOwner().GetFilteringkey(),
-		IsApplicationOwner:    req.GetSearchParams().GetOwner().GetFilterType() && req.GetSearchParams().GetOwner().GetFilteringkey() != "",
-		LkApplicationOwner:    !req.GetSearchParams().GetOwner().GetFilterType() && req.GetSearchParams().GetOwner().GetFilteringkey() != "",
-		ApplicationNameAsc:    strings.Contains(req.GetSortBy().String(), "name") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ApplicationNameDesc:   strings.Contains(req.GetSortBy().String(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ApplicationOwnerAsc:   strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ApplicationOwnerDesc:  strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfInstancesAsc:     strings.Contains(req.GetSortBy().String(), "num_of_instances") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfInstancesDesc:    strings.Contains(req.GetSortBy().String(), "num_of_instances") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfProductsAsc:      strings.Contains(req.GetSortBy().String(), "num_of_products") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfProductsDesc:     strings.Contains(req.GetSortBy().String(), "num_of_products") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfEquipmentsAsc:    strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfEquipmentsDesc:   strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ApplicationDomainAsc:  strings.Contains(req.GetSortBy().String(), "domain") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ApplicationDomainDesc: strings.Contains(req.GetSortBy().String(), "domain") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		ObsolescenceRiskAsc:   strings.Contains(req.GetSortBy().String(), "obsolescence_risk") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		ObsolescenceRiskDesc:  strings.Contains(req.GetSortBy().String(), "obsolescence_risk") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		Scope:                      req.GetScopes(),
+		ApplicationEnvironment:     req.GetSearchParams().GetEnvironment(),
+		ApplicationDomain:          req.GetSearchParams().GetDomain().GetFilteringkey(),
+		ApplicationName:            req.GetSearchParams().GetName().GetFilteringkey(),
+		ObsolescenceRisk:           req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey(),
+		IsApplicationName:          req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+		IsApplicationDomain:        req.GetSearchParams().GetDomain().GetFilterType() && req.GetSearchParams().GetDomain().GetFilteringkey() != "",
+		IsObsolescenceRisk:         req.GetSearchParams().GetObsolescenceRisk().GetFilterType() && req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey() != "",
+		LkApplicationName:          !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
+		LkApplicationDomain:        !req.GetSearchParams().GetDomain().GetFilterType() && req.GetSearchParams().GetDomain().GetFilteringkey() != "",
+		LkObsolescenceRisk:         !req.GetSearchParams().GetObsolescenceRisk().GetFilterType() && req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey() != "",
+		ApplicationOwner:           req.GetSearchParams().GetOwner().GetFilteringkey(),
+		IsApplicationOwner:         req.GetSearchParams().GetOwner().GetFilterType() && req.GetSearchParams().GetOwner().GetFilteringkey() != "",
+		LkApplicationOwner:         !req.GetSearchParams().GetOwner().GetFilterType() && req.GetSearchParams().GetOwner().GetFilteringkey() != "",
+		ApplicationNameAsc:         strings.Contains(req.GetSortBy().String(), "name") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ApplicationNameDesc:        strings.Contains(req.GetSortBy().String(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ApplicationOwnerAsc:        strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ApplicationOwnerDesc:       strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		NumOfEquipmentsAsc:         strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		NumOfEquipmentsDesc:        strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ApplicationDomainAsc:       strings.Contains(req.GetSortBy().String(), "domain") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ApplicationDomainDesc:      strings.Contains(req.GetSortBy().String(), "domain") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ApplicationEnvironmentAsc:  strings.Contains(req.GetSortBy().String(), "environment") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ApplicationEnvironmentDesc: strings.Contains(req.GetSortBy().String(), "environment") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ObsolescenceRiskAsc:        strings.Contains(req.GetSortBy().String(), "obsolescence_risk") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ObsolescenceRiskDesc:       strings.Contains(req.GetSortBy().String(), "obsolescence_risk") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		// API expect pagenum from 1 but the offset in DB starts with 0
 		PageNum:  req.GetPageSize() * (req.GetPageNum() - 1),
 		PageSize: req.GetPageSize(),
@@ -435,6 +479,14 @@ func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req
 	if err != nil {
 		logger.Log.Error("service/v1 - ListApplications - GetApplicationsView", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	app, err := s.product.GetProductCountByApp(ctx, &prov1.GetProductCountByAppRequest{
+		Scope: req.Scopes[0],
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - listApplicationsView - product/GetProductCountByApp", zap.Error(err))
+		return nil, status.Error(codes.Internal, "ServiceError")
 	}
 
 	ListAppResponse := v1.ListApplicationsResponse{}
@@ -449,9 +501,15 @@ func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req
 		ListAppResponse.Applications[i] = &v1.Application{}
 		ListAppResponse.Applications[i].Name = resp[i].ApplicationName
 		ListAppResponse.Applications[i].ApplicationId = resp[i].ApplicationID
-		ListAppResponse.Applications[i].Owner = resp[i].ApplicationOwner
-		ListAppResponse.Applications[i].NumOfInstances = resp[i].NumOfInstances
-		ListAppResponse.Applications[i].NumOfProducts = resp[i].NumOfProducts
+		// ListAppResponse.Applications[i].Owner = resp[i].ApplicationOwner
+		// ListAppResponse.Applications[i].NumOfInstances = resp[i].NumOfInstances
+		for j := range resp {
+			if resp[i].ApplicationID == app.AppData[j].ApplicationId {
+				ListAppResponse.Applications[i].NumOfProducts = int32(app.AppData[j].NumOfProducts)
+				break
+			}
+		}
+		ListAppResponse.Applications[i].Environment = resp[i].ApplicationEnvironment
 		ListAppResponse.Applications[i].Domain = resp[i].ApplicationDomain
 		ListAppResponse.Applications[i].ObsolescenceRisk = resp[i].ObsolescenceRisk.String
 		ListAppResponse.Applications[i].NumOfEquipments = resp[i].NumOfEquipments
@@ -461,9 +519,17 @@ func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req
 
 // nolint: gocyclo
 func (s *applicationServiceServer) listApplicationsByProductSwidtags(ctx context.Context, req *v1.ListApplicationsRequest) (*v1.ListApplicationsResponse, error) {
+	app, err := s.product.GetApplicationsByProduct(ctx, &prov1.GetApplicationsByProductRequest{
+		Scope:   req.Scopes[0],
+		Swidtag: req.SearchParams.ProductId.Filteringkey,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - listApplicationsByProductSwidtags - product/GetApplicationsByProduct", zap.Error(err))
+		return nil, status.Error(codes.Internal, "ServiceError")
+	}
 	resp, err := s.applicationRepo.GetApplicationsByProduct(ctx, db.GetApplicationsByProductParams{
 		Scope:                 req.Scopes,
-		Productswidtags:       req.GetSearchParams().GetProductId().GetFilteringkeyMultiple(),
+		ApplicationID:         app.ApplicationId,
 		ApplicationDomain:     req.GetSearchParams().GetDomain().GetFilteringkey(),
 		ApplicationName:       req.GetSearchParams().GetName().GetFilteringkey(),
 		ObsolescenceRisk:      req.GetSearchParams().GetObsolescenceRisk().GetFilteringkey(),
@@ -480,8 +546,6 @@ func (s *applicationServiceServer) listApplicationsByProductSwidtags(ctx context
 		ApplicationNameDesc:   strings.Contains(req.GetSortBy().String(), "name") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ApplicationOwnerAsc:   strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		ApplicationOwnerDesc:  strings.Contains(req.GetSortBy().String(), "owner") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		NumOfInstancesAsc:     strings.Contains(req.GetSortBy().String(), "num_of_instances") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		NumOfInstancesDesc:    strings.Contains(req.GetSortBy().String(), "num_of_instances") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		NumOfEquipmentsAsc:    strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		NumOfEquipmentsDesc:   strings.Contains(req.GetSortBy().String(), "num_of_equipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		ApplicationDomainAsc:  strings.Contains(req.GetSortBy().String(), "domain") && strings.Contains(req.GetSortOrder().String(), "asc"),
@@ -506,7 +570,6 @@ func (s *applicationServiceServer) listApplicationsByProductSwidtags(ctx context
 		listAppResponse.Applications[i].Name = resp[i].ApplicationName
 		listAppResponse.Applications[i].ApplicationId = resp[i].ApplicationID
 		listAppResponse.Applications[i].Owner = resp[i].ApplicationOwner
-		listAppResponse.Applications[i].NumOfInstances = resp[i].NumOfInstances
 		listAppResponse.Applications[i].Domain = resp[i].ApplicationDomain
 		listAppResponse.Applications[i].ObsolescenceRisk = resp[i].ObsolescenceRisk.String
 		listAppResponse.Applications[i].NumOfEquipments = resp[i].NumOfEquipments

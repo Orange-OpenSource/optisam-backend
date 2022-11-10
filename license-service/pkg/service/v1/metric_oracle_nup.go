@@ -74,6 +74,7 @@ func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes 
 	if input[IsAgg].(bool) {
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
+		mat.Name = input[MetricName].(string)
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {

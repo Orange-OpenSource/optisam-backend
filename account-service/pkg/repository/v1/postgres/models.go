@@ -27,6 +27,25 @@ func (e *AuditStatus) Scan(src interface{}) error {
 	return nil
 }
 
+type ScopeTypes string
+
+const (
+	ScopeTypesGENERIC  ScopeTypes = "GENERIC"
+	ScopeTypesSPECIFIC ScopeTypes = "SPECIFIC"
+)
+
+func (e *ScopeTypes) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ScopeTypes(s)
+	case string:
+		*e = ScopeTypes(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ScopeTypes: %T", src)
+	}
+	return nil
+}
+
 type Group struct {
 	ID                 int32          `json:"id"`
 	Name               string         `json:"name"`
@@ -50,6 +69,7 @@ type Role struct {
 type Scope struct {
 	ScopeCode string         `json:"scope_code"`
 	ScopeName string         `json:"scope_name"`
+	ScopeType ScopeTypes     `json:"scope_type"`
 	CreatedOn sql.NullTime   `json:"created_on"`
 	CreatedBy sql.NullString `json:"created_by"`
 }

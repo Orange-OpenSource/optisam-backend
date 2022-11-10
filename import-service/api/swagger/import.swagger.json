@@ -203,7 +203,7 @@
                   "type": "string"
                },
                {
-                  "name": "scopes",
+                  "name": "scope",
                   "in": "formData",
                   "required": true,
                   "type": "string"
@@ -254,7 +254,7 @@
                   "type": "string"
                },
                {
-                  "name": "scopes",
+                  "name": "scope",
                   "in": "formData",
                   "required": true,
                   "type": "string"

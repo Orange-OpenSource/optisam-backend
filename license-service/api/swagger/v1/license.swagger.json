@@ -149,62 +149,6 @@
         ]
       }
     },
-    "/api/v1/license/equipments/types/{equip_type}/{equip_id}/metric/types/{metric_type}/{metric_name}": {
-      "post": {
-        "operationId": "LicenseService_LicensesForEquipAndMetric",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1LicensesForEquipAndMetricResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "equip_type",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "equip_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "metric_type",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "metric_name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1LicensesForEquipAndMetricRequest"
-            }
-          }
-        ],
-        "tags": [
-          "LicenseService"
-        ]
-      }
-    },
     "/api/v1/license/overall/compliance": {
       "get": {
         "operationId": "LicenseService_GetOverAllCompliance",
@@ -289,7 +233,51 @@
         ]
       }
     },
-    "/api/v1/license/product/{swid_tag}/metric/{metric_name}": {
+    "/api/v1/license/simulation/hardware/equipments/types/{equip_type}/{equip_id}": {
+      "post": {
+        "operationId": "LicenseService_LicensesForEquipAndMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1LicensesForEquipAndMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "equip_type",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "equip_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1LicensesForEquipAndMetricRequest"
+            }
+          }
+        ],
+        "tags": [
+          "LicenseService"
+        ]
+      }
+    },
+    "/api/v1/license/simulation/metric/{metric_name}": {
       "post": {
         "operationId": "LicenseService_ProductLicensesForMetric",
         "responses": {
@@ -307,12 +295,6 @@
           }
         },
         "parameters": [
-          {
-            "name": "swid_tag",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
           {
             "name": "metric_name",
             "in": "path",
@@ -423,6 +405,9 @@
         "computedCost": {
           "type": "number",
           "format": "double"
+        },
+        "costOptimization": {
+          "type": "boolean"
         }
       }
     },
@@ -537,10 +522,10 @@
         "equip_id": {
           "type": "string"
         },
-        "metric_type": {
+        "metric_name": {
           "type": "string"
         },
-        "metric_name": {
+        "metric_type": {
           "type": "string"
         },
         "attributes": {
@@ -612,57 +597,6 @@
         }
       }
     },
-    "v1Product": {
-      "type": "object",
-      "properties": {
-        "swidTag": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "editor": {
-          "type": "string"
-        },
-        "metric": {
-          "type": "string"
-        },
-        "numCptLicences": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numAcqLicences": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "totalCost": {
-          "type": "number",
-          "format": "double"
-        },
-        "deltaNumber": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "deltaCost": {
-          "type": "number",
-          "format": "double"
-        },
-        "numOfApplications": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numofEquipments": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
     "v1ProductAcquiredRights": {
       "type": "object",
       "properties": {
@@ -718,13 +652,28 @@
         "computedCost": {
           "type": "number",
           "format": "double"
+        },
+        "costOptimization": {
+          "type": "boolean"
         }
       }
     },
     "v1ProductLicenseForEquipAndMetric": {
       "type": "object",
       "properties": {
+        "swid_tag": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "editor": {
+          "type": "string"
+        },
         "metric_name": {
+          "type": "string"
+        },
+        "metric_type": {
           "type": "string"
         },
         "old_licences": {
@@ -738,9 +687,6 @@
         "delta": {
           "type": "string",
           "format": "int64"
-        },
-        "product": {
-          "$ref": "#/definitions/v1Product"
         }
       }
     },
@@ -748,6 +694,9 @@
       "type": "object",
       "properties": {
         "swid_tag": {
+          "type": "string"
+        },
+        "aggregation_name": {
           "type": "string"
         },
         "metric_name": {

@@ -397,7 +397,7 @@ func (r *EquipmentRepository) ProductEquipments(ctx context.Context, swidTag str
 	variables[pagesize] = strconv.Itoa(int(params.PageSize))
 
 	q := `query Equips($tag:string,$pagesize:string,$offset:string) {
-		  var(func: eq(product.swidtag,"` + swidTag + `"))` + agregateFilters(scopeFilters(scopes)) + `{
+		  var(func: eq(product.swidtag,"` + swidTag + `"))` + agregateFilters(scopeFilters(scopes), typeFilters("type_name", "product")) + `{
 		  IID as product.equipment @filter(eq(equipment.type,` + eqType.Type + `))  {} }
 		  ID as var(func: uid(IID)) ` + agregateFilters(equipFilter(eqType, params.Filter)) + `{}
 		    NumOfRecords(func:uid(ID)){
@@ -524,6 +524,7 @@ func (r *EquipmentRepository) UpsertEquipment(ctx context.Context, scope string,
 		CommitNow: true,
 	}
 	logger.Log.Info("EquipmentService - dgraph/UpsertEquipment", zap.Any("api.request", req))
+	//logger.Log.Sugar().Info("Equipment Services", "appendSet", set)
 	// Handling locking mechanism on Uspert txn as dgrpah doesnt provide it
 	r.mu.Lock()
 	defer r.mu.Unlock()

@@ -55,6 +55,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 		FloatValOld: 1,
 		Name:        "coreFactor",
 	}
+	envAttrSim := &repo.Attribute{
+		ID:           "1D",
+		Type:         repo.DataTypeString,
+		IsSimulated:  true,
+		StringVal:    "Production",
+		StringValOld: "Development",
+		Name:         "environment",
+	}
 	serverEquipment := &repo.EquipmentType{
 		ID:       "2",
 		Type:     "Server",
@@ -63,6 +71,17 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			coresAttr,
 			cpuAttr,
 			coreFactorAttr,
+		},
+	}
+	serverEquipmentWithEnvAttr := &repo.EquipmentType{
+		ID:       "2",
+		Type:     "Server",
+		ParentID: "3",
+		Attributes: []*repo.Attribute{
+			coresAttr,
+			cpuAttr,
+			coreFactorAttr,
+			envAttrSim,
 		},
 	}
 	clusterEquipment := &repo.EquipmentType{
@@ -82,6 +101,38 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			ID:       "4",
 			Type:     "Vcenter",
 			ParentID: "5",
+			Attributes: []*repo.Attribute{
+				{
+					ID:   "1A",
+					Type: repo.DataTypeString,
+					Name: "environment",
+				},
+			},
+		},
+		{
+			ID:   "5",
+			Type: "Datacenter",
+		},
+	}
+	eqTypeTreeForEnvOnSameLevel := []*repo.EquipmentType{
+		{
+			ID:       "1",
+			Type:     "Partition",
+			ParentID: "2",
+		},
+		serverEquipmentWithEnvAttr,
+		clusterEquipment,
+		{
+			ID:       "4",
+			Type:     "Vcenter",
+			ParentID: "5",
+			Attributes: []*repo.Attribute{
+				{
+					ID:   "1A",
+					Type: repo.DataTypeString,
+					Name: "environment",
+				},
+			},
 		},
 		{
 			ID:   "5",
@@ -203,13 +254,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
 					{
-						Name: "Oracle1",
+						Swidtag: "Oracle1",
 					},
 					{
-						Name: "Oracle2",
+						Swidtag: "Oracle2",
 					},
 					{
-						Name: "Oracle3",
+						Swidtag: "Oracle3",
 					},
 				}, nil)
 				mockLicense.EXPECT().ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx, "e4ID", "Datacenter",
@@ -240,27 +291,21 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle1",
-						},
+						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle2",
-						},
+						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle3",
-						},
+						SwidTag:     "Oracle3",
 					},
 				},
 			},
@@ -361,13 +406,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						NumCPUAttr:     cpuAttr,
 					}, []string{"Scope1"}).Times(1).Return([]*repo.ProductData{
 					{
-						Name: "Oracle1",
+						Swidtag: "Oracle1",
 					},
 					{
-						Name: "Oracle2",
+						Swidtag: "Oracle2",
 					},
 					{
-						Name: "Oracle3",
+						Swidtag: "Oracle3",
 					},
 				}, nil)
 				mockLicense.EXPECT().ComputedLicensesForEquipmentForMetricOracleProcessorStandard(ctx, "e4ID", "Datacenter",
@@ -398,27 +443,21 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle1",
-						},
+						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle2",
-						},
+						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "oracle.processor.standard",
 						OldLicences: int64(350),
 						NewLicenses: int64(351),
 						Delta:       int64(1),
-						Product: &v1.Product{
-							Name: "Oracle3",
-						},
+						SwidTag:     "Oracle3",
 					},
 				},
 			},
@@ -1476,20 +1515,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
 						Delta:       int64(200),
-						Product: &v1.Product{
-							Name:    "Oracle1",
-							SwidTag: "O1",
-						},
+						SwidTag:     "O1",
 					},
 					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
 						Delta:       int64(200),
-						Product: &v1.Product{
-							Name:    "Oracle2",
-							SwidTag: "O2",
-						},
+						SwidTag:     "O2",
 					},
 				},
 			},
@@ -1693,20 +1726,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
 						Delta:       int64(200),
-						Product: &v1.Product{
-							Name:    "Oracle1",
-							SwidTag: "O1",
-						},
+						SwidTag:     "O1",
 					},
 					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: int64(400000),
 						NewLicenses: int64(400200),
 						Delta:       int64(200),
-						Product: &v1.Product{
-							Name:    "Oracle2",
-							SwidTag: "O2",
-						},
+						SwidTag:     "O2",
 					},
 				},
 			},
@@ -1876,20 +1903,14 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: 400000,
 						NewLicenses: 400200,
 						Delta:       200,
-						Product: &v1.Product{
-							Name:    "Oracle1",
-							SwidTag: "O1",
-						},
+						SwidTag:     "O1",
 					},
 					{
 						MetricName:  "oracle.nup.standard",
 						OldLicences: 200000,
 						NewLicenses: 200100,
 						Delta:       100,
-						Product: &v1.Product{
-							Name:    "Oracle2",
-							SwidTag: "O2",
-						},
+						SwidTag:     "O2",
 					},
 				},
 			},
@@ -2967,13 +2988,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					},
 				}, []string{"Scope1"}).Return([]*repo.ProductData{
 					{
-						Name: "Oracle1",
+						Swidtag: "Oracle1",
 					},
 					{
-						Name: "Oracle2",
+						Swidtag: "Oracle2",
 					},
 					{
-						Name: "Oracle3",
+						Swidtag: "Oracle3",
 					},
 				}, nil).Times(1)
 			},
@@ -2984,27 +3005,21 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle1",
-						},
+						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle2",
-						},
+						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle3",
-						},
+						SwidTag:     "Oracle3",
 					},
 				},
 			},
@@ -3479,13 +3494,13 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					},
 				}, []string{"Scope1"}).Return([]*repo.ProductData{
 					{
-						Name: "Oracle1",
+						Swidtag: "Oracle1",
 					},
 					{
-						Name: "Oracle2",
+						Swidtag: "Oracle2",
 					},
 					{
-						Name: "Oracle3",
+						Swidtag: "Oracle3",
 					},
 				}, nil).Times(1)
 			},
@@ -3496,27 +3511,21 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle1",
-						},
+						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle2",
-						},
+						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
 						NewLicenses: 3,
 						Delta:       -4,
-						Product: &v1.Product{
-							Name: "Oracle3",
-						},
+						SwidTag:     "Oracle3",
 					},
 				},
 			},
@@ -3898,6 +3907,493 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{},
 		},
+		{name: "SUCCESS - For Attr Sum metric",
+			args: args{
+				ctx: ctx,
+				req: &v1.LicensesForEquipAndMetricRequest{
+					EquipType:  "Server",
+					EquipId:    "e1ID",
+					MetricType: repo.MetricAttrSumStandard.String(),
+					MetricName: "attrsum1",
+					Attributes: []*v1.Attribute{
+						{
+							ID:        "1C",
+							Name:      "coreFactor",
+							Simulated: true,
+							DataType:  v1.DataTypes_FLOAT,
+							Val: &v1.Attribute_FloatVal{
+								FloatVal: 1.25,
+							},
+							OldVal: &v1.Attribute_FloatValOld{
+								FloatValOld: 1.5,
+							},
+						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
+							ID:        "1A",
+							Name:      "numCores",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 3,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 5,
+							},
+						},
+					},
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
+				mockLicense.EXPECT().ListMetricAttrSum(ctx, []string{"Scope1"}).Return([]*repo.MetricAttrSumStand{
+					{
+						ID:             "1M",
+						Name:           "attrsum1",
+						EqType:         "Server",
+						AttributeName:  "numCores",
+						ReferenceValue: 2,
+					},
+				}, nil).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricAttrSumStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricAttrSumStandComputed{
+					Name:     "attrsum1",
+					BaseType: serverEquipment,
+					Attribute: &repo.Attribute{
+						ID:          "1A",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      3,
+						IntValOld:   5,
+						Name:        "numCores",
+					},
+					ReferenceValue: 2,
+				}, []string{"Scope1"}).Return([]*repo.ProductData{
+					{
+						Swidtag: "Oracle1",
+					},
+					{
+						Swidtag: "Oracle2",
+					},
+					{
+						Swidtag: "Oracle3",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.LicensesForEquipAndMetricResponse{
+				Licenses: []*v1.ProductLicenseForEquipAndMetric{
+					{
+						MetricName:  "attrsum1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle1",
+					},
+					{
+						MetricName:  "attrsum1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle2",
+					},
+					{
+						MetricName:  "attrsum1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle3",
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - For ACS metric",
+			args: args{
+				ctx: ctx,
+				req: &v1.LicensesForEquipAndMetricRequest{
+					EquipType:  "Server",
+					EquipId:    "e1ID",
+					MetricType: repo.MetricAttrCounterStandard.String(),
+					MetricName: "attr1",
+					Attributes: []*v1.Attribute{
+						{
+							ID:        "1C",
+							Name:      "coreFactor",
+							Simulated: true,
+							DataType:  v1.DataTypes_FLOAT,
+							Val: &v1.Attribute_FloatVal{
+								FloatVal: 1.25,
+							},
+							OldVal: &v1.Attribute_FloatValOld{
+								FloatValOld: 1.5,
+							},
+						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
+							ID:        "1A",
+							Name:      "numCores",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 3,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 5,
+							},
+						},
+					},
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
+				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1"}).Return([]*repo.MetricACS{
+					{
+						ID:            "1M",
+						Name:          "attr1",
+						EqType:        "Server",
+						AttributeName: "numCores",
+						Value:         "3",
+					},
+				}, nil).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricAttrCounterStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricACSComputed{
+					Name:     "attr1",
+					BaseType: serverEquipment,
+					Attribute: &repo.Attribute{
+						ID:          "1A",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      3,
+						IntValOld:   5,
+						Name:        "numCores",
+					},
+					Value: "3",
+				}, []string{"Scope1"}).Return([]*repo.ProductData{
+					{
+						Swidtag: "Oracle1",
+					},
+					{
+						Swidtag: "Oracle2",
+					},
+					{
+						Swidtag: "Oracle3",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.LicensesForEquipAndMetricResponse{
+				Licenses: []*v1.ProductLicenseForEquipAndMetric{
+					{
+						MetricName:  "attr1",
+						OldLicences: 0,
+						NewLicenses: 1,
+						Delta:       1,
+						SwidTag:     "Oracle1",
+					},
+					{
+						MetricName:  "attr1",
+						OldLicences: 0,
+						NewLicenses: 1,
+						Delta:       1,
+						SwidTag:     "Oracle2",
+					},
+					{
+						MetricName:  "attr1",
+						OldLicences: 0,
+						NewLicenses: 1,
+						Delta:       1,
+						SwidTag:     "Oracle3",
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - For Equip Sum metric - environment attribute is on parent",
+			args: args{
+				ctx: ctx,
+				req: &v1.LicensesForEquipAndMetricRequest{
+					EquipType:  "Server",
+					EquipId:    "e1ID",
+					MetricType: repo.MetricEquipAttrStandard.String(),
+					MetricName: "equipattr1",
+					Attributes: []*v1.Attribute{
+						{
+							ID:        "1C",
+							Name:      "coreFactor",
+							Simulated: true,
+							DataType:  v1.DataTypes_FLOAT,
+							Val: &v1.Attribute_FloatVal{
+								FloatVal: 1.25,
+							},
+							OldVal: &v1.Attribute_FloatValOld{
+								FloatValOld: 1.5,
+							},
+						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
+							ID:        "1A",
+							Name:      "numCores",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 3,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 5,
+							},
+						},
+					},
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTree, nil)
+				mockLicense.EXPECT().ListMetricEquipAttr(ctx, []string{"Scope1"}).Return([]*repo.MetricEquipAttrStand{
+					{
+						ID:            "1M",
+						Name:          "equipattr1",
+						EqType:        "Server",
+						Environment:   "Production",
+						AttributeName: "numCores",
+						Value:         2,
+					},
+				}, nil).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricEquipAttrStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricEquipAttrStandComputed{
+					Name:     "equipattr1",
+					BaseType: serverEquipment,
+					EqTypeTree: []*repo.EquipmentType{
+						serverEquipment,
+						clusterEquipment,
+						{
+							ID:       "4",
+							Type:     "Vcenter",
+							ParentID: "5",
+							Attributes: []*repo.Attribute{
+								{
+									ID:   "1A",
+									Type: repo.DataTypeString,
+									Name: "environment",
+								},
+							},
+						},
+					},
+					Environment: "Production",
+					Attribute: &repo.Attribute{
+						ID:          "1A",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      3,
+						IntValOld:   5,
+						Name:        "numCores",
+					},
+					Value: 2,
+				}, []string{"Scope1"}).Return([]*repo.ProductData{
+					{
+						Swidtag: "Oracle1",
+					},
+					{
+						Swidtag: "Oracle2",
+					},
+					{
+						Swidtag: "Oracle3",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.LicensesForEquipAndMetricResponse{
+				Licenses: []*v1.ProductLicenseForEquipAndMetric{
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle1",
+					},
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle2",
+					},
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 3,
+						NewLicenses: 2,
+						Delta:       -1,
+						SwidTag:     "Oracle3",
+					},
+				},
+			},
+		},
+		{name: "SUCCESS - For Equip Sum metric - change in env attribute",
+			args: args{
+				ctx: ctx,
+				req: &v1.LicensesForEquipAndMetricRequest{
+					EquipType:  "Server",
+					EquipId:    "e1ID",
+					MetricType: repo.MetricEquipAttrStandard.String(),
+					MetricName: "equipattr1",
+					Attributes: []*v1.Attribute{
+						{
+							ID:        "1C",
+							Name:      "coreFactor",
+							Simulated: true,
+							DataType:  v1.DataTypes_FLOAT,
+							Val: &v1.Attribute_FloatVal{
+								FloatVal: 1.25,
+							},
+							OldVal: &v1.Attribute_FloatValOld{
+								FloatValOld: 1.5,
+							},
+						},
+						{
+							ID:        "1B",
+							Name:      "numCPU",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 2,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 1,
+							},
+						},
+						{
+							ID:        "1A",
+							Name:      "numCores",
+							Simulated: true,
+							DataType:  v1.DataTypes_INT,
+							Val: &v1.Attribute_IntVal{
+								IntVal: 3,
+							},
+							OldVal: &v1.Attribute_IntValOld{
+								IntValOld: 5,
+							},
+						},
+						{
+							ID:        "1D",
+							Name:      "environment",
+							Simulated: true,
+							DataType:  v1.DataTypes_STRING,
+							Val: &v1.Attribute_StringVal{
+								StringVal: "Production",
+							},
+							OldVal: &v1.Attribute_StringValOld{
+								StringValOld: "Development",
+							},
+						},
+					},
+					Scope: "Scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Times(1).Return(eqTypeTreeForEnvOnSameLevel, nil)
+				mockLicense.EXPECT().ListMetricEquipAttr(ctx, []string{"Scope1"}).Return([]*repo.MetricEquipAttrStand{
+					{
+						ID:            "1M",
+						Name:          "equipattr1",
+						EqType:        "Server",
+						Environment:   "Production",
+						AttributeName: "numCores",
+						Value:         2,
+					},
+				}, nil).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricEquipAttrStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricEquipAttrStandComputed{
+					Name:     "equipattr1",
+					BaseType: serverEquipmentWithEnvAttr,
+					EqTypeTree: []*repo.EquipmentType{
+						serverEquipmentWithEnvAttr,
+					},
+					Environment: "Production",
+					Attribute: &repo.Attribute{
+						ID:          "1A",
+						Type:        repo.DataTypeInt,
+						IsSimulated: true,
+						IntVal:      3,
+						IntValOld:   5,
+						Name:        "numCores",
+					},
+					Value: 2,
+				}, []string{"Scope1"}).Return([]*repo.ProductData{
+					{
+						Swidtag: "Oracle1",
+					},
+					{
+						Swidtag: "Oracle2",
+					},
+					{
+						Swidtag: "Oracle3",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.LicensesForEquipAndMetricResponse{
+				Licenses: []*v1.ProductLicenseForEquipAndMetric{
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 0,
+						NewLicenses: 2,
+						Delta:       2,
+						SwidTag:     "Oracle1",
+					},
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 0,
+						NewLicenses: 2,
+						Delta:       2,
+						SwidTag:     "Oracle2",
+					},
+					{
+						MetricName:  "equipattr1",
+						OldLicences: 0,
+						NewLicenses: 2,
+						Delta:       2,
+						SwidTag:     "Oracle3",
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -3933,5 +4429,5 @@ func compareLicensesForEquipAndMetric(t *testing.T, name string, exp, act *v1.Pr
 	assert.Equalf(t, exp.OldLicences, act.OldLicences, "%s.OldLicences are not same", name)
 	assert.Equalf(t, exp.NewLicenses, act.NewLicenses, "%s.NewLicenses are not same", name)
 	assert.Equalf(t, exp.Delta, act.Delta, "%s.Delta are not same", name)
-	assert.Equalf(t, exp.Product, act.Product, "%s.Product are not same", name)
+	assert.Equalf(t, exp.SwidTag, act.SwidTag, "%s.SwidTag are not same", name)
 }

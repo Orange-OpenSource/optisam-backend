@@ -6,7 +6,6 @@ package mock
 
 import (
 	context "context"
-	json "encoding/json"
 	gomock "github.com/golang/mock/gomock"
 	db "optisam-backend/report-service/pkg/repository/v1/postgres/db"
 	reflect "reflect"
@@ -50,10 +49,10 @@ func (mr *MockReportMockRecorder) DeleteReportsByScope(arg0, arg1 interface{}) *
 }
 
 // DownloadReport mocks base method
-func (m *MockReport) DownloadReport(arg0 context.Context, arg1 db.DownloadReportParams) (json.RawMessage, error) {
+func (m *MockReport) DownloadReport(arg0 context.Context, arg1 db.DownloadReportParams) (db.DownloadReportRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DownloadReport", arg0, arg1)
-	ret0, _ := ret[0].(json.RawMessage)
+	ret0, _ := ret[0].(db.DownloadReportRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

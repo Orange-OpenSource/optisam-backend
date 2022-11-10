@@ -35,33 +35,27 @@ func Test_dpsServiceServer_getProducts(t *testing.T) {
 			out: models.FileData{
 				DuplicateRecords: []interface{}{
 					models.ProductInfo{
-						Name:       "n1",
-						Version:    "v1",
-						Editor:     "e1",
-						IsOptionOf: "o1",
-						Category:   "c1",
-						SwidTag:    "swid1",
-						Action:     "UPSERT"},
+						Name:    "n1",
+						Version: "v1",
+						Editor:  "e1",
+						SwidTag: "swid1",
+						Action:  "UPSERT"},
 				},
 				TotalCount: 3,
 				Products: map[string]models.ProductInfo{
 					"swid1": {
-						Name:       "n1",
-						Version:    "v2",
-						Editor:     "e2",
-						IsOptionOf: "o1",
-						Category:   "c1",
-						SwidTag:    "swid1",
-						Action:     "UPSERT",
+						Name:    "n1",
+						Version: "v2",
+						Editor:  "e2",
+						SwidTag: "swid1",
+						Action:  "UPSERT",
 					},
 					"swid3": {
-						Name:       "n3",
-						Version:    "v3",
-						Editor:     "e3",
-						IsOptionOf: "o3",
-						Category:   "c3",
-						SwidTag:    "swid3",
-						Action:     "UPSERT",
+						Name:    "n3",
+						Version: "v3",
+						Editor:  "e3",
+						SwidTag: "swid3",
+						Action:  "UPSERT",
 					},
 				},
 			},
@@ -87,31 +81,25 @@ func Test_dpsServiceServer_getProducts(t *testing.T) {
 				TotalCount: 3,
 				Products: map[string]models.ProductInfo{
 					"swid1": {
-						Name:       "n1",
-						Version:    "v1",
-						Editor:     "e1",
-						IsOptionOf: "o1",
-						Category:   "c1",
-						SwidTag:    "swid1",
-						Action:     "UPSERT",
+						Name:    "n1",
+						Version: "v1",
+						Editor:  "e1",
+						SwidTag: "swid1",
+						Action:  "UPSERT",
 					},
 					"swid3": {
-						Name:       "n3",
-						Version:    "v3",
-						Editor:     "e3",
-						IsOptionOf: "o3",
-						Category:   "c3",
-						SwidTag:    "swid3",
-						Action:     "UPSERT",
+						Name:    "n3",
+						Version: "v3",
+						Editor:  "e3",
+						SwidTag: "swid3",
+						Action:  "UPSERT",
 					},
 					"swid2": {
-						Name:       "n2",
-						Version:    "v2",
-						Editor:     "e2",
-						IsOptionOf: "o2",
-						Category:   "c2",
-						SwidTag:    "swid2",
-						Action:     "UPSERT",
+						Name:    "n2",
+						Version: "v2",
+						Editor:  "e2",
+						SwidTag: "swid2",
+						Action:  "UPSERT",
 					},
 				},
 			},
@@ -612,28 +600,30 @@ func Test_dpsServiceServer_getEquipmentsOfProducts(t *testing.T) {
 			setup: func() (*bufio.Scanner, models.HeadersInfo) {
 				hdrs := models.HeadersInfo{MaxIndexVal: 3}
 				hdrs.IndexesOfHeaders = map[string]int{
-					"swidtag":      0,
-					"equipment_id": 1,
-					"nbusers":      2,
-					"flag":         3}
-				data := "p1;e1;1;1\np1;e1;1;1\np2;e1;1;1"
+					"swidtag":         0,
+					"equipment_id":    1,
+					"allocatedmetric": 2,
+					"allocatedusers":  3,
+					"flag":            4}
+				data := "p1;e1;met;1;1\np1;e1;met;1;1\np1;e1;met;1;1"
 				scanner := bufio.NewScanner(strings.NewReader(data))
 				return scanner, hdrs
 			},
 			out: models.FileData{
 				DuplicateRecords: []interface{}{
 					models.ProductEquipmentLink{
-						ProdID:  "p1",
-						EquipID: "e1",
-						NbUser:  "1",
-						Action:  "UPSERT",
+						ProdID:          "p1",
+						EquipID:         "e1",
+						AllocatedMetric: "met",
+						AllocatedUsers:  "1",
+						Action:          "UPSERT",
 					},
 				},
 				TotalCount: 3,
 				ProdEquipments: map[string]map[string][]models.ProdEquipemtInfo{
 					"UPSERT": {
-						"p1": {{"e1", "1"}},
-						"p2": {{"e1", "1"}},
+						"p1": {{EquipID: "e1", SwidTag: "p1", AllocatedMetric: "met", AllocatedUsers: "1", Action: "UPSERT"}},
+						"p2": {{EquipID: "e1", SwidTag: "p1", AllocatedMetric: "met", AllocatedUsers: "1", Action: "UPSERT"}},
 					},
 					"DELETE": {},
 				},
@@ -645,10 +635,10 @@ func Test_dpsServiceServer_getEquipmentsOfProducts(t *testing.T) {
 			setup: func() (*bufio.Scanner, models.HeadersInfo) {
 				hdrs := models.HeadersInfo{MaxIndexVal: 3}
 				hdrs.IndexesOfHeaders = map[string]int{
-					"swidtag":      0,
-					"equipment_id": 1,
-					"nbusers":      2,
-					"flag":         3}
+					"swidtag":        0,
+					"equipment_id":   1,
+					"allocatedusers": 2,
+					"flag":           3}
 				data := "p1;e1;1;1\np3;e1;1;1\np2;e1;1;1"
 				scanner := bufio.NewScanner(strings.NewReader(data))
 				return scanner, hdrs
@@ -657,9 +647,9 @@ func Test_dpsServiceServer_getEquipmentsOfProducts(t *testing.T) {
 				TotalCount: 3,
 				ProdEquipments: map[string]map[string][]models.ProdEquipemtInfo{
 					"UPSERT": {
-						"p1": {{"e1", "1"}},
-						"p2": {{"e1", "1"}},
-						"p3": {{"e1", "1"}},
+						"p1": {{EquipID: "e1", SwidTag: "", AllocatedMetric: "", AllocatedUsers: "1", Action: ""}},
+						"p2": {{EquipID: "e1", SwidTag: "", AllocatedMetric: "", AllocatedUsers: "1", Action: ""}},
+						"p3": {{EquipID: "e1", SwidTag: "", AllocatedMetric: "", AllocatedUsers: "1", Action: ""}},
 					},
 					"DELETE": {},
 				},
@@ -703,14 +693,14 @@ func Test_dpsServiceServer_getEquipmentsOnInstances(t *testing.T) {
 			},
 			out: models.FileData{
 				DuplicateRecords: []interface{}{
-					models.EquipmentInstanceLink{
-						InstanceID: "i1",
-						EquipID:    "e1",
-						Action:     "UPSERT",
+					models.EquipmentApplicationLink{
+						AppID:   "i1",
+						EquipID: "e1",
+						Action:  "UPSERT",
 					},
 				},
 				TotalCount: 3,
-				EquipInstances: map[string]map[string][]string{
+				EquipApplications: map[string]map[string][]string{
 					"UPSERT": {
 						"i1": {"e1"},
 						"i2": {"e2"},
@@ -734,7 +724,7 @@ func Test_dpsServiceServer_getEquipmentsOnInstances(t *testing.T) {
 			},
 			out: models.FileData{
 				TotalCount: 3,
-				EquipInstances: map[string]map[string][]string{
+				EquipApplications: map[string]map[string][]string{
 					"UPSERT": {
 						"i1": {"e1"},
 						"i2": {"e1"},
@@ -747,7 +737,7 @@ func Test_dpsServiceServer_getEquipmentsOnInstances(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getEquipmentsOnInstances(tt.setup())
+			got, err := getEquipmentsOnApplication(tt.setup())
 			(tt.setup())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getApplicationsAndProducts expected error mismatch  = %v, wantErr %v", err, tt.wantErr)

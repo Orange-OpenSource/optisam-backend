@@ -6,11 +6,12 @@ import (
 	"text/template"
 )
 
-func queryBuilderEquipOPS(mat *v1.MetricOPSComputed, templ *template.Template, equipID, eqType string) (string, error) {
+func queryBuilderEquipOPS(mat *v1.MetricOPSComputed, templ *template.Template, equipID, eqType string, scopes string) (string, error) {
 	buf := &bytes.Buffer{}
 	if err := templ.Execute(buf, &EquipProcCal{
 		EquipID: equipID,
 		EqType:  eqType,
+		Scopes:  scopes,
 		Met:     mat,
 	}); err != nil {
 		return "", err

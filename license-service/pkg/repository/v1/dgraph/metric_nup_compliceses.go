@@ -17,8 +17,20 @@ func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id st
 	// if !ok {
 	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
 	// }
-	opsq := queryBuilderOPSForNUP(mat, scopes, id)
-	usersq := buildQueryUsersForNUP(scopes, id)
+	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, []string{id}, scopes...)
+	if err != nil {
+		logger.Log.Error("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments", zap.Error(err))
+		return 0, 0, errors.New("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments")
+	}
+	equipIDs := filterMetricEquipments(prodAllocatMetricEquipment, mat.Name, "")
+	opsq := queryBuilderOPSForNUP(mat, scopes, equipIDs, id)
+	allocatedUserEquipmentIds := ""
+	if _, ok := equipIDs["notAllocatedUserID"]; ok {
+		if equipIDs["notAllocatedUserID"].(string) != "" {
+			allocatedUserEquipmentIds = equipIDs["notAllocatedUserID"].(string)
+		}
+	}
+	usersq := buildQueryUsersForNUP(scopes, allocatedUserEquipmentIds, id)
 	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", opsq))
@@ -43,12 +55,26 @@ func (l *LicenseRepository) MetricNUPComputedLicensesAgg(ctx context.Context, na
 	if len(ids) == 0 {
 		return 0, 0, nil
 	}
+
+	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, ids, scopes...)
+	if err != nil {
+		logger.Log.Error("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments", zap.Error(err))
+		return 0, 0, errors.New("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments")
+	}
+	equipIDs := filterMetricEquipments(prodAllocatMetricEquipment, metric, "")
+	allocatedUserEquipmentIds := ""
+	if _, ok := equipIDs["notAllocatedUserID"]; ok {
+		if equipIDs["notAllocatedUserID"].(string) != "" {
+			allocatedUserEquipmentIds = equipIDs["notAllocatedUserID"].(string)
+		}
+	}
 	// templ, ok := l.templates[nupTemplate]
 	// if !ok {
 	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
 	// }
-	opsq := queryBuilderOPSForNUP(mat, scopes, ids...)
-	usersq := buildQueryUsersForNUP(scopes, ids...)
+	//allotedMetricsEq := make(map[string]interface{})
+	opsq := queryBuilderOPSForNUP(mat, scopes, equipIDs, ids...)
+	usersq := buildQueryUsersForNUP(scopes, allocatedUserEquipmentIds, ids...)
 	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicensesAgg - query failed", zap.Error(err), zap.String("query", opsq))
@@ -69,8 +95,9 @@ func (l *LicenseRepository) userLicenesForQueryNUP(ctx context.Context, userq st
 		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("users nup query", userq))
 		return 0, err
 	}
+
 	type users struct {
-		TotalUserCount int32
+		TotalUserCount float32
 	}
 	type totalUsers struct {
 		Users []*users

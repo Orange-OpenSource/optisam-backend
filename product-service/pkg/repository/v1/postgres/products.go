@@ -110,10 +110,11 @@ func (p *ProductRepository) UpsertProductTx(ctx context.Context, req *v1.UpsertP
 
 	for _, equip := range addEquipments {
 		error := pt.UpsertProductEquipments(ctx, gendb.UpsertProductEquipmentsParams{
-			Swidtag:     req.GetSwidTag(),
-			EquipmentID: equip.EquipmentId,
-			NumOfUsers:  sql.NullInt32{Int32: equip.NumUser, Valid: true},
-			Scope:       req.GetScope()})
+			Swidtag:         req.GetSwidTag(),
+			EquipmentID:     equip.EquipmentId,
+			AllocatedMetric: equip.AllocatedMetrics,
+			NumOfUsers:      sql.NullInt32{Int32: equip.AllocatedUsers, Valid: true},
+			Scope:           req.GetScope()})
 		if error != nil {
 			tx.Rollback() // nolint: errcheck
 			logger.Log.Error("Failed to execute UpsertProductEquipments", zap.Error(error))

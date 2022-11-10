@@ -61,11 +61,13 @@ func (r *ReportRepository) EquipmentTypeParents(ctx context.Context, equipType s
 		fmt.Println(string(resp.GetJson()))
 		return nil, fmt.Errorf("equipmentTypeParents - cannot unmarshal Json object")
 	}
-
+	if len(d.Hierarchy) == 0 {
+		logger.Log.Error("EquipmentTypeParents - ", zap.String("reason", "unable to find equipment"), zap.String("param", equipType+","+scope))
+		return nil, fmt.Errorf("equipmentTypeParents - unable to find equipment")
+	}
 	if len(d.Hierarchy[0].EquipmentTypes.Val) == 1 {
 		return nil, repo.ErrNoData
 	}
-
 	return d.Hierarchy[0].EquipmentTypes.Val[1:], nil
 
 }

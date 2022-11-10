@@ -16,45 +16,67 @@
         "total_maintenance_cost": "##number",
         "total_cost": "##number",
         "version": "#string",
-        "comment" : "#string"
+        "comment" : "#string",
+        "corporate_sourcing_contract": "#string",
+        "file_name": "#string",
+        "last_purchased_order": "#string",
+        "maintenance_provider": "#string",
+        "ordering_date": "##string",
+        "repartition": "##boolean",
+        "software_provider": "#string",
+        "support_number": "#string"
     },
     "getAcqrights": {
-        "SKU": "ibm_websphere_1_pvu",
-        "swid_tag": "ibm_websphere_1",
-        "product_name": "IBM Websphere 9",
+        "SKU": "ibm_DB2_pvu",
+        "swid_tag": "IBM_DB2_IBM_11.5",
+        "product_name": "IBM DB2",
         "editor": "IBM",
         "metric": "ibm_pvu",
-        "acquired_licenses_number": 100,
+        "acquired_licenses_number": 30,
         "end_of_maintenance": "##string",
         "start_of_maintenance": "##string",
         "licenses_under_maintenance": "#string",
         "licenses_under_maintenance_number": 0,
-        "version": "11.1.7",
-        "avg_licenes_unit_price": 10,
+        "version": "11.5",
+        "avg_licenes_unit_price": 500,
         "avg_maintenance_unit_price": 0,
         "total_maintenance_cost": 0,
-        "total_purchase_cost": 1000,
-        "total_cost": 1000,
-        "comment": ""
+        "total_purchase_cost": 15000,
+        "total_cost": 15000,
+        "comment": "",
+        "software_provider": "##string",
+        "ordering_date": "##string",
+        "support_number": "##string",
+        "repartition": "##boolean",
+        "last_purchased_order": "##string",
+        "file_name": "##string",
+        "maintenance_provider": "##string"
     },
     "createAcqrights": {
-        "sku": "API_Sku",
-        "product_name": "APIProduct",
-        "version":"0.2.8",
-        "product_editor":"Oracle",
-        "metric_name":"Test_instance",
-        "num_licenses_acquired":10,
-        "avg_unit_price":10,
-        "start_of_maintenance":null,
-        "end_of_maintenance":null,
-        "num_licences_maintainance":0,
-        "avg_maintenance_unit_price":0,
-        "scope":"AUT",
-        "comment":"abd"
+"avg_unit_price": 100,
+"comment": "abd",
+"corporate_sourcing_contract": "",
+"file_name": "",
+"last_purchased_order": "",
+"metric_name": "oracle.nup",
+"num_licences_maintainance": 0,
+"num_licenses_acquired": 10,
+"ordering_date": "",
+"product_editor": "Oracle",
+"product_name": "Oracle Real Application Cluster 11",
+"repartition": false,
+"scope": "API",
+"sku": "API_Sku",
+"software_provider": "",
+"start_of_maintenance": "",
+"support_number": "",
+"version": "11.1"
+        
+
     },
     
     "overview": {
-        "total_license_cost": 113900,
+        "total_license_cost": 1392275,
         "total_maintenance_cost": 400
     },
     "schema_overview": {
@@ -63,7 +85,7 @@
     },
     "metrics_products": {
         "metric_name": "ibm_pvu",
-        "num_products": 2
+        "num_products": 3
     },
     "counterfeit_products_licenses": {
         "swid_tag": "ibm_cognos_1",
@@ -80,35 +102,50 @@
         "delta_cost": -4800
     },
     "overdeployed_products_licenses": {
-        "swid_tag": "hpud_2",
-        "product_name": "Micro Focus HPUD 2",
-        "num_licenses_acquired": "100",
-        "num_licenses_computed": "3",
-        "delta": "97"
+        "swid_tag": "Adobe_Media_Server_Adobe_5.0.16",
+        "product_name": "Adobe Media Server",
+        "num_licenses_acquired": "125",
+        "num_licenses_computed": "50",
+        "delta": "75",
+        "aggregation_name": "#string"
     },
     "overdeployed_products_costs": {
-        "swid_tag": "hpud_2",
-        "product_name": "Micro Focus HPUD 2",
-        "licenses_acquired_cost": 1000,
-        "licenses_computed_cost": 30,
-        "delta_cost": 970
+        "swid_tag": "Adobe_Media_Server_Adobe_5.0.16",
+        "product_name": "Adobe Media Server",
+        "licenses_acquired_cost": 24500,
+        "licenses_computed_cost": 9800,
+        "delta_cost": 14700,
+        "aggregation_name": "#string"
     },
 
     "createAcqrightswithmaintenance": {
-        "sku": "API_SkuMain",
-        "product_name": "APIProductMain",
-        "version":"0.2.8",
-        "product_editor":"Oracle",
-        "metric_name":"Test_instance",
-        "num_licenses_acquired":10,
-        "avg_unit_price":10,
-        "start_of_maintenance": "2021-07-31T18:30:00.000Z",
-        "end_of_maintenance": "2028-01-25T18:30:00.000Z",
+        "avg_maintenance_unit_price": 10,
+        "avg_unit_price": 100,
+        "comment": "",
+        "corporate_sourcing_contract": "",
+        "end_of_maintenance": "2023-01-31T00:00:00.000Z",
+        "file_name": "",
+        "last_purchased_order": "",
+        "maintenance_provider": "",
+        "metric_name": "oracle.nup",
         "num_licences_maintainance": 1,
-        "avg_maintenance_unit_price": 1,
-        "scope":"AUT",
-        "comment":"abd"
+        "num_licenses_acquired": 1,
+        "ordering_date": "",
+        "product_editor": "Oracle",
+        "product_name": "Oracle Real Application Cluster 11",
+        "repartition": false,
+        "scope": "API",
+        "sku": "Testing_API",
+        "software_provider": "",
+        "start_of_maintenance": "2022-08-16T00:00:00.000Z",
+        "support_number": "",
+        "version": "11.1"
+    },
+
+    "products_not_acquired": {
+    "editor": "Microsoft"
     }
     
+
 
 }

@@ -37,12 +37,20 @@ service SimulationService {
     };
   }
 
+  rpc SimulationByCost (SimulationByCostRequest) returns (SimulationByCostResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/simulation/cost" 
+      body :"*"
+    };
+  } 
+
   rpc SimulationByMetric (SimulationByMetricRequest) returns (SimulationByMetricResponse) {
     option (google.api.http) = {
       post : "/api/v1/simulation/metric"
       body :"*"
     };
   } 
+
 
   rpc SimulationByHardware (SimulationByHardwareRequest) returns (SimulationByHardwareResponse) {
     option (google.api.http) = {
@@ -58,28 +66,29 @@ message SimulationByHardwareRequest {
   string equip_type = 1;
   string equip_id  = 2;
   repeated EquipAttribute attributes = 3;
-  repeated SimMetricDetails metric_details = 4;
   string scope = 5 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 
 }
+
 message SimulationByHardwareResponse {
-    repeated SimulatedProductsLicenses simulation_result = 1;
+  repeated SimulatedProductLicenses simulated_results = 1;
 }
 
-message SimulatedProductsLicenses{
+message SimulatedProductLicenses{
   bool success = 1;
   repeated SimulatedProductLicense licenses = 2;
-  string sim_failure_reason = 3;
-  string metric_name = 4;
+  string metric_name = 3;
+  string metric_type = 4;
+  string sim_failure_reason = 5;
 }
 
 message SimulatedProductLicense {
-int64  old_licences = 2;
-int64  new_licenses = 3;
-int64  delta = 4;
-string swid_tag = 5;
-string product_name = 6;
-string editor = 7;
+  string swid_tag = 1;
+  string aggregation_name = 2;
+  string editor = 3;
+  int64  old_licences = 4;
+  int64  new_licenses = 5;
+  int64  delta = 6;
 }
 
 
@@ -121,17 +130,38 @@ enum DataTypes {
   FLOAT  = 3;
 }
 
-
-
-
-
 message SimulationByMetricRequest {
-  string editor = 1;
-  repeated MetricSimDetails metric_details = 2;
-  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  string swid_tag = 1;
+  string aggregation_name= 2;
+  repeated MetricSimDetails metric_details = 3;
+  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message MetricSimDetails {
+  string metric_name = 1;
+  double unit_cost = 2;
+}
+
+message SimulationByMetricResponse {
+  repeated MetricSimulationResult metric_sim_result = 1;
+}
+
+
+message MetricSimulationResult{
+    bool success = 1;
+    uint64 num_cpt_licences =2;
+    double total_cost =3;
+    string metric_name = 4;
+    string sim_failure_reason = 5;
+}
+
+message SimulationByCostRequest {
+  string editor = 1;
+  repeated CostSimDetails cost_details = 2;
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message CostSimDetails {
   string swidtag = 1;
   string aggregation_name = 2;
   string metric_name = 3;
@@ -139,15 +169,15 @@ message MetricSimDetails {
   string sku = 5;
 }
 
-message SimulationByMetricResponse {
+message SimulationByCostResponse {
   bool success = 1;
-  repeated MetricSimulationResult metric_sim_result = 2;
+  repeated CostSimulationResult cost_sim_result = 2;
   string sim_failure_reason = 3;
 
 }
 
 
-message MetricSimulationResult{
+message CostSimulationResult{
     string swidtag = 1;
     string aggregation_name = 2;
     string metric_name = 3;
@@ -163,6 +193,7 @@ message MetricSimulationResult{
 message GetConfigDataRequest {
   int32 config_id = 1;
   int32 metadata_id = 2;
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message GetConfigDataResponse {
@@ -171,6 +202,7 @@ message GetConfigDataResponse {
 
 message ListConfigRequest {
    string equipment_type = 1;
+   string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message ListConfigResponse {
@@ -195,6 +227,7 @@ message Attribute {
 
 message DeleteConfigRequest {
   int32 config_id = 1;
+  string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message DeleteConfigResponse {
@@ -210,6 +243,7 @@ message CreateConfigRequest {
   string config_name = 1;
   string equipment_type = 2;
   repeated Data data = 3;
+  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message ConfigValue {
@@ -232,6 +266,7 @@ message UpdateConfigRequest {
   int32 config_id = 1;
   repeated int32 deleted_metadata_ids = 2;
   repeated Data data = 3;
+  string scope = 4 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
 }
 
 message UpdateConfigResponse {

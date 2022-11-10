@@ -34,6 +34,14 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 	}
 	muxHTTP.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	muxHTTP.Handle("/", gw)
+	muxHTTP.HandleFunc("/debug/pprof/", pprof.Index)
+	muxHTTP.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	muxHTTP.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	muxHTTP.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	muxHTTP.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	muxHTTP.Handle("/debug/pprof/heap", pprof.Handler("heap"))
+	muxHTTP.Handle("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	muxHTTP.Handle("/debug/pprof/block", pprof.Handler("block"))
 
 	srv := &http.Server{
 		Addr: ":" + httpPort,

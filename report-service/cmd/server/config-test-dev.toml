@@ -1,0 +1,17 @@
+environment = "Development"
+debug = false
+INITWAITTIME = 10
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[postgres]
+host = "postgres"
+port = 5432
+user = "optisam"
+pass = "optisam"
+name = "optisam"
+
+[dgraph]
+hosts = ["dgraph:9080"]

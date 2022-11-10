@@ -113,7 +113,7 @@ func (s *metricServiceServer) ListMetrices(ctx context.Context, req *v1.ListMetr
 
 }
 
-// nolint: gocyclo
+// nolint: gocyclo,funlen
 func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v1.GetMetricConfigurationRequest) (*v1.GetMetricConfigurationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -226,6 +226,12 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSS", zap.String("reason", err.Error()))
 			return nil, status.Error(codes.Internal, "cannot fetch metric ss")
 		}
+	case repo.MetricEquipAttrStandard:
+		metric, err = s.metricRepo.GetMetricConfigEquipAttr(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricEquipAttr", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric acs")
+		}
 	}
 	resMetric, err := json.Marshal(metric)
 	if err != nil {
@@ -268,6 +274,16 @@ func (s *metricServiceServer) DeleteMetric(ctx context.Context, req *v1.DeleteMe
 			Success: false,
 		}, status.Error(codes.InvalidArgument, "metric is being used by acquired right/aggregation")
 	}
+
+	// Check if metric exists as transform metric name
+	metricTransformMetric, _ := s.metricRepo.GetMetricNUPByTransformMetricName(ctx, req.MetricName, req.Scope)
+	if metricTransformMetric != nil {
+		logger.Log.Error("service/v1 - DeleteMetric - GetMetricNUPByTransformMetricName", zap.String("reason", "metric is being used for transform"))
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "metric cannot be deleted it's alloted as transform metric ")
+	}
+
 	if err := s.metricRepo.DeleteMetric(ctx, req.MetricName, req.Scope); err != nil {
 		logger.Log.Error("service/v1 - DeleteMetric - DeleteMetric", zap.String("reason", err.Error()))
 		return &v1.DeleteMetricResponse{
@@ -336,6 +352,8 @@ func (s *metricServiceServer) discriptionMetric(ctx context.Context, met *repo.M
 		return repo.MetricDescriptionUserSumStandard.String(), nil
 	case repo.MetricStaticStandard:
 		return s.getDescriptionSS(ctx, met.Name, scope)
+	case repo.MetricEquipAttrStandard:
+		return s.getDescriptionEquipAttr(ctx, met.Name, scope)
 	default:
 		return "", status.Error(codes.Internal, "description not found - "+met.Type.String())
 	}

@@ -15,19 +15,21 @@ import (
 	"optisam-backend/dps-service/pkg/worker/models"
 
 	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
+	prodV1 "optisam-backend/product-service/pkg/api/v1"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type worker struct {
 	id string
 	*workerqueue.Queue
 	*gendb.Queries
+	product prodV1.ProductServiceClient
 }
 
-// NewWorker give worker object
-func NewWorker(id string, queue *workerqueue.Queue, db *sql.DB) *worker { // nolint: golint
-	return &worker{id: id, Queue: queue, Queries: gendb.New(db)}
+func NewWorker(id string, queue *workerqueue.Queue, db *sql.DB, grpcServers map[string]*grpc.ClientConn) *worker { // nolint: golint
+	return &worker{id: id, Queue: queue, Queries: gendb.New(db), product: prodV1.NewProductServiceClient(grpcServers["product"])}
 }
 
 // ID gives unique id of worker
@@ -37,6 +39,11 @@ func (w *worker) ID() string {
 
 // DoWork tell the functionality of worker
 func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Log.Sugar().Debug("Recovered in worker/file_worker/DoWork", r)
+		}
+	}()
 	// defer profile.Start(profile.MemProfile, profile.ProfilePath(".")).Stop()
 	dataFromJob := gendb.UploadedDataFile{}
 	var data models.FileData
@@ -116,7 +123,7 @@ func (w *worker) DoWork(ctx context.Context, j *job.Job) error {
 
 	oldName := data.FileName
 	data.FileName = fileNameInDB
-	jobs, err = createAPITypeJobs(data)
+	jobs, err = createAPITypeJobs(ctx, data, w)
 	data.FileName = oldName
 
 	for _, job := range jobs {

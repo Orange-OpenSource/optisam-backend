@@ -2,6 +2,7 @@ package fileworker
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -100,25 +101,25 @@ func getHeadersForFileType(fileType string) (headers []string, err error) {
 	headers = []string{}
 	switch fileType {
 	case constants.PRODUCTS:
-		headers = []string{"swidtag", "version", "category", "editor", "isoptionof", "name", "flag"}
+		headers = []string{"swidtag", "version", "editor", "name", "flag"}
 
 	case constants.APPLICATIONS:
-		headers = []string{"application_id", "version", "owner", "name", "domain", "flag"}
+		headers = []string{"application_id", "name", "environment", "domain", "flag"}
 
-	case constants.ApplicationsInstances:
-		headers = []string{"application_id", "instance_id", "environment", "flag"}
+	// case constants.ApplicationsInstances:
+	// 	headers = []string{"application_id", "instance_id", "environment", "flag"}
 
 	case constants.ApplicationsProducts:
 		headers = []string{"application_id", "swidtag", "flag"}
 
 	case constants.ProductsEquipments:
-		headers = []string{"equipment_id", "swidtag", "nbusers", "flag"}
+		headers = []string{"equipment_id", "swidtag", "allocated_metric", "allocated_users", "flag"}
 
-	case constants.InstancesProducts:
-		headers = []string{"instance_id", "swidtag", "flag"}
+	// case constants.InstancesProducts:
+	// 	headers = []string{"instance_id", "swidtag", "flag"}
 
-	case constants.InstancesEquipments:
-		headers = []string{"instance_id", "equipment_id", "flag"}
+	case constants.ApplicationEquipments:
+		headers = []string{"application_id", "equipment_id", "flag"}
 
 	case constants.ProductsAcquiredRights:
 		headers = []string{"product_version", "sku", "swidtag", "product_name", "editor", "metric", "acquired_licenses", "total_license_cost", "total_maintenance_cost", "unit_price", "maintenance_unit_price", "total_cost", "flag", "maintenance_start", "maintenance_end", "maintenance_licenses"}
@@ -199,8 +200,6 @@ func getProducts(s *bufio.Scanner, headers models.HeadersInfo) (resp models.File
 			data.Name = list[headers.IndexesOfHeaders[constants.NAME]]
 			data.Version = list[headers.IndexesOfHeaders[constants.VERSION]]
 			data.Editor = list[headers.IndexesOfHeaders[constants.EDITOR]]
-			data.IsOptionOf = list[headers.IndexesOfHeaders[constants.ISOPTIONOF]]
-			data.Category = list[headers.IndexesOfHeaders[constants.CATEGORY]]
 			data.SwidTag = list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			data.Action = constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			oldData, ok := resp.Products[data.SwidTag]
@@ -230,8 +229,9 @@ func getApplications(s *bufio.Scanner, headers models.HeadersInfo) (resp models.
 			data := models.ApplicationInfo{}
 			data.ID = list[headers.IndexesOfHeaders[constants.APPID]]
 			data.Name = list[headers.IndexesOfHeaders[constants.NAME]]
-			data.Owner = list[headers.IndexesOfHeaders[constants.OWNER]]
-			data.Version = list[headers.IndexesOfHeaders[constants.VERSION]]
+			// data.Owner = list[headers.IndexesOfHeaders[constants.OWNER]]
+			// data.Version = list[headers.IndexesOfHeaders[constants.VERSION]]
+			data.Environment = list[headers.IndexesOfHeaders[constants.ENVIRONMENT]]
 			data.Domain = list[headers.IndexesOfHeaders[constants.DOMAIN]]
 			data.Action = constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
 			oldData, ok := resp.Applications[data.ID]
@@ -368,22 +368,24 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (mode
 		list := strings.Split(row, constants.DELIMETER)
 		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.SWIDTAG]]) > 0 && len(list[headers.IndexesOfHeaders[constants.EQUIPID]]) > 0 {
 			temp := models.ProdEquipemtInfo{}
-			prodID := list[headers.IndexesOfHeaders[constants.SWIDTAG]]
+			temp.SwidTag = list[headers.IndexesOfHeaders[constants.SWIDTAG]]
 			temp.EquipID = list[headers.IndexesOfHeaders[constants.EQUIPID]]
-			temp.NbUsers = list[headers.IndexesOfHeaders[constants.NBUSERS]]
-			action := constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
+			temp.AllocatedMetric = list[headers.IndexesOfHeaders[constants.AllocatedMetric]]
+			temp.AllocatedUsers = list[headers.IndexesOfHeaders[constants.AllocatedUsers]]
+			temp.Action = constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
 
 			_, ok := records[row]
 			if ok {
 				resp.DuplicateRecords = append(resp.DuplicateRecords, models.ProductEquipmentLink{
-					ProdID:  prodID,
-					EquipID: temp.EquipID,
-					NbUser:  temp.NbUsers,
-					Action:  action,
+					ProdID:          temp.SwidTag,
+					EquipID:         temp.EquipID,
+					AllocatedMetric: temp.AllocatedMetric,
+					AllocatedUsers:  temp.AllocatedUsers,
+					Action:          temp.Action,
 				})
 			} else {
 				records[row] = true
-				resp.ProdEquipments[action][prodID] = append(resp.ProdEquipments[action][prodID], temp)
+				resp.ProdEquipments[temp.Action][temp.SwidTag] = append(resp.ProdEquipments[temp.Action][temp.SwidTag], temp)
 			}
 		} else {
 			resp.InvalidCount++
@@ -394,31 +396,31 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (mode
 	return resp, s.Err()
 }
 
-func getEquipmentsOnInstances(s *bufio.Scanner, headers models.HeadersInfo) (models.FileData, error) {
+func getEquipmentsOnApplication(s *bufio.Scanner, headers models.HeadersInfo) (models.FileData, error) {
 	records := make(map[string]bool)
 	resp := models.FileData{}
-	resp.EquipInstances = make(map[string]map[string][]string)
-	resp.EquipInstances[constants.UPSERT] = make(map[string][]string)
-	resp.EquipInstances[constants.DELETE] = make(map[string][]string)
+	resp.EquipApplications = make(map[string]map[string][]string)
+	resp.EquipApplications[constants.UPSERT] = make(map[string][]string)
+	resp.EquipApplications[constants.DELETE] = make(map[string][]string)
 
 	for s.Scan() {
 		row := s.Text()
 		list := strings.Split(row, constants.DELIMETER)
-		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.EQUIPID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.INSTID]]) > 0 {
-			instanceID := list[headers.IndexesOfHeaders[constants.INSTID]]
+		if len(list) >= headers.MaxIndexVal+1 && len(list[headers.IndexesOfHeaders[constants.EQUIPID]]) > 0 && len(list[headers.IndexesOfHeaders[constants.APPID]]) > 0 {
+			applicationID := list[headers.IndexesOfHeaders[constants.APPID]]
 			equipID := list[headers.IndexesOfHeaders[constants.EQUIPID]]
 			action := constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
 
 			_, ok := records[row]
 			if ok {
-				resp.DuplicateRecords = append(resp.DuplicateRecords, models.EquipmentInstanceLink{
-					InstanceID: instanceID,
-					EquipID:    equipID,
-					Action:     action,
+				resp.DuplicateRecords = append(resp.DuplicateRecords, models.EquipmentApplicationLink{
+					AppID:   applicationID,
+					EquipID: equipID,
+					Action:  action,
 				})
 			} else {
 				records[row] = true
-				resp.EquipInstances[action][instanceID] = append(resp.EquipInstances[action][instanceID], equipID)
+				resp.EquipApplications[action][applicationID] = append(resp.EquipApplications[action][applicationID], equipID)
 			}
 		} else {
 			resp.InvalidCount++
@@ -521,14 +523,14 @@ func csvToFileData(fileType, fileName string, expectedHeaders []string) (models.
 	case constants.ProductsAcquiredRights:
 		resp, err = getAcqRightsOfProducts(scanner, headers)
 
-	case constants.InstancesProducts:
-		resp, err = getInstancesOfProducts(scanner, headers)
+	// case constants.InstancesProducts:
+	// 	resp, err = getInstancesOfProducts(scanner, headers)
 
-	case constants.InstancesEquipments:
-		resp, err = getEquipmentsOnInstances(scanner, headers)
+	case constants.ApplicationEquipments:
+		resp, err = getEquipmentsOnApplication(scanner, headers)
 
-	case constants.ApplicationsInstances:
-		resp, err = getInstanceOfApplications(scanner, headers)
+	// case constants.ApplicationsInstances:
+	// 	resp, err = getInstanceOfApplications(scanner, headers)
 
 	case constants.ApplicationsProducts:
 		resp, err = getApplicationsAndProducts(scanner, headers)
@@ -557,14 +559,14 @@ func getFileName(fileName string) string {
 	return fileName
 }
 
-func createAPITypeJobs(data models.FileData) (jobs []job.Job, err error) {
+func createAPITypeJobs(ctx context.Context, data models.FileData, w *worker) (jobs []job.Job, err error) {
 	for _, targetService := range data.TargetServices {
 		switch targetService {
 		case constants.AppService:
 			jobs = createAppServiceJobs(data, targetService)
 
 		case constants.ProdService:
-			jobs = createProdServiceJobs(data, targetService)
+			jobs = createProdServiceJobs(ctx, data, targetService, w)
 
 		case constants.EquipService:
 			jobs = createEquipServiceJobs(data, targetService)
@@ -642,8 +644,33 @@ func createEquipServiceJobs(data models.FileData, targetService string) (jobs []
 }
 
 // nolint: nakedret
-func createProdAcqRightsJobs(data models.FileData, targetService string) (jobs []job.Job) {
+func createProdAcqRightsJobs(ctx context.Context, data models.FileData, targetService string, w *worker) (jobs []job.Job) {
 	var err error
+	acqs, err := w.product.ListAcqRights(ctx, &product.ListAcqRightsRequest{
+		PageNum:  1,
+		PageSize: 200,
+		Scopes:   []string{data.Scope},
+	})
+	if err != nil {
+		log.Println("Failed to fetch acquired rights, err:", err)
+		return
+	}
+	if acqs.TotalRecords > 200 {
+		acqs, err = w.product.ListAcqRights(ctx, &product.ListAcqRightsRequest{
+			PageNum:  1,
+			PageSize: acqs.TotalRecords,
+			Scopes:   []string{data.Scope},
+		})
+		if err != nil {
+			log.Println("Failed to fetch acquired rights, err:", err)
+			return
+		}
+	}
+	var acquiredRights = make(map[string]bool)
+	for _, v := range acqs.AcquiredRights {
+		acquiredRights[v.GetSKU()] = v.Repartition
+	}
+
 	for _, val := range data.AcqRights {
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
 		jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
@@ -670,6 +697,7 @@ func createProdAcqRightsJobs(data models.FileData, targetService string) (jobs [
 			EndOfMaintenance:          val.EndOfMaintenance,
 			LastPurchasedOrder:        val.LastPurchasedOrder,
 			SupportNumber:             val.SupportNumber,
+			Repartition:               acquiredRights[val.Sku],
 		}
 		envlope.TargetAction = constants.UPSERT
 		envlope.Data, err = json.Marshal(appData)
@@ -688,20 +716,21 @@ func createProdAcqRightsJobs(data models.FileData, targetService string) (jobs [
 	return
 }
 
-func createProdServiceJobs(data models.FileData, targetService string) (jobs []job.Job) {
+func createProdServiceJobs(ctx context.Context, data models.FileData, targetService string, w *worker) (jobs []job.Job) {
 	switch data.FileType {
 	case constants.PRODUCTS:
 		jobs = createProductJobs(data, targetService)
-
-	case constants.ApplicationsProducts:
-		jobs = createAppProductsJobs(data, targetService)
 
 	case constants.ProductsEquipments:
 		jobs = createProdEquipJobs(data, targetService)
 
 	case constants.ProductsAcquiredRights:
-		jobs = createProdAcqRightsJobs(data, targetService)
+		jobs = createProdAcqRightsJobs(ctx, data, targetService, w)
+
+	case constants.ApplicationsProducts:
+		jobs = createAppProductsJobs(data, targetService)
 	}
+
 	return
 }
 
@@ -710,14 +739,17 @@ func createAppServiceJobs(data models.FileData, targetService string) (jobs []jo
 	case constants.APPLICATIONS:
 		jobs = createApplicationJobs(data, targetService)
 
-	case constants.ApplicationsInstances:
-		jobs = createAppInstanceJobs(data, targetService)
+	// case constants.ApplicationsProducts:
+	// 	jobs = createAppProductsJobs(data, targetService)
 
-	case constants.InstancesProducts:
-		jobs = createInstanceProdJobs(data, targetService)
+	// case constants.ApplicationsInstances:
+	// 	jobs = createAppInstanceJobs(data, targetService)
 
-	case constants.InstancesEquipments:
-		jobs = createInstanceEquipJobs(data, targetService)
+	// case constants.InstancesProducts:
+	// 	jobs = createInstanceProdJobs(data, targetService)
+
+	case constants.ApplicationEquipments:
+		jobs = createApplicationEquipJobs(data, targetService)
 	}
 	return
 }
@@ -755,10 +787,11 @@ func createProdEquipJobs(data models.FileData, targetService string) (jobs []job
 }
 func convertProdEquipments(data []models.ProdEquipemtInfo) (res []*product.UpsertProductRequestEquipmentEquipmentuser) {
 	for _, val := range data {
-		nb, _ := strconv.Atoi(val.NbUsers) // nolint: gosec
+		au, _ := strconv.Atoi(val.AllocatedUsers) // nolint: gosec
 		temp := product.UpsertProductRequestEquipmentEquipmentuser{
-			EquipmentId: val.EquipID,
-			NumUser:     int32(nb),
+			EquipmentId:      val.EquipID,
+			AllocatedMetrics: val.AllocatedMetric,
+			AllocatedUsers:   int32(au),
 		}
 		res = append(res, &temp)
 	}
@@ -803,13 +836,13 @@ func createProductJobs(data models.FileData, targetService string) (jobs []job.J
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
 		jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
 		appData := product.UpsertProductRequest{
-			SwidTag:  val.SwidTag,
-			Name:     val.Name,
-			Version:  val.Version,
-			Editor:   val.Editor,
-			Category: val.Category,
-			OptionOf: val.IsOptionOf,
-			Scope:    data.Scope,
+			SwidTag: val.SwidTag,
+			Name:    val.Name,
+			Version: val.Version,
+			Editor:  val.Editor,
+			// Category: val.Category,
+			// OptionOf: val.IsOptionOf,
+			Scope: data.Scope,
 		}
 		envlope.TargetAction = constants.UPSERT
 		envlope.Data, err = json.Marshal(appData)
@@ -828,16 +861,16 @@ func createProductJobs(data models.FileData, targetService string) (jobs []job.J
 	return
 }
 
-func createInstanceEquipJobs(data models.FileData, targetService string) (jobs []job.Job) {
+func createApplicationEquipJobs(data models.FileData, targetService string) (jobs []job.Job) {
 	var err error
-	for action, instanceAndEquipments := range data.EquipInstances {
-		for instanceID, equipments := range instanceAndEquipments {
+	for action, applicationAndEquipments := range data.EquipApplications {
+		for applicationID, equipments := range applicationAndEquipments {
 			envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
 			jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
-			appData := application.UpsertInstanceRequest{
-				InstanceId: instanceID,
-				Scope:      data.Scope,
-				Equipments: &application.UpsertInstanceRequestEquipment{
+			appData := application.UpsertApplicationEquipRequest{
+				ApplicationId: applicationID,
+				Scope:         data.Scope,
+				Equipments: &application.UpsertApplicationEquipRequestEquipment{
 					Operation:   constants.APIAction[action],
 					EquipmentId: equipments,
 				},
@@ -860,77 +893,77 @@ func createInstanceEquipJobs(data models.FileData, targetService string) (jobs [
 	return
 }
 
-func createInstanceProdJobs(data models.FileData, targetService string) (jobs []job.Job) {
-	var err error
-	for action, instanceAndProducts := range data.ProdInstances {
-		for instanceID, products := range instanceAndProducts {
-			envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
-			jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
-			appData := application.UpsertInstanceRequest{
-				InstanceId: instanceID,
-				Scope:      data.Scope,
-				Products: &application.UpsertInstanceRequestProduct{
-					Operation: constants.APIAction[action],
-					ProductId: products,
-				},
-			}
-			envlope.TargetAction = constants.UPSERT
-			envlope.Data, err = json.Marshal(appData)
-			if err != nil {
-				log.Println("Failed to marshal jobdata, err:", err)
-				return
-			}
-			jobObj.Data, err = json.Marshal(envlope)
-			if err != nil {
-				log.Println("Failed to marshal envlope, err:", err)
-				return
-			}
-			jobObj.Status = job.JobStatusPENDING
-			jobs = append(jobs, jobObj)
-		}
-	}
-	return
-}
+// func createInstanceProdJobs(data models.FileData, targetService string) (jobs []job.Job) {
+// 	var err error
+// 	for action, instanceAndProducts := range data.ProdInstances {
+// 		for instanceID, products := range instanceAndProducts {
+// 			envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
+// 			jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
+// 			appData := application.UpsertInstanceRequest{
+// 				InstanceId: instanceID,
+// 				Scope:      data.Scope,
+// 				Products: &application.UpsertInstanceRequestProduct{
+// 					Operation: constants.APIAction[action],
+// 					ProductId: products,
+// 				},
+// 			}
+// 			envlope.TargetAction = constants.UPSERT
+// 			envlope.Data, err = json.Marshal(appData)
+// 			if err != nil {
+// 				log.Println("Failed to marshal jobdata, err:", err)
+// 				return
+// 			}
+// 			jobObj.Data, err = json.Marshal(envlope)
+// 			if err != nil {
+// 				log.Println("Failed to marshal envlope, err:", err)
+// 				return
+// 			}
+// 			jobObj.Status = job.JobStatusPENDING
+// 			jobs = append(jobs, jobObj)
+// 		}
+// 	}
+// 	return
+// }
 
-// nolint: nakedret
-func createAppInstanceJobs(data models.FileData, targetService string) (jobs []job.Job) {
-	var err error
-	for appID, list := range data.AppInstances {
-		for _, val := range list {
-			envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
-			jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
-			var appData interface{}
-			if val.Action == constants.UPSERT {
-				appData = application.UpsertInstanceRequest{
-					ApplicationId: appID,
-					InstanceId:    val.ID,
-					InstanceName:  val.Env,
-					Scope:         data.Scope,
-				}
-				envlope.TargetAction = constants.UPSERT
-			} else {
-				appData = application.DeleteInstanceRequest{
-					ApplicationId: appID,
-					InstanceId:    val.ID,
-				}
-				envlope.TargetAction = constants.DELETE
-			}
-			envlope.Data, err = json.Marshal(appData)
-			if err != nil {
-				log.Println("Failed to marshal jobdata, err:", err)
-				return
-			}
-			jobObj.Data, err = json.Marshal(envlope)
-			if err != nil {
-				log.Println("Failed to marshal envlope, err:", err)
-				return
-			}
-			jobObj.Status = job.JobStatusPENDING
-			jobs = append(jobs, jobObj)
-		}
-	}
-	return
-}
+// // nolint: nakedret
+// func createAppInstanceJobs(data models.FileData, targetService string) (jobs []job.Job) {
+// 	var err error
+// 	for appID, list := range data.AppInstances {
+// 		for _, val := range list {
+// 			envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
+// 			jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
+// 			var appData interface{}
+// 			if val.Action == constants.UPSERT {
+// 				appData = application.UpsertInstanceRequest{
+// 					ApplicationId: appID,
+// 					InstanceId:    val.ID,
+// 					InstanceName:  val.Env,
+// 					Scope:         data.Scope,
+// 				}
+// 				envlope.TargetAction = constants.UPSERT
+// 			} else {
+// 				appData = application.DeleteInstanceRequest{
+// 					ApplicationId: appID,
+// 					InstanceId:    val.ID,
+// 				}
+// 				envlope.TargetAction = constants.DELETE
+// 			}
+// 			envlope.Data, err = json.Marshal(appData)
+// 			if err != nil {
+// 				log.Println("Failed to marshal jobdata, err:", err)
+// 				return
+// 			}
+// 			jobObj.Data, err = json.Marshal(envlope)
+// 			if err != nil {
+// 				log.Println("Failed to marshal envlope, err:", err)
+// 				return
+// 			}
+// 			jobObj.Status = job.JobStatusPENDING
+// 			jobs = append(jobs, jobObj)
+// 		}
+// 	}
+// 	return
+// }
 
 // nolint: nakedret
 func createApplicationJobs(data models.FileData, targetService string) (jobs []job.Job) {
@@ -943,8 +976,7 @@ func createApplicationJobs(data models.FileData, targetService string) (jobs []j
 			appData = application.UpsertApplicationRequest{
 				ApplicationId: val.ID,
 				Name:          val.Name,
-				Version:       val.Version,
-				Owner:         val.Owner,
+				Environment:   val.Environment,
 				Scope:         data.Scope,
 				Domain:        val.Domain,
 			}

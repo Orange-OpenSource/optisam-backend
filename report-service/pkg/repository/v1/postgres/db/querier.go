@@ -4,12 +4,11 @@ package db
 
 import (
 	"context"
-	"encoding/json"
 )
 
 type Querier interface {
 	DeleteReportsByScope(ctx context.Context, scope string) error
-	DownloadReport(ctx context.Context, arg DownloadReportParams) (json.RawMessage, error)
+	DownloadReport(ctx context.Context, arg DownloadReportParams) (DownloadReportRow, error)
 	GetReport(ctx context.Context, arg GetReportParams) ([]GetReportRow, error)
 	GetReportType(ctx context.Context, reportTypeID int32) (ReportType, error)
 	GetReportTypes(ctx context.Context) ([]ReportType, error)

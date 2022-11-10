@@ -1,0 +1,42 @@
+.nifi-template:
+  before_script:
+    - ls -lash
+    - chmod 777 shared-vars.sh
+    - . ./shared-vars.sh
+    - cd nifi-service
+   
+
+.nifi-package:
+  extends: .nifi-template
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - cd ..
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/nifi-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/nifi-service:$TAG
+  only:
+    - develop  
+
+.nifi-deploy_noprod:
+  extends: .nifi-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT}
+    - oc delete deploymentconfig optisam-nifi
+    - oc process -f nifi-service.yml -p TAG=$TAG -p ENV=$ENV -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+
+.nifi-deploy_prod:
+  extends: .nifi-template
+  image: ${DOCKER_PROXY_HOST}/openshift/origin-cli:v3.11
+  environment:
+    name: prod
+    url: https://optisam-nifi-prod.apps.fr01.paas.tech.orange
+  script:
+    - echo "Creating Openshift Resources"
+    - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
+    - oc project ${OCP_PROJECT_PROD}
+    - oc process -f nifi-service.yml -p TAG=$TAG -p ENV=prod -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -

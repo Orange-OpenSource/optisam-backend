@@ -4,12 +4,12 @@ Feature: DashboardTest
   Background:
   # * def equipmentServiceUrl = "https://optisam-equipment-int.apps.fr01.paas.tech.orange"
     * url equipmentServiceUrl+'/api/v1/equipment'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
  @get
   Scenario: Get Equipment Types on Dashboard
@@ -28,7 +28,7 @@ Feature: DashboardTest
     Then status 200
     * match response.types_equipments == '#[] data.schema_overview'
 
-  @get @ignore
+  @get
   Scenario: Get Equipment Types where there is no data in scope
     Given path 'dashboard/types/equipments'
     And params {scope:'CLR'}

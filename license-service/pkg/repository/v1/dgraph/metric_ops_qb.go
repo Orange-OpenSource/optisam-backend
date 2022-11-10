@@ -24,7 +24,7 @@ const (
 	   }
 	}`
 	qDirectEquipments = `var(func: uid($id)){
-		product.equipment @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes])){
+		product.equipment @filter(eq(equipment.type,$CurrentType) AND eq(scopes,[$Scopes]) $CurTypeCondition){
 			$CurrentTypeIDs as uid
 	   }
 	}`
@@ -119,7 +119,7 @@ func replacer(q string, params map[string]string) string {
 	return q
 }
 
-func queryBuilder(ops *v1.MetricOPSComputed, scopes []string, id ...string) string {
+func queryBuilder(ops *v1.MetricOPSComputed, scopes []string, allotedMetricsEq map[string]interface{}, id ...string) string {
 	// q := ""
 	index := -1
 	aggregateIndex := -1
@@ -133,7 +133,7 @@ func queryBuilder(ops *v1.MetricOPSComputed, scopes []string, id ...string) stri
 	}
 
 	return "{\n\t" + replacer(strings.Join([]string{
-		getToBase(ops.EqTypeTree[:index+1]),
+		getToBase(ops.EqTypeTree[:index+1], allotedMetricsEq),
 		getToTop(ops.EqTypeTree[index:], index > 0),
 		caluclateFromTop(ops.EqTypeTree, ops.CoreFactorAttr, ops.NumCPUAttr, ops.NumCoresAttr, aggregateIndex-index, index),
 		licenses(ops.EqTypeTree[index:], aggregateIndex-index),
@@ -195,14 +195,30 @@ func getToBaseForAppProduct(eqTypes []*v1.EquipmentType) string {
 	return strings.Join(queries, "\n\t")
 }
 
-func getToBase(eqTypes []*v1.EquipmentType) string {
+func getToBase(eqTypes []*v1.EquipmentType, allotedMetricsEq map[string]interface{}) string {
 	queries := []string{}
 	for i := range eqTypes {
+		currentTypeCondition := ""
 		if i == 0 {
+			if eqTypes[i].Type != "server" {
+				if _, ok := allotedMetricsEq["notAllotedSoftpartition"]; ok {
+					if allotedMetricsEq["notAllotedSoftpartition"].(string) != "" {
+						currentTypeCondition = " AND not( uid(" + allotedMetricsEq["notAllotedSoftpartition"].(string) + "))"
+					}
+				}
+			} else {
+				if _, ok := allotedMetricsEq["notAlloted"]; ok {
+					if allotedMetricsEq["notAlloted"].(string) != "" {
+						currentTypeCondition = " AND not( uid(" + allotedMetricsEq["notAlloted"].(string) + "))"
+					}
+				}
+			}
 			vars := map[string]string{
-				"$CurrentType": eqTypes[i].Type,
+				"$CurrentType":      eqTypes[i].Type,
+				"$CurTypeCondition": currentTypeCondition,
 			}
 			queries = append(queries, replacer(qDirectEquipments, vars))
+			currentTypeCondition = ""
 			continue
 		}
 		ids := []string{eqTypes[i-1].Type + "IDs"}
@@ -214,8 +230,21 @@ func getToBase(eqTypes []*v1.EquipmentType) string {
 			"$CurrentType": eqTypes[i].Type,
 		}
 		queries = append(queries, replacer(qEquipmentFromChild, vars))
+
+		// if _, ok := allotedMetricsEq["alloted"]; ok {
+		// 	if allotedMetricsEq["alloted"].(string) != "" {
+		// 		currentTypeCondition = " AND (" + allotedMetricsEq["alloted"].(string) + ")"
+		// 	}
+		// }
+		//&& allotedMetricsEq["alloted"].(string) == ""
+		if _, ok := allotedMetricsEq["notAlloted"]; ok {
+			if allotedMetricsEq["notAlloted"].(string) != "" {
+				currentTypeCondition = " AND not( uid(" + allotedMetricsEq["notAlloted"].(string) + "))"
+			}
+		}
 		vars = map[string]string{
-			"$CurrentType": eqTypes[i].Type,
+			"$CurrentType":      eqTypes[i].Type,
+			"$CurTypeCondition": currentTypeCondition,
 		}
 		queries = append(queries, replacer(qDirectEquipments, vars))
 	}

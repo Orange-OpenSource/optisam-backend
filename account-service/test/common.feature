@@ -1,5 +1,6 @@
 
 @ignore
+
 Feature: Common utilities and authentication
 
   Background: pre-requisite
@@ -49,23 +50,25 @@ Feature: Common utilities and authentication
       }
       """
         
-  @ignore
-  Scenario: Verify account service is up and running
-    * def accountServiceInstUrl = replace(karate.get('accountServiceUrl'),'account','account-inst')
-    * url accountServiceInstUrl
-    Given path 'healthz'
-    * configure retry = { count: 10, interval: 10000 }
-    * retry until responseStatus == 200
-    When method get
-    Then status 200
-    And match response.status == 'ok'
+  # @ignore
+  # Scenario: Verify account service is up and running
+  #   * def accountServiceInstUrl = replace(karate.get('accountServiceUrl'),'account','account-inst')
+  #   * url accountServiceInstUrl
+  #   Given path 'healthz'
+  #   * configure retry = { count: 10, interval: 20000 }
+  #   * retry until responseStatus == 200
+  #   When method get
+  #   Then status 200
+  #   And match response.status == 'ok'
 
   
   @ignore
+
   Scenario: Get authorization token
     Given path 'token'
     * form field grant_type = 'password'
     * form fields credentials
+    # * karate.configure('ssl', { algorithm: 'TLS' });
     * configure retry = { count: 10, interval: 10000 }
     When method post
     Then status 200

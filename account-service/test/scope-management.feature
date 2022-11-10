@@ -5,7 +5,8 @@ Feature: Account Service Test
   Background:
   # * def accountServiceUrl = "https://ng-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}  
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
@@ -25,7 +26,7 @@ Feature: Account Service Test
     Given path 'scopes'
     When method get
     Then status 200
-  * match response.scopes[*].scope_code contains ['DMO']
+  * match response.scopes[*].scope_code contains ['CLR']
 
 
   # @create @ignore
@@ -38,7 +39,7 @@ Feature: Account Service Test
   @create 
   Scenario: To verify scopeCode is unique
     Given path 'scopes'
-    * set data.createScope.scope_code = 'DMO'
+    * set data.createScope.scope_code = 'CLR'
     And request data.createScope
     When method post
     Then status 409

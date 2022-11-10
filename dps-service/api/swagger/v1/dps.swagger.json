@@ -4,11 +4,6 @@
     "title": "dps.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "DpsService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -342,6 +337,36 @@
             "required": false,
             "type": "integer",
             "format": "int32"
+          }
+        ],
+        "tags": [
+          "DpsService"
+        ]
+      }
+    },
+    "/api/v1/dps/metrics": {
+      "get": {
+        "operationId": "DpsService_GetAllocMetricDetails",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAllocMetricDetailsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -840,6 +865,23 @@
         },
         "reason": {
           "type": "string"
+        }
+      }
+    },
+    "v1GetAllocMetricDetailsResponse": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

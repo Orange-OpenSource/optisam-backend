@@ -4,101 +4,77 @@ Feature: Product Aggregation Test - admin user
   Background:
   # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
-    * def credentials = {username:'admin@test.com', password: 'admin'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'AUT'
+    * def scope = 'API'
 
 
   @get
   Scenario: Schema validation for get Product aggregation list
-    Given path 'aggregations'
+    Given path 'aggregation/view'
     And params { page_num:1, page_size:10, sort_by:'aggregation_name', sort_order:'desc', scopes:'#(scope)'}
     When method get
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
-    # * match response.aggregations == '#[_ > 0] data.schema_prod_agg'
+    * match response.aggregations == '#[_ > 0] data.schema_prod_agg'
 
-
- @get
-  Scenario: To verify user can get product aggregation Details
-    Given path 'aggregations'
-    And params {scopes:'#(scope)'}
-    When method get
-    Then status 200
-    * def agg_id = karate.jsonPath(response.aggregations,"$.[?(@.name=='"+data.getProdAgg.name+"')].ID")[0]  
-    * header Authorization = 'Bearer '+access_token
-    Given path 'aggregations/productview',agg_id,'details'
-    * params { scope:'#(scope)'}
-    When method get
-    Then status 200
-    And match response.ID contains data.getProdAgg.ID
-    And match response.products contains data.getProdAgg.swidtags
-
-  @getproductagg
-  Scenario: To verify user can get product view from product aggregation
-    Given path 'aggregations'
-    And params {scopes:'#(scope)'}
-    When method get
-    Then status 200
-    * def agg_id = karate.jsonPath(response.aggregations,"$.[?(@.name=='"+data.getProdAgg.name+"')].ID")[0]  
-    * header Authorization = 'Bearer '+access_token
-    Given path 'aggregations',agg_id,'products'
-    And params { scopes:'#(scope)'}
-    When method get
-    Then status 200
-    And match response.products[*].swidTag == data.getProdAgg.swidtags
-
+    
    @search
   Scenario Outline: To verify Searching is working on product Aggregation by single column by <searchBy>
-    Given path 'aggregations'
-    * params { page_num:1, page_size:10, sort_by:'aggregation_name', sort_order:'asc', scopes:'#(scope)'}
-    * params {search_params.<searchBy>.filteringkey: '<searchValue>'}
+    Given path 'aggregation/view'
+    And params { page_num:1, page_size:50}
+    And params {search_params.<searchname>.filteringkey: '<searchValue>'}
+    And params { sort_order:'asc', sort_by:'aggregation_name', scopes:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
     And match response.aggregations[*].<searchBy> contains '<searchValue>'
     Examples:
-    | searchBy | searchValue |
-    | name | apitest_agg_oracleWL |
+   | searchBy | searchValue |
+   # | name |apitest_agg_oracleWL |
     | editor | Oracle |
 
 
+    # Changed Path and params and added searchname for validation
     @search 
   Scenario Outline: To verify Searching is working on product Aggregation by Multiple columns
-    Given path 'aggregations'
-    And params { page_num:1, page_size:10, sort_by:'aggregation_name', sort_order:'asc', scopes:'#(scope)'}
-    And params {search_params.<searchBy1>.filteringkey: '<searchValue1>'}
+    Given path 'aggregation/view'
+    And params { page_num:1, page_size:50}
+    And params {search_params.<searchname>.filteringkey: '<searchValue1>'}
     And params {search_params.<searchBy2>.filteringkey: '<searchValue2>'}
+    And params { sort_order:'asc', sort_by:'aggregation_name', scopes:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
     And match response.aggregations[*].<searchBy1> contains '<searchValue1>'
     And match response.aggregations[*].<searchBy2> contains '<searchValue2>'
   Examples:
-    | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
-    | name | apitest_agg_oracleWL| editor | Oracle |
+  | searchname | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
+  | name | aggregation_name | Oracle_RAC| editor | Redhat |
 
-# TODO: add more sorting
-  Scenario Outline: To verify Sorting is working on product Aggregation by <sortBy>
-    Given path 'aggregations'
-    And params { page_num:1, page_size:10, sort_by:'<sortBy>', sort_order:'<sortOrder>', scopes:'#(scope)'}
+
+  Scenario Outline: To verify Sorting is working on product Aggregation by  <sortBy>
+    Given path 'aggregation/view'
+    And params { page_num:1, page_size:50}
+    And params { sort_order:'asc', sort_by:'aggregation_name', scopes:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
     * def actual = $response.aggregations[*].<sortBy>
     * def sorted = sort(actual,'<sortOrder>')
-    * match sorted == actual
+    * match  sorted == actual
   Examples:
       | sortBy | sortOrder |  
       # | editor | asc |
-      | aggregation_name | desc |
+      | aggregation_name | asc |
    
+
  @pagination
   Scenario Outline: To verify Pagination is working on Product Aggregation Page for <page_size>
-    Given path  'aggregations'
+    Given path 'aggregation/view'
     And params { page_num:1, page_size:'<page_size>', sort_by:'aggregation_name', sort_order:'desc', scopes:'#(scope)'}
     When method get
     Then status 200

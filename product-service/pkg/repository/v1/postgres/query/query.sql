@@ -95,13 +95,13 @@ WHERE
 ; 
 
 -- name: ListProductsViewRedirectedEquipment :many
-SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments ,COALESCE(acq.total_cost,0)::FLOAT as cost 
+SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, pe.allocated_metric, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.equipment_users,0)::INTEGER as equipment_users, COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments, COALESCE(acq.total_cost,0)::FLOAT as cost 
 FROM products p 
 LEFT JOIN 
 (SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = ANY(@scope::TEXT[]) AND (CASE WHEN @is_application_id::bool THEN application_id = @application_id ELSE TRUE END)  GROUP BY swidtag) pa
 ON p.swidtag = pa.swidtag
 INNER JOIN 
-(SELECT swidtag, count(equipment_id) as num_of_equipments FROM products_equipments WHERE  scope = ANY(@scope::TEXT[]) AND (CASE WHEN @is_equipment_id::bool THEN equipment_id = @equipment_id ELSE TRUE END)  GROUP BY swidtag) pe
+(SELECT swidtag, count(equipment_id) as num_of_equipments, sum(num_of_users) as equipment_users, allocated_metric FROM products_equipments WHERE  scope = ANY(@scope::TEXT[]) AND (CASE WHEN @is_equipment_id::bool THEN equipment_id = @equipment_id ELSE TRUE END)  GROUP BY swidtag, allocated_metric) pe
 ON p.swidtag = pe.swidtag
 LEFT JOIN
 (SELECT swidtag, sum(total_cost) as total_cost FROM acqrights WHERE scope = ANY(@scope::TEXT[]) GROUP BY swidtag) acq
@@ -114,7 +114,7 @@ WHERE
   AND (CASE WHEN @is_product_name::bool THEN lower(p.product_name) = lower(@product_name) ELSE TRUE END)
   AND (CASE WHEN @lk_product_editor::bool THEN lower(p.product_editor) LIKE '%' || lower(@product_editor::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN @is_product_editor::bool THEN lower(p.product_editor) = lower(@product_editor) ELSE TRUE END)
-  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments, acq.total_cost
+  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.equipment_users, pe.allocated_metric, pe.num_of_equipments, acq.total_cost
   ORDER BY
   CASE WHEN @swidtag_asc::bool THEN p.swidtag END asc,
   CASE WHEN @swidtag_desc::bool THEN p.swidtag END desc,
@@ -137,15 +137,13 @@ WHERE
   LIMIT @page_size OFFSET @page_num
 ; 
 
--- name: ListProductsByApplicationInstance :many
+-- name: ListProductsByApplication :many
 Select
     count(*) OVER() AS totalRecords,
     p.swidtag,
     p.product_name,
     p.product_version,
-    p.product_category,
     p.product_editor,
-    p.product_edition,
     COALESCE(acq.total_cost, 0) :: FLOAT as total_cost
 from
     products p
@@ -333,8 +331,9 @@ INSERT INTO acqrights (
     corporate_sourcing_contract,
     software_provider,
     file_name,
-    file_data)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) ON CONFLICT (sku,scope) DO
+    file_data,
+    repartition)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) ON CONFLICT (sku,scope) DO
 UPDATE
 SET swidtag = $2,
     product_name = $3,
@@ -360,11 +359,12 @@ SET swidtag = $2,
     corporate_sourcing_contract = $23,
     software_provider = $24,
     file_name = $25,
-    file_data = $26;
+    file_data = $26,
+    repartition = $27;
 
 
 -- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition
 FROM 
 acqrights a
 WHERE 
@@ -497,6 +497,7 @@ SELECT count(*) OVER() AS totalRecords,
     a.updated_on,
     a.updated_by,
     a.file_name,
+    a.repartition,
     agg.aggregation_name,
     agg.product_editor,
     agg.products,
@@ -610,8 +611,9 @@ INSERT INTO aggregated_rights (
   num_licences_maintenance,
   comment,
   file_name,
-  file_data)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23) ON CONFLICT (sku,scope) DO
+  file_data,
+  repartition)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) ON CONFLICT (sku,scope) DO
 UPDATE
 SET aggregation_id = $3,
     metric = $4,
@@ -633,7 +635,8 @@ SET aggregation_id = $3,
     num_licences_maintenance = $20,
     comment = $21,
     file_name = $22,
-    file_data = $23;
+    file_data = $23,
+    repartition = $24;
 
 -- name: UpdateAggregation :exec
 UPDATE aggregations
@@ -773,6 +776,35 @@ from acqrights
 WHERE scope = ANY(@scope::TEXT[])
 GROUP BY scope; 
 
+-- name: GetApplicationsByProductID :many
+SELECT
+    application_id
+from
+    products_applications
+WHERE 
+    scope = @scope
+    AND swidtag = @swidtag;
+
+-- name: GetProductCount :many
+SELECT
+    COUNT(pa.swidtag) as num_of_products,
+    pa.application_id
+FROM
+    products_applications pa
+WHERE
+    pa.scope = @scope
+GROUP BY
+    pa.application_id;
+
+-- name: GetProductsByApplicationID :many
+SELECT
+    swidtag
+from
+    products_applications
+WHERE 
+    scope = @scope
+    AND application_id = @application_id;
+
 -- name: ProductsPerMetric :many
 SELECT x.metric as metric,
 SUM(x.composition) as composition
@@ -797,7 +829,7 @@ num_computed_licences::Numeric(15,2) as num_computed_licences,
 num_acquired_licences::Numeric(15,2) as num_acquired_licences,
 (delta_number)::Numeric(15,2) as delta
 FROM overall_computed_licences
-WHERE scope = @scope AND editor = @editor
+WHERE scope = @scope AND editor = @editor AND cost_optimization= FALSE
 GROUP BY swidtags,product_names,aggregation_name,num_acquired_licences,num_computed_licences,delta_number
 HAVING
     (delta_number) < 0
@@ -811,11 +843,11 @@ SELECT swidtags as swid_tags,
 product_names as product_names,
 aggregation_name as aggregation_name,
 computed_cost::Numeric(15,2) as computed_cost,
-total_cost::Numeric(15,2) as purchase_cost,
+purchase_cost::Numeric(15,2) as purchase_cost,
 (delta_cost)::Numeric(15,2) as delta_cost
 FROM overall_computed_licences
-WHERE scope = @scope AND editor = @editor
-GROUP BY swidtags,product_names,aggregation_name,total_cost,computed_cost,delta_cost
+WHERE scope = @scope AND editor = @editor AND cost_optimization= FALSE
+GROUP BY swidtags,product_names,aggregation_name,purchase_cost,computed_cost,delta_cost
 HAVING
     (delta_cost) < 0
 ORDER BY
@@ -831,7 +863,7 @@ num_computed_licences::Numeric(15,2) as num_computed_licences,
 num_acquired_licences::Numeric(15,2) as num_acquired_licences,
 (delta_number)::Numeric(15,2) as delta
 FROM overall_computed_licences
-WHERE scope = @scope AND editor = @editor
+WHERE scope = @scope AND editor = @editor AND cost_optimization= FALSE
 GROUP BY swidtags,product_names,aggregation_name,num_acquired_licences,num_computed_licences,delta_number
 HAVING
     (delta_number) > 0
@@ -845,11 +877,11 @@ SELECT swidtags as swid_tags,
 product_names as product_names,
 aggregation_name as aggregation_name,
 computed_cost::Numeric(15,2) as computed_cost,
-total_cost::Numeric(15,2) as purchase_cost,
+purchase_cost::Numeric(15,2) as purchase_cost,
 (delta_cost)::Numeric(15,2) as delta_cost
 FROM overall_computed_licences
-WHERE scope = @scope AND editor = @editor
-GROUP BY swidtags,product_names,aggregation_name,total_cost,computed_cost,delta_cost
+WHERE scope = @scope AND editor = @editor AND cost_optimization= FALSE
+GROUP BY swidtags,product_names,aggregation_name,purchase_cost,computed_cost,delta_cost
 HAVING
     (delta_cost) > 0
 ORDER BY
@@ -885,7 +917,7 @@ where ocl.scope = @scope AND ocl.delta_number < 0;
 select coalesce(sum(num_acquired_licences),0)::Numeric(15,2) as acq,
 coalesce(abs(sum(delta_number)), 0)::Numeric(15,2) as delta_rights
 from overall_computed_licences ocl
-where ocl.scope = @scope AND ocl.delta_number > 0;
+where ocl.scope = @scope AND ocl.delta_number >= 0;
 
 
 -- name: UpsertProductApplications :exec
@@ -893,8 +925,8 @@ Insert into products_applications (swidtag, application_id,scope ) Values ($1,$2
 Do NOTHING;
 
 -- name: UpsertProductEquipments :exec
-Insert into products_equipments (swidtag, equipment_id, num_of_users,scope ) Values ($1,$2,$3,$4 ) ON CONFLICT  (swidtag, equipment_id, scope)
-Do Update set num_of_users = $3;
+Insert into products_equipments (swidtag, equipment_id, num_of_users,scope, allocated_metric ) Values ($1,$2,$3,$4,$5 ) ON CONFLICT  (swidtag, equipment_id, scope)
+Do Update set num_of_users = $3, allocated_metric = $5;
 
 -- name: ProductsNotDeployed :many
 SELECT DISTINCT(swidtag), product_name, product_editor, version FROM acqrights
@@ -1117,13 +1149,18 @@ WHERE id = @id
     AND scope = @scope;
 
 -- name: GetTotalCounterfietAmount :one
-select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as underusage_amount from overall_computed_licences ocl
-where ocl.scope = @scope AND ocl.delta_cost < 0;
+select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as counterfiet_amount from overall_computed_licences ocl
+where ocl.scope = @scope AND ocl.delta_cost < 0 AND cost_optimization = FALSE;
 
 
 -- name: GetTotalUnderusageAmount :one
 select coalesce(sum(ocl.delta_cost),0.0)::FLOAT  as underusage_amount from overall_computed_licences ocl
-where ocl.scope = @scope AND ocl.delta_cost > 0;
+where ocl.scope = @scope AND ocl.delta_cost > 0 AND cost_optimization = FALSE;
+
+-- name: GetTotalDeltaCost :one
+select coalesce(sum(ocl.delta_cost),0.0)::FLOAT
+FROM overall_computed_licences ocl
+where cost_optimization = TRUE AND ocl.scope = @scope;
 
 -- name: ListAggregationNameByScope :many
 SELECT aggregation_name from aggregations inner join aggregated_rights on aggregations.id = aggregated_rights.aggregation_id where aggregations.scope = $1;
@@ -1176,13 +1213,23 @@ INSERT INTO overall_computed_licences (
     purchase_cost,
     computed_cost,
     delta_number,
+    cost_optimization,
     delta_cost,
     avg_unit_price,
     computed_details,
     metic_not_defined,
     not_deployed,
     editor)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18);
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19);
 
 -- name: DeleteOverallComputedLicensesByScope :exec
 DELETE FROM overall_computed_licences WHERE scope = @scope;
+
+-- name: DropAllocatedMetricFromEquipment :exec
+UPDATE 
+  products_equipments
+SET 
+  allocated_metric = @allocated_metric
+WHERE swidtag = @swidtag
+AND scope = @scope
+AND equipment_id = @equipment_id;

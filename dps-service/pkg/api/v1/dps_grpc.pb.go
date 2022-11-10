@@ -20,6 +20,7 @@ type DpsServiceClient interface {
 	StoreCoreFactorReference(ctx context.Context, in *StoreReferenceDataRequest, opts ...grpc.CallOption) (*StoreReferenceDataResponse, error)
 	GetAnalysisFileInfo(ctx context.Context, in *GetAnalysisFileInfoRequest, opts ...grpc.CallOption) (*GetAnalysisFileInfoResponse, error)
 	ViewFactorReference(ctx context.Context, in *ViewReferenceDataRequest, opts ...grpc.CallOption) (*ViewReferenceDataResponse, error)
+	GetAllocMetricDetails(ctx context.Context, in *GetAllocMetricDetailsRequest, opts ...grpc.CallOption) (*GetAllocMetricDetailsResponse, error)
 	ViewCoreFactorLogs(ctx context.Context, in *ViewCoreFactorLogsRequest, opts ...grpc.CallOption) (*ViewCoreFactorLogsResponse, error)
 	DataAnalysis(ctx context.Context, in *DataAnalysisRequest, opts ...grpc.CallOption) (*DataAnalysisResponse, error)
 	NotifyUpload(ctx context.Context, in *NotifyUploadRequest, opts ...grpc.CallOption) (*NotifyUploadResponse, error)
@@ -62,6 +63,15 @@ func (c *dpsServiceClient) GetAnalysisFileInfo(ctx context.Context, in *GetAnaly
 func (c *dpsServiceClient) ViewFactorReference(ctx context.Context, in *ViewReferenceDataRequest, opts ...grpc.CallOption) (*ViewReferenceDataResponse, error) {
 	out := new(ViewReferenceDataResponse)
 	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/ViewFactorReference", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dpsServiceClient) GetAllocMetricDetails(ctx context.Context, in *GetAllocMetricDetailsRequest, opts ...grpc.CallOption) (*GetAllocMetricDetailsResponse, error) {
+	out := new(GetAllocMetricDetailsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/GetAllocMetricDetails", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +184,7 @@ type DpsServiceServer interface {
 	StoreCoreFactorReference(context.Context, *StoreReferenceDataRequest) (*StoreReferenceDataResponse, error)
 	GetAnalysisFileInfo(context.Context, *GetAnalysisFileInfoRequest) (*GetAnalysisFileInfoResponse, error)
 	ViewFactorReference(context.Context, *ViewReferenceDataRequest) (*ViewReferenceDataResponse, error)
+	GetAllocMetricDetails(context.Context, *GetAllocMetricDetailsRequest) (*GetAllocMetricDetailsResponse, error)
 	ViewCoreFactorLogs(context.Context, *ViewCoreFactorLogsRequest) (*ViewCoreFactorLogsResponse, error)
 	DataAnalysis(context.Context, *DataAnalysisRequest) (*DataAnalysisResponse, error)
 	NotifyUpload(context.Context, *NotifyUploadRequest) (*NotifyUploadResponse, error)
@@ -199,6 +210,9 @@ func (UnimplementedDpsServiceServer) GetAnalysisFileInfo(context.Context, *GetAn
 }
 func (UnimplementedDpsServiceServer) ViewFactorReference(context.Context, *ViewReferenceDataRequest) (*ViewReferenceDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ViewFactorReference not implemented")
+}
+func (UnimplementedDpsServiceServer) GetAllocMetricDetails(context.Context, *GetAllocMetricDetailsRequest) (*GetAllocMetricDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllocMetricDetails not implemented")
 }
 func (UnimplementedDpsServiceServer) ViewCoreFactorLogs(context.Context, *ViewCoreFactorLogsRequest) (*ViewCoreFactorLogsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ViewCoreFactorLogs not implemented")
@@ -295,6 +309,24 @@ func _DpsService_ViewFactorReference_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DpsServiceServer).ViewFactorReference(ctx, req.(*ViewReferenceDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DpsService_GetAllocMetricDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllocMetricDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).GetAllocMetricDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/GetAllocMetricDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).GetAllocMetricDetails(ctx, req.(*GetAllocMetricDetailsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -512,6 +544,10 @@ var _DpsService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ViewFactorReference",
 			Handler:    _DpsService_ViewFactorReference_Handler,
+		},
+		{
+			MethodName: "GetAllocMetricDetails",
+			Handler:    _DpsService_GetAllocMetricDetails_Handler,
 		},
 		{
 			MethodName: "ViewCoreFactorLogs",

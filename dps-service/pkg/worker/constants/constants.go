@@ -40,6 +40,8 @@ const (
 	CorporateSourcingContract string = "corporate_sourcing_contract"
 	SupportNumber             string = "support_number"
 	LastPurchasedOrder        string = "last_purchased_order"
+	AllocatedMetric           string = "allocated_metric"
+	AllocatedUsers            string = "allocated_users"
 )
 
 // FILETYPES
@@ -49,7 +51,7 @@ const (
 	ProductsEquipments     string = "PRODUCTS_EQUIPMENTS"
 	ApplicationsProducts   string = "APPLICATIONS_PRODUCTS"
 	ApplicationsInstances  string = "APPLICATIONS_INSTANCES"
-	InstancesEquipments    string = "INSTANCES_EQUIPMENTS"
+	ApplicationEquipments  string = "APPLICATION_EQUIPMENTS"
 	InstancesProducts      string = "INSTANCES_PRODUCTS"
 	ProductsAcquiredRights string = "PRODUCTS_ACQUIREDRIGHTS"
 	METADATA               string = "METADATA"
@@ -95,7 +97,7 @@ var (
 		ProductsEquipments:     {ProdService},
 		ApplicationsInstances:  {AppService},
 		ApplicationsProducts:   {ProdService},
-		InstancesEquipments:    {AppService},
+		ApplicationEquipments:  {AppService},
 		InstancesProducts:      {AppService},
 		ProductsAcquiredRights: {ProdService}, // change to product-service in OPTISAM-1708
 		METADATA:               {EquipService},

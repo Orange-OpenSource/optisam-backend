@@ -120,9 +120,11 @@ func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes 
 	if input[IsAgg].(bool) {
 		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
+		mat.Name = input[MetricName].(string)
 		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
 	}
 	if err != nil {
+		logger.Log.Sugar().Infow("cannot compute licenses for metric OPS", "err", err.Error())
 		return 0, status.Error(codes.Internal, "cannot compute licenses for metric OPS")
 	}
 

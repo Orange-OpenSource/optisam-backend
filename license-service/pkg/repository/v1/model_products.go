@@ -22,14 +22,35 @@ type ProductChildData struct {
 
 // ProductAdditionalData ...
 type ProductAdditionalData struct {
-	Name              string
-	Swidtag           string
-	Version           string
-	Editor            string
-	NumOfApplications int32
-	NumofEquipments   int32
-	NumofOptions      int32
-	Child             []ProductChildData
+	Name                string
+	Swidtag             string
+	Version             string
+	Editor              string
+	NumOfApplications   int32
+	NumofEquipments     int32
+	NumofOptions        int32
+	ProdMetricAllocated string
+	Child               []ProductChildData
+}
+
+// ProdMetricAllocation represents allocated metrics on product equipment.
+type ProdMetricAllocation struct {
+	EquipmentId     string
+	MetricAllocated string
+}
+
+// ProductEquipment represents product equipment.
+type ProductEquipment struct {
+	EUID          string
+	EquipmentId   string
+	EquipmentType string
+}
+
+// ProductAllocationEquipmentMetrics  represents product equipment & allocated metrics.
+type ProductAllocationEquipmentMetrics struct {
+	SwidTag          string
+	MetricAllocation []*ProdMetricAllocation
+	ProductEquipment []*ProductEquipment
 }
 
 // ProductAcquiredRight represents product acquired rights.
@@ -40,6 +61,8 @@ type ProductAcquiredRight struct {
 	TotalCost         float64
 	TotalPurchaseCost float64
 	AvgUnitPrice      float64
+	Repartition       bool
+	TransformDetails  string
 }
 
 // ProductAdditionalInfo ...

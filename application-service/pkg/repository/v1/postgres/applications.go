@@ -40,6 +40,38 @@ func NewApplicationRepositoryTx(db *sql.Tx) *ApplicationRepositoryTx {
 	}
 }
 
+// UpsertApplicationEquipTx upserts products/ linking data
+func (p *ApplicationRepository) UpsertApplicationEquipTx(ctx context.Context, req *v1.UpsertApplicationEquipRequest) error {
+	var addEquipments []string
+
+	// Create Transaction
+	tx, err := p.db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.Log.Error("Failed to start Transaction", zap.Error(err))
+		return err
+	}
+	pt := NewApplicationRepositoryTx(tx)
+
+	if req.Equipments.GetOperation() == "add" {
+		addEquipments = req.Equipments.EquipmentId
+	}
+
+	for _, equip := range addEquipments {
+		error := pt.UpsertApplicationEquip(ctx, gendb.UpsertApplicationEquipParams{
+			ApplicationID: req.ApplicationId,
+			EquipmentID:   equip,
+			Scope:         req.GetScope()})
+		if error != nil {
+			tx.Rollback() // nolint: errcheck
+			logger.Log.Error("Failed to execute UpsertApplicaionEquip", zap.Error(error))
+			return error
+		}
+	}
+
+	tx.Commit() // nolint: errcheck
+	return nil
+}
+
 // UpsertInstanceTX ...
 func (p *ApplicationRepository) UpsertInstanceTX(ctx context.Context, req *v1.UpsertInstanceRequest) error {
 	// Create Transaction
@@ -111,6 +143,13 @@ func (p *ApplicationRepository) DropApplicationDataTX(ctx context.Context, scope
 		}
 		return err
 
+	}
+	if err = at.DeleteApplicationEquip(ctx, scope); err != nil {
+		logger.Log.Error("failed to delete application equipment data", zap.Error(err))
+		if err = tx.Rollback(); err != nil {
+			logger.Log.Error("Rollback is failed for application equipment data", zap.Error(err))
+		}
+		return err
 	}
 	if err := at.DeleteInstancesByScope(ctx, scope); err != nil {
 		logger.Log.Error("failed to delete application,instance,equipment linking data", zap.Error(err))

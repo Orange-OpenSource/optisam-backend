@@ -1,0 +1,26 @@
+<Predicates>
+
+metric.oracle_nup.transform : bool .
+metric.oracle_nup.transform_metric_name : string .
+
+metric.oracle_nup.transform_metric_name: string @index(exact) .
+
+
+product.allocation: [uid] @reverse .
+allocation.metric: string @index(exact,trigram) .
+
+<Types>
+MetricOracleNUP - 
+metric.oracle_nup.transform
+metric.oracle_nup.transform_metric_name     
+
+
+type MetricAllocation {
+    type_name
+    scopes
+    updated
+    created
+    allocation.metric
+    product.swidtag
+    equipment.id               
+}

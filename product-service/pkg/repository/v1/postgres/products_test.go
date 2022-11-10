@@ -67,12 +67,12 @@ func Test_UpsertProductTx(t *testing.T) {
 						Operation: "add",
 						Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
 							{
-								EquipmentId: "e1",
-								NumUser:     int32(1),
+								EquipmentId:    "e1",
+								AllocatedUsers: int32(1),
 							},
 							{
-								EquipmentId: "e2",
-								NumUser:     int32(2),
+								EquipmentId:    "e2",
+								AllocatedUsers: int32(2),
 							},
 						},
 					},
@@ -122,12 +122,12 @@ func Test_UpsertProductTx(t *testing.T) {
 						Operation: "add",
 						Equipmentusers: []*v1.UpsertProductRequestEquipmentEquipmentuser{
 							{
-								EquipmentId: "e6",
-								NumUser:     int32(1),
+								EquipmentId:    "e6",
+								AllocatedUsers: int32(1),
 							},
 							{
-								EquipmentId: "e7",
-								NumUser:     int32(2),
+								EquipmentId:    "e7",
+								AllocatedUsers: int32(2),
 							},
 						},
 					},

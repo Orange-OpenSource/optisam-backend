@@ -100,6 +100,7 @@ message ListReportRequest {
       "report_id",
       "report_type",
       "report_status",
+      "editor"
       "created_by",
       "created_on"
     ]
@@ -118,10 +119,17 @@ message Report {
   string report_status = 3;
   string created_by = 4;
   google.protobuf.Timestamp created_on = 5;
+  string editor = 6;
 }
 message DownloadReportRequest { int32 reportID = 1;
   string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; }
-message DownloadReportResponse { bytes report_data = 1; }
+message DownloadReportResponse { 
+  string report_type = 1;
+  bytes report_data = 2; 
+  string scope = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_on = 5;
+}
 
 enum SortOrder {
   asc = 0;
