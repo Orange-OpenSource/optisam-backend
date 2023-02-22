@@ -505,8 +505,6 @@ func CreateSharedContext(api string, appCred config.Application) (*context.Conte
 	authStr := fmt.Sprintf("Bearer %s", respMap["access_token"].(string))
 	md := metadata.Pairs("Authorization", authStr)
 
-	// for debug
-	// md := metadata.Pairs("Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJhZG1pbkB0ZXN0LmNvbSIsIkxvY2FsZSI6ImVuIiwiUm9sZSI6IlN1cGVyQWRtaW4iLCJTb2NwZXMiOlsiT1NOIiwiT0ZSIiwiVUlUIiwiT0xOIiwiT0NNIiwiQ0xSIiwiU1BDIiwiVkVSIiwiUEVSIiwiQU5KIiwiTUFOIiwiQVBJIiwiT0pPIiwiTVRTIiwiQUFLIiwiQUtBIiwiTU9OIiwiU0hJIiwiUFFSIiwiQ0hBIiwiUkVHIiwiTElDIiwiRFBLIiwiQUNSIiwiTVRYIiwiUENUIl0sImV4cCI6MTY3MzQ2Njk2MiwiaWF0IjoxNjczNDU5NzYyLCJpc3MiOiJPcmFuZ2UiLCJzdWIiOiJBY2Nlc3MgVG9rZW4ifQ.GrsyLktAhQscBsCtJ2USb4nHDUcOvSqffSMwfaSVgyZLKkXomzTlvUMd04yisKssTOmydiUpizflt0cUyyKgoL1iBKAt9fv0iF0DWGliGT8cv3buS6XBcqpRZ-iTDx1EH8aJZ2nFvyUp_xPUqnF0mkABj3028vhzMapFe2C6Fg3MUsdLDL2mgY-YWYAHhd5DBVNW7G_0xNfpUWcGhahOFuslQiVpXxURhqzx6Aw2khTLYjX8LS8mXzWpz_tqztxBszo0JSLiZ2rumQEO5l24WT-2SZA2OdKgC8DkY6WIEP9MUNc78EGkBkWKVw3qUrZ3voWvabwUfEw_OeaSkn58CA")
 
 	ctx = metadata.NewIncomingContext(ctx, md)
 	logger.Log.Info("CreateSharedContext", zap.Any("CreateSharedContext executed", time.Now()))
