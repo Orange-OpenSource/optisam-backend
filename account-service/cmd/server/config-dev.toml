@@ -31,7 +31,7 @@ name = "account"
 
 [redis]
 host = "red-orange-redis-tcp.dev-optisam.svc:6379"
-password = "Opt!5@m2023"
+#password = ""
 db = 0
 username = "admin"
 
