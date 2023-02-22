@@ -37,3 +37,10 @@ sortBy = "name"
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+product = "svc-optisam-product-prod.prod-optisam.svc:8090"

@@ -24,18 +24,18 @@ ismultiqueue = true
 time = "@every 3m"
 
 [httpservers.Address]
-auth = "svc-optisam-auth.optisam-performance.svc:80"
+auth = "svc-optisam-auth-performance.optisam-performance.svc:80"
 
 [grpcservers]
 apikey = "12345678"
 timeout = 1000
 
 [grpcservers.Address]
-product = "svc-optisam-product.optisam-performance.svc:8090"
-application = "svc-optisam-application.optisam-performance.svc:8090"
-acqright = "svc-optisam-acqrights.optisam-performance.svc:8090"
-equipment = "svc-optisam-equipment.optisam-performance.svc:8090"
-account = "svc-optisam-account.optisam-performance.svc:8090"
+product = "svc-optisam-product-performance.optisam-performance.svc:8090"
+application = "svc-optisam-application-performance.optisam-performance.svc:8090"
+acqright = "svc-optisam-acqrights-performance.optisam-performance.svc:8090"
+equipment = "svc-optisam-equipment-performance.optisam-performance.svc:8090"
+account = "svc-optisam-account-performance.optisam-performance.svc:8090"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -74,3 +74,11 @@ sortBy = "name"
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

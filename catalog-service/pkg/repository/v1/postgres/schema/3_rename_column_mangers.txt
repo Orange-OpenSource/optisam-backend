@@ -1,0 +1,8 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+ALTER TABLE editor RENAME COLUMN manager TO partner_managers;
+ALTER TABLE editor ADD UNIQUE (name);
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back
+ALTER TABLE editor DROP CONSTRAINT editor_name_key;
+ALTER TABLE TableName RENAME COLUMN partner_managers TO manager;

@@ -72,6 +72,8 @@ func RunServer() error {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
+	} else if os.Getenv("ENV") == "pc" {
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -116,7 +118,6 @@ func RunServer() error {
 		logger.Log.Error(err.Error())
 		os.Exit(3)
 	}
-
 	ctx := context.Background()
 	config.SetConfig(*cfg)
 	if cfg.MaxAPIWorker == 0 {
@@ -274,7 +275,7 @@ func RunServer() error {
 	cron.ConfigInit(cfg.Cron)
 
 	// cron Job
-	cronJob.Init(*Queue, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), cfg.FilesLocation, cfg.ArchiveLocation, cfg.RawdataLocation, v1API, verifyKey, cfg.IAM.APIKey, dbObj, cfg.WaitLimitCount)
+	cronJob.Init(*Queue, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), cfg.FilesLocation, cfg.ArchiveLocation, cfg.RawdataLocation, v1API, verifyKey, cfg.IAM.APIKey, dbObj, cfg.WaitLimitCount, cfg.Application)
 
 	// Below command will trigger the cron job as soon as the service starts
 	cronJob.Job()

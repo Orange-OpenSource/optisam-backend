@@ -4,12 +4,23 @@ WHERE
 equipment_id = $1;
 
 -- name: ListEditors :many
-SELECT DISTINCT ON (p.product_editor) p.product_editor 
-FROM products p 
-WHERE p.scope = ANY(@scope::TEXT[]) AND LENGTH(p.product_editor) > 0;
+SELECT DISTINCT (p.product_editor) AS product_editor FROM products p WHERE p.scope = ANY(@scope::TEXT[]) AND LENGTH(p.product_editor) > 0 
+UNION 
+SELECT DISTINCT (ec.name) AS product_editor FROM editor_catalog AS ec WHERE LENGTH(ec.name) > 0;
+
+-- name: ListEditorsScope :many
+SELECT
+    DISTINCT ON (p.product_editor) p.product_editor
+FROM
+    products p
+WHERE
+    p.scope = ANY(@scope :: TEXT [])
+    AND LENGTH(p.product_editor) > 0;
 
 -- name: ListProductsView :many
-SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments ,COALESCE(acq.total_cost,0)::FLOAT as cost 
+SELECT count(*) OVER() AS totalRecords,p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pc.swid_tag_product as product_swid_tag,pc.id as product_id,
+ v.swid_tag_version as version_swid_tag, ec.id as editor_id, COALESCE(pa.num_of_applications,0)::INTEGER as num_of_applications , COALESCE(pe.num_of_equipments,0)::INTEGER as num_of_equipments ,COALESCE(acq.total_cost,0)::FLOAT as cost
+
 FROM products p 
 LEFT JOIN 
 (SELECT swidtag, count(application_id) as num_of_applications FROM products_applications WHERE scope = ANY(@scope::TEXT[]) GROUP BY swidtag) pa
@@ -20,6 +31,9 @@ ON p.swidtag = pe.swidtag
 LEFT JOIN
 (SELECT swidtag, sum(total_cost) as total_cost FROM acqrights WHERE scope = ANY(@scope::TEXT[]) GROUP BY swidtag) acq
 ON p.swidtag = acq.swidtag
+Left JOIN product_catalog pc ON p.product_name = pc.name AND p.product_editor = pc.editor_name
+Left JOIN version_catalog v ON pc.id = v.p_id  AND v.name = p.product_version
+LEFT JOIN editor_catalog ec ON ec.name = p.product_editor
 WHERE
   p.scope = ANY(@scope::TEXT[])
   AND (CASE WHEN @lk_swidtag::bool THEN lower(p.swidtag) LIKE '%' || lower(@swidtag::TEXT) || '%' ELSE TRUE END)
@@ -28,7 +42,7 @@ WHERE
   AND (CASE WHEN @is_product_name::bool THEN lower(p.product_name) = lower(@product_name) ELSE TRUE END)
   AND (CASE WHEN @lk_product_editor::bool THEN lower(p.product_editor) LIKE '%' || lower(@product_editor::TEXT) || '%' ELSE TRUE END)
   AND (CASE WHEN @is_product_editor::bool THEN lower(p.product_editor) = lower(@product_editor) ELSE TRUE END)
-  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments,acq.total_cost
+  GROUP BY p.swidtag,p.product_name,p.product_version,p.product_category,p.product_editor,p.product_edition,pa.num_of_applications, pe.num_of_equipments,acq.total_cost,pc.swid_tag_product,pc.id,v.swid_tag_version, ec.id
   ORDER BY
   CASE WHEN @swidtag_asc::bool THEN p.swidtag END asc,
   CASE WHEN @swidtag_desc::bool THEN p.swidtag END desc,
@@ -203,14 +217,21 @@ SELECT ac.swidtag,
        ac.product_name,
        ac.product_editor,
        ac.version,
+       p.swid_tag_product as product_swid_tag,
+       v.swid_tag_version as version_swid_tag,
        ARRAY_AGG(DISTINCT acmetrics)::TEXT[] as metrics
-FROM acqrights ac, unnest(string_to_array(ac.metric,',')) as acmetrics
+FROM acqrights ac
+Left JOIN product_catalog p ON ac.product_name = p.name AND ac.product_editor = p.editor_name
+Left JOIN version_catalog v ON p.id = v.p_id  AND v.name = ac.version,
+unnest(string_to_array(ac.metric,',')) as acmetrics
 WHERE ac.scope = @scope
     AND ac.swidtag = @swidtag
 GROUP BY ac.swidtag,
          ac.product_name,
          ac.product_editor,
-         ac.version;
+         ac.version,
+         p.swid_tag_product,
+         v.swid_tag_version;
 
 -- name: GetProductOptions :many
 SELECT p.swidtag,p.product_name,p.product_edition,p.product_editor,p.product_version
@@ -297,13 +318,38 @@ DELETE FROM products_equipments
 WHERE swidtag = @product_id and equipment_id = ANY(@equipment_id::TEXT[]) and scope = @scope;
 
 -- name: GetProductsByEditor :many
-SELECT p.swidtag, p.product_name, p.product_version
+SELECT p.swidtag swidtag, p.product_name product_name, p.product_version product_version
 FROM products p
 JOIN 
 (SELECT swidtag FROM products_equipments WHERE scope = ANY(@scopes::TEXT[]) GROUP BY swidtag) pe
 ON p.swidtag = pe.swidtag
-WHERE p.product_editor = @product_editor and p.scope = ANY(@scopes::TEXT[]);
+WHERE p.product_editor = @product_editor and p.scope = ANY(@scopes::TEXT[])
+UNION
+select vc.swid_tag_system swidtag,pc.name product_name,vc.name product_version from product_catalog pc 
+left join version_catalog vc on pc.id = vc.p_id
+left join editor_catalog ec on pc.editorid = ec.id
+WHERE ec.name = @product_editor;
 
+-- name: GetProductsByEditorScope :many
+SELECT
+    p.swidtag,
+    p.product_name,
+    p.product_version
+FROM
+    products p
+    JOIN (
+        SELECT
+            swidtag
+        FROM
+            products_equipments
+        WHERE
+            scope = ANY(@scopes :: TEXT [])
+        GROUP BY
+            swidtag
+    ) pe ON p.swidtag = pe.swidtag
+WHERE
+    p.product_editor = @product_editor
+    and p.scope = ANY(@scopes :: TEXT []);
 -- name: UpsertAcqRights :exec
 INSERT INTO acqrights (
     sku,
@@ -364,9 +410,13 @@ SET swidtag = $2,
 
 
 -- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition, p.swid_tag_product as product_swid_tag,
+       v.swid_tag_version as version_swid_tag,ec.id as editor_id,p.id as product_id
 FROM 
 acqrights a
+Left JOIN product_catalog p ON a.product_name = p.name AND a.product_editor = p.editor_name
+Left JOIN version_catalog v ON p.id = v.p_id  AND v.name = a.version
+LEFT JOIN editor_catalog ec ON ec.name = a.product_editor
 WHERE 
   a.scope = ANY(@scope::TEXT[])
   AND (CASE WHEN @lk_swidtag::bool THEN lower(a.swidtag) LIKE '%' || lower(@swidtag::TEXT) || '%' ELSE TRUE END)
@@ -417,6 +467,7 @@ WHERE
 Select
     DISTINCT agg.aggregation_name,
     agg.product_editor,
+    ec.id as editor_id,
     agg.swidtags,
     COALESCE(
                     (SELECT sum(y.num_of_applications)
@@ -457,6 +508,7 @@ from
         GROUP BY
             a.aggregation_id
     ) ar ON agg.id = ar.aggregation_id
+    LEFT JOIN editor_catalog ec on ec.name = agg.product_editor
 WHERE
     agg.scope = @scope
 GROUP BY
@@ -464,14 +516,15 @@ GROUP BY
     agg.product_editor,
     agg.swidtags,
     agg.id,
-    ar.total_cost
+    ar.total_cost,
+    ec.id
 LIMIT
     @page_size OFFSET @page_num;
 
 -- name: ListAcqRightsAggregation :many
 SELECT count(*) OVER() AS totalRecords,
     a.sku,
-    a.aggregation_id, 
+    a.aggregation_id,
     a.metric,
     a.ordering_date,
     a.corporate_sourcing_contract,
@@ -501,16 +554,65 @@ SELECT count(*) OVER() AS totalRecords,
     agg.aggregation_name,
     agg.product_editor,
     agg.products,
-    agg.swidtags
- from aggregated_rights a
-  LEFT JOIN (
+    agg.swidtags,
+    ec.id as editor_id,
+    agg.mapping
+from
+    aggregated_rights a
+    LEFT JOIN (
         SELECT
             ag.id,
-            ag.aggregation_name, 
+            ag.aggregation_name,
             ag.scope,
             ag.product_editor,
             ag.products,
-            ag.swidtags
+            ag.swidtags,
+            (
+                Select
+                    coalesce(
+                        (
+                            SELECT
+                                array_to_json(array_agg(row_to_json(mapping)))
+                            from
+                                (
+                                    SELECT
+                                        products.product_name,
+                                        products.product_version
+                                    FROM
+                                        products
+                                    where
+                                        swidtag in (
+                                            SELECT
+                                                UNNEST (ag.swidtags)
+                                        )
+                                    UNION
+                                    select
+                                        pc.name product_name,
+                                        vc.name product_version
+                                    from
+                                        product_catalog pc
+                                        join version_catalog vc on pc.id = vc.p_id
+                                    where
+                                        vc.swid_tag_system in (
+                                            SELECT
+                                                UNNEST (ag.swidtags)
+                                        )
+                                    UNION
+                                    SELECT
+                                        acqrights.product_name,
+                                        acqrights.version
+                                    FROM
+                                        acqrights
+                                    where
+                                        swidtag in (
+                                            SELECT
+                                                UNNEST (ag.swidtags)
+                                        )
+                                ) as mapping
+                        ),
+                        '[]' :: json
+                    ) as mapping
+            )
         FROM
             aggregations ag
         WHERE
@@ -518,6 +620,7 @@ SELECT count(*) OVER() AS totalRecords,
         GROUP BY
             ag.id
     ) agg ON agg.id = a.aggregation_id
+    LEFT JOIN editor_catalog ec on ec.name = agg.product_editor
 WHERE a.scope = @scope
   AND (CASE WHEN @is_agg_name::bool THEN lower(agg.aggregation_name) = lower(@aggregation_name) ELSE TRUE END)
   AND (CASE WHEN @lk_agg_name::bool THEN lower(agg.aggregation_name) LIKE '%' || lower(@aggregation_name) || '%' ELSE TRUE END)
@@ -655,37 +758,124 @@ WHERE id = @id
     AND scope = @scope;
 
 -- name: ListAggregations :many
-SELECT id,
-       aggregation_name,
-       product_editor,
-       products,
-       swidtags,
-       scope
-FROM aggregations
-WHERE scope = @scope
-    AND (CASE WHEN @is_agg_name::bool THEN lower(aggregation_name) = lower(@aggregation_name) ELSE TRUE END)
-    AND (CASE WHEN @ls_agg_name::bool THEN lower(aggregation_name) LIKE '%' || lower(@aggregation_name) || '%' ELSE TRUE END)
-    AND (CASE WHEN @is_product_editor::bool THEN lower(product_editor) = lower(@product_editor) ELSE TRUE END)
-    AND (CASE WHEN @lk_product_editor::bool THEN lower(product_editor) LIKE '%' || lower(@product_editor) || '%' ELSE TRUE END)
-    ORDER BY
-    CASE WHEN @agg_name_asc::bool THEN aggregation_name END asc,
-    CASE WHEN @agg_name_desc::bool THEN aggregation_name END desc,
-    CASE WHEN @product_editor_asc::bool THEN product_editor END asc,
-    CASE WHEN @product_editor_desc::bool THEN product_editor END desc
-  LIMIT @page_size OFFSET @page_num;
+SELECT
+    aggregations.id,
+    aggregation_name,
+    product_editor,
+    products,
+    swidtags,
+    scope,
+    ec.id as editor_id,
+    (
+        Select
+            coalesce(
+                (
+                    SELECT
+                        array_to_json(array_agg(row_to_json(mapping)))
+                    from
+                        (
+                            SELECT
+                                products.product_name,
+                                products.product_version
+                            FROM
+                                products
+                            where
+                                swidtag in (
+                                    SELECT
+                                        UNNEST (swidtags)
+                                )
+                                UNION
+                                select
+                                    pc.name product_name,
+                                    vc.name product_version
+                                from
+                                    product_catalog pc
+                                    join version_catalog vc on pc.id = vc.p_id
+                                where
+                                    vc.swid_tag_system in (
+                                        SELECT
+                                            UNNEST (swidtags)
+                                    )
+                            UNION
+                            SELECT
+                                acqrights.product_name,
+                                acqrights.version
+                            FROM
+                                acqrights
+                            where
+                                swidtag in (
+                                    SELECT
+                                        UNNEST (swidtags)
+                                )
+                        ) as mapping
+                ),
+                '[]' :: json
+            )
+    )
+FROM
+    aggregations
+    LEFT join editor_catalog ec on ec.name = aggregations.product_editor
+WHERE
+    aggregations.scope = @scope
+    AND (
+        CASE
+            WHEN @is_agg_name :: bool THEN lower(aggregation_name) = lower(@aggregation_name)
+            ELSE TRUE
+        END
+    )
+    AND (
+        CASE
+            WHEN @ls_agg_name :: bool THEN lower(aggregation_name) LIKE '%' || lower(@aggregation_name) || '%'
+            ELSE TRUE
+        END
+    )
+    AND (
+        CASE
+            WHEN @is_product_editor :: bool THEN lower(product_editor) = lower(@product_editor)
+            ELSE TRUE
+        END
+    )
+    AND (
+        CASE
+            WHEN @lk_product_editor :: bool THEN lower(product_editor) LIKE '%' || lower(@product_editor) || '%'
+            ELSE TRUE
+        END
+    )
+ORDER BY
+    CASE
+        WHEN @agg_name_asc :: bool THEN aggregation_name
+    END asc,
+    CASE
+        WHEN @agg_name_desc :: bool THEN aggregation_name
+    END desc,
+    CASE
+        WHEN @product_editor_asc :: bool THEN product_editor
+    END asc,
+    CASE
+        WHEN @product_editor_desc :: bool THEN product_editor
+    END desc
+LIMIT
+    @page_size OFFSET @page_num;
 
 -- name: ListProductsForAggregation :many
-SELECT acq.swidtag, acq.product_name, acq.product_editor 
+SELECT acq.swidtag, acq.product_name, acq.product_editor ,acq.version as product_version
 FROM acqrights acq 
 WHERE acq.scope = @scope 
 AND acq.swidtag NOT IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope) 
 AND acq.product_editor = @editor
 UNION
-SELECT prd.swidtag, prd.product_name, prd.product_editor 
+SELECT prd.swidtag, prd.product_name, prd.product_editor,prd.product_version
 FROM products prd 
 WHERE prd.scope = @scope 
 AND prd.swidtag NOT IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope)
-AND prd.product_editor = @editor;
+AND prd.product_editor = @editor
+UNION
+select vc.swid_tag_system swidtag,pc.name product_name,ec.name product_editor,vc.name product_version from product_catalog pc 
+join version_catalog vc on pc.id = vc.p_id 
+left join editor_catalog ec on pc.editorid = ec.id
+WHERE ec.name = @editor
+AND vc.swid_tag_system NOT IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope)
+;
 
 -- name: ListEditorsForAggregation :many
 SELECT DISTINCT acq.product_editor 
@@ -929,12 +1119,14 @@ Insert into products_equipments (swidtag, equipment_id, num_of_users,scope, allo
 Do Update set num_of_users = $3, allocated_metric = $5;
 
 -- name: ProductsNotDeployed :many
-SELECT DISTINCT(swidtag), product_name, product_editor, version FROM acqrights
+SELECT DISTINCT(swidtag), product_name, product_editor,ec.id, version FROM acqrights
+Left Join editor_catalog ec on ec.name = acqrights.product_editor
 WHERE acqrights.swidtag NOT IN (SELECT swidtag FROM products_equipments WHERE products_equipments.scope = @scope)
 AND acqrights.scope = @scope;
 
 -- name: ProductsNotAcquired :many
-SELECT swidtag, product_name, product_editor, product_version  FROM products
+SELECT swidtag, product_name, product_editor, product_version,ec.id  FROM products
+Left Join editor_catalog ec on ec.name = products.product_editor
 WHERE products.swidtag NOT IN (SELECT swidtag FROM acqrights WHERE acqrights.scope = @scope UNION SELECT unnest(swidtags) as swidtags from aggregations INNER JOIN aggregated_rights ON aggregations.id = aggregated_rights.aggregation_id where aggregations.scope = @scope)
 AND products.swidtag IN (SELECT swidtag FROM products_equipments WHERE products_equipments.scope = @scope)
 AND products.scope = @scope;
@@ -1082,7 +1274,7 @@ Select
     agg.product_editor,
     COALESCE(pname,'')::TEXT as name,
     COALESCE(pversion,'')::TEXT as version,
-    p_id,
+    prod_id,
     COALESCE(ar.total_cost,0)::NUMERIC(15,2) as total_cost
 from
 	aggregations agg
@@ -1090,11 +1282,18 @@ from
 		select 
 			p.product_name as pname,
 			p.product_version as pversion,
-			p.swidtag as p_id
+			p.swidtag as prod_id
 			from products p 
-		where 
+		    where 
 			p.scope =  @scope
-	) p on p_id  = ANY(agg.swidtags::TEXT[])
+        UNION
+		select
+			pc.name as pname,
+			v.name as pversion,
+			v.swid_tag_system as prod_id
+			from product_catalog pc
+			left join version_catalog v on pc.id =v.p_id
+	) p on prod_id  = ANY(agg.swidtags::TEXT[])
     LEFT JOIN (
         SELECT
             pa.swidtag ,
@@ -1105,7 +1304,7 @@ from
             pa.scope = @scope
         GROUP BY
             pa.swidtag
-    ) pa ON p_id = pa.swidtag
+    ) pa ON prod_id = pa.swidtag
     LEFT JOIN (
         SELECT
             pe.swidtag ,
@@ -1116,7 +1315,7 @@ from
             pe.scope = @scope
         GROUP BY
             pe.swidtag
-    ) pe ON p_id = pe.swidtag
+    ) pe ON prod_id = pe.swidtag
     LEFT JOIN (
         SELECT
             a.aggregation_id,
@@ -1132,15 +1331,22 @@ WHERE
      agg.scope = @scope and agg.aggregation_name = @aggregation_name;
 
 -- name: ListSelectedProductsForAggregration :many
-SELECT acq.swidtag, acq.product_name, acq.product_editor
+SELECT acq.swidtag, acq.product_name, acq.product_editor,acq.version as product_version
 FROM acqrights acq 
 WHERE acq.scope = @scope 
 AND acq.swidtag IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope and agg.id = @id) 
 UNION
-SELECT prd.swidtag, prd.product_name, prd.product_editor
+SELECT prd.swidtag, prd.product_name, prd.product_editor, prd.product_version
 FROM products prd 
 WHERE prd.scope = @scope 
-AND prd.swidtag IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope and agg.id = @id);
+AND prd.swidtag IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope and agg.id = @id)
+UNION
+select vc.swid_tag_system swidtag,pc.name product_name,ec.name product_editor,vc.name product_version from product_catalog pc 
+join version_catalog vc on pc.id = vc.p_id 
+left join editor_catalog ec on pc.editorid = ec.id
+WHERE ec.name =  @editor
+AND vc.swid_tag_system  IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope and agg.id = @id);
+
 
 -- name: GetAggregationByID :one
 SELECT *
@@ -1193,11 +1399,11 @@ WHERE scope = @scope
 
 -- name: GetIndividualProductForAggregationCount :one
 SELECT count(*) 
-FROM products p 
-WHERE p.scope = @scope 
-    AND p.swidtag = ANY(@swidtags::TEXT[]);
-
-
+FROM (
+    Select p.product_name from products p WHERE p.scope = @scope 
+                                                AND p.swidtag = ANY(@swidtags::TEXT[])
+    UNION
+    select v.name from version_catalog v WHERE v.swid_tag_system = ANY(@swidtags::TEXT[]) AND v.name != '') t1;
 
 -- name: InsertOverAllComputedLicences :exec
 INSERT INTO overall_computed_licences (

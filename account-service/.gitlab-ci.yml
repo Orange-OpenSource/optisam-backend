@@ -89,8 +89,7 @@
     - cd ..
     - mkdir -p /kaniko/.docker
     - echo $DOCKER_AUTH_CONFIG > /kaniko/.docker/config.json
-  # - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/account-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/account-service:$TAG  
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/account-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/account-service-$ENV:$TAG  
 
 .account-deploy_noprod:
   extends: .account-template
@@ -100,15 +99,15 @@
     - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT}
     - oc create configmap config-account-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
-    - oc delete deploymentconfig optisam-account
+    - oc delete deploymentconfig optisam-account-$ENV
     - oc process -f account-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-account
-    - |
-      end=$((SECONDS+400))
-      while [ "$(oc get pods -l=app='optisam-account' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
-        sleep 8
-        echo "Waiting for pod to be ready."
-      done
+    - oc rollout status dc/optisam-account-$ENV
+#    - |
+#      end=$((SECONDS+400))
+#      while [ "$(oc get pods -l=app='optisam-account-$ENV' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+#        sleep 8
+#        echo "Waiting for pod to be ready."
+#      done
 
 .account-deploy_prod:
   extends: .account-template
@@ -120,9 +119,9 @@
     - echo "Creating Openshift Resources"
     - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT_PROD}
-    - oc create configmap config-account-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
-    - oc process -f account-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-account
+    - oc create configmap config-account-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f account-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-account-$ENV
 
 .account-integration_test:
   extends: .account-template

@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"optisam-backend/common/optisam/config"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue"
@@ -26,14 +27,17 @@ var (
 	AuthAPI   string
 	VerifyKey *rsa.PublicKey
 	APIKey    string
+	AppConfig config.Application
 )
 
 // JobConfigInit ...
-func JobConfigInit(q workerqueue.Queue, authapi string, key *rsa.PublicKey, apiKey string) {
+func JobConfigInit(q workerqueue.Queue, authapi string, key *rsa.PublicKey, apiKey string, config config.Application) {
 	Queue = q
 	AuthAPI = authapi
 	VerifyKey = key
 	APIKey = apiKey
+	AppConfig = config
+
 }
 
 // Job will be executed by cron
@@ -71,8 +75,8 @@ func createSharedContext(api string) (*context.Context, error) {
 	ctx := context.Background()
 	respMap := make(map[string]interface{})
 	data := url.Values{
-		"username":   {"admin@test.com"},
-		"password":   {"Welcome@123"},
+		"username":   {AppConfig.UserNameSuperAdmin},
+		"password":   {AppConfig.PasswordSuperAdmin},
 		"grant_type": {"password"},
 	}
 

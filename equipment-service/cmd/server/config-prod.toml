@@ -37,9 +37,9 @@ apikey = "12345678"
 timeout = 1000
 
 [grpcservers.Address]
-account = "svc-optisam-account.prod-optisam.svc:8090"
-metric = "svc-optisam-metric.prod-optisam.svc:8090"
-product = "svc-optisam-product.prod-optisam.svc:8090"
+account = "svc-optisam-account-prod.prod-optisam.svc:8090"
+metric = "svc-optisam-metric-prod.prod-optisam.svc:8090"
+product = "svc-optisam-product-prod.prod-optisam.svc:8090"
 
 [app.params]
 pageSize = 20

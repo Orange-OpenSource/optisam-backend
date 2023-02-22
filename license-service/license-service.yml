@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-license
+      name: svc-optisam-license-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-license
+        run: optisam-license-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP
       selector:
-        app: optisam-license
+        app: optisam-license-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-license
+      name: route-svc-optisam-license-${ENV}
       labels:
-        run: optisam-license
+        run: optisam-license-${ENV}
     spec:
       host: optisam-license-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-license
+        name: svc-optisam-license-${ENV}
       port:
         targetPort: api
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-license-instrumentation
+      name: route-svc-optisam-license-instrumentation-${ENV}
       labels:
-        run: optisam-license
+        run: optisam-license-${ENV}
     spec:
       host: optisam-license-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-license
+        name: svc-optisam-license-${ENV}
       port:
         targetPort: instapi        
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-license
+      name: optisam-license-${ENV}
       labels:
-        app: optisam-license
+        app: optisam-license-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-license
+        app: optisam-license-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,19 +77,22 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-license
+            app: optisam-license-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-license
+          name: optisam-license-${ENV}
         spec:
           containers:
-            - name: optisam-license
-              image: ${DOCKER_REGISTRY}/optisam/license-service:${TAG}
+            - name: optisam-license-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/license-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -125,13 +128,13 @@ objects:
                   cpu: "120m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-license-${ENV}
             - name: secret-volume

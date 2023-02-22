@@ -148,6 +148,13 @@ service AccountService {
       get: "/api/v1/account/scopes/{scope}"
     };
   }
+  
+  //GetScope returns scope details for a particular scope
+  rpc GetScopeLists(GetScopeListRequest) returns (ScopeListResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/account/scopes/list"
+    };
+  }
 }
 
 message GetScopeRequest{
@@ -369,3 +376,11 @@ message UserQueryParams{
   bool all_users = 1;
 }
 
+
+message GetScopeListRequest {
+  repeated string scopes =1;
+}
+
+message ScopeListResponse {
+  repeated string scope_names =1;
+}

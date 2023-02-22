@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-metric
+      name: svc-optisam-metric-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-metric
+        run: optisam-metric-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP           
       selector:
-        app: optisam-metric
+        app: optisam-metric-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-metric
+      name: route-svc-optisam-metric-${ENV}
       labels:
-        run: optisam-metric
+        run: optisam-metric-${ENV}
     spec:
       host: optisam-metric-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-metric
+        name: svc-optisam-metric-${ENV}
       port:
         targetPort: api           
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-metric-instrumentation
+      name: route-svc-optisam-metric-instrumentation-${ENV}
       labels:
-        run: optisam-metric
+        run: optisam-metric-${ENV}
     spec:
       host: optisam-metric-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-metric
+        name: svc-optisam-metric-${ENV}
       port:
         targetPort: instapi          
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-metric
+      name: optisam-metric-${ENV}
       labels:
-        app: optisam-metric
+        app: optisam-metric-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-metric
+        app: optisam-metric-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,19 +77,22 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-metric
+            app: optisam-metric-${ENV}
             internal-elasticsearch: 'true'
-          name: optisam-metric
+          name: optisam-metric-${ENV}
         spec:
           containers:
-            - name: optisam-metric
-              image: ${DOCKER_REGISTRY}/optisam/metric-service:${TAG}
+            - name: optisam-metric-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/metric-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -125,13 +128,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-metric-${ENV}
             - name: secret-volume

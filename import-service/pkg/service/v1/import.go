@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	v1Acc "optisam-backend/account-service/pkg/api/v1"
+	v1Catalog "optisam-backend/catalog-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	rest_middleware "optisam-backend/common/optisam/middleware/rest"
@@ -27,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/julienschmidt/httprouter"
 	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
@@ -35,10 +37,11 @@ import (
 
 type importServiceServer struct {
 	// grpcServers map[string]*grpc.ClientConn
-	dpsClient v1.DpsServiceClient
-	simClient v1Simulation.SimulationServiceClient
-	accClient v1Acc.AccountServiceClient
-	config    *config.Config
+	dpsClient     v1.DpsServiceClient
+	simClient     v1Simulation.SimulationServiceClient
+	accClient     v1Acc.AccountServiceClient
+	catalogClient v1Catalog.ProductCatalogClient
+	config        *config.Config
 }
 
 type uploadType string
@@ -61,8 +64,9 @@ const (
 // NewImportServiceServer creates import service
 func NewImportServiceServer(grpcServers map[string]*grpc.ClientConn, config *config.Config) ImportServiceServer {
 	return &importServiceServer{config: config, dpsClient: v1.NewDpsServiceClient(grpcServers["dps"]),
-		simClient: v1Simulation.NewSimulationServiceClient(grpcServers["simulation"]),
-		accClient: v1Acc.NewAccountServiceClient(grpcServers["account"]),
+		simClient:     v1Simulation.NewSimulationServiceClient(grpcServers["simulation"]),
+		accClient:     v1Acc.NewAccountServiceClient(grpcServers["account"]),
+		catalogClient: v1Catalog.NewProductCatalogClient(grpcServers["catalog"]),
 	}
 }
 
@@ -1096,4 +1100,196 @@ func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Re
 	}
 	http.ServeContent(res, req, fileName, time.Now().UTC(), bytes.NewReader(fileData))
 	return
+}
+
+func (i *importServiceServer) UploadCatalogData(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+	var err error
+
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		logger.Log.Error("ClaimsNotFound")
+		http.Error(res, "ClaimsNotFound", http.StatusBadRequest)
+		return
+	}
+	if userClaims.Role != claims.RoleSuperAdmin {
+		logger.Log.Error("Role Validation Error")
+		http.Error(res, "Role Validation Error", http.StatusBadRequest)
+		return
+	}
+
+	if err = req.ParseMultipartForm(32 << 20); nil != err {
+		logger.Log.Error("ParsingFailure", zap.Error(err))
+		http.Error(res, "ParsingFailure", http.StatusInternalServerError)
+		return
+	}
+	var status int
+	var resp interface{}
+
+	resp, status, err = saveCatalogProducts(i, req)
+	if err != nil {
+		logger.Log.Error("Failed to upload file ", zap.Error(err))
+		http.Error(res, err.Error(), status)
+		return
+	}
+	if err != nil {
+		logger.Log.Error("Failed to upload file ", zap.Error(err))
+		http.Error(res, err.Error(), status)
+		return
+	}
+	out, jrr := json.Marshal(resp)
+	if jrr != nil {
+		logger.Log.Error("Failed to marshal the response", zap.Error(jrr))
+		http.Error(res, "ResponseParsingFailure", http.StatusInternalServerError)
+	}
+	res.Write(out) //nolint
+}
+
+func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.UploadResponse, int, error) {
+	file, fileInfo, err := req.FormFile("file")
+	defer file.Close()
+	if fileInfo.Size > i.config.MaxFileSize*1024*1024 {
+		logger.Log.Error("File uploaded is larger than allowed", zap.Error(err))
+		return nil, http.StatusBadRequest, errors.New("maximum file allowded is :" + strconv.FormatInt(i.config.MaxFileSize, 10) + "Mbs")
+	}
+	if err != nil {
+		logger.Log.Error("Failed to read reference file", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		logger.Log.Error("Failed to parse reference file", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	sheets := f.GetSheetList()
+	if len(sheets) == 0 {
+		logger.Log.Error("Reference file doesn't have any sheet", zap.Error(err))
+		return nil, http.StatusBadRequest, err
+	}
+	rows, err := f.GetRows(sheets[0])
+	if err != nil {
+		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.String("sheet", sheets[0]))
+		return nil, http.StatusInternalServerError, err
+	} else if len(rows) < 2 {
+		logger.Log.Error("inapropiate sheet, no reference value found", zap.Error(err), zap.String("sheet", sheets[0]))
+		return nil, http.StatusInternalServerError, err
+	}
+	//save headers index and validate all present
+
+	headers := rows[0]
+	headersindexarray := make([]int, len(headers))
+	var headerscount int
+	for index := 0; index < len(headers); index++ {
+		switch strings.ToLower(headers[index]) {
+		case "editor":
+			headersindexarray[0] = index
+			headerscount = headerscount + 1
+		case "name":
+			headersindexarray[1] = index
+			headerscount = headerscount + 1
+		case "licensing":
+			headersindexarray[2] = index
+			headerscount = headerscount + 1
+		case "general information":
+			headersindexarray[3] = index
+			headerscount = headerscount + 1
+		case "version":
+			headersindexarray[4] = index
+			headerscount = headerscount + 1
+		case "eol":
+			headersindexarray[5] = index
+			headerscount = headerscount + 1
+		case "eos":
+			headersindexarray[6] = index
+			headerscount = headerscount + 1
+		}
+	}
+	if headerscount < 7 {
+		err = errors.New("missing headers")
+		logger.Log.Error("unable to import catalog products from sheet", zap.Error(err))
+		return nil, http.StatusInternalServerError, err
+	}
+
+	rows = rows[1:]
+	dataToSend := v1Catalog.UploadRecords{}
+	for _, v := range rows {
+		if len(v) == 0 {
+			continue
+		}
+		gn := (greaternumber(headersindexarray[0], headersindexarray[1]) + 1)
+		if len(v) >= gn {
+			if v[headersindexarray[0]] == "" || v[headersindexarray[1]] == "" {
+				logger.Log.Info("Wrong Number of arguments")
+				continue
+			}
+		} else {
+			logger.Log.Info("Wrong Number of arguments")
+			continue
+
+		}
+		var eoltime, eostime time.Time
+		if len(v) > headersindexarray[5] {
+			if strings.Contains(v[headersindexarray[5]], "/") {
+				v[headersindexarray[5]] = strings.ReplaceAll(v[headersindexarray[5]], "/", "-")
+			}
+			eoltime, _ = time.Parse("02-01-2006", v[headersindexarray[5]])
+		} else {
+			eoltime, _ = time.Parse("02-01-2006", "")
+		}
+		eoltimeObject, err := ptypes.TimestampProto(eoltime)
+		if err != nil {
+			logger.Log.Error("unable to import process record", zap.Error(err))
+			continue
+		}
+		if len(v) > headersindexarray[6] {
+			if strings.Contains(v[headersindexarray[6]], "/") {
+				v[headersindexarray[6]] = strings.ReplaceAll(v[headersindexarray[6]], "/", "-")
+			}
+			eostime, _ = time.Parse("02-01-2006", v[headersindexarray[6]])
+		} else {
+			eoltime, _ = time.Parse("02-01-2006", "")
+		}
+		eostimeObject, err := ptypes.TimestampProto(eostime)
+		if err != nil {
+			logger.Log.Error("unable to import process record", zap.Error(err))
+			continue
+		}
+		var version string
+		if len(v) > headersindexarray[4] {
+			version = v[headersindexarray[4]]
+		}
+		var generalInfo, licensing string
+		if len(v) > headersindexarray[3] {
+			generalInfo = v[headersindexarray[3]]
+		}
+		if len(v) > headersindexarray[2] {
+			licensing = v[headersindexarray[2]]
+		}
+		row := v1Catalog.Upload{
+			Editor:             v[headersindexarray[0]],
+			Name:               v[headersindexarray[1]],
+			Licensing:          licensing,
+			GenearlInformation: generalInfo,
+			Version:            version,
+			EndOfLife:          eoltimeObject,
+			EndOfSupport:       eostimeObject,
+		}
+		dataToSend.Data = append(dataToSend.Data, &row)
+	}
+	logger.Log.Info("v1/service - Calling Catalog Bulk Import" + fmt.Sprint(time.Now()))
+	dataToSend.FileName = fileInfo.Filename
+	resp, err := i.catalogClient.BulkFileUpload(req.Context(), &dataToSend)
+	if err != nil {
+		logger.Log.Error(" unable to import catalog products from sheet", zap.Error(err))
+		return nil, http.StatusInternalServerError, err
+	}
+	logger.Log.Info("v1/service - Calling Catalog Bulk Import Finished " + fmt.Sprint(time.Now()))
+
+	return resp, http.StatusOK, nil
+}
+
+func greaternumber(num1 int, num2 int) int {
+	if num1 > num2 {
+		return num1
+	}
+	return num2
 }

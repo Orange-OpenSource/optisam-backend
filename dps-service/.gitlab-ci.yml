@@ -92,8 +92,8 @@
     - cd ..
     - mkdir -p /kaniko/.docker
     - echo $DOCKER_AUTH_CONFIG > /kaniko/.docker/config.json
-  # - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/dps-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/dps-service:$TAG  
+#    - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/dps-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/dps-service-$ENV:$TAG  
 
 .dps-deploy_noprod:
   extends: .dps-template
@@ -103,15 +103,15 @@
     - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT}
     - oc create configmap config-dps-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
-    - oc delete deploymentconfig optisam-dps
+    - oc delete deploymentconfig optisam-dps-$ENV
     - oc process -f dps-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-dps --watch=true
-    - |
-      end=$((SECONDS+300))
-      while [ "$(oc get pods -l=app='optisam-dps' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
-        sleep 8
-        echo "Waiting for dps pod to be ready."
-      done
+    - oc rollout status dc/optisam-dps-$ENV --watch=true
+#    - |
+#      end=$((SECONDS+300))
+#      while [ "$(oc get pods -l=app='optisam-dps' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+#        sleep 8
+#        echo "Waiting for dps pod to be ready."
+#      done
 
 .dps-deploy_prod:
   extends: .dps-template
@@ -123,9 +123,9 @@
     - echo "Creating Openshift Resources"
     - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT_PROD}
-    - oc create configmap config-dps-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
-    - oc process -f dps-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-dps --watch=true
+    - oc create configmap config-dps-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f dps-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-dps-$ENV --watch=true
     
 
 .dps-integration_test:

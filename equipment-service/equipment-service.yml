@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-equipment
+      name: svc-optisam-equipment-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-equipment
+        run: optisam-equipment-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP
       selector:
-        app: optisam-equipment
+        app: optisam-equipment-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-equipment
+      name: route-svc-optisam-equipment-${ENV}
       labels:
-        run: optisam-equipment
+        run: optisam-equipment-${ENV}
     spec:
       host: optisam-equipment-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-equipment
+        name: svc-optisam-equipment-${ENV}
       port:
         targetPort: api
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-equipment-instrumentation
+      name: route-svc-optisam-equipment-instrumentation-${ENV}
       labels:
-        run: optisam-equipment
+        run: optisam-equipment-${ENV}
     spec:
       host: optisam-equipment-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-equipment
+        name: svc-optisam-equipment-${ENV}
       port:
         targetPort: instapi          
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-equipment
+      name: optisam-equipment-${ENV}
       labels:
-        app: optisam-equipment
+        app: optisam-equipment-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-equipment
+        app: optisam-equipment-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,19 +77,22 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-equipment
+            app: optisam-equipment-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-equipment
+          name: optisam-equipment-${ENV}
         spec:
           containers:
-            - name: optisam-equipment
-              image: ${DOCKER_REGISTRY}/optisam/equipment-service:${TAG}
+            - name: optisam-equipment-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/equipment-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -125,13 +128,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-equipment-${ENV}
             - name: secret-volume

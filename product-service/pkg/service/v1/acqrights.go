@@ -280,6 +280,12 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 		apiresp.AcquiredRights[i].MaintenanceProvider = dbresp[i].MaintenanceProvider
 		apiresp.AcquiredRights[i].CorporateSourcingContract = dbresp[i].CorporateSourcingContract
 		apiresp.AcquiredRights[i].FileName = dbresp[i].FileName
+		apiresp.AcquiredRights[i].ProductSwidTag = dbresp[i].ProductSwidTag.String
+		apiresp.AcquiredRights[i].VersionSwidTag = dbresp[i].VersionSwidTag.String
+
+		apiresp.AcquiredRights[i].EditorId = dbresp[i].EditorID.String
+		apiresp.AcquiredRights[i].ProductId = dbresp[i].ProductID.String
+
 		apiresp.AcquiredRights[i].Repartition = dbresp[i].Repartition
 		if dbresp[i].OrderingDate.Valid {
 			apiresp.AcquiredRights[i].OrderingDate, _ = ptypes.TimestampProto(dbresp[i].OrderingDate.Time)

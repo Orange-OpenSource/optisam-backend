@@ -70,6 +70,8 @@ func RunServer() error {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
+	} else if os.Getenv("ENV") == "pc" {
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -85,7 +87,6 @@ func RunServer() error {
 	if err != nil {
 		log.Fatalf("failed to unmarshal configuration: %v", err)
 	}
-
 	buildInfo := buildinfo.New(version, commitHash, buildDate)
 	// Instumentation Handler
 	instrumentationRouter := http.NewServeMux()
@@ -260,9 +261,8 @@ func RunServer() error {
 
 	// This is one time
 	cron.ConfigInit(cfg.Cron)
-
 	// cron Job
-	cronJob.JobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), verifyKey, cfg.IAM.APIKey)
+	cronJob.JobConfigInit(*q, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), verifyKey, cfg.IAM.APIKey, cfg.Application)
 	// Below command will trigger the cron job as soon as the service starts
 	cronJob.Job()
 	cron.AddCronJob(cronJob.Job)

@@ -480,6 +480,12 @@ message Aggregation {
   repeated string product_names = 4 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().+-]+$"];
   repeated string swidtags = 5 [(validate.rules).repeated  = {min_items: 1}];
   string scope = 6 [(validate.rules).string.min_len = 1 ];
+  string editor_id = 7;
+  repeated Mapping mapping = 8;
+}
+message Mapping {
+  string product_name =1;
+  string product_version=2;
 }
 
 message AggregationResponse { 
@@ -538,6 +544,8 @@ message AggregatedRightsView {
   string maintenance_provider = 26;
   string file_name = 27;
   bool repartition = 28;
+  string editor_id =29;
+  repeated Mapping mapping = 30;
 }
 
 message AggregatedRightsResponse { 
@@ -652,6 +660,7 @@ message ProductAggregationView {
   double total_cost = 6;
   repeated string swidtags = 7;
   bool individual_product_exists = 8;
+  string editor_id = 9;
 }
 
 message ProductAggRecord {
@@ -695,6 +704,10 @@ message Product {
   int32 numofEquipments = 9;
   int32 allocatedUser = 10;
   string allocatedMetric = 11;
+  string product_swid_tag = 12;
+  string version_swid_tag = 13;
+  string editor_id = 14;
+  string product_id = 15;
 }
 
 message ListProductsResponse {
@@ -752,6 +765,8 @@ message ProductResponse {
   int32 num_applications = 5;
   int32 num_equipments = 6;
   repeated string defined_metrics = 7; 
+  string product_swid_tag = 8;
+  string version_swid_tag = 9;
 }
 
 message ProductOptionsResponse {
@@ -861,6 +876,7 @@ message DashboardQualityProducts {
   string product_name = 2; 
   string editor = 3;
   string version = 4;
+  string editor_id = 5;
 }
 
 message ProductsLicenses {
@@ -1025,6 +1041,10 @@ message AcqRights {
   string maintenance_provider = 23;
   string file_name = 24;
   bool repartition = 25;
+  string product_swid_tag = 26;
+  string version_swid_tag = 27;
+  string editor_id =28;
+  string product_id=29;
 }
 
 message ListAggregatedAcqRightsRequest {
@@ -1173,6 +1193,7 @@ message AggregationProducts {
   string swidtag = 1;
   string product_name = 2;
   string editor = 3;
+  string product_version =4;
 }
 
 message DropProductDataRequest {  

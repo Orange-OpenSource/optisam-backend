@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
@@ -37,11 +38,13 @@ func (s *productServiceServer) ListAggregationProducts(ctx context.Context, req 
 		logger.Log.Error("service/v1 - ListAggregationProducts - ListProductsForAggregation", zap.String("reason", err.Error()))
 		return &v1.ListAggregationProductsResponse{}, status.Error(codes.Internal, "DBError")
 	}
+
 	var selectedProds []db.ListSelectedProductsForAggregrationRow
 	if req.ID != 0 {
 		selectedProds, err = s.productRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
-			ID:    req.ID,
-			Scope: req.Scope,
+			ID:     req.ID,
+			Scope:  req.Scope,
+			Editor: req.Editor,
 		})
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -277,8 +280,9 @@ func (s *productServiceServer) validateAggregation(ctx context.Context, req *v1.
 	}
 	if req.ID != 0 {
 		selectedProds, err := s.productRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
-			ID:    req.ID,
-			Scope: req.Scope,
+			ID:     req.ID,
+			Scope:  req.Scope,
+			Editor: req.ProductEditor,
 		})
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -365,6 +369,9 @@ func dbAggregationsToSrvAggregationsAll(aggregations []db.ListAggregationsRow) [
 }
 
 func dbAggregationToSrvAggregation(aggregation db.ListAggregationsRow) *v1.Aggregation {
+	var mapping = aggregation.Coalesce.([]byte)
+	var tmp []*v1.Mapping
+	json.Unmarshal(mapping, &tmp)
 	resp := &v1.Aggregation{
 		ID:              aggregation.ID,
 		AggregationName: aggregation.AggregationName,
@@ -372,23 +379,35 @@ func dbAggregationToSrvAggregation(aggregation db.ListAggregationsRow) *v1.Aggre
 		ProductNames:    aggregation.Products,
 		Swidtags:        aggregation.Swidtags,
 		Scope:           aggregation.Scope,
+		EditorId:        aggregation.EditorID.String,
+		Mapping:         tmp,
 	}
 	return resp
 }
 
 func dbAggProductsToSrvAggProductsAll(aggprods []db.ListProductsForAggregationRow) []*v1.AggregationProducts {
 	servAggProds := make([]*v1.AggregationProducts, 0, len(aggprods))
+	aggp := make(map[string]bool, len(aggprods))
 	for _, aggprod := range aggprods {
+		if aggprod.ProductVersion != "" {
+			aggp[aggprod.ProductName] = true // for not empty product version
+		}
 		servAggProds = append(servAggProds, dbAggProductsToSrvAggProducts(aggprod))
+	}
+	for i, aggprod := range servAggProds {
+		if aggp[aggprod.ProductName] && aggprod.ProductVersion == "" { //test not empty product name with empty version too
+			servAggProds = append(servAggProds[:i], servAggProds[i+1:]...)
+		}
 	}
 	return servAggProds
 }
 
 func dbAggProductsToSrvAggProducts(aggprod db.ListProductsForAggregationRow) *v1.AggregationProducts {
 	return &v1.AggregationProducts{
-		Swidtag:     aggprod.Swidtag,
-		ProductName: aggprod.ProductName,
-		Editor:      aggprod.ProductEditor,
+		Swidtag:        aggprod.Swidtag,
+		ProductName:    aggprod.ProductName,
+		Editor:         aggprod.ProductEditor,
+		ProductVersion: fmt.Sprintf("%v", aggprod.ProductVersion),
 	}
 }
 
@@ -402,8 +421,9 @@ func dbSelectedProductsToSrvSelectedProductsAll(selectedProds []db.ListSelectedP
 
 func dbSelectedProductsToSrvSelectedProducts(selectedProd db.ListSelectedProductsForAggregrationRow) *v1.AggregationProducts {
 	return &v1.AggregationProducts{
-		Swidtag:     selectedProd.Swidtag,
-		ProductName: selectedProd.ProductName,
-		Editor:      selectedProd.ProductEditor,
+		Swidtag:        selectedProd.Swidtag,
+		ProductName:    selectedProd.ProductName,
+		Editor:         selectedProd.ProductEditor,
+		ProductVersion: selectedProd.ProductVersion,
 	}
 }

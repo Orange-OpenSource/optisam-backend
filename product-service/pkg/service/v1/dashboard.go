@@ -157,9 +157,9 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	}
 
 	// Find Total Number of Editors in the system and in this scope
-	editors, err := s.productRepo.ListEditors(ctx, scopes)
+	editors, err := s.productRepo.ListEditorsScope(ctx, scopes)
 	if err != nil {
-		logger.Log.Error("service/v1 - DashboardOverview - db/ListEditors", zap.Error(err))
+		logger.Log.Error("service/v1 - DashboardOverview - db/ListEditorsScope", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	resp.NumEditors = int32(len(editors))
@@ -220,9 +220,9 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 	scopes = append(scopes, req.Scope)
 
 	// Find Total Number of Editors in the system and in this scope
-	editors, err := s.productRepo.ListEditors(ctx, scopes)
+	editors, err := s.productRepo.ListEditorsScope(ctx, scopes)
 	if err != nil {
-		logger.Log.Error("service/v1 - ProductsPerEditor - db/ListEditors", zap.Error(err))
+		logger.Log.Error("service/v1 - ProductsPerEditor - db/ListEditorsScope", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
@@ -234,9 +234,9 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 
 	// Find Number of Products per Editor and Scopes
 	for _, editor := range editors {
-		products, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: editor, Scopes: scopes})
+		products, err := s.productRepo.GetProductsByEditorScope(ctx, db.GetProductsByEditorScopeParams{ProductEditor: editor, Scopes: scopes})
 		if err != nil {
-			logger.Log.Error("service/v1 - ListEditorProducts - db/GetProductsByEditor ", zap.Error(err))
+			logger.Log.Error("service/v1 - ListEditorProducts - db/GetProductsByEditorScope ", zap.Error(err))
 			return nil, status.Error(codes.Internal, "DBError")
 		}
 		editorProducts = append(editorProducts, &v1.EditorProducts{
@@ -565,6 +565,7 @@ func dbToServProductsNotDeployed(prodNotDeployed []db.ProductsNotDeployedRow) []
 			ProductName: p.ProductName,
 			Editor:      p.ProductEditor,
 			Version:     p.Version,
+			EditorId:    p.ID.String,
 		})
 	}
 	return res
@@ -578,6 +579,7 @@ func dbToServProductsNotAcquired(prodNotAcquried []db.ProductsNotAcquiredRow) []
 			ProductName: p.ProductName,
 			Editor:      p.ProductEditor,
 			Version:     p.ProductVersion,
+			EditorId:    p.ID.String,
 		})
 	}
 	return res

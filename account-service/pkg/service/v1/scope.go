@@ -9,6 +9,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
+	"time"
 
 	equipment "optisam-backend/equipment-service/pkg/api/v1"
 
@@ -56,6 +57,7 @@ func (s *accountServiceServer) CreateScope(ctx context.Context, req *v1.CreateSc
 }
 
 func (s *accountServiceServer) ListScopes(ctx context.Context, req *v1.ListScopesRequest) (*v1.ListScopesResponse, error) {
+	logger.Log.Info("List Scopes", zap.Any("list scopes called", time.Now()))
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
@@ -70,7 +72,9 @@ func (s *accountServiceServer) ListScopes(ctx context.Context, req *v1.ListScope
 	scopeCodes := userClaims.Socpes
 
 	// Call ListScopes
+	logger.Log.Info("List Scopes", zap.Any("before list scopes postgres called", time.Now()))
 	scopes, err := s.accountRepo.ListScopes(ctx, scopeCodes)
+	logger.Log.Info("List Scopes", zap.Any("after list scopes postgres called", time.Now()))
 
 	if err != nil {
 		logger.Log.Error("service/v1 - ListScopes - Repo: ListScopes", zap.Error(err))
@@ -86,6 +90,7 @@ func (s *accountServiceServer) ListScopes(ctx context.Context, req *v1.ListScope
 		logger.Log.Error("service/v1 - ListScopes - ListScopes  - timestampProto", zap.Error(err))
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
+	logger.Log.Info("List Scopes", zap.Any("end", time.Now()))
 
 	return &v1.ListScopesResponse{
 		Scopes: scopeList,
@@ -119,6 +124,7 @@ func (s *accountServiceServer) GetScope(ctx context.Context, req *v1.GetScopeReq
 }
 
 func repoScopeListToServrepoList(scopes []*repo.Scope) ([]*v1.Scope, error) {
+	logger.Log.Info("repoScopeListToServrepoList", zap.Any("before parsing", time.Now()))
 
 	res := make([]*v1.Scope, 0)
 
@@ -130,7 +136,7 @@ func repoScopeListToServrepoList(scopes []*repo.Scope) ([]*v1.Scope, error) {
 		servScope := repoScopeToListScope(scope, protoTime)
 		res = append(res, servScope)
 	}
-
+	logger.Log.Info("repoScopeListToServrepoList", zap.Any("after parsing", time.Now()))
 	return res, nil
 }
 
@@ -143,4 +149,40 @@ func repoScopeToListScope(scope *repo.Scope, time *tspb.Timestamp) *v1.Scope {
 		GroupNames: scope.GroupNames,
 		ScopeType:  scope.ScopeType,
 	}
+}
+
+func (s *accountServiceServer) GetScopeLists(ctx context.Context, req *v1.GetScopeListRequest) (*v1.ScopeListResponse, error) {
+	_, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+
+	// If there are no scopes available to user.
+	if len(req.Scopes) == 0 {
+		return &v1.ScopeListResponse{}, nil
+	}
+
+	// Fetch Scopes from request body
+	scopeCodes := req.Scopes
+
+	// Call ListScopes
+	scopes, err := s.accountRepo.ListScopes(ctx, scopeCodes)
+
+	if err != nil {
+		logger.Log.Error("service/v1 - ListScopes - Repo: ListScopes", zap.Error(err))
+		return nil, status.Error(codes.Internal, "Unable to fetch scopes")
+	}
+
+	if len(scopes) == 0 {
+		return &v1.ScopeListResponse{}, nil
+	}
+	var scopeList []string
+
+	for _, scpData := range scopes {
+		scopeList = append(scopeList, scpData.ScopeName)
+	}
+	return &v1.ScopeListResponse{
+		ScopeNames: scopeList,
+	}, nil
+
 }

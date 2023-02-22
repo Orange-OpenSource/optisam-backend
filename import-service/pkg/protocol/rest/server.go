@@ -45,6 +45,7 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	router.POST("/api/v1/import/globaldata", h.UploadGlobalDataHandler)
 	router.GET("/api/v1/import/download", h.DownloadFile)
 	router.POST("/api/v1/import/upload", h.UploadFiles)
+	router.POST("/api/v1/import/uploadcatalogdata", h.UploadCatalogData)
 
 	srv := &http.Server{
 		Addr: ":" + config.HTTPPort,

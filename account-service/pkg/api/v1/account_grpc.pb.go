@@ -47,6 +47,8 @@ type AccountServiceClient interface {
 	DropScopeData(ctx context.Context, in *DropScopeDataRequest, opts ...grpc.CallOption) (*DropScopeDataResponse, error)
 	//GetScope returns scope details for a particular scope
 	GetScope(ctx context.Context, in *GetScopeRequest, opts ...grpc.CallOption) (*Scope, error)
+	//GetScope returns scope details for a particular scope
+	GetScopeLists(ctx context.Context, in *GetScopeListRequest, opts ...grpc.CallOption) (*ScopeListResponse, error)
 }
 
 type accountServiceClient struct {
@@ -228,6 +230,15 @@ func (c *accountServiceClient) GetScope(ctx context.Context, in *GetScopeRequest
 	return out, nil
 }
 
+func (c *accountServiceClient) GetScopeLists(ctx context.Context, in *GetScopeListRequest, opts ...grpc.CallOption) (*ScopeListResponse, error) {
+	out := new(ScopeListResponse)
+	err := c.cc.Invoke(ctx, "/optisam.account.v1.AccountService/GetScopeLists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AccountServiceServer is the server API for AccountService service.
 // All implementations should embed UnimplementedAccountServiceServer
 // for forward compatibility
@@ -262,6 +273,8 @@ type AccountServiceServer interface {
 	DropScopeData(context.Context, *DropScopeDataRequest) (*DropScopeDataResponse, error)
 	//GetScope returns scope details for a particular scope
 	GetScope(context.Context, *GetScopeRequest) (*Scope, error)
+	//GetScope returns scope details for a particular scope
+	GetScopeLists(context.Context, *GetScopeListRequest) (*ScopeListResponse, error)
 }
 
 // UnimplementedAccountServiceServer should be embedded to have forward compatible implementations.
@@ -324,6 +337,9 @@ func (UnimplementedAccountServiceServer) DropScopeData(context.Context, *DropSco
 }
 func (UnimplementedAccountServiceServer) GetScope(context.Context, *GetScopeRequest) (*Scope, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetScope not implemented")
+}
+func (UnimplementedAccountServiceServer) GetScopeLists(context.Context, *GetScopeListRequest) (*ScopeListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetScopeLists not implemented")
 }
 
 // UnsafeAccountServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -679,6 +695,24 @@ func _AccountService_GetScope_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountService_GetScopeLists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScopeListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).GetScopeLists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.account.v1.AccountService/GetScopeLists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).GetScopeLists(ctx, req.(*GetScopeListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AccountService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.account.v1.AccountService",
 	HandlerType: (*AccountServiceServer)(nil),
@@ -758,6 +792,10 @@ var _AccountService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetScope",
 			Handler:    _AccountService_GetScope_Handler,
+		},
+		{
+			MethodName: "GetScopeLists",
+			Handler:    _AccountService_GetScopeLists_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

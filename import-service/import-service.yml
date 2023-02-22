@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-import
+      name: svc-optisam-import-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-import
+        run: optisam-import-${ENV}
     spec:
       ports:
         - name: api
@@ -20,30 +20,30 @@ objects:
           targetPort: 8080
           protocol: TCP
       selector:
-        app: optisam-import
+        app: optisam-import-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
       annotations:
           haproxy.router.openshift.io/timeout: 300s
-      name: route-svc-optisam-import
+      name: route-svc-optisam-import-${ENV}
       labels:
-        run: optisam-import
+        run: optisam-import-${ENV}
     spec:
       host: optisam-import-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-import
+        name: svc-optisam-import-${ENV}
       tls:
         termination: edge
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-import-instrumentation
+      name: svc-optisam-import-instrumentation-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-import-instrumentation
+        run: optisam-import-instrumentation-${ENV}
     spec:
       ports:
         - name: api
@@ -51,48 +51,51 @@ objects:
           targetPort: 8081
           protocol: TCP
       selector:
-        app: optisam-import
+        app: optisam-import-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-import-instrumentation
+      name: route-svc-optisam-import-instrumentation-${ENV}
       labels:
-        run: optisam-import
+        run: optisam-import-${ENV}
     spec:
       host: optisam-import-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-import-instrumentation
+        name: svc-optisam-import-instrumentation-${ENV}
       tls:
         termination: edge
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-import
+      name: optisam-import-${ENV}
       labels:
-        app: optisam-import
+        app: optisam-import-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-import
+        app: optisam-import-${ENV}
       strategy:
         type: Rolling
       template:
         metadata:
           labels:
-            app: optisam-import
+            app: optisam-import-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-import
+          name: optisam-import-${ENV}
         spec:
           containers:
-            - name: optisam-import
-              image: ${DOCKER_REGISTRY}/optisam/import-service:${TAG}
+            - name: optisam-import-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/import-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -121,12 +124,12 @@ objects:
               resources:
                 requests:
                   cpu: "80m"
-                  memory: "128Mi"
+                  memory: "300Mi"
                 limits:
                   cpu: "100m"
-                  memory: "150Mi"
+                  memory: "1200Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config/
                 - name: optisam-dir
                   mountPath: /optisam_dir
@@ -134,7 +137,7 @@ objects:
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-import-${ENV}
             - name: optisam-dir

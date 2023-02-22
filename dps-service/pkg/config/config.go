@@ -1,6 +1,7 @@
 package config
 
 import (
+	"optisam-backend/common/optisam/config"
 	"optisam-backend/common/optisam/cron"
 	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
@@ -95,6 +96,9 @@ type Config struct {
 
 	// WaitlimitCount is max limit counter for global file not processed/missed
 	WaitLimitCount int
+
+	//Application cred.
+	Application config.Application
 }
 
 type httpConfg struct {
@@ -214,5 +218,12 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")
+
+	_ = v.BindEnv("application.usernameadmin", "APP_ADMIN_USERNAME")
+	_ = v.BindEnv("application.passwordadmin", "APP_ADMIN_PASSWORD")
+	_ = v.BindEnv("application.usernamesuperadmin", "APP_SUPER_ADMIN_USERNAME")
+	_ = v.BindEnv("application.passwordsuperadmin", "APP_SUPER_ADMIN_PASSWORD")
+	_ = v.BindEnv("application.usernameuser", "APP_USER_USERNAME")
+	_ = v.BindEnv("application.passworduser", "APP_USER_PASSWORD")
 
 }

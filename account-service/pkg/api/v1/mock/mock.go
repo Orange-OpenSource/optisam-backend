@@ -275,6 +275,26 @@ func (mr *MockAccountServiceClientMockRecorder) GetScope(arg0, arg1 interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScope", reflect.TypeOf((*MockAccountServiceClient)(nil).GetScope), varargs...)
 }
 
+// GetScopeLists mocks base method
+func (m *MockAccountServiceClient) GetScopeLists(arg0 context.Context, arg1 *v1.GetScopeListRequest, arg2 ...grpc.CallOption) (*v1.ScopeListResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetScopeLists", varargs...)
+	ret0, _ := ret[0].(*v1.ScopeListResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopeLists indicates an expected call of GetScopeLists
+func (mr *MockAccountServiceClientMockRecorder) GetScopeLists(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeLists", reflect.TypeOf((*MockAccountServiceClient)(nil).GetScopeLists), varargs...)
+}
+
 // GetUsers mocks base method
 func (m *MockAccountServiceClient) GetUsers(arg0 context.Context, arg1 *v1.GetUsersRequest, arg2 ...grpc.CallOption) (*v1.ListUsersResponse, error) {
 	m.ctrl.T.Helper()

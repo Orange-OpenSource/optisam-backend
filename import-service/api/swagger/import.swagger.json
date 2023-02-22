@@ -309,6 +309,27 @@
             }
          }
       },
+      "/api/v1/import/uploadcatalogdata": {
+         "post": {
+            "summary": "Upload file or files.",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+               {
+                  "in": "formData",
+                  "name": "file",
+                  "type": "file",
+                  "required": true
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "A successful response."
+               }
+            }
+         }
+      },
       "/api/v1/globaldata/analysis": {
          "get": {
             "summary": "Download global data analysis excel file.",

@@ -2730,6 +2730,18 @@
         },
         "repartition": {
           "type": "boolean"
+        },
+        "product_swid_tag": {
+          "type": "string"
+        },
+        "version_swid_tag": {
+          "type": "string"
+        },
+        "editor_id": {
+          "type": "string"
+        },
+        "product_id": {
+          "type": "string"
         }
       }
     },
@@ -2985,6 +2997,15 @@
         },
         "repartition": {
           "type": "boolean"
+        },
+        "editor_id": {
+          "type": "string"
+        },
+        "mapping": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Mapping"
+          }
         }
       }
     },
@@ -3015,6 +3036,15 @@
         },
         "scope": {
           "type": "string"
+        },
+        "editor_id": {
+          "type": "string"
+        },
+        "mapping": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Mapping"
+          }
         }
       }
     },
@@ -3028,6 +3058,9 @@
           "type": "string"
         },
         "editor": {
+          "type": "string"
+        },
+        "product_version": {
           "type": "string"
         }
       }
@@ -3120,6 +3153,9 @@
           "type": "string"
         },
         "version": {
+          "type": "string"
+        },
+        "editor_id": {
           "type": "string"
         }
       }
@@ -3507,6 +3543,17 @@
         }
       }
     },
+    "v1Mapping": {
+      "type": "object",
+      "properties": {
+        "product_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        }
+      }
+    },
     "v1MetricProducts": {
       "type": "object",
       "properties": {
@@ -3616,6 +3663,18 @@
         },
         "allocatedMetric": {
           "type": "string"
+        },
+        "product_swid_tag": {
+          "type": "string"
+        },
+        "version_swid_tag": {
+          "type": "string"
+        },
+        "editor_id": {
+          "type": "string"
+        },
+        "product_id": {
+          "type": "string"
         }
       }
     },
@@ -3669,6 +3728,9 @@
         },
         "individual_product_exists": {
           "type": "boolean"
+        },
+        "editor_id": {
+          "type": "string"
         }
       }
     },
@@ -3747,6 +3809,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "product_swid_tag": {
+          "type": "string"
+        },
+        "version_swid_tag": {
+          "type": "string"
         }
       }
     },

@@ -89,8 +89,8 @@
     - cd ..
     - mkdir -p /kaniko/.docker
     - echo $DOCKER_AUTH_CONFIG > /kaniko/.docker/config.json
-      #  - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/application-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/application-service:$TAG  
+  #    - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/application-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/application-service-$ENV:$TAG  
 
 .application-deploy_noprod:
   extends: .application-template
@@ -100,15 +100,15 @@
     - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT}
     - oc create configmap config-application-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
-    - oc delete deploymentconfig optisam-application
+    - oc delete deploymentconfig optisam-application-$ENV
     - oc process -f application-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-application
-    - |
-      end=$((SECONDS+300))
-      while [ "$(oc get pods -l=app='optisam-application' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
-        sleep 8
-        echo "Waiting for pod to be ready."
-      done
+    - oc rollout status dc/optisam-application-$ENV
+#    - |
+#      end=$((SECONDS+300))
+#      while [ "$(oc get pods -l=app='optisam-application' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+#        sleep 8
+#        echo "Waiting for pod to be ready."
+#      done
 
 .application-deploy_prod:
   extends: .application-template
@@ -120,9 +120,9 @@
     - echo "Creating Openshift Resources"
     - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT_PROD}
-    - oc create configmap config-application-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
-    - oc process -f application-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-application
+    - oc create configmap config-application-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f application-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-application-$ENV
 
 .application-integration_test:
   extends: .application-template

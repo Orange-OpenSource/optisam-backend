@@ -1,0 +1,652 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "catalog-service.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/catalog/bulkfileuploadlogs": {
+      "get": {
+        "operationId": "ProductCatalog_BulkFileUploadLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UploadCatalogDataLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/editor": {
+      "post": {
+        "operationId": "ProductCatalog_CreateEditor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Editor"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateEditorRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      },
+      "put": {
+        "operationId": "ProductCatalog_UpdateEditor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Editor"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Editor"
+            }
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/editor/{editor_id}": {
+      "get": {
+        "operationId": "ProductCatalog_GetEditor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Editor"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "editor_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductCatalog_DeleteEditor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "editor_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/product": {
+      "post": {
+        "operationId": "ProductCatalog_InsertProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      },
+      "put": {
+        "operationId": "ProductCatalog_UpdateProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/product/{prod_id}": {
+      "get": {
+        "operationId": "ProductCatalog_GetProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1Product"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "prod_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductCatalog_DeleteProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "prod_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/uploadrecords": {
+      "post": {
+        "operationId": "ProductCatalog_BulkFileUpload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UploadRecords"
+            }
+          }
+        ],
+        "tags": [
+          "ProductCatalog"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1Audits": {
+      "type": "object",
+      "properties": {
+        "entity": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1CloseSource": {
+      "type": "object",
+      "properties": {
+        "isCloseSource": {
+          "type": "boolean"
+        },
+        "closeLicences": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1CreateEditorRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "genearl_information": {
+          "type": "string"
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Vendors"
+          }
+        },
+        "partner_managers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1PartnerManagers"
+          }
+        },
+        "audits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Audits"
+          }
+        }
+      }
+    },
+    "v1DeleteResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1Editor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "genearlInformation": {
+          "type": "string"
+        },
+        "vendors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Vendors"
+          }
+        },
+        "partner_managers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1PartnerManagers"
+          }
+        },
+        "audits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Audits"
+          }
+        },
+        "createdOn": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "UpdatedOn": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "products_count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1OpenSource": {
+      "type": "object",
+      "properties": {
+        "isOpenSource": {
+          "type": "boolean"
+        },
+        "openLicences": {
+          "type": "string"
+        },
+        "openSourceType": {
+          "type": "string"
+        }
+      }
+    },
+    "v1PartnerManagers": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Product": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "editorID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "genearlInformation": {
+          "type": "string"
+        },
+        "contracttTips": {
+          "type": "string"
+        },
+        "locationType": {
+          "type": "string"
+        },
+        "openSource": {
+          "$ref": "#/definitions/v1OpenSource"
+        },
+        "closeSource": {
+          "$ref": "#/definitions/v1CloseSource"
+        },
+        "version": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Version"
+          }
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "usefulLinks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supportVendors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdOn": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "UpdatedOn": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "swidtagProduct": {
+          "type": "string"
+        },
+        "editorName": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Upload": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "licensing": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "genearlInformation": {
+          "type": "string"
+        },
+        "endOfLife": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endOfSupport": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "origin": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UploadCatalogDataLogs": {
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "uploaded_on": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1UploadCatalogDataLogsResponse": {
+      "type": "object",
+      "properties": {
+        "uploadCatalogDataLogs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1UploadCatalogDataLogs"
+          }
+        }
+      }
+    },
+    "v1UploadRecords": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Upload"
+          }
+        },
+        "fileName": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UploadResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Vendors": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1Version": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "swidtagVersion": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "endOfLife": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "endOfSupport": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

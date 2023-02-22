@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-auth
+      name: svc-optisam-auth-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-auth
+        run: optisam-auth-${ENV}
     spec:
       ports:
         - name: api
@@ -20,28 +20,28 @@ objects:
           targetPort: 8080
           protocol: TCP
       selector:
-        app: optisam-auth
+        app: optisam-auth-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-auth
+      name: route-svc-optisam-auth-${ENV}
       labels:
-        run: optisam-auth
+        run: optisam-auth-${ENV}
     spec:
       host: optisam-auth-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-auth
+        name: svc-optisam-auth-${ENV}
       tls:
         termination: edge
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-auth-instrumentation
+      name: svc-optisam-auth-instrumentation-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-auth-instrumentation
+        run: optisam-auth-instrumentation-${ENV}
     spec:
       ports:
         - name: api
@@ -49,42 +49,42 @@ objects:
           targetPort: 8081
           protocol: TCP
       selector:
-        app: optisam-auth
+        app: optisam-auth-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-auth-instrumentation
+      name: route-svc-optisam-auth-instrumentation-${ENV}
       labels:
-        run: optisam-auth
+        run: optisam-auth-${ENV}
     spec:
       host: optisam-auth-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-auth-instrumentation
+        name: svc-optisam-auth-instrumentation-${ENV}
       tls:
         termination: edge        
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-auth
+      name: optisam-auth-${ENV}
       labels:
-        app: optisam-auth
+        app: optisam-auth-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-auth
+        app: optisam-auth-${ENV}
       strategy:
         type: Rolling
       template:
         metadata:
           labels:
-            app: optisam-auth
+            app: optisam-auth-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-auth
+          name: optisam-auth-${ENV}
         spec:
           containers:
-            - name: optisam-auth
-              image: ${DOCKER_REGISTRY}/optisam/auth-service:${TAG}
+            - name: optisam-auth-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/auth-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
@@ -96,6 +96,9 @@ objects:
                   protocol: TCP
                 - containerPort: 8081
                   protocol: TCP
+              envFrom:
+                - secretRef:
+                       name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
@@ -124,13 +127,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config/
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-auth-${ENV}
             - name: secret-volume

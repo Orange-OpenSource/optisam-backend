@@ -421,6 +421,41 @@
         ]
       }
     },
+    "/api/v1/account/scopes/list": {
+      "get": {
+        "summary": "GetScope returns scope details for a particular scope",
+        "operationId": "AccountService_GetScopeLists",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ScopeListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
     "/api/v1/account/scopes/{scope}": {
       "get": {
         "summary": "GetScope returns scope details for a particular scope",
@@ -940,6 +975,17 @@
         },
         "scope_type": {
           "type": "string"
+        }
+      }
+    },
+    "v1ScopeListResponse": {
+      "type": "object",
+      "properties": {
+        "scope_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

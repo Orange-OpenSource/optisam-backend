@@ -2484,6 +2484,25 @@ func (m *Aggregation) Validate() error {
 		}
 	}
 
+	// no validation rules for EditorId
+
+	for idx, item := range m.GetMapping() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return AggregationValidationError{
+					field:  fmt.Sprintf("Mapping[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -2544,6 +2563,74 @@ var _ interface {
 var _Aggregation_ProductEditor_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9.-]+$")
 
 var _Aggregation_ProductNames_Pattern = regexp.MustCompile("^[\\sa-zA-Z0-9().+-]+$")
+
+// Validate checks the field values on Mapping with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Mapping) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProductName
+
+	// no validation rules for ProductVersion
+
+	return nil
+}
+
+// MappingValidationError is the validation error returned by Mapping.Validate
+// if the designated constraints aren't met.
+type MappingValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MappingValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MappingValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MappingValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MappingValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MappingValidationError) ErrorName() string { return "MappingValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MappingValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMapping.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MappingValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MappingValidationError{}
 
 // Validate checks the field values on AggregationResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2926,6 +3013,25 @@ func (m *AggregatedRightsView) Validate() error {
 	// no validation rules for FileName
 
 	// no validation rules for Repartition
+
+	// no validation rules for EditorId
+
+	for idx, item := range m.GetMapping() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return AggregatedRightsViewValidationError{
+					field:  fmt.Sprintf("Mapping[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -4195,6 +4301,8 @@ func (m *ProductAggregationView) Validate() error {
 
 	// no validation rules for IndividualProductExists
 
+	// no validation rules for EditorId
+
 	return nil
 }
 
@@ -4824,6 +4932,14 @@ func (m *Product) Validate() error {
 
 	// no validation rules for AllocatedMetric
 
+	// no validation rules for ProductSwidTag
+
+	// no validation rules for VersionSwidTag
+
+	// no validation rules for EditorId
+
+	// no validation rules for ProductId
+
 	return nil
 }
 
@@ -5334,6 +5450,10 @@ func (m *ProductResponse) Validate() error {
 	// no validation rules for NumApplications
 
 	// no validation rules for NumEquipments
+
+	// no validation rules for ProductSwidTag
+
+	// no validation rules for VersionSwidTag
 
 	return nil
 }
@@ -6409,6 +6529,8 @@ func (m *DashboardQualityProducts) Validate() error {
 	// no validation rules for Editor
 
 	// no validation rules for Version
+
+	// no validation rules for EditorId
 
 	return nil
 }
@@ -7853,6 +7975,14 @@ func (m *AcqRights) Validate() error {
 	// no validation rules for FileName
 
 	// no validation rules for Repartition
+
+	// no validation rules for ProductSwidTag
+
+	// no validation rules for VersionSwidTag
+
+	// no validation rules for EditorId
+
+	// no validation rules for ProductId
 
 	return nil
 }
@@ -9389,6 +9519,8 @@ func (m *AggregationProducts) Validate() error {
 	// no validation rules for ProductName
 
 	// no validation rules for Editor
+
+	// no validation rules for ProductVersion
 
 	return nil
 }

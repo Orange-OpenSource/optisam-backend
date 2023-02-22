@@ -72,6 +72,14 @@ type InstrumentationConfig struct {
 		jaeger.Config `mapstructure:",squash"`
 	}
 }
+type Application struct {
+	UserNameAdmin      string
+	PasswordAdmin      string
+	UserNameSuperAdmin string
+	PasswordSuperAdmin string
+	UserNameUser       string
+	PasswordUser       string
+}
 
 type AppParameters struct {
 	PageSize  int

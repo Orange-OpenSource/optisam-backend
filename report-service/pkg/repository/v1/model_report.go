@@ -1,8 +1,9 @@
 package v1
 
 type ProductEquipment struct {
-	Swidtag    string
-	Equipments []*Equipment
+	Swidtag     string
+	ProductName string
+	Equipments  []*Equipment
 }
 
 // ProductEquipment ...

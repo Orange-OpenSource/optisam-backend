@@ -42,7 +42,8 @@ agentEndpoint = "192.168.99.100:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+    "https://green-feather-500064.ap-south-1.aws.cloud.dgraph.io"
+    #"localhost:9080"  
 #"10.171.44.163:9082"  this is dev dgraph
 
 ]
@@ -64,3 +65,11 @@ sortBy = "name"
 publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

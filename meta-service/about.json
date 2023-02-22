@@ -1,49 +1,36 @@
 {
 	"copyright": "Copyright © Orange 2022",
 	"release_notes": [
-		"Allowed 0 in unit cost of acquired rights.",
-		"Admin can choose only reference equipment type which itself or parent has attribute environment, in order to create a metric of type equipment.attribute.standard.",
-		"For Admin, optisam to find the best repartition of licences amongst SKUs (for same product or aggregation).",
-		"Configure Prometheus and grafana in dev env for Diod setup.",
-		"Add 3 node cluster for INT environment (similar like dev and prod)",
-		"Fixed: Bug_UI: Metric details are not populating from UI while editing metrics(NUP/OPS/IBM/SAG)",
-		"Fixed: Bug_OLN - Cannot download server file (all platforms).",
-		"Fixed: Bug-Dashboard compliance overview and Counterfeiting/Underusage Amount is not getting updated on data upload on prod after aggregation creation",
-		"Fixed: Bug:- Aggregation Compliance getting failed on Production Platform.",
-		"Fixed: Bug- File is getting stuck in Processed status , impacting DPS service",
-		"Fixed: Getting \"internal Server Error \" on file upload with 10k records.",
-		"Translate NUP into Processor metric during metric creation or updation",
-		"Allocate metric from UI to product equipment and calculate compliance for products with allocated metric. Allocation will be till the last equipment of defined Metric.",
-		"Cost optimization improvements delta cost is negative then delta cost is summed up with the counterfeiting amount. If it is positive it is summed up with the under usage amount. The popup for compliance will show the total cost acquired by summing each total cost by skus and also show the sum of the delta cost.",
-		"Allow admin to delete allocation metric from UI",
-		"Allow admin to allocate metric from data import",
-		"Allow to add allocated users to individual equipment, not to other equipment under same parent. Fix equipment users count issue while compliance calculation ",
-		"A NUP metric is transalted into OPS then added a transaltion text on compliance details.",
-		"Allocated metric compliance changes equipment which are having parent also restricted to allocated metric computation only. Equipment which are avaliable will be part of both computation metrics allocated and non-allocated.",
-		"Creation for logins on prod to do ",
-		"Dgraph query for Equipment type update(Generic scope)",
-		"Update dashboard overview Alert compliance calculation",
-		"A NUP metric is transalted to OPS then all the equipment where NUP is allocatd those will be part of OPS calculation.",
-		"Fixed: Bug- Cost optimization check is getting removed from ACQ rights if the admin reload the data after inventory park deletion not the acquired right.",
-		"Fixed: Bug- Corefactor management default values should be picked from file if present rather than fixed value.",
-		"As optisam user, I want to simulate a change in hardware configuration and get the results.",
-		"Error while uploading Large File"
+		"Admin can create of editor through UI from the Product Catalog Management.",
+		"Admin can update an editor through UI from the Product Catalog Management.",
+		"Admin can delete an editor through UI and deleting an Editor will delete the associated Products.",
+		"Any person who has access to the Product Catalog can see the all Editors at once.",
+		"Any person who has access to the Product Catalog can search for a specific Editor by name to display its details.",
+		"Any person who has access to the Product Catalog can select an Editor and view its attributes.",
+		"Any OpTISAM user or admin can access the Editor details of the Product Catalog from the Editor name present in all other pages, if the Editor name is present in the Catalog.",
+		"Any OpTISAM admin can choose from the Editors & Products present in the product Catalog when creating an acquired right from UI.",
+		"Any OpTISAM admin can create a new Product from the UI, from the Product Catalog Management where product is linked to an existing catalog editor.",
+		"Any OpTISAM admin can add a version to a Product by giving a version name.",
+		"Any OpTISAM admin can update a product and its versions.",
+		"Any OpTISAM admin can delete an Product and deleting a Product will delete the associated versions.",
+		"Any person who has access to the Product Catalog can see the all Products at once and search them according to editors, name, license, location.",
+		"Any person who has access to the Product Catalog can select a Product and view its attributes.",
+		"Every OpTISAM admin can choose from the Products with their version present in the product Catalog when creating an acquired right (along with products already in the inventory).",
+		"Any OpTISAM admin can upload a file from UI and create Products in Product catalog.",
+		"Removal of Old Swidtag from UI and reports.",
+		"Added Product and Version Swidtag from referred product in catalog on UI.",
+		"Introduced New Landing Page of Application featuring all editors and Products in Product Catalog with Login Functionality.",
+		"Any OpTISAM User can redirect to Product Catalog Section from new menu icon added on sidebar."
 	],
 	"future": [
-		{
-			"version": "1.3.0 ",
-			"date_month": "October",
-			"date_year": "2022",
-			"bullets": [
-				"Metric changes"
-			]
-		},
 		{
 			"version": "1.4.0 ",
 			"date_month": "",
 			"date_year": "",
 			"bullets": [
-				"Product catalog changes"
+				"Concurrent And Nominative Users",
+				"Metric changes",
+				"Shared licenses"
 			]
 		}
 	]

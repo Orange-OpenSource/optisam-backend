@@ -27,7 +27,9 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "svc-optisam-license.int-optisam.svc:8090"
+license = "svc-optisam-license-int.int-optisam.svc:8090"
+product = "svc-optisam-product-int.int-optisam.svc:8090"
+
 
 [database]
 host = "svc-optisam-postgres.int-optisam.svc"

@@ -33,8 +33,8 @@ name = "simulation"
 apiKey = "12345678"
 
 [grpcservers.address]
-license = "svc-optisam-license.optisam-performance.svc:8090"
-metric = "svc-optisam-metric.optisam-performance.svc:8090"
+license = "svc-optisam-license-performance.optisam-performance.svc:8090"
+metric = "svc-optisam-metric-performance.optisam-performance.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"

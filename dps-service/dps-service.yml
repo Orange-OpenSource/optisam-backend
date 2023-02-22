@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-dps
+      name: svc-optisam-dps-${ENV}
       annotations:
         description: Exposes and load balances the dps pods
       labels:
-        run: optisam-dps
+        run: optisam-dps-${ENV}
     spec:
       ports:
         - name: api
@@ -28,20 +28,20 @@ objects:
           targetPort: 8090
           protocol: TCP
       selector:
-        app: optisam-dps
+        app: optisam-dps-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
       annotations:
         haproxy.router.openshift.io/timeout: 300s
-      name: route-svc-optisam-dps
+      name: route-svc-optisam-dps-${ENV}
       labels:
-        run: optisam-dps
+        run: optisam-dps-${ENV}
     spec:
       host: optisam-dps-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-dps
+        name: svc-optisam-dps-${ENV}
       port:
         targetPort: api
       tls:
@@ -49,14 +49,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-dps-instrumentation
+      name: route-svc-optisam-dps-instrumentation-${ENV}
       labels:
-        run: optisam-dps
+        run: optisam-dps-${ENV}
     spec:
       host: optisam-dps-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-dps
+        name: svc-optisam-dps-${ENV}
       port:
         targetPort: instapi        
       tls:
@@ -64,13 +64,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-dps
+      name: optisam-dps-${ENV}
       labels:
-        app: optisam-dps
+        app: optisam-dps-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-dps
+        app: optisam-dps-${ENV}
       strategy:
         type: Rolling
       template:
@@ -79,13 +79,13 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-dps
+            app: optisam-dps-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-dps
+          name: optisam-dps-${ENV}
         spec:
           containers:
-            - name: optisam-dps
-              image: ${DOCKER_REGISTRY}/optisam/dps-service:${TAG}
+            - name: optisam-dps-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/dps-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
@@ -99,6 +99,9 @@ objects:
                   protocol: TCP
                 - containerPort: 8081
                   protocol: TCP
+              envFrom:
+                - secretRef:
+                       name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
@@ -124,10 +127,10 @@ objects:
                   cpu: "1200m"
                   memory: "1900Mi"
                 limits:
-                  cpu: "1500m"
-                  memory: "2900Mi"
+                  cpu: "3100m"
+                  memory: "7900Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config/
                 - name: optisam-dir
                   mountPath: /optisam_dir
@@ -135,7 +138,7 @@ objects:
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-dps-${ENV}
             - name: optisam-dir
@@ -163,3 +166,4 @@ parameters:
     description: Artifactory URL to download images
     value: "optisam-it-virt-docker-unstable.repos.tech.orange"
     required: true
+ 

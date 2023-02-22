@@ -37,9 +37,11 @@ apiKey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-dps = "svc-optisam-dps.optisam-performance.svc:8090"
-simulation = "svc-optisam-simulation.optisam-performance.svc:8090"
-account = "svc-optisam-account.optisam-performance.svc:8090"
+dps = "svc-optisam-dps-performance.optisam-performance.svc:8090"
+simulation = "svc-optisam-simulation-performance.optisam-performance.svc:8090"
+account = "svc-optisam-account-performance.optisam-performance.svc:8090"
+catalog = "svc-optisam-catalog-performance.optisam-performance.svc:8090"
+
 
 
 [upload]

@@ -27,8 +27,8 @@ agentEndpoint = "192.168.99.100:6831"
 host = "localhost"
 port = 5432
 user = "postgres"
-pass = "postgres"
-name = "postgres"
+pass = "1@34567b"
+name = "import"
 
 [grpcservers]
 apiKey = "12345678"
@@ -38,6 +38,7 @@ timeout = 10
 dps = "localhost:10000"
 simulation = "localhost:22090"
 account = "localhost:20000"
+catalog = "localhost:20024"
 
 [upload]
 uploadDir = "testdata"

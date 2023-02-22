@@ -20,10 +20,10 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-product = "svc-optisam-product.dev-optisam.svc:8090"
+product = "svc-optisam-product-dev.dev-optisam.svc:8090"
 
 [httpservers.Address]
-auth = "svc-optisam-auth.dev-optisam.svc:80"
+auth = "svc-optisam-auth-dev.dev-optisam.svc:80"
 
 [instrumentation]
 addr = ":8081"
@@ -62,3 +62,11 @@ sortBy = "name"
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

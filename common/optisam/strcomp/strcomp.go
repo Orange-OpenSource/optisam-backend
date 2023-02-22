@@ -1,6 +1,7 @@
 package strcomp
 
 import (
+	"strconv"
 	"strings"
 )
 
@@ -10,4 +11,12 @@ func CompareStrings(str1, str2 string) bool {
 		return false
 	}
 	return true
+}
+
+func StringToNum(strVar string) int {
+	intVar, err := strconv.Atoi(strVar)
+	if err == nil {
+		return intVar
+	}
+	return 0
 }

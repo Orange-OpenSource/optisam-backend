@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-simulation
+      name: svc-optisam-simulation-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-simulation
+        run: optisam-simulation-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP                
       selector:
-        app: optisam-simulation
+        app: optisam-simulation-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-simulation
+      name: route-svc-optisam-simulation-${ENV}
       labels:
-        run: optisam-simulation
+        run: optisam-simulation-${ENV}
     spec:
       host: optisam-simulation-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-simulation
+        name: svc-optisam-simulation-${ENV}
       port:
         targetPort: api        
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-simulation-instrumentation
+      name: route-svc-optisam-simulation-instrumentation-${ENV}
       labels:
-        run: optisam-simulation
+        run: optisam-simulation-${ENV}
     spec:
       host: optisam-simulation-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-simulation
+        name: svc-optisam-simulation-${ENV}
       port:
         targetPort: instapi        
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-simulation
+      name: optisam-simulation-${ENV}
       labels:
-        app: optisam-simulation
+        app: optisam-simulation-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-simulation
+        app: optisam-simulation-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,13 +77,13 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-simulation
+            app: optisam-simulation-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-simulation
+          name: optisam-simulation-${ENV}
         spec:
           containers:
-            - name: optisam-simulation
-              image: ${DOCKER_REGISTRY}/optisam/simulation-service:${TAG}
+            - name: optisam-simulation-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/simulation-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
@@ -97,6 +97,9 @@ objects:
                   protocol: TCP
                 - containerPort: 8090
                   protocol: TCP
+              envFrom:
+                - secretRef:
+                       name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
@@ -125,13 +128,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-simulation-${ENV}
             - name: secret-volume

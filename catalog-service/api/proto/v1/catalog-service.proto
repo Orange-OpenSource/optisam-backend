@@ -1,0 +1,212 @@
+syntax = "proto3";
+
+option go_package = "optisam-backend/catalog-service/pkg/api/v1";
+
+package optisam.productcatalog.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+// import "protoc-gen-swagger/options/annotations.proto";
+
+service ProductCatalog {
+  rpc InsertProduct(Product)returns (Product){
+    option (google.api.http) = {
+      post : "/api/v1/catalog/product"
+      body : "*"
+    };
+  }
+
+  rpc GetProduct(GetProductRequest)returns(Product){
+    option (google.api.http) = {
+      get:"/api/v1/catalog/product/{prod_id}"
+    };
+  }
+   rpc CreateEditor(CreateEditorRequest)returns(Editor){
+    option (google.api.http) = {
+      post:"/api/v1/catalog/editor"
+      body : "*"
+    };
+  }
+  rpc GetEditor(GetEditorRequest)returns(Editor){
+    option (google.api.http) = {
+      get:"/api/v1/catalog/editor/{editor_id}"
+    };
+  }
+
+  rpc UpdateEditor(Editor)returns(Editor){
+    option (google.api.http) = {
+      put:"/api/v1/catalog/editor"
+      body : "*"
+    };
+  }
+  
+  rpc DeleteProduct(GetProductRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/catalog/product/{prod_id}"
+    };
+  }
+  rpc UpdateProduct(Product) returns (Product){
+    option (google.api.http) = {
+      put : "/api/v1/catalog/product"
+      body : "*"
+    };
+  }
+
+  rpc BulkFileUpload(UploadRecords) returns (UploadResponse){
+    option (google.api.http) = {
+      post : "/api/v1/catalog/uploadrecords"
+      body : "*"
+    };
+  }
+
+  rpc DeleteEditor(GetEditorRequest) returns (DeleteResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/catalog/editor/{editor_id}"
+    };
+  }
+  rpc BulkFileUploadLogs(UploadCatalogDataLogsRequest) returns (UploadCatalogDataLogsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/catalog/bulkfileuploadlogs"
+    };
+  }
+   
+}
+
+message UploadCatalogDataLogsRequest{
+
+}
+
+message UploadCatalogDataLogs {
+  string filename =1;
+  google.protobuf.Timestamp uploaded_on = 2;
+}
+
+message UploadCatalogDataLogsResponse{
+  repeated UploadCatalogDataLogs uploadCatalogDataLogs = 1;
+}
+
+message UploadRecords {
+repeated Upload data=1;
+string fileName =2;
+}
+
+message Upload{
+  string editor = 1 ;
+  string name =2;
+  string licensing = 3;
+  string version = 4;
+  string genearlInformation =5;
+  google.protobuf.Timestamp endOfLife =6;
+  google.protobuf.Timestamp endOfSupport=7;
+  string origin =8;
+}
+
+message UploadResponse{
+  string message = 1;
+}
+
+message Product{
+  string id = 1 ;
+  string editorID =2 [(validate.rules).string.uuid = true];
+  string name = 3 [(validate.rules).string.max_bytes = 200];
+  repeated string metrics = 4 [(validate.rules).repeated.items.string = {max_bytes: 200}];
+  string genearlInformation =5 [(validate.rules).string.max_bytes = 200];
+  string contracttTips =6 [(validate.rules).string.max_bytes = 200];
+  string locationType = 7 [(validate.rules).string = {in: ["NONE","SAAS","On Premise","Both"]}];
+  OpenSource openSource = 8;
+  CloseSource closeSource =9;
+  repeated Version version =10;
+  string recommendation = 11;
+  repeated string usefulLinks = 12;
+  repeated string supportVendors =13 [(validate.rules).repeated.items.string = {max_bytes: 200}];
+  google.protobuf.Timestamp createdOn =14;
+  google.protobuf.Timestamp UpdatedOn=15;
+  string swidtagProduct=16 [(validate.rules).string.max_bytes = 200];
+  string editorName=17;
+}
+message Version{
+  string id =1 ;
+  string swidtagVersion=2 [(validate.rules).string.max_bytes = 200];
+  string name = 3 [(validate.rules).string.max_bytes = 200];
+  string recommendation = 4 [(validate.rules).string.max_bytes = 200];
+  google.protobuf.Timestamp endOfLife =5;
+  google.protobuf.Timestamp endOfSupport=6;
+}
+message OpenSource{
+  bool isOpenSource =1;
+  string openLicences =2;
+  string openSourceType= 3 [(validate.rules).string = {in: ['NONE', 'COMMERCIAL', 'COMMUNITY', 'BOTH']}];
+}
+message CloseSource{
+  bool isCloseSource =1;
+  repeated string closeLicences =2;
+}
+// message ListProductsRequest{
+//   int32 page_num = 1 [
+//     (validate.rules).int32 = {gte : 1, lt : 1000},
+//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field)=
+//     {description : "Page number", minimum : 1, maximum : 1000}
+//   ];
+//   int32 page_size = 2 [
+//     (validate.rules).int32 = {gte : 10, lt : 100},
+//     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+//     {description : "Items per page", minimum : 10, maximum : 100}
+//   ];
+//   enum SortBy {
+//     id = 0;
+//     name = 1;
+//     createdOn=2;
+//     updatedOn=3;
+//    }
+//   SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+//   string sort_order = 4 [(validate.rules).string = {in: ["asc","desc"]}];
+//   ProductsSearchParams  search_params = 5;
+// }
+
+message ProductsSearchParams {
+  string name = 1;
+}
+message GetProductRequest{
+  string prod_id = 1[(validate.rules).string.uuid = true];
+}
+
+message GetEditorRequest{
+  string editor_id = 1[(validate.rules).string.uuid = true];
+}
+
+message CreateEditorRequest {
+  string name = 1 [(validate.rules).string.max_bytes = 200];
+  string genearl_information =2 [(validate.rules).string.max_bytes = 200];
+  repeated Vendors vendors =3;
+  repeated PartnerManagers partner_managers =4;
+  repeated Audits audits =5;
+}
+
+message Editor{
+  string id = 1 [(validate.rules).string.uuid = true];
+  string name = 2  [(validate.rules).string.max_bytes = 200];
+  string genearlInformation =3 [(validate.rules).string.max_bytes = 200];
+  repeated Vendors vendors =4;
+  repeated PartnerManagers partner_managers =5;
+  repeated Audits audits =6; 
+  google.protobuf.Timestamp createdOn =7;
+  google.protobuf.Timestamp UpdatedOn=8;
+  int32 products_count =9;
+}
+
+message Vendors{
+  string name =1;
+}
+message Audits{
+  string entity =1 [(validate.rules).string.max_bytes = 200];
+  google.protobuf.Timestamp date =2;
+}
+message PartnerManagers{
+  string email =1;
+  string name =2 [(validate.rules).string.max_bytes = 200];
+}
+
+message DeleteResponse {
+  bool success = 1;
+}

@@ -1,3 +1,12 @@
+var envSuperAdminUserName= java.lang.System.getenv('APP_SUPER_ADMIN_USERNAME');
+var envSuperAdminUserPassword= java.lang.System.getenv('APP_SUPER_ADMIN_PASSWORD');
+var envAdminuserName= java.lang.System.getenv('APP_ADMIN_USERNAME');
+var envAdminuserPassword= java.lang.System.getenv('APP_ADMIN_PASSWORD');
+var envuserName= java.lang.System.getenv('APP_USER_USERNAME');
+var envuserPassword= java.lang.System.getenv('APP_USER_PASSWORD');
+
+//require('dotenv').config()
+//console.log(process.env)
 function fn() {
   var env = karate.env; // get system property 'karate.env'
 
@@ -23,11 +32,14 @@ function fn() {
     env: env,
     access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJyZWcudXNlckB0ZXN0LmNvbSIsIkxvY2FsZSI6ImVuIiwiUm9sZSI6IkFkbWluIiwiU29jcGVzIjpbIk9TUCIsIlRTVCJdLCJleHAiOjE2MDY5ODMzMTcsImlhdCI6MTYwNjk3NjExNywiaXNzIjoiT3JhbmdlIiwic3ViIjoiQWNjZXNzIFRva2VuIn0.OfxXAQP1EU-9sWhqCj_0My3hp4lxnNxyUk3FjjyzQMOArbM3Y6yjb1lKWSZoK6TlWJbzZRaritzBDhVBOGb0BLXmRCIRXCywqojrdNtSXe_cBKe1Ohrfdg4V-8Vy5Ip4cW5wg8Yx7-Bn40Wl_39X3a8XOkTUWvcbDsZ8uPUsDQ56h4-VUNNT6FMF0zmo4HE45MdZITGezUoth2dn7b6I9TC49RtgKkuXWJ5BiB5zio2aRFpZDAYKc9BC4MWfbfuTG6qJ3RcMBm1yW5pbtQMy03QM7OJXG8ZzLE2E5fzXwFyTXRUzbtRKE9RZhrJSpYn1jjJS6CGAWwEYqU8v2C0wrA",
     authServiceUrl: "",
-    AdminAccount_UserName: "admin@test.com",
-    AdminAccount_Password: "Welcome@123",
-    UserAccount_Username: "UserAccount1@gmail.com",
-    UserAccount_password: "password"
-
+    //AdminAccount_UserName: "",
+    //AdminAccount_Password: "",
+    //UserAccount_Username: "",
+    //UserAccount_password: ""
+    AdminAccount_UserName: envSuperAdminUserName,
+    AdminAccount_Password: envSuperAdminUserPassword,
+    UserAccount_Username: envuserName,
+    UserAccount_password: envuserPassword
   };
 
   if (env == 'local') {

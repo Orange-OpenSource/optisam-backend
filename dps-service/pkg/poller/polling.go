@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"optisam-backend/common/optisam/config"
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/workerqueue"
@@ -35,6 +36,7 @@ var (
 	APIKey         string
 	dbObj          repo.Dps
 	WaitLimitCount int
+	AppConfig      config.Application
 )
 
 const (
@@ -43,7 +45,7 @@ const (
 	NIFIInternalError string = "NIFIInternalError"
 )
 
-func Init(q workerqueue.Queue, authapi, sourceDir, archieveDir, rawdataDir string, obj v1.DpsServiceServer, key *rsa.PublicKey, apiKey string, db repo.Dps, waitLimitCount int) {
+func Init(q workerqueue.Queue, authapi, sourceDir, archieveDir, rawdataDir string, obj v1.DpsServiceServer, key *rsa.PublicKey, apiKey string, db repo.Dps, waitLimitCount int, config config.Application) {
 	Queue = q
 	RawdataDir = rawdataDir
 	AuthAPI = authapi
@@ -57,6 +59,7 @@ func Init(q workerqueue.Queue, authapi, sourceDir, archieveDir, rawdataDir strin
 	if waitLimitCount > 0 {
 		WaitLimitCount = waitLimitCount
 	}
+	AppConfig = config
 
 }
 
@@ -72,7 +75,7 @@ func Job() { //nolint
 			logger.Log.Error("Panic recovered from cron job", zap.Any("recover", r))
 		}
 	}()
-	cronCtx, err := createSharedContext(AuthAPI)
+	cronCtx, err := createSharedContext(AuthAPI, AppConfig)
 	if err != nil {
 		logger.Log.Error("couldnt fetch token, will try next time when cron will execute", zap.Any("error", err))
 		return
@@ -235,12 +238,12 @@ func revertProcessingFilesName(files []string) {
 	}
 }
 
-func createSharedContext(api string) (*context.Context, error) {
+func createSharedContext(api string, appcred config.Application) (*context.Context, error) {
 	ctx := context.Background()
 	respMap := make(map[string]interface{})
 	data := url.Values{
-		"username":   {"admin@test.com"},
-		"password":   {"Welcome@123"},
+		"username":   {appcred.UserNameSuperAdmin},
+		"password":   {appcred.PasswordSuperAdmin},
 		"grant_type": {"password"},
 	}
 

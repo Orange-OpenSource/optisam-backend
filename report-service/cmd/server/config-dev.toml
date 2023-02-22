@@ -46,7 +46,8 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "svc-optisam-license.dev-optisam.svc:8090"
+license = "svc-optisam-license-dev.dev-optisam.svc:8090"
+product = "svc-optisam-product-dev.dev-optisam.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"

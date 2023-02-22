@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-report
+      name: svc-optisam-report-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-report
+        run: optisam-report-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP
       selector:
-        app: optisam-report
+        app: optisam-report-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-report
+      name: route-svc-optisam-report-${ENV}
       labels:
-        run: optisam-report
+        run: optisam-report-${ENV}
     spec:
       host: optisam-report-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-report
+        name: svc-optisam-report-${ENV}
       port:
         targetPort: api
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-report-instrumentation
+      name: route-svc-optisam-report-instrumentation-${ENV}
       labels:
-        run: optisam-report
+        run: optisam-report-${ENV}
     spec:
       host: optisam-report-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-report
+        name: svc-optisam-report-${ENV}
       port:
         targetPort: instapi        
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-report
+      name: optisam-report-${ENV}
       labels:
-        app: optisam-report
+        app: optisam-report-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-report
+        app: optisam-report-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,19 +77,22 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-report
+            app: optisam-report-${ENV}
             internal-elasticsearch: 'true'  
-          name: optisam-report
+          name: optisam-report-${ENV}
         spec:
           containers:
-            - name: optisam-report
-              image: ${DOCKER_REGISTRY}/optisam/report-service:${TAG}
+            - name: optisam-report-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/report-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -125,13 +128,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-report-${ENV}
             - name: secret-volume

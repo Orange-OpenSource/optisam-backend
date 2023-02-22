@@ -1,0 +1,330 @@
+swagger: '2.0'
+info:
+  title: catalog-service
+  version: version not set
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /catalog/editor:
+    get:
+      operationId: ProductCatalog_GetEditor
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1Editor'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      parameters:
+        - name: id
+          in: query
+          required: true
+          type: string
+      tags:
+        - ProductCatalog
+  /catalog/editors:
+    get:
+      operationId: ProductCatalog_GetEditors
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+              $ref: '#/definitions/v1Editors'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      parameters:
+        - name: pageNum
+          in: query
+          required: true
+          type: string
+        - name: sortBy
+          in: query
+          required: true
+          type: string
+          enum: [productsCount,name,createdOn]
+        - name: sortOrder
+          in: query
+          required: true
+          type: string
+          enum: [asc, dcs]
+        - name: pageSize
+          in: query
+          required: true
+          type: string
+        - name: search_params.name.filteringkey
+          in: query
+          required: false
+          type: string
+      tags:
+        - ProductCatalog
+  /catalog/editornames:
+    get:
+      operationId: ProductCatalog_GetEditorsNames
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+              $ref: '#/definitions/v1EditorNames'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      tags:
+        - ProductCatalog
+  /catalog/product:
+    get:
+      operationId: ProductCatalog_GetProduct
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1Product'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      parameters:
+        - name: id
+          in: query
+          required: true
+          type: string
+      tags:
+        - ProductCatalog
+  /catalog/products:
+    get:
+      operationId: ProductCatalog_ListProducts
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1ListProductResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      parameters:
+        - name: page_num
+          description: Page number
+          in: query
+          required: false
+          type: string
+        - name: page_size
+          description: Items per page
+          in: query
+          required: false
+          type: string
+        - name: sort_by
+          in: query
+          required: false
+          type: string
+          enum:
+            - name
+            - createdOn
+          default: createdOn
+        - name: sort_order
+          in: query
+          required: false
+          type: string
+        - name: search_params.name.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.editorName.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.editorId.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.locationType.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.licensing.filteringkey
+          in: query
+          required: false
+          type: string
+      tags:
+      - ProductCatalog
+definitions:
+  v1Audits:
+    type: object
+    properties:
+      entity:
+        type: string
+      date:
+        type: string
+        format: date-time
+  v1Editor:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      genearlInformation:
+        type: string
+      vendors:
+        type: array
+        items:
+          $ref: '#/definitions/v1Vendors'
+      partner_managers:
+        type: array
+        items:
+          $ref: '#/definitions/v1PartnerManagers'
+      audits:
+        type: array
+        items:
+          $ref: '#/definitions/v1Audits'
+      createdOn:
+        type: string
+        format: date-time
+      UpdatedOn:
+        type: string
+        format: date-time 
+      product_count:
+        type: number
+  v1EditorName:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  v1Editors:
+    type: object
+    properties:
+      editors:
+        type: array
+        items:
+          $ref: '#/definitions/v1Editor'
+      totalRecords:
+        type: integer
+  v1EditorNames:
+    type: object
+    properties:
+      editors:
+        type: array
+        items:
+          $ref: '#/definitions/v1EditorName'
+  v1PartnerManagers:
+    type: object
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+  v1Vendors:
+    type: object
+    properties:
+      name:
+        type: string
+  error:
+    type: object
+    properties:
+      message:
+        type: string
+      code:
+        type: integer
+  v1Product:
+    type: object
+    properties:
+     id:
+        type: string
+     editorID:
+        type: string
+     name:
+        type: string
+     metrics:
+        type: array
+        items:
+            type: string
+     genearlInformation:
+        type: string
+     contracttTips:
+        type: string
+     locationType:
+        type: string
+     openSource:
+        $ref: '#/definitions/v1OpenSource'
+     closeSource:
+        $ref: '#/definitions/v1CloseSource'
+     version:
+        type: array
+        items:
+         $ref: '#/definitions/v1Version'
+     recommendation:
+        type: string
+     usefulLinks:
+        type: array
+        items:
+          type: string
+     supportVendors:
+        type: array
+        items:
+          type: string
+     createdOn:
+        type: string
+        format: date-time
+     UpdatedOn:
+        type: string
+        format: date-time
+     productSwidTag:
+        type: string
+     editorName:
+        type: string
+  v1OpenSource:
+    type: object
+    properties:
+      isOpenSource:
+        type: boolean
+      openSourceType:
+        type: string
+        example: COMMERCIAL
+      openLicences:
+        type: string
+  v1CloseSource:
+    type: object
+    properties:
+      isCloseSource:
+        type: boolean
+      closeLicences:
+        type: array
+        items:
+          type: string
+  v1Version:
+    type: object
+    properties:
+      id:
+        type: string
+      swidTagVersion:
+        type: string
+      name:
+        type: string
+      recommendation:
+        type: string
+      endOfLife:
+        type: string
+        format: date-time
+      endOfSupport:
+        type: string
+        format: date-time
+  v1ListProductResponse:
+    type: object
+    properties:
+      total_records:
+        type: integer
+        format: int32
+      product:
+        type: array
+        items:
+          $ref: '#/definitions/v1Product'

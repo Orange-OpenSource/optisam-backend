@@ -44,7 +44,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 		temp.Editor = dbresp[i].ProductEditor
 		temp.NumApplications = dbresp[i].NumOfApplications
 		temp.NumEquipments = dbresp[i].NumOfEquipments
-		temp.TotalCost, _ = dbresp[i].TotalCost.Float64()
+		temp.EditorId = dbresp[i].EditorID.String
 		individualCount, err := s.productRepo.GetIndividualProductForAggregationCount(ctx, db.GetIndividualProductForAggregationCountParams{
 			Scope:    req.Scopes[0],
 			Swidtags: dbresp[i].Swidtags,
@@ -150,7 +150,7 @@ func (s *productServiceServer) GetAggregationProductsExpandedView(ctx context.Co
 	}
 	for _, v := range expandedProd {
 		temp := &v1.ProductExpand{}
-		temp.SwidTag = v.PID
+		temp.SwidTag = v.ProdID
 		temp.Name = v.Name
 		temp.Editor = v.ProductEditor
 		temp.Version = v.Version

@@ -169,6 +169,7 @@ func (r *ReportRepository) ProductEquipments(ctx context.Context, editor string,
 	q := `{
 		DirectEquipments(func: eq(product.editor,"` + editor + `")) @filter(eq(scopes,"` + scope + `")) @cascade{
 			Swidtag: product.swidtag
+			ProductName: product.name
 	  		Equipments: product.equipment @filter(eq(equipment.type,"` + eqtype + `")){
 	 	 		EquipmentID: equipment.id
 	  	 		EquipmentType: equipment.type

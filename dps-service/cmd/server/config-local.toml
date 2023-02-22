@@ -76,3 +76,10 @@ publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
 
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

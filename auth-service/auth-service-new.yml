@@ -1,0 +1,157 @@
+kind: "Template"
+apiVersion: "v1"
+metadata:
+  name: "deploy-template"
+  annotations:
+    description: "Template for deployment"
+objects:
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-auth-new
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-auth-new
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+      selector:
+        app: optisam-auth-new
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-auth-new
+      labels:
+        run: optisam-auth-new
+    spec:
+      host: optisam-auth-new-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-auth-new
+      tls:
+        termination: edge
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: svc-optisam-auth-instrumentation-new
+      annotations:
+        description: Exposes and load balances the application pods
+      labels:
+        run: optisam-auth-instrumentation-new
+    spec:
+      ports:
+        - name: api
+          port: 80
+          targetPort: 8081
+          protocol: TCP
+      selector:
+        app: optisam-auth-new
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-auth-instrumentation-new
+      labels:
+        run: optisam-auth-new
+    spec:
+      host: optisam-auth-inst-new-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        kind: Service
+        name: svc-optisam-auth-instrumentation-new
+      tls:
+        termination: edge        
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: optisam-auth-new
+      labels:
+        app: optisam-auth-new
+    spec:
+      replicas: ${{REPLICAS}}
+      selector:
+        app: optisam-auth-new
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: optisam-auth-new
+            internal-elasticsearch: 'true'  
+          name: optisam-auth-new
+        spec:
+          containers:
+            - name: optisam-auth-new
+              image: ${DOCKER_REGISTRY}/optisam/auth-service-new:${TAG}
+              imagePullPolicy: Always
+              env:
+                - name: "ENV"
+                  value: ${ENV}
+                - name: "DB_PASSWORD"  
+                  value: ${DB_PASSWORD}
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+                - containerPort: 8081
+                  protocol: TCP
+              livenessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2
+              readinessProbe:
+                failureThreshold: 3
+                httpGet:
+                  path: /healthz
+                  port: 8081
+                  scheme: HTTP
+                initialDelaySeconds: 15
+                periodSeconds: 10
+                successThreshold: 1
+                timeoutSeconds: 2                                    
+              resources:
+                requests:
+                  cpu: "80m"
+                  memory: "128Mi"
+                limits:
+                  cpu: "100m"
+                  memory: "150Mi"
+              volumeMounts:
+                - name: config-volume-new
+                  mountPath: /opt/config/
+                - name: secret-volume
+                  mountPath: /opt/secret
+                  readOnly: true
+          volumes:
+            - name: config-volume-new
+              configMap:
+                name: config-auth-new-${ENV}
+            - name: secret-volume
+              secret:
+                secretName: secret-apiprivatekey-${ENV}
+parameters:
+  - name: DB_PASSWORD
+    description: Postgres Database Password
+    required: true
+  - name: TAG
+    description: Tag for Docker image
+    value: "latest"
+    required: true
+  - name: ENV
+    description: Env for deployment
+    required: true
+  - name: REPLICAS
+    description: Pod replica count
+    value: "1"
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    value: "optisam-it-virt-docker-unstable.repos.tech.orange"
+    required: true

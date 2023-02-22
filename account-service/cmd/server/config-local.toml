@@ -5,7 +5,7 @@ httpport = 20001
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
-loglevel = -1
+loglevel = 0
 
 [instrumentation.prometheus]
 enabled = false
@@ -20,10 +20,16 @@ agentEndpoint = "192.168.99.100:6831"
 
 [database]
 host = "localhost"
-port = 5432
+port = 5431
 user = "optisam"
-pass = "optisam"
-name = "optisam"
+pass = ""
+name = "account"
+
+[redis]
+host = "localhost:6379"
+pass = ""
+db = 0
+username = ""
 
 [pki]
 publickeypath = "cert.pem"

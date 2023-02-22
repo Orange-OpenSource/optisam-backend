@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
@@ -132,6 +133,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.SupportNumber = dbresp[i].SupportNumber
 		temp.MaintenanceProvider = dbresp[i].MaintenanceProvider
 		temp.FileName = dbresp[i].FileName
+		temp.EditorId = dbresp[i].EditorID.String
 		temp.Repartition = dbresp[i].Repartition
 		if dbresp[i].StartOfMaintenance.Valid {
 			temp.StartOfMaintenance = dbresp[i].StartOfMaintenance.Time.Format(time.RFC3339)
@@ -151,6 +153,10 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.TotalCost, _ = dbresp[i].TotalCost.Float64()
 		temp.TotalPurchaseCost, _ = dbresp[i].TotalPurchaseCost.Float64()
 		temp.TotalMaintenanceCost, _ = dbresp[i].TotalMaintenanceCost.Float64()
+		var mapping = dbresp[i].Mapping.([]byte)
+		var t []*v1.Mapping
+		json.Unmarshal(mapping, &t)
+		temp.Mapping = t
 		apiresp.Aggregations = append(apiresp.Aggregations, temp)
 	}
 	return &apiresp, nil

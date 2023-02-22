@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-meta
+      name: svc-optisam-meta-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-meta
+        run: optisam-meta-${ENV}
     spec:
       ports:
         - name: api
@@ -20,18 +20,18 @@ objects:
           targetPort: 8080
           protocol: TCP
       selector:
-        app: optisam-meta
+        app: optisam-meta-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-meta
+      name: route-svc-optisam-meta-${ENV}
       labels:
-        run: optisam-meta
+        run: optisam-meta-${ENV}
     spec:
       host: optisam-meta-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-meta
+        name: svc-optisam-meta-${ENV}
       port:
         targetPort: api        
       tls:
@@ -39,25 +39,25 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-meta
+      name: optisam-meta-${ENV}
       labels:
-        app: optisam-meta
+        app: optisam-meta-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-meta
+        app: optisam-meta-${ENV}
       strategy:
         type: Rolling
       template:
         metadata:
           labels:
-            app: optisam-meta
+            app: optisam-meta-${ENV}
             internal-elasticsearch: 'true'
-          name: optisam-meta
+          name: optisam-meta-${ENV}
         spec:
           containers:
-            - name: optisam-meta
-              image: ${DOCKER_REGISTRY}/optisam/meta-service:${TAG}
+            - name: optisam-meta-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/meta-service-${ENV}:${TAG}
               imagePullPolicy: Always
               ports:
                 - containerPort: 8080

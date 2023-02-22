@@ -35,3 +35,10 @@ sortBy = "name"
 publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[grpcservers.Address]
+product = "localhost:12090"

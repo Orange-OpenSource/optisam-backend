@@ -50,6 +50,7 @@ type AcqRightsStruct struct {
 	AggregationName    string  `json:"aggregationName"`
 	SwidTag            string  `json:"swidtags"`
 	Editor             string  `json:"editor"`
+	Product            string  `json:"product"`
 	Metric             string  `json:"metric"`
 	NumCptLicences     int32   `json:"computedLicenses"`
 	ComputationDetails string  `json:"computationDetails"`
@@ -116,6 +117,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				AggregationName:    a.AggregationName,
 				SwidTag:            a.SwidTags,
 				Editor:             r.Editor,
+				Product:            a.ProductNames,
 				Metric:             a.Metric,
 				NumCptLicences:     a.NumCptLicences,
 				ComputationDetails: a.ComputedDetails,
@@ -201,7 +203,8 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 					var jsonValues []string
 					swidtagString := `"swidtag":"` + pro.Swidtag + `"`
 					editorString := `"editor":"` + r.Editor + `"`
-					jsonValues = append(jsonValues, swidtagString, editorString)
+					productString := `"product":"` + pro.ProductName + `"`
+					jsonValues = append(jsonValues, swidtagString, editorString, productString)
 					directEquipmentString := `"` + equipment.EquipmentType + `":"` + equipment.EquipmentID + `"`
 					jsonValues = append(jsonValues, directEquipmentString)
 					// Find all attributes value if the attribute are available

@@ -211,6 +211,10 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
 		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
 		apiresp.Products[i].TotalCost = dbresp[i].Cost
+		apiresp.Products[i].EditorId = dbresp[i].EditorID.String
+		apiresp.Products[i].ProductSwidTag = dbresp[i].ProductSwidTag.String
+		apiresp.Products[i].VersionSwidTag = dbresp[i].VersionSwidTag.String
+		apiresp.Products[i].ProductId = dbresp[i].ProductID.String
 
 	}
 	return &apiresp, nil
@@ -526,6 +530,8 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 		apiresp.Editor = dbresp.ProductEditor
 		apiresp.Version = dbresp.Version
 		dbmetrics = dbresp.Metrics
+		apiresp.ProductSwidTag = dbresp.ProductSwidTag.String
+		apiresp.VersionSwidTag = dbresp.VersionSwidTag.String
 	} else {
 		apiresp.SwidTag = dbresp.Swidtag
 		apiresp.ProductName = dbresp.ProductName

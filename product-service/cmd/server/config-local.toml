@@ -28,17 +28,24 @@ agentEndpoint = "192.168.99.100:6831"
 
 [dgraph]
 hosts = [
-    "localhost:9080"
+   # "https://green-feather-500064.ap-south-1.aws.cloud.dgraph.io"
 #    "10.171.44.163:9082"  dev dgrpah
+    "127.0.0.1:9080"
 
 ]
 
 [database]
 host = "localhost"
 port = 5432
-user = "optisam"
-pass = "optisam"
-name = "optisam"
+user = "product"
+pass = "product"
+name = "product"
+
+[redis]
+host = "localhost:6379"
+pass = ""
+db = 0
+username = ""
 
 [app.params]
 pageSize = 20
@@ -67,3 +74,11 @@ equipment = "localhost:14090"
 
 [httpservers.Address]
 auth = "localhost:9093"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

@@ -29,6 +29,12 @@ user = "optisam"
 #pass = ""
 name = "account"
 
+[redis]
+host = "red-dev-redis-dev-service"
+#pass = ""
+db = 0
+#username = ""
+
 [pki]
 publickeypath = "/opt/secret/ssh-privatekey"
 
@@ -38,12 +44,12 @@ timeout = 10000
 
 
 [grpcservers.Address]
-product = "svc-optisam-product.prod-optisam.svc:8090"
-application = "svc-optisam-application.prod-optisam.svc:8090"
-dps = "svc-optisam-dps.prod-optisam.svc:8090"
-metric = "svc-optisam-metric.prod-optisam.svc:8090"
-equipment = "svc-optisam-equipment.prod-optisam.svc:8090"
-report = "svc-optisam-report.prod-optisam.svc:8090"
+product = "svc-optisam-product-prod.prod-optisam.svc:8090"
+application = "svc-optisam-application-prod.prod-optisam.svc:8090"
+dps = "svc-optisam-dps-prod.prod-optisam.svc:8090"
+metric = "svc-optisam-metric-prod.prod-optisam.svc:8090"
+equipment = "svc-optisam-equipment-prod.prod-optisam.svc:8090"
+report = "svc-optisam-report-prod.prod-optisam.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"

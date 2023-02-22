@@ -42,6 +42,12 @@ user = "optisam"
 #pass = ""
 name = "product"
 
+[redis]
+host = "red-prod-redis-prod-service"
+#pass = ""
+db = 0
+#username = ""
+
 [app.params]
 pageSize = 20
 pageNum = 1
@@ -58,11 +64,19 @@ apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-license = "svc-optisam-license.prod-optisam.svc:8090"
-metric = "svc-optisam-metric.prod-optisam.svc:8090"
-application = "svc-optisam-application.prod-optisam.svc:8090"
-account = "svc-optisam-account.prod-optisam.svc:8090"
-equipment = "svc-optisam-equipment.prod-optisam.svc:8090"
+license = "svc-optisam-license-prod.prod-optisam.svc:8090"
+metric = "svc-optisam-metric-prod.prod-optisam.svc:8090"
+application = "svc-optisam-application-prod.prod-optisam.svc:8090"
+account = "svc-optisam-account-prod.prod-optisam.svc:8090"
+equipment = "svc-optisam-equipment-prod.prod-optisam.svc:8090"
 
 [httpservers.Address]
-auth = "svc-optisam-auth.prod-optisam.svc:80"
+auth = "svc-optisam-auth-prod.prod-optisam.svc:80"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

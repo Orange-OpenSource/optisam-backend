@@ -20,10 +20,11 @@ variables:
   DGRAPH_VERSION: "v20.03.3"
   POSTGRES_VERSION: "9.6.5"
   TEST_ONLY: "false"
+  CHECKMARX_PROJECTNAME: "CxServer\\ORANGE\\OLS\\OLI\\optisam-backend"
   CUSTOM_CA_CERTS: $SONAR_CA_CERTS
   SONAR_TOKEN: $SONAR_TOKEN
   SONAR_ARGS: >-
-    -Dsonar.host.url=https://faas-gw.innov.intraorange/optisam/sonar
+    -Dsonar.host.url=https://sqaas.dos.tech.orange
     -Dsonar.sourceEncoding=UTF-8
     -Dsonar.analysis.mode=publish
     -Dsonar.projectBaseDir=.
@@ -64,7 +65,7 @@ sonarqube-check:
     - /^release-.*$/i
     - /^develop-.*$/i
     - /^performance-.*$/i
-
+    - /^product-.*$/i
 
 defectdojo:
   rules:
@@ -95,11 +96,16 @@ include:
   - local: 'license-service/.gitlab-ci.yml'
   - local: 'metric-service/.gitlab-ci.yml'
   - local: 'product-service/.gitlab-ci.yml'
+  - local: 'catalog-service/.gitlab-ci.yml'
   - local: 'equipment-service/.gitlab-ci.yml'
   - local: 'dps-service/.gitlab-ci.yml'
   - local: 'report-service/.gitlab-ci.yml'
   - local: 'meta-service/.gitlab-ci.yml'
   - local: 'nifi-service/.gitlab-ci.yml'
+  # Checkmarx template
+  - project: "to-be-continuous/custom/checkmarx"
+    ref: "2.0.1"
+    file: "templates/gitlab-ci-checkmarx.yml"
 
 
 .ng-scripts: &ng-scripts | 
@@ -168,7 +174,7 @@ include:
 
 init-job:
   stage: init
-  image: optisam-it-virt-docker-stable.${ARTIFACTORY_INFRA}/optisam/git-bash
+  image:  optisam-it-virt-docker-stable.${ARTIFACTORY_INFRA}/optisam/git-bash
   variables:
     GIT_STRATEGY: none
   artifacts:
@@ -186,6 +192,12 @@ init-job:
         echo "export OCP_PROJECT=$OCP_PROJECT_PERFORMANCE;" >> shared-vars.sh
         echo "export OCP_TOKEN=$OCP_TOKEN_PERFORMANCE;" >> shared-vars.sh
         echo "export DB_PASSWORD=$DB_PASSWORD_PERFORMANCE;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
       elif [[ "$CI_COMMIT_REF_NAME" = develop-v* ]]; then
         echo "export ENV=dev;" >> shared-vars.sh
         echo "export TAG=dev;" >> shared-vars.sh
@@ -195,6 +207,27 @@ init-job:
         echo "export OCP_PROJECT=$OCP_PROJECT_DEV;" >> shared-vars.sh
         echo "export OCP_TOKEN=$OCP_TOKEN_DEV;" >> shared-vars.sh
         echo "export DB_PASSWORD=$DB_PASSWORD_DEV;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
+      elif [[ "$CI_COMMIT_REF_NAME" = product-v* ]]; then
+        echo "export ENV=pc;" >> shared-vars.sh
+        echo "export TAG=pc;" >> shared-vars.sh
+        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_UNSTABLE;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_DEV;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_DEV;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_DEV;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_DEV;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
       elif [[ "$CI_COMMIT_REF_NAME" = release-v* ]]; then
         echo "export ENV=int;" >> shared-vars.sh
         echo "export TAG=latest;" >> shared-vars.sh
@@ -204,15 +237,27 @@ init-job:
         echo "export OCP_PROJECT=$OCP_PROJECT_INT;" >> shared-vars.sh
         echo "export OCP_TOKEN=$OCP_TOKEN_INT;" >> shared-vars.sh
         echo "export DB_PASSWORD=$DB_PASSWORD_INT;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
       elif [ "$CI_COMMIT_TAG" != "" ]; then
-        echo "export ENV=int;" >> shared-vars.sh
+        echo "export ENV=prod;" >> shared-vars.sh
         echo "export TAG=$CI_COMMIT_TAG;" >> shared-vars.sh
-        echo "export REPLICAS=1;" >> shared-vars.sh
+        echo "export REPLICAS=2;" >> shared-vars.sh
         echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_STABLE;" >> shared-vars.sh
-        echo "export OCP_URL=$OCP_URL_INT;" >> shared-vars.sh
-        echo "export OCP_PROJECT=$OCP_PROJECT_INT;" >> shared-vars.sh
-        echo "export OCP_TOKEN=$OCP_TOKEN_INT;" >> shared-vars.sh
-        echo "export DB_PASSWORD=$DB_PASSWORD_INT;" >> shared-vars.sh
+        echo "export OCP_URL=$OCP_URL_PROD;" >> shared-vars.sh
+        echo "export OCP_PROJECT=$OCP_PROJECT_PROD;" >> shared-vars.sh
+        echo "export OCP_TOKEN=$OCP_TOKEN_PROD;" >> shared-vars.sh
+        echo "export DB_PASSWORD=$DB_PASSWORD_PROD;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
       else
         echo "export ENV=dev;" >> shared-vars.sh
         echo "export TAG=dev;" >> shared-vars.sh
@@ -222,6 +267,12 @@ init-job:
         echo "export OCP_PROJECT=$OCP_PROJECT_DEV;" >> shared-vars.sh
         echo "export OCP_TOKEN=$OCP_TOKEN_DEV;" >> shared-vars.sh
         echo "export DB_PASSWORD=$DB_PASSWORD_DEV;" >> shared-vars.sh
+        echo "export APP_ADMIN_USERNAME=$APP_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_USERNAME=$APP_SUPER_ADMIN_USERNAME;" >> shared-vars.sh
+        echo "export APP_ADMIN_PASSWORD=$APP_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_SUPER_ADMIN_PASSWORD=$APP_SUPER_ADMIN_PASSWORD;" >> shared-vars.sh
+        echo "export APP_USER_USERNAME=$APP_USER_USERNAME;" >> shared-vars.sh
+        echo "export APP_USER_PASSWORD=$APP_USER_PASSWORD;" >> shared-vars.sh
       fi
   only:
     refs:
@@ -229,6 +280,7 @@ init-job:
       - /^performance-.*$/i
       - /^develop-.*$/i
       - tags
+      - /^product-.*$/i
       - /^release-.*$/i
     variables:
       - $TEST_ONLY == "false"
@@ -240,6 +292,7 @@ license-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - license-service/**/*
@@ -256,6 +309,7 @@ license-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -282,6 +336,7 @@ license-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - license-service/**/*
@@ -299,6 +354,7 @@ license-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -319,6 +375,7 @@ license-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -339,8 +396,9 @@ license-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - license-service/**/*
@@ -370,9 +428,10 @@ license-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - license-service/**/*
       - common/**/*
@@ -393,6 +452,163 @@ license-service-integration_test:
 #       - /^release-.*$/i
 
 
+catalog-service-lint:
+  stage: lint
+  extends: .catalog-lint
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^product-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+    variables:
+      - $TEST_ONLY == "false"
+
+catalog-service-test:
+  stage: test
+  extends: .catalog-test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^product-.*$/i
+      - tags
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+catalog-service-sonar:
+  stage: publish
+  extends: .catalog-sonar
+  dependencies:
+    - init-job
+    - catalog-service-lint
+    - catalog-service-test
+  # variables:
+  #   JAVA_KEYSTORE_PATH: "/usr/lib/sonar-scanner/jre/lib/security/cacerts"
+  before_script:
+    - *ng-scripts
+    - install_ca_certs "${CUSTOM_CA_CERTS:-$DEFAULT_CA_CERTS}"
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^product-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
+catalog-service-build:
+  stage: build
+  extends: .catalog-build
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - merge_requests
+      - /^develop-.*$/i
+      - /^product-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^release-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+catalog-service-package:
+  stage: package
+  extends: .catalog-package
+  dependencies:
+    - init-job
+    - catalog-service-build
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - tags
+      - /^product-.*$/i
+      - /^release-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+catalog-service-deploy_noprod:
+  stage: deploy
+  extends: .catalog-deploy_noprod
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+      - /^product-.*$/i
+#      - tags
+      - /^release-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+
+catalog-service-deploy_prod:
+  stage: deploy_prod
+  extends: .catalog-deploy_prod
+  dependencies:
+    - init-job
+  when: manual
+  only:
+    variables:
+      - $TEST_ONLY == "false"
+    refs:
+      - tags
+
+catalog-service-integration_test:
+  stage: integration_test
+  extends: .catalog-integration_test
+  dependencies:
+    - init-job
+  only:
+    refs:
+      - /^develop-.*$/i
+      - /^performance-.*$/i
+#      - tags
+      - /^release-.*$/i
+      - /^product-.*$/i
+    changes:
+      - catalog-service/**/*
+      - common/**/*
+      - go.mod
+      - go.sum
+    variables:
+      - $TEST_ONLY == "false"
+  allow_failure: true
+
 auth-service-lint:
   stage: lint
   extends: .auth-lint
@@ -401,6 +617,7 @@ auth-service-lint:
       - merge_requests
       - /^develop-.*$/i
       - /^performance-.*$/i
+      - /^product-.*$/i
     changes:
       - auth-service/**/*
       - common/**/*
@@ -417,6 +634,7 @@ auth-service-test:
       - merge_requests
       - /^develop-.*$/i
       - /^performance-.*$/i
+      - /^product-.*$/i
       - tags
     changes:
       - auth-service/**/*
@@ -442,6 +660,7 @@ auth-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - auth-service/**/*
@@ -463,6 +682,7 @@ auth-service-build:
       - /^develop-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
+      - /^product-.*$/i
       - tags
     changes:
       - auth-service/**/*
@@ -482,6 +702,7 @@ auth-service-package:
     refs:
       - /^develop-.*$/i
       - /^release-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -500,8 +721,9 @@ auth-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - auth-service/**/*
@@ -532,8 +754,9 @@ auth-service-integration_test:
     refs:
       - /^develop-.*$/i
       - /^performance-.*$/i
+      - /^product-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - auth-service/**/*
       - common/**/*
@@ -551,6 +774,7 @@ account-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - account-service/**/*
@@ -567,6 +791,7 @@ account-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -593,6 +818,7 @@ account-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - account-service/**/*
@@ -612,6 +838,7 @@ account-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -632,6 +859,7 @@ account-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -651,8 +879,9 @@ account-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - account-service/**/*
@@ -682,8 +911,9 @@ account-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - account-service/**/*
@@ -702,6 +932,7 @@ import-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     variables:
       - $TEST_ONLY == "false"
@@ -718,6 +949,7 @@ import-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     variables:
@@ -746,6 +978,7 @@ import-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - import-service/**/*
@@ -765,6 +998,7 @@ import-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -785,6 +1019,7 @@ import-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -804,9 +1039,10 @@ import-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^release-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
     changes:
       - import-service/**/*
       - common/**/*
@@ -835,6 +1071,7 @@ simulation-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - simulation-service/**/*
@@ -851,6 +1088,7 @@ simulation-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -878,6 +1116,7 @@ simulation-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - simulation-service/**/*
@@ -897,6 +1136,7 @@ simulation-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -917,6 +1157,7 @@ simulation-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -936,9 +1177,10 @@ simulation-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - simulation-service/**/*
       - common/**/*
@@ -967,9 +1209,10 @@ simulation-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - simulation-service/**/*
       - common/**/*
@@ -987,6 +1230,7 @@ application-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - application-service/**/*
@@ -1003,6 +1247,7 @@ application-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1029,6 +1274,7 @@ application-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - application-service/**/*
@@ -1049,6 +1295,7 @@ application-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -1069,6 +1316,7 @@ application-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -1088,9 +1336,10 @@ application-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - application-service/**/*
       - common/**/*
@@ -1119,9 +1368,10 @@ application-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - application-service/**/*
       - common/**/*
@@ -1139,6 +1389,7 @@ application-service-performance_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
     changes:
@@ -1158,6 +1409,7 @@ metric-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - metric-service/**/*
@@ -1174,6 +1426,7 @@ metric-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1200,6 +1453,7 @@ metric-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - metric-service/**/*
@@ -1220,6 +1474,7 @@ metric-service-build:
       - merge_requests
       - /^develop-.*$/i
       - /^release-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1239,6 +1494,7 @@ metric-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -1258,9 +1514,10 @@ metric-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - metric-service/**/*
       - common/**/*
@@ -1289,9 +1546,10 @@ metric-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - metric-service/**/*
       - common/**/*
@@ -1308,6 +1566,7 @@ product-service-lint:
   only:
     refs:
       - merge_requests
+      - /^product-.*$/i
       - /^develop-.*$/i
       - /^performance-.*$/i
     changes:
@@ -1324,6 +1583,7 @@ product-service-test:
   only:
     refs:
       - merge_requests
+      - /^product-.*$/i
       - /^develop-.*$/i
       - /^performance-.*$/i
       - tags
@@ -1351,6 +1611,7 @@ product-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - product-service/**/*
@@ -1370,6 +1631,7 @@ product-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -1390,6 +1652,7 @@ product-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -1409,9 +1672,10 @@ product-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^release-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
     changes:
       - product-service/**/*
       - common/**/*
@@ -1440,9 +1704,10 @@ product-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - product-service/**/*
       - common/**/*
@@ -1460,6 +1725,7 @@ product-service-performance_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
     changes:
@@ -1479,6 +1745,7 @@ equipment-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - equipment-service/**/*
@@ -1495,6 +1762,7 @@ equipment-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1521,6 +1789,7 @@ equipment-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - equipment-service/**/*
@@ -1539,6 +1808,7 @@ equipment-service-build:
   only:
     refs:
       - merge_requests
+      - /^product-.*$/i
       - /^develop-.*$/i
       - /^performance-.*$/i
       - tags
@@ -1560,6 +1830,7 @@ equipment-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -1579,8 +1850,9 @@ equipment-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - equipment-service/**/*
@@ -1610,8 +1882,9 @@ equipment-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - equipment-service/**/*
@@ -1630,6 +1903,7 @@ equipment-service-performance_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
     changes:
@@ -1648,6 +1922,7 @@ dps-service-lint:
   only:
     refs:
       - merge_requests
+      - /^product-.*$/i
       - /^develop-.*$/i
       - /^performance-.*$/i
     changes:
@@ -1665,6 +1940,7 @@ dps-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1691,6 +1967,7 @@ dps-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - dps-service/**/*
@@ -1710,6 +1987,7 @@ dps-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -1730,6 +2008,7 @@ dps-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -1749,8 +2028,9 @@ dps-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
-      - tags
+#      - tags
       - /^release-.*$/i
     changes:
       - dps-service/**/*
@@ -1781,7 +2061,8 @@ dps-service-integration_test:
     refs:
       - /^develop-.*$/i
       - /^performance-.*$/i
-      - tags
+      - /^product-.*$/i
+#      - tags
       - /^release-.*$/i
     changes:
       - dps-service/**/*
@@ -1799,6 +2080,7 @@ report-service-lint:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - report-service/**/*
@@ -1815,6 +2097,7 @@ report-service-test:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
     changes:
@@ -1841,6 +2124,7 @@ report-service-sonar:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
     changes:
       - report-service/**/*
@@ -1860,6 +2144,7 @@ report-service-build:
     refs:
       - merge_requests
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - tags
       - /^release-.*$/i
@@ -1882,6 +2167,7 @@ report-service-package:
       - /^develop-.*$/i
       - tags
       - /^performance-.*$/i
+      - /^product-.*$/i
       - /^release-.*$/i
     changes:
       - report-service/**/*
@@ -1900,7 +2186,8 @@ report-service-deploy_noprod:
     refs:
       - /^develop-.*$/i
       - /^performance-.*$/i
-      - tags
+      - /^product-.*$/i
+#      - tags
       - /^release-.*$/i
     changes:
       - report-service/**/*
@@ -1930,9 +2217,10 @@ report-service-integration_test:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - report-service/**/*
       - common/**/*
@@ -1951,6 +2239,7 @@ meta-service-package:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
       - tags
@@ -1967,9 +2256,10 @@ meta-service-deploy_noprod:
   only:
     refs:
       - /^develop-.*$/i
+      - /^product-.*$/i
       - /^performance-.*$/i
       - /^release-.*$/i
-      - tags
+#      - tags
     changes:
       - meta-service/**/*
     variables:
@@ -2087,9 +2377,10 @@ pages:
     - mv pub public
   only:
     - /^develop-.*$/i
-    - tags
+#    - tags
     - /^release-.*$/i
     - /^performance-.*$/i
+    - /^product-.*$/i
     - schedules
   except:
     changes:

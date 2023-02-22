@@ -94,7 +94,7 @@
     - mkdir -p /kaniko/.docker
     - echo $DOCKER_AUTH_CONFIG > /kaniko/.docker/config.json
   #  - echo "{\"auths\":{\"$DOCKER_REGISTRY\":{\"username\":\"$DOCKER_LOGIN\",\"password\":\"$DOCKER_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/product-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/product-service:$TAG
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/product-service/Dockerfile --destination ${DOCKER_REGISTRY}/optisam/product-service-$ENV:$TAG
 
 
 .product-deploy_noprod:
@@ -105,15 +105,15 @@
     - oc login ${OCP_URL}  --token=${OCP_TOKEN}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT}
     - oc create configmap config-product-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
-    - oc delete deploymentconfig optisam-product
+    - oc delete deploymentconfig optisam-product-$ENV
     - oc process -f product-service.yml -p DB_PASSWORD=$DB_PASSWORD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=$REPLICAS -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-product
-    - |
-      end=$((SECONDS+300))
-      while [ "$(oc get pods -l=app='optisam-product' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
-        sleep 8
-        echo "Waiting for pod to be ready."
-      done
+    - oc rollout status dc/optisam-product-$ENV
+#    - |
+#      end=$((SECONDS+300))
+#      while [ "$(oc get pods -l=app='optisam-product-new' -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ] && [ $SECONDS -lt $end ]; do
+#        sleep 8
+#        echo "Waiting for pod to be ready."
+#      done
 
 .product-deploy_prod:
   extends: .product-template
@@ -125,9 +125,9 @@
     - echo "Creating Openshift Resources"
     - oc login ${OCP_URL_PROD}  --token=${OCP_TOKEN_PROD}   --insecure-skip-tls-verify
     - oc project ${OCP_PROJECT_PROD}
-    - oc create configmap config-product-prod --from-file=cmd/server/config-prod.toml -o yaml --dry-run | oc apply -f -
-    - oc process -f product-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=prod -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
-    - oc rollout status dc/optisam-product
+    - oc create configmap config-product-$ENV --from-file=cmd/server/config-$ENV.toml -o yaml --dry-run | oc apply -f -
+    - oc process -f product-service.yml -p DB_PASSWORD=$DB_PASSWORD_PROD -p TAG=$TAG -p ENV=$ENV -p REPLICAS=2 -p DOCKER_REGISTRY=$DOCKER_REGISTRY| oc apply -f -
+    - oc rollout status dc/optisam-product-$ENV
 
 
 .product-integration_test:

@@ -22,9 +22,9 @@ agentEndpoint = "192.168.99.100:6831"
 [database]
 host = "localhost"
 port = 5432
-user = "optisam"
-pass = "optisam"
-name = "optisam"
+user = "postgres"
+pass = "suchita"
+name = "report"
 
 [grpcservers]
 apikey = "12345678"
@@ -32,6 +32,7 @@ timeout = 10
 
 [grpcservers.Address]
 license = "localhost:8090"
+product = "localhost:12090"
 
 [dgraph]
 hosts = [

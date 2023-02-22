@@ -24,18 +24,18 @@ ismultiqueue = true
 time = "@every 5m"
 
 [httpservers.Address]
-auth = "svc-optisam-auth.prod-optisam.svc:80"
+auth = "svc-optisam-auth-prod.prod-optisam.svc:80"
 
 [grpcservers]
 apikey = "12345678"
 timeout = 10
 
 [grpcservers.Address]
-product = "svc-optisam-product.prod-optisam.svc:8090"
-application = "svc-optisam-application.prod-optisam.svc:8090"
-acqright = "svc-optisam-acqrights.prod-optisam.svc:8090"
-equipment = "svc-optisam-equipment.prod-optisam.svc:8090"
-account = "svc-optisam-account.prod-optisam.svc:8090"
+product = "svc-optisam-product-prod.prod-optisam.svc:8090"
+application = "svc-optisam-application-prod.prod-optisam.svc:8090"
+acqright = "svc-optisam-acqrights-prod.prod-optisam.svc:8090"
+equipment = "svc-optisam-equipment-prod.prod-optisam.svc:8090"
+account = "svc-optisam-account-prod.prod-optisam.svc:8090"
 
 
 [log]
@@ -75,3 +75,11 @@ sortBy = "name"
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[application]
+#usernameadmin = ""
+#passwordadmin = ""
+#usernamesuperadmin = ""
+#passwordsuperadmin = ""
+#usernameuser = ""
+#passworduser = ""

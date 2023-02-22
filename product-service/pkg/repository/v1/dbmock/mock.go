@@ -666,6 +666,21 @@ func (mr *MockProductMockRecorder) GetProductsByEditor(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByEditor", reflect.TypeOf((*MockProduct)(nil).GetProductsByEditor), arg0, arg1)
 }
 
+// GetProductsByEditorScope mocks base method
+func (m *MockProduct) GetProductsByEditorScope(arg0 context.Context, arg1 db.GetProductsByEditorScopeParams) ([]db.GetProductsByEditorScopeRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductsByEditorScope", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetProductsByEditorScopeRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductsByEditorScope indicates an expected call of GetProductsByEditorScope
+func (mr *MockProductMockRecorder) GetProductsByEditorScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByEditorScope", reflect.TypeOf((*MockProduct)(nil).GetProductsByEditorScope), arg0, arg1)
+}
+
 // GetTotalCounterfietAmount mocks base method
 func (m *MockProduct) GetTotalCounterfietAmount(arg0 context.Context, arg1 string) (float64, error) {
 	m.ctrl.T.Helper()
@@ -888,6 +903,21 @@ func (m *MockProduct) ListEditorsForAggregation(arg0 context.Context, arg1 strin
 func (mr *MockProductMockRecorder) ListEditorsForAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditorsForAggregation", reflect.TypeOf((*MockProduct)(nil).ListEditorsForAggregation), arg0, arg1)
+}
+
+// ListEditorsScope mocks base method
+func (m *MockProduct) ListEditorsScope(arg0 context.Context, arg1 []string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListEditorsScope", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListEditorsScope indicates an expected call of ListEditorsScope
+func (mr *MockProductMockRecorder) ListEditorsScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditorsScope", reflect.TypeOf((*MockProduct)(nil).ListEditorsScope), arg0, arg1)
 }
 
 // ListMetricsForAggregation mocks base method

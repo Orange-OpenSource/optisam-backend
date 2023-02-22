@@ -18,6 +18,8 @@ import (
 	"errors"
 	"fmt"
 
+	"optisam-backend/common/optisam/config"
+
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -72,6 +74,8 @@ type Config struct {
 
 	// IAM Configuration
 	IAM iam.Config
+	//Application cred.
+	Application config.Application
 }
 
 type httpConfg struct {
@@ -185,5 +189,11 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 
 	// Database Password configuration
 	_ = v.BindEnv("database.pass", "DB_PASSWORD")
+	_ = v.BindEnv("application.usernameadmin", "APP_ADMIN_USERNAME")
+	_ = v.BindEnv("application.passwordadmin", "APP_ADMIN_PASSWORD")
+	_ = v.BindEnv("application.usernamesuperadmin", "APP_SUPER_ADMIN_USERNAME")
+	_ = v.BindEnv("application.passwordsuperadmin", "APP_SUPER_ADMIN_PASSWORD")
+	_ = v.BindEnv("application.usernameuser", "APP_USER_USERNAME")
+	_ = v.BindEnv("application.passworduser", "APP_USER_PASSWORD")
 
 }

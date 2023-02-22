@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS overall_computed_licences(
     not_deployed BOOLEAN DEFAULT FALSE,
     editor VARCHAR NOT NULL,
     primary key (sku,swidtags,scope)
-)
+);
 
 -- For testing
 -- insert into products(swidtag,product_name,product_version,product_edition,product_category,

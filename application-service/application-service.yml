@@ -8,11 +8,11 @@ objects:
   - kind: Service
     apiVersion: v1
     metadata:
-      name: svc-optisam-application
+      name: svc-optisam-application-${ENV}
       annotations:
         description: Exposes and load balances the application pods
       labels:
-        run: optisam-application
+        run: optisam-application-${ENV}
     spec:
       ports:
         - name: api
@@ -28,18 +28,18 @@ objects:
           targetPort: 8090
           protocol: TCP
       selector:
-        app: optisam-application
+        app: optisam-application-${ENV}
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-application
+      name: route-svc-optisam-application-${ENV}
       labels:
-        run: optisam-application
+        run: optisam-application-${ENV}
     spec:
       host: optisam-application-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-application
+        name: svc-optisam-application-${ENV}
       port:
         targetPort: api
       tls:
@@ -47,14 +47,14 @@ objects:
   - kind: Route
     apiVersion: v1
     metadata:
-      name: route-svc-optisam-application-instrumentation
+      name: route-svc-optisam-application-instrumentation-${ENV}
       labels:
-        run: optisam-application
+        run: optisam-application-${ENV}
     spec:
       host: optisam-application-inst-${ENV}.apps.fr01.paas.tech.orange
       to:
         kind: Service
-        name: svc-optisam-application
+        name: svc-optisam-application-${ENV}
       port:
         targetPort: instapi          
       tls:
@@ -62,13 +62,13 @@ objects:
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
-      name: optisam-application
+      name: optisam-application-${ENV}
       labels:
-        app: optisam-application
+        app: optisam-application-${ENV}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        app: optisam-application
+        app: optisam-application-${ENV}
       strategy:
         type: Rolling
       template:
@@ -77,19 +77,22 @@ objects:
             prometheus.io/port: '8081'
             prometheus.io/scrape: 'true'
           labels:
-            app: optisam-application
+            app: optisam-application-${ENV}
             internal-elasticsearch: 'true'
-          name: optisam-application
+          name: optisam-application-${ENV}
         spec:
           containers:
-            - name: optisam-application
-              image: ${DOCKER_REGISTRY}/optisam/application-service:${TAG}
+            - name: optisam-application-${ENV}
+              image: ${DOCKER_REGISTRY}/optisam/application-service-${ENV}:${TAG}
               imagePullPolicy: Always
               env:
                 - name: "ENV"
                   value: ${ENV}
                 - name: "DB_PASSWORD"  
                   value: ${DB_PASSWORD}
+              envFrom:
+                - secretRef:
+                       name: user-access
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -125,13 +128,13 @@ objects:
                   cpu: "100m"
                   memory: "150Mi"
               volumeMounts:
-                - name: config-volume
+                - name: config-volume-${ENV}
                   mountPath: /opt/config/
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
           volumes:
-            - name: config-volume
+            - name: config-volume-${ENV}
               configMap:
                 name: config-application-${ENV}
             - name: secret-volume
