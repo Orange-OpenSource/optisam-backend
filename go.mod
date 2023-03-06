@@ -55,16 +55,15 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
-	github.com/tabbed/pqtype v0.1.1 // indirect
+	github.com/tabbed/pqtype v0.1.1
 	github.com/uber/jaeger-client-go v2.22.1+incompatible // indirect
 	github.com/valyala/fasthttp v1.16.0 // indirect
 	github.com/xuri/excelize/v2 v2.4.1
 	go.opencensus.io v0.22.6
 	go.uber.org/zap v1.16.0
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/mod v0.4.0 // indirect
-	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.7.0
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	google.golang.org/genproto v0.0.0-20210224155714-063164c882e6
 	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.25.1-0.20201208041424-160c7477e0e8
