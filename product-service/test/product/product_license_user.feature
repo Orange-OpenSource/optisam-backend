@@ -81,3 +81,4 @@ Scenario: To verify Acquired Licenses for aggregated product Oracle_enterprise_d
   When method get
   Then status 200
   And response.acq_rights[0].numAcqLicences == data.get_Aggregation_product_Details.numAcqLicences
+

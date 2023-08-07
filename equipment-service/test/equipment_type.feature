@@ -13,7 +13,7 @@ Feature: Equipment Service Test
 
 
 ## Equipments Types
-
+@SmokeTest
   @schema
   Scenario: Schema validation for get Equipment Types
     Given path 'types'

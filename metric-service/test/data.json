@@ -4,7 +4,7 @@
         "Name": "apitest_instance",
         "num_of_deployments": "1",
         "scopes": [
-            "API"
+            "DEM"
         ]
     },
     "metric_instance_number_standard_1": {
@@ -12,7 +12,7 @@
         "Name":"instance_1",
         "num_of_deployments":1,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_instance_number_standard_62": {
@@ -20,7 +20,7 @@
         "Name":"instance_62",
         "num_of_deployments":62,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_instance_number_standard_8": {
@@ -28,7 +28,7 @@
         "Name":"instance_8",
         "num_of_deployments":8,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_static_standard":{
@@ -36,7 +36,7 @@
         "Name":"static_1",
         "reference_value":10,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "crud_metric_static_standard":{
@@ -44,21 +44,21 @@
         "Name":"apitest_static_std_metric",
         "reference_value":10,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_user_sum_standard":{
         "ID":"",
         "Name":"user",
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "crud_metric_user_sum_standard":{
         "ID":"",
         "Name":"apitest_user_metric",
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_attribute_sum_standard":{
@@ -68,7 +68,7 @@
         "attribute_name":"cores_per_processor",
         "reference_value":8,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "crud_metric_attr_sum_std":{
@@ -78,7 +78,7 @@
         "attribute_name":"cores_per_processor",
         "reference_value":8,
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "metric_attribute_counter_standard":{
@@ -88,7 +88,7 @@
         "attribute_name":"hyperthreading",
         "value":"yes",
         "scopes":[
-            "API"
+            "DEM"
         ]
     },
     "crud_metric_attr_counter_std":{
@@ -98,7 +98,49 @@
         "attribute_name":"hyperthreading",
         "value":"yes",
         "scopes":[
+            "DEM"
+        ]
+    },
+    "metric_inm": {
+        "ID": "",
+        "Name": "apitest_instance",
+        "num_of_deployments": "1",
+        "scopes": [
             "API"
+        ]
+    },
+    "create_saas_metric_conc": {
+        "ID": "",
+        "Name": "API_TestConc",
+        "profile": "ALL",
+        "scopes": [
+            "DEM"
+        ]
+        },
+    "edit_saas_metric_conc": {
+        "ID": "",
+        "Name": "API_TestConc",
+        "profile": "API",
+        "scopes": [
+            "DEM"
+        ]
+    },
+    "create_saas_metric_nom": {
+        "ID": "",
+        "Name": "API_TestNom",
+        "profile": "ALL",
+        "scopes": [
+            "DEM"
+        ]
+        },
+    "edit_saas_metric_nom": {
+        "ID": "",
+        "Name": "API_TestNom",
+        "profile": "Test1",
+        "scopes": [
+            "DEM"
         ]
     }
 }
+
+

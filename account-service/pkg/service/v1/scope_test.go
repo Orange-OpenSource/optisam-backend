@@ -227,7 +227,7 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().ListScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{
+				mockRepo.EXPECT().GetScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{
 					{
 						ScopeCode:  "O1",
 						ScopeName:  "India",
@@ -243,6 +243,22 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 						GroupNames: []string{"ROOT", "INDIA"},
 					},
 				}, nil)
+				mockRepo.EXPECT().SetScope(ctx, []*repv1.Scope{
+					{
+						ScopeCode:  "O1",
+						ScopeName:  "India",
+						CreatedBy:  "admin@test.com",
+						CreatedOn:  time.Unix(10, 0),
+						GroupNames: []string{"ROOT"},
+					},
+					{
+						ScopeCode:  "O2",
+						ScopeName:  "France",
+						CreatedBy:  "admin@test.com",
+						CreatedOn:  time.Unix(11, 0),
+						GroupNames: []string{"ROOT", "INDIA"},
+					},
+				}).Times(1).Return(nil)
 			},
 			want: &v1.ListScopesResponse{
 				Scopes: []*v1.Scope{
@@ -287,6 +303,34 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 						CreatedOn: time.Unix(11, 0),
 					},
 				}, nil)
+				mockRepo.EXPECT().GetScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{
+					{
+						ScopeCode: "O1",
+						ScopeName: "India",
+						CreatedBy: "admin@test.com",
+						CreatedOn: time.Unix(10, 0),
+					},
+					{
+						ScopeCode: "O2",
+						ScopeName: "France",
+						CreatedBy: "admin@test.com",
+						CreatedOn: time.Unix(11, 0),
+					},
+				}, nil)
+				mockRepo.EXPECT().SetScope(ctx, []*repv1.Scope{
+					{
+						ScopeCode: "O1",
+						ScopeName: "India",
+						CreatedBy: "admin@test.com",
+						CreatedOn: time.Unix(10, 0),
+					},
+					{
+						ScopeCode: "O2",
+						ScopeName: "France",
+						CreatedBy: "admin@test.com",
+						CreatedOn: time.Unix(11, 0),
+					},
+				}).Times(1).Return(nil)
 			},
 			want: &v1.ListScopesResponse{
 				Scopes: []*v1.Scope{
@@ -315,7 +359,9 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
+				mockRepo.EXPECT().GetScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{}, nil)
 				mockRepo.EXPECT().ListScopes(ctx, []string{"O1", "O2"}).Times(1).Return([]*repv1.Scope{}, nil)
+				mockRepo.EXPECT().SetScope(ctx, []*repv1.Scope{}).Times(1).Return(nil)
 			},
 			want: &v1.ListScopesResponse{},
 		},
@@ -338,7 +384,9 @@ func Test_accountServiceServer_ListScopes(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
+				mockRepo.EXPECT().GetScopes(ctx, []string{"O1", "O2"}).Times(1).Return(nil, errors.New("Internal"))
 				mockRepo.EXPECT().ListScopes(ctx, []string{"O1", "O2"}).Times(1).Return(nil, errors.New("Internal"))
+				mockRepo.EXPECT().GetScopes(ctx, []string{"O1", "O2"}).Times(1).Return(nil, errors.New("Internal"))
 			},
 			wantErr: true,
 		},
@@ -491,6 +539,69 @@ func Test_accountServiceServer_GetScope(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("accountServiceServer.GetScope() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_accountServiceServer_GetScopeLists(t *testing.T) {
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+	var equip equipment.EquipmentServiceClient
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@test.com",
+		Role:   "SuperAdmin",
+	})
+	type args struct {
+		ctx context.Context
+		req *v1.GetScopeListRequest
+	}
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.ScopeListResponse
+		wantErr bool
+	}{
+		{
+			name: "Success",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetScopeListRequest{
+					Scopes: []string{"OFR"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListScopes(ctx, []string{"OFR"}).Times(1).Return([]*repv1.Scope{
+					{
+						ScopeCode: "OFR",
+						ScopeName: "France",
+						CreatedBy: "admin@test.com",
+						CreatedOn: time.Unix(10, 0),
+					},
+				}, nil)
+			},
+			want: &v1.ScopeListResponse{ScopeNames: []string{"France"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := &accountServiceServer{
+				accountRepo: rep,
+				equipment:   equip,
+			}
+			got, err := s.GetScopeLists(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.CreateScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("accountServiceServer.CreateScope() = %v, want %v", got, tt.want)
 			}
 		})
 	}

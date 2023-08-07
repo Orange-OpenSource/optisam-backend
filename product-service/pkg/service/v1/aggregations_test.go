@@ -239,7 +239,7 @@ func Test_productServiceServer_ListAggregationEditors(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAggregationEditorsRequest{
-					Scope: "scope1",
+					Scope: "scope1,scope3",
 				},
 			},
 			setup: func() {

@@ -6,36 +6,37 @@ package mock
 
 import (
 	context "context"
-	gomock "github.com/golang/mock/gomock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	db "optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockProduct is a mock of Product interface
+// MockProduct is a mock of Product interface.
 type MockProduct struct {
 	ctrl     *gomock.Controller
 	recorder *MockProductMockRecorder
 }
 
-// MockProductMockRecorder is the mock recorder for MockProduct
+// MockProductMockRecorder is the mock recorder for MockProduct.
 type MockProductMockRecorder struct {
 	mock *MockProduct
 }
 
-// NewMockProduct creates a new mock instance
+// NewMockProduct creates a new mock instance.
 func NewMockProduct(ctrl *gomock.Controller) *MockProduct {
 	mock := &MockProduct{ctrl: ctrl}
 	mock.recorder = &MockProductMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockProduct) EXPECT() *MockProductMockRecorder {
 	return m.recorder
 }
 
-// AddComputedLicenses mocks base method
+// AddComputedLicenses mocks base method.
 func (m *MockProduct) AddComputedLicenses(arg0 context.Context, arg1 db.AddComputedLicensesParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddComputedLicenses", arg0, arg1)
@@ -43,13 +44,13 @@ func (m *MockProduct) AddComputedLicenses(arg0 context.Context, arg1 db.AddCompu
 	return ret0
 }
 
-// AddComputedLicenses indicates an expected call of AddComputedLicenses
+// AddComputedLicenses indicates an expected call of AddComputedLicenses.
 func (mr *MockProductMockRecorder) AddComputedLicenses(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddComputedLicenses", reflect.TypeOf((*MockProduct)(nil).AddComputedLicenses), arg0, arg1)
 }
 
-// AddComputedLicensesToAggregation mocks base method
+// AddComputedLicensesToAggregation mocks base method.
 func (m *MockProduct) AddComputedLicensesToAggregation(arg0 context.Context, arg1 db.AddComputedLicensesToAggregationParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddComputedLicensesToAggregation", arg0, arg1)
@@ -57,13 +58,13 @@ func (m *MockProduct) AddComputedLicensesToAggregation(arg0 context.Context, arg
 	return ret0
 }
 
-// AddComputedLicensesToAggregation indicates an expected call of AddComputedLicensesToAggregation
+// AddComputedLicensesToAggregation indicates an expected call of AddComputedLicensesToAggregation.
 func (mr *MockProductMockRecorder) AddComputedLicensesToAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddComputedLicensesToAggregation", reflect.TypeOf((*MockProduct)(nil).AddComputedLicensesToAggregation), arg0, arg1)
 }
 
-// AggregatedRightDetails mocks base method
+// AggregatedRightDetails mocks base method.
 func (m *MockProduct) AggregatedRightDetails(arg0 context.Context, arg1 db.AggregatedRightDetailsParams) (db.AggregatedRightDetailsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AggregatedRightDetails", arg0, arg1)
@@ -72,13 +73,13 @@ func (m *MockProduct) AggregatedRightDetails(arg0 context.Context, arg1 db.Aggre
 	return ret0, ret1
 }
 
-// AggregatedRightDetails indicates an expected call of AggregatedRightDetails
+// AggregatedRightDetails indicates an expected call of AggregatedRightDetails.
 func (mr *MockProductMockRecorder) AggregatedRightDetails(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregatedRightDetails", reflect.TypeOf((*MockProduct)(nil).AggregatedRightDetails), arg0, arg1)
 }
 
-// CounterFeitedProductsCosts mocks base method
+// CounterFeitedProductsCosts mocks base method.
 func (m *MockProduct) CounterFeitedProductsCosts(arg0 context.Context, arg1 db.CounterFeitedProductsCostsParams) ([]db.CounterFeitedProductsCostsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CounterFeitedProductsCosts", arg0, arg1)
@@ -87,13 +88,13 @@ func (m *MockProduct) CounterFeitedProductsCosts(arg0 context.Context, arg1 db.C
 	return ret0, ret1
 }
 
-// CounterFeitedProductsCosts indicates an expected call of CounterFeitedProductsCosts
+// CounterFeitedProductsCosts indicates an expected call of CounterFeitedProductsCosts.
 func (mr *MockProductMockRecorder) CounterFeitedProductsCosts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CounterFeitedProductsCosts", reflect.TypeOf((*MockProduct)(nil).CounterFeitedProductsCosts), arg0, arg1)
 }
 
-// CounterFeitedProductsLicences mocks base method
+// CounterFeitedProductsLicences mocks base method.
 func (m *MockProduct) CounterFeitedProductsLicences(arg0 context.Context, arg1 db.CounterFeitedProductsLicencesParams) ([]db.CounterFeitedProductsLicencesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CounterFeitedProductsLicences", arg0, arg1)
@@ -102,13 +103,13 @@ func (m *MockProduct) CounterFeitedProductsLicences(arg0 context.Context, arg1 d
 	return ret0, ret1
 }
 
-// CounterFeitedProductsLicences indicates an expected call of CounterFeitedProductsLicences
+// CounterFeitedProductsLicences indicates an expected call of CounterFeitedProductsLicences.
 func (mr *MockProductMockRecorder) CounterFeitedProductsLicences(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CounterFeitedProductsLicences", reflect.TypeOf((*MockProduct)(nil).CounterFeitedProductsLicences), arg0, arg1)
 }
 
-// CounterfeitPercent mocks base method
+// CounterfeitPercent mocks base method.
 func (m *MockProduct) CounterfeitPercent(arg0 context.Context, arg1 string) (db.CounterfeitPercentRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CounterfeitPercent", arg0, arg1)
@@ -117,13 +118,27 @@ func (m *MockProduct) CounterfeitPercent(arg0 context.Context, arg1 string) (db.
 	return ret0, ret1
 }
 
-// CounterfeitPercent indicates an expected call of CounterfeitPercent
+// CounterfeitPercent indicates an expected call of CounterfeitPercent.
 func (mr *MockProductMockRecorder) CounterfeitPercent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CounterfeitPercent", reflect.TypeOf((*MockProduct)(nil).CounterfeitPercent), arg0, arg1)
 }
 
-// DeleteAcqrightBySKU mocks base method
+// DeletConcurrentUserByID mocks base method.
+func (m *MockProduct) DeletConcurrentUserByID(arg0 context.Context, arg1 db.DeletConcurrentUserByIDParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletConcurrentUserByID", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletConcurrentUserByID indicates an expected call of DeletConcurrentUserByID.
+func (mr *MockProductMockRecorder) DeletConcurrentUserByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletConcurrentUserByID", reflect.TypeOf((*MockProduct)(nil).DeletConcurrentUserByID), arg0, arg1)
+}
+
+// DeleteAcqrightBySKU mocks base method.
 func (m *MockProduct) DeleteAcqrightBySKU(arg0 context.Context, arg1 db.DeleteAcqrightBySKUParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAcqrightBySKU", arg0, arg1)
@@ -131,13 +146,13 @@ func (m *MockProduct) DeleteAcqrightBySKU(arg0 context.Context, arg1 db.DeleteAc
 	return ret0
 }
 
-// DeleteAcqrightBySKU indicates an expected call of DeleteAcqrightBySKU
+// DeleteAcqrightBySKU indicates an expected call of DeleteAcqrightBySKU.
 func (mr *MockProductMockRecorder) DeleteAcqrightBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAcqrightBySKU", reflect.TypeOf((*MockProduct)(nil).DeleteAcqrightBySKU), arg0, arg1)
 }
 
-// DeleteAcqrightsByScope mocks base method
+// DeleteAcqrightsByScope mocks base method.
 func (m *MockProduct) DeleteAcqrightsByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAcqrightsByScope", arg0, arg1)
@@ -145,13 +160,13 @@ func (m *MockProduct) DeleteAcqrightsByScope(arg0 context.Context, arg1 string) 
 	return ret0
 }
 
-// DeleteAcqrightsByScope indicates an expected call of DeleteAcqrightsByScope
+// DeleteAcqrightsByScope indicates an expected call of DeleteAcqrightsByScope.
 func (mr *MockProductMockRecorder) DeleteAcqrightsByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAcqrightsByScope", reflect.TypeOf((*MockProduct)(nil).DeleteAcqrightsByScope), arg0, arg1)
 }
 
-// DeleteAggregatedRightBySKU mocks base method
+// DeleteAggregatedRightBySKU mocks base method.
 func (m *MockProduct) DeleteAggregatedRightBySKU(arg0 context.Context, arg1 db.DeleteAggregatedRightBySKUParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAggregatedRightBySKU", arg0, arg1)
@@ -159,13 +174,13 @@ func (m *MockProduct) DeleteAggregatedRightBySKU(arg0 context.Context, arg1 db.D
 	return ret0
 }
 
-// DeleteAggregatedRightBySKU indicates an expected call of DeleteAggregatedRightBySKU
+// DeleteAggregatedRightBySKU indicates an expected call of DeleteAggregatedRightBySKU.
 func (mr *MockProductMockRecorder) DeleteAggregatedRightBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAggregatedRightBySKU", reflect.TypeOf((*MockProduct)(nil).DeleteAggregatedRightBySKU), arg0, arg1)
 }
 
-// DeleteAggregatedRightsByScope mocks base method
+// DeleteAggregatedRightsByScope mocks base method.
 func (m *MockProduct) DeleteAggregatedRightsByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAggregatedRightsByScope", arg0, arg1)
@@ -173,13 +188,13 @@ func (m *MockProduct) DeleteAggregatedRightsByScope(arg0 context.Context, arg1 s
 	return ret0
 }
 
-// DeleteAggregatedRightsByScope indicates an expected call of DeleteAggregatedRightsByScope
+// DeleteAggregatedRightsByScope indicates an expected call of DeleteAggregatedRightsByScope.
 func (mr *MockProductMockRecorder) DeleteAggregatedRightsByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAggregatedRightsByScope", reflect.TypeOf((*MockProduct)(nil).DeleteAggregatedRightsByScope), arg0, arg1)
 }
 
-// DeleteAggregation mocks base method
+// DeleteAggregation mocks base method.
 func (m *MockProduct) DeleteAggregation(arg0 context.Context, arg1 db.DeleteAggregationParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAggregation", arg0, arg1)
@@ -187,13 +202,13 @@ func (m *MockProduct) DeleteAggregation(arg0 context.Context, arg1 db.DeleteAggr
 	return ret0
 }
 
-// DeleteAggregation indicates an expected call of DeleteAggregation
+// DeleteAggregation indicates an expected call of DeleteAggregation.
 func (mr *MockProductMockRecorder) DeleteAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAggregation", reflect.TypeOf((*MockProduct)(nil).DeleteAggregation), arg0, arg1)
 }
 
-// DeleteAggregationByScope mocks base method
+// DeleteAggregationByScope mocks base method.
 func (m *MockProduct) DeleteAggregationByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteAggregationByScope", arg0, arg1)
@@ -201,13 +216,27 @@ func (m *MockProduct) DeleteAggregationByScope(arg0 context.Context, arg1 string
 	return ret0
 }
 
-// DeleteAggregationByScope indicates an expected call of DeleteAggregationByScope
+// DeleteAggregationByScope indicates an expected call of DeleteAggregationByScope.
 func (mr *MockProductMockRecorder) DeleteAggregationByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAggregationByScope", reflect.TypeOf((*MockProduct)(nil).DeleteAggregationByScope), arg0, arg1)
 }
 
-// DeleteOverallComputedLicensesByScope mocks base method
+// DeleteNominativeUserByID mocks base method.
+func (m *MockProduct) DeleteNominativeUserByID(arg0 context.Context, arg1 db.DeleteNominativeUserByIDParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNominativeUserByID", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNominativeUserByID indicates an expected call of DeleteNominativeUserByID.
+func (mr *MockProductMockRecorder) DeleteNominativeUserByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNominativeUserByID", reflect.TypeOf((*MockProduct)(nil).DeleteNominativeUserByID), arg0, arg1)
+}
+
+// DeleteOverallComputedLicensesByScope mocks base method.
 func (m *MockProduct) DeleteOverallComputedLicensesByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteOverallComputedLicensesByScope", arg0, arg1)
@@ -215,13 +244,13 @@ func (m *MockProduct) DeleteOverallComputedLicensesByScope(arg0 context.Context,
 	return ret0
 }
 
-// DeleteOverallComputedLicensesByScope indicates an expected call of DeleteOverallComputedLicensesByScope
+// DeleteOverallComputedLicensesByScope indicates an expected call of DeleteOverallComputedLicensesByScope.
 func (mr *MockProductMockRecorder) DeleteOverallComputedLicensesByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOverallComputedLicensesByScope", reflect.TypeOf((*MockProduct)(nil).DeleteOverallComputedLicensesByScope), arg0, arg1)
 }
 
-// DeleteProductApplications mocks base method
+// DeleteProductApplications mocks base method.
 func (m *MockProduct) DeleteProductApplications(arg0 context.Context, arg1 db.DeleteProductApplicationsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProductApplications", arg0, arg1)
@@ -229,13 +258,13 @@ func (m *MockProduct) DeleteProductApplications(arg0 context.Context, arg1 db.De
 	return ret0
 }
 
-// DeleteProductApplications indicates an expected call of DeleteProductApplications
+// DeleteProductApplications indicates an expected call of DeleteProductApplications.
 func (mr *MockProductMockRecorder) DeleteProductApplications(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductApplications", reflect.TypeOf((*MockProduct)(nil).DeleteProductApplications), arg0, arg1)
 }
 
-// DeleteProductEquipments mocks base method
+// DeleteProductEquipments mocks base method.
 func (m *MockProduct) DeleteProductEquipments(arg0 context.Context, arg1 db.DeleteProductEquipmentsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProductEquipments", arg0, arg1)
@@ -243,13 +272,13 @@ func (m *MockProduct) DeleteProductEquipments(arg0 context.Context, arg1 db.Dele
 	return ret0
 }
 
-// DeleteProductEquipments indicates an expected call of DeleteProductEquipments
+// DeleteProductEquipments indicates an expected call of DeleteProductEquipments.
 func (mr *MockProductMockRecorder) DeleteProductEquipments(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductEquipments", reflect.TypeOf((*MockProduct)(nil).DeleteProductEquipments), arg0, arg1)
 }
 
-// DeleteProductsByScope mocks base method
+// DeleteProductsByScope mocks base method.
 func (m *MockProduct) DeleteProductsByScope(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProductsByScope", arg0, arg1)
@@ -257,13 +286,55 @@ func (m *MockProduct) DeleteProductsByScope(arg0 context.Context, arg1 string) e
 	return ret0
 }
 
-// DeleteProductsByScope indicates an expected call of DeleteProductsByScope
+// DeleteProductsByScope indicates an expected call of DeleteProductsByScope.
 func (mr *MockProductMockRecorder) DeleteProductsByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductsByScope", reflect.TypeOf((*MockProduct)(nil).DeleteProductsByScope), arg0, arg1)
 }
 
-// DropAllocatedMetricFromEquipment mocks base method
+// DeleteProductsBySwidTagScope mocks base method.
+func (m *MockProduct) DeleteProductsBySwidTagScope(arg0 context.Context, arg1 db.DeleteProductsBySwidTagScopeParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteProductsBySwidTagScope", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteProductsBySwidTagScope indicates an expected call of DeleteProductsBySwidTagScope.
+func (mr *MockProductMockRecorder) DeleteProductsBySwidTagScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProductsBySwidTagScope", reflect.TypeOf((*MockProduct)(nil).DeleteProductsBySwidTagScope), arg0, arg1)
+}
+
+// DeleteSharedDataByScope mocks base method.
+func (m *MockProduct) DeleteSharedDataByScope(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSharedDataByScope", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSharedDataByScope indicates an expected call of DeleteSharedDataByScope.
+func (mr *MockProductMockRecorder) DeleteSharedDataByScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSharedDataByScope", reflect.TypeOf((*MockProduct)(nil).DeleteSharedDataByScope), arg0, arg1)
+}
+
+// DeleteSharedLicences mocks base method.
+func (m *MockProduct) DeleteSharedLicences(arg0 context.Context, arg1 db.DeleteSharedLicencesParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSharedLicences", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSharedLicences indicates an expected call of DeleteSharedLicences.
+func (mr *MockProductMockRecorder) DeleteSharedLicences(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSharedLicences", reflect.TypeOf((*MockProduct)(nil).DeleteSharedLicences), arg0, arg1)
+}
+
+// DropAllocatedMetricFromEquipment mocks base method.
 func (m *MockProduct) DropAllocatedMetricFromEquipment(arg0 context.Context, arg1 db.DropAllocatedMetricFromEquipmentParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DropAllocatedMetricFromEquipment", arg0, arg1)
@@ -271,13 +342,13 @@ func (m *MockProduct) DropAllocatedMetricFromEquipment(arg0 context.Context, arg
 	return ret0
 }
 
-// DropAllocatedMetricFromEquipment indicates an expected call of DropAllocatedMetricFromEquipment
+// DropAllocatedMetricFromEquipment indicates an expected call of DropAllocatedMetricFromEquipment.
 func (mr *MockProductMockRecorder) DropAllocatedMetricFromEquipment(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropAllocatedMetricFromEquipment", reflect.TypeOf((*MockProduct)(nil).DropAllocatedMetricFromEquipment), arg0, arg1)
 }
 
-// DropProductDataTx mocks base method
+// DropProductDataTx mocks base method.
 func (m *MockProduct) DropProductDataTx(arg0 context.Context, arg1 string, arg2 v1.DropProductDataRequestDeletionTypes) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DropProductDataTx", arg0, arg1, arg2)
@@ -285,13 +356,13 @@ func (m *MockProduct) DropProductDataTx(arg0 context.Context, arg1 string, arg2 
 	return ret0
 }
 
-// DropProductDataTx indicates an expected call of DropProductDataTx
+// DropProductDataTx indicates an expected call of DropProductDataTx.
 func (mr *MockProductMockRecorder) DropProductDataTx(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropProductDataTx", reflect.TypeOf((*MockProduct)(nil).DropProductDataTx), arg0, arg1, arg2)
 }
 
-// EquipmentProducts mocks base method
+// EquipmentProducts mocks base method.
 func (m *MockProduct) EquipmentProducts(arg0 context.Context, arg1 string) ([]db.ProductsEquipment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EquipmentProducts", arg0, arg1)
@@ -300,13 +371,73 @@ func (m *MockProduct) EquipmentProducts(arg0 context.Context, arg1 string) ([]db
 	return ret0, ret1
 }
 
-// EquipmentProducts indicates an expected call of EquipmentProducts
+// EquipmentProducts indicates an expected call of EquipmentProducts.
 func (mr *MockProductMockRecorder) EquipmentProducts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EquipmentProducts", reflect.TypeOf((*MockProduct)(nil).EquipmentProducts), arg0, arg1)
 }
 
-// GetAcqBySwidtags mocks base method
+// ExportConcurrentUsers mocks base method.
+func (m *MockProduct) ExportConcurrentUsers(arg0 context.Context, arg1 db.ExportConcurrentUsersParams) ([]db.ExportConcurrentUsersRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportConcurrentUsers", arg0, arg1)
+	ret0, _ := ret[0].([]db.ExportConcurrentUsersRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportConcurrentUsers indicates an expected call of ExportConcurrentUsers.
+func (mr *MockProductMockRecorder) ExportConcurrentUsers(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportConcurrentUsers", reflect.TypeOf((*MockProduct)(nil).ExportConcurrentUsers), arg0, arg1)
+}
+
+// ExportNominativeUsersAggregation mocks base method.
+func (m *MockProduct) ExportNominativeUsersAggregation(arg0 context.Context, arg1 db.ExportNominativeUsersAggregationParams) ([]db.ExportNominativeUsersAggregationRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportNominativeUsersAggregation", arg0, arg1)
+	ret0, _ := ret[0].([]db.ExportNominativeUsersAggregationRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportNominativeUsersAggregation indicates an expected call of ExportNominativeUsersAggregation.
+func (mr *MockProductMockRecorder) ExportNominativeUsersAggregation(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportNominativeUsersAggregation", reflect.TypeOf((*MockProduct)(nil).ExportNominativeUsersAggregation), arg0, arg1)
+}
+
+// ExportNominativeUsersProducts mocks base method.
+func (m *MockProduct) ExportNominativeUsersProducts(arg0 context.Context, arg1 db.ExportNominativeUsersProductsParams) ([]db.ExportNominativeUsersProductsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportNominativeUsersProducts", arg0, arg1)
+	ret0, _ := ret[0].([]db.ExportNominativeUsersProductsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportNominativeUsersProducts indicates an expected call of ExportNominativeUsersProducts.
+func (mr *MockProductMockRecorder) ExportNominativeUsersProducts(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportNominativeUsersProducts", reflect.TypeOf((*MockProduct)(nil).ExportNominativeUsersProducts), arg0, arg1)
+}
+
+// GetAcqBySwidtag mocks base method.
+func (m *MockProduct) GetAcqBySwidtag(arg0 context.Context, arg1 db.GetAcqBySwidtagParams) (db.Acqright, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAcqBySwidtag", arg0, arg1)
+	ret0, _ := ret[0].(db.Acqright)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAcqBySwidtag indicates an expected call of GetAcqBySwidtag.
+func (mr *MockProductMockRecorder) GetAcqBySwidtag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqBySwidtag", reflect.TypeOf((*MockProduct)(nil).GetAcqBySwidtag), arg0, arg1)
+}
+
+// GetAcqBySwidtags mocks base method.
 func (m *MockProduct) GetAcqBySwidtags(arg0 context.Context, arg1 db.GetAcqBySwidtagsParams) ([]db.GetAcqBySwidtagsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqBySwidtags", arg0, arg1)
@@ -315,13 +446,13 @@ func (m *MockProduct) GetAcqBySwidtags(arg0 context.Context, arg1 db.GetAcqBySwi
 	return ret0, ret1
 }
 
-// GetAcqBySwidtags indicates an expected call of GetAcqBySwidtags
+// GetAcqBySwidtags indicates an expected call of GetAcqBySwidtags.
 func (mr *MockProductMockRecorder) GetAcqBySwidtags(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqBySwidtags", reflect.TypeOf((*MockProduct)(nil).GetAcqBySwidtags), arg0, arg1)
 }
 
-// GetAcqRightBySKU mocks base method
+// GetAcqRightBySKU mocks base method.
 func (m *MockProduct) GetAcqRightBySKU(arg0 context.Context, arg1 db.GetAcqRightBySKUParams) (db.GetAcqRightBySKURow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqRightBySKU", arg0, arg1)
@@ -330,13 +461,13 @@ func (m *MockProduct) GetAcqRightBySKU(arg0 context.Context, arg1 db.GetAcqRight
 	return ret0, ret1
 }
 
-// GetAcqRightBySKU indicates an expected call of GetAcqRightBySKU
+// GetAcqRightBySKU indicates an expected call of GetAcqRightBySKU.
 func (mr *MockProductMockRecorder) GetAcqRightBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRightBySKU", reflect.TypeOf((*MockProduct)(nil).GetAcqRightBySKU), arg0, arg1)
 }
 
-// GetAcqRightFileDataBySKU mocks base method
+// GetAcqRightFileDataBySKU mocks base method.
 func (m *MockProduct) GetAcqRightFileDataBySKU(arg0 context.Context, arg1 db.GetAcqRightFileDataBySKUParams) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqRightFileDataBySKU", arg0, arg1)
@@ -345,13 +476,13 @@ func (m *MockProduct) GetAcqRightFileDataBySKU(arg0 context.Context, arg1 db.Get
 	return ret0, ret1
 }
 
-// GetAcqRightFileDataBySKU indicates an expected call of GetAcqRightFileDataBySKU
+// GetAcqRightFileDataBySKU indicates an expected call of GetAcqRightFileDataBySKU.
 func (mr *MockProductMockRecorder) GetAcqRightFileDataBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRightFileDataBySKU", reflect.TypeOf((*MockProduct)(nil).GetAcqRightFileDataBySKU), arg0, arg1)
 }
 
-// GetAcqRightMetricsBySwidtag mocks base method
+// GetAcqRightMetricsBySwidtag mocks base method.
 func (m *MockProduct) GetAcqRightMetricsBySwidtag(arg0 context.Context, arg1 db.GetAcqRightMetricsBySwidtagParams) ([]db.GetAcqRightMetricsBySwidtagRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqRightMetricsBySwidtag", arg0, arg1)
@@ -360,13 +491,13 @@ func (m *MockProduct) GetAcqRightMetricsBySwidtag(arg0 context.Context, arg1 db.
 	return ret0, ret1
 }
 
-// GetAcqRightMetricsBySwidtag indicates an expected call of GetAcqRightMetricsBySwidtag
+// GetAcqRightMetricsBySwidtag indicates an expected call of GetAcqRightMetricsBySwidtag.
 func (mr *MockProductMockRecorder) GetAcqRightMetricsBySwidtag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRightMetricsBySwidtag", reflect.TypeOf((*MockProduct)(nil).GetAcqRightMetricsBySwidtag), arg0, arg1)
 }
 
-// GetAcqRightsByEditor mocks base method
+// GetAcqRightsByEditor mocks base method.
 func (m *MockProduct) GetAcqRightsByEditor(arg0 context.Context, arg1 db.GetAcqRightsByEditorParams) ([]db.GetAcqRightsByEditorRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqRightsByEditor", arg0, arg1)
@@ -375,13 +506,13 @@ func (m *MockProduct) GetAcqRightsByEditor(arg0 context.Context, arg1 db.GetAcqR
 	return ret0, ret1
 }
 
-// GetAcqRightsByEditor indicates an expected call of GetAcqRightsByEditor
+// GetAcqRightsByEditor indicates an expected call of GetAcqRightsByEditor.
 func (mr *MockProductMockRecorder) GetAcqRightsByEditor(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRightsByEditor", reflect.TypeOf((*MockProduct)(nil).GetAcqRightsByEditor), arg0, arg1)
 }
 
-// GetAcqRightsCost mocks base method
+// GetAcqRightsCost mocks base method.
 func (m *MockProduct) GetAcqRightsCost(arg0 context.Context, arg1 []string) (db.GetAcqRightsCostRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAcqRightsCost", arg0, arg1)
@@ -390,13 +521,13 @@ func (m *MockProduct) GetAcqRightsCost(arg0 context.Context, arg1 []string) (db.
 	return ret0, ret1
 }
 
-// GetAcqRightsCost indicates an expected call of GetAcqRightsCost
+// GetAcqRightsCost indicates an expected call of GetAcqRightsCost.
 func (mr *MockProductMockRecorder) GetAcqRightsCost(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcqRightsCost", reflect.TypeOf((*MockProduct)(nil).GetAcqRightsCost), arg0, arg1)
 }
 
-// GetAggRightMetricsByAggregationId mocks base method
+// GetAggRightMetricsByAggregationId mocks base method.
 func (m *MockProduct) GetAggRightMetricsByAggregationId(arg0 context.Context, arg1 db.GetAggRightMetricsByAggregationIdParams) ([]db.GetAggRightMetricsByAggregationIdRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggRightMetricsByAggregationId", arg0, arg1)
@@ -405,13 +536,13 @@ func (m *MockProduct) GetAggRightMetricsByAggregationId(arg0 context.Context, ar
 	return ret0, ret1
 }
 
-// GetAggRightMetricsByAggregationId indicates an expected call of GetAggRightMetricsByAggregationId
+// GetAggRightMetricsByAggregationId indicates an expected call of GetAggRightMetricsByAggregationId.
 func (mr *MockProductMockRecorder) GetAggRightMetricsByAggregationId(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggRightMetricsByAggregationId", reflect.TypeOf((*MockProduct)(nil).GetAggRightMetricsByAggregationId), arg0, arg1)
 }
 
-// GetAggregatedRightBySKU mocks base method
+// GetAggregatedRightBySKU mocks base method.
 func (m *MockProduct) GetAggregatedRightBySKU(arg0 context.Context, arg1 db.GetAggregatedRightBySKUParams) (db.GetAggregatedRightBySKURow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggregatedRightBySKU", arg0, arg1)
@@ -420,13 +551,13 @@ func (m *MockProduct) GetAggregatedRightBySKU(arg0 context.Context, arg1 db.GetA
 	return ret0, ret1
 }
 
-// GetAggregatedRightBySKU indicates an expected call of GetAggregatedRightBySKU
+// GetAggregatedRightBySKU indicates an expected call of GetAggregatedRightBySKU.
 func (mr *MockProductMockRecorder) GetAggregatedRightBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregatedRightBySKU", reflect.TypeOf((*MockProduct)(nil).GetAggregatedRightBySKU), arg0, arg1)
 }
 
-// GetAggregatedRightsFileDataBySKU mocks base method
+// GetAggregatedRightsFileDataBySKU mocks base method.
 func (m *MockProduct) GetAggregatedRightsFileDataBySKU(arg0 context.Context, arg1 db.GetAggregatedRightsFileDataBySKUParams) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggregatedRightsFileDataBySKU", arg0, arg1)
@@ -435,13 +566,13 @@ func (m *MockProduct) GetAggregatedRightsFileDataBySKU(arg0 context.Context, arg
 	return ret0, ret1
 }
 
-// GetAggregatedRightsFileDataBySKU indicates an expected call of GetAggregatedRightsFileDataBySKU
+// GetAggregatedRightsFileDataBySKU indicates an expected call of GetAggregatedRightsFileDataBySKU.
 func (mr *MockProductMockRecorder) GetAggregatedRightsFileDataBySKU(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregatedRightsFileDataBySKU", reflect.TypeOf((*MockProduct)(nil).GetAggregatedRightsFileDataBySKU), arg0, arg1)
 }
 
-// GetAggregationByEditor mocks base method
+// GetAggregationByEditor mocks base method.
 func (m *MockProduct) GetAggregationByEditor(arg0 context.Context, arg1 db.GetAggregationByEditorParams) ([]db.GetAggregationByEditorRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggregationByEditor", arg0, arg1)
@@ -450,13 +581,13 @@ func (m *MockProduct) GetAggregationByEditor(arg0 context.Context, arg1 db.GetAg
 	return ret0, ret1
 }
 
-// GetAggregationByEditor indicates an expected call of GetAggregationByEditor
+// GetAggregationByEditor indicates an expected call of GetAggregationByEditor.
 func (mr *MockProductMockRecorder) GetAggregationByEditor(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationByEditor", reflect.TypeOf((*MockProduct)(nil).GetAggregationByEditor), arg0, arg1)
 }
 
-// GetAggregationByID mocks base method
+// GetAggregationByID mocks base method.
 func (m *MockProduct) GetAggregationByID(arg0 context.Context, arg1 db.GetAggregationByIDParams) (db.Aggregation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggregationByID", arg0, arg1)
@@ -465,13 +596,13 @@ func (m *MockProduct) GetAggregationByID(arg0 context.Context, arg1 db.GetAggreg
 	return ret0, ret1
 }
 
-// GetAggregationByID indicates an expected call of GetAggregationByID
+// GetAggregationByID indicates an expected call of GetAggregationByID.
 func (mr *MockProductMockRecorder) GetAggregationByID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationByID", reflect.TypeOf((*MockProduct)(nil).GetAggregationByID), arg0, arg1)
 }
 
-// GetAggregationByName mocks base method
+// GetAggregationByName mocks base method.
 func (m *MockProduct) GetAggregationByName(arg0 context.Context, arg1 db.GetAggregationByNameParams) (db.Aggregation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAggregationByName", arg0, arg1)
@@ -480,13 +611,13 @@ func (m *MockProduct) GetAggregationByName(arg0 context.Context, arg1 db.GetAggr
 	return ret0, ret1
 }
 
-// GetAggregationByName indicates an expected call of GetAggregationByName
+// GetAggregationByName indicates an expected call of GetAggregationByName.
 func (mr *MockProductMockRecorder) GetAggregationByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationByName", reflect.TypeOf((*MockProduct)(nil).GetAggregationByName), arg0, arg1)
 }
 
-// GetApplicationsByProductID mocks base method
+// GetApplicationsByProductID mocks base method.
 func (m *MockProduct) GetApplicationsByProductID(arg0 context.Context, arg1 db.GetApplicationsByProductIDParams) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetApplicationsByProductID", arg0, arg1)
@@ -495,13 +626,103 @@ func (m *MockProduct) GetApplicationsByProductID(arg0 context.Context, arg1 db.G
 	return ret0, ret1
 }
 
-// GetApplicationsByProductID indicates an expected call of GetApplicationsByProductID
+// GetApplicationsByProductID indicates an expected call of GetApplicationsByProductID.
 func (mr *MockProductMockRecorder) GetApplicationsByProductID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsByProductID", reflect.TypeOf((*MockProduct)(nil).GetApplicationsByProductID), arg0, arg1)
 }
 
-// GetDashboardUpdates mocks base method
+// GetAvailableAcqLicenses mocks base method.
+func (m *MockProduct) GetAvailableAcqLicenses(arg0 context.Context, arg1 db.GetAvailableAcqLicensesParams) (int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAvailableAcqLicenses", arg0, arg1)
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAvailableAcqLicenses indicates an expected call of GetAvailableAcqLicenses.
+func (mr *MockProductMockRecorder) GetAvailableAcqLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvailableAcqLicenses", reflect.TypeOf((*MockProduct)(nil).GetAvailableAcqLicenses), arg0, arg1)
+}
+
+// GetAvailableAggLicenses mocks base method.
+func (m *MockProduct) GetAvailableAggLicenses(arg0 context.Context, arg1 db.GetAvailableAggLicensesParams) (int32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAvailableAggLicenses", arg0, arg1)
+	ret0, _ := ret[0].(int32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAvailableAggLicenses indicates an expected call of GetAvailableAggLicenses.
+func (mr *MockProductMockRecorder) GetAvailableAggLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvailableAggLicenses", reflect.TypeOf((*MockProduct)(nil).GetAvailableAggLicenses), arg0, arg1)
+}
+
+// GetConcurrentNominativeUsersBySwidTag mocks base method.
+func (m *MockProduct) GetConcurrentNominativeUsersBySwidTag(arg0 context.Context, arg1 db.GetConcurrentNominativeUsersBySwidTagParams) ([]db.GetConcurrentNominativeUsersBySwidTagRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcurrentNominativeUsersBySwidTag", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetConcurrentNominativeUsersBySwidTagRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcurrentNominativeUsersBySwidTag indicates an expected call of GetConcurrentNominativeUsersBySwidTag.
+func (mr *MockProductMockRecorder) GetConcurrentNominativeUsersBySwidTag(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcurrentNominativeUsersBySwidTag", reflect.TypeOf((*MockProduct)(nil).GetConcurrentNominativeUsersBySwidTag), arg0, arg1)
+}
+
+// GetConcurrentUserByID mocks base method.
+func (m *MockProduct) GetConcurrentUserByID(arg0 context.Context, arg1 db.GetConcurrentUserByIDParams) (db.ProductConcurrentUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcurrentUserByID", arg0, arg1)
+	ret0, _ := ret[0].(db.ProductConcurrentUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcurrentUserByID indicates an expected call of GetConcurrentUserByID.
+func (mr *MockProductMockRecorder) GetConcurrentUserByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcurrentUserByID", reflect.TypeOf((*MockProduct)(nil).GetConcurrentUserByID), arg0, arg1)
+}
+
+// GetConcurrentUsersByDay mocks base method.
+func (m *MockProduct) GetConcurrentUsersByDay(arg0 context.Context, arg1 db.GetConcurrentUsersByDayParams) ([]db.GetConcurrentUsersByDayRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcurrentUsersByDay", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetConcurrentUsersByDayRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcurrentUsersByDay indicates an expected call of GetConcurrentUsersByDay.
+func (mr *MockProductMockRecorder) GetConcurrentUsersByDay(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcurrentUsersByDay", reflect.TypeOf((*MockProduct)(nil).GetConcurrentUsersByDay), arg0, arg1)
+}
+
+// GetConcurrentUsersByMonth mocks base method.
+func (m *MockProduct) GetConcurrentUsersByMonth(arg0 context.Context, arg1 db.GetConcurrentUsersByMonthParams) ([]db.GetConcurrentUsersByMonthRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConcurrentUsersByMonth", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetConcurrentUsersByMonthRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcurrentUsersByMonth indicates an expected call of GetConcurrentUsersByMonth.
+func (mr *MockProductMockRecorder) GetConcurrentUsersByMonth(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcurrentUsersByMonth", reflect.TypeOf((*MockProduct)(nil).GetConcurrentUsersByMonth), arg0, arg1)
+}
+
+// GetDashboardUpdates mocks base method.
 func (m *MockProduct) GetDashboardUpdates(arg0 context.Context, arg1 db.GetDashboardUpdatesParams) (db.GetDashboardUpdatesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDashboardUpdates", arg0, arg1)
@@ -510,13 +731,43 @@ func (m *MockProduct) GetDashboardUpdates(arg0 context.Context, arg1 db.GetDashb
 	return ret0, ret1
 }
 
-// GetDashboardUpdates indicates an expected call of GetDashboardUpdates
+// GetDashboardUpdates indicates an expected call of GetDashboardUpdates.
 func (mr *MockProductMockRecorder) GetDashboardUpdates(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDashboardUpdates", reflect.TypeOf((*MockProduct)(nil).GetDashboardUpdates), arg0, arg1)
 }
 
-// GetEquipmentsBySwidtag mocks base method
+// GetEditor mocks base method.
+func (m *MockProduct) GetEditor(arg0 context.Context) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEditor", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEditor indicates an expected call of GetEditor.
+func (mr *MockProductMockRecorder) GetEditor(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditor", reflect.TypeOf((*MockProduct)(nil).GetEditor), arg0)
+}
+
+// GetEditorExpensesByScopeData mocks base method.
+func (m *MockProduct) GetEditorExpensesByScopeData(arg0 context.Context, arg1 []string) ([]db.GetEditorExpensesByScopeDataRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEditorExpensesByScopeData", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetEditorExpensesByScopeDataRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEditorExpensesByScopeData indicates an expected call of GetEditorExpensesByScopeData.
+func (mr *MockProductMockRecorder) GetEditorExpensesByScopeData(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditorExpensesByScopeData", reflect.TypeOf((*MockProduct)(nil).GetEditorExpensesByScopeData), arg0, arg1)
+}
+
+// GetEquipmentsBySwidtag mocks base method.
 func (m *MockProduct) GetEquipmentsBySwidtag(arg0 context.Context, arg1 db.GetEquipmentsBySwidtagParams) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEquipmentsBySwidtag", arg0, arg1)
@@ -525,13 +776,13 @@ func (m *MockProduct) GetEquipmentsBySwidtag(arg0 context.Context, arg1 db.GetEq
 	return ret0, ret1
 }
 
-// GetEquipmentsBySwidtag indicates an expected call of GetEquipmentsBySwidtag
+// GetEquipmentsBySwidtag indicates an expected call of GetEquipmentsBySwidtag.
 func (mr *MockProductMockRecorder) GetEquipmentsBySwidtag(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEquipmentsBySwidtag", reflect.TypeOf((*MockProduct)(nil).GetEquipmentsBySwidtag), arg0, arg1)
 }
 
-// GetIndividualProductDetailByAggregation mocks base method
+// GetIndividualProductDetailByAggregation mocks base method.
 func (m *MockProduct) GetIndividualProductDetailByAggregation(arg0 context.Context, arg1 db.GetIndividualProductDetailByAggregationParams) ([]db.GetIndividualProductDetailByAggregationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIndividualProductDetailByAggregation", arg0, arg1)
@@ -540,13 +791,13 @@ func (m *MockProduct) GetIndividualProductDetailByAggregation(arg0 context.Conte
 	return ret0, ret1
 }
 
-// GetIndividualProductDetailByAggregation indicates an expected call of GetIndividualProductDetailByAggregation
+// GetIndividualProductDetailByAggregation indicates an expected call of GetIndividualProductDetailByAggregation.
 func (mr *MockProductMockRecorder) GetIndividualProductDetailByAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIndividualProductDetailByAggregation", reflect.TypeOf((*MockProduct)(nil).GetIndividualProductDetailByAggregation), arg0, arg1)
 }
 
-// GetIndividualProductForAggregationCount mocks base method
+// GetIndividualProductForAggregationCount mocks base method.
 func (m *MockProduct) GetIndividualProductForAggregationCount(arg0 context.Context, arg1 db.GetIndividualProductForAggregationCountParams) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetIndividualProductForAggregationCount", arg0, arg1)
@@ -555,13 +806,13 @@ func (m *MockProduct) GetIndividualProductForAggregationCount(arg0 context.Conte
 	return ret0, ret1
 }
 
-// GetIndividualProductForAggregationCount indicates an expected call of GetIndividualProductForAggregationCount
+// GetIndividualProductForAggregationCount indicates an expected call of GetIndividualProductForAggregationCount.
 func (mr *MockProductMockRecorder) GetIndividualProductForAggregationCount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIndividualProductForAggregationCount", reflect.TypeOf((*MockProduct)(nil).GetIndividualProductForAggregationCount), arg0, arg1)
 }
 
-// GetLicensesCost mocks base method
+// GetLicensesCost mocks base method.
 func (m *MockProduct) GetLicensesCost(arg0 context.Context, arg1 []string) (db.GetLicensesCostRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLicensesCost", arg0, arg1)
@@ -570,13 +821,88 @@ func (m *MockProduct) GetLicensesCost(arg0 context.Context, arg1 []string) (db.G
 	return ret0, ret1
 }
 
-// GetLicensesCost indicates an expected call of GetLicensesCost
+// GetLicensesCost indicates an expected call of GetLicensesCost.
 func (mr *MockProductMockRecorder) GetLicensesCost(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLicensesCost", reflect.TypeOf((*MockProduct)(nil).GetLicensesCost), arg0, arg1)
 }
 
-// GetProductCount mocks base method
+// GetMetricsBySku mocks base method.
+func (m *MockProduct) GetMetricsBySku(arg0 context.Context, arg1 db.GetMetricsBySkuParams) (db.GetMetricsBySkuRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricsBySku", arg0, arg1)
+	ret0, _ := ret[0].(db.GetMetricsBySkuRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricsBySku indicates an expected call of GetMetricsBySku.
+func (mr *MockProductMockRecorder) GetMetricsBySku(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsBySku", reflect.TypeOf((*MockProduct)(nil).GetMetricsBySku), arg0, arg1)
+}
+
+// GetNominativeUserByID mocks base method.
+func (m *MockProduct) GetNominativeUserByID(arg0 context.Context, arg1 db.GetNominativeUserByIDParams) (db.NominativeUser, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNominativeUserByID", arg0, arg1)
+	ret0, _ := ret[0].(db.NominativeUser)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNominativeUserByID indicates an expected call of GetNominativeUserByID.
+func (mr *MockProductMockRecorder) GetNominativeUserByID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNominativeUserByID", reflect.TypeOf((*MockProduct)(nil).GetNominativeUserByID), arg0, arg1)
+}
+
+// GetOverallCostByProduct mocks base method.
+func (m *MockProduct) GetOverallCostByProduct(arg0 context.Context, arg1 db.GetOverallCostByProductParams) ([]db.GetOverallCostByProductRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOverallCostByProduct", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetOverallCostByProductRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOverallCostByProduct indicates an expected call of GetOverallCostByProduct.
+func (mr *MockProductMockRecorder) GetOverallCostByProduct(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOverallCostByProduct", reflect.TypeOf((*MockProduct)(nil).GetOverallCostByProduct), arg0, arg1)
+}
+
+// GetOverallLicencesByProduct mocks base method.
+func (m *MockProduct) GetOverallLicencesByProduct(arg0 context.Context, arg1 db.GetOverallLicencesByProductParams) ([]db.GetOverallLicencesByProductRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOverallLicencesByProduct", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetOverallLicencesByProductRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOverallLicencesByProduct indicates an expected call of GetOverallLicencesByProduct.
+func (mr *MockProductMockRecorder) GetOverallLicencesByProduct(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOverallLicencesByProduct", reflect.TypeOf((*MockProduct)(nil).GetOverallLicencesByProduct), arg0, arg1)
+}
+
+// GetProductByNameEditor mocks base method.
+func (m *MockProduct) GetProductByNameEditor(arg0 context.Context, arg1 db.GetProductByNameEditorParams) ([]db.Product, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductByNameEditor", arg0, arg1)
+	ret0, _ := ret[0].([]db.Product)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductByNameEditor indicates an expected call of GetProductByNameEditor.
+func (mr *MockProductMockRecorder) GetProductByNameEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductByNameEditor", reflect.TypeOf((*MockProduct)(nil).GetProductByNameEditor), arg0, arg1)
+}
+
+// GetProductCount mocks base method.
 func (m *MockProduct) GetProductCount(arg0 context.Context, arg1 string) ([]db.GetProductCountRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductCount", arg0, arg1)
@@ -585,13 +911,13 @@ func (m *MockProduct) GetProductCount(arg0 context.Context, arg1 string) ([]db.G
 	return ret0, ret1
 }
 
-// GetProductCount indicates an expected call of GetProductCount
+// GetProductCount indicates an expected call of GetProductCount.
 func (mr *MockProductMockRecorder) GetProductCount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductCount", reflect.TypeOf((*MockProduct)(nil).GetProductCount), arg0, arg1)
 }
 
-// GetProductInformation mocks base method
+// GetProductInformation mocks base method.
 func (m *MockProduct) GetProductInformation(arg0 context.Context, arg1 db.GetProductInformationParams) (db.GetProductInformationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductInformation", arg0, arg1)
@@ -600,13 +926,13 @@ func (m *MockProduct) GetProductInformation(arg0 context.Context, arg1 db.GetPro
 	return ret0, ret1
 }
 
-// GetProductInformation indicates an expected call of GetProductInformation
+// GetProductInformation indicates an expected call of GetProductInformation.
 func (mr *MockProductMockRecorder) GetProductInformation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductInformation", reflect.TypeOf((*MockProduct)(nil).GetProductInformation), arg0, arg1)
 }
 
-// GetProductInformationFromAcqright mocks base method
+// GetProductInformationFromAcqright mocks base method.
 func (m *MockProduct) GetProductInformationFromAcqright(arg0 context.Context, arg1 db.GetProductInformationFromAcqrightParams) (db.GetProductInformationFromAcqrightRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductInformationFromAcqright", arg0, arg1)
@@ -615,13 +941,28 @@ func (m *MockProduct) GetProductInformationFromAcqright(arg0 context.Context, ar
 	return ret0, ret1
 }
 
-// GetProductInformationFromAcqright indicates an expected call of GetProductInformationFromAcqright
+// GetProductInformationFromAcqright indicates an expected call of GetProductInformationFromAcqright.
 func (mr *MockProductMockRecorder) GetProductInformationFromAcqright(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductInformationFromAcqright", reflect.TypeOf((*MockProduct)(nil).GetProductInformationFromAcqright), arg0, arg1)
 }
 
-// GetProductOptions mocks base method
+// GetProductListByEditor mocks base method.
+func (m *MockProduct) GetProductListByEditor(arg0 context.Context, arg1 db.GetProductListByEditorParams) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetProductListByEditor", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductListByEditor indicates an expected call of GetProductListByEditor.
+func (mr *MockProductMockRecorder) GetProductListByEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductListByEditor", reflect.TypeOf((*MockProduct)(nil).GetProductListByEditor), arg0, arg1)
+}
+
+// GetProductOptions mocks base method.
 func (m *MockProduct) GetProductOptions(arg0 context.Context, arg1 db.GetProductOptionsParams) ([]db.GetProductOptionsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductOptions", arg0, arg1)
@@ -630,13 +971,13 @@ func (m *MockProduct) GetProductOptions(arg0 context.Context, arg1 db.GetProduct
 	return ret0, ret1
 }
 
-// GetProductOptions indicates an expected call of GetProductOptions
+// GetProductOptions indicates an expected call of GetProductOptions.
 func (mr *MockProductMockRecorder) GetProductOptions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductOptions", reflect.TypeOf((*MockProduct)(nil).GetProductOptions), arg0, arg1)
 }
 
-// GetProductsByApplicationID mocks base method
+// GetProductsByApplicationID mocks base method.
 func (m *MockProduct) GetProductsByApplicationID(arg0 context.Context, arg1 db.GetProductsByApplicationIDParams) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByApplicationID", arg0, arg1)
@@ -645,13 +986,13 @@ func (m *MockProduct) GetProductsByApplicationID(arg0 context.Context, arg1 db.G
 	return ret0, ret1
 }
 
-// GetProductsByApplicationID indicates an expected call of GetProductsByApplicationID
+// GetProductsByApplicationID indicates an expected call of GetProductsByApplicationID.
 func (mr *MockProductMockRecorder) GetProductsByApplicationID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByApplicationID", reflect.TypeOf((*MockProduct)(nil).GetProductsByApplicationID), arg0, arg1)
 }
 
-// GetProductsByEditor mocks base method
+// GetProductsByEditor mocks base method.
 func (m *MockProduct) GetProductsByEditor(arg0 context.Context, arg1 db.GetProductsByEditorParams) ([]db.GetProductsByEditorRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByEditor", arg0, arg1)
@@ -660,13 +1001,13 @@ func (m *MockProduct) GetProductsByEditor(arg0 context.Context, arg1 db.GetProdu
 	return ret0, ret1
 }
 
-// GetProductsByEditor indicates an expected call of GetProductsByEditor
+// GetProductsByEditor indicates an expected call of GetProductsByEditor.
 func (mr *MockProductMockRecorder) GetProductsByEditor(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByEditor", reflect.TypeOf((*MockProduct)(nil).GetProductsByEditor), arg0, arg1)
 }
 
-// GetProductsByEditorScope mocks base method
+// GetProductsByEditorScope mocks base method.
 func (m *MockProduct) GetProductsByEditorScope(arg0 context.Context, arg1 db.GetProductsByEditorScopeParams) ([]db.GetProductsByEditorScopeRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByEditorScope", arg0, arg1)
@@ -675,13 +1016,103 @@ func (m *MockProduct) GetProductsByEditorScope(arg0 context.Context, arg1 db.Get
 	return ret0, ret1
 }
 
-// GetProductsByEditorScope indicates an expected call of GetProductsByEditorScope
+// GetProductsByEditorScope indicates an expected call of GetProductsByEditorScope.
 func (mr *MockProductMockRecorder) GetProductsByEditorScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsByEditorScope", reflect.TypeOf((*MockProduct)(nil).GetProductsByEditorScope), arg0, arg1)
 }
 
-// GetTotalCounterfietAmount mocks base method
+// GetScopeCounterfietAmountEditor mocks base method.
+func (m *MockProduct) GetScopeCounterfietAmountEditor(arg0 context.Context, arg1 db.GetScopeCounterfietAmountEditorParams) ([]db.GetScopeCounterfietAmountEditorRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScopeCounterfietAmountEditor", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetScopeCounterfietAmountEditorRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopeCounterfietAmountEditor indicates an expected call of GetScopeCounterfietAmountEditor.
+func (mr *MockProductMockRecorder) GetScopeCounterfietAmountEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeCounterfietAmountEditor", reflect.TypeOf((*MockProduct)(nil).GetScopeCounterfietAmountEditor), arg0, arg1)
+}
+
+// GetScopeTotalAmountEditor mocks base method.
+func (m *MockProduct) GetScopeTotalAmountEditor(arg0 context.Context, arg1 db.GetScopeTotalAmountEditorParams) ([]db.GetScopeTotalAmountEditorRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScopeTotalAmountEditor", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetScopeTotalAmountEditorRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopeTotalAmountEditor indicates an expected call of GetScopeTotalAmountEditor.
+func (mr *MockProductMockRecorder) GetScopeTotalAmountEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeTotalAmountEditor", reflect.TypeOf((*MockProduct)(nil).GetScopeTotalAmountEditor), arg0, arg1)
+}
+
+// GetScopeUnderUsageCostEditor mocks base method.
+func (m *MockProduct) GetScopeUnderUsageCostEditor(arg0 context.Context, arg1 db.GetScopeUnderUsageCostEditorParams) ([]db.GetScopeUnderUsageCostEditorRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScopeUnderUsageCostEditor", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetScopeUnderUsageCostEditorRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopeUnderUsageCostEditor indicates an expected call of GetScopeUnderUsageCostEditor.
+func (mr *MockProductMockRecorder) GetScopeUnderUsageCostEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeUnderUsageCostEditor", reflect.TypeOf((*MockProduct)(nil).GetScopeUnderUsageCostEditor), arg0, arg1)
+}
+
+// GetSharedData mocks base method.
+func (m *MockProduct) GetSharedData(arg0 context.Context, arg1 string) ([]db.SharedLicense, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSharedData", arg0, arg1)
+	ret0, _ := ret[0].([]db.SharedLicense)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSharedData indicates an expected call of GetSharedData.
+func (mr *MockProductMockRecorder) GetSharedData(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedData", reflect.TypeOf((*MockProduct)(nil).GetSharedData), arg0, arg1)
+}
+
+// GetSharedLicenses mocks base method.
+func (m *MockProduct) GetSharedLicenses(arg0 context.Context, arg1 db.GetSharedLicensesParams) ([]db.SharedLicense, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSharedLicenses", arg0, arg1)
+	ret0, _ := ret[0].([]db.SharedLicense)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSharedLicenses indicates an expected call of GetSharedLicenses.
+func (mr *MockProductMockRecorder) GetSharedLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSharedLicenses", reflect.TypeOf((*MockProduct)(nil).GetSharedLicenses), arg0, arg1)
+}
+
+// GetTotalCostByProduct mocks base method.
+func (m *MockProduct) GetTotalCostByProduct(arg0 context.Context, arg1 db.GetTotalCostByProductParams) ([]db.GetTotalCostByProductRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalCostByProduct", arg0, arg1)
+	ret0, _ := ret[0].([]db.GetTotalCostByProductRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalCostByProduct indicates an expected call of GetTotalCostByProduct.
+func (mr *MockProductMockRecorder) GetTotalCostByProduct(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalCostByProduct", reflect.TypeOf((*MockProduct)(nil).GetTotalCostByProduct), arg0, arg1)
+}
+
+// GetTotalCounterfietAmount mocks base method.
 func (m *MockProduct) GetTotalCounterfietAmount(arg0 context.Context, arg1 string) (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTotalCounterfietAmount", arg0, arg1)
@@ -690,13 +1121,13 @@ func (m *MockProduct) GetTotalCounterfietAmount(arg0 context.Context, arg1 strin
 	return ret0, ret1
 }
 
-// GetTotalCounterfietAmount indicates an expected call of GetTotalCounterfietAmount
+// GetTotalCounterfietAmount indicates an expected call of GetTotalCounterfietAmount.
 func (mr *MockProductMockRecorder) GetTotalCounterfietAmount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalCounterfietAmount", reflect.TypeOf((*MockProduct)(nil).GetTotalCounterfietAmount), arg0, arg1)
 }
 
-// GetTotalDeltaCost mocks base method
+// GetTotalDeltaCost mocks base method.
 func (m *MockProduct) GetTotalDeltaCost(arg0 context.Context, arg1 string) (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTotalDeltaCost", arg0, arg1)
@@ -705,13 +1136,28 @@ func (m *MockProduct) GetTotalDeltaCost(arg0 context.Context, arg1 string) (floa
 	return ret0, ret1
 }
 
-// GetTotalDeltaCost indicates an expected call of GetTotalDeltaCost
+// GetTotalDeltaCost indicates an expected call of GetTotalDeltaCost.
 func (mr *MockProductMockRecorder) GetTotalDeltaCost(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalDeltaCost", reflect.TypeOf((*MockProduct)(nil).GetTotalDeltaCost), arg0, arg1)
 }
 
-// GetTotalUnderusageAmount mocks base method
+// GetTotalSharedLicenses mocks base method.
+func (m *MockProduct) GetTotalSharedLicenses(arg0 context.Context, arg1 db.GetTotalSharedLicensesParams) (db.GetTotalSharedLicensesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTotalSharedLicenses", arg0, arg1)
+	ret0, _ := ret[0].(db.GetTotalSharedLicensesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalSharedLicenses indicates an expected call of GetTotalSharedLicenses.
+func (mr *MockProductMockRecorder) GetTotalSharedLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalSharedLicenses", reflect.TypeOf((*MockProduct)(nil).GetTotalSharedLicenses), arg0, arg1)
+}
+
+// GetTotalUnderusageAmount mocks base method.
 func (m *MockProduct) GetTotalUnderusageAmount(arg0 context.Context, arg1 string) (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTotalUnderusageAmount", arg0, arg1)
@@ -720,13 +1166,28 @@ func (m *MockProduct) GetTotalUnderusageAmount(arg0 context.Context, arg1 string
 	return ret0, ret1
 }
 
-// GetTotalUnderusageAmount indicates an expected call of GetTotalUnderusageAmount
+// GetTotalUnderusageAmount indicates an expected call of GetTotalUnderusageAmount.
 func (mr *MockProductMockRecorder) GetTotalUnderusageAmount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalUnderusageAmount", reflect.TypeOf((*MockProduct)(nil).GetTotalUnderusageAmount), arg0, arg1)
 }
 
-// InsertAggregation mocks base method
+// GetUnitPriceBySku mocks base method.
+func (m *MockProduct) GetUnitPriceBySku(arg0 context.Context, arg1 db.GetUnitPriceBySkuParams) (db.GetUnitPriceBySkuRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUnitPriceBySku", arg0, arg1)
+	ret0, _ := ret[0].(db.GetUnitPriceBySkuRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnitPriceBySku indicates an expected call of GetUnitPriceBySku.
+func (mr *MockProductMockRecorder) GetUnitPriceBySku(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitPriceBySku", reflect.TypeOf((*MockProduct)(nil).GetUnitPriceBySku), arg0, arg1)
+}
+
+// InsertAggregation mocks base method.
 func (m *MockProduct) InsertAggregation(arg0 context.Context, arg1 db.InsertAggregationParams) (int32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertAggregation", arg0, arg1)
@@ -735,13 +1196,27 @@ func (m *MockProduct) InsertAggregation(arg0 context.Context, arg1 db.InsertAggr
 	return ret0, ret1
 }
 
-// InsertAggregation indicates an expected call of InsertAggregation
+// InsertAggregation indicates an expected call of InsertAggregation.
 func (mr *MockProductMockRecorder) InsertAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertAggregation", reflect.TypeOf((*MockProduct)(nil).InsertAggregation), arg0, arg1)
 }
 
-// InsertOverAllComputedLicences mocks base method
+// InsertNominativeUserFileUploadDetails mocks base method.
+func (m *MockProduct) InsertNominativeUserFileUploadDetails(arg0 context.Context, arg1 db.InsertNominativeUserFileUploadDetailsParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertNominativeUserFileUploadDetails", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertNominativeUserFileUploadDetails indicates an expected call of InsertNominativeUserFileUploadDetails.
+func (mr *MockProductMockRecorder) InsertNominativeUserFileUploadDetails(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertNominativeUserFileUploadDetails", reflect.TypeOf((*MockProduct)(nil).InsertNominativeUserFileUploadDetails), arg0, arg1)
+}
+
+// InsertOverAllComputedLicences mocks base method.
 func (m *MockProduct) InsertOverAllComputedLicences(arg0 context.Context, arg1 db.InsertOverAllComputedLicencesParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertOverAllComputedLicences", arg0, arg1)
@@ -749,13 +1224,13 @@ func (m *MockProduct) InsertOverAllComputedLicences(arg0 context.Context, arg1 d
 	return ret0
 }
 
-// InsertOverAllComputedLicences indicates an expected call of InsertOverAllComputedLicences
+// InsertOverAllComputedLicences indicates an expected call of InsertOverAllComputedLicences.
 func (mr *MockProductMockRecorder) InsertOverAllComputedLicences(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertOverAllComputedLicences", reflect.TypeOf((*MockProduct)(nil).InsertOverAllComputedLicences), arg0, arg1)
 }
 
-// ListAcqRightsAggregation mocks base method
+// ListAcqRightsAggregation mocks base method.
 func (m *MockProduct) ListAcqRightsAggregation(arg0 context.Context, arg1 db.ListAcqRightsAggregationParams) ([]db.ListAcqRightsAggregationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAcqRightsAggregation", arg0, arg1)
@@ -764,13 +1239,13 @@ func (m *MockProduct) ListAcqRightsAggregation(arg0 context.Context, arg1 db.Lis
 	return ret0, ret1
 }
 
-// ListAcqRightsAggregation indicates an expected call of ListAcqRightsAggregation
+// ListAcqRightsAggregation indicates an expected call of ListAcqRightsAggregation.
 func (mr *MockProductMockRecorder) ListAcqRightsAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAcqRightsAggregation", reflect.TypeOf((*MockProduct)(nil).ListAcqRightsAggregation), arg0, arg1)
 }
 
-// ListAcqRightsIndividual mocks base method
+// ListAcqRightsIndividual mocks base method.
 func (m *MockProduct) ListAcqRightsIndividual(arg0 context.Context, arg1 db.ListAcqRightsIndividualParams) ([]db.ListAcqRightsIndividualRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAcqRightsIndividual", arg0, arg1)
@@ -779,13 +1254,13 @@ func (m *MockProduct) ListAcqRightsIndividual(arg0 context.Context, arg1 db.List
 	return ret0, ret1
 }
 
-// ListAcqRightsIndividual indicates an expected call of ListAcqRightsIndividual
+// ListAcqRightsIndividual indicates an expected call of ListAcqRightsIndividual.
 func (mr *MockProductMockRecorder) ListAcqRightsIndividual(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAcqRightsIndividual", reflect.TypeOf((*MockProduct)(nil).ListAcqRightsIndividual), arg0, arg1)
 }
 
-// ListAcqrightsProducts mocks base method
+// ListAcqrightsProducts mocks base method.
 func (m *MockProduct) ListAcqrightsProducts(arg0 context.Context) ([]db.ListAcqrightsProductsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAcqrightsProducts", arg0)
@@ -794,13 +1269,13 @@ func (m *MockProduct) ListAcqrightsProducts(arg0 context.Context) ([]db.ListAcqr
 	return ret0, ret1
 }
 
-// ListAcqrightsProducts indicates an expected call of ListAcqrightsProducts
+// ListAcqrightsProducts indicates an expected call of ListAcqrightsProducts.
 func (mr *MockProductMockRecorder) ListAcqrightsProducts(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAcqrightsProducts", reflect.TypeOf((*MockProduct)(nil).ListAcqrightsProducts), arg0)
 }
 
-// ListAcqrightsProductsByScope mocks base method
+// ListAcqrightsProductsByScope mocks base method.
 func (m *MockProduct) ListAcqrightsProductsByScope(arg0 context.Context, arg1 string) ([]db.ListAcqrightsProductsByScopeRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAcqrightsProductsByScope", arg0, arg1)
@@ -809,13 +1284,13 @@ func (m *MockProduct) ListAcqrightsProductsByScope(arg0 context.Context, arg1 st
 	return ret0, ret1
 }
 
-// ListAcqrightsProductsByScope indicates an expected call of ListAcqrightsProductsByScope
+// ListAcqrightsProductsByScope indicates an expected call of ListAcqrightsProductsByScope.
 func (mr *MockProductMockRecorder) ListAcqrightsProductsByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAcqrightsProductsByScope", reflect.TypeOf((*MockProduct)(nil).ListAcqrightsProductsByScope), arg0, arg1)
 }
 
-// ListAggregationNameByScope mocks base method
+// ListAggregationNameByScope mocks base method.
 func (m *MockProduct) ListAggregationNameByScope(arg0 context.Context, arg1 string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAggregationNameByScope", arg0, arg1)
@@ -824,13 +1299,13 @@ func (m *MockProduct) ListAggregationNameByScope(arg0 context.Context, arg1 stri
 	return ret0, ret1
 }
 
-// ListAggregationNameByScope indicates an expected call of ListAggregationNameByScope
+// ListAggregationNameByScope indicates an expected call of ListAggregationNameByScope.
 func (mr *MockProductMockRecorder) ListAggregationNameByScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAggregationNameByScope", reflect.TypeOf((*MockProduct)(nil).ListAggregationNameByScope), arg0, arg1)
 }
 
-// ListAggregationNameWithScope mocks base method
+// ListAggregationNameWithScope mocks base method.
 func (m *MockProduct) ListAggregationNameWithScope(arg0 context.Context) ([]db.ListAggregationNameWithScopeRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAggregationNameWithScope", arg0)
@@ -839,13 +1314,13 @@ func (m *MockProduct) ListAggregationNameWithScope(arg0 context.Context) ([]db.L
 	return ret0, ret1
 }
 
-// ListAggregationNameWithScope indicates an expected call of ListAggregationNameWithScope
+// ListAggregationNameWithScope indicates an expected call of ListAggregationNameWithScope.
 func (mr *MockProductMockRecorder) ListAggregationNameWithScope(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAggregationNameWithScope", reflect.TypeOf((*MockProduct)(nil).ListAggregationNameWithScope), arg0)
 }
 
-// ListAggregations mocks base method
+// ListAggregations mocks base method.
 func (m *MockProduct) ListAggregations(arg0 context.Context, arg1 db.ListAggregationsParams) ([]db.ListAggregationsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListAggregations", arg0, arg1)
@@ -854,13 +1329,28 @@ func (m *MockProduct) ListAggregations(arg0 context.Context, arg1 db.ListAggrega
 	return ret0, ret1
 }
 
-// ListAggregations indicates an expected call of ListAggregations
+// ListAggregations indicates an expected call of ListAggregations.
 func (mr *MockProductMockRecorder) ListAggregations(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAggregations", reflect.TypeOf((*MockProduct)(nil).ListAggregations), arg0, arg1)
 }
 
-// ListDeployedAndAcquiredEditors mocks base method
+// ListConcurrentUsers mocks base method.
+func (m *MockProduct) ListConcurrentUsers(arg0 context.Context, arg1 db.ListConcurrentUsersParams) ([]db.ListConcurrentUsersRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListConcurrentUsers", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListConcurrentUsersRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListConcurrentUsers indicates an expected call of ListConcurrentUsers.
+func (mr *MockProductMockRecorder) ListConcurrentUsers(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConcurrentUsers", reflect.TypeOf((*MockProduct)(nil).ListConcurrentUsers), arg0, arg1)
+}
+
+// ListDeployedAndAcquiredEditors mocks base method.
 func (m *MockProduct) ListDeployedAndAcquiredEditors(arg0 context.Context, arg1 string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDeployedAndAcquiredEditors", arg0, arg1)
@@ -869,13 +1359,13 @@ func (m *MockProduct) ListDeployedAndAcquiredEditors(arg0 context.Context, arg1 
 	return ret0, ret1
 }
 
-// ListDeployedAndAcquiredEditors indicates an expected call of ListDeployedAndAcquiredEditors
+// ListDeployedAndAcquiredEditors indicates an expected call of ListDeployedAndAcquiredEditors.
 func (mr *MockProductMockRecorder) ListDeployedAndAcquiredEditors(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDeployedAndAcquiredEditors", reflect.TypeOf((*MockProduct)(nil).ListDeployedAndAcquiredEditors), arg0, arg1)
 }
 
-// ListEditors mocks base method
+// ListEditors mocks base method.
 func (m *MockProduct) ListEditors(arg0 context.Context, arg1 []string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEditors", arg0, arg1)
@@ -884,14 +1374,14 @@ func (m *MockProduct) ListEditors(arg0 context.Context, arg1 []string) ([]string
 	return ret0, ret1
 }
 
-// ListEditors indicates an expected call of ListEditors
+// ListEditors indicates an expected call of ListEditors.
 func (mr *MockProductMockRecorder) ListEditors(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditors", reflect.TypeOf((*MockProduct)(nil).ListEditors), arg0, arg1)
 }
 
-// ListEditorsForAggregation mocks base method
-func (m *MockProduct) ListEditorsForAggregation(arg0 context.Context, arg1 string) ([]string, error) {
+// ListEditorsForAggregation mocks base method.
+func (m *MockProduct) ListEditorsForAggregation(arg0 context.Context, arg1 []string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEditorsForAggregation", arg0, arg1)
 	ret0, _ := ret[0].([]string)
@@ -899,13 +1389,13 @@ func (m *MockProduct) ListEditorsForAggregation(arg0 context.Context, arg1 strin
 	return ret0, ret1
 }
 
-// ListEditorsForAggregation indicates an expected call of ListEditorsForAggregation
+// ListEditorsForAggregation indicates an expected call of ListEditorsForAggregation.
 func (mr *MockProductMockRecorder) ListEditorsForAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditorsForAggregation", reflect.TypeOf((*MockProduct)(nil).ListEditorsForAggregation), arg0, arg1)
 }
 
-// ListEditorsScope mocks base method
+// ListEditorsScope mocks base method.
 func (m *MockProduct) ListEditorsScope(arg0 context.Context, arg1 []string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEditorsScope", arg0, arg1)
@@ -914,13 +1404,13 @@ func (m *MockProduct) ListEditorsScope(arg0 context.Context, arg1 []string) ([]s
 	return ret0, ret1
 }
 
-// ListEditorsScope indicates an expected call of ListEditorsScope
+// ListEditorsScope indicates an expected call of ListEditorsScope.
 func (mr *MockProductMockRecorder) ListEditorsScope(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditorsScope", reflect.TypeOf((*MockProduct)(nil).ListEditorsScope), arg0, arg1)
 }
 
-// ListMetricsForAggregation mocks base method
+// ListMetricsForAggregation mocks base method.
 func (m *MockProduct) ListMetricsForAggregation(arg0 context.Context, arg1 string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricsForAggregation", arg0, arg1)
@@ -929,13 +1419,58 @@ func (m *MockProduct) ListMetricsForAggregation(arg0 context.Context, arg1 strin
 	return ret0, ret1
 }
 
-// ListMetricsForAggregation indicates an expected call of ListMetricsForAggregation
+// ListMetricsForAggregation indicates an expected call of ListMetricsForAggregation.
 func (mr *MockProductMockRecorder) ListMetricsForAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMetricsForAggregation", reflect.TypeOf((*MockProduct)(nil).ListMetricsForAggregation), arg0, arg1)
 }
 
-// ListProductAggregation mocks base method
+// ListNominativeUsersAggregation mocks base method.
+func (m *MockProduct) ListNominativeUsersAggregation(arg0 context.Context, arg1 db.ListNominativeUsersAggregationParams) ([]db.ListNominativeUsersAggregationRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNominativeUsersAggregation", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListNominativeUsersAggregationRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNominativeUsersAggregation indicates an expected call of ListNominativeUsersAggregation.
+func (mr *MockProductMockRecorder) ListNominativeUsersAggregation(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNominativeUsersAggregation", reflect.TypeOf((*MockProduct)(nil).ListNominativeUsersAggregation), arg0, arg1)
+}
+
+// ListNominativeUsersProducts mocks base method.
+func (m *MockProduct) ListNominativeUsersProducts(arg0 context.Context, arg1 db.ListNominativeUsersProductsParams) ([]db.ListNominativeUsersProductsRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNominativeUsersProducts", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListNominativeUsersProductsRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNominativeUsersProducts indicates an expected call of ListNominativeUsersProducts.
+func (mr *MockProductMockRecorder) ListNominativeUsersProducts(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNominativeUsersProducts", reflect.TypeOf((*MockProduct)(nil).ListNominativeUsersProducts), arg0, arg1)
+}
+
+// ListNominativeUsersUploadedFiles mocks base method.
+func (m *MockProduct) ListNominativeUsersUploadedFiles(arg0 context.Context, arg1 db.ListNominativeUsersUploadedFilesParams) ([]db.ListNominativeUsersUploadedFilesRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNominativeUsersUploadedFiles", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListNominativeUsersUploadedFilesRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNominativeUsersUploadedFiles indicates an expected call of ListNominativeUsersUploadedFiles.
+func (mr *MockProductMockRecorder) ListNominativeUsersUploadedFiles(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNominativeUsersUploadedFiles", reflect.TypeOf((*MockProduct)(nil).ListNominativeUsersUploadedFiles), arg0, arg1)
+}
+
+// ListProductAggregation mocks base method.
 func (m *MockProduct) ListProductAggregation(arg0 context.Context, arg1 db.ListProductAggregationParams) ([]db.ListProductAggregationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductAggregation", arg0, arg1)
@@ -944,13 +1479,13 @@ func (m *MockProduct) ListProductAggregation(arg0 context.Context, arg1 db.ListP
 	return ret0, ret1
 }
 
-// ListProductAggregation indicates an expected call of ListProductAggregation
+// ListProductAggregation indicates an expected call of ListProductAggregation.
 func (mr *MockProductMockRecorder) ListProductAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductAggregation", reflect.TypeOf((*MockProduct)(nil).ListProductAggregation), arg0, arg1)
 }
 
-// ListProductsAggregationIndividual mocks base method
+// ListProductsAggregationIndividual mocks base method.
 func (m *MockProduct) ListProductsAggregationIndividual(arg0 context.Context, arg1 db.ListProductsAggregationIndividualParams) ([]db.ListProductsAggregationIndividualRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsAggregationIndividual", arg0, arg1)
@@ -959,13 +1494,13 @@ func (m *MockProduct) ListProductsAggregationIndividual(arg0 context.Context, ar
 	return ret0, ret1
 }
 
-// ListProductsAggregationIndividual indicates an expected call of ListProductsAggregationIndividual
+// ListProductsAggregationIndividual indicates an expected call of ListProductsAggregationIndividual.
 func (mr *MockProductMockRecorder) ListProductsAggregationIndividual(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsAggregationIndividual", reflect.TypeOf((*MockProduct)(nil).ListProductsAggregationIndividual), arg0, arg1)
 }
 
-// ListProductsByApplication mocks base method
+// ListProductsByApplication mocks base method.
 func (m *MockProduct) ListProductsByApplication(arg0 context.Context, arg1 db.ListProductsByApplicationParams) ([]db.ListProductsByApplicationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsByApplication", arg0, arg1)
@@ -974,13 +1509,13 @@ func (m *MockProduct) ListProductsByApplication(arg0 context.Context, arg1 db.Li
 	return ret0, ret1
 }
 
-// ListProductsByApplication indicates an expected call of ListProductsByApplication
+// ListProductsByApplication indicates an expected call of ListProductsByApplication.
 func (mr *MockProductMockRecorder) ListProductsByApplication(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsByApplication", reflect.TypeOf((*MockProduct)(nil).ListProductsByApplication), arg0, arg1)
 }
 
-// ListProductsForAggregation mocks base method
+// ListProductsForAggregation mocks base method.
 func (m *MockProduct) ListProductsForAggregation(arg0 context.Context, arg1 db.ListProductsForAggregationParams) ([]db.ListProductsForAggregationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsForAggregation", arg0, arg1)
@@ -989,13 +1524,13 @@ func (m *MockProduct) ListProductsForAggregation(arg0 context.Context, arg1 db.L
 	return ret0, ret1
 }
 
-// ListProductsForAggregation indicates an expected call of ListProductsForAggregation
+// ListProductsForAggregation indicates an expected call of ListProductsForAggregation.
 func (mr *MockProductMockRecorder) ListProductsForAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsForAggregation", reflect.TypeOf((*MockProduct)(nil).ListProductsForAggregation), arg0, arg1)
 }
 
-// ListProductsView mocks base method
+// ListProductsView mocks base method.
 func (m *MockProduct) ListProductsView(arg0 context.Context, arg1 db.ListProductsViewParams) ([]db.ListProductsViewRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsView", arg0, arg1)
@@ -1004,13 +1539,13 @@ func (m *MockProduct) ListProductsView(arg0 context.Context, arg1 db.ListProduct
 	return ret0, ret1
 }
 
-// ListProductsView indicates an expected call of ListProductsView
+// ListProductsView indicates an expected call of ListProductsView.
 func (mr *MockProductMockRecorder) ListProductsView(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsView", reflect.TypeOf((*MockProduct)(nil).ListProductsView), arg0, arg1)
 }
 
-// ListProductsViewRedirectedApplication mocks base method
+// ListProductsViewRedirectedApplication mocks base method.
 func (m *MockProduct) ListProductsViewRedirectedApplication(arg0 context.Context, arg1 db.ListProductsViewRedirectedApplicationParams) ([]db.ListProductsViewRedirectedApplicationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsViewRedirectedApplication", arg0, arg1)
@@ -1019,13 +1554,13 @@ func (m *MockProduct) ListProductsViewRedirectedApplication(arg0 context.Context
 	return ret0, ret1
 }
 
-// ListProductsViewRedirectedApplication indicates an expected call of ListProductsViewRedirectedApplication
+// ListProductsViewRedirectedApplication indicates an expected call of ListProductsViewRedirectedApplication.
 func (mr *MockProductMockRecorder) ListProductsViewRedirectedApplication(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsViewRedirectedApplication", reflect.TypeOf((*MockProduct)(nil).ListProductsViewRedirectedApplication), arg0, arg1)
 }
 
-// ListProductsViewRedirectedEquipment mocks base method
+// ListProductsViewRedirectedEquipment mocks base method.
 func (m *MockProduct) ListProductsViewRedirectedEquipment(arg0 context.Context, arg1 db.ListProductsViewRedirectedEquipmentParams) ([]db.ListProductsViewRedirectedEquipmentRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListProductsViewRedirectedEquipment", arg0, arg1)
@@ -1034,13 +1569,13 @@ func (m *MockProduct) ListProductsViewRedirectedEquipment(arg0 context.Context, 
 	return ret0, ret1
 }
 
-// ListProductsViewRedirectedEquipment indicates an expected call of ListProductsViewRedirectedEquipment
+// ListProductsViewRedirectedEquipment indicates an expected call of ListProductsViewRedirectedEquipment.
 func (mr *MockProductMockRecorder) ListProductsViewRedirectedEquipment(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProductsViewRedirectedEquipment", reflect.TypeOf((*MockProduct)(nil).ListProductsViewRedirectedEquipment), arg0, arg1)
 }
 
-// ListSelectedProductsForAggregration mocks base method
+// ListSelectedProductsForAggregration mocks base method.
 func (m *MockProduct) ListSelectedProductsForAggregration(arg0 context.Context, arg1 db.ListSelectedProductsForAggregrationParams) ([]db.ListSelectedProductsForAggregrationRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListSelectedProductsForAggregration", arg0, arg1)
@@ -1049,13 +1584,28 @@ func (m *MockProduct) ListSelectedProductsForAggregration(arg0 context.Context, 
 	return ret0, ret1
 }
 
-// ListSelectedProductsForAggregration indicates an expected call of ListSelectedProductsForAggregration
+// ListSelectedProductsForAggregration indicates an expected call of ListSelectedProductsForAggregration.
 func (mr *MockProductMockRecorder) ListSelectedProductsForAggregration(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSelectedProductsForAggregration", reflect.TypeOf((*MockProduct)(nil).ListSelectedProductsForAggregration), arg0, arg1)
 }
 
-// OverDeployedProductsCosts mocks base method
+// ListUnderusageByEditor mocks base method.
+func (m *MockProduct) ListUnderusageByEditor(arg0 context.Context, arg1 db.ListUnderusageByEditorParams) ([]db.ListUnderusageByEditorRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListUnderusageByEditor", arg0, arg1)
+	ret0, _ := ret[0].([]db.ListUnderusageByEditorRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUnderusageByEditor indicates an expected call of ListUnderusageByEditor.
+func (mr *MockProductMockRecorder) ListUnderusageByEditor(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUnderusageByEditor", reflect.TypeOf((*MockProduct)(nil).ListUnderusageByEditor), arg0, arg1)
+}
+
+// OverDeployedProductsCosts mocks base method.
 func (m *MockProduct) OverDeployedProductsCosts(arg0 context.Context, arg1 db.OverDeployedProductsCostsParams) ([]db.OverDeployedProductsCostsRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OverDeployedProductsCosts", arg0, arg1)
@@ -1064,13 +1614,13 @@ func (m *MockProduct) OverDeployedProductsCosts(arg0 context.Context, arg1 db.Ov
 	return ret0, ret1
 }
 
-// OverDeployedProductsCosts indicates an expected call of OverDeployedProductsCosts
+// OverDeployedProductsCosts indicates an expected call of OverDeployedProductsCosts.
 func (mr *MockProductMockRecorder) OverDeployedProductsCosts(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OverDeployedProductsCosts", reflect.TypeOf((*MockProduct)(nil).OverDeployedProductsCosts), arg0, arg1)
 }
 
-// OverDeployedProductsLicences mocks base method
+// OverDeployedProductsLicences mocks base method.
 func (m *MockProduct) OverDeployedProductsLicences(arg0 context.Context, arg1 db.OverDeployedProductsLicencesParams) ([]db.OverDeployedProductsLicencesRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OverDeployedProductsLicences", arg0, arg1)
@@ -1079,13 +1629,13 @@ func (m *MockProduct) OverDeployedProductsLicences(arg0 context.Context, arg1 db
 	return ret0, ret1
 }
 
-// OverDeployedProductsLicences indicates an expected call of OverDeployedProductsLicences
+// OverDeployedProductsLicences indicates an expected call of OverDeployedProductsLicences.
 func (mr *MockProductMockRecorder) OverDeployedProductsLicences(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OverDeployedProductsLicences", reflect.TypeOf((*MockProduct)(nil).OverDeployedProductsLicences), arg0, arg1)
 }
 
-// OverdeployPercent mocks base method
+// OverdeployPercent mocks base method.
 func (m *MockProduct) OverdeployPercent(arg0 context.Context, arg1 string) (db.OverdeployPercentRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OverdeployPercent", arg0, arg1)
@@ -1094,13 +1644,13 @@ func (m *MockProduct) OverdeployPercent(arg0 context.Context, arg1 string) (db.O
 	return ret0, ret1
 }
 
-// OverdeployPercent indicates an expected call of OverdeployPercent
+// OverdeployPercent indicates an expected call of OverdeployPercent.
 func (mr *MockProductMockRecorder) OverdeployPercent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OverdeployPercent", reflect.TypeOf((*MockProduct)(nil).OverdeployPercent), arg0, arg1)
 }
 
-// ProductsNotAcquired mocks base method
+// ProductsNotAcquired mocks base method.
 func (m *MockProduct) ProductsNotAcquired(arg0 context.Context, arg1 string) ([]db.ProductsNotAcquiredRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProductsNotAcquired", arg0, arg1)
@@ -1109,13 +1659,13 @@ func (m *MockProduct) ProductsNotAcquired(arg0 context.Context, arg1 string) ([]
 	return ret0, ret1
 }
 
-// ProductsNotAcquired indicates an expected call of ProductsNotAcquired
+// ProductsNotAcquired indicates an expected call of ProductsNotAcquired.
 func (mr *MockProductMockRecorder) ProductsNotAcquired(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsNotAcquired", reflect.TypeOf((*MockProduct)(nil).ProductsNotAcquired), arg0, arg1)
 }
 
-// ProductsNotDeployed mocks base method
+// ProductsNotDeployed mocks base method.
 func (m *MockProduct) ProductsNotDeployed(arg0 context.Context, arg1 string) ([]db.ProductsNotDeployedRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProductsNotDeployed", arg0, arg1)
@@ -1124,13 +1674,13 @@ func (m *MockProduct) ProductsNotDeployed(arg0 context.Context, arg1 string) ([]
 	return ret0, ret1
 }
 
-// ProductsNotDeployed indicates an expected call of ProductsNotDeployed
+// ProductsNotDeployed indicates an expected call of ProductsNotDeployed.
 func (mr *MockProductMockRecorder) ProductsNotDeployed(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsNotDeployed", reflect.TypeOf((*MockProduct)(nil).ProductsNotDeployed), arg0, arg1)
 }
 
-// ProductsPerMetric mocks base method
+// ProductsPerMetric mocks base method.
 func (m *MockProduct) ProductsPerMetric(arg0 context.Context, arg1 string) ([]db.ProductsPerMetricRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProductsPerMetric", arg0, arg1)
@@ -1139,13 +1689,28 @@ func (m *MockProduct) ProductsPerMetric(arg0 context.Context, arg1 string) ([]db
 	return ret0, ret1
 }
 
-// ProductsPerMetric indicates an expected call of ProductsPerMetric
+// ProductsPerMetric indicates an expected call of ProductsPerMetric.
 func (mr *MockProductMockRecorder) ProductsPerMetric(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsPerMetric", reflect.TypeOf((*MockProduct)(nil).ProductsPerMetric), arg0, arg1)
 }
 
-// UpdateAggregation mocks base method
+// TotalCostOfEachScope mocks base method.
+func (m *MockProduct) TotalCostOfEachScope(arg0 context.Context, arg1 []string) ([]db.TotalCostOfEachScopeRow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TotalCostOfEachScope", arg0, arg1)
+	ret0, _ := ret[0].([]db.TotalCostOfEachScopeRow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TotalCostOfEachScope indicates an expected call of TotalCostOfEachScope.
+func (mr *MockProductMockRecorder) TotalCostOfEachScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalCostOfEachScope", reflect.TypeOf((*MockProduct)(nil).TotalCostOfEachScope), arg0, arg1)
+}
+
+// UpdateAggregation mocks base method.
 func (m *MockProduct) UpdateAggregation(arg0 context.Context, arg1 db.UpdateAggregationParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateAggregation", arg0, arg1)
@@ -1153,13 +1718,13 @@ func (m *MockProduct) UpdateAggregation(arg0 context.Context, arg1 db.UpdateAggr
 	return ret0
 }
 
-// UpdateAggregation indicates an expected call of UpdateAggregation
+// UpdateAggregation indicates an expected call of UpdateAggregation.
 func (mr *MockProductMockRecorder) UpdateAggregation(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAggregation", reflect.TypeOf((*MockProduct)(nil).UpdateAggregation), arg0, arg1)
 }
 
-// UpsertAcqRights mocks base method
+// UpsertAcqRights mocks base method.
 func (m *MockProduct) UpsertAcqRights(arg0 context.Context, arg1 db.UpsertAcqRightsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertAcqRights", arg0, arg1)
@@ -1167,13 +1732,13 @@ func (m *MockProduct) UpsertAcqRights(arg0 context.Context, arg1 db.UpsertAcqRig
 	return ret0
 }
 
-// UpsertAcqRights indicates an expected call of UpsertAcqRights
+// UpsertAcqRights indicates an expected call of UpsertAcqRights.
 func (mr *MockProductMockRecorder) UpsertAcqRights(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAcqRights", reflect.TypeOf((*MockProduct)(nil).UpsertAcqRights), arg0, arg1)
 }
 
-// UpsertAggregatedRights mocks base method
+// UpsertAggregatedRights mocks base method.
 func (m *MockProduct) UpsertAggregatedRights(arg0 context.Context, arg1 db.UpsertAggregatedRightsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertAggregatedRights", arg0, arg1)
@@ -1181,13 +1746,69 @@ func (m *MockProduct) UpsertAggregatedRights(arg0 context.Context, arg1 db.Upser
 	return ret0
 }
 
-// UpsertAggregatedRights indicates an expected call of UpsertAggregatedRights
+// UpsertAggregatedRights indicates an expected call of UpsertAggregatedRights.
 func (mr *MockProductMockRecorder) UpsertAggregatedRights(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAggregatedRights", reflect.TypeOf((*MockProduct)(nil).UpsertAggregatedRights), arg0, arg1)
 }
 
-// UpsertDashboardUpdates mocks base method
+// UpsertAggregationConcurrentUser mocks base method.
+func (m *MockProduct) UpsertAggregationConcurrentUser(arg0 context.Context, arg1 db.UpsertAggregationConcurrentUserParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAggregationConcurrentUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAggregationConcurrentUser indicates an expected call of UpsertAggregationConcurrentUser.
+func (mr *MockProductMockRecorder) UpsertAggregationConcurrentUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAggregationConcurrentUser", reflect.TypeOf((*MockProduct)(nil).UpsertAggregationConcurrentUser), arg0, arg1)
+}
+
+// UpsertAggrigationNominativeUser mocks base method.
+func (m *MockProduct) UpsertAggrigationNominativeUser(arg0 context.Context, arg1 db.UpsertAggrigationNominativeUserParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertAggrigationNominativeUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertAggrigationNominativeUser indicates an expected call of UpsertAggrigationNominativeUser.
+func (mr *MockProductMockRecorder) UpsertAggrigationNominativeUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAggrigationNominativeUser", reflect.TypeOf((*MockProduct)(nil).UpsertAggrigationNominativeUser), arg0, arg1)
+}
+
+// UpsertConcurrentUser mocks base method.
+func (m *MockProduct) UpsertConcurrentUser(arg0 context.Context, arg1 db.UpsertConcurrentUserParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertConcurrentUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertConcurrentUser indicates an expected call of UpsertConcurrentUser.
+func (mr *MockProductMockRecorder) UpsertConcurrentUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertConcurrentUser", reflect.TypeOf((*MockProduct)(nil).UpsertConcurrentUser), arg0, arg1)
+}
+
+// UpsertConcurrentUserTx mocks base method.
+func (m *MockProduct) UpsertConcurrentUserTx(arg0 context.Context, arg1 *v1.ProductConcurrentUserRequest, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertConcurrentUserTx", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertConcurrentUserTx indicates an expected call of UpsertConcurrentUserTx.
+func (mr *MockProductMockRecorder) UpsertConcurrentUserTx(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertConcurrentUserTx", reflect.TypeOf((*MockProduct)(nil).UpsertConcurrentUserTx), arg0, arg1, arg2)
+}
+
+// UpsertDashboardUpdates mocks base method.
 func (m *MockProduct) UpsertDashboardUpdates(arg0 context.Context, arg1 db.UpsertDashboardUpdatesParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertDashboardUpdates", arg0, arg1)
@@ -1195,13 +1816,27 @@ func (m *MockProduct) UpsertDashboardUpdates(arg0 context.Context, arg1 db.Upser
 	return ret0
 }
 
-// UpsertDashboardUpdates indicates an expected call of UpsertDashboardUpdates
+// UpsertDashboardUpdates indicates an expected call of UpsertDashboardUpdates.
 func (mr *MockProductMockRecorder) UpsertDashboardUpdates(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertDashboardUpdates", reflect.TypeOf((*MockProduct)(nil).UpsertDashboardUpdates), arg0, arg1)
 }
 
-// UpsertProduct mocks base method
+// UpsertNominativeUsersTx mocks base method.
+func (m *MockProduct) UpsertNominativeUsersTx(arg0 context.Context, arg1 *v1.UpserNominativeUserRequest, arg2, arg3, arg4 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertNominativeUsersTx", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertNominativeUsersTx indicates an expected call of UpsertNominativeUsersTx.
+func (mr *MockProductMockRecorder) UpsertNominativeUsersTx(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertNominativeUsersTx", reflect.TypeOf((*MockProduct)(nil).UpsertNominativeUsersTx), arg0, arg1, arg2, arg3, arg4)
+}
+
+// UpsertProduct mocks base method.
 func (m *MockProduct) UpsertProduct(arg0 context.Context, arg1 db.UpsertProductParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertProduct", arg0, arg1)
@@ -1209,13 +1844,13 @@ func (m *MockProduct) UpsertProduct(arg0 context.Context, arg1 db.UpsertProductP
 	return ret0
 }
 
-// UpsertProduct indicates an expected call of UpsertProduct
+// UpsertProduct indicates an expected call of UpsertProduct.
 func (mr *MockProductMockRecorder) UpsertProduct(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProduct", reflect.TypeOf((*MockProduct)(nil).UpsertProduct), arg0, arg1)
 }
 
-// UpsertProductApplications mocks base method
+// UpsertProductApplications mocks base method.
 func (m *MockProduct) UpsertProductApplications(arg0 context.Context, arg1 db.UpsertProductApplicationsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertProductApplications", arg0, arg1)
@@ -1223,13 +1858,13 @@ func (m *MockProduct) UpsertProductApplications(arg0 context.Context, arg1 db.Up
 	return ret0
 }
 
-// UpsertProductApplications indicates an expected call of UpsertProductApplications
+// UpsertProductApplications indicates an expected call of UpsertProductApplications.
 func (mr *MockProductMockRecorder) UpsertProductApplications(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductApplications", reflect.TypeOf((*MockProduct)(nil).UpsertProductApplications), arg0, arg1)
 }
 
-// UpsertProductEquipments mocks base method
+// UpsertProductEquipments mocks base method.
 func (m *MockProduct) UpsertProductEquipments(arg0 context.Context, arg1 db.UpsertProductEquipmentsParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertProductEquipments", arg0, arg1)
@@ -1237,13 +1872,27 @@ func (m *MockProduct) UpsertProductEquipments(arg0 context.Context, arg1 db.Upse
 	return ret0
 }
 
-// UpsertProductEquipments indicates an expected call of UpsertProductEquipments
+// UpsertProductEquipments indicates an expected call of UpsertProductEquipments.
 func (mr *MockProductMockRecorder) UpsertProductEquipments(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductEquipments", reflect.TypeOf((*MockProduct)(nil).UpsertProductEquipments), arg0, arg1)
 }
 
-// UpsertProductPartial mocks base method
+// UpsertProductNominativeUser mocks base method.
+func (m *MockProduct) UpsertProductNominativeUser(arg0 context.Context, arg1 db.UpsertProductNominativeUserParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertProductNominativeUser", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertProductNominativeUser indicates an expected call of UpsertProductNominativeUser.
+func (mr *MockProductMockRecorder) UpsertProductNominativeUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductNominativeUser", reflect.TypeOf((*MockProduct)(nil).UpsertProductNominativeUser), arg0, arg1)
+}
+
+// UpsertProductPartial mocks base method.
 func (m *MockProduct) UpsertProductPartial(arg0 context.Context, arg1 db.UpsertProductPartialParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertProductPartial", arg0, arg1)
@@ -1251,13 +1900,13 @@ func (m *MockProduct) UpsertProductPartial(arg0 context.Context, arg1 db.UpsertP
 	return ret0
 }
 
-// UpsertProductPartial indicates an expected call of UpsertProductPartial
+// UpsertProductPartial indicates an expected call of UpsertProductPartial.
 func (mr *MockProductMockRecorder) UpsertProductPartial(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductPartial", reflect.TypeOf((*MockProduct)(nil).UpsertProductPartial), arg0, arg1)
 }
 
-// UpsertProductTx mocks base method
+// UpsertProductTx mocks base method.
 func (m *MockProduct) UpsertProductTx(arg0 context.Context, arg1 *v1.UpsertProductRequest, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpsertProductTx", arg0, arg1, arg2)
@@ -1265,8 +1914,36 @@ func (m *MockProduct) UpsertProductTx(arg0 context.Context, arg1 *v1.UpsertProdu
 	return ret0
 }
 
-// UpsertProductTx indicates an expected call of UpsertProductTx
+// UpsertProductTx indicates an expected call of UpsertProductTx.
 func (mr *MockProductMockRecorder) UpsertProductTx(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductTx", reflect.TypeOf((*MockProduct)(nil).UpsertProductTx), arg0, arg1, arg2)
+}
+
+// UpsertRecievedLicenses mocks base method.
+func (m *MockProduct) UpsertRecievedLicenses(arg0 context.Context, arg1 db.UpsertRecievedLicensesParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertRecievedLicenses", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertRecievedLicenses indicates an expected call of UpsertRecievedLicenses.
+func (mr *MockProductMockRecorder) UpsertRecievedLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertRecievedLicenses", reflect.TypeOf((*MockProduct)(nil).UpsertRecievedLicenses), arg0, arg1)
+}
+
+// UpsertSharedLicenses mocks base method.
+func (m *MockProduct) UpsertSharedLicenses(arg0 context.Context, arg1 db.UpsertSharedLicensesParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertSharedLicenses", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertSharedLicenses indicates an expected call of UpsertSharedLicenses.
+func (mr *MockProductMockRecorder) UpsertSharedLicenses(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertSharedLicenses", reflect.TypeOf((*MockProduct)(nil).UpsertSharedLicenses), arg0, arg1)
 }

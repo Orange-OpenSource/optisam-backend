@@ -680,6 +680,60 @@
         ]
       }
     },
+    "/api/v1/equipment/types/attribute": {
+      "delete": {
+        "operationId": "EquipmentService_DeleteEquipmentTypeAttr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteEquipmentTypeAttrResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "equip_type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deleteAttributes.ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deleteAttributes.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "EquipmentService"
+        ]
+      }
+    },
     "/api/v1/equipment/types/{equip_type}": {
       "delete": {
         "operationId": "EquipmentService_DeleteEquipmentType",
@@ -1316,6 +1370,25 @@
         "FLOAT"
       ],
       "default": "UNKNOWN"
+    },
+    "v1DeleteAttr": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1DeleteEquipmentTypeAttrResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
     },
     "v1DeleteEquipmentTypeResponse": {
       "type": "object",

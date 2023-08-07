@@ -10,8 +10,8 @@ import (
 )
 
 // MetricACSComputedLicenses implements Licence MetricACSComputedLicenses function
-func (l *LicenseRepository) MetricACSComputedLicenses(ctx context.Context, id string, mat *v1.MetricACSComputed, scopes ...string) (uint64, error) {
-	q := buildQueryACS(mat, scopes, id)
+func (l *LicenseRepository) MetricACSComputedLicenses(ctx context.Context, id []string, mat *v1.MetricACSComputed, scopes ...string) (uint64, error) {
+	q := buildQueryACS(mat, scopes, id...)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricACSComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))

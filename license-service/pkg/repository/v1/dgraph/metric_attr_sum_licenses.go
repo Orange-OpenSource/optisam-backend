@@ -11,8 +11,8 @@ import (
 )
 
 // MetricAttrSumComputedLicenses implements Licence MetricAttrSumComputedLicenses function
-func (l *LicenseRepository) MetricAttrSumComputedLicenses(ctx context.Context, id string, mat *v1.MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error) {
-	q := buildQueryAttrSum(mat, scopes, id)
+func (l *LicenseRepository) MetricAttrSumComputedLicenses(ctx context.Context, id []string, mat *v1.MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error) {
+	q := buildQueryAttrSum(mat, scopes, id...)
 	sumValue, err := l.licensesForQueryAll(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricAttrSumComputedLicenses - licensesForQueryAll", zap.Error(err), zap.String("query", q))

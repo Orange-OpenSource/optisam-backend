@@ -4,11 +4,6 @@
     "title": "metric.proto",
     "version": "version not set"
   },
-  "tags": [
-    {
-      "name": "MetricService"
-    }
-  ],
   "consumes": [
     "application/json"
   ],
@@ -16,6 +11,28 @@
     "application/json"
   ],
   "paths": {
+    "/api/v1/metric": {
+      "post": {
+        "operationId": "MetricService_CreateMetric",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
     "/api/v1/metric/acs": {
       "post": {
         "summary": "CreateMetricAttrCounterStandard will create an attribute.counter.standard metric",
@@ -965,6 +982,196 @@
         ]
       }
     },
+    "/api/v1/metric/uns": {
+      "post": {
+        "summary": "CreateMetricUserNominativeStandard will create an user.nominative.standard metric",
+        "operationId": "MetricService_CreateMetricUserNominativeStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricUNS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUNS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateMetricUserNominativeStandard will update an user.nominative.standard metric",
+        "operationId": "MetricService_UpdateMetricUserNominativeStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUNS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateMetricUserNominativeStandard will update an user.nominative.standard metric",
+        "operationId": "MetricService_UpdateMetricUserNominativeStandard2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUNS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/user_conc": {
+      "post": {
+        "summary": "CreateMetricUserConcurentStandard will create an user.concurrent.standard metric",
+        "operationId": "MetricService_CreateMetricUserConcurentStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricUCS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUCS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "put": {
+        "summary": "UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric",
+        "operationId": "MetricService_UpdateMetricUserConcurentStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUCS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric",
+        "operationId": "MetricService_UpdateMetricUserConcurentStandard2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateMetricResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricUCS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
     "/api/v1/metric/uss": {
       "post": {
         "summary": "CreateMetricUserSumStandard will create an oracle.processor.standard metric",
@@ -1129,6 +1336,14 @@
           "items": {
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "v1CreateMetricResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -1500,9 +1715,53 @@
         "Attr_Sum",
         "User_Sum",
         "Static_Standard",
-        "Equip_Attr"
+        "Equip_Attr",
+        "Nominative_User",
+        "User_Concurent"
       ],
       "default": "Unknown"
+    },
+    "v1MetricUCS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1MetricUNS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "v1MetricUSS": {
       "type": "object",

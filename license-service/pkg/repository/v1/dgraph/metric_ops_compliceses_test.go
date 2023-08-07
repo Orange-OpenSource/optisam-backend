@@ -60,7 +60,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 
 	type args struct {
 		ctx    context.Context
-		id     string
+		id     []string
 		mat    *v1.MetricOPSComputed
 		scopes string
 	}
@@ -89,7 +89,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 			l: NewLicenseRepository(dgClient),
 			args: args{
 				ctx: context.Background(),
-				id:  ID,
+				id:  []string{ID},
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -132,7 +132,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -175,7 +175,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -215,7 +215,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -252,7 +252,7 @@ func TestLicenseRepository_MetricOPSComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricOPSComputed{
 					EqTypeTree: []*v1.EquipmentType{
 

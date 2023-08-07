@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"optisam-backend/common/optisam/buildinfo"
 	"optisam-backend/common/optisam/dgraph"
+	gconn "optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/healthcheck"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
@@ -60,7 +61,7 @@ func RunServer() error {
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
 	} else if os.Getenv("ENV") == "pc" {
-                viper.SetConfigName("config-pc")
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -185,8 +186,14 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to get verify key")
 	}
+	// GRPC Connections
+	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize GRPC client")
+	}
+	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 
-	v1API := v1.NewLicenseServiceServer(rep)
+	v1API := v1.NewLicenseServiceServer(rep, grpcClientMap)
 
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)

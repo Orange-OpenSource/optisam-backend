@@ -27,7 +27,7 @@ func TestQueries_DeleteUser(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db,rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "admin1@test.com",
@@ -107,7 +107,7 @@ func TestQueries_InsertUserAudit(t *testing.T) {
 					Role:            "Admin",
 					Locale:          "en",
 					ContFailedLogin: int16(3),
-					Operation:       AuditStatusDELETED,
+					Operation:       NullAuditStatus{AuditStatus: AuditStatusDELETED},
 					UpdatedBy:       "admin@test.com",
 				},
 			},

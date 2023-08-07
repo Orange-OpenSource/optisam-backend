@@ -75,6 +75,26 @@ func (mr *MockProductServiceClientMockRecorder) ComplianceAlert(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComplianceAlert", reflect.TypeOf((*MockProductServiceClient)(nil).ComplianceAlert), varargs...)
 }
 
+// ConcurrentUserExport mocks base method
+func (m *MockProductServiceClient) ConcurrentUserExport(arg0 context.Context, arg1 *v1.ListConcurrentUsersExportRequest, arg2 ...grpc.CallOption) (*v1.ListConcurrentUsersResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ConcurrentUserExport", varargs...)
+	ret0, _ := ret[0].(*v1.ListConcurrentUsersResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConcurrentUserExport indicates an expected call of ConcurrentUserExport
+func (mr *MockProductServiceClientMockRecorder) ConcurrentUserExport(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConcurrentUserExport", reflect.TypeOf((*MockProductServiceClient)(nil).ConcurrentUserExport), varargs...)
+}
+
 // CounterfeitedProducts mocks base method
 func (m *MockProductServiceClient) CounterfeitedProducts(arg0 context.Context, arg1 *v1.CounterfeitedProductsRequest, arg2 ...grpc.CallOption) (*v1.CounterfeitedProductsResponse, error) {
 	m.ctrl.T.Helper()
@@ -295,6 +315,66 @@ func (mr *MockProductServiceClientMockRecorder) DeleteAllocatedMetricEquipment(a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllocatedMetricEquipment", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteAllocatedMetricEquipment), varargs...)
 }
 
+// DeleteConcurrentUsers mocks base method
+func (m *MockProductServiceClient) DeleteConcurrentUsers(arg0 context.Context, arg1 *v1.DeleteConcurrentUsersRequest, arg2 ...grpc.CallOption) (*v1.DeleteConcurrentUsersResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteConcurrentUsers", varargs...)
+	ret0, _ := ret[0].(*v1.DeleteConcurrentUsersResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteConcurrentUsers indicates an expected call of DeleteConcurrentUsers
+func (mr *MockProductServiceClientMockRecorder) DeleteConcurrentUsers(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConcurrentUsers", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteConcurrentUsers), varargs...)
+}
+
+// DeleteNominativeUsers mocks base method
+func (m *MockProductServiceClient) DeleteNominativeUsers(arg0 context.Context, arg1 *v1.DeleteNominativeUserRequest, arg2 ...grpc.CallOption) (*v1.DeleteNominativeUserResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteNominativeUsers", varargs...)
+	ret0, _ := ret[0].(*v1.DeleteNominativeUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteNominativeUsers indicates an expected call of DeleteNominativeUsers
+func (mr *MockProductServiceClientMockRecorder) DeleteNominativeUsers(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNominativeUsers", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteNominativeUsers), varargs...)
+}
+
+// DeleteSharedLicenses mocks base method
+func (m *MockProductServiceClient) DeleteSharedLicenses(arg0 context.Context, arg1 *v1.DeleteSharedLicensesRequest, arg2 ...grpc.CallOption) (*v1.DeleteSharedLicensesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteSharedLicenses", varargs...)
+	ret0, _ := ret[0].(*v1.DeleteSharedLicensesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSharedLicenses indicates an expected call of DeleteSharedLicenses
+func (mr *MockProductServiceClientMockRecorder) DeleteSharedLicenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSharedLicenses", reflect.TypeOf((*MockProductServiceClient)(nil).DeleteSharedLicenses), varargs...)
+}
+
 // DownloadAcqRightFile mocks base method
 func (m *MockProductServiceClient) DownloadAcqRightFile(arg0 context.Context, arg1 *v1.DownloadAcqRightFileRequest, arg2 ...grpc.CallOption) (*v1.DownloadAcqRightFileResponse, error) {
 	m.ctrl.T.Helper()
@@ -415,6 +495,26 @@ func (mr *MockProductServiceClientMockRecorder) GetAggregationProductsExpandedVi
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAggregationProductsExpandedView", reflect.TypeOf((*MockProductServiceClient)(nil).GetAggregationProductsExpandedView), varargs...)
 }
 
+// GetAllEditorsCatalog mocks base method
+func (m *MockProductServiceClient) GetAllEditorsCatalog(arg0 context.Context, arg1 *v1.GetAllEditorsCatalogRequest, arg2 ...grpc.CallOption) (*v1.GetAllEditorsCatalogResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAllEditorsCatalog", varargs...)
+	ret0, _ := ret[0].(*v1.GetAllEditorsCatalogResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllEditorsCatalog indicates an expected call of GetAllEditorsCatalog
+func (mr *MockProductServiceClientMockRecorder) GetAllEditorsCatalog(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllEditorsCatalog", reflect.TypeOf((*MockProductServiceClient)(nil).GetAllEditorsCatalog), varargs...)
+}
+
 // GetApplicationsByProduct mocks base method
 func (m *MockProductServiceClient) GetApplicationsByProduct(arg0 context.Context, arg1 *v1.GetApplicationsByProductRequest, arg2 ...grpc.CallOption) (*v1.GetApplicationsByProductResponse, error) {
 	m.ctrl.T.Helper()
@@ -433,6 +533,26 @@ func (mr *MockProductServiceClientMockRecorder) GetApplicationsByProduct(arg0, a
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationsByProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GetApplicationsByProduct), varargs...)
+}
+
+// GetAvailableLicenses mocks base method
+func (m *MockProductServiceClient) GetAvailableLicenses(arg0 context.Context, arg1 *v1.GetAvailableLicensesRequest, arg2 ...grpc.CallOption) (*v1.GetAvailableLicensesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAvailableLicenses", varargs...)
+	ret0, _ := ret[0].(*v1.GetAvailableLicensesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAvailableLicenses indicates an expected call of GetAvailableLicenses
+func (mr *MockProductServiceClientMockRecorder) GetAvailableLicenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAvailableLicenses", reflect.TypeOf((*MockProductServiceClient)(nil).GetAvailableLicenses), varargs...)
 }
 
 // GetBanner mocks base method
@@ -455,6 +575,46 @@ func (mr *MockProductServiceClientMockRecorder) GetBanner(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBanner", reflect.TypeOf((*MockProductServiceClient)(nil).GetBanner), varargs...)
 }
 
+// GetConcurrentUsersHistroy mocks base method
+func (m *MockProductServiceClient) GetConcurrentUsersHistroy(arg0 context.Context, arg1 *v1.GetConcurrentUsersHistroyRequest, arg2 ...grpc.CallOption) (*v1.GetConcurrentUsersHistroyResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetConcurrentUsersHistroy", varargs...)
+	ret0, _ := ret[0].(*v1.GetConcurrentUsersHistroyResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConcurrentUsersHistroy indicates an expected call of GetConcurrentUsersHistroy
+func (mr *MockProductServiceClientMockRecorder) GetConcurrentUsersHistroy(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConcurrentUsersHistroy", reflect.TypeOf((*MockProductServiceClient)(nil).GetConcurrentUsersHistroy), varargs...)
+}
+
+// GetEditorExpensesByScope mocks base method
+func (m *MockProductServiceClient) GetEditorExpensesByScope(arg0 context.Context, arg1 *v1.EditorExpensesByScopeRequest, arg2 ...grpc.CallOption) (*v1.EditorExpensesByScopeResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetEditorExpensesByScope", varargs...)
+	ret0, _ := ret[0].(*v1.EditorExpensesByScopeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEditorExpensesByScope indicates an expected call of GetEditorExpensesByScope
+func (mr *MockProductServiceClientMockRecorder) GetEditorExpensesByScope(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditorExpensesByScope", reflect.TypeOf((*MockProductServiceClient)(nil).GetEditorExpensesByScope), varargs...)
+}
+
 // GetEquipmentsByProduct mocks base method
 func (m *MockProductServiceClient) GetEquipmentsByProduct(arg0 context.Context, arg1 *v1.GetEquipmentsByProductRequest, arg2 ...grpc.CallOption) (*v1.GetEquipmentsByProductResponse, error) {
 	m.ctrl.T.Helper()
@@ -473,6 +633,26 @@ func (mr *MockProductServiceClientMockRecorder) GetEquipmentsByProduct(arg0, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEquipmentsByProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GetEquipmentsByProduct), varargs...)
+}
+
+// GetMetric mocks base method
+func (m *MockProductServiceClient) GetMetric(arg0 context.Context, arg1 *v1.GetMetricRequest, arg2 ...grpc.CallOption) (*v1.GetMetricResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetMetric", varargs...)
+	ret0, _ := ret[0].(*v1.GetMetricResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetric indicates an expected call of GetMetric
+func (mr *MockProductServiceClientMockRecorder) GetMetric(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetric", reflect.TypeOf((*MockProductServiceClient)(nil).GetMetric), varargs...)
 }
 
 // GetProductCountByApp mocks base method
@@ -515,6 +695,26 @@ func (mr *MockProductServiceClientMockRecorder) GetProductDetail(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductDetail", reflect.TypeOf((*MockProductServiceClient)(nil).GetProductDetail), varargs...)
 }
 
+// GetProductListByEditor mocks base method
+func (m *MockProductServiceClient) GetProductListByEditor(arg0 context.Context, arg1 *v1.GetProductListByEditorRequest, arg2 ...grpc.CallOption) (*v1.GetProductListByEditorResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetProductListByEditor", varargs...)
+	ret0, _ := ret[0].(*v1.GetProductListByEditorResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetProductListByEditor indicates an expected call of GetProductListByEditor
+func (mr *MockProductServiceClientMockRecorder) GetProductListByEditor(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductListByEditor", reflect.TypeOf((*MockProductServiceClient)(nil).GetProductListByEditor), varargs...)
+}
+
 // GetProductOptions mocks base method
 func (m *MockProductServiceClient) GetProductOptions(arg0 context.Context, arg1 *v1.ProductRequest, arg2 ...grpc.CallOption) (*v1.ProductOptionsResponse, error) {
 	m.ctrl.T.Helper()
@@ -553,6 +753,86 @@ func (mr *MockProductServiceClientMockRecorder) GetRightsInfoByEditor(arg0, arg1
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRightsInfoByEditor", reflect.TypeOf((*MockProductServiceClient)(nil).GetRightsInfoByEditor), varargs...)
+}
+
+// GetTotalSharedAmount mocks base method
+func (m *MockProductServiceClient) GetTotalSharedAmount(arg0 context.Context, arg1 *v1.GetTotalSharedAmountRequest, arg2 ...grpc.CallOption) (*v1.GetTotalSharedAmountResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetTotalSharedAmount", varargs...)
+	ret0, _ := ret[0].(*v1.GetTotalSharedAmountResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTotalSharedAmount indicates an expected call of GetTotalSharedAmount
+func (mr *MockProductServiceClientMockRecorder) GetTotalSharedAmount(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTotalSharedAmount", reflect.TypeOf((*MockProductServiceClient)(nil).GetTotalSharedAmount), varargs...)
+}
+
+// GetUnderusageLicenceByEditorProduct mocks base method
+func (m *MockProductServiceClient) GetUnderusageLicenceByEditorProduct(arg0 context.Context, arg1 *v1.GetUnderusageByEditorRequest, arg2 ...grpc.CallOption) (*v1.GetUnderusageByEditorResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUnderusageLicenceByEditorProduct", varargs...)
+	ret0, _ := ret[0].(*v1.GetUnderusageByEditorResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnderusageLicenceByEditorProduct indicates an expected call of GetUnderusageLicenceByEditorProduct
+func (mr *MockProductServiceClientMockRecorder) GetUnderusageLicenceByEditorProduct(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnderusageLicenceByEditorProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GetUnderusageLicenceByEditorProduct), varargs...)
+}
+
+// GroupComplianceEditorCost mocks base method
+func (m *MockProductServiceClient) GroupComplianceEditorCost(arg0 context.Context, arg1 *v1.GroupComplianceEditorRequest, arg2 ...grpc.CallOption) (*v1.GroupComplianceEditorResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GroupComplianceEditorCost", varargs...)
+	ret0, _ := ret[0].(*v1.GroupComplianceEditorResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GroupComplianceEditorCost indicates an expected call of GroupComplianceEditorCost
+func (mr *MockProductServiceClientMockRecorder) GroupComplianceEditorCost(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GroupComplianceEditorCost", reflect.TypeOf((*MockProductServiceClient)(nil).GroupComplianceEditorCost), varargs...)
+}
+
+// GroupComplianceProduct mocks base method
+func (m *MockProductServiceClient) GroupComplianceProduct(arg0 context.Context, arg1 *v1.GroupComplianceProductRequest, arg2 ...grpc.CallOption) (*v1.GroupComplianceProductResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GroupComplianceProduct", varargs...)
+	ret0, _ := ret[0].(*v1.GroupComplianceProductResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GroupComplianceProduct indicates an expected call of GroupComplianceProduct
+func (mr *MockProductServiceClientMockRecorder) GroupComplianceProduct(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GroupComplianceProduct", reflect.TypeOf((*MockProductServiceClient)(nil).GroupComplianceProduct), varargs...)
 }
 
 // ListAcqRights mocks base method
@@ -655,6 +935,26 @@ func (mr *MockProductServiceClientMockRecorder) ListAggregations(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAggregations", reflect.TypeOf((*MockProductServiceClient)(nil).ListAggregations), varargs...)
 }
 
+// ListConcurrentUsers mocks base method
+func (m *MockProductServiceClient) ListConcurrentUsers(arg0 context.Context, arg1 *v1.ListConcurrentUsersRequest, arg2 ...grpc.CallOption) (*v1.ListConcurrentUsersResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListConcurrentUsers", varargs...)
+	ret0, _ := ret[0].(*v1.ListConcurrentUsersResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListConcurrentUsers indicates an expected call of ListConcurrentUsers
+func (mr *MockProductServiceClientMockRecorder) ListConcurrentUsers(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConcurrentUsers", reflect.TypeOf((*MockProductServiceClient)(nil).ListConcurrentUsers), varargs...)
+}
+
 // ListDeployedAndAcquiredEditors mocks base method
 func (m *MockProductServiceClient) ListDeployedAndAcquiredEditors(arg0 context.Context, arg1 *v1.ListDeployedAndAcquiredEditorsRequest, arg2 ...grpc.CallOption) (*v1.ListEditorsResponse, error) {
 	m.ctrl.T.Helper()
@@ -715,6 +1015,46 @@ func (mr *MockProductServiceClientMockRecorder) ListEditors(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEditors", reflect.TypeOf((*MockProductServiceClient)(nil).ListEditors), varargs...)
 }
 
+// ListNominativeUser mocks base method
+func (m *MockProductServiceClient) ListNominativeUser(arg0 context.Context, arg1 *v1.ListNominativeUsersRequest, arg2 ...grpc.CallOption) (*v1.ListNominativeUsersResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListNominativeUser", varargs...)
+	ret0, _ := ret[0].(*v1.ListNominativeUsersResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNominativeUser indicates an expected call of ListNominativeUser
+func (mr *MockProductServiceClientMockRecorder) ListNominativeUser(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNominativeUser", reflect.TypeOf((*MockProductServiceClient)(nil).ListNominativeUser), varargs...)
+}
+
+// ListNominativeUserFileUpload mocks base method
+func (m *MockProductServiceClient) ListNominativeUserFileUpload(arg0 context.Context, arg1 *v1.ListNominativeUsersFileUploadRequest, arg2 ...grpc.CallOption) (*v1.ListNominativeUsersFileUploadResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListNominativeUserFileUpload", varargs...)
+	ret0, _ := ret[0].(*v1.ListNominativeUsersFileUploadResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNominativeUserFileUpload indicates an expected call of ListNominativeUserFileUpload
+func (mr *MockProductServiceClientMockRecorder) ListNominativeUserFileUpload(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNominativeUserFileUpload", reflect.TypeOf((*MockProductServiceClient)(nil).ListNominativeUserFileUpload), varargs...)
+}
+
 // ListProductAggregationView mocks base method
 func (m *MockProductServiceClient) ListProductAggregationView(arg0 context.Context, arg1 *v1.ListProductAggregationViewRequest, arg2 ...grpc.CallOption) (*v1.ListProductAggregationViewResponse, error) {
 	m.ctrl.T.Helper()
@@ -753,6 +1093,26 @@ func (mr *MockProductServiceClientMockRecorder) ListProducts(arg0, arg1 interfac
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListProducts", reflect.TypeOf((*MockProductServiceClient)(nil).ListProducts), varargs...)
+}
+
+// NominativeUserExport mocks base method
+func (m *MockProductServiceClient) NominativeUserExport(arg0 context.Context, arg1 *v1.NominativeUsersExportRequest, arg2 ...grpc.CallOption) (*v1.ListNominativeUsersExportResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "NominativeUserExport", varargs...)
+	ret0, _ := ret[0].(*v1.ListNominativeUsersExportResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NominativeUserExport indicates an expected call of NominativeUserExport
+func (mr *MockProductServiceClientMockRecorder) NominativeUserExport(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NominativeUserExport", reflect.TypeOf((*MockProductServiceClient)(nil).NominativeUserExport), varargs...)
 }
 
 // OverdeployedProducts mocks base method
@@ -835,6 +1195,26 @@ func (mr *MockProductServiceClientMockRecorder) ProductsPerMetricType(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductsPerMetricType", reflect.TypeOf((*MockProductServiceClient)(nil).ProductsPerMetricType), varargs...)
 }
 
+// SoftwareExpenditureByScope mocks base method
+func (m *MockProductServiceClient) SoftwareExpenditureByScope(arg0 context.Context, arg1 *v1.SoftwareExpenditureByScopeRequest, arg2 ...grpc.CallOption) (*v1.SoftwareExpenditureByScopeResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SoftwareExpenditureByScope", varargs...)
+	ret0, _ := ret[0].(*v1.SoftwareExpenditureByScopeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SoftwareExpenditureByScope indicates an expected call of SoftwareExpenditureByScope
+func (mr *MockProductServiceClientMockRecorder) SoftwareExpenditureByScope(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoftwareExpenditureByScope", reflect.TypeOf((*MockProductServiceClient)(nil).SoftwareExpenditureByScope), varargs...)
+}
+
 // UpdateAcqRight mocks base method
 func (m *MockProductServiceClient) UpdateAcqRight(arg0 context.Context, arg1 *v1.AcqRightRequest, arg2 ...grpc.CallOption) (*v1.AcqRightResponse, error) {
 	m.ctrl.T.Helper()
@@ -853,6 +1233,26 @@ func (mr *MockProductServiceClientMockRecorder) UpdateAcqRight(arg0, arg1 interf
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAcqRight", reflect.TypeOf((*MockProductServiceClient)(nil).UpdateAcqRight), varargs...)
+}
+
+// UpdateAcqrightsSharedLicenses mocks base method
+func (m *MockProductServiceClient) UpdateAcqrightsSharedLicenses(arg0 context.Context, arg1 *v1.UpdateSharedLicensesRequest, arg2 ...grpc.CallOption) (*v1.UpdateSharedLicensesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateAcqrightsSharedLicenses", varargs...)
+	ret0, _ := ret[0].(*v1.UpdateSharedLicensesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAcqrightsSharedLicenses indicates an expected call of UpdateAcqrightsSharedLicenses
+func (mr *MockProductServiceClientMockRecorder) UpdateAcqrightsSharedLicenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAcqrightsSharedLicenses", reflect.TypeOf((*MockProductServiceClient)(nil).UpdateAcqrightsSharedLicenses), varargs...)
 }
 
 // UpdateAggregatedRights mocks base method
@@ -895,6 +1295,26 @@ func (mr *MockProductServiceClientMockRecorder) UpdateAggregation(arg0, arg1 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAggregation", reflect.TypeOf((*MockProductServiceClient)(nil).UpdateAggregation), varargs...)
 }
 
+// UpdateAggrightsSharedLicenses mocks base method
+func (m *MockProductServiceClient) UpdateAggrightsSharedLicenses(arg0 context.Context, arg1 *v1.UpdateAggrightsSharedLicensesRequest, arg2 ...grpc.CallOption) (*v1.UpdateSharedLicensesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateAggrightsSharedLicenses", varargs...)
+	ret0, _ := ret[0].(*v1.UpdateSharedLicensesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateAggrightsSharedLicenses indicates an expected call of UpdateAggrightsSharedLicenses
+func (mr *MockProductServiceClientMockRecorder) UpdateAggrightsSharedLicenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAggrightsSharedLicenses", reflect.TypeOf((*MockProductServiceClient)(nil).UpdateAggrightsSharedLicenses), varargs...)
+}
+
 // UpsertAcqRights mocks base method
 func (m *MockProductServiceClient) UpsertAcqRights(arg0 context.Context, arg1 *v1.UpsertAcqRightsRequest, arg2 ...grpc.CallOption) (*v1.UpsertAcqRightsResponse, error) {
 	m.ctrl.T.Helper()
@@ -935,6 +1355,26 @@ func (mr *MockProductServiceClientMockRecorder) UpsertAllocatedMetricEquipment(a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertAllocatedMetricEquipment", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertAllocatedMetricEquipment), varargs...)
 }
 
+// UpsertNominativeUser mocks base method
+func (m *MockProductServiceClient) UpsertNominativeUser(arg0 context.Context, arg1 *v1.UpserNominativeUserRequest, arg2 ...grpc.CallOption) (*v1.UpserNominativeUserResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertNominativeUser", varargs...)
+	ret0, _ := ret[0].(*v1.UpserNominativeUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertNominativeUser indicates an expected call of UpsertNominativeUser
+func (mr *MockProductServiceClientMockRecorder) UpsertNominativeUser(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertNominativeUser", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertNominativeUser), varargs...)
+}
+
 // UpsertProduct mocks base method
 func (m *MockProductServiceClient) UpsertProduct(arg0 context.Context, arg1 *v1.UpsertProductRequest, arg2 ...grpc.CallOption) (*v1.UpsertProductResponse, error) {
 	m.ctrl.T.Helper()
@@ -953,4 +1393,24 @@ func (mr *MockProductServiceClientMockRecorder) UpsertProduct(arg0, arg1 interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProduct", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertProduct), varargs...)
+}
+
+// UpsertProductConcurrentUser mocks base method
+func (m *MockProductServiceClient) UpsertProductConcurrentUser(arg0 context.Context, arg1 *v1.ProductConcurrentUserRequest, arg2 ...grpc.CallOption) (*v1.ProductConcurrentUserResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertProductConcurrentUser", varargs...)
+	ret0, _ := ret[0].(*v1.ProductConcurrentUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertProductConcurrentUser indicates an expected call of UpsertProductConcurrentUser
+func (mr *MockProductServiceClientMockRecorder) UpsertProductConcurrentUser(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertProductConcurrentUser", reflect.TypeOf((*MockProductServiceClient)(nil).UpsertProductConcurrentUser), varargs...)
 }

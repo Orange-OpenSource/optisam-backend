@@ -12,6 +12,7 @@ import (
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
+	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -67,11 +68,13 @@ func (s *productServiceServer) ListAggregationEditors(ctx context.Context, req *
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
-	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+	scopes := strings.Split(req.Scope, ",")
+	if !helper.Contains(userClaims.Socpes, scopes...) {
 		logger.Log.Error("service/v1 - ListAggregationEditors", zap.String("reason", "ScopeError"))
 		return &v1.ListAggregationEditorsResponse{}, status.Error(codes.Internal, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.ListEditorsForAggregation(ctx, req.Scope)
+
+	dbresp, err := s.productRepo.ListEditorsForAggregation(ctx, scopes)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &v1.ListAggregationEditorsResponse{}, nil
@@ -87,6 +90,7 @@ func (s *productServiceServer) ListAggregationEditors(ctx context.Context, req *
 func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Aggregation) (*v1.AggregationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Error("service/v1 - CreateAggregation ", zap.String("reason", "ClaimsError"))
 		return &v1.AggregationResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
 	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
@@ -107,7 +111,8 @@ func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Ag
 	}
 	err = s.validateAggregation(ctx, req)
 	if err != nil {
-		return &v1.AggregationResponse{}, err
+		logger.Log.Error("service/v1 - CreateAggregation - validateAggregation", zap.String("reason", err.Error()))
+		return nil, err
 	}
 	aggid, inerr := s.productRepo.InsertAggregation(ctx, db.InsertAggregationParams{
 		AggregationName: req.AggregationName,
@@ -143,15 +148,19 @@ func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.Lis
 		return &v1.ListAggregationsResponse{}, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	dbresp, err := s.productRepo.ListAggregations(ctx, db.ListAggregationsParams{
-		IsAggName:       !req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
-		LsAggName:       req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
-		AggregationName: req.GetSearchParams().GetAggregationName().GetFilteringkey(),
-		IsProductEditor: !req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
-		LkProductEditor: req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
-		ProductEditor:   req.GetSearchParams().GetProductEditor().GetFilteringkey(),
-		Scope:           req.Scope,
-		PageNum:         req.GetPageSize() * (req.GetPageNum() - 1),
-		PageSize:        req.GetPageSize(),
+		IsAggName:         !req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
+		LsAggName:         req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
+		AggregationName:   req.GetSearchParams().GetAggregationName().GetFilteringkey(),
+		IsProductEditor:   !req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
+		LkProductEditor:   req.GetSearchParams().GetProductEditor().GetFilterType() && req.GetSearchParams().GetProductEditor().GetFilteringkey() != "",
+		ProductEditor:     req.GetSearchParams().GetProductEditor().GetFilteringkey(),
+		AggNameAsc:        strings.Contains(req.GetSortBy().String(), "aggregation_name") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		AggNameDesc:       strings.Contains(req.GetSortBy().String(), "aggregation_name") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		ProductEditorAsc:  strings.Contains(req.GetSortBy().String(), "product_editor") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductEditorDesc: strings.Contains(req.GetSortBy().String(), "product_editor") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		Scope:             req.Scope,
+		PageNum:           req.GetPageSize() * (req.GetPageNum() - 1),
+		PageSize:          req.GetPageSize(),
 	})
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -160,8 +169,12 @@ func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.Lis
 		logger.Log.Error("service/v1 - ListAggregation - ListAggregation", zap.String("reason", err.Error()))
 		return &v1.ListAggregationsResponse{}, status.Error(codes.Internal, "DBError")
 	}
+	var total int32
+	if len(dbresp) > 0 {
+		total = int32(dbresp[0].Totalrecords)
+	}
 	return &v1.ListAggregationsResponse{
-		TotalRecords: int32(len(dbresp)),
+		TotalRecords: total,
 		Aggregations: dbAggregationsToSrvAggregationsAll(dbresp),
 	}, nil
 }
@@ -292,6 +305,7 @@ func (s *productServiceServer) validateAggregation(ctx context.Context, req *v1.
 			return status.Error(codes.Internal, "DBError")
 		}
 		if !selectedProductExists(availProds, selectedProds, req.Swidtags) {
+			logger.Log.Error("service/v1 - validateAggregation", zap.String("reason", err.Error()))
 			return status.Error(codes.InvalidArgument, "ProductNotAvailable")
 		}
 	} else if len(availProds) == 0 || !availableProductExists(availProds, req.Swidtags) {

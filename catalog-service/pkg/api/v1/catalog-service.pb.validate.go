@@ -397,6 +397,8 @@ func (m *Upload) Validate() error {
 
 	// no validation rules for Origin
 
+	// no validation rules for Recommendation
+
 	return nil
 }
 
@@ -557,10 +559,10 @@ func (m *Product) Validate() error {
 
 	}
 
-	if len(m.GetGenearlInformation()) > 200 {
+	if len(m.GetGenearlInformation()) > 1000 {
 		return ProductValidationError{
 			field:  "GenearlInformation",
-			reason: "value length must be at most 200 bytes",
+			reason: "value length must be at most 1000 bytes",
 		}
 	}
 
@@ -574,7 +576,7 @@ func (m *Product) Validate() error {
 	if _, ok := _Product_LocationType_InLookup[m.GetLocationType()]; !ok {
 		return ProductValidationError{
 			field:  "LocationType",
-			reason: "value must be in list [NONE SAAS On Premise Both]",
+			reason: "value must be in list [NONE SAAS On Premise]",
 		}
 	}
 
@@ -590,15 +592,10 @@ func (m *Product) Validate() error {
 		}
 	}
 
-	if v, ok := interface{}(m.GetCloseSource()).(interface {
-		Validate() error
-	}); ok {
-		if err := v.Validate(); err != nil {
-			return ProductValidationError{
-				field:  "CloseSource",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+	if _, ok := _Product_Licensing_InLookup[m.GetLicensing()]; !ok {
+		return ProductValidationError{
+			field:  "Licensing",
+			reason: "value must be in list [NONE CLOSEDSOURCE OPENSOURCE]",
 		}
 	}
 
@@ -619,7 +616,12 @@ func (m *Product) Validate() error {
 
 	}
 
-	// no validation rules for Recommendation
+	if _, ok := _Product_Recommendation_InLookup[m.GetRecommendation()]; !ok {
+		return ProductValidationError{
+			field:  "Recommendation",
+			reason: "value must be in list [NONE AUTHORIZED BLACKLISTED RECOMMENDED]",
+		}
+	}
 
 	for idx, item := range m.GetSupportVendors() {
 		_, _ = idx, item
@@ -735,7 +737,19 @@ var _Product_LocationType_InLookup = map[string]struct{}{
 	"NONE":       {},
 	"SAAS":       {},
 	"On Premise": {},
-	"Both":       {},
+}
+
+var _Product_Licensing_InLookup = map[string]struct{}{
+	"NONE":         {},
+	"CLOSEDSOURCE": {},
+	"OPENSOURCE":   {},
+}
+
+var _Product_Recommendation_InLookup = map[string]struct{}{
+	"NONE":        {},
+	"AUTHORIZED":  {},
+	"BLACKLISTED": {},
+	"RECOMMENDED": {},
 }
 
 // Validate checks the field values on Version with the rules defined in the
@@ -856,8 +870,6 @@ func (m *OpenSource) Validate() error {
 		return nil
 	}
 
-	// no validation rules for IsOpenSource
-
 	// no validation rules for OpenLicences
 
 	if _, ok := _OpenSource_OpenSourceType_InLookup[m.GetOpenSourceType()]; !ok {
@@ -930,73 +942,6 @@ var _OpenSource_OpenSourceType_InLookup = map[string]struct{}{
 	"COMMUNITY":  {},
 	"BOTH":       {},
 }
-
-// Validate checks the field values on CloseSource with the rules defined in
-// the proto definition for this message. If any rules are violated, an error
-// is returned.
-func (m *CloseSource) Validate() error {
-	if m == nil {
-		return nil
-	}
-
-	// no validation rules for IsCloseSource
-
-	return nil
-}
-
-// CloseSourceValidationError is the validation error returned by
-// CloseSource.Validate if the designated constraints aren't met.
-type CloseSourceValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e CloseSourceValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e CloseSourceValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e CloseSourceValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e CloseSourceValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e CloseSourceValidationError) ErrorName() string { return "CloseSourceValidationError" }
-
-// Error satisfies the builtin error interface
-func (e CloseSourceValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sCloseSource.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = CloseSourceValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = CloseSourceValidationError{}
 
 // Validate checks the field values on ProductsSearchParams with the rules
 // defined in the proto definition for this message. If any rules are
@@ -1246,10 +1191,10 @@ func (m *CreateEditorRequest) Validate() error {
 		}
 	}
 
-	if len(m.GetGenearlInformation()) > 200 {
+	if len(m.GetGenearlInformation()) > 1000 {
 		return CreateEditorRequestValidationError{
 			field:  "GenearlInformation",
-			reason: "value length must be at most 200 bytes",
+			reason: "value length must be at most 1000 bytes",
 		}
 	}
 
@@ -1296,6 +1241,51 @@ func (m *CreateEditorRequest) Validate() error {
 			if err := v.Validate(); err != nil {
 				return CreateEditorRequestValidationError{
 					field:  fmt.Sprintf("Audits[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(m.GetCountryCode()) > 2 {
+		return CreateEditorRequestValidationError{
+			field:  "CountryCode",
+			reason: "value length must be at most 2 bytes",
+		}
+	}
+
+	// no validation rules for Address
+
+	// no validation rules for GroupContract
+
+	for idx, item := range m.GetGlobalAccountManager() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return CreateEditorRequestValidationError{
+					field:  fmt.Sprintf("GlobalAccountManager[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetSourcers() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return CreateEditorRequestValidationError{
+					field:  fmt.Sprintf("Sourcers[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -1385,10 +1375,10 @@ func (m *Editor) Validate() error {
 		}
 	}
 
-	if len(m.GetGenearlInformation()) > 200 {
+	if len(m.GetGenearlInformation()) > 1000 {
 		return EditorValidationError{
 			field:  "GenearlInformation",
-			reason: "value length must be at most 200 bytes",
+			reason: "value length must be at most 1000 bytes",
 		}
 	}
 
@@ -1468,6 +1458,51 @@ func (m *Editor) Validate() error {
 	}
 
 	// no validation rules for ProductsCount
+
+	if len(m.GetCountryCode()) > 2 {
+		return EditorValidationError{
+			field:  "CountryCode",
+			reason: "value length must be at most 2 bytes",
+		}
+	}
+
+	// no validation rules for Address
+
+	// no validation rules for GroupContract
+
+	for idx, item := range m.GetGlobalAccountManager() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return EditorValidationError{
+					field:  fmt.Sprintf("GlobalAccountManager[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetSourcers() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return EditorValidationError{
+					field:  fmt.Sprintf("Sourcers[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	return nil
 }
@@ -1626,6 +1661,8 @@ func (m *Audits) Validate() error {
 		}
 	}
 
+	// no validation rules for Year
+
 	return nil
 }
 
@@ -1683,10 +1720,9 @@ var _ interface {
 	ErrorName() string
 } = AuditsValidationError{}
 
-// Validate checks the field values on PartnerManagers with the rules defined
-// in the proto definition for this message. If any rules are violated, an
-// error is returned.
-func (m *PartnerManagers) Validate() error {
+// Validate checks the field values on Managers with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Managers) Validate() error {
 	if m == nil {
 		return nil
 	}
@@ -1694,7 +1730,7 @@ func (m *PartnerManagers) Validate() error {
 	// no validation rules for Email
 
 	if len(m.GetName()) > 200 {
-		return PartnerManagersValidationError{
+		return ManagersValidationError{
 			field:  "Name",
 			reason: "value length must be at most 200 bytes",
 		}
@@ -1703,9 +1739,9 @@ func (m *PartnerManagers) Validate() error {
 	return nil
 }
 
-// PartnerManagersValidationError is the validation error returned by
-// PartnerManagers.Validate if the designated constraints aren't met.
-type PartnerManagersValidationError struct {
+// ManagersValidationError is the validation error returned by
+// Managers.Validate if the designated constraints aren't met.
+type ManagersValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1713,22 +1749,22 @@ type PartnerManagersValidationError struct {
 }
 
 // Field function returns field value.
-func (e PartnerManagersValidationError) Field() string { return e.field }
+func (e ManagersValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e PartnerManagersValidationError) Reason() string { return e.reason }
+func (e ManagersValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e PartnerManagersValidationError) Cause() error { return e.cause }
+func (e ManagersValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e PartnerManagersValidationError) Key() bool { return e.key }
+func (e ManagersValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e PartnerManagersValidationError) ErrorName() string { return "PartnerManagersValidationError" }
+func (e ManagersValidationError) ErrorName() string { return "ManagersValidationError" }
 
 // Error satisfies the builtin error interface
-func (e PartnerManagersValidationError) Error() string {
+func (e ManagersValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1740,14 +1776,14 @@ func (e PartnerManagersValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sPartnerManagers.%s: %s%s",
+		"invalid %sManagers.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = PartnerManagersValidationError{}
+var _ error = ManagersValidationError{}
 
 var _ interface {
 	Field() string
@@ -1755,7 +1791,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = PartnerManagersValidationError{}
+} = ManagersValidationError{}
 
 // Validate checks the field values on DeleteResponse with the rules defined in
 // the proto definition for this message. If any rules are violated, an error

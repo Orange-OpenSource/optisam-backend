@@ -16,87 +16,14 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/strcomp"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
-
-const getEditor = `-- name: GetEditor :one
-SELECT editor_catalog.id, editor_catalog.name, editor_catalog.general_information, editor_catalog.partner_managers, editor_catalog.audits, editor_catalog.vendors, editor_catalog.created_on, editor_catalog.updated_on, COUNT(product_catalog.id), (Select json_agg(t.scope) as a from (
-    (Select scope from products where product_editor = editor_catalog.name )
-    UNION
-    (select scope from acqrights where product_editor = editor_catalog.name)
-) t) from editor_catalog
-LEFT JOIN product_catalog ON editor_catalog.id = product_catalog.editorID
-where editor_catalog.id = $1
-GROUP BY editor_catalog.id
-`
-
-// const listEditors = `-- name: GetEditor :many
-// SELECT count(*) OVER() AS totalRecords, editor_catalog.id, editor_catalog.name, editor_catalog.general_information, editor_catalog.partner_managers, editor_catalog.audits, editor_catalog.vendors, editor_catalog.created_on, editor_catalog.updated_on, COUNT(product_catalog.id),(Select json_agg(t.scope) as a from (
-//     (Select scope from products where product_editor = editor_catalog.name )
-//     UNION
-//     (select scope from acqrights where product_editor = editor_catalog.name)
-// ) t) from editor_catalog
-// LEFT JOIN product_catalog ON editor_catalog.id = product_catalog.editorID
-// where
-// (CASE WHEN $5::BOOL THEN lower(editor_catalog.name) LIKE '%' || lower($6::TEXT) || '%' ELSE TRUE END)
-// GROUP BY editor_catalog.id
-// ORDER BY
-//   CASE WHEN $1::bool THEN editor_catalog.created_on END asc,
-//   CASE WHEN $2::bool THEN editor_catalog.created_on END desc,
-//   CASE WHEN $7::bool THEN editor_catalog.name END asc,
-//   CASE WHEN $8::bool THEN editor_catalog.name END desc,
-//   CASE WHEN $9::bool THEN COUNT(product_catalog.id) END asc,
-//   CASE WHEN $10::bool THEN COUNT(product_catalog.id) END desc
-// LIMIT $3 OFFSET $4
-// `
-
-const listEditors = `-- name: GetEditor :many
-select * ,(Select json_agg(t.scope) as a from (
-    (Select scope from products where product_editor = editor.name )
-    UNION
-    (select scope from acqrights where product_editor = editor.name)
-) t) from (
-SELECT count(editor_catalog.id) OVER() AS totalRecords, editor_catalog.id, editor_catalog.name,
-editor_catalog.general_information, editor_catalog.partner_managers, editor_catalog.audits,
-editor_catalog.vendors, editor_catalog.created_on,
-editor_catalog.updated_on, COUNT(product_catalog.id) as pcount from editor_catalog
-LEFT JOIN product_catalog ON editor_catalog.id = product_catalog.editorID
-where
-(CASE WHEN $5::BOOL THEN lower(editor_catalog.name) LIKE '%' || lower($6::TEXT) || '%' ELSE TRUE END)
-GROUP BY editor_catalog.id
-order by 
-CASE WHEN $1::bool THEN editor_catalog.created_on END asc,
-CASE WHEN $2::bool THEN editor_catalog.created_on END desc,
-CASE WHEN $7::bool THEN editor_catalog.name END asc,
-CASE WHEN $8::bool THEN editor_catalog.name END desc,
-CASE WHEN $9::bool THEN COUNT(product_catalog.id) END asc,
-CASE WHEN $10::bool THEN COUNT(product_catalog.id) END desc
-LIMIT $3 OFFSET $4) as editor
-`
-
-const listEditorNames = `-- name: GetEditorNames :many
-SELECT id, name from editor_catalog
-where
-(CASE WHEN $1::BOOL THEN lower(editor_catalog.name) LIKE '%' || lower($2::TEXT) || '%' ELSE TRUE END)
-GROUP BY editor_catalog.id
-ORDER BY
-  CASE WHEN $3::bool THEN editor_catalog.name END asc,
-  CASE WHEN $4::bool THEN editor_catalog.name END desc
-LIMIT $5 OFFSET $6
-`
-const listEditorNamesAll = `-- name: GetEditorNames :many
-SELECT id, name from editor_catalog
-where
-(CASE WHEN $1::BOOL THEN lower(editor_catalog.name) LIKE '%' || lower($2::TEXT) || '%' ELSE TRUE END)
-GROUP BY editor_catalog.id
-ORDER BY
-  CASE WHEN $3::bool THEN editor_catalog.name END asc,
-  CASE WHEN $4::bool THEN editor_catalog.name END desc
-`
 
 func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -115,9 +42,10 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(http.StatusMethodNotAllowed, "Unable to fetch Query Params", w)
 		return
 	}
-	var vendors, audits, managers, scopes []byte
+	var vendors, audits, managers, scopes, generalAccountManager, sourcers []byte
 	var createdOn, updatedOn time.Time
-	var genInfo sql.NullString
+	var genInfo, address, code sql.NullString
+
 	row := handler.Db.QueryRowContext(r.Context(), getEditor, id)
 	err := row.Scan(
 		&editor.ID,
@@ -128,6 +56,11 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 		&vendors,
 		&createdOn,
 		&updatedOn,
+		&code,
+		&address,
+		&editor.GroupContract,
+		&generalAccountManager,
+		&sourcers,
 		&editor.ProductCount,
 		&scopes,
 	)
@@ -144,7 +77,7 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		var man = make([]PartnerManagers, 0)
+		var man = make([]Managers, 0)
 		ra, _ := json.Marshal(man)
 		editor.PartnerManagers = ra
 	}
@@ -167,7 +100,8 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 					el = &e
 				}
 			}
-			audit := &AuditResponse{Date: el, Entity: a.Entity}
+
+			audit := &AuditResponse{Date: el, Entity: a.Entity, Year: int(a.Year)}
 			respAudits = append(respAudits, audit)
 		}
 
@@ -196,6 +130,32 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 		editor.Vendors = ra
 	}
 
+	if len(generalAccountManager) != 0 && string(generalAccountManager) != "null" {
+		err = json.Unmarshal(generalAccountManager, &editor.GlobalAccountManager)
+		if err != nil {
+			logger.Log.Error("rest - geteditor - Marshal", zap.String("Reason: ", err.Error()))
+			sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
+			return
+		}
+	} else {
+		var man = make([]Managers, 0)
+		ra, _ := json.Marshal(man)
+		editor.GlobalAccountManager = ra
+	}
+
+	if len(sourcers) != 0 && string(sourcers) != "null" {
+		err = json.Unmarshal(sourcers, &editor.Sourcers)
+		if err != nil {
+			logger.Log.Error("rest - geteditor - Marshal", zap.String("Reason: ", err.Error()))
+			sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
+			return
+		}
+	} else {
+		var man = make([]Managers, 0)
+		ra, _ := json.Marshal(man)
+		editor.GlobalAccountManager = ra
+	}
+
 	if scopes != nil {
 		var scopeCode []string
 		err = json.Unmarshal(scopes, &scopeCode)
@@ -204,25 +164,41 @@ func (handler *handler) GetEditor(w http.ResponseWriter, r *http.Request) {
 			sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
 			return
 		}
-		cronCtx, err := CreateSharedContext(handler.AuthAPI, handler.Application)
+		scopes_response, err := handler.pCRepo.GetScope(r.Context(), scopeCode)
 		if err != nil {
-			logger.Log.Error("couldnt fetch token, will try next time when API will execute", zap.Any("error", err))
+			logger.Log.Info("couldn't fetch data from redis", zap.Any("error", err))
 		}
-		if cronCtx != nil {
-			cronAPIKeyCtx, err := grpc.AddClaimsInContext(*cronCtx, handler.VerifyKey, handler.APIKey)
-			if err != nil {
-				logger.Log.Error("Cron AddClaims Failed", zap.Error(err))
+		if len(scopes_response) == len(scopeCode) {
+			listScopeMap := map[string]string{}
+			for _, v := range scopes_response {
+				listScopeMap[v.ScopeCode] = v.ScopeName
 			}
+			for i, v := range scopeCode {
+				scopeCode[i] = listScopeMap[v]
+			}
+			editor.Scopes = scopeCode
+		} else {
+			cronCtx, err := CreateSharedContext(handler.AuthAPI, handler.Application)
+			if err != nil {
+				logger.Log.Error("couldnt fetch token, will try next time when API will execute", zap.Any("error", err))
+			}
+			if cronCtx != nil {
+				cronAPIKeyCtx, err := grpc.AddClaimsInContext(*cronCtx, handler.VerifyKey, handler.APIKey)
+				if err != nil {
+					logger.Log.Error("Cron AddClaims Failed", zap.Error(err))
+				}
 
-			listScopesNames, err := handler.account.GetScopeLists(cronAPIKeyCtx, &accv1.GetScopeListRequest{Scopes: scopeCode})
-			if err != nil {
-				logger.Log.Error("couldnt fetch scope name, will try next time when API will execute", zap.Any("error", err))
+				listScopesNames, err := handler.account.GetScopeLists(cronAPIKeyCtx, &accv1.GetScopeListRequest{Scopes: scopeCode})
+				if err != nil {
+					logger.Log.Error("couldnt fetch scope name, will try next time when API will execute", zap.Any("error", err))
+				}
+				editor.Scopes = listScopesNames.ScopeNames
 			}
-			editor.Scopes = listScopesNames.ScopeNames
 		}
-
 	}
 	editor.GeneralInformation = genInfo.String
+	editor.Address = address.String
+	editor.CountryCode = code.String
 	editor.CreatedOn = createdOn
 	editor.UpdatedOn = updatedOn
 
@@ -240,14 +216,51 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Info("ListEditors", zap.Any("started listing of editors", time.Now()))
 	w.Header().Set("Content-Type", "application/json")
 	if r.Method != http.MethodGet {
-		logger.Log.Error("rest - geteditor - Meathod Not Allowed", zap.String("Reason: ", "Meathod Not Allowed"))
+		logger.Log.Error("rest - ListEditors - Meathod Not Allowed", zap.String("Reason: ", "Meathod Not Allowed"))
 		sendErrorResponse(http.StatusMethodNotAllowed, "Meathod Not Allowed", w)
 		return
 	}
-
+	err := validatePagination(r)
+	if err != nil {
+		logger.Log.Error("rest - ListEditors - pagination error", zap.String("Reason: ", err.Error()))
+		sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
+		return
+	}
+	//name
 	search_params_name := (r.URL.Query().Get("search_params.name.filteringkey"))
 	isename := (search_params_name != "")
 	ename := strings.ToLower(search_params_name)
+
+	//group contract
+	search_params_group_contract := (r.URL.Query().Get("search_params.group_contract.filteringkey"))
+	is_search_params_group_contract := (search_params_group_contract != "")
+	// group_contract := strings.Split(search_params_group_contract, ",")
+	var group_contract bool
+	if is_search_params_group_contract {
+		if strings.Contains(search_params_group_contract, "false,true") {
+			is_search_params_group_contract = false
+		} else {
+			var err error
+			group_contract, err = strconv.ParseBool(search_params_group_contract)
+			if err != nil {
+				logger.Log.Error("rest - geteditors - Internal Server Error", zap.String("Reason: ", err.Error()))
+				sendErrorResponse(http.StatusInternalServerError, err.Error(), w)
+				return
+			}
+		}
+	}
+
+	entities := r.URL.Query().Get("search_params.entities.filteringkey")
+	entitiesType := strings.Split(entities, ",")
+	isEntitiesType := (entities != "")
+
+	countrycodes := r.URL.Query().Get("search_params.countryCodes.filteringkey")
+	countrycodesType := strings.Split(countrycodes, ",")
+	iscountrycodesType := (countrycodes != "")
+
+	audityears := r.URL.Query().Get("search_params.audityears.filteringkey")
+	audityearsType := strings.Split(audityears, ",")
+	isaudityearsType := (audityears != "")
 
 	createdonAsc := (strings.Contains(r.URL.Query().Get("sortBy"), "createdOn") && (strings.Contains(r.URL.Query().Get("sortOrder"), "asc")))
 	createdonDesc := (strings.Contains(r.URL.Query().Get("sortBy"), "createdOn") && (strings.Contains(r.URL.Query().Get("sortOrder"), "desc")))
@@ -255,50 +268,62 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 	NameDesc := (strings.Contains(r.URL.Query().Get("sortBy"), "name") && (strings.Contains(r.URL.Query().Get("sortOrder"), "desc")))
 	pcountAsc := (strings.Contains(r.URL.Query().Get("sortBy"), "productsCount") && (strings.Contains(r.URL.Query().Get("sortOrder"), "asc")))
 	pcountDesc := (strings.Contains(r.URL.Query().Get("sortBy"), "productsCount") && (strings.Contains(r.URL.Query().Get("sortOrder"), "desc")))
+	gcontractAsc := (strings.Contains(r.URL.Query().Get("sortBy"), "groupContract") && (strings.Contains(r.URL.Query().Get("sortOrder"), "asc")))
+	gcontractDesc := (strings.Contains(r.URL.Query().Get("sortBy"), "groupContract") && (strings.Contains(r.URL.Query().Get("sortOrder"), "desc")))
+
+	// pagination
 	pageNum := strcomp.StringToNum(r.URL.Query().Get("pageSize")) * (strcomp.StringToNum(r.URL.Query().Get("pageNum")) - 1)
 	pageSize := strcomp.StringToNum(r.URL.Query().Get("pageSize"))
-	logger.Log.Info("ListEditors", zap.Any("before list editors query", time.Now()))
-	rows, err := handler.Db.QueryContext(r.Context(), listEditors, createdonAsc, createdonDesc, pageSize, pageNum, isename, ename, NameAsc, NameDesc, pcountAsc, pcountDesc)
-	logger.Log.Info("ListEditors", zap.Any("after list editors query", time.Now()))
+
+	var rows *sql.Rows
+	var query string
+
+	scopesmap := make(map[string]string)
+	scopes, err := handler.pCRepo.GetAllScope(r.Context())
 	if err != nil {
-		logger.Log.Error("rest - geteditor - Internal Server Error", zap.String("Reason: ", err.Error()))
+		logger.Log.Error("couldn't fetch scopes from redis", zap.Any("error", err))
+	}
+	if len(scopes) > 0 {
+		for _, v := range scopes {
+			scopesmap[v.ScopeCode] = v.ScopeName
+		}
+	} else {
+		scopesmap = createScopeMap(handler)
+	}
+
+	logger.Log.Info("ListEditors", zap.Any("before editors query", time.Now()))
+	if !isEntitiesType {
+		query = listEditors
+		rows, err = handler.Db.QueryContext(r.Context(), query, createdonAsc, createdonDesc, pageSize, pageNum, isename, ename, NameAsc, NameDesc, pcountAsc, pcountDesc, is_search_params_group_contract, group_contract, gcontractAsc, gcontractDesc, iscountrycodesType, pq.Array(countrycodesType), isaudityearsType, pq.Array(audityearsType))
+	} else {
+		var scopeCodes []string
+		reversescopesmap := make(map[string]string)
+		for k, v := range scopesmap {
+			reversescopesmap[v] = k
+		}
+		for _, entity := range entitiesType {
+			scopeCodes = append(scopeCodes, reversescopesmap[entity])
+		}
+		query = innerScopeEditor
+		rows, err = handler.Db.QueryContext(r.Context(), query, createdonAsc, createdonDesc, pageSize, pageNum, isename, ename, NameAsc, NameDesc, pcountAsc, pcountDesc, is_search_params_group_contract, group_contract, gcontractAsc, gcontractDesc, iscountrycodesType, pq.Array(countrycodesType), isaudityearsType, pq.Array(audityearsType), pq.Array(scopeCodes))
+	}
+	if err != nil {
+		logger.Log.Error("rest - ListEditors - Internal Server Error", zap.String("Reason: ", err.Error()))
 		sendErrorResponse(http.StatusInternalServerError, err.Error(), w)
 		return
 	}
+	logger.Log.Info("ListEditors", zap.Any("after list editors query", time.Now()))
+
 	defer rows.Close()
-	// this should be replaced by redis
-	scopesmap := make(map[string]string)
-	cronCtx, err := CreateSharedContext(handler.AuthAPI, handler.Application)
-	if err != nil {
-		logger.Log.Error("couldnt fetch token, will try next time when API will execute", zap.Any("error", err))
-	}
-	if cronCtx != nil {
-		logger.Log.Info("ListEditors", zap.Any("before AddClaimsInContext", time.Now()))
-		cronAPIKeyCtx, err := grpc.AddClaimsInContext(*cronCtx, handler.VerifyKey, handler.APIKey)
-		logger.Log.Info("ListEditors", zap.Any("after AddClaimsInContext", time.Now()))
-		if err != nil {
-			logger.Log.Error("Cron AddClaims Failed", zap.Error(err))
-		}
-		logger.Log.Info("ListEditors", zap.Any("before list scopes call", time.Now()))
-		listScopesNames, err := handler.account.ListScopes(cronAPIKeyCtx, &accv1.ListScopesRequest{})
-		logger.Log.Info("ListEditors", zap.Any("after list scopes call", time.Now()))
-		if err != nil {
-			logger.Log.Error("couldnt fetch scope name, will try next time when API will execute", zap.Any("error", err))
-		}
-		if listScopesNames != nil {
-			for _, v := range listScopesNames.Scopes {
-				scopesmap[v.ScopeCode] = v.ScopeName
-			}
-		}
-	}
+
 	var response ListEditorResponse
 	var totalRecords int
 	logger.Log.Info("ListEditors", zap.Any("before data parsing", time.Now()))
 	for rows.Next() {
 		var editor Editor
-		var vendors, audits, managers, scopes []byte
+		var vendors, audits, managers, scopes, sourcers, account_manager []byte
 		var createdOn, updatedOn time.Time
-		var genInfo sql.NullString
+		var genInfo, address, code sql.NullString
 		err := rows.Scan(
 			&totalRecords,
 			&editor.ID,
@@ -309,6 +334,11 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 			&vendors,
 			&createdOn,
 			&updatedOn,
+			&code,
+			&address,
+			&editor.GroupContract,
+			&account_manager,
+			&sourcers,
 			&editor.ProductCount,
 			&scopes,
 		)
@@ -325,12 +355,38 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			var ven = make([]PartnerManagers, 0)
+			var ven = make([]Managers, 0)
 			ra, _ := json.Marshal(ven)
 			editor.PartnerManagers = ra
 		}
+		if len(sourcers) != 0 && string(sourcers) != "null" {
+			err = json.Unmarshal(sourcers, &editor.Sourcers)
+			if err != nil {
+				logger.Log.Error("rest - geteditor - Marshal", zap.String("Reason: ", err.Error()))
+				sendErrorResponse(http.StatusInternalServerError, err.Error(), w)
+				return
+			}
+		} else {
+			var ven = make([]Managers, 0)
+			ra, _ := json.Marshal(ven)
+			editor.Sourcers = ra
+		}
+		if len(account_manager) != 0 && string(account_manager) != "null" {
+			err = json.Unmarshal(account_manager, &editor.GlobalAccountManager)
+			if err != nil {
+				logger.Log.Error("rest - geteditor - Marshal", zap.String("Reason: ", err.Error()))
+				sendErrorResponse(http.StatusInternalServerError, err.Error(), w)
+				return
+			}
+		} else {
+			var ven = make([]Managers, 0)
+			ra, _ := json.Marshal(ven)
+			editor.GlobalAccountManager = ra
+		}
 
 		editor.GeneralInformation = genInfo.String
+		editor.Address = address.String
+		editor.CountryCode = code.String
 		var pbaudits []*v1.Audits
 		var respAudits []*AuditResponse
 		if len(audits) != 0 && string(audits) != "null" {
@@ -341,15 +397,26 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			for _, a := range pbaudits {
+				// var audit *AuditResponse
+				// if a.Date > 1970 {
+				// 	audit = &AuditResponse{Date: &a.Date, Entity: a.Entity}
+				// } else {
+				// 	audit = &AuditResponse{Date: nil, Entity: a.Entity}
+				// }
 				var el *string
 				var e string
 				if a.Date != nil {
 					e = a.Date.AsTime().String()
 					if e != "1970-01-01 12:00:00 +0000 UTC" {
 						el = &e
+
 					}
 				}
-				audit := &AuditResponse{Date: el, Entity: a.Entity}
+				if el == nil {
+					a.Year = 0
+				}
+				audit := &AuditResponse{Date: el, Entity: a.Entity, Year: int(a.Year)}
+
 				respAudits = append(respAudits, audit)
 			}
 
@@ -391,7 +458,6 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 				scopes = append(scopes, scopesmap[v])
 			}
 			editor.Scopes = scopes
-
 		}
 		editor.CreatedOn = createdOn
 		editor.UpdatedOn = updatedOn
@@ -405,13 +471,6 @@ func (handler *handler) ListEditors(w http.ResponseWriter, r *http.Request) {
 	}
 	logger.Log.Info("ListEditors", zap.Any("after data parsing", time.Now()))
 	w.WriteHeader(http.StatusOK)
-	// resp, err := json.Marshal(response)
-	// if err != nil {
-	// 	logger.Log.Error("rest - geteditor - Marshal response", zap.String("Reason: ", err.Error()))
-	// 	sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
-	// 	return
-	// }
-	// w.Write([]byte(resp))
 	logger.Log.Info("ListEditors", zap.Any("end", time.Now()))
 	json.NewEncoder(w).Encode(response)
 }
@@ -460,13 +519,6 @@ func (handler *handler) ListEditorNames(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(response)
-	// resp, err := json.Marshal(response)
-	// if err != nil {
-	// 	logger.Log.Error("rest - geteditor - Marshal response", zap.String("Reason: ", err.Error()))
-	// 	sendErrorResponse(http.StatusMethodNotAllowed, err.Error(), w)
-	// 	return
-	// }
-	// w.Write([]byte(resp))
 }
 
 func validateRequest(r *http.Request) error {
@@ -474,6 +526,25 @@ func validateRequest(r *http.Request) error {
 		return errors.New("parameter missing")
 	}
 	return nil
+}
+
+func validatePagination(r *http.Request) error {
+	ps, err := strconv.Atoi(r.URL.Query().Get("pageSize"))
+	if err != nil {
+		return err
+	}
+	if ps < 10 || ps > 200 {
+		return errors.New("page size is allowed between 10 and 200")
+	}
+	pn, err := strconv.Atoi(r.URL.Query().Get("pageNum"))
+	if err != nil {
+		return err
+	}
+	if pn < 1 || pn > 1000 {
+		return errors.New("page number is allowed between 1 and 1000")
+	}
+	return nil
+
 }
 
 // CreateSharedContext will return admin auth token
@@ -504,7 +575,6 @@ func CreateSharedContext(api string, appCred config.Application) (*context.Conte
 	}
 	authStr := fmt.Sprintf("Bearer %s", respMap["access_token"].(string))
 	md := metadata.Pairs("Authorization", authStr)
-
 
 	ctx = metadata.NewIncomingContext(ctx, md)
 	logger.Log.Info("CreateSharedContext", zap.Any("CreateSharedContext executed", time.Now()))

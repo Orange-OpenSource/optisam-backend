@@ -83,6 +83,7 @@ message ComputedDetails {
   int32 numAcqLicences = 4;
   int32 deltaNumber = 5;
   double deltaCost = 6;
+  int32 numAvailLicences = 7;
 }
 
 message ListAcqRightsForApplicationsProductRequest {
@@ -206,6 +207,11 @@ message ProductAcquiredRights {
   double purchaseCost = 15;
   double computedCost = 16;
   bool costOptimization = 17;
+  int32 availableLicences = 18 [(validate.rules).int32 = { gte: 0}];
+  int32 sharedLicences = 19 [(validate.rules).int32 = { gte: 0}];
+  int32 recievedLicences = 20 [(validate.rules).int32 = { gte: 0}];
+  bool withoutVerionAcq = 21;
+  int32 oldDeltaNumber = 22;
 }
 
 message AggregationAcquiredRights {
@@ -226,6 +232,9 @@ message AggregationAcquiredRights {
   double purchaseCost = 15;
   double computedCost = 16;
   bool costOptimization = 17;
+  int32 availableLicences = 18 [(validate.rules).int32 = { gte: 0}];
+  int32 sharedLicences = 19 [(validate.rules).int32 = { gte: 0}];
+  int32 recievedLicences = 20 [(validate.rules).int32 = { gte: 0}];
 }
 
 message Attribute {

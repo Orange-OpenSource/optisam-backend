@@ -1,0 +1,14 @@
+-- +migrate Up
+-- SQL in section 'Up' is executed when this migration is applied
+
+
+Alter Table product  ADD COLUMN swid_tag VARCHAR NOT NULL;
+Alter Table version  ADD COLUMN swid_tag VARCHAR NOT NULL;
+
+ALTER TABLE product ADD UNIQUE (name);
+
+-- +migrate Down
+-- SQL section 'Down' is executed when this migration is rolled back
+ALTER TABLE product DROP CONSTRAINT product_name_key;
+ALTER TABLE version DROP COLUMN swid_tag;
+ALTER TABLE product DROP COLUMN swid_tag;

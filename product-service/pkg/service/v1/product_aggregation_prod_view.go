@@ -7,6 +7,7 @@ import (
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 
@@ -56,6 +57,17 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 		if individualCount > 0 {
 			temp.IndividualProductExists = true
 		}
+		if dbresp[i].NominativeUsers == 0 && dbresp[i].ConcurrentUsers == 0 {
+			temp.UsersCount = dbresp[i].NumOfUsers
+			temp.Location = "ONPREMISE"
+		} else if dbresp[i].NominativeUsers > dbresp[i].ConcurrentUsers {
+			temp.UsersCount = dbresp[i].NominativeUsers
+			temp.Location = "SAAS"
+		} else {
+			temp.UsersCount = dbresp[i].ConcurrentUsers
+			temp.Location = "SAAS"
+		}
+
 		apiresp.Aggregations = append(apiresp.Aggregations, temp)
 	}
 	apiresp.TotalRecords = int32(len(apiresp.Aggregations))
@@ -115,6 +127,27 @@ func (s *productServiceServer) AggregatedRightDetails(ctx context.Context, req *
 		logger.Log.Error("service/v1 - AggregatedRightDetails - db/AggregatedRightDetails", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
+	flag := false
+
+	if dbresp.NumOfEquipments == 0 {
+		flag = true
+	}
+	dbmetrics := dbresp.Metrics
+	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
+		Scopes: []string{req.Scope},
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - AggregatedRightDetails - ListMetrices", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "ServiceError")
+	}
+	if metrics != nil || len(metrics.Metrices) != 0 {
+		for _, met := range dbmetrics {
+			exist := metricTypeOfSaasExists(metrics.Metrices, met)
+			if exist == false {
+				flag = false
+			}
+		}
+	}
 	return &v1.AggregatedRightDetailsResponse{
 		ID:              req.ID,
 		Name:            dbresp.AggregationName,
@@ -125,6 +158,7 @@ func (s *productServiceServer) AggregatedRightDetails(ctx context.Context, req *
 		NumApplications: dbresp.NumOfApplications,
 		NumEquipments:   dbresp.NumOfEquipments,
 		DefinedMetrics:  dbresp.Metrics,
+		NotDeployed:     flag,
 	}, nil
 }
 

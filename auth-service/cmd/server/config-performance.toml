@@ -26,9 +26,21 @@ agentEndpoint = "jaeger-agent.optisam-performance.svc:6831"
 [database]
 host = "svc-optisam-postgres.optisam-performance.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "account"
+pass = ""
+name = "account" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "account" 
+[database.Migration]
+version = ""#version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
+direction = ""
+migrationPath  = "./schema"
+
 
 [dgraph]
 host = "svc-optisam-dgraph.optisam-performance.svc:9080"

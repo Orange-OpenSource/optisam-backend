@@ -28,11 +28,11 @@ service ProductCatalog {
       body : "*"
     };
   }
-  rpc GetEditor(GetEditorRequest)returns(Editor){
-    option (google.api.http) = {
-      get:"/api/v1/catalog/editor/{editor_id}"
-    };
-  }
+  // rpc GetEditor(GetEditorRequest)returns(Editor){
+  //   option (google.api.http) = {
+  //     get:"/api/v1/catalog/editor/{editor_id}"
+  //   };
+  // }
 
   rpc UpdateEditor(Editor)returns(Editor){
     option (google.api.http) = {
@@ -98,8 +98,9 @@ message Upload{
   string version = 4;
   string genearlInformation =5;
   google.protobuf.Timestamp endOfLife =6;
-  google.protobuf.Timestamp endOfSupport=7;
+  google.protobuf.Timestamp endOfSupport =7;
   string origin =8;
+  string recommendation =9;
 }
 
 message UploadResponse{
@@ -111,13 +112,13 @@ message Product{
   string editorID =2 [(validate.rules).string.uuid = true];
   string name = 3 [(validate.rules).string.max_bytes = 200];
   repeated string metrics = 4 [(validate.rules).repeated.items.string = {max_bytes: 200}];
-  string genearlInformation =5 [(validate.rules).string.max_bytes = 200];
+  string genearlInformation =5 [(validate.rules).string.max_bytes = 1000];
   string contracttTips =6 [(validate.rules).string.max_bytes = 200];
-  string locationType = 7 [(validate.rules).string = {in: ["NONE","SAAS","On Premise","Both"]}];
+  string locationType = 7 [(validate.rules).string = {in: ["NONE","SAAS","On Premise"]}];
   OpenSource openSource = 8;
-  CloseSource closeSource =9;
+  string licensing =9 [(validate.rules).string = {in: ["NONE","CLOSEDSOURCE","OPENSOURCE"]}];
   repeated Version version =10;
-  string recommendation = 11;
+  string recommendation = 11 [(validate.rules).string = {in: ["NONE","AUTHORIZED","BLACKLISTED","RECOMMENDED"]}];
   repeated string usefulLinks = 12;
   repeated string supportVendors =13 [(validate.rules).repeated.items.string = {max_bytes: 200}];
   google.protobuf.Timestamp createdOn =14;
@@ -133,15 +134,17 @@ message Version{
   google.protobuf.Timestamp endOfLife =5;
   google.protobuf.Timestamp endOfSupport=6;
 }
+
 message OpenSource{
-  bool isOpenSource =1;
-  string openLicences =2;
-  string openSourceType= 3 [(validate.rules).string = {in: ['NONE', 'COMMERCIAL', 'COMMUNITY', 'BOTH']}];
+  // bool isOpenSource =1;
+  string openLicences =1;
+  string openSourceType= 2 [(validate.rules).string = {in: ['NONE', 'COMMERCIAL', 'COMMUNITY', 'BOTH']}];
 }
-message CloseSource{
-  bool isCloseSource =1;
-  repeated string closeLicences =2;
-}
+
+// message CloseSource{
+//   bool isCloseSource =1;
+//   repeated string closeLicences =2;
+// }
 // message ListProductsRequest{
 //   int32 page_num = 1 [
 //     (validate.rules).int32 = {gte : 1, lt : 1000},
@@ -177,32 +180,45 @@ message GetEditorRequest{
 
 message CreateEditorRequest {
   string name = 1 [(validate.rules).string.max_bytes = 200];
-  string genearl_information =2 [(validate.rules).string.max_bytes = 200];
+  string genearl_information =2 [(validate.rules).string.max_bytes = 1000];
   repeated Vendors vendors =3;
-  repeated PartnerManagers partner_managers =4;
+  repeated Managers partner_managers =4;
   repeated Audits audits =5;
+  string countryCode = 6 [(validate.rules).string.max_bytes = 2];
+  string address =7;
+  bool groupContract = 8;
+  repeated Managers globalAccountManager =9;
+  repeated  Managers sourcers =10;
 }
 
 message Editor{
   string id = 1 [(validate.rules).string.uuid = true];
   string name = 2  [(validate.rules).string.max_bytes = 200];
-  string genearlInformation =3 [(validate.rules).string.max_bytes = 200];
+  string genearlInformation =3 [(validate.rules).string.max_bytes = 1000];
   repeated Vendors vendors =4;
-  repeated PartnerManagers partner_managers =5;
+  repeated Managers partner_managers =5;
   repeated Audits audits =6; 
   google.protobuf.Timestamp createdOn =7;
   google.protobuf.Timestamp UpdatedOn=8;
   int32 products_count =9;
+  string countryCode = 10 [(validate.rules).string.max_bytes = 2];
+  string address =11;
+  bool groupContract = 12;
+  repeated Managers globalAccountManager =13;
+  repeated  Managers sourcers =14;
 }
 
 message Vendors{
   string name =1;
 }
+
 message Audits{
   string entity =1 [(validate.rules).string.max_bytes = 200];
   google.protobuf.Timestamp date =2;
+  int32 year =3;
 }
-message PartnerManagers{
+
+message Managers{
   string email =1;
   string name =2 [(validate.rules).string.max_bytes = 200];
 }

@@ -26,7 +26,7 @@ func TestAccountRepository_CreateScope(t *testing.T) {
 	}{
 		{
 			name: "Success",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:       context.Background(),
 				scopeName: "France",
@@ -122,7 +122,7 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 	}{
 		{
 			name: "SUCCESS",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:        context.Background(),
 				scopeCodes: []string{"O1", "O2"},
@@ -181,7 +181,7 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 		},
 		{
 			name: "SUCCESS - Scope is not in scope table",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:        context.Background(),
 				scopeCodes: []string{"O3"},
@@ -225,7 +225,7 @@ func TestAccountRepository_ListScopes(t *testing.T) {
 		},
 		{
 			name: "SUCCESS - Scope is not there in the group",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:        context.Background(),
 				scopeCodes: []string{"O1", "O2", "O3", "O4"},
@@ -350,7 +350,7 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 	}{
 		{
 			name: "SUCCESS",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:       context.Background(),
 				scopeCode: "O1",
@@ -374,7 +374,7 @@ func TestAccountRepository_ScopeByCode(t *testing.T) {
 		},
 		{
 			name: "SUCCESS - With scope nil",
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			args: args{
 				ctx:       context.Background(),
 				scopeCode: "O3",

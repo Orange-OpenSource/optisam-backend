@@ -106,6 +106,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 	}
 	for i := range dbresp {
 		temp := &v1.AggregatedRightsView{}
+		licenses, _ := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: dbresp[i].Sku, Scope: req.Scope})
 		temp.ID = dbresp[i].AggregationID
 		temp.AggregationName = dbresp[i].AggregationName
 		temp.Sku = dbresp[i].Sku
@@ -135,6 +136,10 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.FileName = dbresp[i].FileName
 		temp.EditorId = dbresp[i].EditorID.String
 		temp.Repartition = dbresp[i].Repartition
+		temp.SharedLicenses = licenses.TotalSharedLicenses
+		temp.RecievedLicenses = licenses.TotalRecievedLicenses
+		temp.AvailableLicenses = licenses.AvailableLicenses
+		temp.SharedData = licenses.SharedData
 		if dbresp[i].StartOfMaintenance.Valid {
 			temp.StartOfMaintenance = dbresp[i].StartOfMaintenance.Time.Format(time.RFC3339)
 		}

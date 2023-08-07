@@ -22,6 +22,7 @@ Feature: Metric Service Test
   * match response.types[*].name contains ['sag.processor.standard']
   * match response.types[*].name contains ['ibm.pvu.standard']
 
+@SmokeTest
   @schema
   Scenario: Validate Schema for get metrics list
     Given path 'metrics'
@@ -49,7 +50,7 @@ Feature: Metric Service Test
     @get
   Scenario: Get Metric configuration
     Given path 'metric/config'
-    * params {metric_info.type:'oracle.processor.standard' , metric_info.name:'oracle.processor.standard' , scopes:'#(scope)'}
+    * params {metric_info.type:'oracle.processor.standard' , metric_info.name:'oracle.processor' , scopes:'#(scope)'}
     When method get
     Then status 200
   * response.metric_config.Name == 'oracle_processor'
@@ -65,8 +66,8 @@ Feature: Metric Service Test
     # * match response.metric_config.Name == <name>
   Examples:
     | type | name |
-    | 'oracle.processor.standard' | 'oracle.processor.standard' |
-    | 'oracle.nup.standard' | 'oracle.nup.standard' |
+    | 'oracle.processor.standard' | 'oracle.processor' |
+    | 'oracle.nup.standard' | 'oracle.nup' |
     # | 'sag.processor.standard' | 'sag' |
     # | 'ibm.pvu.standard' | 'ibm_pvu' |
     # | 'instance.number.standard' | 'os_instance' |

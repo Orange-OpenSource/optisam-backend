@@ -6,9 +6,13 @@
         "emit_json_tags": true,
         "emit_prepared_queries": false,
         "emit_interface": true,
-        "path": "./db/",
-        "queries": "./query/",
-        "schema": "./schema/"
+        "path": "./../../../../../catalog-service/pkg/repository/v1/postgres/db/",
+        "queries": "./../../../../../catalog-service/pkg/repository/v1/postgres/query/",
+        "schema": ["./../../../../../product-service/pkg/repository/v1/postgres/schema_archive/1_initial_schema.sql",
+        "./../../../../../product-service/pkg/repository/v1/postgres/schema_archive/1.3_schema.sql",
+        "./../../../../../product-service/pkg/repository/v1/postgres/schema_archive/2_product_catalog.sql",
+        "./../../../../../product-service/pkg/repository/v1/postgres/schema_archive/3_product_catalog.sql"
+      ]
       }
     ]
   }

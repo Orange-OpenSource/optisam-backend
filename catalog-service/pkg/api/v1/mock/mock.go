@@ -135,26 +135,6 @@ func (mr *MockProductCatalogClientMockRecorder) DeleteProduct(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProduct", reflect.TypeOf((*MockProductCatalogClient)(nil).DeleteProduct), varargs...)
 }
 
-// GetEditor mocks base method
-func (m *MockProductCatalogClient) GetEditor(arg0 context.Context, arg1 *v1.GetEditorRequest, arg2 ...grpc.CallOption) (*v1.Editor, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "GetEditor", varargs...)
-	ret0, _ := ret[0].(*v1.Editor)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetEditor indicates an expected call of GetEditor
-func (mr *MockProductCatalogClientMockRecorder) GetEditor(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEditor", reflect.TypeOf((*MockProductCatalogClient)(nil).GetEditor), varargs...)
-}
-
 // GetProduct mocks base method
 func (m *MockProductCatalogClient) GetProduct(arg0 context.Context, arg1 *v1.GetProductRequest, arg2 ...grpc.CallOption) (*v1.Product, error) {
 	m.ctrl.T.Helper()

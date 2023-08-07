@@ -1107,6 +1107,8 @@ func (m *DownloadReportResponse) Validate() error {
 		}
 	}
 
+	// no validation rules for EquipType
+
 	return nil
 }
 

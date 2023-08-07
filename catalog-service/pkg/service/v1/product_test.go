@@ -53,9 +53,8 @@ func TestInsertProduct(t *testing.T) {
 				GenearlInformation: "ginfo",
 				ContracttTips:      "ct",
 				LocationType:       "Both",
-				OpenSource: &v1.OpenSource{IsOpenSource: true, OpenLicences: "string",
+				OpenSource: &v1.OpenSource{OpenLicences: "string",
 					OpenSourceType: "NONE"},
-				CloseSource: &v1.CloseSource{IsCloseSource: false},
 				Version: []*v1.Version{{Name: "v1", Recommendation: "string",
 					EndOfLife: timestamppb.Now(), EndOfSupport: timestamppb.Now()}},
 				Recommendation: "recomm",
@@ -73,9 +72,8 @@ func TestInsertProduct(t *testing.T) {
 				GenearlInformation: "ginfo",
 				ContracttTips:      "ct",
 				LocationType:       "Both",
-				OpenSource: &v1.OpenSource{IsOpenSource: true, OpenLicences: "string",
+				OpenSource: &v1.OpenSource{OpenLicences: "string",
 					OpenSourceType: "None"},
-				CloseSource: &v1.CloseSource{IsCloseSource: false},
 				Version: []*v1.Version{{Id: uuid.New().String(), Name: "v1", Recommendation: "string",
 					EndOfLife: timestamppb.Now(), EndOfSupport: timestamppb.Now()}},
 				Recommendation: "recomm",
@@ -110,7 +108,7 @@ func TestInsertProduct(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductCatalogServer(dbObj, &workerqueue.Queue{}, nil)
+			s := NewProductCatalogServer(dbObj, &workerqueue.Queue{}, nil, nil)
 			fmt.Println("a ...any,", test.ctx, "poiuytgrfed", test.input)
 			got, err := s.InsertProduct(test.ctx, test.input)
 			if (err != nil) != test.outErr {

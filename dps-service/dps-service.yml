@@ -1,3 +1,4 @@
+---
 kind: "Template"
 apiVersion: "v1"
 metadata:
@@ -22,7 +23,7 @@ objects:
         - name: instapi
           port: 81
           targetPort: 8081
-          protocol: TCP          
+          protocol: TCP
         - name: grpc
           port: 8090
           targetPort: 8090
@@ -58,9 +59,9 @@ objects:
         kind: Service
         name: svc-optisam-dps-${ENV}
       port:
-        targetPort: instapi        
+        targetPort: instapi
       tls:
-        termination: edge        
+        termination: edge
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
@@ -80,7 +81,7 @@ objects:
             prometheus.io/scrape: 'true'
           labels:
             app: optisam-dps-${ENV}
-            internal-elasticsearch: 'true'  
+            internal-elasticsearch: 'true'
           name: optisam-dps-${ENV}
         spec:
           containers:
@@ -90,8 +91,17 @@ objects:
               env:
                 - name: "ENV"
                   value: ${ENV}
-                - name: "DB_PASSWORD"  
-                  value: ${DB_PASSWORD}
+                - name: "MIG_DIR"
+                  value: ${MIG_DIR}
+                - name: "MIG_VERSION"
+                  value: ${MIG_VERSION}
+              envFrom:
+                - secretRef:
+                    name: user-access
+                - secretRef:
+                    name: db-access
+                - secretRef:
+                    name: db-pass
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -99,33 +109,30 @@ objects:
                   protocol: TCP
                 - containerPort: 8081
                   protocol: TCP
-              envFrom:
-                - secretRef:
-                       name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
                   path: /healthz
                   port: 8081
                   scheme: HTTP
-                initialDelaySeconds: 15
-                periodSeconds: 10
+                initialDelaySeconds: 30
+                periodSeconds: 20
                 successThreshold: 1
-                timeoutSeconds: 2
+                timeoutSeconds: 5
               readinessProbe:
                 failureThreshold: 3
                 httpGet:
                   path: /healthz
                   port: 8081
                   scheme: HTTP
-                initialDelaySeconds: 15
-                periodSeconds: 10
+                initialDelaySeconds: 30
+                periodSeconds: 20
                 successThreshold: 1
-                timeoutSeconds: 2
+                timeoutSeconds: 5
               resources:
                 requests:
-                  cpu: "1200m"
-                  memory: "1900Mi"
+                  cpu: "10m"
+                  memory: "40Mi"
                 limits:
                   cpu: "3100m"
                   memory: "7900Mi"
@@ -148,8 +155,11 @@ objects:
               secret:
                 secretName: secret-apipublickey-${ENV}
 parameters:
-  - name: DB_PASSWORD
-    description: Postgres Database Password
+  - name: MIG_DIR
+    description: Postgres Database variable
+    required: true
+  - name: MIG_VERSION
+    description: Postgres Database variable
     required: true
   - name: TAG
     description: Tag for Docker image
@@ -166,4 +176,3 @@ parameters:
     description: Artifactory URL to download images
     value: "optisam-it-virt-docker-unstable.repos.tech.orange"
     required: true
- 

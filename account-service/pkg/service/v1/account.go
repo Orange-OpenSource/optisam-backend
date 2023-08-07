@@ -160,6 +160,16 @@ func (s *accountServiceServer) DropScopeData(ctx context.Context, req *v1.DropSc
 		return nil
 	})
 
+	// Delete scope from redis
+	g.Go(func() error {
+		if err := s.accountRepo.DropScope(ctx, req.Scope); err != nil {
+			logger.Log.Error("Failed to delete scope data from redis", zap.Error(err))
+			return err
+		}
+		logger.Log.Info("scope data from redis deleted successfully")
+		return nil
+	})
+
 	if err := g.Wait(); err != nil {
 		return &v1.DropScopeDataResponse{
 			Success: false,

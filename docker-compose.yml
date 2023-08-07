@@ -1,3 +1,4 @@
+---
 version: "3.2"
 # docker commit optisam-backend_db_1 optisam/auth-service-postgres
 services:
@@ -16,21 +17,21 @@ services:
     ports:
       - "9093:9093"
     depends_on:
-      - db 
+      - db
   # optisam-account-service:
   #   image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/account-service
   #   restart: always
   #   ports:
   #     - "9091:9091"
   #   depends_on:
-  #     - db 
+  #     - db
   optisam-license-service:
-    image: optisam-it-virt-docker-unstable.${ARTIFACTORY_INFRA}/optisam/license-service 
+    image: optisam-it-virt-docker-unstable.${ARTIFACTORY_INFRA}/optisam/license-service
     restart: always
     ports:
       - "8092:8091"
     depends_on:
-      - server 
+      - server
   zero:
     image: dgraph/dgraph:latest
     volumes:
@@ -43,7 +44,7 @@ services:
       - 5080:5080
       - 6080:6080
     restart: on-failure
-    command: dgraph zero --my=zero:5080  
+    command: dgraph zero --my=zero:5080
   server:
     image: dgraph/dgraph:latest
     volumes:
@@ -68,6 +69,6 @@ services:
     ports:
       - 8000:8000
     command: dgraph-ratel
-  
+
 volumes:
   dgraph:

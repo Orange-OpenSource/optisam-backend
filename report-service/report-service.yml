@@ -1,3 +1,4 @@
+---
 kind: "Template"
 apiVersion: "v1"
 metadata:
@@ -22,7 +23,7 @@ objects:
         - name: instapi
           port: 81
           targetPort: 8081
-          protocol: TCP          
+          protocol: TCP
         - name: grpc
           port: 8090
           targetPort: 8090
@@ -56,7 +57,7 @@ objects:
         kind: Service
         name: svc-optisam-report-${ENV}
       port:
-        targetPort: instapi        
+        targetPort: instapi
       tls:
         termination: edge
   - kind: DeploymentConfig
@@ -78,7 +79,7 @@ objects:
             prometheus.io/scrape: 'true'
           labels:
             app: optisam-report-${ENV}
-            internal-elasticsearch: 'true'  
+            internal-elasticsearch: 'true'
           name: optisam-report-${ENV}
         spec:
           containers:
@@ -88,11 +89,17 @@ objects:
               env:
                 - name: "ENV"
                   value: ${ENV}
-                - name: "DB_PASSWORD"  
-                  value: ${DB_PASSWORD}
+                - name: "MIG_DIR"
+                  value: ${MIG_DIR}
+                - name: "MIG_VERSION"
+                  value: ${MIG_VERSION}
               envFrom:
                 - secretRef:
-                       name: user-access
+                    name: user-access
+                - secretRef:
+                    name: db-access
+                - secretRef:
+                    name: db-pass
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -122,11 +129,11 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "80m"
-                  memory: "128Mi"
+                  cpu: "5m"
+                  memory: "20Mi"
                 limits:
-                  cpu: "100m"
-                  memory: "150Mi"
+                  cpu: "40m"
+                  memory: "100Mi"
               volumeMounts:
                 - name: config-volume-${ENV}
                   mountPath: /opt/config
@@ -141,8 +148,11 @@ objects:
               secret:
                 secretName: secret-apipublickey-${ENV}
 parameters:
-  - name: DB_PASSWORD
-    description: Postgres Database Password
+  - name: MIG_DIR
+    description: Postgres Database variable
+    required: true
+  - name: MIG_VERSION
+    description: Postgres Database variable
     required: true
   - name: TAG
     description: Tag for Docker image

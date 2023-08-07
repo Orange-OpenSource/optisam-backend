@@ -11,7 +11,7 @@ loglevel = -1
 addr = ":8081"
 
 [instrumentation.prometheus]
-enabled = false
+enabled = true
 
 
 [instrumentation.jaeger]
@@ -25,9 +25,27 @@ agentEndpoint = "jaeger-agent.prod-optisam.svc:6831"
 [database]
 host = "svc-optisam-postgres.prod-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
 name = "product"
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+name = "product"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
+
+[redis]
+redishost = ""
+redispassword = ""
+db = 0
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
 
 [pki]
 publickeypath = "/opt/secret/ssh-privatekey"

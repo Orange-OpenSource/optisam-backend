@@ -115,6 +115,26 @@ func (mr *MockEquipmentServiceClientMockRecorder) DeleteEquipmentType(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipmentType", reflect.TypeOf((*MockEquipmentServiceClient)(nil).DeleteEquipmentType), varargs...)
 }
 
+// DeleteEquipmentTypeAttr mocks base method
+func (m *MockEquipmentServiceClient) DeleteEquipmentTypeAttr(arg0 context.Context, arg1 *v1.DeleteEquipmentTypeAttrRequest, arg2 ...grpc.CallOption) (*v1.DeleteEquipmentTypeAttrResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteEquipmentTypeAttr", varargs...)
+	ret0, _ := ret[0].(*v1.DeleteEquipmentTypeAttrResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteEquipmentTypeAttr indicates an expected call of DeleteEquipmentTypeAttr
+func (mr *MockEquipmentServiceClientMockRecorder) DeleteEquipmentTypeAttr(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipmentTypeAttr", reflect.TypeOf((*MockEquipmentServiceClient)(nil).DeleteEquipmentTypeAttr), varargs...)
+}
+
 // DropEquipmentData mocks base method
 func (m *MockEquipmentServiceClient) DropEquipmentData(arg0 context.Context, arg1 *v1.DropEquipmentDataRequest, arg2 ...grpc.CallOption) (*v1.DropEquipmentDataResponse, error) {
 	m.ctrl.T.Helper()

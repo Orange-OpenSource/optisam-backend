@@ -107,6 +107,20 @@ func (mr *MockEquipmentMockRecorder) DeleteEquipmentType(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipmentType", reflect.TypeOf((*MockEquipment)(nil).DeleteEquipmentType), arg0, arg1, arg2)
 }
 
+// DeleteEquipmentTypeAttr mocks base method
+func (m *MockEquipment) DeleteEquipmentTypeAttr(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteEquipmentTypeAttr", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteEquipmentTypeAttr indicates an expected call of DeleteEquipmentTypeAttr
+func (mr *MockEquipmentMockRecorder) DeleteEquipmentTypeAttr(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEquipmentTypeAttr", reflect.TypeOf((*MockEquipment)(nil).DeleteEquipmentTypeAttr), arg0, arg1, arg2)
+}
+
 // DeleteEquipments mocks base method
 func (m *MockEquipment) DeleteEquipments(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()

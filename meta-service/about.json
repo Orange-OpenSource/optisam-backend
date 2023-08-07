@@ -1,37 +1,34 @@
 {
-	"copyright": "Copyright © Orange 2022",
+	"copyright": "Copyright © Orange 2023",
 	"release_notes": [
-		"Admin can create of editor through UI from the Product Catalog Management.",
-		"Admin can update an editor through UI from the Product Catalog Management.",
-		"Admin can delete an editor through UI and deleting an Editor will delete the associated Products.",
-		"Any person who has access to the Product Catalog can see the all Editors at once.",
-		"Any person who has access to the Product Catalog can search for a specific Editor by name to display its details.",
-		"Any person who has access to the Product Catalog can select an Editor and view its attributes.",
-		"Any OpTISAM user or admin can access the Editor details of the Product Catalog from the Editor name present in all other pages, if the Editor name is present in the Catalog.",
-		"Any OpTISAM admin can choose from the Editors & Products present in the product Catalog when creating an acquired right from UI.",
-		"Any OpTISAM admin can create a new Product from the UI, from the Product Catalog Management where product is linked to an existing catalog editor.",
-		"Any OpTISAM admin can add a version to a Product by giving a version name.",
-		"Any OpTISAM admin can update a product and its versions.",
-		"Any OpTISAM admin can delete an Product and deleting a Product will delete the associated versions.",
-		"Any person who has access to the Product Catalog can see the all Products at once and search them according to editors, name, license, location.",
-		"Any person who has access to the Product Catalog can select a Product and view its attributes.",
-		"Every OpTISAM admin can choose from the Products with their version present in the product Catalog when creating an acquired right (along with products already in the inventory).",
-		"Any OpTISAM admin can upload a file from UI and create Products in Product catalog.",
-		"Removal of Old Swidtag from UI and reports.",
-		"Added Product and Version Swidtag from referred product in catalog on UI.",
-		"Introduced New Landing Page of Application featuring all editors and Products in Product Catalog with Login Functionality.",
-		"Any OpTISAM User can redirect to Product Catalog Section from new menu icon added on sidebar."
+		"New metrics saas.nominative.standard and saas.concurrent.standard creation, updation and deletion.",
+		"New Nominative user inventory and Concurrent user inventory introduced .",
+		"SaaS nominative and concurrent product users creation , updation and deletion for individual as well as aggregations from UI and segregation as SAAS/on premise Products.",
+		"Export/Import the list of nominative users as csv.",
+		"Export the list of concurrent users as csv.",
+		"Compliance for saas products using new metrics.",
+		"Sharing of licenses for the individual or aggregated rights through the UI.",
+		"Creation of Acquired rights without version  from UI and their Compliance computation.",
+		"Dashboard- User can see shared and received licenses .",
+		"Scope software expenditure updation inside scope management and also be visible on dashboard.",
+		"History evolution to be shown in graph for concurrent users.",
+		"Blank Rows Auto deletion at the time of analysis.",
+		"New Design of product catalog landing page for editors and products.",
+		"New filters are introduced on editor and product page.",
+		"New fields- group contract, Global account managers, the Sourcers and the headquarters country and address are added on Editors creation from product catalog management.",
+		"New dropdown recommendation is added on product creation in product catalog management.",
+		"Group compliance dashboard is introduced for super admin.",
+		"SuperAdmin can create groups for group compliance dashboard from  group management.",
+		"Software expenditure, compliance and underusage KPIs are introduced on  group compliance dashboard."
 	],
 	"future": [
 		{
-			"version": "1.4.0 ",
+			"version": "1.5.0 ",
 			"date_month": "",
 			"date_year": "",
 			"bullets": [
-				"Concurrent And Nominative Users",
-				"Metric changes",
-				"Shared licenses"
-			]
+				"Microsoft Windows And SQL metrics",
+				"Metric changes auto creation while creating scope"			]
 		}
 	]
 }

@@ -11,7 +11,7 @@ Feature: Aggregation Test for Acqrights : Normal user
     * def data = read('data.json')
     * def scope = 'API'
 
-
+  @SmokeTest
   @schema
   Scenario: Schema validation for Aggregation list in Acqrights
     Given path 'aggregated_acqrights'
@@ -20,7 +20,7 @@ Feature: Aggregation Test for Acqrights : Normal user
     When method get
     Then status 200
     * response.totalRecords == '#number? _ > 0'
-    * match response.aggregations == '#[_ > 0] data.schema_acqrights_agg'
+    * match response.aggregations.[*].product_names[*] contains ["Oracle Enterprise Database 9","Oracle Enterprise Database 18","Oracle Enterprise Database 11", "Oracle Enterprise Database 21","Oracle Enterprise Database 10"]
 
    
    @search

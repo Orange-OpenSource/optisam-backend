@@ -1548,3 +1548,95 @@ func groupsCompare(t *testing.T, name string, exp *v1.ListGroupsResponse, act *v
 	}
 	compareAllGroups(t, name+".Group", exp.Groups, act.Groups)
 }
+
+func Test_accountServiceServer_ListComplienceGroups(t *testing.T) {
+	ctx := context.Background()
+	clms := &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   claims.RoleSuperAdmin,
+	}
+	ctx = grpc_middleware.AddClaims(ctx, clms)
+	var mockCtrl *gomock.Controller
+	var rep repo.Account
+
+	type args struct {
+		ctx context.Context
+		req *v1.ListGroupsRequest
+	}
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.ListComplienceGroupsResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListGroupsRequest{},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetComplienceGroups(ctx).Return([]repo.GetComplienceGroups{
+					{
+						ID:        2,
+						Name:      "ROOT.Orange",
+						ScopeCode: []string{"A", "B"},
+						ScopeName: []string{"A", "B"},
+					},
+					{
+						ID:        3,
+						Name:      "ROOT.API",
+						ScopeCode: []string{"C", "D"},
+						ScopeName: []string{"C", "D"},
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.ListComplienceGroupsResponse{
+				ComplienceGroups: []*v1.ComplienceGroup{
+					{
+						GroupId:   2,
+						Name:      "ROOT.Orange",
+						ScopeCode: []string{"A", "B"},
+						ScopeName: []string{"A", "B"},
+					},
+					{
+						GroupId:   3,
+						Name:      "ROOT.API",
+						ScopeCode: []string{"C", "D"},
+						ScopeName: []string{"C", "D"},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{name: "FAILURE - cannot retrive claims",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.ListGroupsRequest{},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &accountServiceServer{
+				accountRepo: rep,
+			}
+			got, err := tt.s.ListComplienceGroups(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.ListUserGroups() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("accountServiceServer.ListComplienceGroups() = %v, want %v", got, tt.want)
+			}
+
+		})
+	}
+}

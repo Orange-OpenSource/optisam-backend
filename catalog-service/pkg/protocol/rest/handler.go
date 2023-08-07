@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	accv1 "optisam-backend/account-service/pkg/api/v1"
+	repo "optisam-backend/catalog-service/pkg/repository/v1/postgres"
 	"optisam-backend/catalog-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/common/optisam/config"
 	"time"
@@ -18,6 +19,7 @@ type handler struct {
 	VerifyKey   *rsa.PublicKey
 	APIKey      string
 	Application config.Application
+	pCRepo      *repo.ProductCatalogRepository
 }
 type errorresponse struct {
 	Message string
@@ -34,28 +36,27 @@ func sendErrorResponse(code int, message string, w http.ResponseWriter) {
 }
 
 type ProductResponse struct {
-	Id                 string       `json:"id,omitempty"`
-	EditorID           string       `json:"editorID,omitempty"`
-	Name               string       `json:"name,omitempty"`
-	Metrics            []string     `json:"metrics,omitempty"`
-	GenearlInformation string       `json:"genearlInformation,omitempty"`
-	ContracttTips      string       `json:"contracttTips,omitempty"`
-	LocationType       string       `json:"locationType,omitempty"`
-	OpenSource         *OpenSource  `json:"openSource,omitempty"`
-	CloseSource        *CloseSource `json:"closeSource,omitempty"`
-	Version            []*Version   `json:"version,omitempty"`
-	Recommendation     string       `json:"recommendation,omitempty"`
-	UsefulLinks        []string     `json:"usefulLinks"`
-	SupportVendors     []string     `json:"supportVendors"`
-	CreatedOn          time.Time    `json:"createdOn,omitempty"`
-	UpdatedOn          time.Time    `json:"UpdatedOn,omitempty"`
-	ProductSwidTag     string       `json:"productSwidTag"`
-	EditorName         string       `json:"editorName,omitempty"`
-	Scopes             []string     `json:"scopes"`
+	Id                 string      `json:"id"`
+	EditorID           string      `json:"editorID"`
+	Name               string      `json:"name"`
+	Metrics            []string    `json:"metrics"`
+	GenearlInformation string      `json:"genearlInformation"`
+	ContracttTips      string      `json:"contracttTips"`
+	LocationType       string      `json:"locationType"`
+	OpenSource         *OpenSource `json:"openSource"`
+	Version            []*Version  `json:"version"`
+	Recommendation     string      `json:"recommendation"`
+	UsefulLinks        []string    `json:"usefulLinks"`
+	SupportVendors     []string    `json:"supportVendors"`
+	CreatedOn          time.Time   `json:"createdOn"`
+	UpdatedOn          time.Time   `json:"UpdatedOn"`
+	ProductSwidTag     string      `json:"productSwidTag"`
+	EditorName         string      `json:"editorName"`
+	Scopes             []string    `json:"scopes"`
+	Licensing          string      `json:"licensing"`
 }
 
 type OpenSource struct {
-	IsOpenSource   bool   `json:"isOpenSource"`
 	OpenLicences   string `json:"openLicences"`
 	OpensourceType string `json:"openSourceType"`
 }
@@ -65,10 +66,10 @@ type CloseSource struct {
 }
 
 type Version struct {
-	Id             string     `json:"id,omitempty"`
+	Id             string     `json:"id"`
 	SwidTagVersion string     `json:"swidTagVersion"`
-	Name           string     `json:"name,omitempty"`
-	Recommendation string     `json:"recommendation,omitempty"`
+	Name           string     `json:"name"`
+	Recommendation string     `json:"recommendation"`
 	EndOfLife      *time.Time `json:"endOfLife"`
 	EndOfSupport   *time.Time `json:"endOfSupport"`
 }
@@ -87,90 +88,99 @@ type StringFilter struct {
 }
 
 type ProductsDBResponse struct {
-	TotalRecords        int64             `json:"totalRecords"`
-	ID                  string            `json:"id"`
-	Name                string            `json:"name"`
-	Editorid            string            `json:"editorid"`
-	GenearlInformation  sql.NullString    `json:"genearl_information"`
-	ContractTips        sql.NullString    `json:"contract_tips"`
-	SupportVendors      json.RawMessage   `json:"support_vendors"`
-	Metrics             json.RawMessage   `json:"metrics"`
-	IsOpensource        sql.NullBool      `json:"is_opensource"`
-	LicencesOpensource  sql.NullString    `json:"licences_opensource"`
-	IsClosesource       sql.NullBool      `json:"is_closesource"`
-	LicensesClosesource json.RawMessage   `json:"licenses_closesource"`
-	Location            db.LocationType   `json:"location"`
-	OpensourceType      db.OpensourceType `json:"opensource_type"`
-	CreatedOn           time.Time         `json:"created_on"`
-	UpdatedOn           time.Time         `json:"updated_on"`
-	Recommendation      sql.NullString    `json:"recommendation"`
-	UsefulLinks         json.RawMessage   `json:"useful_links"`
-	SwidTagProduct      string            `json:"swid_tag_product"`
-	EditorName          string            `json:"editor_name"`
-	Versions            json.RawMessage   `json:"versions"`
-	Scopes              json.RawMessage   `json:"scopes"`
+	TotalRecords       int64           `json:"totalRecords"`
+	ID                 string          `json:"id"`
+	Name               string          `json:"name"`
+	Editorid           string          `json:"editorid"`
+	GenearlInformation sql.NullString  `json:"genearl_information"`
+	ContractTips       sql.NullString  `json:"contract_tips"`
+	SupportVendors     json.RawMessage `json:"support_vendors"`
+	Metrics            json.RawMessage `json:"metrics"`
+	// IsOpensource        sql.NullBool      `json:"is_opensource"`
+	LicencesOpensource sql.NullString `json:"licences_opensource"`
+	// IsClosesource       sql.NullBool      `json:"is_closesource"`
+	// LicensesClosesource json.RawMessage   `json:"licenses_closesource"`
+	Location       db.LocationType            `json:"location"`
+	OpensourceType db.OpensourceType          `json:"opensource_type"`
+	CreatedOn      time.Time                  `json:"created_on"`
+	UpdatedOn      time.Time                  `json:"updated_on"`
+	Recommendation sql.NullString             `json:"recommendation"`
+	UsefulLinks    json.RawMessage            `json:"useful_links"`
+	SwidTagProduct string                     `json:"swid_tag_product"`
+	EditorName     string                     `json:"editor_name"`
+	Versions       json.RawMessage            `json:"versions"`
+	Scopes         json.RawMessage            `json:"scopes"`
+	Licensing      db.ProductCatalogLicensing `json:"licensing"`
 }
 
 type LocationType string
+type Licensing string
 type OpensourceType string
 
 type Product struct {
-	ID                  string          `json:"id"`
-	Name                string          `json:"name"`
-	Editorid            string          `json:"editorid"`
-	GenearlInformation  sql.NullString  `json:"genearl_information"`
-	ContractTips        sql.NullString  `json:"contract_tips"`
-	SupportVendors      json.RawMessage `json:"support_vendors"`
-	Metrics             json.RawMessage `json:"metrics"`
-	IsOpensource        sql.NullBool    `json:"is_opensource"`
-	LicencesOpensource  sql.NullString  `json:"licences_opensource"`
-	IsClosesource       sql.NullBool    `json:"is_closesource"`
-	LicensesClosesource json.RawMessage `json:"licenses_closesource"`
-	Location            LocationType    `json:"location"`
-	CreatedOn           time.Time       `json:"created_on"`
-	UpdatedOn           time.Time       `json:"updated_on"`
-	Recommendation      sql.NullString  `json:"recommendation"`
-	UsefulLinks         json.RawMessage `json:"useful_links"`
-	SwidTagProduct      sql.NullString  `json:"swid_tag_product"`
-	Source              sql.NullString  `json:"source"`
-	EditorName          string          `json:"editor_name"`
-	OpensourceType      OpensourceType  `json:"opensource_type"`
-	Scopes              []string        `json:"scopes"`
+	ID                 string          `json:"id"`
+	Name               string          `json:"name"`
+	Editorid           string          `json:"editorid"`
+	GenearlInformation sql.NullString  `json:"genearl_information"`
+	ContractTips       sql.NullString  `json:"contract_tips"`
+	SupportVendors     json.RawMessage `json:"support_vendors"`
+	Metrics            json.RawMessage `json:"metrics"`
+	// IsOpensource        sql.NullBool    `json:"is_opensource"`
+	LicencesOpensource sql.NullString `json:"licences_opensource"`
+	// IsClosesource       sql.NullBool    `json:"is_closesource"`
+	// LicensesClosesource json.RawMessage `json:"licenses_closesource"`
+	Location       LocationType    `json:"location"`
+	Licensing      Licensing       `json:" licensing"`
+	CreatedOn      time.Time       `json:"created_on"`
+	UpdatedOn      time.Time       `json:"updated_on"`
+	Recommendation sql.NullString  `json:"recommendation"`
+	UsefulLinks    json.RawMessage `json:"useful_links"`
+	SwidTagProduct sql.NullString  `json:"swid_tag_product"`
+	Source         sql.NullString  `json:"source"`
+	EditorName     string          `json:"editor_name"`
+	OpensourceType OpensourceType  `json:"opensource_type"`
+	Scopes         []string        `json:"scopes"`
 }
 
 type AuditResponse struct {
-	Entity string  `json:"entity,omitempty"`
+	Entity string  `json:"entity"`
 	Date   *string `json:"date"`
+	Year   int     `json:"year"`
 }
 type ListEditorResponse struct {
 	TotalRecords int      `json:"totalrecords"`
 	Editors      []Editor `json:"editors"`
 }
 type Editor struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	GeneralInformation string          `json:"general_information"`
-	PartnerManagers    json.RawMessage `json:"partner_managers"`
-	Audits             json.RawMessage `json:"audits"`
-	Vendors            json.RawMessage `json:"vendors"`
-	CreatedOn          time.Time       `json:"created_on"`
-	UpdatedOn          time.Time       `json:"updated_on"`
-	ProductCount       int             `json:"product_count"`
-	Scopes             []string        `json:"scopes"`
+	ID                   string          `json:"id"`
+	Name                 string          `json:"name"`
+	GeneralInformation   string          `json:"general_information"`
+	PartnerManagers      json.RawMessage `json:"partner_managers"`
+	Audits               json.RawMessage `json:"audits"`
+	Vendors              json.RawMessage `json:"vendors"`
+	CreatedOn            time.Time       `json:"created_on"`
+	UpdatedOn            time.Time       `json:"updated_on"`
+	ProductCount         int             `json:"product_count"`
+	Scopes               []string        `json:"scopes"`
+	CountryCode          string          `json:"country_code"`
+	Address              string          `json:"address"`
+	GroupContract        bool            `json:"groupContract"`
+	GlobalAccountManager json.RawMessage `json:"global_account_manager"`
+	Sourcers             json.RawMessage `json:"sourcers"`
 }
 
 type Vendors struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
-type PartnerManagers struct {
-	Email string `json:"email,omitempty"`
-	Name  string `json:"name,omitempty"`
+type Managers struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
 }
 
 type Audits struct {
 	Entity string     `json:"entity"`
-	Date   *time.Time `json:"date,omitempty"`
+	Date   *time.Time `json:"date"`
 }
 
 type EditorNames struct {
@@ -204,4 +214,32 @@ type VersionCatalog struct {
 type resp struct {
 	Count int    `json:"count"`
 	Name  string `json:"name"`
+}
+
+type Productsfilters struct {
+	DeploymentType FilterDetail `json:"deploymentType,omitempty"`
+	Licensing      FilterDetail `json:"licensing,omitempty"`
+	Recommendation FilterDetail `json:"recommendation,omitempty"`
+	Entities       FilterDetail `json:"entities,omitempty"`
+	Vendors        FilterDetail `json:"vendors,omitempty"`
+}
+type Editorfilters struct {
+	GroupContract FilterDetail `json:"groupContract,omitempty"`
+	Year          FilterDetail `json:"year,omitempty"`
+	CountryCode   FilterDetail `json:"countryCode,omitempty"`
+	Entities      FilterDetail `json:"entities,omitempty"`
+}
+
+type FilterDetail struct {
+	TotalCount int      `json:"total_count"`
+	Filter     []Filter `json:"filter"`
+}
+type Filter struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+type FilterDbResponse struct {
+	TotalCount int    `json:"total_count"`
+	Name       string `json:"name"`
+	Count      int    `json:"count"`
 }

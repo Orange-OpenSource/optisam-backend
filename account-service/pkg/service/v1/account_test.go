@@ -27,6 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"bou.ke/monkey"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
@@ -70,12 +72,13 @@ func Test_DeleteResourceByScope(t *testing.T) {
 		{
 			name:  "DB Failure case",
 			input: &v1.DropScopeDataRequest{Scope: "s1"},
-			ctx:   context.Background(),
+			ctx:   ctx,
 			setup: func() {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
 				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(errors.New("DBError")).Times(1)
+				mockRepo.EXPECT().DropScope(ctx, "s1").Return(nil).Times(1)
 				mockAppClient := appMock.NewMockApplicationServiceClient(mockCtrl)
 				app = mockAppClient
 				mockAppClient.EXPECT().DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: "s1"}).Return(&application.DropApplicationDataResponse{Success: true}, nil).Times(1)
@@ -84,13 +87,19 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
 				prod = mockProdClient
 				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1", DeletionType: product.DropProductDataRequest_FULL}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
-				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).Times(1)
+				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropAggregationDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).Times(1)
 
 				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
 				equip = mockEquipClient
-				ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
+				monkey.Patch(time.Now, func() time.Time {
+					return time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+				})
+				fixedTime := time.Now()
+				newTime := fixedTime.Add(time.Second * 300)
+				ctx1, cancel := context.WithDeadline(ctx, newTime)
 				defer cancel()
-				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).Times(1)
+				// monkey.Unpatch(time.Now())
+				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(nil, nil).Times(1)
 				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)
 
 				mockDpsClient := dpsMock.NewMockDpsServiceClient(mockCtrl)
@@ -106,6 +115,7 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockReportClient.EXPECT().DropReportData(ctx, &reportv1.DropReportDataRequest{Scope: "s1"}).Return(&reportv1.DropReportDataResponse{Success: true}, nil).Times(1)
 
 			},
+
 			wantErr: true,
 		},
 		{
@@ -116,6 +126,7 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
+				mockRepo.EXPECT().DropScope(ctx, "s1").Return(nil).Times(1)
 				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(nil).Times(1)
 
 				mockAppClient := appMock.NewMockApplicationServiceClient(mockCtrl)
@@ -130,7 +141,12 @@ func Test_DeleteResourceByScope(t *testing.T) {
 
 				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
 				equip = mockEquipClient
-				ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
+				// monkey.Patch(time.Now, func() time.Time {
+				// 	return time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+				// })
+				fixedTime := time.Now()
+				newTime := fixedTime.Add(time.Second * 300)
+				ctx1, cancel := context.WithDeadline(ctx, newTime)
 				defer cancel()
 				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).Times(1)
 				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)

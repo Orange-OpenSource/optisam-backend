@@ -13,5 +13,20 @@ user = "optisam"
 pass = "optisam"
 name = "optisam"
 
+[database]
+host = "postgres"
+port = 5432
+name = "product"
+[database.admin]
+user = "optisam"
+# pass = ""
+[database.user]
+user = "postgresuser"
+# pass = ""
+[database.Migration]
+steps = 2
+direction = ""
+migrationPath  = "./schema"
+
 [dgraph]
 hosts = ["dgraph:9080"]

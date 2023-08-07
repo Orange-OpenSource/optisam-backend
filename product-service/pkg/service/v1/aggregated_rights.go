@@ -218,6 +218,15 @@ func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *
 	if aggRight.Sku != req.Sku {
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "sku cannot be updated")
 	}
+	resp, err := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: req.Sku, Scope: req.Scope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateAggregatedRights - GetAvailableLicenses", zap.String("reason", err.Error()))
+		return &v1.AggregatedRightsResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	if req.NumLicensesAcquired < resp.TotalSharedLicenses {
+		logger.Log.Error("service/v1 - UpdateAggregatedRights - GetAvailableLicenses", zap.String("reason", "AcquiredLicences less than sharedLicences"))
+		return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "AcquiredLicences less than sharedLicences")
+	}
 	dbAggRight, upsertAggRight, err := s.validateAggregatedRight(ctx, req)
 	if err != nil {
 		return &v1.AggregatedRightsResponse{}, err
@@ -231,6 +240,280 @@ func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *
 	// For Worker Queue
 	s.pushUpsertAggrightWorkerJob(ctx, *upsertAggRight)
 	return &v1.AggregatedRightsResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context, req *v1.UpdateAggrightsSharedLicensesRequest) (*v1.UpdateSharedLicensesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses ", zap.String("reason", "ScopeError"))
+		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+	resp, err := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: req.Sku, Scope: req.Scope})
+	if err != nil {
+		logger.Log.Error("service/v1 -UpdateAggrightsSharedLicenses - GetAvailableLicenses", zap.String("reason", err.Error()))
+		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	senderSku, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		if err != sql.ErrNoRows {
+			logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - GetAggregatedRightBySKU", zap.String("reason", err.Error()))
+			return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
+		}
+		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.InvalidArgument, "aggregation does not exist")
+	}
+	totalAvailLic := 0
+	for _, v := range req.LicenseData {
+		if v.SharedLicenses == 0 {
+			for _, i := range resp.SharedData {
+				if v.RecieverScope == i.Scope {
+					totalAvailLic += int(i.SharedLicenses)
+				}
+			}
+		}
+	}
+	licenses := 0
+	for _, v := range req.LicenseData {
+		licenses = licenses + int(v.SharedLicenses)
+	}
+	totalAvailLic += int(resp.AvailableLicenses)
+	licenses = licenses - int(resp.TotalSharedLicenses)
+	if int32(licenses) > int32(totalAvailLic) {
+		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.InvalidArgument, "LicencesNotAvailable")
+	}
+	for _, v := range req.LicenseData {
+		_, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+			Sku:   req.Sku,
+			Scope: v.RecieverScope,
+		})
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				err = s.CreateMetricIfNotExists(ctx, req.Scope, v.RecieverScope, senderSku.Metric)
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - CreateMetricIfNotExists", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{}, err
+				}
+				err = s.CreateAggregationIfNotExists(ctx, req.Scope, v.RecieverScope, req.AggregationName)
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - CreateAggregationIfNotExists", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{}, err
+				}
+				resp, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+					AggregationName: req.AggregationName,
+					Scope:           v.RecieverScope,
+				})
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - GetAggregationByName", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
+				}
+				unitPrice, _ := senderSku.AvgUnitPrice.Float64()
+				maintenanceUnitPrice, _ := senderSku.AvgMaintenanceUnitPrice.Float64()
+				startOfMaintenance := senderSku.StartOfMaintenance.Time.Format(time.RFC3339)
+				endOfMaintenance := senderSku.EndOfMaintenance.Time.Format(time.RFC3339)
+				if senderSku.NumLicencesMaintenance == 0 {
+					startOfMaintenance = ""
+					endOfMaintenance = ""
+				}
+				orderingDate := senderSku.OrderingDate.Time.Format(time.RFC3339)
+				if orderingDate == "0001-01-01T00:00:00Z" {
+					orderingDate = ""
+				}
+				_, err = s.CreateAggregatedRights(ctx, &v1.AggregatedRightsRequest{
+					Sku:                       senderSku.Sku,
+					AggregationID:             resp.ID,
+					MetricName:                senderSku.Metric,
+					NumLicensesAcquired:       0,
+					AvgUnitPrice:              unitPrice,
+					StartOfMaintenance:        startOfMaintenance,
+					EndOfMaintenance:          endOfMaintenance,
+					NumLicencesMaintenance:    senderSku.NumLicencesMaintenance,
+					LastPurchasedOrder:        senderSku.LastPurchasedOrder,
+					SupportNumber:             senderSku.SupportNumber,
+					MaintenanceProvider:       senderSku.MaintenanceProvider,
+					Comment:                   senderSku.Comment.String,
+					OrderingDate:              orderingDate,
+					CorporateSourcingContract: senderSku.CorporateSourcingContract,
+					SoftwareProvider:          senderSku.SoftwareProvider,
+					FileName:                  senderSku.FileName,
+					AvgMaintenanceUnitPrice:   maintenanceUnitPrice,
+					Scope:                     v.RecieverScope,
+				})
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - CreateAggregatedRights", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "InternalError")
+				}
+			} else {
+				logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - GetAggregatedRightBySKU", zap.String("reason", err.Error()))
+				return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
+			}
+		}
+		if dbresp := s.productRepo.UpsertSharedLicenses(ctx, db.UpsertSharedLicensesParams{
+			Sku:            req.Sku,
+			Scope:          req.Scope,
+			SharingScope:   v.RecieverScope,
+			SharedLicences: int32(v.SharedLicenses),
+		}); dbresp != nil {
+			logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - UpsertSharedLicenses", zap.String("reason", dbresp.Error()))
+			return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+		}
+		if dbresp := s.productRepo.UpsertRecievedLicenses(ctx, db.UpsertRecievedLicensesParams{
+			Sku:              req.Sku,
+			Scope:            v.RecieverScope,
+			SharingScope:     req.Scope,
+			RecievedLicences: int32(v.SharedLicenses),
+		}); dbresp != nil {
+			logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - UpsertRecievedLicenses", zap.String("reason", dbresp.Error()))
+			return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+		}
+	}
+	return &v1.UpdateSharedLicensesResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) CreateAggregationIfNotExists(ctx context.Context, senderScope string, recieverScope string, aggName string) error {
+	_, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+		AggregationName: aggName,
+		Scope:           recieverScope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			agg, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+				AggregationName: aggName,
+				Scope:           senderScope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - CreateAggregationIfNotExists - GetAggregationByName", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "DBError")
+			}
+			for i := range agg.Swidtags {
+				err = s.CreateProduct(ctx, agg.Swidtags[i], senderScope, recieverScope)
+				if err != nil {
+					logger.Log.Error("service/v1 - CreateAggregationIfNotExists - CreateProduct", zap.String("reason", err.Error()))
+					return status.Error(codes.Internal, "InternalError")
+				}
+			}
+			resp, err := s.CreateAggregation(ctx, &v1.Aggregation{
+				ID:              0,
+				AggregationName: aggName,
+				ProductEditor:   agg.ProductEditor,
+				ProductNames:    agg.Products,
+				Swidtags:        agg.Swidtags,
+				Scope:           recieverScope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - CreateAggregationIfNotExists - CreateAggregation", zap.String("reason", err.Error()))
+				return err
+			}
+			if !resp.Success {
+				logger.Log.Error("service/v1 - CreateAggregationIfNotExists - CreateAggregation", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "InternalError")
+			}
+		} else {
+			logger.Log.Error("service/v1 - CreateAggregationIfNotExists - GetAggregationByName", zap.String("reason", err.Error()))
+			return status.Error(codes.Internal, "DBError")
+		}
+	}
+	return nil
+}
+
+func (s *productServiceServer) CreateProduct(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
+	_, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+		Swidtag: swidtag,
+		Scope:   recieverScope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			product, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+				Swidtag: swidtag,
+				Scope:   senderScope,
+			})
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					err = s.CreateAcqrights(ctx, swidtag, senderScope, recieverScope)
+					if err != nil {
+						logger.Log.Error("service/v1 - CreateProduct - CreateAcqrights", zap.String("reason", err.Error()))
+						return status.Error(codes.Internal, "AcqRightNotCreated")
+					}
+					return nil
+				} else {
+					logger.Log.Error("service/v1 - CreateProduct - GetProductInformation", zap.String("reason", err.Error()))
+					return status.Error(codes.NotFound, "ProductNotFound")
+				}
+			}
+			resp, err := s.UpsertProduct(ctx, &v1.UpsertProductRequest{
+				SwidTag: swidtag,
+				Name:    product.ProductName,
+				Editor:  product.ProductEditor,
+				Version: product.ProductVersion,
+				Scope:   recieverScope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - CreateProduct - UpsertProduct", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "ProductNotCreated")
+			}
+			if !resp.Success {
+				logger.Log.Error("service/v1 - CreateProduct - UpsertProduct", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "ProductNotCreated")
+			}
+		} else {
+			logger.Log.Error("service/v1 - CreateProduct - GetProductInformation", zap.String("reason", err.Error()))
+			return status.Error(codes.Internal, "DBError")
+		}
+	}
+	return nil
+}
+
+func (s *productServiceServer) CreateAcqrights(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
+	_, err := s.productRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
+		Swidtag: swidtag,
+		Scope:   recieverScope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			product, err := s.productRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
+				Swidtag: swidtag,
+				Scope:   senderScope,
+			})
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					return nil
+				}
+				logger.Log.Error("service/v1 - CreateAcqrights - GetAcqBySwidtag", zap.String("reason", err.Error()))
+				return status.Error(codes.NotFound, "AcRightNotFound")
+			}
+			err = s.CreateMetricIfNotExists(ctx, senderScope, recieverScope, product.Metric)
+			if err != nil {
+				logger.Log.Error("service/v1 - CreateAcqrights - CreateMetricIfNotExists", zap.String("reason", err.Error()))
+				return err
+			}
+			resp, err := s.UpsertAcqRights(ctx, &v1.UpsertAcqRightsRequest{
+				Sku:                 product.Sku,
+				Swidtag:             swidtag,
+				ProductName:         product.ProductName,
+				ProductEditor:       product.ProductEditor,
+				Version:             product.Version,
+				MetricType:          product.Metric,
+				NumLicensesAcquired: 0,
+				Scope:               recieverScope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - CreateAcqrights - UpsertAcqRights", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "AcqrightNotCreated")
+			}
+			if !resp.Success {
+				logger.Log.Error("service/v1 - CreateAcqrights - UpsertProduct", zap.String("reason", err.Error()))
+				return status.Error(codes.Internal, "AcqrightNotCreated")
+			}
+		} else {
+			logger.Log.Error("service/v1 - CreateAcqrights - GetAcqBySwidtag", zap.String("reason", err.Error()))
+			return status.Error(codes.Internal, "DBError")
+		}
+	}
+	return nil
 }
 
 func (s *productServiceServer) DeleteAggregatedRights(ctx context.Context, req *v1.DeleteAggregatedRightsRequest) (*v1.DeleteAggregatedRightsResponse, error) {

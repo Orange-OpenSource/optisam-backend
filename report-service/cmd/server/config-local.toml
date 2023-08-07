@@ -1,7 +1,7 @@
 environment = "development"
 debug = false
-grpcport = 19090
-httpport = 19091
+grpcport = 19095
+httpport = 19096
 #maxapiworker = 10
 
 [log]
@@ -22,9 +22,22 @@ agentEndpoint = "192.168.99.100:6831"
 [database]
 host = "localhost"
 port = 5432
+# should be user of full rights
+[database.admin]
 user = "postgres"
-pass = "suchita"
-name = "report"
+pass = "orange"
+name = "report" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "postgres"
+pass = "orange"
+name = "report" 
+
+[database.migration]
+version = "1.4_schema.sql,1.4.3_schema.sql,1.4.2_schema.sql"
+direction = "up"
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
 
 [grpcservers]
 apikey = "12345678"

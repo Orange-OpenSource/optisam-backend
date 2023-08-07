@@ -9,7 +9,7 @@ Feature: E2E Data injection test for GEN Scope
 
   Background:
     * url dpsServiceUrl+'/api/v1'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+   
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token

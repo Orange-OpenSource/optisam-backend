@@ -25,9 +25,27 @@ agentEndpoint = "jaeger-agent.optisam-performance.svc:6831"
 [database]
 host = "svc-optisam-postgres.optisam-performance.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
 name = "product"
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+name = "product"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
+
+[redis]
+redishost = ""
+redispassword = ""
+db = 0
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
 
 [pki]
 publickeypath = "/opt/secret/ssh-privatekey"
@@ -41,13 +59,7 @@ auth = "svc-optisam-auth-performance.optisam-performance.svc:80"
 
 
 [grpcservers.Address]
-product = "svc-optisam-license-performance.optisam-performance.svc:8090"
-dps = "svc-optisam-dps-performance.optisam-performance.svc:8090"
-metric = "svc-optisam-metric-performance.optisam-performance.svc:8090"
-application = "svc-optisam-application-performance.optisam-performance.svc:8090"
-report = "svc-optisam-account-performance.optisam-performance.svc:8090"
-equipment = "svc-optisam-equipment-performance.optisam-performance.svc:8090"
-account = "svc-optisam-account-performance.optisam-performance.svc:8090"
+account = "svc-optisam-acount-performance.optisam-performance.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"

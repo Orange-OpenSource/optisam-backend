@@ -20,14 +20,14 @@ import (
 type productdata struct {
 	name                string
 	editor_name         string
-	is_closesource      bool
-	is_opensource       bool
 	genearl_information string
 	created_on          time.Time
 	updated_on          time.Time
 	location            db.LocationType
 	opensource_type     db.OpensourceType
+	recommendation      db.ProductCatalogRecommendation
 	productUid          string
+	licensing           db.ProductCatalogLicensing
 }
 type versiondata struct {
 	versionUid    string
@@ -48,7 +48,6 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 	version_product_editors := map[string]versiondata{}
 	valueStrings := []string{}
 	valueArgs := []interface{}{}
-	editorQuery := fmt.Sprintf("INSERT INTO editor_catalog (id,name,created_on,updated_on) VALUES %s ON CONFLICT (LOWER(name)) DO NOTHING;", strings.Join(valueStrings, ","))
 
 	var counter int
 	start := time.Now()
@@ -61,7 +60,7 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 			continue
 		}
 		if counter == 5000 {
-			editorQuery = fmt.Sprintf("INSERT INTO editor_catalog (id,name,created_on,updated_on) VALUES %s ON CONFLICT (LOWER(name)) DO NOTHING;", strings.Join(valueStrings, ","))
+			editorQuery := fmt.Sprintf("INSERT INTO editor_catalog (id,name,created_on,updated_on) VALUES %s ON CONFLICT (LOWER(name)) DO NOTHING;", strings.Join(valueStrings, ","))
 			_, err := p.db.Exec(editorQuery, valueArgs...)
 			if err != nil {
 				logger.Log.Error("v1/service - InsertRecordsTx - query error" + err.Error())
@@ -71,7 +70,7 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 			valueStrings = []string{}
 
 			prodvalueStrings, prodvalueArgs := generateQueryForProducts(product_editors)
-			prodQuery := fmt.Sprintf("INSERT INTO product_catalog (id,name,editorID,editor_name,is_closesource,is_opensource,genearl_information,location,created_on,updated_on,opensource_type) values %s ON CONFLICT (LOWER(name),LOWER(editor_name)) Do UPDATE SET is_closesource = EXCLUDED.is_closesource, is_opensource = EXCLUDED.is_opensource, genearl_information = EXCLUDED.genearl_information, updated_on = EXCLUDED.updated_on", strings.Join(prodvalueStrings, ","))
+			prodQuery := fmt.Sprintf("INSERT INTO product_catalog (id,name,editorID,editor_name,genearl_information,location,created_on,updated_on,opensource_type,licensing,recommendation) values %s ON CONFLICT (LOWER(name),LOWER(editor_name)) Do UPDATE SET genearl_information = EXCLUDED.genearl_information, updated_on = EXCLUDED.updated_on,licensing = EXCLUDED.licensing,recommendation = EXCLUDED.recommendation", strings.Join(prodvalueStrings, ","))
 			_, err = p.db.Exec(prodQuery, prodvalueArgs...)
 			if err != nil {
 				logger.Log.Error("v1/service - InsertRecordsTx - product query error" + err.Error())
@@ -79,6 +78,7 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 			}
 			prodvalueStrings = []string{}
 			prodvalueArgs = []interface{}{}
+
 			vervalueStrings, vervalueArgs := generateQueryForVersions(version_product_editors)
 			verQuery := fmt.Sprintf("INSERT INTO version_catalog (id,p_id,name,end_of_life,end_of_support,swid_tag_system) VALUES %s on CONFLICT (LOWER(name),p_id) Do UPDATE SET end_of_life = EXCLUDED.end_of_life ,end_of_support = EXCLUDED.end_of_support", strings.Join(vervalueStrings, ","))
 			_, err = p.db.Exec(verQuery, vervalueArgs...)
@@ -88,6 +88,7 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 			}
 			vervalueStrings = []string{}
 			vervalueArgs = []interface{}{}
+
 			product_editors = map[string]productdata{}
 			version_product_editors = map[string]versiondata{}
 			counter = 0
@@ -106,30 +107,38 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 		//prod logic
 		productUid := uuid.New().String()
 		genInfo := record.GenearlInformation
-		var isOpenSource, isClosedSource bool
-		if strings.ToLower(record.Licensing) == "open source" {
-			isOpenSource = true
+		var licence db.ProductCatalogLicensing
+		switch strings.ToLower(record.Licensing) {
+		case "open source":
+			licence = db.ProductCatalogLicensingOPENSOURCE
+		case "closed source":
+			licence = db.ProductCatalogLicensingCLOSEDSOURCE
+		default:
+			licence = db.ProductCatalogLicensingNONE
 		}
-		if strings.ToLower(record.Licensing) == "closed source" {
-			isClosedSource = true
-		}
-
-		if strings.ToLower(record.Licensing) == "open source and closed source" || strings.ToLower(record.Licensing) == "closed source and open source" {
-			isClosedSource = true
-			isOpenSource = true
+		var recommendation db.ProductCatalogRecommendation
+		switch strings.ToUpper(strings.TrimSpace(record.Recommendation)) {
+		case "AUTHORIZED":
+			recommendation = db.ProductCatalogRecommendation("AUTHORIZED")
+		case "BLACKLISTED":
+			recommendation = db.ProductCatalogRecommendation("BLACKLISTED")
+		case "RECOMMENDED":
+			recommendation = db.ProductCatalogRecommendation("RECOMMENDED")
+		default:
+			recommendation = db.ProductCatalogRecommendation("NONE")
 		}
 
 		product_editors[strings.ToLower(editorName)+strings.ToLower(productName)] = productdata{
 			name:                productName,
 			editor_name:         editorName,
-			is_closesource:      isClosedSource,
-			is_opensource:       isOpenSource,
 			genearl_information: genInfo,
 			location:            db.LocationType("NONE"),
 			opensource_type:     db.OpensourceType("NONE"),
 			productUid:          productUid,
 			created_on:          currentTimeStamp,
 			updated_on:          currentTimeStamp,
+			recommendation:      recommendation,
+			licensing:           licence,
 		}
 
 		//versionlogic
@@ -156,7 +165,7 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 		counter++
 	}
 
-	editorQuery = fmt.Sprintf("INSERT INTO editor_catalog (id,name,created_on,updated_on) VALUES %s ON CONFLICT (LOWER(name)) DO NOTHING;", strings.Join(valueStrings, ","))
+	editorQuery := fmt.Sprintf("INSERT INTO editor_catalog (id,name,created_on,updated_on) VALUES %s ON CONFLICT (LOWER(name)) DO NOTHING;", strings.Join(valueStrings, ","))
 	_, err = p.db.Exec(editorQuery, valueArgs...)
 	if err != nil {
 		logger.Log.Error("v1/service - InsertRecordsTx - query error" + err.Error())
@@ -164,8 +173,9 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 	}
 
 	prodvalueStrings, prodvalueArgs := generateQueryForProducts(product_editors)
-	prodQuery := fmt.Sprintf("INSERT INTO product_catalog (id,name,editorID,editor_name,is_closesource,is_opensource,genearl_information,location,created_on,updated_on,opensource_type) values %s ON CONFLICT (LOWER(name),LOWER(editor_name)) Do UPDATE SET is_closesource = EXCLUDED.is_closesource, is_opensource = EXCLUDED.is_opensource, genearl_information = EXCLUDED.genearl_information, updated_on = EXCLUDED.updated_on", strings.Join(prodvalueStrings, ","))
-	// fmt.Println(prodQuery)
+	fmt.Print(prodvalueStrings)
+	fmt.Print(prodvalueArgs)
+	prodQuery := fmt.Sprintf("INSERT INTO product_catalog (id,name,editorID,editor_name,genearl_information,location,created_on,updated_on,opensource_type,licensing,recommendation) values %s ON CONFLICT (LOWER(name),LOWER(editor_name)) Do UPDATE SET genearl_information = EXCLUDED.genearl_information, updated_on = EXCLUDED.updated_on,licensing = EXCLUDED.licensing,recommendation = EXCLUDED.recommendation", strings.Join(prodvalueStrings, ","))
 	_, err = p.db.Exec(prodQuery, prodvalueArgs...)
 	if err != nil {
 		logger.Log.Error("v1/service - InsertRecordsTx - prod query error" + err.Error())
@@ -174,7 +184,6 @@ func (p *ProductCatalogRepository) InsertRecordsTx(ctx context.Context, req *v1.
 	vervalueStrings, vervalueArgs := generateQueryForVersions(version_product_editors)
 	verQuery := fmt.Sprintf("INSERT INTO version_catalog (id,p_id,name,end_of_life,end_of_support,swid_tag_system) VALUES %s on CONFLICT (LOWER(name),p_id) Do UPDATE SET end_of_life = EXCLUDED.end_of_life ,end_of_support = EXCLUDED.end_of_support", strings.Join(vervalueStrings, ","))
 	_, err = p.db.Exec(verQuery, vervalueArgs...)
-	// fmt.Println(verQuery)
 
 	if err != nil {
 		logger.Log.Error("v1/service - InsertRecordsTx - version query error" + err.Error())
@@ -202,13 +211,13 @@ func generateQueryForProducts(product_editors map[string]productdata) (prodvalue
 		prodvalueArgs = append(prodvalueArgs, v.name)
 		prodvalueArgs = append(prodvalueArgs, strings.ToLower(v.editor_name))
 		prodvalueArgs = append(prodvalueArgs, v.editor_name)
-		prodvalueArgs = append(prodvalueArgs, v.is_closesource)
-		prodvalueArgs = append(prodvalueArgs, v.is_opensource)
 		prodvalueArgs = append(prodvalueArgs, string(v.genearl_information))
 		prodvalueArgs = append(prodvalueArgs, v.location)
 		prodvalueArgs = append(prodvalueArgs, v.created_on)
 		prodvalueArgs = append(prodvalueArgs, v.updated_on)
 		prodvalueArgs = append(prodvalueArgs, v.opensource_type)
+		prodvalueArgs = append(prodvalueArgs, v.licensing)
+		prodvalueArgs = append(prodvalueArgs, v.recommendation)
 		counter++
 	}
 	return

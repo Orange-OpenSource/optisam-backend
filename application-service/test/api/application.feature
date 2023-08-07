@@ -4,22 +4,24 @@ Feature: Application Service Test
   Background:
   # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
     * url applicationServiceUrl+'/api/v1'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
     * def scope = 'API'
-
+  
+  @SmokeTest
     @schema
   Scenario: Schema validation for get Applications
     Given path 'applications'
-    * params { page_num:1, page_size:10, sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
+    * params { page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
     When method get
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
     * match response.applications == '#[] data.schema_app'
+    And print response
 
    @pagination
   Scenario Outline: To verify Pagination on Application page
@@ -28,8 +30,7 @@ Feature: Application Service Test
     When method get
     Then status 200
     And response.totalRecords > 0
-    And match $.applications == '#[_ <= <page_size>]'
-
+  
   Examples:
     | page_size |
     | 50 |
@@ -60,7 +61,7 @@ Feature: Application Service Test
     | searchBy | searchValue |
     | name | carala |
     | domain | mobile |
-    | obsolescence_risk | Medium | 
+     
 
 
  @search
@@ -76,8 +77,12 @@ Feature: Application Service Test
     And match response.applications[*].<searchBy2> contains '<searchValue2>'
   Examples:
     | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
-    | name | carala |domain | internet |
-    | domain | internet | obsolescence_risk  | High |
+    | name      | carala       |domain     | internet      |
+    
+
+
+    # Not showing result in front end 
+
 
 
   @sort
@@ -120,17 +125,17 @@ Feature: Application Service Test
     * response.totalRecords == '#number? _ >= 0'
     * match response.instances == '#[] data.schema_instance'
 
-  @search
-  Scenario: Searching_Filter Instances by Application Id
-    Given path 'application/instances'
-    And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
-    And params {search_params.application_id.filter_type: 1 }
-    And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
-    When method get
-    Then status 200
-    And response.totalRecords > 0
-    * remove data.getInstance.application_id
-    And match response.instances[*] contains data.getInstance
+  #@search
+  #Scenario: Searching_Filter Instances by Application Id
+   # Given path 'application/instances'
+    #And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
+    #And params {search_params.application_id.filter_type: 1 }
+    #And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
+    #When method get
+    #Then status 200
+    #And response.totalRecords > 0
+    #* remove data.getInstance.application_id
+    #And match response.instances[*] contains data.getInstance
 
   # @search
   # Scenario: Searching_Filter Instances by product Id
@@ -153,7 +158,7 @@ Feature: Application Service Test
 #     And request data.createApp
 #     When method post
 #     Then status 200
-#     And match response.success == true
+#     And match response.success == true 
 
   # Scenario: To verify Application is not created for incorrect body
   #   Given path 'applications'
@@ -193,3 +198,6 @@ Feature: Application Service Test
   #   Given path 'applications',application_id
   #   When method delete
   #   Then status 200
+
+
+

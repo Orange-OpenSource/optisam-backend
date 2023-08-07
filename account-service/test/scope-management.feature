@@ -3,17 +3,17 @@
 Feature: Account Service Test
 
   Background:
-  # * def accountServiceUrl = "https://ng-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}  
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
+    * def scope = 'API'
     # * def err = {"error": "string","code": 0,"message": "string","details": [{"type_url": "string","value": "string"}]}
 
-
+  @SmokeTest
   @get
   Scenario: To validate Scope Schema
     Given path 'scopes'
@@ -30,7 +30,7 @@ Feature: Account Service Test
 
 
   # @create @ignore
-  # Scenario: Create scopes
+ #  Scenario: Create scopes
   #   Given path 'scopes'
   #   And request data.createScopes
   #   When method post
@@ -62,3 +62,26 @@ Feature: Account Service Test
     When method post
     Then status 400
     * match response.message == "invalid CreateScopeRequest.ScopeCode: value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\""  
+
+  Scenario: To verify that the edited expense is getting updated
+    Given path 'scopes/expenses'
+    And request data.createScope
+    When method post
+    Then status 200 
+
+  Scenario: To verify the updated expense is getting updated on the dashboard
+    Given path 'scopes/expenses'
+    And request data.createScope
+    When method post
+    Then status 200
+    * header Authorization = 'Bearer '+access_token 
+    Given path 'scopes/expenses/', scope
+    When method get
+    Then status 200
+    * match response.expenses == data.createScope.expenses
+
+     # Delete the Created Scope 
+  Scenario: Delete the Created Scope
+    Given path 'scope',data.createScope.scope_code
+    When method Delete
+    Then status 200 

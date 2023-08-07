@@ -47,8 +47,14 @@ type AccountServiceClient interface {
 	DropScopeData(ctx context.Context, in *DropScopeDataRequest, opts ...grpc.CallOption) (*DropScopeDataResponse, error)
 	//GetScope returns scope details for a particular scope
 	GetScope(ctx context.Context, in *GetScopeRequest, opts ...grpc.CallOption) (*Scope, error)
+	//UpsertScopeExpenses upsert scope expenses for present year
+	UpsertScopeExpenses(ctx context.Context, in *UpsertScopeExpensesRequest, opts ...grpc.CallOption) (*CreateScopeResponse, error)
+	//GetScopeExpenses returns scope details for a particular scope
+	GetScopeExpenses(ctx context.Context, in *GetScopeRequest, opts ...grpc.CallOption) (*ScopeExpenses, error)
 	//GetScope returns scope details for a particular scope
 	GetScopeLists(ctx context.Context, in *GetScopeListRequest, opts ...grpc.CallOption) (*ScopeListResponse, error)
+	//GetScope returns scope details for a particular scope
+	ListComplienceGroups(ctx context.Context, in *ListGroupsRequest, opts ...grpc.CallOption) (*ListComplienceGroupsResponse, error)
 }
 
 type accountServiceClient struct {
@@ -230,9 +236,36 @@ func (c *accountServiceClient) GetScope(ctx context.Context, in *GetScopeRequest
 	return out, nil
 }
 
+func (c *accountServiceClient) UpsertScopeExpenses(ctx context.Context, in *UpsertScopeExpensesRequest, opts ...grpc.CallOption) (*CreateScopeResponse, error) {
+	out := new(CreateScopeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.account.v1.AccountService/UpsertScopeExpenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountServiceClient) GetScopeExpenses(ctx context.Context, in *GetScopeRequest, opts ...grpc.CallOption) (*ScopeExpenses, error) {
+	out := new(ScopeExpenses)
+	err := c.cc.Invoke(ctx, "/optisam.account.v1.AccountService/GetScopeExpenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *accountServiceClient) GetScopeLists(ctx context.Context, in *GetScopeListRequest, opts ...grpc.CallOption) (*ScopeListResponse, error) {
 	out := new(ScopeListResponse)
 	err := c.cc.Invoke(ctx, "/optisam.account.v1.AccountService/GetScopeLists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *accountServiceClient) ListComplienceGroups(ctx context.Context, in *ListGroupsRequest, opts ...grpc.CallOption) (*ListComplienceGroupsResponse, error) {
+	out := new(ListComplienceGroupsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.account.v1.AccountService/ListComplienceGroups", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -273,8 +306,14 @@ type AccountServiceServer interface {
 	DropScopeData(context.Context, *DropScopeDataRequest) (*DropScopeDataResponse, error)
 	//GetScope returns scope details for a particular scope
 	GetScope(context.Context, *GetScopeRequest) (*Scope, error)
+	//UpsertScopeExpenses upsert scope expenses for present year
+	UpsertScopeExpenses(context.Context, *UpsertScopeExpensesRequest) (*CreateScopeResponse, error)
+	//GetScopeExpenses returns scope details for a particular scope
+	GetScopeExpenses(context.Context, *GetScopeRequest) (*ScopeExpenses, error)
 	//GetScope returns scope details for a particular scope
 	GetScopeLists(context.Context, *GetScopeListRequest) (*ScopeListResponse, error)
+	//GetScope returns scope details for a particular scope
+	ListComplienceGroups(context.Context, *ListGroupsRequest) (*ListComplienceGroupsResponse, error)
 }
 
 // UnimplementedAccountServiceServer should be embedded to have forward compatible implementations.
@@ -338,8 +377,17 @@ func (UnimplementedAccountServiceServer) DropScopeData(context.Context, *DropSco
 func (UnimplementedAccountServiceServer) GetScope(context.Context, *GetScopeRequest) (*Scope, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetScope not implemented")
 }
+func (UnimplementedAccountServiceServer) UpsertScopeExpenses(context.Context, *UpsertScopeExpensesRequest) (*CreateScopeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertScopeExpenses not implemented")
+}
+func (UnimplementedAccountServiceServer) GetScopeExpenses(context.Context, *GetScopeRequest) (*ScopeExpenses, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetScopeExpenses not implemented")
+}
 func (UnimplementedAccountServiceServer) GetScopeLists(context.Context, *GetScopeListRequest) (*ScopeListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetScopeLists not implemented")
+}
+func (UnimplementedAccountServiceServer) ListComplienceGroups(context.Context, *ListGroupsRequest) (*ListComplienceGroupsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListComplienceGroups not implemented")
 }
 
 // UnsafeAccountServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -695,6 +743,42 @@ func _AccountService_GetScope_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AccountService_UpsertScopeExpenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpsertScopeExpensesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).UpsertScopeExpenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.account.v1.AccountService/UpsertScopeExpenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).UpsertScopeExpenses(ctx, req.(*UpsertScopeExpensesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountService_GetScopeExpenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScopeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).GetScopeExpenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.account.v1.AccountService/GetScopeExpenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).GetScopeExpenses(ctx, req.(*GetScopeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AccountService_GetScopeLists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetScopeListRequest)
 	if err := dec(in); err != nil {
@@ -709,6 +793,24 @@ func _AccountService_GetScopeLists_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AccountServiceServer).GetScopeLists(ctx, req.(*GetScopeListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AccountService_ListComplienceGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).ListComplienceGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.account.v1.AccountService/ListComplienceGroups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).ListComplienceGroups(ctx, req.(*ListGroupsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -794,8 +896,20 @@ var _AccountService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _AccountService_GetScope_Handler,
 		},
 		{
+			MethodName: "UpsertScopeExpenses",
+			Handler:    _AccountService_UpsertScopeExpenses_Handler,
+		},
+		{
+			MethodName: "GetScopeExpenses",
+			Handler:    _AccountService_GetScopeExpenses_Handler,
+		},
+		{
 			MethodName: "GetScopeLists",
 			Handler:    _AccountService_GetScopeLists_Handler,
+		},
+		{
+			MethodName: "ListComplienceGroups",
+			Handler:    _AccountService_ListComplienceGroups_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

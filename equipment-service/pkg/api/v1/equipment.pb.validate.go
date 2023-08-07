@@ -2642,6 +2642,169 @@ var _ interface {
 	ErrorName() string
 } = UpdateEquipmentTypeRequestValidationError{}
 
+// Validate checks the field values on DeleteEquipmentTypeAttrRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteEquipmentTypeAttrRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Id
+
+	if !_DeleteEquipmentTypeAttrRequest_EquipType_Pattern.MatchString(m.GetEquipType()) {
+		return DeleteEquipmentTypeAttrRequestValidationError{
+			field:  "EquipType",
+			reason: "value does not match regex pattern \"^[-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	// no validation rules for Scope
+
+	if v, ok := interface{}(m.GetDeleteAttributes()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return DeleteEquipmentTypeAttrRequestValidationError{
+				field:  "DeleteAttributes",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeleteEquipmentTypeAttrRequestValidationError is the validation error
+// returned by DeleteEquipmentTypeAttrRequest.Validate if the designated
+// constraints aren't met.
+type DeleteEquipmentTypeAttrRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteEquipmentTypeAttrRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteEquipmentTypeAttrRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteEquipmentTypeAttrRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteEquipmentTypeAttrRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteEquipmentTypeAttrRequestValidationError) ErrorName() string {
+	return "DeleteEquipmentTypeAttrRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteEquipmentTypeAttrRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteEquipmentTypeAttrRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteEquipmentTypeAttrRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteEquipmentTypeAttrRequestValidationError{}
+
+var _DeleteEquipmentTypeAttrRequest_EquipType_Pattern = regexp.MustCompile("^[-_A-Za-z0-9]+$")
+
+// Validate checks the field values on DeleteEquipmentTypeAttrResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *DeleteEquipmentTypeAttrResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// DeleteEquipmentTypeAttrResponseValidationError is the validation error
+// returned by DeleteEquipmentTypeAttrResponse.Validate if the designated
+// constraints aren't met.
+type DeleteEquipmentTypeAttrResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteEquipmentTypeAttrResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteEquipmentTypeAttrResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteEquipmentTypeAttrResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteEquipmentTypeAttrResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteEquipmentTypeAttrResponseValidationError) ErrorName() string {
+	return "DeleteEquipmentTypeAttrResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteEquipmentTypeAttrResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteEquipmentTypeAttrResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteEquipmentTypeAttrResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteEquipmentTypeAttrResponseValidationError{}
+
 // Validate checks the field values on DeleteEquipmentTypeRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -3556,6 +3719,74 @@ var _Attribute_DataType_InLookup = map[DataTypes]struct{}{
 	2: {},
 	3: {},
 }
+
+// Validate checks the field values on DeleteAttr with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *DeleteAttr) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	// no validation rules for Name
+
+	return nil
+}
+
+// DeleteAttrValidationError is the validation error returned by
+// DeleteAttr.Validate if the designated constraints aren't met.
+type DeleteAttrValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteAttrValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteAttrValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteAttrValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteAttrValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteAttrValidationError) ErrorName() string { return "DeleteAttrValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DeleteAttrValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteAttr.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteAttrValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteAttrValidationError{}
 
 // Validate checks the field values on UpdAttribute with the rules defined in
 // the proto definition for this message. If any rules are violated, an error

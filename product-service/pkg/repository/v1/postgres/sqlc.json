@@ -8,7 +8,13 @@
       "emit_interface": true,
       "path": "./db/",
       "queries": "./query/",
-      "schema": "./schema/"
+      "schema": [
+        "./schema/1_initial_schema.sql",
+        "./schema_archive/1_initial_schema.sql",
+        "./schema_archive/1.3_schema.sql",
+        "./schema_archive/2_product_catalog.sql",
+        "./schema_archive/3_product_catalog.sql"
+      ]
     }
   ],
   "overrides": [

@@ -10,7 +10,8 @@ Feature: DashboardTest
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
     * def scope = 'API'
-
+  
+  @SmokeTest
   @get
   Scenario: Get Equipment Types on Dashboard
     Given path 'dashboard/types/equipments'

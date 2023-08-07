@@ -1,7 +1,11 @@
+-- steps to generate code:
+-- add schema changes in migatoin files in product service folder
+-- cd to optisam-backend
+-- run  $ docker run --rm -v /$(pwd):/src -w //src/catalog-service/pkg/repository/v1/postgres kjconroy/sqlc:1.6.0 generate
+
 -- name: InsertProductCatalog :exec
-INSERT INTO product_catalog (id,name,editorID, genearl_information,contract_tips,support_vendors,metrics,is_opensource,licences_opensource,
-is_closesource,licenses_closesource,location,created_on,updated_on,recommendation,useful_links,swid_tag_product,editor_name,opensource_type)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19);
+INSERT INTO product_catalog (id,name,editorID, genearl_information,contract_tips,support_vendors,metrics,licences_opensource,location,created_on,updated_on,recommendation,useful_links,swid_tag_product,editor_name,opensource_type,licensing)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17);
 
 -- name: InsertVersionCatalog :exec
 INSERT INTO version_catalog (id,p_id,name,end_of_life,end_of_support,recommendation,swid_tag_version,swid_tag_system)
@@ -12,12 +16,13 @@ SELECT * from version_catalog
 WHERE p_id = @id;
 
 -- name: GetProductCatalogByPrductID :one
-SELECT * from product_catalog 
-WHERE id = @id;
+SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, licences_opensource, location, created_on, updated_on, recommendation, useful_links,swid_tag_product,opensource_type,editor_name,licensing 
+ from product_catalog 
+WHERE id = $1;
 
 -- name: InsertEditorCatalog :exec
-INSERT INTO editor_catalog (id,name, general_information,partner_managers,audits,vendors,created_on,updated_on)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8);
+INSERT INTO editor_catalog (id,name, general_information,partner_managers,audits,vendors,created_on,updated_on,source,country_code,address,group_contract,global_account_manager,sourcers)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14);
 
 -- name: GetEditorCatalog :one
 SELECT * from editor_catalog WHERE id = @id;
@@ -32,12 +37,11 @@ WHERE id = $1;
 
 -- name: UpdateProductCatalog :exec
 UPDATE product_catalog SET 
-name=$1,editorID=$2, genearl_information=$3,contract_tips=$4,support_vendors=$5,metrics=$6,is_opensource=$7,licences_opensource=$8,
-is_closesource=$9,licenses_closesource=$10,location=$11,updated_on=$12,recommendation=$13,useful_links=$14,swid_tag_product=$15,editor_name=$16,opensource_type=$17
-where id =$18;
-
+name=$1,editorID=$2, genearl_information=$3,contract_tips=$4,support_vendors=$5,metrics=$6,licences_opensource=$7,
+location=$8,updated_on=$9,recommendation=$10,useful_links=$11,swid_tag_product=$12,editor_name=$13,opensource_type=$14,licensing=$15
+where id =$16;
 -- name: UpdateEditorCatalog :exec
-UPDATE editor_catalog SET general_information=$1, partner_managers=$2, audits=$3, vendors=$4, updated_on=$5, name=$7 where id=$6;
+UPDATE editor_catalog SET general_information=$1, partner_managers=$2, audits=$3, vendors=$4, updated_on=$5, name=$7, country_code=$8, address=$9, group_contract= $10, global_account_manager= $11 ,sourcers= $12 where id=$6;
 
 -- name: DeleteVersionCatalog :exec
 Delete from version_catalog 

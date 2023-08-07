@@ -3,17 +3,16 @@
 Feature: Account Service Test
 
   Background:
-  # * def accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"
     * url accountServiceUrl+'/api/v1/account'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+   
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    # * def err = {"error": "string","code": 0,"message": "string","details": [{"type_url": "string","value": "string"}]}
-
-
+    * def scope = 'API'
+  
+  @SmokeTest
   @schema
   Scenario: Schema validation for get all users request
     Given path 'users'
@@ -22,19 +21,13 @@ Feature: Account Service Test
     Then status 200
     * match response.users == '#[] data.schema_users'
 
+  @SmokeTest
   @get
   Scenario: Verify Get all the users present
     Given path 'users'
     When method get
     Then status 200
-     And match response.users[*] contains data.testadmin
-    
-
-  # @get
-  # Scenario: Verify Get user by userID
-  #   Given path 'admin@test.com'
-  #   When method get
-  #   Then status 200
+    # And match response.users[*] contains data.testadmin
     
     
   @create
@@ -42,7 +35,9 @@ Feature: Account Service Test
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    #* def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API_Testing')].ID")[0]
+      * print 'Group_is is: ' +  group_id
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createAdminAccount.groups[0] = group_id
@@ -62,7 +57,7 @@ Feature: Account Service Test
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API_Testing')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createUserAccount.groups[0] = group_id
@@ -82,7 +77,7 @@ Feature: Account Service Test
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API_Testing')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createUserAccount.groups[0] = group_id
@@ -103,18 +98,6 @@ Feature: Account Service Test
      When method delete
      Then status 200
      And match response.success == true
-
-
-# TODO: get account uses token info and not path parameter
-  # @delete @ignore
-  # Scenario:Delete account
-  #   Given path 'accounts' ,data.createUserAccount.user_id
-  #   When method delete
-  #   Then status 200
-  #   # * path 'accounts',data.createUserAccount.user_id
-  #   # * header Authorization = 'Bearer '+access_token
-  #   # * method get
-  #   # * status 500
 
   @delete
   Scenario:Delete account that does not exist
@@ -146,7 +129,7 @@ Feature: Account Service Test
     Given path 'admin/groups'
     When method get
     Then status 200
-    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API')].ID")[0]  
+    * def group_id = karate.jsonPath(response.groups,"$.[?(@.name=='API_Testing')].ID")[0]  
     Given path 'user' 
     * header Authorization = 'Bearer '+access_token
     * set data.createAdminAccount.groups[0] = group_id
@@ -167,3 +150,5 @@ Feature: Account Service Test
      When method delete
      Then status 200
      And match response.success == true
+
+    

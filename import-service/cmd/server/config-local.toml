@@ -39,6 +39,7 @@ dps = "localhost:10000"
 simulation = "localhost:22090"
 account = "localhost:20000"
 catalog = "localhost:20024"
+product = "localhost:12090"
 
 [upload]
 uploadDir = "testdata"

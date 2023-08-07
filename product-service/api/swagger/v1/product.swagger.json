@@ -4,6 +4,11 @@
     "title": "product.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "ProductService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],
@@ -497,6 +502,42 @@
             "schema": {
               "$ref": "#/definitions/v1UpsertAcqRightsRequest"
             }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/acqrights/licenses": {
+      "get": {
+        "operationId": "ProductService_GetAvailableLicenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAvailableLicensesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1533,6 +1574,38 @@
         ]
       }
     },
+    "/api/v1/product/aggrights/licenses": {
+      "put": {
+        "operationId": "ProductService_UpdateAggrightsSharedLicenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateSharedLicensesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateAggrightsSharedLicensesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/banner": {
       "get": {
         "operationId": "ProductService_GetBanner",
@@ -1562,6 +1635,716 @@
             "in": "query",
             "required": false,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/concurrent": {
+      "get": {
+        "operationId": "ProductService_ListConcurrentUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListConcurrentUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.product_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.aggregation_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_version.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_version.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_version.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_version.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.team.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.team.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.team.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.team.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.profile_user.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.profile_user.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.profile_user.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.profile_user.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.number_of_users.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.number_of_users.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.number_of_users.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.number_of_users.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.purchase_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_aggregation",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
+      "post": {
+        "operationId": "ProductService_UpsertProductConcurrentUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductConcurrentUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ProductConcurrentUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/concurrent/users/export": {
+      "get": {
+        "operationId": "ProductService_ConcurrentUserExport",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListConcurrentUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.product_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.aggregation_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_version.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_version.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_version.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_version.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.team.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.team.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.team.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.team.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.profile_user.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.profile_user.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.profile_user.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.profile_user.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.number_of_users.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.number_of_users.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.number_of_users.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.number_of_users.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.purchase_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "number_of_users",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "is_aggregation",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/concurrent/{id}": {
+      "delete": {
+        "operationId": "ProductService_DeleteConcurrentUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteConcurrentUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
+      "put": {
+        "operationId": "ProductService_UpsertProductConcurrentUser2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductConcurrentUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ProductConcurrentUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/concurrent/{scope}": {
+      "get": {
+        "operationId": "ProductService_GetConcurrentUsersHistroy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetConcurrentUsersHistroyResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "swidtag",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "aggID",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -1671,6 +2454,40 @@
         ]
       }
     },
+    "/api/v1/product/dashboard/compliance/soft_exp": {
+      "get": {
+        "operationId": "ProductService_SoftwareExpenditureByScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SoftwareExpenditureByScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/dashboard/editors/products": {
       "get": {
         "operationId": "ProductService_ProductsPerEditor",
@@ -1691,6 +2508,132 @@
         "parameters": [
           {
             "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/groupcompliance/editor": {
+      "get": {
+        "operationId": "ProductService_GroupComplianceEditorCost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GroupComplianceEditorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/groupcompliance/editor/product": {
+      "get": {
+        "operationId": "ProductService_GetProductListByEditor",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetProductListByEditorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/groupcompliance/product": {
+      "get": {
+        "operationId": "ProductService_GroupComplianceProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GroupComplianceProductResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product_name",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1821,6 +2764,71 @@
         ]
       }
     },
+    "/api/v1/product/dashboard/underusage": {
+      "get": {
+        "operationId": "ProductService_GetUnderusageLicenceByEditorProduct",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetUnderusageByEditorResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort_by",
+            "description": "int32 page_num = 1 [\n  (validate.rules).int32 = {gte : 1, lt : 1000},\n  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =\n      {description : \"Page number\", minimum : 1, maximum : 1000}\n];\nint32 page_size = 2 [\n  (validate.rules).int32 = {gte : 10, lte : 200},\n  (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =\n      {description : \"Items per page\", minimum : 10, maximum : 200}\n];.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "scopes",
+            "description": "scopes must be subset of the scopes of parent.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "product_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/editors": {
       "get": {
         "operationId": "ProductService_ListEditors",
@@ -1888,6 +2896,12 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          },
+          {
+            "name": "park_inventory",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1999,6 +3013,847 @@
           },
           {
             "name": "aggregation_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/licenses": {
+      "put": {
+        "operationId": "ProductService_UpdateAcqrightsSharedLicenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateSharedLicensesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateSharedLicensesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/nominative/users": {
+      "get": {
+        "operationId": "ProductService_ListNominativeUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNominativeUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.product_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.aggregation_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_version.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_version.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_version.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_version.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.user_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.user_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.user_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.user_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.first_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.first_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.first_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.first_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.user_email.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.user_email.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.user_email.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.user_email.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.profile.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.profile.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.profile.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.profile.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.activation_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "search_params.editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_product",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      },
+      "post": {
+        "operationId": "ProductService_UpsertNominativeUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpserNominativeUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpserNominativeUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/nominative/users/export": {
+      "get": {
+        "operationId": "ProductService_NominativeUserExport",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNominativeUsersExportResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          },
+          {
+            "name": "search_params.product_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.aggregation_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.aggregation_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.product_version.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.product_version.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.product_version.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.product_version.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.user_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.user_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.user_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.user_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.first_name.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.first_name.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.first_name.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.first_name.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.user_email.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.user_email.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.user_email.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.user_email.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.profile.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.profile.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.profile.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.profile.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "search_params.activation_date",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "search_params.editor.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.editor.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.editor.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.editor.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "is_product",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/nominative/users/fileupload": {
+      "get": {
+        "operationId": "ProductService_ListNominativeUserFileUpload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListNominativeUsersFileUploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_num",
+            "description": "Page number",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_size",
+            "description": "Items per page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "default": "asc"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/nominative/users/{id}": {
+      "delete": {
+        "operationId": "ProductService_DeleteNominativeUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteNominativeUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/shared_licences": {
+      "delete": {
+        "operationId": "ProductService_DeleteSharedLicenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteSharedLicensesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "reciever_scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/sharedamount": {
+      "get": {
+        "operationId": "ProductService_GetTotalSharedAmount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTotalSharedAmountResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2415,6 +4270,35 @@
             "collectionFormat": "multi"
           },
           {
+            "name": "search_params.location.filteringOrder",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "search_params.location.filteringkey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "search_params.location.filter_type",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "search_params.location.filteringkey_multiple",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
             "name": "scopes",
             "in": "query",
             "required": false,
@@ -2731,6 +4615,24 @@
         "repartition": {
           "type": "boolean"
         },
+        "shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recieved_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "available_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "shared_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SharedData"
+          }
+        },
         "product_swid_tag": {
           "type": "string"
         },
@@ -2815,6 +4717,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "not_deployed": {
+          "type": "boolean"
         }
       }
     },
@@ -2998,6 +4903,24 @@
         "repartition": {
           "type": "boolean"
         },
+        "shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recieved_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "available_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "shared_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SharedData"
+          }
+        },
         "editor_id": {
           "type": "string"
         },
@@ -3081,6 +5004,123 @@
           "format": "double"
         },
         "overdeployment_percentage": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1ConcurrentUser": {
+      "type": "object",
+      "properties": {
+        "product_name": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        },
+        "profile_user": {
+          "type": "string"
+        },
+        "number_of_users": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "purchase_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "aggregation_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "is_aggregation": {
+          "type": "boolean"
+        },
+        "product_editor": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ConcurrentUserSearchParams": {
+      "type": "object",
+      "properties": {
+        "product_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "aggregation_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "product_version": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "team": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "profile_user": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "number_of_users": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "product_editor": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "purchase_date": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1ConcurrentUsersByDay": {
+      "type": "object",
+      "properties": {
+        "purchase_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "concurrent_users": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ConcurrentUsersByMonth": {
+      "type": "object",
+      "properties": {
+        "purchase_month": {
+          "type": "string"
+        },
+        "councurrent_users": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1CostData": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "underusage_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "counterfeiting_cost": {
           "type": "number",
           "format": "double"
         }
@@ -3193,6 +5233,30 @@
         }
       }
     },
+    "v1DeleteConcurrentUsersResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1DeleteNominativeUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1DeleteSharedLicensesResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1DownloadAcqRightFileResponse": {
       "type": "object",
       "properties": {
@@ -3224,6 +5288,37 @@
       "properties": {
         "success": {
           "type": "boolean"
+        }
+      }
+    },
+    "v1EditorExpensesByScopeData": {
+      "type": "object",
+      "properties": {
+        "editor_name": {
+          "type": "string"
+        },
+        "total_purchase_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_maintenance_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1EditorExpensesByScopeResponse": {
+      "type": "object",
+      "properties": {
+        "editorExpensesByScope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EditorExpensesByScopeData"
+          }
         }
       }
     },
@@ -3269,6 +5364,17 @@
         }
       }
     },
+    "v1GetAllEditorsCatalogResponse": {
+      "type": "object",
+      "properties": {
+        "editor_name": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1GetApplicationsByProductResponse": {
       "type": "object",
       "properties": {
@@ -3277,6 +5383,29 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1GetAvailableLicensesResponse": {
+      "type": "object",
+      "properties": {
+        "available_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "shared_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SharedData"
+          }
+        },
+        "total_shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "total_recieved_licenses": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -3291,6 +5420,23 @@
         }
       }
     },
+    "v1GetConcurrentUsersHistroyResponse": {
+      "type": "object",
+      "properties": {
+        "concurrentUsersByDays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ConcurrentUsersByDay"
+          }
+        },
+        "concurrentUsersByMonths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ConcurrentUsersByMonth"
+          }
+        }
+      }
+    },
     "v1GetEquipmentsByProductResponse": {
       "type": "object",
       "properties": {
@@ -3299,6 +5445,14 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1GetMetricResponse": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
         }
       }
     },
@@ -3313,6 +5467,17 @@
         }
       }
     },
+    "v1GetProductListByEditorResponse": {
+      "type": "object",
+      "properties": {
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1GetRightsInfoByEditorResponse": {
       "type": "object",
       "properties": {
@@ -3321,6 +5486,84 @@
           "items": {
             "$ref": "#/definitions/v1RightsInfoByEditor"
           }
+        }
+      }
+    },
+    "v1GetTotalSharedAmountResponse": {
+      "type": "object",
+      "properties": {
+        "total_shared_amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_recieved_amount": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1GetUnderusageByEditorResponse": {
+      "type": "object",
+      "properties": {
+        "UnderusageByEditorData": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1UnderusageByEditorData"
+          },
+          "title": "int32 totalRecords = 1;"
+        }
+      }
+    },
+    "v1GroupComplianceEditorResponse": {
+      "type": "object",
+      "properties": {
+        "costs": {
+          "$ref": "#/definitions/v1ScopesEditorCosts"
+        },
+        "groupCounterFeitingCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "groupUnderUsageCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "groupTotalCost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1GroupComplianceProductResponse": {
+      "type": "object",
+      "properties": {
+        "licences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1LicencesData"
+          }
+        },
+        "cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1CostData"
+          }
+        }
+      }
+    },
+    "v1LicencesData": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "acquired_licences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "computed_licences": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -3480,6 +5723,21 @@
         }
       }
     },
+    "v1ListConcurrentUsersResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "concurrent_user": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ConcurrentUser"
+          }
+        }
+      }
+    },
     "v1ListEditorProductsResponse": {
       "type": "object",
       "properties": {
@@ -3498,6 +5756,121 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "v1ListNominativeUsersExportResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nominative_user": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1NominativeUserExport"
+          }
+        }
+      }
+    },
+    "v1ListNominativeUsersFileUpload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "swidtag": {
+          "type": "string"
+        },
+        "aggregations_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "product_editor": {
+          "type": "string"
+        },
+        "uploaded_by": {
+          "type": "string"
+        },
+        "nominative_users_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1NominativeUserDetails"
+          }
+        },
+        "record_succeed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "record_failed": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "sheet_name": {
+          "type": "string"
+        },
+        "file_status": {
+          "type": "string"
+        },
+        "uploaded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "upload_id": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ListNominativeUsersFileUploadResponse": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "file_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ListNominativeUsersFileUpload"
+          }
+        }
+      }
+    },
+    "v1ListNominativeUsersResponse": {
+      "type": "object",
+      "properties": {
+        "totalRecords": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "nominative_user": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1NominativeUser"
           }
         }
       }
@@ -3563,6 +5936,155 @@
         "num_products": {
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "v1NominativeUser": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "user_name": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        },
+        "user_email": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "activation_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "aggregation_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "activation_date_string": {
+          "type": "string"
+        }
+      }
+    },
+    "v1NominativeUserDetails": {
+      "type": "object",
+      "properties": {
+        "user_name": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "activation_date": {
+          "type": "string"
+        },
+        "comments": {
+          "type": "string"
+        }
+      }
+    },
+    "v1NominativeUserExport": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "user_name": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        },
+        "user_email": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "activation_date": {
+          "type": "string"
+        },
+        "aggregation_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "activation_date_string": {
+          "type": "string"
+        }
+      }
+    },
+    "v1NominativeUserSearchParams": {
+      "type": "object",
+      "properties": {
+        "product_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "aggregation_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "product_version": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "user_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "first_name": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "user_email": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "profile": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "activation_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "editor": {
+          "$ref": "#/definitions/v1StringFilter"
         }
       }
     },
@@ -3664,6 +6186,13 @@
         "allocatedMetric": {
           "type": "string"
         },
+        "numofUsers": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "location": {
+          "type": "string"
+        },
         "product_swid_tag": {
           "type": "string"
         },
@@ -3729,8 +6258,64 @@
         "individual_product_exists": {
           "type": "boolean"
         },
+        "users_count": {
+          "type": "integer",
+          "format": "int32"
+        },
         "editor_id": {
           "type": "string"
+        },
+        "location": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ProductConcurrentUserRequest": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "aggregation_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "is_aggregations": {
+          "type": "boolean"
+        },
+        "swidtag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "product_editor": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "number_of_users": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "profile_user": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1ProductConcurrentUserResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -3815,6 +6400,9 @@
         },
         "version_swid_tag": {
           "type": "string"
+        },
+        "not_deployed": {
+          "type": "boolean"
         }
       }
     },
@@ -3837,6 +6425,9 @@
           "$ref": "#/definitions/v1StringFilter"
         },
         "equipment_id": {
+          "$ref": "#/definitions/v1StringFilter"
+        },
+        "location": {
           "$ref": "#/definitions/v1StringFilter"
         }
       }
@@ -3940,6 +6531,96 @@
         }
       }
     },
+    "v1ScopeCost": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1ScopesEditorCosts": {
+      "type": "object",
+      "properties": {
+        "counterFeiting": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ScopeCost"
+          }
+        },
+        "underUsage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ScopeCost"
+          }
+        },
+        "total": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ScopeCost"
+          }
+        }
+      }
+    },
+    "v1SharedData": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recieved_licenses": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1SoftwareExpenditureByScopeResponse": {
+      "type": "object",
+      "properties": {
+        "expense_percent": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1SoftwareExpensePercent"
+          }
+        },
+        "total_expenditure": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1SoftwareExpensePercent": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "expenditure": {
+          "type": "number",
+          "format": "double"
+        },
+        "totalCost": {
+          "type": "number",
+          "format": "double"
+        },
+        "expenditure_percent": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
     "v1SortOrder": {
       "type": "string",
       "enum": [
@@ -3966,6 +6647,140 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1UnderusageByEditorData": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "string"
+        },
+        "delta_number": {
+          "type": "string",
+          "format": "int64"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "is_aggregation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1UpdateAggrightsSharedLicensesRequest": {
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "license_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1UpdateAggrightsSharedLicensesRequestSharedLicenses"
+          }
+        },
+        "scope": {
+          "type": "string"
+        },
+        "aggregation_name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateAggrightsSharedLicensesRequestSharedLicenses": {
+      "type": "object",
+      "properties": {
+        "reciever_scope": {
+          "type": "string"
+        },
+        "shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1UpdateSharedLicensesRequest": {
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string"
+        },
+        "license_data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1UpdateSharedLicensesRequestSharedLicenses"
+          }
+        },
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpdateSharedLicensesRequestSharedLicenses": {
+      "type": "object",
+      "properties": {
+        "reciever_scope": {
+          "type": "string"
+        },
+        "shared_licenses": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1UpdateSharedLicensesResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1UpserNominativeUserRequest": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "aggregation_id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "file_name": {
+          "type": "string"
+        },
+        "sheet_name": {
+          "type": "string"
+        },
+        "user_details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1NominativeUserDetails"
+          }
+        },
+        "upload_id": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UpserNominativeUserResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "boolean"
         }
       }
     },
@@ -4102,6 +6917,9 @@
         },
         "equipments": {
           "$ref": "#/definitions/UpsertProductRequestequipment"
+        },
+        "productType": {
+          "$ref": "#/definitions/v1producttype"
         }
       }
     },
@@ -4112,6 +6930,14 @@
           "type": "boolean"
         }
       }
+    },
+    "v1producttype": {
+      "type": "string",
+      "enum": [
+        "on_premise",
+        "saas"
+      ],
+      "default": "on_premise"
     }
   }
 }

@@ -260,6 +260,7 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 	}
 	for i := range dbresp {
 		apiresp.AcquiredRights[i] = &v1.AcqRights{}
+		licenses, _ := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: dbresp[i].Sku, Scope: req.Scopes[0]})
 		apiresp.AcquiredRights[i].Version = dbresp[i].Version
 		apiresp.AcquiredRights[i].SwidTag = dbresp[i].Swidtag
 		apiresp.AcquiredRights[i].ProductName = dbresp[i].ProductName
@@ -287,6 +288,10 @@ func (s *productServiceServer) ListAcqRights(ctx context.Context, req *v1.ListAc
 		apiresp.AcquiredRights[i].ProductId = dbresp[i].ProductID.String
 
 		apiresp.AcquiredRights[i].Repartition = dbresp[i].Repartition
+		apiresp.AcquiredRights[i].SharedLicenses = licenses.TotalSharedLicenses
+		apiresp.AcquiredRights[i].RecievedLicenses = licenses.TotalRecievedLicenses
+		apiresp.AcquiredRights[i].AvailableLicenses = licenses.AvailableLicenses
+		apiresp.AcquiredRights[i].SharedData = licenses.SharedData
 		if dbresp[i].OrderingDate.Valid {
 			apiresp.AcquiredRights[i].OrderingDate, _ = ptypes.TimestampProto(dbresp[i].OrderingDate.Time)
 		}
@@ -367,6 +372,15 @@ func (s *productServiceServer) UpdateAcqRight(ctx context.Context, req *v1.AcqRi
 		logger.Log.Error("service/v1 - CreateAcqRight - GetAcqRightBySKU", zap.String("reason", err.Error()))
 		return &v1.AcqRightResponse{}, status.Error(codes.Internal, "DBError")
 	}
+	resp, err := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: req.Sku, Scope: req.Scope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - GetAvailableLicenses", zap.String("reason", err.Error()))
+		return &v1.AcqRightResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	if req.NumLicensesAcquired < resp.TotalSharedLicenses {
+		logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - GetAvailableLicenses", zap.String("reason", "AcquiredLicences less than sharedLicences"))
+		return &v1.AcqRightResponse{}, status.Error(codes.InvalidArgument, "AcquiredLicences less than sharedLicences")
+	}
 	dbAcqRight, upsertAcqRight, err := s.validateAcqRight(ctx, req)
 	if err != nil {
 		return &v1.AcqRightResponse{}, err
@@ -396,6 +410,12 @@ func (s *productServiceServer) DeleteAcqRight(ctx context.Context, req *v1.Delet
 	}
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return &v1.DeleteAcqRightResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	if err := s.productRepo.DeleteSharedLicences(ctx, db.DeleteSharedLicencesParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	}); err != nil {
+		return &v1.DeleteAcqRightResponse{Success: false}, status.Error(codes.Internal, "DBError")
 	}
 	if err := s.productRepo.DeleteAcqrightBySKU(ctx, db.DeleteAcqrightBySKUParams{
 		Sku:   req.Sku,
@@ -429,6 +449,318 @@ func (s *productServiceServer) DeleteAcqRight(ctx context.Context, req *v1.Delet
 	return &v1.DeleteAcqRightResponse{
 		Success: true,
 	}, nil
+}
+
+func (s *productServiceServer) GetAvailableLicenses(ctx context.Context, req *v1.GetAvailableLicensesRequest) (*v1.GetAvailableLicensesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.GetAvailableLicensesResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Sugar().Errorf("service/v1 - GetAvailableLicenses - req scope: %s, available scopes: %v", req.Scope, userClaims.Socpes)
+		return &v1.GetAvailableLicensesResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+
+	totalSharedLicences := 0
+	totalRecievedLicences := 0
+	acqLicenses, aggLicenses := 0, 0
+
+	aggregatedLicenses, err := s.productRepo.GetAvailableAggLicenses(ctx, db.GetAvailableAggLicensesParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			aggLicenses = 0
+		} else {
+			logger.Log.Error("service/v1 - GetAvailableLicenses - GetAvailableAggLicenses", zap.String("reason", err.Error()))
+			return &v1.GetAvailableLicensesResponse{}, status.Error(codes.Internal, "DBError")
+		}
+	} else {
+		aggLicenses = int(aggregatedLicenses)
+	}
+
+	acquiredLicenses, err := s.productRepo.GetAvailableAcqLicenses(ctx, db.GetAvailableAcqLicensesParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			acqLicenses = 0
+		} else {
+			logger.Log.Error("service/v1 - GetAvailableLicenses - GetAvailableAcqLicenses", zap.String("reason", err.Error()))
+			return &v1.GetAvailableLicensesResponse{}, status.Error(codes.Internal, "DBError")
+		}
+	} else {
+		acqLicenses = int(acquiredLicenses)
+	}
+
+	totalSharedData, err := s.productRepo.GetTotalSharedLicenses(ctx, db.GetTotalSharedLicensesParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			totalSharedLicences = 0
+			totalRecievedLicences = 0
+		} else {
+			logger.Log.Error("service/v1 - GetAvailableLicenses - GetTotalSharedLicenses", zap.String("reason", err.Error()))
+			return &v1.GetAvailableLicensesResponse{}, status.Error(codes.Internal, "DBError")
+		}
+	} else {
+		totalSharedLicences = int(totalSharedData.TotalSharedLicences)
+		totalRecievedLicences = int(totalSharedData.TotalRecievedLicences)
+	}
+
+	sharedData, err := s.productRepo.GetSharedLicenses(ctx, db.GetSharedLicensesParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			totalSharedLicences = 0
+			totalRecievedLicences = 0
+		} else {
+			logger.Log.Error("service/v1 - GetAvailableLicenses - GetSharedLicenses", zap.String("reason", err.Error()))
+			return &v1.GetAvailableLicensesResponse{}, status.Error(codes.Internal, "DBError")
+		}
+	}
+	availableLicenses := acqLicenses + aggLicenses - totalSharedLicences + totalRecievedLicences
+	apiresp := &v1.GetAvailableLicensesResponse{}
+	apiresp.SharedData = make([]*v1.SharedData, len(sharedData))
+	apiresp.AvailableLicenses = int32(availableLicenses)
+	apiresp.TotalSharedLicenses = int32(totalSharedLicences)
+	apiresp.TotalRecievedLicenses = int32(totalRecievedLicences)
+	for i := range sharedData {
+		apiresp.SharedData[i] = &v1.SharedData{}
+		apiresp.SharedData[i].Scope = sharedData[i].SharingScope
+		apiresp.SharedData[i].SharedLicenses = sharedData[i].SharedLicences
+		apiresp.SharedData[i].RecievedLicenses = sharedData[i].RecievedLicences
+	}
+	return apiresp, nil
+}
+
+func (s *productServiceServer) DeleteSharedLicenses(ctx context.Context, req *v1.DeleteSharedLicensesRequest) (*v1.DeleteSharedLicensesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DeleteSharedLicensesResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - DeleteSharedLicenses ", zap.String("reason", "ScopeError"))
+		return &v1.DeleteSharedLicensesResponse{Success: false}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+	if dbresp := s.productRepo.UpsertSharedLicenses(ctx, db.UpsertSharedLicensesParams{
+		Sku:            req.Sku,
+		Scope:          req.Scope,
+		SharingScope:   req.RecieverScope,
+		SharedLicences: 0,
+	}); dbresp != nil {
+		logger.Log.Error("service/v1 - DeleteSharedLicenses - UpsertSharedLicenses", zap.String("reason", dbresp.Error()))
+		return &v1.DeleteSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+	}
+	if dbresp := s.productRepo.UpsertRecievedLicenses(ctx, db.UpsertRecievedLicensesParams{
+		Sku:              req.Sku,
+		Scope:            req.RecieverScope,
+		SharingScope:     req.Scope,
+		RecievedLicences: 0,
+	}); dbresp != nil {
+		logger.Log.Error("service/v1 - DeleteSharedLicenses - UpsertRecievedLicenses", zap.String("reason", dbresp.Error()))
+		return &v1.DeleteSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+	}
+	return &v1.DeleteSharedLicensesResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) UpdateAcqrightsSharedLicenses(ctx context.Context, req *v1.UpdateSharedLicensesRequest) (*v1.UpdateSharedLicensesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses ", zap.String("reason", "ScopeError"))
+		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+	resp, err := s.GetAvailableLicenses(ctx, &v1.GetAvailableLicensesRequest{Sku: req.Sku, Scope: req.Scope})
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - GetAvailableLicenses", zap.String("reason", err.Error()))
+		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	senderSku, err := s.productRepo.GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+		AcqrightSku: req.Sku,
+		Scope:       req.Scope,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.InvalidArgument, "SKU does not exist")
+		}
+		logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - GetAcqRightBySKU", zap.String("reason", err.Error()))
+		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	totalAvailLic := 0
+	for _, v := range req.LicenseData {
+		if v.SharedLicenses == 0 {
+			for _, i := range resp.SharedData {
+				if v.RecieverScope == i.Scope {
+					totalAvailLic += int(i.SharedLicenses)
+				}
+			}
+		}
+	}
+	licenses := 0
+	for _, v := range req.LicenseData {
+		licenses = licenses + int(v.SharedLicenses)
+	}
+	totalAvailLic += int(resp.AvailableLicenses)
+	licenses = licenses - int(resp.TotalSharedLicenses)
+	if int32(licenses) > int32(totalAvailLic) {
+		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.InvalidArgument, "LicencesNotAvailable")
+	}
+	for _, v := range req.LicenseData {
+		_, err := s.productRepo.GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+			AcqrightSku: req.Sku,
+			Scope:       v.RecieverScope,
+		})
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				err = s.CreateMetricIfNotExists(ctx, req.Scope, v.RecieverScope, senderSku.Metric)
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - CreateMetricIfNotExists", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{Success: false}, err
+				}
+				unitPrice, _ := senderSku.AvgUnitPrice.Float64()
+				maintenanceUnitPrice, _ := senderSku.AvgMaintenanceUnitPrice.Float64()
+				startOfMaintenance := senderSku.StartOfMaintenance.Time.Format(time.RFC3339)
+				endOfMaintenance := senderSku.EndOfMaintenance.Time.Format(time.RFC3339)
+				if senderSku.NumLicencesMaintainance == 0 {
+					startOfMaintenance = ""
+					endOfMaintenance = ""
+				}
+				orderingDate := senderSku.OrderingDate.Time.Format(time.RFC3339)
+				if orderingDate == "0001-01-01T00:00:00Z" {
+					orderingDate = ""
+				}
+				_, err = s.CreateAcqRight(ctx, &v1.AcqRightRequest{
+					Sku:                       senderSku.Sku,
+					ProductName:               senderSku.ProductName,
+					ProductEditor:             senderSku.ProductEditor,
+					Version:                   senderSku.Version,
+					MetricName:                senderSku.Metric,
+					NumLicensesAcquired:       0,
+					AvgUnitPrice:              unitPrice,
+					StartOfMaintenance:        startOfMaintenance,
+					EndOfMaintenance:          endOfMaintenance,
+					NumLicencesMaintainance:   senderSku.NumLicencesMaintainance,
+					LastPurchasedOrder:        senderSku.LastPurchasedOrder,
+					SupportNumber:             senderSku.SupportNumber,
+					MaintenanceProvider:       senderSku.MaintenanceProvider,
+					Comment:                   senderSku.Comment.String,
+					OrderingDate:              orderingDate,
+					CorporateSourcingContract: senderSku.CorporateSourcingContract,
+					SoftwareProvider:          senderSku.SoftwareProvider,
+					FileName:                  senderSku.FileName,
+					Repartition:               senderSku.Repartition,
+					FileData:                  senderSku.FileData,
+					AvgMaintenanceUnitPrice:   maintenanceUnitPrice,
+					Scope:                     v.RecieverScope,
+				})
+				if err != nil {
+					logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - CreateAcqRight", zap.String("reason", err.Error()))
+					return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Internal, "InternalError")
+				}
+			} else {
+				logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - GetAcqRightBySKU", zap.String("reason", err.Error()))
+				return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Internal, "DBError")
+			}
+		}
+		if dbresp := s.productRepo.UpsertSharedLicenses(ctx, db.UpsertSharedLicensesParams{
+			Sku:            req.Sku,
+			Scope:          req.Scope,
+			SharingScope:   v.RecieverScope,
+			SharedLicences: v.SharedLicenses,
+		}); dbresp != nil {
+			logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - UpsertSharedLicenses", zap.String("reason", dbresp.Error()))
+			return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+		}
+		if dbresp := s.productRepo.UpsertRecievedLicenses(ctx, db.UpsertRecievedLicensesParams{
+			Sku:              req.Sku,
+			Scope:            v.RecieverScope,
+			SharingScope:     req.Scope,
+			RecievedLicences: v.SharedLicenses,
+		}); dbresp != nil {
+			logger.Log.Error("service/v1 - UpdateAcqrightsSharedLicenses - UpsertRecievedLicenses", zap.String("reason", dbresp.Error()))
+			return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
+		}
+	}
+	return &v1.UpdateSharedLicensesResponse{Success: true}, nil
+}
+
+func (s *productServiceServer) CreateMetricIfNotExists(ctx context.Context, senderScope string, recieverScope string, metric string) error {
+	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
+		Scopes: []string{senderScope},
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - CreateMetricIfNotExists - ListMetrices", zap.String("reason", err.Error()))
+		return status.Error(codes.Internal, "ServiceError")
+	}
+	recieverMetrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
+		Scopes: []string{recieverScope},
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - CreateMetricIfNotExists - ListMetrices", zap.String("reason", err.Error()))
+		return status.Error(codes.Internal, "ServiceError")
+	}
+	if metrics == nil || len(metrics.Metrices) == 0 {
+		return status.Error(codes.InvalidArgument, "MetricNotExists")
+	}
+	for _, met := range strings.Split(metric, ",") {
+		idx := metricExists(metrics.Metrices, met)
+		if idx == -1 {
+			logger.Log.Error("service/v1 - CreateMetricIfNotExists - metric does not exist", zap.String("metric:", metric))
+			return status.Error(codes.InvalidArgument, "MetricNotExists")
+		}
+		if metrics == nil || len(metrics.Metrices) == 0 {
+			_, err = s.metric.CreateMetric(ctx, &metv1.CreateMetricRequest{
+				Metric:        metrics.Metrices[idx],
+				SenderScope:   senderScope,
+				RecieverScope: recieverScope,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			index := metricExists(recieverMetrics.Metrices, met)
+			if index == -1 {
+				_, err = s.metric.CreateMetric(ctx, &metv1.CreateMetricRequest{
+					Metric:        metrics.Metrices[idx],
+					SenderScope:   senderScope,
+					RecieverScope: recieverScope,
+				})
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (s *productServiceServer) GetMetric(ctx context.Context, req *v1.GetMetricRequest) (*v1.GetMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.GetMetricResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Sugar().Errorf("service/v1 - GetMetric - req scope: %s, available scopes: %v", req.Scope, userClaims.Socpes)
+		return &v1.GetMetricResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
+	}
+	resp, err := s.productRepo.GetMetricsBySku(ctx, db.GetMetricsBySkuParams{
+		Sku:   req.Sku,
+		Scope: req.Scope,
+	})
+	if err != nil {
+		logger.Log.Error("service/v1 - GetMetric - GetMetricsBySku", zap.String("reason", err.Error()))
+		return &v1.GetMetricResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.GetMetricResponse{Metric: resp.Metric}, nil
 }
 
 func (s *productServiceServer) DownloadAcqRightFile(ctx context.Context, req *v1.DownloadAcqRightFileRequest) (*v1.DownloadAcqRightFileResponse, error) {
@@ -469,7 +801,13 @@ func (s *productServiceServer) DownloadAcqRightFile(ctx context.Context, req *v1
 
 // nolint: gocyclo,funlen
 func (s *productServiceServer) validateAcqRight(ctx context.Context, req *v1.AcqRightRequest) (db.UpsertAcqRightsParams, *dgworker.UpsertAcqRightsRequest, error) {
-	swidtag := strings.ReplaceAll(strings.Join([]string{req.ProductName, req.ProductEditor, req.Version}, "_"), " ", "_")
+
+	var swidtag string
+	if req.Version != "" {
+		swidtag = strings.ReplaceAll(strings.Join([]string{req.ProductName, req.ProductEditor, req.Version}, "_"), " ", "_")
+	} else {
+		swidtag = strings.ReplaceAll(strings.Join([]string{req.ProductName, req.ProductEditor}, "_"), " ", "_")
+	}
 	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
 		Scopes: []string{req.Scope},
 	})

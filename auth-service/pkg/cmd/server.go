@@ -65,8 +65,8 @@ func RunServer() error {
 		viper.SetConfigName("config-int")
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
-        } else if os.Getenv("ENV") == "pc" {
-                viper.SetConfigName("config-pc")
+	} else if os.Getenv("ENV") == "pc" {
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -81,7 +81,6 @@ func RunServer() error {
 	err := viper.Unmarshal(&cfg)
 	if err != nil {
 		log.Fatalf("failed to unmarshal configuration: %v", err)
-
 	}
 
 	buildInfo := buildinfo.New(version, commitHash, buildDate)
@@ -111,10 +110,22 @@ func RunServer() error {
 	ocsql.RegisterAllViews()
 
 	// Create database connection.
-	db, err := postgres.NewConnection(cfg.Database)
+	db, err := postgres.NewConnection(postgres.Config{
+		Host: cfg.Database.Host,
+		Port: cfg.Database.Port,
+		Name: cfg.Database.User.Name,
+		User: cfg.Database.User.User,
+		Pass: cfg.Database.User.Pass,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
+	// Verify connection.
+	if err = db.Ping(); err != nil {
+		logger.Log.Error("failed to verify connection to PostgreSQL: %v", zap.Error(err))
+		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", zap.Error(err))
+	}
+	logger.Log.Info("Postgres connection verified to", zap.Any("", cfg.Database.Host))
 
 	// Record DB stats every 5 seconds until we exit
 	defer ocsql.RecordStats(db, 5*time.Second)()

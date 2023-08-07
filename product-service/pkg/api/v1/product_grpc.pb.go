@@ -27,16 +27,20 @@ type ProductServiceClient interface {
 	AggregatedRightDetails(ctx context.Context, in *AggregatedRightDetailsRequest, opts ...grpc.CallOption) (*AggregatedRightDetailsResponse, error)
 	ListDeployedAndAcquiredEditors(ctx context.Context, in *ListDeployedAndAcquiredEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error)
 	ListEditors(ctx context.Context, in *ListEditorsRequest, opts ...grpc.CallOption) (*ListEditorsResponse, error)
+	GetAvailableLicenses(ctx context.Context, in *GetAvailableLicensesRequest, opts ...grpc.CallOption) (*GetAvailableLicensesResponse, error)
 	ListEditorProducts(ctx context.Context, in *ListEditorProductsRequest, opts ...grpc.CallOption) (*ListEditorProductsResponse, error)
 	UpsertProduct(ctx context.Context, in *UpsertProductRequest, opts ...grpc.CallOption) (*UpsertProductResponse, error)
 	UpsertAcqRights(ctx context.Context, in *UpsertAcqRightsRequest, opts ...grpc.CallOption) (*UpsertAcqRightsResponse, error)
 	ProductsPerMetricType(ctx context.Context, in *ProductsPerMetricTypeRequest, opts ...grpc.CallOption) (*ProductsPerMetricTypeResponse, error)
 	ComplianceAlert(ctx context.Context, in *ComplianceAlertRequest, opts ...grpc.CallOption) (*ComplianceAlertResponse, error)
 	CounterfeitedProducts(ctx context.Context, in *CounterfeitedProductsRequest, opts ...grpc.CallOption) (*CounterfeitedProductsResponse, error)
+	GroupComplianceEditorCost(ctx context.Context, in *GroupComplianceEditorRequest, opts ...grpc.CallOption) (*GroupComplianceEditorResponse, error)
 	OverdeployedProducts(ctx context.Context, in *OverdeployedProductsRequest, opts ...grpc.CallOption) (*OverdeployedProductsResponse, error)
+	SoftwareExpenditureByScope(ctx context.Context, in *SoftwareExpenditureByScopeRequest, opts ...grpc.CallOption) (*SoftwareExpenditureByScopeResponse, error)
 	DashboardQualityProducts(ctx context.Context, in *DashboardQualityProductsRequest, opts ...grpc.CallOption) (*DashboardQualityProductsResponse, error)
 	ListAcqRights(ctx context.Context, in *ListAcqRightsRequest, opts ...grpc.CallOption) (*ListAcqRightsResponse, error)
 	ListAggregatedAcqRights(ctx context.Context, in *ListAggregatedAcqRightsRequest, opts ...grpc.CallOption) (*ListAggregatedAcqRightsResponse, error)
+	GetAllEditorsCatalog(ctx context.Context, in *GetAllEditorsCatalogRequest, opts ...grpc.CallOption) (*GetAllEditorsCatalogResponse, error)
 	CreateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error)
 	CreateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
 	UpdateAggregatedRights(ctx context.Context, in *AggregatedRightsRequest, opts ...grpc.CallOption) (*AggregatedRightsResponse, error)
@@ -56,6 +60,8 @@ type ProductServiceClient interface {
 	DeleteAllocatedMetricEquipment(ctx context.Context, in *DropAllocateMetricEquipementRequest, opts ...grpc.CallOption) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(ctx context.Context, in *GetBannerRequest, opts ...grpc.CallOption) (*GetBannerResponse, error)
 	UpdateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
+	UpdateAcqrightsSharedLicenses(ctx context.Context, in *UpdateSharedLicensesRequest, opts ...grpc.CallOption) (*UpdateSharedLicensesResponse, error)
+	UpdateAggrightsSharedLicenses(ctx context.Context, in *UpdateAggrightsSharedLicensesRequest, opts ...grpc.CallOption) (*UpdateSharedLicensesResponse, error)
 	DeleteAcqRight(ctx context.Context, in *DeleteAcqRightRequest, opts ...grpc.CallOption) (*DeleteAcqRightResponse, error)
 	DownloadAcqRightFile(ctx context.Context, in *DownloadAcqRightFileRequest, opts ...grpc.CallOption) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(ctx context.Context, in *GetEquipmentsByProductRequest, opts ...grpc.CallOption) (*GetEquipmentsByProductResponse, error)
@@ -63,6 +69,23 @@ type ProductServiceClient interface {
 	GetAggregationProductsExpandedView(ctx context.Context, in *GetAggregationProductsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationProductsExpandedViewResponse, error)
 	GetApplicationsByProduct(ctx context.Context, in *GetApplicationsByProductRequest, opts ...grpc.CallOption) (*GetApplicationsByProductResponse, error)
 	GetProductCountByApp(ctx context.Context, in *GetProductCountByAppRequest, opts ...grpc.CallOption) (*GetProductCountByAppResponse, error)
+	UpsertNominativeUser(ctx context.Context, in *UpserNominativeUserRequest, opts ...grpc.CallOption) (*UpserNominativeUserResponse, error)
+	UpsertProductConcurrentUser(ctx context.Context, in *ProductConcurrentUserRequest, opts ...grpc.CallOption) (*ProductConcurrentUserResponse, error)
+	ListNominativeUser(ctx context.Context, in *ListNominativeUsersRequest, opts ...grpc.CallOption) (*ListNominativeUsersResponse, error)
+	NominativeUserExport(ctx context.Context, in *NominativeUsersExportRequest, opts ...grpc.CallOption) (*ListNominativeUsersExportResponse, error)
+	ConcurrentUserExport(ctx context.Context, in *ListConcurrentUsersExportRequest, opts ...grpc.CallOption) (*ListConcurrentUsersResponse, error)
+	ListConcurrentUsers(ctx context.Context, in *ListConcurrentUsersRequest, opts ...grpc.CallOption) (*ListConcurrentUsersResponse, error)
+	DeleteConcurrentUsers(ctx context.Context, in *DeleteConcurrentUsersRequest, opts ...grpc.CallOption) (*DeleteConcurrentUsersResponse, error)
+	DeleteNominativeUsers(ctx context.Context, in *DeleteNominativeUserRequest, opts ...grpc.CallOption) (*DeleteNominativeUserResponse, error)
+	GetTotalSharedAmount(ctx context.Context, in *GetTotalSharedAmountRequest, opts ...grpc.CallOption) (*GetTotalSharedAmountResponse, error)
+	GroupComplianceProduct(ctx context.Context, in *GroupComplianceProductRequest, opts ...grpc.CallOption) (*GroupComplianceProductResponse, error)
+	GetProductListByEditor(ctx context.Context, in *GetProductListByEditorRequest, opts ...grpc.CallOption) (*GetProductListByEditorResponse, error)
+	GetConcurrentUsersHistroy(ctx context.Context, in *GetConcurrentUsersHistroyRequest, opts ...grpc.CallOption) (*GetConcurrentUsersHistroyResponse, error)
+	GetUnderusageLicenceByEditorProduct(ctx context.Context, in *GetUnderusageByEditorRequest, opts ...grpc.CallOption) (*GetUnderusageByEditorResponse, error)
+	GetMetric(ctx context.Context, in *GetMetricRequest, opts ...grpc.CallOption) (*GetMetricResponse, error)
+	DeleteSharedLicenses(ctx context.Context, in *DeleteSharedLicensesRequest, opts ...grpc.CallOption) (*DeleteSharedLicensesResponse, error)
+	ListNominativeUserFileUpload(ctx context.Context, in *ListNominativeUsersFileUploadRequest, opts ...grpc.CallOption) (*ListNominativeUsersFileUploadResponse, error)
+	GetEditorExpensesByScope(ctx context.Context, in *EditorExpensesByScopeRequest, opts ...grpc.CallOption) (*EditorExpensesByScopeResponse, error)
 }
 
 type productServiceClient struct {
@@ -163,6 +186,15 @@ func (c *productServiceClient) ListEditors(ctx context.Context, in *ListEditorsR
 	return out, nil
 }
 
+func (c *productServiceClient) GetAvailableLicenses(ctx context.Context, in *GetAvailableLicensesRequest, opts ...grpc.CallOption) (*GetAvailableLicensesResponse, error) {
+	out := new(GetAvailableLicensesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetAvailableLicenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) ListEditorProducts(ctx context.Context, in *ListEditorProductsRequest, opts ...grpc.CallOption) (*ListEditorProductsResponse, error) {
 	out := new(ListEditorProductsResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListEditorProducts", in, out, opts...)
@@ -217,9 +249,27 @@ func (c *productServiceClient) CounterfeitedProducts(ctx context.Context, in *Co
 	return out, nil
 }
 
+func (c *productServiceClient) GroupComplianceEditorCost(ctx context.Context, in *GroupComplianceEditorRequest, opts ...grpc.CallOption) (*GroupComplianceEditorResponse, error) {
+	out := new(GroupComplianceEditorResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GroupComplianceEditorCost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) OverdeployedProducts(ctx context.Context, in *OverdeployedProductsRequest, opts ...grpc.CallOption) (*OverdeployedProductsResponse, error) {
 	out := new(OverdeployedProductsResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/OverdeployedProducts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) SoftwareExpenditureByScope(ctx context.Context, in *SoftwareExpenditureByScopeRequest, opts ...grpc.CallOption) (*SoftwareExpenditureByScopeResponse, error) {
+	out := new(SoftwareExpenditureByScopeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/SoftwareExpenditureByScope", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +297,15 @@ func (c *productServiceClient) ListAcqRights(ctx context.Context, in *ListAcqRig
 func (c *productServiceClient) ListAggregatedAcqRights(ctx context.Context, in *ListAggregatedAcqRightsRequest, opts ...grpc.CallOption) (*ListAggregatedAcqRightsResponse, error) {
 	out := new(ListAggregatedAcqRightsResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListAggregatedAcqRights", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetAllEditorsCatalog(ctx context.Context, in *GetAllEditorsCatalogRequest, opts ...grpc.CallOption) (*GetAllEditorsCatalogResponse, error) {
+	out := new(GetAllEditorsCatalogResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetAllEditorsCatalog", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -424,6 +483,24 @@ func (c *productServiceClient) UpdateAcqRight(ctx context.Context, in *AcqRightR
 	return out, nil
 }
 
+func (c *productServiceClient) UpdateAcqrightsSharedLicenses(ctx context.Context, in *UpdateSharedLicensesRequest, opts ...grpc.CallOption) (*UpdateSharedLicensesResponse, error) {
+	out := new(UpdateSharedLicensesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpdateAcqrightsSharedLicenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) UpdateAggrightsSharedLicenses(ctx context.Context, in *UpdateAggrightsSharedLicensesRequest, opts ...grpc.CallOption) (*UpdateSharedLicensesResponse, error) {
+	out := new(UpdateSharedLicensesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpdateAggrightsSharedLicenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) DeleteAcqRight(ctx context.Context, in *DeleteAcqRightRequest, opts ...grpc.CallOption) (*DeleteAcqRightResponse, error) {
 	out := new(DeleteAcqRightResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteAcqRight", in, out, opts...)
@@ -487,6 +564,159 @@ func (c *productServiceClient) GetProductCountByApp(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *productServiceClient) UpsertNominativeUser(ctx context.Context, in *UpserNominativeUserRequest, opts ...grpc.CallOption) (*UpserNominativeUserResponse, error) {
+	out := new(UpserNominativeUserResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertNominativeUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) UpsertProductConcurrentUser(ctx context.Context, in *ProductConcurrentUserRequest, opts ...grpc.CallOption) (*ProductConcurrentUserResponse, error) {
+	out := new(ProductConcurrentUserResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertProductConcurrentUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListNominativeUser(ctx context.Context, in *ListNominativeUsersRequest, opts ...grpc.CallOption) (*ListNominativeUsersResponse, error) {
+	out := new(ListNominativeUsersResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListNominativeUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) NominativeUserExport(ctx context.Context, in *NominativeUsersExportRequest, opts ...grpc.CallOption) (*ListNominativeUsersExportResponse, error) {
+	out := new(ListNominativeUsersExportResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/NominativeUserExport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ConcurrentUserExport(ctx context.Context, in *ListConcurrentUsersExportRequest, opts ...grpc.CallOption) (*ListConcurrentUsersResponse, error) {
+	out := new(ListConcurrentUsersResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ConcurrentUserExport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListConcurrentUsers(ctx context.Context, in *ListConcurrentUsersRequest, opts ...grpc.CallOption) (*ListConcurrentUsersResponse, error) {
+	out := new(ListConcurrentUsersResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListConcurrentUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteConcurrentUsers(ctx context.Context, in *DeleteConcurrentUsersRequest, opts ...grpc.CallOption) (*DeleteConcurrentUsersResponse, error) {
+	out := new(DeleteConcurrentUsersResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteConcurrentUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteNominativeUsers(ctx context.Context, in *DeleteNominativeUserRequest, opts ...grpc.CallOption) (*DeleteNominativeUserResponse, error) {
+	out := new(DeleteNominativeUserResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteNominativeUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetTotalSharedAmount(ctx context.Context, in *GetTotalSharedAmountRequest, opts ...grpc.CallOption) (*GetTotalSharedAmountResponse, error) {
+	out := new(GetTotalSharedAmountResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetTotalSharedAmount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GroupComplianceProduct(ctx context.Context, in *GroupComplianceProductRequest, opts ...grpc.CallOption) (*GroupComplianceProductResponse, error) {
+	out := new(GroupComplianceProductResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GroupComplianceProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetProductListByEditor(ctx context.Context, in *GetProductListByEditorRequest, opts ...grpc.CallOption) (*GetProductListByEditorResponse, error) {
+	out := new(GetProductListByEditorResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductListByEditor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetConcurrentUsersHistroy(ctx context.Context, in *GetConcurrentUsersHistroyRequest, opts ...grpc.CallOption) (*GetConcurrentUsersHistroyResponse, error) {
+	out := new(GetConcurrentUsersHistroyResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetConcurrentUsersHistroy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetUnderusageLicenceByEditorProduct(ctx context.Context, in *GetUnderusageByEditorRequest, opts ...grpc.CallOption) (*GetUnderusageByEditorResponse, error) {
+	out := new(GetUnderusageByEditorResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetUnderusageLicenceByEditorProduct", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetMetric(ctx context.Context, in *GetMetricRequest, opts ...grpc.CallOption) (*GetMetricResponse, error) {
+	out := new(GetMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetMetric", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DeleteSharedLicenses(ctx context.Context, in *DeleteSharedLicensesRequest, opts ...grpc.CallOption) (*DeleteSharedLicensesResponse, error) {
+	out := new(DeleteSharedLicensesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DeleteSharedLicenses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ListNominativeUserFileUpload(ctx context.Context, in *ListNominativeUsersFileUploadRequest, opts ...grpc.CallOption) (*ListNominativeUsersFileUploadResponse, error) {
+	out := new(ListNominativeUsersFileUploadResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ListNominativeUserFileUpload", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetEditorExpensesByScope(ctx context.Context, in *EditorExpensesByScopeRequest, opts ...grpc.CallOption) (*EditorExpensesByScopeResponse, error) {
+	out := new(EditorExpensesByScopeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetEditorExpensesByScope", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
@@ -501,16 +731,20 @@ type ProductServiceServer interface {
 	AggregatedRightDetails(context.Context, *AggregatedRightDetailsRequest) (*AggregatedRightDetailsResponse, error)
 	ListDeployedAndAcquiredEditors(context.Context, *ListDeployedAndAcquiredEditorsRequest) (*ListEditorsResponse, error)
 	ListEditors(context.Context, *ListEditorsRequest) (*ListEditorsResponse, error)
+	GetAvailableLicenses(context.Context, *GetAvailableLicensesRequest) (*GetAvailableLicensesResponse, error)
 	ListEditorProducts(context.Context, *ListEditorProductsRequest) (*ListEditorProductsResponse, error)
 	UpsertProduct(context.Context, *UpsertProductRequest) (*UpsertProductResponse, error)
 	UpsertAcqRights(context.Context, *UpsertAcqRightsRequest) (*UpsertAcqRightsResponse, error)
 	ProductsPerMetricType(context.Context, *ProductsPerMetricTypeRequest) (*ProductsPerMetricTypeResponse, error)
 	ComplianceAlert(context.Context, *ComplianceAlertRequest) (*ComplianceAlertResponse, error)
 	CounterfeitedProducts(context.Context, *CounterfeitedProductsRequest) (*CounterfeitedProductsResponse, error)
+	GroupComplianceEditorCost(context.Context, *GroupComplianceEditorRequest) (*GroupComplianceEditorResponse, error)
 	OverdeployedProducts(context.Context, *OverdeployedProductsRequest) (*OverdeployedProductsResponse, error)
+	SoftwareExpenditureByScope(context.Context, *SoftwareExpenditureByScopeRequest) (*SoftwareExpenditureByScopeResponse, error)
 	DashboardQualityProducts(context.Context, *DashboardQualityProductsRequest) (*DashboardQualityProductsResponse, error)
 	ListAcqRights(context.Context, *ListAcqRightsRequest) (*ListAcqRightsResponse, error)
 	ListAggregatedAcqRights(context.Context, *ListAggregatedAcqRightsRequest) (*ListAggregatedAcqRightsResponse, error)
+	GetAllEditorsCatalog(context.Context, *GetAllEditorsCatalogRequest) (*GetAllEditorsCatalogResponse, error)
 	CreateAggregation(context.Context, *Aggregation) (*AggregationResponse, error)
 	CreateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error)
 	UpdateAggregatedRights(context.Context, *AggregatedRightsRequest) (*AggregatedRightsResponse, error)
@@ -530,6 +764,8 @@ type ProductServiceServer interface {
 	DeleteAllocatedMetricEquipment(context.Context, *DropAllocateMetricEquipementRequest) (*UpsertAllocateMetricEquipementResponse, error)
 	GetBanner(context.Context, *GetBannerRequest) (*GetBannerResponse, error)
 	UpdateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
+	UpdateAcqrightsSharedLicenses(context.Context, *UpdateSharedLicensesRequest) (*UpdateSharedLicensesResponse, error)
+	UpdateAggrightsSharedLicenses(context.Context, *UpdateAggrightsSharedLicensesRequest) (*UpdateSharedLicensesResponse, error)
 	DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error)
 	DownloadAcqRightFile(context.Context, *DownloadAcqRightFileRequest) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(context.Context, *GetEquipmentsByProductRequest) (*GetEquipmentsByProductResponse, error)
@@ -537,6 +773,23 @@ type ProductServiceServer interface {
 	GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error)
 	GetApplicationsByProduct(context.Context, *GetApplicationsByProductRequest) (*GetApplicationsByProductResponse, error)
 	GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error)
+	UpsertNominativeUser(context.Context, *UpserNominativeUserRequest) (*UpserNominativeUserResponse, error)
+	UpsertProductConcurrentUser(context.Context, *ProductConcurrentUserRequest) (*ProductConcurrentUserResponse, error)
+	ListNominativeUser(context.Context, *ListNominativeUsersRequest) (*ListNominativeUsersResponse, error)
+	NominativeUserExport(context.Context, *NominativeUsersExportRequest) (*ListNominativeUsersExportResponse, error)
+	ConcurrentUserExport(context.Context, *ListConcurrentUsersExportRequest) (*ListConcurrentUsersResponse, error)
+	ListConcurrentUsers(context.Context, *ListConcurrentUsersRequest) (*ListConcurrentUsersResponse, error)
+	DeleteConcurrentUsers(context.Context, *DeleteConcurrentUsersRequest) (*DeleteConcurrentUsersResponse, error)
+	DeleteNominativeUsers(context.Context, *DeleteNominativeUserRequest) (*DeleteNominativeUserResponse, error)
+	GetTotalSharedAmount(context.Context, *GetTotalSharedAmountRequest) (*GetTotalSharedAmountResponse, error)
+	GroupComplianceProduct(context.Context, *GroupComplianceProductRequest) (*GroupComplianceProductResponse, error)
+	GetProductListByEditor(context.Context, *GetProductListByEditorRequest) (*GetProductListByEditorResponse, error)
+	GetConcurrentUsersHistroy(context.Context, *GetConcurrentUsersHistroyRequest) (*GetConcurrentUsersHistroyResponse, error)
+	GetUnderusageLicenceByEditorProduct(context.Context, *GetUnderusageByEditorRequest) (*GetUnderusageByEditorResponse, error)
+	GetMetric(context.Context, *GetMetricRequest) (*GetMetricResponse, error)
+	DeleteSharedLicenses(context.Context, *DeleteSharedLicensesRequest) (*DeleteSharedLicensesResponse, error)
+	ListNominativeUserFileUpload(context.Context, *ListNominativeUsersFileUploadRequest) (*ListNominativeUsersFileUploadResponse, error)
+	GetEditorExpensesByScope(context.Context, *EditorExpensesByScopeRequest) (*EditorExpensesByScopeResponse, error)
 }
 
 // UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
@@ -573,6 +826,9 @@ func (UnimplementedProductServiceServer) ListDeployedAndAcquiredEditors(context.
 func (UnimplementedProductServiceServer) ListEditors(context.Context, *ListEditorsRequest) (*ListEditorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEditors not implemented")
 }
+func (UnimplementedProductServiceServer) GetAvailableLicenses(context.Context, *GetAvailableLicensesRequest) (*GetAvailableLicensesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAvailableLicenses not implemented")
+}
 func (UnimplementedProductServiceServer) ListEditorProducts(context.Context, *ListEditorProductsRequest) (*ListEditorProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListEditorProducts not implemented")
 }
@@ -591,8 +847,14 @@ func (UnimplementedProductServiceServer) ComplianceAlert(context.Context, *Compl
 func (UnimplementedProductServiceServer) CounterfeitedProducts(context.Context, *CounterfeitedProductsRequest) (*CounterfeitedProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CounterfeitedProducts not implemented")
 }
+func (UnimplementedProductServiceServer) GroupComplianceEditorCost(context.Context, *GroupComplianceEditorRequest) (*GroupComplianceEditorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupComplianceEditorCost not implemented")
+}
 func (UnimplementedProductServiceServer) OverdeployedProducts(context.Context, *OverdeployedProductsRequest) (*OverdeployedProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OverdeployedProducts not implemented")
+}
+func (UnimplementedProductServiceServer) SoftwareExpenditureByScope(context.Context, *SoftwareExpenditureByScopeRequest) (*SoftwareExpenditureByScopeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SoftwareExpenditureByScope not implemented")
 }
 func (UnimplementedProductServiceServer) DashboardQualityProducts(context.Context, *DashboardQualityProductsRequest) (*DashboardQualityProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DashboardQualityProducts not implemented")
@@ -602,6 +864,9 @@ func (UnimplementedProductServiceServer) ListAcqRights(context.Context, *ListAcq
 }
 func (UnimplementedProductServiceServer) ListAggregatedAcqRights(context.Context, *ListAggregatedAcqRightsRequest) (*ListAggregatedAcqRightsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAggregatedAcqRights not implemented")
+}
+func (UnimplementedProductServiceServer) GetAllEditorsCatalog(context.Context, *GetAllEditorsCatalogRequest) (*GetAllEditorsCatalogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllEditorsCatalog not implemented")
 }
 func (UnimplementedProductServiceServer) CreateAggregation(context.Context, *Aggregation) (*AggregationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAggregation not implemented")
@@ -660,6 +925,12 @@ func (UnimplementedProductServiceServer) GetBanner(context.Context, *GetBannerRe
 func (UnimplementedProductServiceServer) UpdateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAcqRight not implemented")
 }
+func (UnimplementedProductServiceServer) UpdateAcqrightsSharedLicenses(context.Context, *UpdateSharedLicensesRequest) (*UpdateSharedLicensesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAcqrightsSharedLicenses not implemented")
+}
+func (UnimplementedProductServiceServer) UpdateAggrightsSharedLicenses(context.Context, *UpdateAggrightsSharedLicensesRequest) (*UpdateSharedLicensesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAggrightsSharedLicenses not implemented")
+}
 func (UnimplementedProductServiceServer) DeleteAcqRight(context.Context, *DeleteAcqRightRequest) (*DeleteAcqRightResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAcqRight not implemented")
 }
@@ -680,6 +951,57 @@ func (UnimplementedProductServiceServer) GetApplicationsByProduct(context.Contex
 }
 func (UnimplementedProductServiceServer) GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductCountByApp not implemented")
+}
+func (UnimplementedProductServiceServer) UpsertNominativeUser(context.Context, *UpserNominativeUserRequest) (*UpserNominativeUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertNominativeUser not implemented")
+}
+func (UnimplementedProductServiceServer) UpsertProductConcurrentUser(context.Context, *ProductConcurrentUserRequest) (*ProductConcurrentUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductConcurrentUser not implemented")
+}
+func (UnimplementedProductServiceServer) ListNominativeUser(context.Context, *ListNominativeUsersRequest) (*ListNominativeUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNominativeUser not implemented")
+}
+func (UnimplementedProductServiceServer) NominativeUserExport(context.Context, *NominativeUsersExportRequest) (*ListNominativeUsersExportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NominativeUserExport not implemented")
+}
+func (UnimplementedProductServiceServer) ConcurrentUserExport(context.Context, *ListConcurrentUsersExportRequest) (*ListConcurrentUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConcurrentUserExport not implemented")
+}
+func (UnimplementedProductServiceServer) ListConcurrentUsers(context.Context, *ListConcurrentUsersRequest) (*ListConcurrentUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListConcurrentUsers not implemented")
+}
+func (UnimplementedProductServiceServer) DeleteConcurrentUsers(context.Context, *DeleteConcurrentUsersRequest) (*DeleteConcurrentUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConcurrentUsers not implemented")
+}
+func (UnimplementedProductServiceServer) DeleteNominativeUsers(context.Context, *DeleteNominativeUserRequest) (*DeleteNominativeUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteNominativeUsers not implemented")
+}
+func (UnimplementedProductServiceServer) GetTotalSharedAmount(context.Context, *GetTotalSharedAmountRequest) (*GetTotalSharedAmountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTotalSharedAmount not implemented")
+}
+func (UnimplementedProductServiceServer) GroupComplianceProduct(context.Context, *GroupComplianceProductRequest) (*GroupComplianceProductResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GroupComplianceProduct not implemented")
+}
+func (UnimplementedProductServiceServer) GetProductListByEditor(context.Context, *GetProductListByEditorRequest) (*GetProductListByEditorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductListByEditor not implemented")
+}
+func (UnimplementedProductServiceServer) GetConcurrentUsersHistroy(context.Context, *GetConcurrentUsersHistroyRequest) (*GetConcurrentUsersHistroyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConcurrentUsersHistroy not implemented")
+}
+func (UnimplementedProductServiceServer) GetUnderusageLicenceByEditorProduct(context.Context, *GetUnderusageByEditorRequest) (*GetUnderusageByEditorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUnderusageLicenceByEditorProduct not implemented")
+}
+func (UnimplementedProductServiceServer) GetMetric(context.Context, *GetMetricRequest) (*GetMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMetric not implemented")
+}
+func (UnimplementedProductServiceServer) DeleteSharedLicenses(context.Context, *DeleteSharedLicensesRequest) (*DeleteSharedLicensesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSharedLicenses not implemented")
+}
+func (UnimplementedProductServiceServer) ListNominativeUserFileUpload(context.Context, *ListNominativeUsersFileUploadRequest) (*ListNominativeUsersFileUploadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNominativeUserFileUpload not implemented")
+}
+func (UnimplementedProductServiceServer) GetEditorExpensesByScope(context.Context, *EditorExpensesByScopeRequest) (*EditorExpensesByScopeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEditorExpensesByScope not implemented")
 }
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -873,6 +1195,24 @@ func _ProductService_ListEditors_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GetAvailableLicenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAvailableLicensesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetAvailableLicenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetAvailableLicenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetAvailableLicenses(ctx, req.(*GetAvailableLicensesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_ListEditorProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListEditorProductsRequest)
 	if err := dec(in); err != nil {
@@ -981,6 +1321,24 @@ func _ProductService_CounterfeitedProducts_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GroupComplianceEditorCost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupComplianceEditorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GroupComplianceEditorCost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GroupComplianceEditorCost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GroupComplianceEditorCost(ctx, req.(*GroupComplianceEditorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_OverdeployedProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OverdeployedProductsRequest)
 	if err := dec(in); err != nil {
@@ -995,6 +1353,24 @@ func _ProductService_OverdeployedProducts_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).OverdeployedProducts(ctx, req.(*OverdeployedProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_SoftwareExpenditureByScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SoftwareExpenditureByScopeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).SoftwareExpenditureByScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/SoftwareExpenditureByScope",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).SoftwareExpenditureByScope(ctx, req.(*SoftwareExpenditureByScopeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1049,6 +1425,24 @@ func _ProductService_ListAggregatedAcqRights_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).ListAggregatedAcqRights(ctx, req.(*ListAggregatedAcqRightsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetAllEditorsCatalog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllEditorsCatalogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetAllEditorsCatalog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetAllEditorsCatalog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetAllEditorsCatalog(ctx, req.(*GetAllEditorsCatalogRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1395,6 +1789,42 @@ func _ProductService_UpdateAcqRight_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpdateAcqrightsSharedLicenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSharedLicensesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateAcqrightsSharedLicenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpdateAcqrightsSharedLicenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateAcqrightsSharedLicenses(ctx, req.(*UpdateSharedLicensesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_UpdateAggrightsSharedLicenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAggrightsSharedLicensesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateAggrightsSharedLicenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpdateAggrightsSharedLicenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateAggrightsSharedLicenses(ctx, req.(*UpdateAggrightsSharedLicensesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_DeleteAcqRight_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteAcqRightRequest)
 	if err := dec(in); err != nil {
@@ -1521,6 +1951,312 @@ func _ProductService_GetProductCountByApp_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpsertNominativeUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpserNominativeUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpsertNominativeUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpsertNominativeUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpsertNominativeUser(ctx, req.(*UpserNominativeUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_UpsertProductConcurrentUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductConcurrentUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpsertProductConcurrentUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/UpsertProductConcurrentUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpsertProductConcurrentUser(ctx, req.(*ProductConcurrentUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListNominativeUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNominativeUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListNominativeUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListNominativeUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListNominativeUser(ctx, req.(*ListNominativeUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_NominativeUserExport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NominativeUsersExportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).NominativeUserExport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/NominativeUserExport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).NominativeUserExport(ctx, req.(*NominativeUsersExportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ConcurrentUserExport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListConcurrentUsersExportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ConcurrentUserExport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ConcurrentUserExport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ConcurrentUserExport(ctx, req.(*ListConcurrentUsersExportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListConcurrentUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListConcurrentUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListConcurrentUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListConcurrentUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListConcurrentUsers(ctx, req.(*ListConcurrentUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteConcurrentUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConcurrentUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteConcurrentUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteConcurrentUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteConcurrentUsers(ctx, req.(*DeleteConcurrentUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteNominativeUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteNominativeUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteNominativeUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteNominativeUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteNominativeUsers(ctx, req.(*DeleteNominativeUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetTotalSharedAmount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTotalSharedAmountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetTotalSharedAmount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetTotalSharedAmount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetTotalSharedAmount(ctx, req.(*GetTotalSharedAmountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GroupComplianceProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GroupComplianceProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GroupComplianceProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GroupComplianceProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GroupComplianceProduct(ctx, req.(*GroupComplianceProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetProductListByEditor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductListByEditorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetProductListByEditor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetProductListByEditor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetProductListByEditor(ctx, req.(*GetProductListByEditorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetConcurrentUsersHistroy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConcurrentUsersHistroyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetConcurrentUsersHistroy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetConcurrentUsersHistroy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetConcurrentUsersHistroy(ctx, req.(*GetConcurrentUsersHistroyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetUnderusageLicenceByEditorProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUnderusageByEditorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetUnderusageLicenceByEditorProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetUnderusageLicenceByEditorProduct",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetUnderusageLicenceByEditorProduct(ctx, req.(*GetUnderusageByEditorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetMetric(ctx, req.(*GetMetricRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DeleteSharedLicenses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSharedLicensesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DeleteSharedLicenses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/DeleteSharedLicenses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DeleteSharedLicenses(ctx, req.(*DeleteSharedLicensesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ListNominativeUserFileUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNominativeUsersFileUploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ListNominativeUserFileUpload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ListNominativeUserFileUpload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ListNominativeUserFileUpload(ctx, req.(*ListNominativeUsersFileUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetEditorExpensesByScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditorExpensesByScopeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetEditorExpensesByScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetEditorExpensesByScope",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetEditorExpensesByScope(ctx, req.(*EditorExpensesByScopeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ProductService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.products.v1.ProductService",
 	HandlerType: (*ProductServiceServer)(nil),
@@ -1566,6 +2302,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_ListEditors_Handler,
 		},
 		{
+			MethodName: "GetAvailableLicenses",
+			Handler:    _ProductService_GetAvailableLicenses_Handler,
+		},
+		{
 			MethodName: "ListEditorProducts",
 			Handler:    _ProductService_ListEditorProducts_Handler,
 		},
@@ -1590,8 +2330,16 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_CounterfeitedProducts_Handler,
 		},
 		{
+			MethodName: "GroupComplianceEditorCost",
+			Handler:    _ProductService_GroupComplianceEditorCost_Handler,
+		},
+		{
 			MethodName: "OverdeployedProducts",
 			Handler:    _ProductService_OverdeployedProducts_Handler,
+		},
+		{
+			MethodName: "SoftwareExpenditureByScope",
+			Handler:    _ProductService_SoftwareExpenditureByScope_Handler,
 		},
 		{
 			MethodName: "DashboardQualityProducts",
@@ -1604,6 +2352,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAggregatedAcqRights",
 			Handler:    _ProductService_ListAggregatedAcqRights_Handler,
+		},
+		{
+			MethodName: "GetAllEditorsCatalog",
+			Handler:    _ProductService_GetAllEditorsCatalog_Handler,
 		},
 		{
 			MethodName: "CreateAggregation",
@@ -1682,6 +2434,14 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_UpdateAcqRight_Handler,
 		},
 		{
+			MethodName: "UpdateAcqrightsSharedLicenses",
+			Handler:    _ProductService_UpdateAcqrightsSharedLicenses_Handler,
+		},
+		{
+			MethodName: "UpdateAggrightsSharedLicenses",
+			Handler:    _ProductService_UpdateAggrightsSharedLicenses_Handler,
+		},
+		{
 			MethodName: "DeleteAcqRight",
 			Handler:    _ProductService_DeleteAcqRight_Handler,
 		},
@@ -1708,6 +2468,74 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProductCountByApp",
 			Handler:    _ProductService_GetProductCountByApp_Handler,
+		},
+		{
+			MethodName: "UpsertNominativeUser",
+			Handler:    _ProductService_UpsertNominativeUser_Handler,
+		},
+		{
+			MethodName: "UpsertProductConcurrentUser",
+			Handler:    _ProductService_UpsertProductConcurrentUser_Handler,
+		},
+		{
+			MethodName: "ListNominativeUser",
+			Handler:    _ProductService_ListNominativeUser_Handler,
+		},
+		{
+			MethodName: "NominativeUserExport",
+			Handler:    _ProductService_NominativeUserExport_Handler,
+		},
+		{
+			MethodName: "ConcurrentUserExport",
+			Handler:    _ProductService_ConcurrentUserExport_Handler,
+		},
+		{
+			MethodName: "ListConcurrentUsers",
+			Handler:    _ProductService_ListConcurrentUsers_Handler,
+		},
+		{
+			MethodName: "DeleteConcurrentUsers",
+			Handler:    _ProductService_DeleteConcurrentUsers_Handler,
+		},
+		{
+			MethodName: "DeleteNominativeUsers",
+			Handler:    _ProductService_DeleteNominativeUsers_Handler,
+		},
+		{
+			MethodName: "GetTotalSharedAmount",
+			Handler:    _ProductService_GetTotalSharedAmount_Handler,
+		},
+		{
+			MethodName: "GroupComplianceProduct",
+			Handler:    _ProductService_GroupComplianceProduct_Handler,
+		},
+		{
+			MethodName: "GetProductListByEditor",
+			Handler:    _ProductService_GetProductListByEditor_Handler,
+		},
+		{
+			MethodName: "GetConcurrentUsersHistroy",
+			Handler:    _ProductService_GetConcurrentUsersHistroy_Handler,
+		},
+		{
+			MethodName: "GetUnderusageLicenceByEditorProduct",
+			Handler:    _ProductService_GetUnderusageLicenceByEditorProduct_Handler,
+		},
+		{
+			MethodName: "GetMetric",
+			Handler:    _ProductService_GetMetric_Handler,
+		},
+		{
+			MethodName: "DeleteSharedLicenses",
+			Handler:    _ProductService_DeleteSharedLicenses_Handler,
+		},
+		{
+			MethodName: "ListNominativeUserFileUpload",
+			Handler:    _ProductService_ListNominativeUserFileUpload_Handler,
+		},
+		{
+			MethodName: "GetEditorExpensesByScope",
+			Handler:    _ProductService_GetEditorExpensesByScope_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

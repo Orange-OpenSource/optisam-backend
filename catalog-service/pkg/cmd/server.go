@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	redisClient "github.com/go-redis/redis/v8"
+
 	// "sample-service/pkg/middleware/logger"
 	"optisam-backend/catalog-service/pkg/config"
 	"optisam-backend/catalog-service/pkg/protocol/grpc"
@@ -22,6 +24,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/postgres"
 	"optisam-backend/common/optisam/prometheus"
+	"optisam-backend/common/optisam/redis"
 	"optisam-backend/common/optisam/workerqueue"
 
 	"github.com/InVisionApp/go-health"
@@ -59,7 +62,7 @@ func init() {
 // nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
-
+	isLocal := false
 	pflag.Parse()
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
@@ -73,6 +76,7 @@ func RunServer() error {
 		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
+		isLocal = true
 	}
 
 	viper.AddConfigPath("/opt/config/")
@@ -113,10 +117,20 @@ func RunServer() error {
 	ocsql.RegisterAllViews()
 
 	// Create database connection.
-	db, err := postgres.NewConnection(*cfg.Database)
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
+	// defer db.Close()
+	defer func() {
+		db.Close()
+		// Wait to 4 seconds so that the traces can be exported
+		waitTime := 2 * time.Second
+		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
+		<-time.After(waitTime)
+	}()
+
 	// Run Migration
 	// comment
 	// migrations := &migrate.PackrMigrationSource{
@@ -173,6 +187,26 @@ func RunServer() error {
 			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
+	redisC := &redisClient.Client{}
+	if isLocal {
+		redisC = redis.NewConnection(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis")
+		} else {
+			logger.Log.Info("redis server connected at:" + cfg.Redis.RedisHost)
+		}
+		//defer redisClient.Close()
+	} else {
+		redisC = redis.NewConnectionSentinel(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis sentinel")
+		} else {
+			logger.Log.Info("redis server connected")
+		}
+	}
+	defer redisC.Close()
 	// defer db.Close()
 	defer func() {
 		//	db.Close()
@@ -238,7 +272,7 @@ func RunServer() error {
 	go func() {
 		_ = instrumentationServer.ListenAndServe()
 	}()
-	repo.SetProductCatalogRepository(db)
+	repo.SetProductCatalogRepository(db, redisC)
 	dbObj := repo.GetProductCatalogRepository()
 
 	// Verify connection.
@@ -247,7 +281,7 @@ func RunServer() error {
 	}
 	fmt.Printf("Postgres connection verified to %+v \n\n", cfg.Database.Host)
 
-	v1API := v1.NewProductCatalogServer(dbObj, &workerqueue.Queue{}, grpcClientMap)
+	v1API := v1.NewProductCatalogServer(dbObj, &workerqueue.Queue{}, grpcClientMap, redisC)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {
@@ -267,7 +301,7 @@ func RunServer() error {
 		}
 	}()
 	go func() {
-		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey, db, grpcClientMap, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), cfg.IAM.APIKey, cfg.Application)
+		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey, db, grpcClientMap, fmt.Sprintf("http://%s/api/v1/token", cfg.HTTPServers.Address["auth"]), cfg.IAM.APIKey, cfg.Application, redisC)
 	}()
 	return grpc.RunServer(ctx, v1API, cfg.GRPCPort, verifyKey, authZPolicies, cfg.IAM.APIKey)
 }

@@ -397,6 +397,8 @@ func (m *ComputedDetails) Validate() error {
 
 	// no validation rules for DeltaCost
 
+	// no validation rules for NumAvailLicences
+
 	return nil
 }
 
@@ -1814,6 +1816,31 @@ func (m *ProductAcquiredRights) Validate() error {
 
 	// no validation rules for CostOptimization
 
+	if m.GetAvailableLicences() < 0 {
+		return ProductAcquiredRightsValidationError{
+			field:  "AvailableLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetSharedLicences() < 0 {
+		return ProductAcquiredRightsValidationError{
+			field:  "SharedLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetRecievedLicences() < 0 {
+		return ProductAcquiredRightsValidationError{
+			field:  "RecievedLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	// no validation rules for WithoutVerionAcq
+
+	// no validation rules for OldDeltaNumber
+
 	return nil
 }
 
@@ -1914,6 +1941,27 @@ func (m *AggregationAcquiredRights) Validate() error {
 	// no validation rules for ComputedCost
 
 	// no validation rules for CostOptimization
+
+	if m.GetAvailableLicences() < 0 {
+		return AggregationAcquiredRightsValidationError{
+			field:  "AvailableLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetSharedLicences() < 0 {
+		return AggregationAcquiredRightsValidationError{
+			field:  "SharedLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	if m.GetRecievedLicences() < 0 {
+		return AggregationAcquiredRightsValidationError{
+			field:  "RecievedLicences",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
 
 	return nil
 }

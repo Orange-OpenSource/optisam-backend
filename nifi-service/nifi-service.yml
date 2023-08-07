@@ -1,3 +1,4 @@
+---
 kind: Template
 apiVersion: v1
 metadata:
@@ -7,192 +8,167 @@ metadata:
     tags: app,nifi
     iconClass: icon-apache
 objects:
-- kind: Service
-  apiVersion: v1
-  spec:
-    ports:
-    - name: web
-      port: 8080
-      targetPort: 8080
-    selector:
-      app: optisam-nifi
-  metadata:
-    name: svc-optisam-nifi
-    labels:
-      run: optisam-nifi
-    annotations:
-      description: The web server's http port.
-- kind: Route
-  apiVersion: v1
-  metadata:
-    name: route-svc-optisam-nifi
-    labels:
-      run: optisam-nifi
-    annotations:
-      description: Route for application's http service.
-  spec:
-    host: optisam-nifi-${ENV}.apps.fr01.paas.tech.orange
-    to:
+  - kind: Service
+    apiVersion: v1
+    spec:
+      ports:
+        - name: web
+          port: 8080
+          targetPort: 8080
+      selector:
+        app: optisam-nifi
+    metadata:
       name: svc-optisam-nifi
-# - kind: ImageStream
-#   apiVersion: v1
-#   metadata:
-#     name: nifi
-#     labels:
-#       app: nifi
-# - apiVersion: v1
-#   kind: BuildConfig
-#   metadata:
-#     labels:
-#       app: nifi
-#     name: nifi
-#   spec:
-#     nodeSelector:
-#     output:
-#       to:
-#         kind: ImageStreamTag
-#         name: "nifi:latest"
-#     postCommit: {}
-#     resources: {}
-#     runPolicy: Serial
-#     source:
-#       binary: {}
-#       type: Binary
-#     strategy:
-#       dockerStrategy:
-#         from:
-#           kind: ImageStreamTag
-#           name: ${NIFI_BASE_IMAGE}
-#           namespace: ${IMAGE_STREAM_NAMESPACE}
-##     triggers: {}
-- kind: DeploymentConfig
-  apiVersion: v1
-  metadata:
-    name: optisam-nifi
-    labels:
-      app: optisam-nifi
-  spec:
-    selector:
-      app: optisam-nifi
-    strategy:
-      type: Recreate
-    replicas: 1
-    template:
-      metadata:
-        name: optisam-nifi
-        labels:
-          app: optisam-nifi
-          internal-elasticsearch: 'true'  
-      spec:
-        terminationGracePeriodSeconds: 60
-        initContainers:
-        - name: init-nifi
-          image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/nifi-service:${TAG}
-          volumeMounts:
-          - mountPath: "/nifi/"
-            name: nifi-storage           
-          command: ["/bin/bash","-c","cp -r /opt/nifi/* /nifi/ && sed -i -e 's/\\/opt\\/nifi/\\/nifi/' /nifi/scripts/start.sh && sleep 200"]
-        containers:
-        - name: optisam-nifi
-          image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/nifi-service:${TAG}
-          imagePullPolicy: Always
-          ports:
-          - name: http
-            containerPort: 8080
-            protocol: TCP
-          env:
-          - name: "NIFI_JAVA_XMS"
-            value: ${NIFI_JAVA_XMS}
-          - name: "NIFI_JAVA_XMX"
-            value: ${NIFI_JAVA_XMX}
-          - name: "NIFI_JVM_HEAP_INIT"
-            value: ${NIFI_JVM_HEAP_INIT}
-          - name: "NIFI_JVM_HEAP_MAX"
-            value: ${NIFI_JVM_HEAP_MAX}    
-          - name: "NIFI_TIMEZONE"
-            value: ${NIFI_TIMEZONE}
-          - name: "NIFI_BASE_DIR"
-            value: /nifi
-          - name: "HOME"
-            value: /nifi              
-          - name: "NIFI_HOME"
-            value: /nifi/nifi-current                        
-          - name: "NIFI_TOOLKIT_HOME"
-            value: /nifi/nifi-toolkit-current            
-          - name: "NIFI_LOG_DIR"
-            value: /nifi/nifi-current/logs 
-          - name: "NIFI_PID_DIR"
-            value: /nifi/nifi-current/run                         
-          resources:
-            limits:
-              cpu: ${CPU_LIMIT}
-              memory: ${MEMORY_LIMIT}
-            requests:
-              cpu: ${CPU_REQUEST}
-              memory: ${MEMORY_REQUEST}
-          volumeMounts:
-          - mountPath: "/nifi/"
-            name: nifi-storage
-          - mountPath: "/optisam_dir/"
-            name: optisam-dir            
-        volumes:
-        - name: nifi-storage
-          persistentVolumeClaim:
-            claimName: nifi-storage
-        - name: optisam-dir
-          persistentVolumeClaim:
-            claimName: optisam-storage
-
-
+      labels:
+        run: optisam-nifi
+      annotations:
+        description: The web server's http port.
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      name: route-svc-optisam-nifi
+      labels:
+        run: optisam-nifi
+      annotations:
+        description: Route for application's http service.
+    spec:
+      host: optisam-nifi-${ENV}.apps.fr01.paas.tech.orange
+      to:
+        name: svc-optisam-nifi
+  - kind: DeploymentConfig
+    apiVersion: v1
+    metadata:
+      name: optisam-nifi
+      labels:
+        app: optisam-nifi
+    spec:
+      selector:
+        app: optisam-nifi
+      strategy:
+        type: Recreate
+      replicas: 1
+      template:
+        metadata:
+          name: optisam-nifi
+          labels:
+            app: optisam-nifi
+            internal-elasticsearch: "true"
+        spec:
+          terminationGracePeriodSeconds: 60
+          initContainers:
+            - name: init-nifi
+              image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/nifi-service:${TAG}
+              volumeMounts:
+                - mountPath: /nifi/
+                  name: nifi-storage
+              command:
+                - /bin/bash
+                - -c
+                - cp -r /opt/nifi/* /nifi/ && sed -i -e 's/\/opt\/nifi/\/nifi/'
+                  /nifi/scripts/start.sh && sleep 200
+          containers:
+            - name: optisam-nifi
+              image: dockerfactory-unstable-iva.si.francetelecom.fr/optisam/nifi-service:${TAG}
+              imagePullPolicy: Always
+              ports:
+                - name: http
+                  containerPort: 8080
+                  protocol: TCP
+              env:
+                - name: NIFI_JAVA_XMS
+                  value: ${NIFI_JAVA_XMS}
+                - name: NIFI_JAVA_XMX
+                  value: ${NIFI_JAVA_XMX}
+                - name: NIFI_JVM_HEAP_INIT
+                  value: ${NIFI_JVM_HEAP_INIT}
+                - name: NIFI_JVM_HEAP_MAX
+                  value: ${NIFI_JVM_HEAP_MAX}
+                - name: NIFI_TIMEZONE
+                  value: ${NIFI_TIMEZONE}
+                - name: NIFI_BASE_DIR
+                  value: /nifi
+                - name: HOME
+                  value: /nifi
+                - name: NIFI_HOME
+                  value: /nifi/nifi-current
+                - name: NIFI_TOOLKIT_HOME
+                  value: /nifi/nifi-toolkit-current
+                - name: NIFI_LOG_DIR
+                  value: /nifi/nifi-current/logs
+                - name: NIFI_PID_DIR
+                  value: /nifi/nifi-current/run
+              resources:
+                limits:
+                  cpu: ${CPU_LIMIT}
+                  memory: ${MEMORY_LIMIT}
+                requests:
+                  cpu: ${CPU_REQUEST}
+                  memory: ${MEMORY_REQUEST}
+              volumeMounts:
+                - mountPath: /nifi/
+                  name: nifi-storage
+                - mountPath: /optisam_dir/
+                  name: optisam-dir
+          volumes:
+            - name: nifi-storage
+              persistentVolumeClaim:
+                claimName: nifi-storage
+            - name: optisam-dir
+              persistentVolumeClaim:
+                claimName: optisam-storage
 parameters:
-- name: CPU_REQUEST
-  description: "Minimum amount of CPU that the container may consume. Unit (m) has to be included."
-  value: "600m"
-  required: true
-- name: CPU_LIMIT
-  description: "Maximum amount of CPU that the container may consume. Unit (m) has to be included."
-  value: "1000m"
-  required: true
-- name: MEMORY_REQUEST
-  description: "Minimum amount of memory that the container may consume. Unit (Mi, Gi) has to be included."
-  value: "1600Mi"
-  required: true
-- name: MEMORY_LIMIT
-  description: "Maximum amount of memory that the container may consume. Unit (Mi, Gi) has to be included."
-  value: "2000Mi"
-  required: true
-- name: NIFI_JAVA_XMS
-  description: "Startup heap to be requested by the JVM."
-  value: "-Xms512m"
-  required: true
-- name: NIFI_JAVA_XMX
-  description: "Maximum heap to be requested by the JVM."
-  value: "-Xmx1024m"
-- name: NIFI_JVM_HEAP_INIT
-  description: "Minimum Heap Value"
-  value: "512m"
-  required: true
-- name: NIFI_JVM_HEAP_MAX
-  description:"Maximum Heap Value"
-  value: "2048m"        
-  required: true
-- name: NIFI_TIMEZONE
-  description: "Timezone to be used by the JVM."
-  value: "-Duser.timezone=Europe/Berlin"
-  required: true
-- name: TAG
-  description: Tag for Docker image
-  value: "dev"
-  required: true
-- name: ENV
-  description: Env for deployment
-  value: "dev"
-  required: true
-- name: REPLICAS
-  description: Pod replica count
-  value: "1"
-  required: true
-- name: DOCKER_REGISTRY
-  description: Artifactory URL to download images
-  value: "dockerfactory-unstable.tech.orange"
-  required: true  
+  - name: CPU_REQUEST
+    description: Minimum amount of CPU that the container may consume. Unit (m) has
+      to be included.
+    value: 600m
+    required: true
+  - name: CPU_LIMIT
+    description: Maximum amount of CPU that the container may consume. Unit (m) has
+      to be included.
+    value: 1000m
+    required: true
+  - name: MEMORY_REQUEST
+    description: Minimum amount of memory that the container may consume. Unit (Mi,
+      Gi) has to be included.
+    value: 1600Mi
+    required: true
+  - name: MEMORY_LIMIT
+    description: Maximum amount of memory that the container may consume. Unit (Mi,
+      Gi) has to be included.
+    value: 2000Mi
+    required: true
+  - name: NIFI_JAVA_XMS
+    description: Startup heap to be requested by the JVM.
+    value: -Xms512m
+    required: true
+  - name: NIFI_JAVA_XMX
+    description: Maximum heap to be requested by the JVM.
+    value: -Xmx1024m
+  - name: NIFI_JVM_HEAP_INIT
+    description: Minimum Heap Value
+    value: 512m
+    required: true
+  - name: NIFI_JVM_HEAP_MAX
+    description: Maximum Heap Value
+    value: 2048m
+    required: true
+  - name: NIFI_TIMEZONE
+    description: Timezone to be used by the JVM.
+    value: -Duser.timezone=Europe/Berlin
+    required: true
+  - name: TAG
+    description: Tag for Docker image
+    value: dev
+    required: true
+  - name: ENV
+    description: Env for deployment
+    value: dev
+    required: true
+  - name: REPLICAS
+    description: Pod replica count
+    value: "1"
+    required: true
+  - name: DOCKER_REGISTRY
+    description: Artifactory URL to download images
+    value: dockerfactory-unstable.tech.orange
+    required: true

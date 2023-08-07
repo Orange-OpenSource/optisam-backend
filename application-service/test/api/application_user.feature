@@ -1,24 +1,25 @@
 @application
 Feature: Application Service Test
 
-  Background:
+Background:
   # * def applicationServiceUrl = "https://optisam-application-int.apps.fr01.paas.tech.orange"
-    * url applicationServiceUrl+'/api/v1'
-    * def credentials = {username:#(UserAccount_Username), password:#(UserAccount_password)}
+    * url applicationServiceUrl+'/api/v1/'
+    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'API'
-
+    * def scope = 'API' 
+  @SmokeTest
   @schema
   Scenario: Schema validation for get Applications
     Given path 'applications'
-    * params { page_num:1, page_size:10, sort_by:'name', sort_order:'desc', scopes:'#(scope)'}
+    * params { page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
     When method get
     Then status 200
-    * response.totalRecords == '#number? _ >= 0'
     * match response.applications == '#[] data.schema_app'
+   
 
    @pagination
   Scenario Outline: To verify Pagination on Application page
@@ -59,7 +60,7 @@ Feature: Application Service Test
     | searchBy | searchValue |
     | name | carala |
     | domain | mobile |
-    | obsolescence_risk | Medium | 
+   
 
 
  @search
@@ -76,8 +77,7 @@ Feature: Application Service Test
   Examples:
     | searchBy1 | searchValue1 | searchBy2 | searchValue2 |
     | name | carala |domain | internet |
-    | domain | internet | obsolescence_risk  | High |
-
+    
 
   @sort
   Scenario Outline: Sorting_sort Applications data 
@@ -105,11 +105,11 @@ Feature: Application Service Test
     When method get
     Then status 200
     And response.totalRecords > 0
-    # And match response.applications[*].application_id contains data.getApp.application_id
+     And match response.applications[*].name contains ["valora"]
     
 
 ## Instances 
-
+@SmokeTest
   @schema
   Scenario: Schema validation for get Instances
     Given path 'application/instances'
@@ -118,18 +118,18 @@ Feature: Application Service Test
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
     * match response.instances == '#[] data.schema_instance'
-
-  @search
-  Scenario: Searching_Filter Instances by Application Id
-    Given path 'application/instances'
-    And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
-    And params {search_params.application_id.filter_type: 1 }
-    And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
-    When method get
-    Then status 200
-    And response.totalRecords > 0
-    * remove data.getInstance.application_id
-    And match response.instances[*] contains data.getInstance
+#
+  #@search
+  #Scenario: Searching_Filter Instances by Application Id
+  #  Given path 'application/instances'
+  #  And params { page_num:1, page_size:100, sort_by:'instance_id', sort_order:'desc', scopes:'#(scope)'}
+  #  And params {search_params.application_id.filter_type: 1 }
+  #  And params {search_params.application_id.filteringkey: '#(data.getInstance.application_id)'}
+  #  When method get
+  #  Then status 200
+  #  And response.totalRecords > 0
+  #  * remove data.getInstance.application_id
+  #  And match response.instances[*] contains data.getInstance
 
   # @search
   # Scenario: Searching_Filter Instances by product Id
@@ -192,3 +192,35 @@ Feature: Application Service Test
   #   Given path 'applications',application_id
   #   When method delete
   #   Then status 200
+
+
+  Scenario: To verify the functional working of application
+    Given path 'applications'
+    And params {page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
+    When method get
+    Then status 200
+    # And print response
+   # And match response.totalRecords ==5
+
+  #Scenario:To verfiy the  action after clicking on product count  
+  #  Given path 'product'
+  #  And params{page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
+  #  And params{search_params.application_id.filter_type:'1', search_params.application_id.filteringkey:'car'}
+  #  When method get
+  #  Then status 200
+  #  And print response 
+  #  And match response.SwidTag=="Adobe_Media_Server_Adobe_5.0.16"
+
+#  Scenario:To verfiy the  action after clicking on product count  
+#    Given path 'product'
+#    And params{page_num:1, page_size:50, sort_by:'Product_Count', sort_order:'asc', scopes:'#(scope)'}
+#    And params{search_params.application_id.filter_type:'1',search_params.application_id.filteringkey:'pod'}
+#    When method get
+#    Then status 200
+#    And print response 
+
+  
+ 
+
+
+

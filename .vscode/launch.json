@@ -10,7 +10,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceRoot}/import-service/cmd/server/main.go",
+            "program": "${workspaceRoot}/product-service/cmd/server/main.go",
             "env": {},
             "args": []
         }

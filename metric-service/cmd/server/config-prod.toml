@@ -11,7 +11,7 @@ loglevel = -1
 addr = ":8081"
 
 [instrumentation.prometheus]
-enabled = false
+enabled = true
 
 
 [instrumentation.jaeger]

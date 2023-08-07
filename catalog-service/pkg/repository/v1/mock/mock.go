@@ -9,6 +9,7 @@ import (
 	sql "database/sql"
 	gomock "github.com/golang/mock/gomock"
 	v1 "optisam-backend/catalog-service/pkg/api/v1"
+	postgres "optisam-backend/catalog-service/pkg/repository/v1/postgres"
 	db "optisam-backend/catalog-service/pkg/repository/v1/postgres/db"
 	reflect "reflect"
 )
@@ -92,6 +93,21 @@ func (mr *MockProductCatalogMockRecorder) DeleteVersionCatalog(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteVersionCatalog", reflect.TypeOf((*MockProductCatalog)(nil).DeleteVersionCatalog), arg0, arg1)
 }
 
+// GetAllScope mocks base method
+func (m *MockProductCatalog) GetAllScope(arg0 context.Context) ([]*postgres.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllScope", arg0)
+	ret0, _ := ret[0].([]*postgres.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllScope indicates an expected call of GetAllScope
+func (mr *MockProductCatalogMockRecorder) GetAllScope(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllScope", reflect.TypeOf((*MockProductCatalog)(nil).GetAllScope), arg0)
+}
+
 // GetEditorCatalog mocks base method
 func (m *MockProductCatalog) GetEditorCatalog(arg0 context.Context, arg1 string) (db.EditorCatalog, error) {
 	m.ctrl.T.Helper()
@@ -153,10 +169,10 @@ func (mr *MockProductCatalogMockRecorder) GetProductCatalogByEditorId(arg0, arg1
 }
 
 // GetProductCatalogByPrductID mocks base method
-func (m *MockProductCatalog) GetProductCatalogByPrductID(arg0 context.Context, arg1 string) (db.ProductCatalog, error) {
+func (m *MockProductCatalog) GetProductCatalogByPrductID(arg0 context.Context, arg1 string) (db.GetProductCatalogByPrductIDRow, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductCatalogByPrductID", arg0, arg1)
-	ret0, _ := ret[0].(db.ProductCatalog)
+	ret0, _ := ret[0].(db.GetProductCatalogByPrductIDRow)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -210,6 +226,21 @@ func (m *MockProductCatalog) GetProductsNamesByEditorID(arg0 context.Context, ar
 func (mr *MockProductCatalogMockRecorder) GetProductsNamesByEditorID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProductsNamesByEditorID", reflect.TypeOf((*MockProductCatalog)(nil).GetProductsNamesByEditorID), arg0, arg1)
+}
+
+// GetScope mocks base method
+func (m *MockProductCatalog) GetScope(arg0 context.Context, arg1 []string) ([]*postgres.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScope", arg0, arg1)
+	ret0, _ := ret[0].([]*postgres.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScope indicates an expected call of GetScope
+func (mr *MockProductCatalogMockRecorder) GetScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScope", reflect.TypeOf((*MockProductCatalog)(nil).GetScope), arg0, arg1)
 }
 
 // GetUploadFileLogs mocks base method

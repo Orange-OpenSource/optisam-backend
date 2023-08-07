@@ -1,0 +1,415 @@
+{
+  "create_editor": {
+    "name": "Test_Editor_000999999",
+    "partner_managers": [
+      {
+        "name": "P1",
+        "email": "P1@gmail.com"
+      }
+    ],
+    "genearlInformation": "This is the general INformation ",
+    "groupContract": true,
+    "globalAccountManager": [
+      {
+        "name": "G1",
+        "email": "G1@gmail.com"
+      }
+    ],
+    "sourcers": [
+      {
+        "name": "S1",
+        "email": "S1@gmail.com"
+      }
+    ],
+    "audits": [
+      {
+        "entity": "Audit",
+        "date": "2023-01-02T18:30:00.000Z"
+      }
+    ],
+    "vendors": [
+      {
+        "name": "Vendor1"
+      }
+    ],
+    "countryCode": "ad",
+    "address": "Address"
+  },
+  "Editor_Blank_input": {
+    "name": ""
+  },
+  "Editor_Blank_input_And_Special_Char": {
+    "name": "Test1 Test11!*&$"
+  },
+  "Update_Editor_Information": {
+    "name": "Test_Editor486",
+    "partner_managers": [
+      {
+        "name": "P1",
+        "email": "P1@gmail.com"
+      },
+      {
+        "name": "P22304",
+        "email": "P22304@gmail.com"
+      }
+    ],
+    "genearlInformation": "This is the general INformation Update from API ",
+    "groupContract": true,
+    "globalAccountManager": [
+      {
+        "name": "G1",
+        "email": "G1@gmail.com"
+      },
+      {
+        "name": "G22304",
+        "email": "G22304@gmail.com"
+      }
+    ],
+    "sourcers": [
+      {
+        "name": "S1",
+        "email": "S1@gmail.com"
+      },
+      {
+        "name": "S22304",
+        "email": "S22304@gmail.com"
+      }
+    ],
+    "audits": [
+      {
+        "entity": "Audit",
+        "date": "2022-12-31T18:30:00.000Z"
+      },
+      {
+        "entity": "Audit22304",
+        "date": "2017-12-31T18:30:00.000Z"
+      }
+    ],
+    "vendors": [
+      {
+        "name": "Vendor1"
+      }
+    ],
+    "countryCode": "ad",
+    "address": "Address",
+    "id": "ee1b77e3-1ed0-4655-b093-f3400cd2abf9",
+    "createdOn": "2023-04-23T10:09:48.1713Z",
+    "updatedOn": "2023-04-23T10:09:48.1713Z"
+  },
+  "Duplicate_editor_message": {
+    "message": "Error while saving record, Duplicate Editor Name"
+  },
+  "Delete_Editor": {
+    "id": "##string",
+    "name": "Editor_test_Del",
+    "genearl_information": "Editor_General_information2",
+    "vendors": [
+      {
+        "name": "Oracle2"
+      }
+    ],
+    "partner_managers": [
+      {
+        "email": "Test_editor2@gmail.com",
+        "name": "Editor_test2"
+      }
+    ],
+    "audits": [
+      {
+        "entity": "test2",
+        "date": "2022-11-12T10:54:57.042Z"
+      }
+    ]
+  },
+  "delete_product":
+  {
+    "name":"DeepakTest_product_09"
+  },
+  "Schema_Editor": {
+    "name": "##string",
+    "general_information": "##string",
+    "id": "##string",
+    "created_on": "##string",
+    "product_count": "##number",
+    "updated_on": "##string",
+    "scopes": null,
+    "vendors": [
+      {}
+    ],
+    "partner_managers": [
+      {
+        "email": "##string",
+        "name": "##string"
+      }
+    ],
+    "audits": [
+      {
+        "entity": "##string",
+        "date": "##string"
+      }
+    ]
+  },
+  "Blank_Input": {
+    "name": "Editor_test7",
+    "genearl_information": "Editor_General_information2",
+    "vendors": [
+      {
+        "name": ""
+      }
+    ],
+    "partner_managers": [
+      {
+        "email": "Test_editor2@gmail.com",
+        "name": "Editor_test2"
+      }
+    ],
+    "audits": [
+      {
+        "entity": "",
+        "date": ""
+      }
+    ]
+  },
+  "Open_API_Get_Editor": {
+    "name": "IBM",
+    "scope": "Regression_Test"
+  },
+  "Open_API_Get_Product": {
+    "name": "3PAR",
+    "editorName": "HP",
+    "invalid_id": "c702ec28-d1bd-4db9-xxxxxxxxxx"
+  },
+  "Product_Schema": {
+    "UpdatedOn": "##string",
+    "closeSource": {
+      "isCloseSource": "##boolean",
+      "closeLicences": "#[] #string"
+    },
+    "contracttTips": "##string",
+    "createdOn": "##string",
+    "editorID": "##string",
+    "editorName": "##string",
+    "genearlInformation": "##string",
+    "id": "##string",
+    "locationType": "##string",
+    "metrics": "#[] #string",
+    "name": "##string",
+    "openSource": {
+      "isOpenSource": "##boolean",
+      "openLicences": "##string",
+      "openSourceType": "##string"
+    },
+    "productSwidTag": "##string",
+    "recommendation": "##string",
+    "scopes": null,
+    "supportVendors": "#[] #string",
+    "version": "##[]"
+  },
+  "Create_Product": {
+    "id": "#string",
+    "editorID": "#string",
+    "name": "DeepakTest_product_09",
+    "metrics": [
+      "m1"
+    ],
+    "genearlInformation": "This is a product created during API testing ",
+    "contracttTips": "Demo Product",
+    "locationType": "On Premise",
+    "licensing": "OPENSOURCE",
+    "openSource": {
+      "openLicences": "",
+      "openSourceType": "NONE"
+    },
+    "version": [
+      {
+        "id": "",
+        "swidtagVersion": "VersionSwidTag",
+        "name": "NewVersion",
+        "recommendation": "The version is provided by the Tester",
+        "endOfLife": "2023-04-23T18:30:00.000Z",
+        "endOfSupport": "2023-04-25T18:30:00.000Z"
+      }
+    ],
+    "recommendation": "AUTHORIZED",
+    "usefulLinks": [
+      "www.Teamcareergurus.in"
+    ],
+    "supportVendors": [
+      "Rohit Kumar"
+    ],
+    "createdOn": "2023-04-23T13:08:10.664Z",
+    "UpdatedOn": "2023-04-23T13:08:10.664Z",
+    "swidtagProduct": "SwidTag1",
+    "editorName": "#string"
+
+  },
+  "Update_Product_Details": {
+    "id": "#string",
+    "editorID": "#string",
+    "name": "DeepakTest_product_09",
+    "metrics": [
+      "oracle.nup"
+    ],
+    "genearlInformation": "This is updated General information from API",
+    "contracttTips": "Updated Contacts Tips",
+    "locationType": "SAAS",
+    "licensing": "OPENSOURCE",
+    "openSource": {
+      "openLicences": "",
+      "openSourceType": "NONE"
+    },
+    "version": [
+      {
+        "id": " ",
+        "swidtagVersion": "prod",
+        "name": "prod",
+        "recommendation": "",
+        "endOfLife": "2023-12-13T23:00:00.000Z",
+        "endOfSupport": "2023-12-05T23:00:00.000Z"
+      }
+    ],
+    "recommendation": "BLACKLISTED",
+    "usefulLinks": [
+      "This is website "
+    ],
+    "supportVendors": [
+      "toto",
+      "khokho"
+    ],
+    "createdOn": "2023-04-23T13:23:08.587Z",
+    "UpdatedOn": "2023-04-23T13:23:08.587Z",
+    "swidtagProduct": "0_prod_test"
+  },
+  "Empty_Product_Name": {
+    "name": ""
+  },
+  "Product_Name_With_Special_character": {
+    "name": "Product Test1 Special Char !@#$"
+  },
+  "Create_Product_With_Multiple_Input": 
+  {
+    "id": "#string",
+    "editorID": "#string",
+    "name": "TestProduct00001",
+    "metrics": [
+      "m1"
+    ],
+    "genearlInformation": "General Information",
+    "contracttTips": "Contract Tip",
+    "locationType": "On Premise",
+    "licensing": "CLOSEDSOURCE",
+    "openSource": {
+      "openLicences": "",
+      "openSourceType": "NONE"
+    },
+    "version": [
+      {
+        "id": "",
+        "swidtagVersion": "",
+        "name": "v1.1",
+        "recommendation": "R1",
+        "endOfLife": "2023-04-22T18:30:00.000Z",
+        "endOfSupport": "2023-04-25T18:30:00.000Z"
+      },
+      {
+        "id": "",
+        "swidtagVersion": "",
+        "name": "V1.2",
+        "recommendation": "R2",
+        "endOfLife": "2023-04-24T18:30:00.000Z",
+        "endOfSupport": "2023-04-26T18:30:00.000Z"
+      },
+      {
+        "id": "",
+        "swidtagVersion": "",
+        "name": "V1.3",
+        "recommendation": "R3",
+        "endOfLife": "2023-04-09T18:30:00.000Z",
+        "endOfSupport": "2023-04-12T18:30:00.000Z"
+      }
+    ],
+    "recommendation": "RECOMMENDED",
+    "usefulLinks": [
+      "www.youtube.com",
+      "www.google.com",
+      "www.Facebook.com"
+    ],
+    "supportVendors": [
+      "Vendor1",
+      "Vendor2",
+      "vendor3"
+    ],
+    "createdOn": "2023-04-23T13:33:08.507Z",
+    "UpdatedOn": "2023-04-23T13:33:08.507Z",
+    "swidtagProduct": ""
+    
+  },
+  "Upload_Schema": {
+    "filename": "##string",
+    "uploaded_on": "##string"
+  },
+  "Blank_Editor_Name_Message": {
+    "message": "editor name should not be empty"
+  },
+  "Search_record": {
+    "Search_Valid_Product_Name": "3CServer",
+    "Search_valid_editorName": "Hewlett-Packard (3Com)",
+    "Search_Invalid_EditorName": "Hewlett-Packard (3Com) 123"
+  },
+  "Schema_OpenAPI_Editor": {
+    "audits": "#[] #string",
+    "created_on": "#string",
+    "general_information": "#string",
+    "id": "#string",
+    "name": "#string",
+    "partner_managers": [
+      {
+        "email": "##string",
+        "name": "##string"
+      },
+      {
+        "email": "##string",
+        "name": "##string"
+      }
+    ],
+    "product_count": "##number",
+    "scopes": "#[] #string",
+    "updated_on": "#string",
+    "vendors": [
+      {
+        "name": "##string"
+      }
+    ]
+  },
+  "Editor": {
+    "ID": "7497a246-4b9b-467f-86f8-5368f6c17ddc",
+    "product_name": "adobe"
+  },
+  "Group_Contract": {
+    "total_count": 7424
+  },
+  "year": {
+    "total_count": 96
+  },
+  "countryCode": {
+    "total_count": 20
+  },
+  "entities": {
+    "total_count": 200
+  },
+  "deploymentType": {
+    "total_count": 22128
+  },
+  "licensing": {
+    "total_count": 22128
+  },
+  "recommendation": {
+    "total_count": 22128
+  },
+  "Entity": {
+    "total_count": 124
+  },
+  "vendors": {
+    "total_count": 72
+  }
+}

@@ -35,6 +35,26 @@ func (m *MockMetricServiceClient) EXPECT() *MockMetricServiceClientMockRecorder 
 	return m.recorder
 }
 
+// CreateMetric mocks base method
+func (m *MockMetricServiceClient) CreateMetric(arg0 context.Context, arg1 *v1.CreateMetricRequest, arg2 ...grpc.CallOption) (*v1.CreateMetricResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateMetric", varargs...)
+	ret0, _ := ret[0].(*v1.CreateMetricResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetric indicates an expected call of CreateMetric
+func (mr *MockMetricServiceClientMockRecorder) CreateMetric(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetric", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetric), varargs...)
+}
+
 // CreateMetricAttrCounterStandard mocks base method
 func (m *MockMetricServiceClient) CreateMetricAttrCounterStandard(arg0 context.Context, arg1 *v1.MetricACS, arg2 ...grpc.CallOption) (*v1.MetricACS, error) {
 	m.ctrl.T.Helper()
@@ -213,6 +233,46 @@ func (mr *MockMetricServiceClientMockRecorder) CreateMetricStaticStandard(arg0, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricStaticStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetricStaticStandard), varargs...)
+}
+
+// CreateMetricUserConcurentStandard mocks base method
+func (m *MockMetricServiceClient) CreateMetricUserConcurentStandard(arg0 context.Context, arg1 *v1.MetricUCS, arg2 ...grpc.CallOption) (*v1.MetricUCS, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateMetricUserConcurentStandard", varargs...)
+	ret0, _ := ret[0].(*v1.MetricUCS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetricUserConcurentStandard indicates an expected call of CreateMetricUserConcurentStandard
+func (mr *MockMetricServiceClientMockRecorder) CreateMetricUserConcurentStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricUserConcurentStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetricUserConcurentStandard), varargs...)
+}
+
+// CreateMetricUserNominativeStandard mocks base method
+func (m *MockMetricServiceClient) CreateMetricUserNominativeStandard(arg0 context.Context, arg1 *v1.MetricUNS, arg2 ...grpc.CallOption) (*v1.MetricUNS, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateMetricUserNominativeStandard", varargs...)
+	ret0, _ := ret[0].(*v1.MetricUNS)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateMetricUserNominativeStandard indicates an expected call of CreateMetricUserNominativeStandard
+func (mr *MockMetricServiceClientMockRecorder) CreateMetricUserNominativeStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMetricUserNominativeStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).CreateMetricUserNominativeStandard), varargs...)
 }
 
 // CreateMetricUserSumStandard mocks base method
@@ -513,4 +573,44 @@ func (mr *MockMetricServiceClientMockRecorder) UpdateMetricStaticStandard(arg0, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricStaticStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).UpdateMetricStaticStandard), varargs...)
+}
+
+// UpdateMetricUserConcurentStandard mocks base method
+func (m *MockMetricServiceClient) UpdateMetricUserConcurentStandard(arg0 context.Context, arg1 *v1.MetricUCS, arg2 ...grpc.CallOption) (*v1.UpdateMetricResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateMetricUserConcurentStandard", varargs...)
+	ret0, _ := ret[0].(*v1.UpdateMetricResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMetricUserConcurentStandard indicates an expected call of UpdateMetricUserConcurentStandard
+func (mr *MockMetricServiceClientMockRecorder) UpdateMetricUserConcurentStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricUserConcurentStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).UpdateMetricUserConcurentStandard), varargs...)
+}
+
+// UpdateMetricUserNominativeStandard mocks base method
+func (m *MockMetricServiceClient) UpdateMetricUserNominativeStandard(arg0 context.Context, arg1 *v1.MetricUNS, arg2 ...grpc.CallOption) (*v1.UpdateMetricResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateMetricUserNominativeStandard", varargs...)
+	ret0, _ := ret[0].(*v1.UpdateMetricResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateMetricUserNominativeStandard indicates an expected call of UpdateMetricUserNominativeStandard
+func (mr *MockMetricServiceClientMockRecorder) UpdateMetricUserNominativeStandard(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricUserNominativeStandard", reflect.TypeOf((*MockMetricServiceClient)(nil).UpdateMetricUserNominativeStandard), varargs...)
 }

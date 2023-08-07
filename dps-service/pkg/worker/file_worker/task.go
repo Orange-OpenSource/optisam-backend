@@ -373,8 +373,8 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (mode
 			temp.AllocatedMetric = list[headers.IndexesOfHeaders[constants.AllocatedMetric]]
 			temp.AllocatedUsers = list[headers.IndexesOfHeaders[constants.AllocatedUsers]]
 			temp.Action = constants.ActionType[list[headers.IndexesOfHeaders[constants.FLAG]]]
-
-			_, ok := records[row]
+			tmpDupplicateKey := temp.SwidTag + "_" + temp.EquipID
+			_, ok := records[tmpDupplicateKey]
 			if ok {
 				resp.DuplicateRecords = append(resp.DuplicateRecords, models.ProductEquipmentLink{
 					ProdID:          temp.SwidTag,
@@ -384,7 +384,7 @@ func getEquipmentsOfProducts(s *bufio.Scanner, headers models.HeadersInfo) (mode
 					Action:          temp.Action,
 				})
 			} else {
-				records[row] = true
+				records[tmpDupplicateKey] = true
 				resp.ProdEquipments[temp.Action][temp.SwidTag] = append(resp.ProdEquipments[temp.Action][temp.SwidTag], temp)
 			}
 		} else {
@@ -670,8 +670,14 @@ func createProdAcqRightsJobs(ctx context.Context, data models.FileData, targetSe
 	for _, v := range acqs.AcquiredRights {
 		acquiredRights[v.GetSKU()] = v.Repartition
 	}
-
+	var sharedLicenses = make(map[string]int32)
+	for _, v := range acqs.AcquiredRights {
+		sharedLicenses[v.GetSKU()] = v.SharedLicenses
+	}
 	for _, val := range data.AcqRights {
+		if int32(val.NumOfAcqLic) < sharedLicenses[val.Sku] {
+			continue
+		}
 		envlope := getEnvlope(targetService, data.FileType, data.FileName, data.TransfromedFileName, data.UploadID, data.GlobalID)
 		jobObj := job.Job{Status: job.JobStatusFAILED, Type: constants.APITYPE}
 		appData := product.UpsertAcqRightsRequest{

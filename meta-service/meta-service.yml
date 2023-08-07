@@ -1,3 +1,4 @@
+---
 kind: "Template"
 apiVersion: "v1"
 metadata:
@@ -33,7 +34,7 @@ objects:
         kind: Service
         name: svc-optisam-meta-${ENV}
       port:
-        targetPort: api        
+        targetPort: api
       tls:
         termination: edge
   - kind: DeploymentConfig
@@ -64,11 +65,11 @@ objects:
                   protocol: TCP
               resources:
                 requests:
-                  cpu: "80m"
-                  memory: "128Mi"
+                  cpu: "5m"
+                  memory: "10Mi"
                 limits:
-                  cpu: "100m"
-                  memory: "150Mi"
+                  cpu: "20m"
+                  memory: "50Mi"
 parameters:
   - name: TAG
     description: Tag for Docker image

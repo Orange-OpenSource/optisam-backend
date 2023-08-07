@@ -10,8 +10,8 @@ import (
 )
 
 // MetricIPSComputedLicenses implements Licence MetricIPSComputedLicenses function
-func (l *LicenseRepository) MetricIPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricIPSComputed, scopes ...string) (uint64, error) {
-	q := buildQueryIPS(mat, scopes, id)
+func (l *LicenseRepository) MetricIPSComputedLicenses(ctx context.Context, id []string, mat *v1.MetricIPSComputed, scopes ...string) (uint64, error) {
+	q := buildQueryIPS(mat, scopes, id...)
 	licenses, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricIPSComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))

@@ -1,6 +1,9 @@
 package v1
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 // Scope represents scope details
 type Scope struct {
@@ -10,4 +13,5 @@ type Scope struct {
 	ScopeType  string
 	CreatedOn  time.Time
 	GroupNames []string
+	Expenses   sql.NullFloat64
 }

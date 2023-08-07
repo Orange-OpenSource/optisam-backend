@@ -131,6 +131,26 @@ type MetricINM {
     metric.instancenumber.coefficient
 }
 
+type MetricUNS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.user_nominative.profile
+}
+
+type MetricUCS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.user_concurrent.profile
+}
+
 type MetricSS {
     type_name
     scopes
@@ -249,7 +269,8 @@ type Aggregation {
     aggregation.editor                        
     aggregation.product_names                            
     aggregation.swidtags   
-    aggregation.products                                        
+    aggregation.products
+    aggregation.concurrent.users                                        
 }
 
 type AggregatedRights{
@@ -293,6 +314,7 @@ type Product {
     product.acqRights
     product.users
     product.allocation
+    product.concurrent.users
     <~application.product>
     <~instance.product>
     <~editor.product>                         
@@ -317,4 +339,18 @@ type MetricAllocation {
     allocation.metric
     product.swidtag
     equipment.id               
+}
+
+type ProductConcurrentUser {
+    type_name
+    scopes
+    updated
+    created
+    concurrent.user.swidtag  
+    concurrent.user.number_of_users 
+    concurrent.user.profile_user 
+    concurrent.user.team 
+    concurrent.user.is_aggregations
+    concurrent.user.purchase_date
+    concurrent.user.aggregation.id
 }

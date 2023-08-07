@@ -408,6 +408,18 @@
         },
         "costOptimization": {
           "type": "boolean"
+        },
+        "availableLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sharedLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recievedLicences": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -489,6 +501,10 @@
         "deltaCost": {
           "type": "number",
           "format": "double"
+        },
+        "numAvailLicences": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -655,6 +671,25 @@
         },
         "costOptimization": {
           "type": "boolean"
+        },
+        "availableLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sharedLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "recievedLicences": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "withoutVerionAcq": {
+          "type": "boolean"
+        },
+        "oldDeltaNumber": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

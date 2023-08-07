@@ -36,7 +36,7 @@ type Config struct {
 	HTTPPort string
 
 	// Database connection information
-	Database postgres.Config
+	Database postgres.DBConfig
 
 	// Log configuration
 	Log logger.Config
@@ -150,9 +150,14 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Database configuration
 	_ = v.BindEnv("database.host")
 	v.SetDefault("database.port", 5432)
-	_ = v.BindEnv("database.user")
-	_ = v.BindEnv("database.pass", "DB_PASSWORD")
-	_ = v.BindEnv("database.name")
+	_ = v.BindEnv("database.user.name")
+	_ = v.BindEnv("database.user.user")
+	_ = v.BindEnv("database.admin.name")
+	_ = v.BindEnv("database.admin.user")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
 
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")

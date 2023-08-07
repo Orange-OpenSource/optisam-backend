@@ -3,13 +3,13 @@ Feature: To validate CRUD operation on metrics : admin user
 
   Background:
     * url metricServiceUrl+'/api/v1'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = 'API'
+    * def scope = 'DEM'
 
   @create
   Scenario: To verify user can create instance metric.
@@ -28,6 +28,7 @@ Feature: To validate CRUD operation on metrics : admin user
     # get instance metric
       Given path 'metric/config'
     * def metric_name = data.crud_metric_inm.Name
+  
     * params {metric_info.type:'instance.number.standard' , metric_info.name:'#(metric_name)' , scopes:'#(scope)'}
       When method get
       Then status 200
@@ -72,8 +73,10 @@ Feature: To validate CRUD operation on metrics : admin user
       * url metricServiceUrl+'/api/v1'
       * header Authorization = 'Bearer '+access_token
       Given path 'metric/ops'
-      * request {"Name":"apitest_ops","num_core_attr_id":'#(eq_data.serv_core.ID)',"core_factor_attr_id":'#(eq_data.server_oracle.ID)',"numCPU_attr_id":'#(eq_data.serv_processor.ID)',"base_eq_type_id":'#(eq_data.server_eq_type.ID)',"start_eq_type_id":'#(eq_data.server_eq_type.ID)',"aggerateLevel_eq_type_id":'#(eq_data.cluster_eq_type.ID)',"end_eq_type_id":'#(eq_data.vcenter_eq_type.ID)',"number_of_users":1,"scopes":['#(scope)']}
-      When method post
+     # * request {"Name":"apitest_ops","num_core_attr_id":'#(eq_data.serv_core.ID)',"core_factor_attr_id":'#(eq_data.server_oracle.ID)',"numCPU_attr_id":'#(eq_data.serv_processor.ID)',"base_eq_type_id":'#(eq_data.server_eq_type.ID)',"start_eq_type_id":'#(eq_data.server_eq_type.ID)',"aggerateLevel_eq_type_id":'#(eq_data.cluster_eq_type.ID)',"end_eq_type_id":'#(eq_data.vcenter_eq_type.ID)',"number_of_users":1,"scopes":['#(scope)']}
+     * request {"Name":"apitest_ops","num_core_attr_id":'#(eq_data.serv_core.ID)',"core_factor_attr_id":'#(eq_data.server_oracle.ID)',"numCPU_attr_id":'#(eq_data.serv_processor.ID)',"base_eq_type_id":'#(eq_data.server_eq_type.ID)',"start_eq_type_id":'#(eq_data.server_eq_type.ID)',"aggerateLevel_eq_type_id":'#(eq_data.cluster_eq_type.ID)',"end_eq_type_id":'#(eq_data.vcenter_eq_type.ID)',"scopes":['#(scope)']}
+ 
+     When method post
       Then status 200
       And response.Name == "apitest_ops"
       # validate schema
@@ -141,7 +144,6 @@ Feature: To validate CRUD operation on metrics : admin user
      * def schema = read('schema_data.json')
      And match response == '#(schema.ibm_metric)'
 
-
   @update
   Scenario Outline: To verfiy user can update IBM metric 
     # get IBM metric
@@ -202,7 +204,6 @@ Feature: To validate CRUD operation on metrics : admin user
     When method delete
     Then status 200
     And response.success == true
-
 
   Scenario: To verify user can create oracle nup metric.
     * def eq_data = call read('get_equipments_id.feature')
@@ -525,3 +526,5 @@ Feature: To validate CRUD operation on metrics : admin user
       And response.success == true
   
   
+
+

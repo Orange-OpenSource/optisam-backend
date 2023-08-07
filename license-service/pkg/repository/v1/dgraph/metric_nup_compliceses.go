@@ -12,25 +12,25 @@ import (
 )
 
 // MetricNUPComputedLicenses implements Licence MetricNUPComputedLicenses function
-func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, uint64, error) {
+func (l *LicenseRepository) MetricNUPComputedLicenses(ctx context.Context, id []string, mat *v1.MetricNUPComputed, scopes ...string) (uint64, uint64, error) {
 	// templ, ok := l.templates[nupTemplate]
 	// if !ok {
 	// 	return 0, errors.New("dgraph/MetricNUPComputedLicensesAgg - cannot find template for:  " + string(nupTemplate))
 	// }
-	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, []string{id}, scopes...)
+	prodAllocatMetricEquipment, err := l.GetProdAllocatedMetric(ctx, id, scopes...)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments", zap.Error(err))
 		return 0, 0, errors.New("dgraph/MetricOPSComputedLicenses - unable to get allocated equipments")
 	}
 	equipIDs := filterMetricEquipments(prodAllocatMetricEquipment, mat.Name, "")
-	opsq := queryBuilderOPSForNUP(mat, scopes, equipIDs, id)
+	opsq := queryBuilderOPSForNUP(mat, scopes, equipIDs, id...)
 	allocatedUserEquipmentIds := ""
 	if _, ok := equipIDs["notAllocatedUserID"]; ok {
 		if equipIDs["notAllocatedUserID"].(string) != "" {
 			allocatedUserEquipmentIds = equipIDs["notAllocatedUserID"].(string)
 		}
 	}
-	usersq := buildQueryUsersForNUP(scopes, allocatedUserEquipmentIds, id)
+	usersq := buildQueryUsersForNUP(scopes, allocatedUserEquipmentIds, id...)
 	opsLicenses, err := l.licensesForQueryAll(ctx, opsq)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricNUPComputedLicenses - query failed", zap.Error(err), zap.String("query", opsq))

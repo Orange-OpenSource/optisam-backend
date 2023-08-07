@@ -57,10 +57,10 @@ func (r *EquipmentRepository) Equipments(ctx context.Context, eqType *v1.Equipme
 		uids = append(uids, "ID_Pro")
 		querySlice = append(querySlice, aggProEquipsQueryFromID("ID_Pro", params.ProductFilter))
 	}
-	if params.InstanceFilter != nil && len(params.InstanceFilter.Filters) != 0 {
-		uids = append(uids, "ID_Ins")
-		querySlice = append(querySlice, aggInsEquipsQueryFromID("ID_Ins", params.InstanceFilter))
-	}
+	// if params.InstanceFilter != nil && len(params.InstanceFilter.Filters) != 0 {
+	// 	uids = append(uids, "ID_Ins")
+	// 	querySlice = append(querySlice, aggInsEquipsQueryFromID("ID_Ins", params.InstanceFilter))
+	// }
 	q := `query Equips($tag:string,$pagesize:string,$offset:string) {
 			EquipID as var(func: eq(equipment.type,` + eqType.Type + `)) ` + agregateFilters(scopeFilters(scopes), equipFilter(eqType, params.Filter)) + `{}
 			` + strings.Join(querySlice, "\n") + `
@@ -712,9 +712,7 @@ func aggAppEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
 		return ""
 	}
 	return ` var(func: eq(application.id,"` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `")) @cascade{
-		application.instance{
-		` + id + ` as instance.equipment
-		}
+		` + id + ` as application.equipment
 	  }`
 }
 
@@ -727,11 +725,11 @@ func aggProEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
 	  }`
 }
 
-func aggInsEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
-	if filter == nil && len(filter.Filters) == 0 {
-		return ""
-	}
-	return ` var(func: eq(instance.id,"` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `")) @cascade{
-		` + id + ` as instance.equipment
-	  }`
-}
+// func aggInsEquipsQueryFromID(id string, filter *v1.AggregateFilter) string {
+// 	if filter == nil && len(filter.Filters) == 0 {
+// 		return ""
+// 	}
+// 	return ` var(func: eq(instance.id,"` + fmt.Sprintf("%v", filter.Filters[0].Value()) + `")) @cascade{
+// 		` + id + ` as instance.equipment
+// 	  }`
+// }

@@ -84,6 +84,57 @@
             }
          }
       },
+      "/api/v1/import/nominative/user": {
+         "post": {
+            "summary": "Upload file or files.",
+            "consumes": [
+               "multipart/form-data"
+            ],
+            "parameters": [
+               {
+                  "in": "formData",
+                  "name": "file",
+                  "type": "file",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "scope",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "product_name",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "product_version",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "aggregation_id",
+                  "type": "string",
+                  "required": true
+               },
+               {
+                  "in": "formData",
+                  "name": "editor",
+                  "type": "string",
+                  "required": true
+               }
+            ],
+            "responses": {
+               "200": {
+                  "description": "A successful response."
+               }
+            }
+         }
+      },
       "/api/v1/import/data": {
          "post": {
             "summary": "Upload multiple Data files.",

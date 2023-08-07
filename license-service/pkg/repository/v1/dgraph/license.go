@@ -90,9 +90,9 @@ func (l *LicenseRepository) GetAcqRights(ctx context.Context, swidtags []string,
 		q += ` and eq(acqRights.editor,"` + editor + `")`
 	}
 	if len(swidtags) != 0 {
-		q += `and not eq (acqRights.swidtag,[` + strings.Join(swidtags, ",") + `])`
+		q += `and not eq (acqRights.swidtag,["` + strings.Join(swidtags, ",") + `"])`
 	}
-	q += `) @groupby(acqRights.swidtag){
+	q += `) @groupby(acqRights.swidtag,acqRights.productName){
 	    }
 	}`
 	logger.Log.Debug("Query called for GetAcqRights", zap.String("query", q))

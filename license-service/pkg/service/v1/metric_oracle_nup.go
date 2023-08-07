@@ -15,8 +15,10 @@ import (
 
 func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricNUP(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
+		logger.Log.Sugar().Infow("computedLicensesNUP", "error", err.Error())
 		return 0, "", status.Error(codes.Internal, "cannot fetch metric NUP")
 
 	}
@@ -75,7 +77,7 @@ func (s *licenseServiceServer) computedLicensesNUP(ctx context.Context, eqTypes 
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
 		mat.Name = input[MetricName].(string)
-		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricNUPComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		return 0, "", status.Error(codes.Internal, "cannot compute licenses for metric OPS")

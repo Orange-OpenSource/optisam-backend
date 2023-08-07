@@ -1,0 +1,79 @@
+{
+   "Create_Concurrent_User": {
+        "scope": "API",
+        "aggregation_id": 0,
+        "is_aggregations": false,
+        "swidtag": "#string",
+        "product_name": "Adobe Media Server",
+        "product_editor": "Adobe",
+        "product_version": "1.0.1",
+        "number_of_users": 3,
+        "profile_user": "QA",
+        "team": "Team1",
+        "id": 0
+      },
+
+   "Edit_Concurrent_user": {
+        "scope": "API",
+        "aggregation_id": 0,
+        "is_aggregations": false,
+        "swidtag": "#string",
+        "product_name": "Adobe Media Server",
+        "product_editor": "Adobe",
+        "product_version": "1.0.1",
+        "number_of_users": 35,
+        "profile_user": "QA",
+        "team": "Team3",
+        "id": 0
+   },
+
+   "create_aggregation_user": {
+      "aggregation_id": "1071",
+      "id": 0,
+      "is_aggregations": true,
+      "number_of_users": 12,
+      "product_name": "",
+      "product_version": "",
+      "profile_user": "testing",
+      "scope": "API",
+      "swidtag": "",
+      "team": "QA"
+   },
+
+   "edit_aggregation_user": {
+      "aggregation_id":1183,
+   "scope":"API",
+   "product_name":"",
+   "product_version":"",
+   "number_of_users":18,
+   "team":"QA",
+   "profile_user":"testing",
+   "swidtag":"","is_aggregations":true,
+   "id":716},
+
+      "createAgg": {"ID":0,
+      "aggregation_name":"Aggregation_test18",
+      "product_editor":"Oracle",
+      "scope":"API",
+      "product_names":["Administration Assistant"],
+      "swidtags":["Administration_Assistant_Oracle_15.0.2",
+      "Administration_Assistant_Oracle_10.2.0.3",
+      "Administration_Assistant_Oracle_11.1.0.7.0",
+      "Administration_Assistant_Oracle_15.5",
+      "Administration_Assistant_Oracle_15.0.3_x64",
+      "Administration_Assistant_Oracle_15.0",
+      "Administration_Assistant_Oracle_15.0_x64",
+      "Administration_Assistant_Oracle_11.2.0.2.0",
+      "Administration_Assistant_Oracle_15.0.3",
+      "Administration_Assistant_Oracle_11.2.0.1.0",
+      "Administration_Assistant_Oracle_15.7",
+      "Administration_Assistant_Oracle_11.2.0.1.0_x64"]},
+      
+      "add_concurrent_user":
+      {"aggregation_id":1185,
+      "scope":"API","product_name":"",
+      "product_version":"",
+      "number_of_users":12,"team":"QA",
+      "profile_user":"Admin","swidtag":"",
+      "is_aggregations":true,"id":0}
+  }

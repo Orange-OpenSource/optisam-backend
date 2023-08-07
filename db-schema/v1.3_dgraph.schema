@@ -1,0 +1,135 @@
+// OPTISAM-3419
+// OPTISAM-3376_1
+// OPTISAM-4506_1
+
+// OPTISAM-3402 
+<Predicates>
+// Create new predicate and allocated to Aggregation type 
+aggregation.concurrent.users :  [uid] @reverse .
+
+// Create new predicate and allocated to Product type 
+product.concurrent.users :  [uid]  @reverse .
+
+concurrent.user.swidtag  : string @index(exact) .
+concurrent.user.number_of_users :  int .
+concurrent.user.profile_user : string .
+concurrent.user.team : string .
+concurrent.user.is_aggregations : bool .
+concurrent.user.purchase_date : datetime  .
+concurrent.user.aggregation.id : int .
+
+type ProductConcurrentUser {
+    type_name
+    scopes
+    updated
+    created
+    concurrent.user.swidtag  
+    concurrent.user.number_of_users 
+    concurrent.user.profile_user 
+    concurrent.user.team 
+    concurrent.user.is_aggregations
+    concurrent.user.purchase_date
+    concurrent.user.aggregation.id
+}
+
+
+//OPTISAM-3397
+<Predicates>
+
+//--for product 
+<product.nominative.users>: [uid] @reverse .
+
+//--for aggregation
+<aggregation.nominative.users>: [uid] @reverse .
+
+//-- for nominative user
+<nominative.user.editor>: string .
+<nominative.user.swidtag>: string .
+<nominative.user.aggregation.id>: int .
+<nominative.user.email>: string @index(exact) .
+<nominative.user.first_name>: string .
+<nominative.user.name>: string .
+<nominative.user.profile>: string .
+<nominative.user.activation.date>: string .
+
+<Types>
+
+//--for product add
+type <Product> {
+	product.nominative.users
+    product.concurrent.users
+}
+
+//--for aggregation add
+type <Aggregation> {
+	aggregation.nominative.users
+    aggregation.concurrent.users
+}
+
+//--for nominative user
+type <NominativeUser> {
+	type_name
+	scopes
+	updated
+	created
+	nominative.user.editor
+	nominative.user.swidtag
+	nominative.user.aggregation.id
+	nominative.user.email
+	nominative.user.first_name
+	nominative.user.name
+	nominative.user.profile
+	nominative.user.activation.date
+}
+
+
+<Predicates>
+
+//--for application
+<application.environment>: string .
+<application.equipment>: [uid] @count @reverse .
+
+<Types>
+
+type <Application> {
+	type_name
+	scopes
+	updated
+	created
+	application.id
+	application.name
+	application.version
+	application.owner
+	application.domain
+	application.instance
+	application.product
+    application.environment
+    application.equipment
+}
+
+//OPTISAM-4506_1
+<Predicates>
+metric.user_nominative.profile    : string .
+metric.user_concurrent.profile    : string .
+
+
+<Types>
+type MetricUNS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.user_nominative.profile
+}
+
+type MetricUCS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.user_concurrent.profile
+}

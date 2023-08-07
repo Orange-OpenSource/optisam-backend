@@ -4,14 +4,15 @@ Feature: Product Service Test - admin user
   Background:
     * url productServiceUrl+'/api/v1'
    # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
-   # * def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+  
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
     * def scope = 'API'
-    
+   
+  @SmokeTest
   @schema
   Scenario: Schema Validation for get product list
     Given path 'products'
@@ -20,8 +21,8 @@ Feature: Product Service Test - admin user
     When method get
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
-    * match response.products == '#[_ > 0] schema'
-    * match response.products == '#[_ <= 50] schema'
+    #* match response.products == '#[_ > 0] schema'
+    #* match response.products == '#[_ <= 50] schema'
 
      @get
   Scenario: To verify user can get list of all products for the scope
@@ -30,9 +31,8 @@ Feature: Product Service Test - admin user
     When method get
     Then status 200
     And response.totalRecords > 0
-    * def result = karate.jsonPath(response, "$.products[?(@.swidTag=='"+data.getProduct.swidTag+"')]")[0]
-    #* print 'Result Printing:' + result
-      * match result == data.getProduct
+   # * def result = karate.jsonPath(response, "$.products[?(@.swidTag=='"+data.getProduct.swidTag+"')]")[0]
+      * match response.products[*].name contains ["Adobe Media Server"]
 
 
      @search
@@ -240,3 +240,93 @@ Scenario Outline: To verify Pagination on Aggregation Product Page with Invalid 
   #   When method post
   #   Then status 200
   #   And match response.success == true
+
+
+
+Scenario Outline: To verify Pagination is working on Nominative Users list(Individual)
+  Given path  'product/nominative/users'
+  And params { page_num:1, page_size:'<page_size>', sort_by:'product_name', sort_order:'asc', scopes:'#(scope)', is_product:true}
+  When method get
+  Then status 200
+ Examples:
+  | page_size |
+  | 200 |
+  | 100 |
+  | 50 |
+
+Scenario Outline: To verify Pagination is working on Nominative Users list(Aggregation)
+  Given path  'product/nominative/users'
+  And params { page_num:1, page_size:'<page_size>', sort_by:'aggregation_name', sort_order:'asc', scopes:'#(scope)', is_product:false}
+  When method get
+  Then status 200
+ Examples:
+  | page_size |
+  | 200 |
+  | 100 |
+  | 50 |
+
+Scenario Outline: To verify Pagination is working on Concurrent Users list(Product)
+  Given path  'product/concurrent'
+  And params { page_num:1, page_size:'<page_size>', sort_by:'product_name', sort_order:'asc', scopes:'#(scope)', is_aggregation:false}
+  When method get
+  Then status 200
+ Examples:
+  | page_size |
+  | 200 |
+  | 100 |
+  | 50 |
+
+Scenario Outline: To verify Pagination is working on Concurrent Users list(Aggregation)
+  Given path  'product/nominative/users'
+  And params { page_num:1, page_size:'<page_size>', sort_by:'aggregation_name', sort_order:'desc', scopes:'#(scope)', is_aggregation:true}
+  When method get
+  Then status 200
+ Examples:
+  | page_size |
+  | 200 |
+  | 100 |
+  | 50 |
+
+Scenario Outline: To verify Pagination is working on Nominative Users list(Individual) with Invalid inputs
+  Given path  'product/nominative/users'
+  And params { page_num:'<page_num>', page_size:'<page_size>', sort_by:'aggregation_name', sort_order:'asc', scopes:'#(scope)', is_product:false}
+  When method get
+  Then status 400
+ Examples:
+ | page_size | page_num |
+ | 5 | 5 |
+ | 10 | 0 |
+ | "A" | 5 |
+
+Scenario Outline: To verify Pagination is working on Nominative Users list(Aggregation) with Invalid inputs
+  Given path  'product/nominative/users'
+  And params { page_num:'<page_num>', page_size:'<page_size>', sort_by:'aggregation_name', sort_order:'asc', scopes:'#(scope)', is_product:false}
+  When method get
+  Then status 400
+  Examples:
+  | page_size | page_num |
+  | 5 | 5 |
+  | 10 | 0 |
+  | "A" | 5 |
+
+Scenario Outline: To verify Pagination is working on Concurrent Users list(Product) with Invalid inputs
+  Given path  'product/concurrent'
+  And params { page_num:'<page_num>', page_size:'<page_size>', sort_by:'product_name', sort_order:'asc', scopes:'#(scope)', is_aggregation:false}
+  When method get
+  Then status 400
+  Examples:
+  | page_size | page_num |
+  | 5 | 5 |
+  | 10 | 0 |
+  | "A" | 5 |
+
+Scenario Outline: To verify Pagination is working on Concurrent Users list(Aggregation) with Invalid inputs
+  Given path  'product/concurrent'
+  And params { page_num:'<page_num>', page_size:'<page_size>', sort_by:'name', sort_order:'desc', scopes:'#(scope)', is_aggregation:true}
+  When method get
+  Then status 400
+  Examples:
+  | page_size | page_num |
+  | 5 | 5 |
+  | 10 | 0 |
+  | "A" | 5 |

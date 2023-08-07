@@ -23,7 +23,8 @@ const (
 	parent_id,
 	scopes,
 	(` + countGroupUsers + `) AS total_users,
-	(` + countGroupDirectChild + `) AS total_groups  
+	(` + countGroupDirectChild + `) AS total_groups,
+	is_group_compliance    
 	FROM groups `
 
 	selectGroupForUser = `SELECT 
@@ -34,7 +35,8 @@ const (
 	scopes,
 	count(*) OVER() AS total_records,
 	(` + countGroupUsers + `) AS total_users,
-	(` + countGroupDirectChild + `) AS total_groups  
+	(` + countGroupDirectChild + `) AS total_groups,
+	is_group_compliance  
 	FROM groups
 	WHERE fully_qualified_name <@ 
 	(SELECT ARRAY(SELECT fully_qualified_name 
@@ -45,8 +47,8 @@ const (
 
 	createGroup = `
 	INSERT INTO 
-	groups(name, fully_qualified_name, scopes, parent_id, created_by)
-	VALUES ($1, $2, $3, $4, $5) RETURNING id
+	groups(name, fully_qualified_name, scopes, parent_id, created_by,is_group_compliance)
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
 	`
 
 	selectChildGroupsAllForGroup = selectGroup + ` WHERE fully_qualified_name <@ 
@@ -64,7 +66,7 @@ const (
 	|| subpath(fully_qualified_name, nlevel($2)) 
 	WHERE fully_qualified_name ~ $3
 	`
-	updateGroupName = `UPDATE groups SET fully_qualified_name = $3, name=$2
+	updateGroupName = `UPDATE groups SET fully_qualified_name = $3, name=$2,scopes =$4,is_group_compliance=$5
 	WHERE id = $1
     `
 
@@ -88,6 +90,13 @@ const (
 	WHERE id=$1`
 
 	selectRootGroup = selectGroup + `WHERE parent_id IS NULL`
+
+	selectGroupComplience = `
+	SELECT grp.id,name,scopes as scope_code,array_agg(scp."scope_name") as scope_name FROM groups  grp
+					left join scopes scp ON scp.scope_code=any(grp.scopes)
+					WHERE is_group_compliance=TRUE
+					group by grp.id
+`
 )
 
 // UserOwnedGroups implements Account UserOwnedGroups function
@@ -102,7 +111,7 @@ func (r *AccountRepository) UserOwnedGroups(ctx context.Context, userID string, 
 		group := &v1.Group{}
 		parentID := sql.NullInt64{}
 		if error := rows.Scan(&group.ID, &group.Name, &group.FullyQualifiedName, &parentID,
-			pq.Array(&group.Scopes), &totalRecords, &group.NumberOfUsers, &group.NumberOfGroups); error != nil {
+			pq.Array(&group.Scopes), &totalRecords, &group.NumberOfUsers, &group.NumberOfGroups, &group.GroupCompliance); error != nil {
 			return 0, nil, error
 		}
 		group.ParentID = parentID.Int64
@@ -115,7 +124,7 @@ func (r *AccountRepository) UserOwnedGroups(ctx context.Context, userID string, 
 func (r *AccountRepository) CreateGroup(ctx context.Context, userID string, group *v1.Group) (*v1.Group, error) {
 	var id int64
 	if err := r.db.QueryRowContext(ctx, createGroup, group.Name, group.FullyQualifiedName,
-		pq.Array(group.Scopes), group.ParentID, userID).Scan(&id); err != nil {
+		pq.Array(group.Scopes), group.ParentID, userID, group.GroupCompliance).Scan(&id); err != nil {
 		return nil, err
 	}
 	group.ID = id
@@ -127,7 +136,7 @@ func (r *AccountRepository) CreateGroup(ctx context.Context, userID string, grou
 func (r *AccountRepository) GroupInfo(ctx context.Context, groupID int64) (*v1.Group, error) {
 	grp := &v1.Group{}
 	parentID := sql.NullInt64{}
-	if err := r.db.QueryRowContext(ctx, selectGroupWithID, groupID).Scan(&grp.ID, &grp.Name, &grp.FullyQualifiedName, &parentID, pq.Array(&grp.Scopes), &grp.NumberOfUsers, &grp.NumberOfGroups); err != nil {
+	if err := r.db.QueryRowContext(ctx, selectGroupWithID, groupID).Scan(&grp.ID, &grp.Name, &grp.FullyQualifiedName, &parentID, pq.Array(&grp.Scopes), &grp.NumberOfUsers, &grp.NumberOfGroups, &grp.GroupCompliance); err != nil {
 		return nil, err
 	}
 	grp.ParentID = parentID.Int64
@@ -217,7 +226,7 @@ func (r *AccountRepository) UpdateGroup(ctx context.Context, groupID int64, upda
 		}
 	}()
 	newFullyQualifiedName := strings.TrimSuffix(grpInfo.FullyQualifiedName, grpInfo.Name) + update.Name
-	result, err := r.db.ExecContext(ctx, updateGroupName, groupID, update.Name, newFullyQualifiedName)
+	result, err := r.db.ExecContext(ctx, updateGroupName, groupID, update.Name, newFullyQualifiedName, pq.Array(update.Scopes), update.GroupCompliance)
 	if err != nil {
 		return err
 	}
@@ -312,11 +321,35 @@ func (r *AccountRepository) IsGroupRoot(ctx context.Context, groupID int64) (boo
 func (r *AccountRepository) GetRootGroup(ctx context.Context) (*v1.Group, error) {
 	grp := &v1.Group{}
 	parentID := sql.NullInt64{}
-	if err := r.db.QueryRowContext(ctx, selectRootGroup).Scan(&grp.ID, &grp.Name, &grp.FullyQualifiedName, &parentID, pq.Array(&grp.Scopes), &grp.NumberOfUsers, &grp.NumberOfGroups); err != nil {
+	if err := r.db.QueryRowContext(ctx, selectRootGroup).Scan(&grp.ID, &grp.Name, &grp.FullyQualifiedName, &parentID, pq.Array(&grp.Scopes), &grp.NumberOfUsers, &grp.NumberOfGroups, &grp.GroupCompliance); err != nil {
 		return nil, err
 	}
 	grp.ParentID = parentID.Int64
 	return grp, nil
+}
+
+// GetComplienceGroups -
+func (r *AccountRepository) GetComplienceGroups(ctx context.Context) ([]v1.GetComplienceGroups, error) {
+	rows, err := r.db.QueryContext(ctx, selectGroupComplience)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []v1.GetComplienceGroups
+	for rows.Next() {
+		var i v1.GetComplienceGroups
+		if err := rows.Scan(&i.ID, &i.Name, pq.Array(&i.ScopeCode), pq.Array(&i.ScopeName)); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func queryDeleteUsersIntoGroupOwnership(groupID int64, users []string) ([]interface{}, string) {
@@ -361,7 +394,7 @@ func scanGroupRows(rows *sql.Rows) ([]*v1.Group, error) {
 		group := &v1.Group{}
 		parentID := sql.NullInt64{}
 		if err := rows.Scan(&group.ID, &group.Name, &group.FullyQualifiedName, &parentID,
-			pq.Array(&group.Scopes), &group.NumberOfUsers, &group.NumberOfGroups); err != nil {
+			pq.Array(&group.Scopes), &group.NumberOfUsers, &group.NumberOfGroups, &group.GroupCompliance); err != nil {
 			return nil, err
 		}
 		group.ParentID = parentID.Int64

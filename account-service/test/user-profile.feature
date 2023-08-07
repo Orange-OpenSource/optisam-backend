@@ -20,14 +20,28 @@ Feature: Account Service Test
   #   Then status 200
 
 
-  # Scenario: Create User account with Admin role and delete it
-  #   Given path 'accounts' 
-  #   And request data.createAdminAccount
-  #   When method post
-  #   Then status 200
-  #   And match response == data.createAdminAccount
-  #   * path 'accounts' ,data.createAdminAccount.user_id
-  #   * header Authorization = 'Bearer '+access_token
-  #   * method delete
-  #   * status 200
-  #   * match response.success == true
+   Scenario: Create User account with Admin role and delete it
+     Given path 'account/user' 
+     And request data.createAdminAccount
+     When method post
+     Then status 200 
+    And match response == data.createAdminAccount
+    
+     * path 'account' ,data.createAdminAccount.user_id
+     * header Authorization = 'Bearer '+access_token
+     * method delete
+    * status 200
+    * match response.success == true
+
+  Scenario: Create User account with User role and delete it
+    Given path 'account/user' 
+    And request data.createUserAccount
+    When method post
+    Then status 200 
+   And match response == data.createUserAccount
+   * print response
+    * path 'account' ,data.createUserAccount.user_id
+    * header Authorization = 'Bearer '+access_token
+    * method delete
+   * status 200
+   * match response.success == true

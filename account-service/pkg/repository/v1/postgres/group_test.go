@@ -32,7 +32,7 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "admin@test.com",
 			},
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			want: 1,
 			setup: func() ([]*v1.Group, cleanUpFunc, error) {
 				return []*v1.Group{
@@ -60,10 +60,10 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "admin@test.com",
 			},
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			want: 5,
 			setup: func() (grps []*v1.Group, clenaup cleanUpFunc, retErr error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				g1 := &v1.Group{
 					Name:               "G1",
 					FullyQualifiedName: "ROOT.G1",
@@ -157,10 +157,10 @@ func TestAccountRepository_UserOwnedGroups(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "user7@test.com",
 			},
-			r:    NewAccountRepository(db),
+			r:    NewAccountRepository(db, rc),
 			want: 2,
 			setup: func() (grps []*v1.Group, clenaup cleanUpFunc, retErr error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				g1 := &v1.Group{
 					Name:               "G1",
 					FullyQualifiedName: "ROOT.G1",
@@ -294,13 +294,13 @@ func TestAccountRepository_DeleteGroup(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
 			setup: func() (func() error, int64, error) {
 
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				acc := &v1.AccountInfo{
 					UserID:    "admintest",
 					FirstName: "FIRST",
@@ -409,7 +409,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 				update: &v1.GroupUpdate{
@@ -458,7 +458,7 @@ func TestAccountRepository_UpdateGroup(t *testing.T) {
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, nil, 0, err
@@ -604,7 +604,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -650,7 +650,7 @@ func TestAccountRepository_ChildGroupsDirect(t *testing.T) {
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, nil, 0, err
@@ -769,7 +769,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -815,7 +815,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 						FullyQualifiedName: "SUPERROOT.A.B.E.G",
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, nil, "", err
@@ -943,12 +943,12 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 // 		wantErr bool
 // 	}{
 // 		{name: "success",
-// 			r: NewAccountRepository(db),
+// 			r: NewAccountRepository(db,rc),
 // 			args: args{
 // 				ctx: context.Background(),
 // 			},
 // 			setup: func() (func() error, int64, error) {
-// 				repo := NewAccountRepository(db)
+// 				repo := NewAccountRepository(db,rc)
 // 				q := `
 // 				INSERT INTO groups(name, fully_qualified_name) VALUES ('A','ROOT.A') RETURNING id
 // 				`
@@ -963,7 +963,7 @@ func TestAccountRepository_UserOwnedGroupsDirect(t *testing.T) {
 // 			want: true,
 // 		},
 // 		{name: "success-group not present",
-// 			r: NewAccountRepository(db),
+// 			r: NewAccountRepository(db,rc),
 // 			args: args{
 // 				ctx: context.Background(),
 // 			},
@@ -1050,13 +1050,13 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:     context.Background(),
 				userIDs: []string{"u2"},
 			},
 			setup: func() (func() error, []*groupWithUsers, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				grpID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&grpID); err != nil {
@@ -1136,7 +1136,7 @@ func TestAccountRepository_AddGroupUsers(t *testing.T) {
 				}, gwu, grpID, nil
 			},
 			verify: func(a *AccountRepository, gwu []*groupWithUsers) error {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				for i := range gwu {
 					acc, err := repo.GroupUsers(context.Background(), gwu[i].groupID)
 					if err != nil {
@@ -1211,13 +1211,13 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:     context.Background(),
 				userIDs: []string{"u1", "u3"},
 			},
 			setup: func() (func() error, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				grpID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('TEST','TEST') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&grpID); err != nil {
@@ -1242,7 +1242,7 @@ func TestAccountRepository_DeleteGroupUsers(t *testing.T) {
 				}, grpID, nil //B
 			},
 			verify: func(a *AccountRepository, grpID int64) error {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				acc, err := repo.GroupUsers(context.Background(), grpID)
 				if err != nil {
 					return err
@@ -1353,7 +1353,7 @@ func deleteGroups(db *sql.DB, groups []int64) (retErr error) {
 
 // []int{-1,0,1,1,2,2,5,5}
 func createGroupsHierarchyNew(groups []*v1.Group, userID string, hir []int) error {
-	repo := NewAccountRepository(db)
+	repo := NewAccountRepository(db, rc)
 	for i, group := range groups {
 		if i == 0 {
 			continue
@@ -1388,7 +1388,7 @@ func TestAccountRepository_IsGroupRoot(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success - root group",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -1401,12 +1401,12 @@ func TestAccountRepository_IsGroupRoot(t *testing.T) {
 			want: true,
 		},
 		{name: "success-group present but not root",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
 			setup: func() (func() error, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				q := `
 						INSERT INTO groups(name, fully_qualified_name,parent_id) VALUES ('A','ROOT.A',1) RETURNING id
 						`
@@ -1421,7 +1421,7 @@ func TestAccountRepository_IsGroupRoot(t *testing.T) {
 			want: false,
 		},
 		{name: "success-group not present",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -1481,12 +1481,12 @@ func TestAccountRepository_GetRootGroup(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
 			setup: func() (func() error, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				grpID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name,parent_id) VALUES ('A','ROOT.A',1) returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&grpID); err != nil {

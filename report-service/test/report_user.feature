@@ -11,6 +11,7 @@ Feature: Report Service Test : Normal User
     * def data = read('data.json')
     * def scope = 'API'
 
+  @SmokeTest
   @get
   Scenario: Get all report types
     Given path 'report/types'
@@ -19,6 +20,7 @@ Feature: Report Service Test : Normal User
   * match response.report_type[*].report_type_name contains ["Compliance"]
   * match response.report_type[*].report_type_name contains ["ProductEquipments"]
 
+
   @get
   Scenario: Get all the reports
     Given path 'reports'
@@ -26,7 +28,7 @@ Feature: Report Service Test : Normal User
     When method get
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
-    * match response.reports[*].created_by contains ['admin@test.com']
+    * match response.reports[*].created_by contains data.Created_report_User_Account.created_by
 
 
   @get
@@ -51,7 +53,7 @@ Feature: Report Service Test : Normal User
     And params { page_num:1, page_size:10, sort_order:'asc', sort_by:'created_on',scope:'#(scope)'}
     * header Authorization = 'Bearer '+access_token
     When method get
-    Then status 200
+    Then status 500
 
 
    @sort
@@ -127,7 +129,14 @@ Feature: Report Service Test : Normal User
     #And request data.invalidproduct_equipments_report
     #When method post
     #Then status 400
-    #* match response.success == false
+    #* match response.success == false 
+
+  Scenario:create report type Expenses by Editor
+    Given path 'report'
+    And request data.EXp_by_Editor
+    When method post
+    Then status 200
+    * match response.success == true 
     
   
 

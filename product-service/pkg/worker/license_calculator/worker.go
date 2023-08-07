@@ -49,6 +49,9 @@ type DataUpdateWorker struct {
 
 // DoWork ...
 func (w *LicenseCalWorker) DoWork(ctx context.Context, j *job.Job) error {
+	logger.Log.Sugar().Infof("before sleep")
+	time.Sleep(60 * time.Second)
+	logger.Log.Sugar().Infof("running worker")
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Error("Panic recovered from cron job", zap.Any("recover", r))
@@ -81,7 +84,7 @@ func (w *LicenseCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 			logger.Log.Error("worker - licenseCalculator - DeleteOverallComputedLicensesByScope ", zap.Any("error", err), zap.Any("scope", scope))
 			return status.Error(codes.Internal, "error deleting OverAllComputedLicences by scope")
 		}
-		editors, err := w.productRepo.ListEditorsForAggregation(ctx, scope)
+		editors, err := w.productRepo.ListEditorsForAggregation(ctx, []string{scope})
 		if err != nil {
 			logger.Log.Error("worker - LicenceCalculator - ListEditors", zap.Error(err))
 			return status.Error(codes.Internal, "error fetching list of editor")
@@ -94,7 +97,8 @@ func (w *LicenseCalWorker) DoWork(ctx context.Context, j *job.Job) error {
 				Editor: editor,
 			})
 			if err != nil {
-				logger.Log.Error("worker - licenseCalculator - GetOverAllCompliance", zap.Error(err))
+				logger.Log.Error("worker - licenseCalculator - GetOverAllCompliance", zap.Error(err), zap.Any("scope", scope), zap.Any("editor", editor))
+				continue
 				// return status.Error(codes.Internal, "error fetching GetOverAllCompliance")
 			}
 			if err := w.addComputedLicences(ctx, resp.AcqRights, editor, scope); err != nil {

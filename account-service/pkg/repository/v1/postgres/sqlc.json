@@ -8,7 +8,10 @@
         "emit_interface": true,
         "path": ".",
         "queries": "./query/",
-        "schema": "./schema/"
+        "schema":[
+        "./schema_archive/1_user_login.sql",
+        "./schema_archive/2_add_users_audit_table.sql"
+      ]
       }
     ]
   }

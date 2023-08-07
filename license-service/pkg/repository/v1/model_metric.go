@@ -24,6 +24,10 @@ const (
 	MetricUserSumStandard MetricType = "user.sum.standard"
 	// MetricEquipAttrStandard is equipment.attribute.standard
 	MetricEquipAttrStandard MetricType = "equipment.attribute.standard"
+	// MetricUserNomStandard is user.nominative.standard
+	MetricUserNomStandard MetricType = "user.nominative.standard"
+	// MetricUserConcurentStandard is user.concurrent.standard
+	MetricUserConcurentStandard MetricType = "user.concurrent.standard"
 )
 
 // String implements Stringer interface
@@ -59,6 +63,8 @@ const (
 	MetricUserSum         MetricTypeID = 8
 	MetricStatic          MetricTypeID = 9
 	MetricEquipAttr       MetricTypeID = 10
+	MetricNominativeUser  MetricTypeID = 11
+	MetricConcurentUser   MetricTypeID = 12
 )
 
 // MetricDescription provide description
@@ -87,6 +93,10 @@ const (
 	MetricDescriptionUserSumStandard MetricDescription = "Number of licenses required = Sum of all users using the product."
 	// MetricDescriptionStaticStandard provides description of static.standard
 	MetricDescriptionStaticStandard MetricDescription = "Number of licenses required = Reference Value."
+	// MetricDescriptionUserNomStandard provides description of user.nominative.standard
+	MetricDescriptionUserNomStandard MetricDescription = "sum the number of users with profile = [profile]"
+	// MetricDescriptionUserConcurentStandard provides description of user.concurrent.standard
+	MetricDescriptionUserConcurentStandard MetricDescription = "latest number of users with profile = [profile]"
 )
 
 var (
@@ -145,6 +155,18 @@ var (
 			Description: MetricDescriptionStaticStandard.String(),
 			Href:        "/api/v1/metric/ss",
 			MetricType:  MetricStatic,
+		},
+		{
+			Name:        MetricUserNomStandard,
+			Description: MetricDescriptionUserNomStandard.String(),
+			Href:        "/api/v1/metric/uns",
+			MetricType:  MetricNominativeUser,
+		},
+		{
+			Name:        MetricUserConcurentStandard,
+			Description: MetricDescriptionUserConcurentStandard.String(),
+			Href:        "/api/v1/metric/user_conc",
+			MetricType:  MetricConcurentUser,
 		},
 	}
 )

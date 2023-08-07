@@ -25,15 +25,29 @@ agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
 [database]
 host = "svc-optisam-postgres.int-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "account"
+pass = ""
+name = "account" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "account" 
+[database.Migration]
+version = ""#version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
+direction = ""
+migrationPath  = "./schema"
 
 [redis]
-host = "red-int-redis-int-service"
-#pass = ""
+redishost = ""
+redispassword = ""
 db = 0
-#username = ""
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
 
 [pki]
 publickeypath = "/opt/secret/ssh-privatekey"

@@ -20,7 +20,6 @@ type ProductCatalogClient interface {
 	InsertProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Product, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*Product, error)
 	CreateEditor(ctx context.Context, in *CreateEditorRequest, opts ...grpc.CallOption) (*Editor, error)
-	GetEditor(ctx context.Context, in *GetEditorRequest, opts ...grpc.CallOption) (*Editor, error)
 	UpdateEditor(ctx context.Context, in *Editor, opts ...grpc.CallOption) (*Editor, error)
 	DeleteProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 	UpdateProduct(ctx context.Context, in *Product, opts ...grpc.CallOption) (*Product, error)
@@ -58,15 +57,6 @@ func (c *productCatalogClient) GetProduct(ctx context.Context, in *GetProductReq
 func (c *productCatalogClient) CreateEditor(ctx context.Context, in *CreateEditorRequest, opts ...grpc.CallOption) (*Editor, error) {
 	out := new(Editor)
 	err := c.cc.Invoke(ctx, "/optisam.productcatalog.v1.ProductCatalog/CreateEditor", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *productCatalogClient) GetEditor(ctx context.Context, in *GetEditorRequest, opts ...grpc.CallOption) (*Editor, error) {
-	out := new(Editor)
-	err := c.cc.Invoke(ctx, "/optisam.productcatalog.v1.ProductCatalog/GetEditor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +124,6 @@ type ProductCatalogServer interface {
 	InsertProduct(context.Context, *Product) (*Product, error)
 	GetProduct(context.Context, *GetProductRequest) (*Product, error)
 	CreateEditor(context.Context, *CreateEditorRequest) (*Editor, error)
-	GetEditor(context.Context, *GetEditorRequest) (*Editor, error)
 	UpdateEditor(context.Context, *Editor) (*Editor, error)
 	DeleteProduct(context.Context, *GetProductRequest) (*DeleteResponse, error)
 	UpdateProduct(context.Context, *Product) (*Product, error)
@@ -155,9 +144,6 @@ func (UnimplementedProductCatalogServer) GetProduct(context.Context, *GetProduct
 }
 func (UnimplementedProductCatalogServer) CreateEditor(context.Context, *CreateEditorRequest) (*Editor, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateEditor not implemented")
-}
-func (UnimplementedProductCatalogServer) GetEditor(context.Context, *GetEditorRequest) (*Editor, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEditor not implemented")
 }
 func (UnimplementedProductCatalogServer) UpdateEditor(context.Context, *Editor) (*Editor, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEditor not implemented")
@@ -239,24 +225,6 @@ func _ProductCatalog_CreateEditor_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductCatalogServer).CreateEditor(ctx, req.(*CreateEditorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ProductCatalog_GetEditor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetEditorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductCatalogServer).GetEditor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/optisam.productcatalog.v1.ProductCatalog/GetEditor",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductCatalogServer).GetEditor(ctx, req.(*GetEditorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -384,10 +352,6 @@ var _ProductCatalog_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateEditor",
 			Handler:    _ProductCatalog_CreateEditor_Handler,
-		},
-		{
-			MethodName: "GetEditor",
-			Handler:    _ProductCatalog_GetEditor_Handler,
 		},
 		{
 			MethodName: "UpdateEditor",

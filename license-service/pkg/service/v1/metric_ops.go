@@ -62,6 +62,7 @@ func validateLevelsNew(levels []*repo.EquipmentType, startIdx int, base string) 
 
 func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricOPS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		return 0, status.Error(codes.Internal, "cannot fetch metric OPS")
@@ -121,7 +122,7 @@ func (s *licenseServiceServer) computedLicensesOPS(ctx context.Context, eqTypes 
 		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
 		mat.Name = input[MetricName].(string)
-		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricOPSComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Sugar().Infow("cannot compute licenses for metric OPS", "err", err.Error())

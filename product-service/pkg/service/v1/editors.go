@@ -37,20 +37,35 @@ func (s *productServiceServer) ListEditorProducts(ctx context.Context, req *v1.L
 	if !helper.Contains(userClaims.Socpes, req.Scopes...) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.Editor, Scopes: req.Scopes})
-	if err != nil {
-		logger.Log.Error("service/v1 - ListEditorProducts - ListEditorProducts", zap.Error(err))
-		return nil, status.Error(codes.Internal, "DBError")
+	apiresp := v1.ListEditorProductsResponse{}
+	if req.ParkInventory {
+		dbresp, err := s.productRepo.GetProductsByEditorScope(ctx, db.GetProductsByEditorScopeParams{ProductEditor: req.Editor, Scopes: req.Scopes})
+		if err != nil {
+			logger.Log.Error("service/v1 - ListEditorProducts - ListEditorProducts", zap.Error(err))
+			return nil, status.Error(codes.Internal, "DBError")
+		}
+		apiresp.Products = make([]*v1.Product, len(dbresp))
+		for i := range dbresp {
+			apiresp.Products[i] = &v1.Product{}
+			apiresp.Products[i].SwidTag = dbresp[i].Swidtag
+			apiresp.Products[i].Name = dbresp[i].ProductName
+			apiresp.Products[i].Version = dbresp[i].ProductVersion
+		}
+	} else {
+		dbresp, err := s.productRepo.GetProductsByEditor(ctx, db.GetProductsByEditorParams{ProductEditor: req.Editor, Scopes: req.Scopes})
+		if err != nil {
+			logger.Log.Error("service/v1 - ListEditorProducts - ListEditorProducts", zap.Error(err))
+			return nil, status.Error(codes.Internal, "DBError")
+		}
+		apiresp.Products = make([]*v1.Product, len(dbresp))
+		for i := range dbresp {
+			apiresp.Products[i] = &v1.Product{}
+			apiresp.Products[i].SwidTag = dbresp[i].Swidtag
+			apiresp.Products[i].Name = dbresp[i].ProductName
+			apiresp.Products[i].Version = dbresp[i].ProductVersion
+		}
 	}
 
-	apiresp := v1.ListEditorProductsResponse{}
-	apiresp.Products = make([]*v1.Product, len(dbresp))
-	for i := range dbresp {
-		apiresp.Products[i] = &v1.Product{}
-		apiresp.Products[i].SwidTag = dbresp[i].Swidtag
-		apiresp.Products[i].Name = dbresp[i].ProductName
-		apiresp.Products[i].Version = dbresp[i].ProductVersion
-	}
 	return &apiresp, nil
 
 }
@@ -100,6 +115,20 @@ func (s *productServiceServer) GetRightsInfoByEditor(ctx context.Context, req *v
 	}, nil
 }
 
+func (s *productServiceServer) GetAllEditorsCatalog(ctx context.Context, req *v1.GetAllEditorsCatalogRequest) (*v1.GetAllEditorsCatalogResponse, error) {
+	_, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
+	}
+
+	dbresp, err := s.productRepo.GetEditor(ctx)
+	if err != nil {
+		logger.Log.Error("service/v1 - ListEditors - ListEditors", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.GetAllEditorsCatalogResponse{EditorName: dbresp}, nil
+}
+
 func dbRightsInfoToSrvRightsInfoAll(indRightsInfo []db.GetAcqRightsByEditorRow, aggRightsInfo []db.GetAggregationByEditorRow) []*v1.RightsInfoByEditor {
 	servRightsInfo := make([]*v1.RightsInfoByEditor, 0, len(indRightsInfo)+len(aggRightsInfo))
 	for _, ri := range indRightsInfo {
@@ -132,4 +161,34 @@ func dbAggRightsInfoToSrvRightsInfo(rightsInfo db.GetAggregationByEditorRow) *v1
 		AggregationName:     rightsInfo.AggregationName,
 	}
 	return resp
+}
+
+func (s *productServiceServer) GetEditorExpensesByScope(ctx context.Context, req *v1.EditorExpensesByScopeRequest) (*v1.EditorExpensesByScopeResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	dbresp, err := s.productRepo.GetEditorExpensesByScopeData(ctx, []string{req.Scope})
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - GetEditorExpensesByScope - GetEditorExpensesByScopeData",
+			"error", err.Error(),
+			"scope", req.Scope,
+			"status", codes.Internal,
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	apiresp := v1.EditorExpensesByScopeResponse{}
+	apiresp.EditorExpensesByScope = make([]*v1.EditorExpensesByScopeData, len(dbresp))
+	for i := range dbresp {
+		apiresp.EditorExpensesByScope[i] = &v1.EditorExpensesByScopeData{}
+		apiresp.EditorExpensesByScope[i].EditorName = dbresp[i].Editor
+		apiresp.EditorExpensesByScope[i].TotalPurchaseCost = dbresp[i].TotalPurchaseCost
+		apiresp.EditorExpensesByScope[i].TotalMaintenanceCost = dbresp[i].TotalMaintenanceCost
+		apiresp.EditorExpensesByScope[i].TotalCost = dbresp[i].TotalCost
+	}
+	return &apiresp, nil
 }

@@ -275,6 +275,26 @@ func (mr *MockAccountServiceClientMockRecorder) GetScope(arg0, arg1 interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScope", reflect.TypeOf((*MockAccountServiceClient)(nil).GetScope), varargs...)
 }
 
+// GetScopeExpenses mocks base method
+func (m *MockAccountServiceClient) GetScopeExpenses(arg0 context.Context, arg1 *v1.GetScopeRequest, arg2 ...grpc.CallOption) (*v1.ScopeExpenses, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetScopeExpenses", varargs...)
+	ret0, _ := ret[0].(*v1.ScopeExpenses)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopeExpenses indicates an expected call of GetScopeExpenses
+func (mr *MockAccountServiceClientMockRecorder) GetScopeExpenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopeExpenses", reflect.TypeOf((*MockAccountServiceClient)(nil).GetScopeExpenses), varargs...)
+}
+
 // GetScopeLists mocks base method
 func (m *MockAccountServiceClient) GetScopeLists(arg0 context.Context, arg1 *v1.GetScopeListRequest, arg2 ...grpc.CallOption) (*v1.ScopeListResponse, error) {
 	m.ctrl.T.Helper()
@@ -333,6 +353,26 @@ func (mr *MockAccountServiceClientMockRecorder) ListChildGroups(arg0, arg1 inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListChildGroups", reflect.TypeOf((*MockAccountServiceClient)(nil).ListChildGroups), varargs...)
+}
+
+// ListComplienceGroups mocks base method
+func (m *MockAccountServiceClient) ListComplienceGroups(arg0 context.Context, arg1 *v1.ListGroupsRequest, arg2 ...grpc.CallOption) (*v1.ListComplienceGroupsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListComplienceGroups", varargs...)
+	ret0, _ := ret[0].(*v1.ListComplienceGroupsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListComplienceGroups indicates an expected call of ListComplienceGroups
+func (mr *MockAccountServiceClientMockRecorder) ListComplienceGroups(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListComplienceGroups", reflect.TypeOf((*MockAccountServiceClient)(nil).ListComplienceGroups), varargs...)
 }
 
 // ListGroups mocks base method
@@ -433,4 +473,24 @@ func (mr *MockAccountServiceClientMockRecorder) UpdateGroup(arg0, arg1 interface
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateGroup", reflect.TypeOf((*MockAccountServiceClient)(nil).UpdateGroup), varargs...)
+}
+
+// UpsertScopeExpenses mocks base method
+func (m *MockAccountServiceClient) UpsertScopeExpenses(arg0 context.Context, arg1 *v1.UpsertScopeExpensesRequest, arg2 ...grpc.CallOption) (*v1.CreateScopeResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpsertScopeExpenses", varargs...)
+	ret0, _ := ret[0].(*v1.CreateScopeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertScopeExpenses indicates an expected call of UpsertScopeExpenses
+func (mr *MockAccountServiceClientMockRecorder) UpsertScopeExpenses(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertScopeExpenses", reflect.TypeOf((*MockAccountServiceClient)(nil).UpsertScopeExpenses), varargs...)
 }

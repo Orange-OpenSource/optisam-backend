@@ -336,6 +336,29 @@
         ]
       }
     },
+    "/api/v1/account/complience/groups": {
+      "get": {
+        "summary": "GetScope returns scope details for a particular scope",
+        "operationId": "AccountService_ListComplienceGroups",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListComplienceGroupsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
     "/api/v1/account/scope/{scope}": {
       "delete": {
         "summary": "DropScopeData delete all resource/data of a scope in service",
@@ -414,6 +437,70 @@
             "schema": {
               "$ref": "#/definitions/v1CreateScopeRequest"
             }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/scopes/expenses": {
+      "post": {
+        "summary": "UpsertScopeExpenses upsert scope expenses for present year",
+        "operationId": "AccountService_UpsertScopeExpenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpsertScopeExpensesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/scopes/expenses/{scope}": {
+      "get": {
+        "summary": "GetScopeExpenses returns scope details for a particular scope",
+        "operationId": "AccountService_GetScopeExpenses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ScopeExpenses"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "path",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
@@ -776,6 +863,30 @@
         }
       }
     },
+    "v1ComplienceGroup": {
+      "type": "object",
+      "properties": {
+        "group_id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scope_code": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope_name": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1CreateScopeRequest": {
       "type": "object",
       "properties": {
@@ -899,9 +1010,24 @@
           "type": "integer",
           "format": "int32",
           "title": "Not required for creation\nnum_of_users represents number of users who belongs to group"
+        },
+        "group_compliance": {
+          "type": "boolean",
+          "title": "Group compliance group flag created"
         }
       },
       "description": "Group is a collection of scopes and functionalities."
+    },
+    "v1ListComplienceGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "complience_groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ComplienceGroup"
+          }
+        }
+      }
     },
     "v1ListGroupsResponse": {
       "type": "object",
@@ -975,6 +1101,22 @@
         },
         "scope_type": {
           "type": "string"
+        },
+        "expenditure": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1ScopeExpenses": {
+      "type": "object",
+      "properties": {
+        "scope_code": {
+          "type": "string"
+        },
+        "expenses": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -1033,6 +1175,15 @@
       "properties": {
         "name": {
           "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "group_compliance": {
+          "type": "boolean"
         }
       }
     },
@@ -1045,6 +1196,18 @@
         },
         "group": {
           "$ref": "#/definitions/v1UpdateGroup"
+        }
+      }
+    },
+    "v1UpsertScopeExpensesRequest": {
+      "type": "object",
+      "properties": {
+        "scope_code": {
+          "type": "string"
+        },
+        "expenses": {
+          "type": "number",
+          "format": "double"
         }
       }
     },

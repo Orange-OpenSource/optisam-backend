@@ -389,3 +389,133 @@ func TestGetRightsInfoByEditor(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEditorExpensesByScope(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	var met metv1.MetricServiceClient
+	type args struct {
+		ctx context.Context
+		req *v1.EditorExpensesByScopeRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.EditorExpensesByScopeResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.EditorExpensesByScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetEditorExpensesByScopeData(ctx, []string{"scope1"}).Times(1).Return([]db.GetEditorExpensesByScopeDataRow{
+					{
+						Editor:               "Oracle",
+						TotalPurchaseCost:    2.0,
+						TotalMaintenanceCost: 3.0,
+						TotalCost:            5.0,
+					},
+					{
+						Editor:               "Adobe",
+						TotalPurchaseCost:    12.0,
+						TotalMaintenanceCost: 13.0,
+						TotalCost:            25.0,
+					},
+				}, nil)
+			},
+			want: &v1.EditorExpensesByScopeResponse{
+				EditorExpensesByScope: []*v1.EditorExpensesByScopeData{
+					{
+						EditorName:           "Oracle",
+						TotalPurchaseCost:    2.0,
+						TotalMaintenanceCost: 3.0,
+						TotalCost:            5.0,
+					},
+					{
+						EditorName:           "Adobe",
+						TotalPurchaseCost:    12.0,
+						TotalMaintenanceCost: 13.0,
+						TotalCost:            25.0,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{name: "FAILURE-can not find claims in context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.EditorExpensesByScopeRequest{
+					Scope: "scope4",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE-Scope Validation error",
+			args: args{
+				ctx: ctx,
+				req: &v1.EditorExpensesByScopeRequest{
+					Scope: "scope4",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE-db/GetAcqRightsByEditor",
+			args: args{
+				ctx: ctx,
+				req: &v1.EditorExpensesByScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetEditorExpensesByScopeData(ctx, []string{"scope1"}).Times(1).Return([]db.GetEditorExpensesByScopeDataRow{}, errors.New("internal"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				metric:      met,
+			}
+			got, err := tt.s.GetEditorExpensesByScope(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.GetEditorExpensesByScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.GetEditorExpensesByScope() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

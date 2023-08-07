@@ -11,7 +11,7 @@ import (
 func TestLicenseRepository_MetricSPSComputedLicenses(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		id     string
+		id     []string
 		mat    *v1.MetricSPSComputed
 		scopes string
 	}
@@ -41,7 +41,7 @@ func TestLicenseRepository_MetricSPSComputedLicenses(t *testing.T) {
 			l: NewLicenseRepository(dgClient),
 			args: args{
 				ctx: context.Background(),
-				id:  ID,
+				id:  []string{ID},
 				mat: &v1.MetricSPSComputed{
 					BaseType: &v1.EquipmentType{
 						Type: "Server",

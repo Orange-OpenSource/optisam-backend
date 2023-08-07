@@ -1,3 +1,4 @@
+---
 kind: "Template"
 apiVersion: "v1"
 metadata:
@@ -25,7 +26,7 @@ objects:
     apiVersion: v1
     metadata:
       annotations:
-          haproxy.router.openshift.io/timeout: 300s
+        haproxy.router.openshift.io/timeout: 300s
       name: route-svc-optisam-import-${ENV}
       labels:
         run: optisam-import-${ENV}
@@ -81,7 +82,7 @@ objects:
         metadata:
           labels:
             app: optisam-import-${ENV}
-            internal-elasticsearch: 'true'  
+            internal-elasticsearch: 'true'
           name: optisam-import-${ENV}
         spec:
           containers:
@@ -91,11 +92,17 @@ objects:
               env:
                 - name: "ENV"
                   value: ${ENV}
-                - name: "DB_PASSWORD"  
-                  value: ${DB_PASSWORD}
+                - name: "MIG_DIR"
+                  value: ${MIG_DIR}
+                - name: "MIG_VERSION"
+                  value: ${MIG_VERSION}
               envFrom:
                 - secretRef:
-                       name: user-access
+                    name: user-access
+                - secretRef:
+                    name: db-access
+                - secretRef:
+                    name: db-pass
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -123,8 +130,8 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "80m"
-                  memory: "300Mi"
+                  cpu: "5m"
+                  memory: "20Mi"
                 limits:
                   cpu: "100m"
                   memory: "1200Mi"
@@ -147,8 +154,11 @@ objects:
               secret:
                 secretName: secret-apipublickey-${ENV}
 parameters:
-  - name: DB_PASSWORD
-    description: Postgres Database Password
+  - name: MIG_DIR
+    description: Postgres Database variable
+    required: true
+  - name: MIG_VERSION
+    description: Postgres Database variable
     required: true
   - name: TAG
     description: Tag for Docker image

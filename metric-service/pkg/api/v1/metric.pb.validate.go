@@ -343,6 +343,172 @@ var _ interface {
 	ErrorName() string
 } = DeleteMetricResponseValidationError{}
 
+// Validate checks the field values on CreateMetricRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateMetricRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetMetric()).(interface {
+		Validate() error
+	}); ok {
+		if err := v.Validate(); err != nil {
+			return CreateMetricRequestValidationError{
+				field:  "Metric",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if !_CreateMetricRequest_SenderScope_Pattern.MatchString(m.GetSenderScope()) {
+		return CreateMetricRequestValidationError{
+			field:  "SenderScope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	if !_CreateMetricRequest_RecieverScope_Pattern.MatchString(m.GetRecieverScope()) {
+		return CreateMetricRequestValidationError{
+			field:  "RecieverScope",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	return nil
+}
+
+// CreateMetricRequestValidationError is the validation error returned by
+// CreateMetricRequest.Validate if the designated constraints aren't met.
+type CreateMetricRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateMetricRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateMetricRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateMetricRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateMetricRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateMetricRequestValidationError) ErrorName() string {
+	return "CreateMetricRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateMetricRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateMetricRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateMetricRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateMetricRequestValidationError{}
+
+var _CreateMetricRequest_SenderScope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+var _CreateMetricRequest_RecieverScope_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on CreateMetricResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CreateMetricResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// CreateMetricResponseValidationError is the validation error returned by
+// CreateMetricResponse.Validate if the designated constraints aren't met.
+type CreateMetricResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateMetricResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateMetricResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateMetricResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateMetricResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateMetricResponseValidationError) ErrorName() string {
+	return "CreateMetricResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateMetricResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateMetricResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateMetricResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateMetricResponseValidationError{}
+
 // Validate checks the field values on GetMetricConfigurationRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -1412,6 +1578,200 @@ var _ interface {
 } = MetricACSValidationError{}
 
 var _MetricACS_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
+
+// Validate checks the field values on MetricUNS with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *MetricUNS) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		return MetricUNSValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_MetricUNS_Name_Pattern.MatchString(m.GetName()) {
+		return MetricUNSValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[.-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	// no validation rules for Profile
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return MetricUNSValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+// MetricUNSValidationError is the validation error returned by
+// MetricUNS.Validate if the designated constraints aren't met.
+type MetricUNSValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricUNSValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricUNSValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricUNSValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricUNSValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricUNSValidationError) ErrorName() string { return "MetricUNSValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricUNSValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricUNS.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricUNSValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricUNSValidationError{}
+
+var _MetricUNS_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
+
+// Validate checks the field values on MetricUCS with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *MetricUCS) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ID
+
+	if utf8.RuneCountInString(m.GetName()) < 1 {
+		return MetricUCSValidationError{
+			field:  "Name",
+			reason: "value length must be at least 1 runes",
+		}
+	}
+
+	if !_MetricUCS_Name_Pattern.MatchString(m.GetName()) {
+		return MetricUCSValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[.-_A-Za-z0-9]+$\"",
+		}
+	}
+
+	// no validation rules for Profile
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if utf8.RuneCountInString(item) != 3 {
+			return MetricUCSValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value length must be 3 runes",
+			}
+
+		}
+
+	}
+
+	return nil
+}
+
+// MetricUCSValidationError is the validation error returned by
+// MetricUCS.Validate if the designated constraints aren't met.
+type MetricUCSValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricUCSValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricUCSValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricUCSValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricUCSValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricUCSValidationError) ErrorName() string { return "MetricUCSValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricUCSValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricUCS.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricUCSValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricUCSValidationError{}
+
+var _MetricUCS_Name_Pattern = regexp.MustCompile("[.-_A-Za-z0-9]+$")
 
 // Validate checks the field values on ListMetricRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, an

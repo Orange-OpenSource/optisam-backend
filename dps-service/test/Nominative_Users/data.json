@@ -1,0 +1,75 @@
+{
+    "Schema_nominative_user": {
+        "product_version": "1.2",
+        "profile_user": "testing",
+        "product_name": "Irisa",
+        "product_editor": "Datamedia",
+        "team": "test",
+        "number_of_users": "23"
+    },
+    "add_nominative_user":
+        {"editor":"Datamedia",
+        "aggregation_id":0,"scope":"API",
+        "product_name":"Irisa","product_version":"1.2",
+        "user_details":[{"first_name":"Test_page",
+        "email":"Testing@gmail.com","user_name":"Testing",
+        "profile":"QA","activation_date":"2023-04-11T00:00:00.000Z"}]
+        
+    },
+    "createAgg": {"aggregation_id":1186,
+    "scope":"API",
+    "product_name":"","product_version":"",
+    "user_details":[{"first_name":"Deepak ",
+    "email":"thedjaswal@gmail.com","user_name":"thedjaswal",
+    "profile":"QA","activation_date":"2023-04-20T00:00:00.000Z"}]},
+    "create_aggregation_user": {
+        "aggregation_id": "1071",
+        "id": 0,
+        "is_aggregations": true,
+        "number_of_users": 12,
+        "product_name": "",
+        "product_version": "",
+        "profile_user": "testing",
+        "scope": "ACQ",
+        "swidtag": "",
+        "team": "QA"
+     },
+     "Edit_Nominative_user":
+     {
+     "editor":"Axicon Auto ID",
+     "aggregation_id":0,
+     "scope":"ACQ",
+     "product_name":"Axicon Verifer",
+     "product_version":"",
+     "user_details":[
+     {"first_name":"DeepakJ",
+     "email":"thedjaswal@gmail.com",
+     "user_name":"thedjaswal",
+     "profile":"Admin",
+     "activation_date":"2023-04-19T11:00:00.000Z"}]
+     },
+     "create_nominative_user":
+     {"aggregation_id":1186,
+     "scope":"API",
+     "product_name":"",
+     "product_version":"",
+     "user_details":
+     [{"first_name":"User",
+     "email":"User123@gmail.com",
+     "user_name":"User123","profile":"Tester",
+     "activation_date":"2023-04-18T00:00:00.000Z"}]},
+     
+     "edit_aggregation_user":
+     {"aggregation_id":1185,
+     "scope":"API",
+     "product_name":"",
+     "product_version":"",
+     "user_details":
+     [{"first_name":"Test",
+     "email":"Test1@gmail.com",
+     "user_name":"Test1406","profile":"Admin",
+     "activation_date":"2023-04-19T05:30:00.000Z"}]}
+     
+     
+
+}

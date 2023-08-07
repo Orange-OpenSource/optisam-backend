@@ -30,8 +30,6 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
-	"github.com/gobuffalo/packr/v2"
-	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"github.com/spf13/pflag"
@@ -120,17 +118,12 @@ func RunServer() error {
 	}
 	fmt.Println("Dgraph connection verified to", cfg.Dgraph.Hosts)
 
-	// Create database connection.
-	db, err := postgres.NewConnection(cfg.Database)
+	// Create database connection.and exec migratrions
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
-
-	// Verify connection.
-	if err = db.Ping(); err != nil {
-		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", err.Error())
-	}
-	fmt.Println("Postgres connection verified to", cfg.Database.Host)
 	// defer db.Close()
 	defer func() {
 		db.Close()
@@ -139,16 +132,6 @@ func RunServer() error {
 		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
 		<-time.After(waitTime)
 	}()
-
-	// Run Migration
-	migrations := &migrate.PackrMigrationSource{
-		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
-	}
-	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
-	if err != nil {
-		logger.Log.Error(err.Error())
-	}
-	log.Printf("Applied %d migrations!\n", n)
 
 	// Register http health check
 	{

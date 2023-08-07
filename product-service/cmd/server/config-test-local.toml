@@ -9,9 +9,18 @@ loglevel = -1
 [database]
 host = "127.0.0.1"
 port = 5432
-user = "postgres"
-pass = "postgres"
-name = "postgres"
+name = "product"
+[database.admin]
+user = "optisam"
+# pass = ""
+[database.user]
+user = "postgresuser"
+# pass = ""
+[database.Migration]
+steps = 2
+direction = ""
+migrationPath  = "./schema"
+
 
 [dgraph]
 hosts = ["127.0.0.1:9080"]

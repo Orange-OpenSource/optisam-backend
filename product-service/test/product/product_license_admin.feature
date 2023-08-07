@@ -11,7 +11,7 @@ Feature: Product Service Test - admin user
     * def scope = 'API'
 
 @get
-Scenario: To verify Computed licenses for the product Adobe_Media_Server_Adobe
+Scenario: To verify Computed licenses for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get
@@ -21,7 +21,7 @@ Scenario: To verify Computed licenses for the product Adobe_Media_Server_Adobe
 * match response.acq_rights[0].numCptLicences == data.get_productDetail.numCptLicences
 
 @get
-Scenario: To verify Acquired Licenses for the product Adobe_Media_Server_Adobe
+Scenario: To verify Acquired Licenses for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get
@@ -29,7 +29,7 @@ Scenario: To verify Acquired Licenses for the product Adobe_Media_Server_Adobe
 * match response.acq_rights[0].numAcqLicences == data.get_productDetail.numAcqLicences
 
 @get
-Scenario: To verify Delta (licenses) for the product Adobe_Media_Server_Adobe
+Scenario: To verify Delta (licenses) for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get
@@ -37,7 +37,7 @@ Scenario: To verify Delta (licenses) for the product Adobe_Media_Server_Adobe
 * match response.acq_rights[0].deltaNumber == data.get_productDetail.deltaNumber
 
 @get
-Scenario: To verify Delta Cost for the product Adobe_Media_Server_Adobe
+Scenario: To verify Delta Cost for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get
@@ -46,7 +46,7 @@ Scenario: To verify Delta Cost for the product Adobe_Media_Server_Adobe
 
 
 @get
-Scenario: To verify Total Cost for the product Adobe_Media_Server_Adobe
+Scenario: To verify Total Cost for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get
@@ -54,7 +54,7 @@ Scenario: To verify Total Cost for the product Adobe_Media_Server_Adobe
 * match response.acq_rights[0].totalCost == data.get_productDetail.totalCost
 
 @get
-Scenario: To verify SKU for the product Adobe_Media_Server_Adobe
+Scenario: To verify SKU for the product Oracle
   Given path 'license/product/'+data.get_productDetail.swidTag+'/acquiredrights'
   And params {scope:'#(scope)'}
   When method get

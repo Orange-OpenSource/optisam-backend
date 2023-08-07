@@ -23,6 +23,7 @@ func metricNameExistsSPS(metrics []*repo.MetricSPS, name string) int {
 func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, uint64, error) {
 	scope, _ := input[SCOPES].([]string)
 	metrics, err := s.licenseRepo.ListMetricSPS(ctx, scope...)
+	prodID, _ := input[ProdID].([]string)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 - computedLicensesSPS - ", zap.String("reason", err.Error()))
 		return 0, 0, status.Error(codes.Internal, "cannot fetch metric SPS")
@@ -42,7 +43,7 @@ func (s *licenseServiceServer) computedLicensesSPS(ctx context.Context, eqTypes 
 	if input[IsAgg].(bool) {
 		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicensesProd, computedLicensesNonProd, err = s.licenseRepo.MetricSPSComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesSPS - ", zap.String("reason", err.Error()))

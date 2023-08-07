@@ -4,12 +4,16 @@ import (
 	"database/sql"
 	base "optisam-backend/account-service/pkg/repository/v1/postgres/common"
 	"optisam-backend/common/optisam/docker"
+
 	"os"
 	"testing"
+
+	"github.com/go-redis/redis/v8"
 )
 
 // nolint: gochecknoglobals
 var db *sql.DB
+var rc *redis.Client
 
 const (
 	serverPath = "../../../../cmd/server/"

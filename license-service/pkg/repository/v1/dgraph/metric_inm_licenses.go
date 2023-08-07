@@ -11,8 +11,8 @@ import (
 )
 
 // MetricINMComputedLicenses implements Licence MetricINMComputedLicenses function
-func (l *LicenseRepository) MetricINMComputedLicenses(ctx context.Context, id string, mat *v1.MetricINMComputed, scopes ...string) (uint64, uint64, error) {
-	q := buildQueryINM(id)
+func (l *LicenseRepository) MetricINMComputedLicenses(ctx context.Context, id []string, mat *v1.MetricINMComputed, scopes ...string) (uint64, uint64, error) {
+	q := buildQueryINM(id...)
 	instances, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricINMComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))

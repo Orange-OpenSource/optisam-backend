@@ -45,6 +45,7 @@ product.equipment: [uid] @count @reverse .
 product.acqRights: [uid] @count @reverse .
 product.users    :  [uid] @reverse .
 product.allocation: [uid] @reverse .
+product.concurrent.users :  [uid]  @reverse .
 
 editor.name: string @index(exact,trigram) @upsert .
 editor.product: [uid] @reverse .
@@ -57,7 +58,7 @@ aggregation.editor           : string @index(trigram,exact) .
 aggregation.product_names    : [string] @index(trigram,exact) .
 aggregation.swidtags         : [string] @index(trigram,exact) .
 aggregation.products         : [uid] @count @reverse .
-
+aggregation.concurrent.users :  [uid] @reverse .
 
 aggregatedRights.SKU                           : string @index(exact,trigram) .
 aggregatedRights.aggregationId                 : int @index(int) .
@@ -148,6 +149,8 @@ metric.acs.attr_value           : string .
 
 metric.instancenumber.coefficient       : int .
 
+metric.user_nominative.profile        : string .
+
 metric.attr_sum.equipment_type       : string .
 metric.attr_sum.attr_name            : string .
 metric.attr_sum.reference_value      : float .
@@ -158,3 +161,13 @@ metric.equip_attr.equipment_type       : string .
 metric.equip_attr.attr_name            : string .
 metric.equip_attr.environment            : string .
 metric.equip_attr.value      : int .
+
+metric.user_concurrent.profile        : string .
+
+concurrent.user.swidtag  : string @index(exact) .
+concurrent.user.number_of_users :  int .
+concurrent.user.profile_user : string .
+concurrent.user.team : string .
+concurrent.user.is_aggregations : bool .
+concurrent.user.purchase_date : datetime  .
+concurrent.user.aggregation.id : int .

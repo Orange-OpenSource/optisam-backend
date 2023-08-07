@@ -2,11 +2,14 @@ package v1
 
 import (
 	"context"
+	"math"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
+	prodv1 "optisam-backend/product-service/pkg/api/v1"
+	"strings"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -66,13 +69,42 @@ func (s *licenseServiceServer) ListAcqRightsForApplicationsProduct(ctx context.C
 	prodAcqRights := make([]*v1.ProductAcquiredRights, len(prodRights))
 	ind := 0
 	for i, acqRight := range prodRights {
+		metricType := ""
+		availbleLicences := 0
+		sku := strings.Split(acqRight.SKU, ",")
+		for i := range sku {
+			metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
+				Sku:   sku[i],
+				Scope: req.Scope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - ListAcqRightsForApplicationsProduct - GetMetric", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "serviceError")
+			}
+			for _, v := range metrics {
+				if metricName.Metric == v.Name {
+					metricType = string(v.Type)
+				}
+			}
+			resp, err := s.productClient.GetAvailableLicenses(ctx, &prodv1.GetAvailableLicensesRequest{Sku: sku[i], Scope: req.Scope})
+			if err != nil {
+				logger.Log.Error("service/v1 - ListAcqRightsForApplicationsProduct - GetAvailableLicenses", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "serviceError")
+			}
+			if metricType == "oracle.nup.standard" && acqRight.TransformDetails != "" {
+				availbleLicences += int(math.Ceil(float64(resp.AvailableLicenses) / 50))
+			} else {
+				availbleLicences += int(resp.AvailableLicenses)
+			}
+		}
 		prodAcqRights[i] = &v1.ProductAcquiredRights{
-			SKU:            acqRight.SKU,
-			SwidTag:        req.ProdId,
-			Metric:         acqRight.Metric,
-			NumAcqLicences: int32(acqRight.AcqLicenses),
-			TotalCost:      acqRight.TotalCost,
-			AvgUnitPrice:   acqRight.TotalCost / float64(acqRight.AcqLicenses),
+			SKU:               acqRight.SKU,
+			SwidTag:           req.ProdId,
+			Metric:            acqRight.Metric,
+			NumAcqLicences:    int32(acqRight.AcqLicenses),
+			TotalCost:         acqRight.TotalCost,
+			AvgUnitPrice:      acqRight.TotalCost / float64(acqRight.AcqLicenses),
+			AvailableLicences: int32(availbleLicences),
 		}
 		if ind = metricNameExistsAll(metrics, acqRight.Metric); ind == -1 {
 			logger.Log.Error("service/v1 - ListAcqRightsForApplicationsProduct - metric name does not exist", zap.String("metric name", acqRight.Metric))
@@ -97,7 +129,7 @@ func (s *licenseServiceServer) ListAcqRightsForApplicationsProduct(ctx context.C
 			return nil, status.Error(codes.Internal, "cannot compute licenses")
 		}
 		computedLicenses := resp[ComputedLicenses].(uint64)
-		delta := int32(acqRight.AcqLicenses) - int32(computedLicenses)
+		delta := int32(availbleLicences) - int32(computedLicenses)
 
 		prodAcqRights[i].NumCptLicences = int32(computedLicenses)
 		prodAcqRights[i].DeltaNumber = delta

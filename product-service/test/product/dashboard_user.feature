@@ -29,7 +29,7 @@ Feature: Dashboard Test
     Then status 200
     And match response.num_products == data.overview.num_products
   
-
+  @SmokeTest
     @schema
   Scenario: Schema validation for Products on dashboard
    Given path 'dashboard/overview'
@@ -103,7 +103,16 @@ Feature: Dashboard Test
     Then status 200
     #And match response.products_not_acquired[*] contains data.dashboard_products.products_not_acquired
 
+#-------------TO get Shared and Received License amount on the Dashboard------------------#
+    Scenario:To get the shared and Received License Amount on Dashboard 
+      Given path 'sharedamount'
+      And params {scope:"AAK"}
+      When method get 
+      Then status 200 
+      
 
+
+      
 
 
     

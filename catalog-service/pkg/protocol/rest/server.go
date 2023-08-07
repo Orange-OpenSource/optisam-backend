@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 	v1 "optisam-backend/catalog-service/pkg/api/v1"
+	repo "optisam-backend/catalog-service/pkg/repository/v1/postgres"
 	"optisam-backend/common/optisam/config"
 	"optisam-backend/common/optisam/logger"
 	rest_middleware "optisam-backend/common/optisam/middleware/rest"
@@ -18,6 +19,7 @@ import (
 
 	accService "optisam-backend/account-service/pkg/api/v1"
 
+	redisClient "github.com/go-redis/redis/v8"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
@@ -26,7 +28,7 @@ import (
 )
 
 // RunServer runs HTTP/REST gateway
-func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.PublicKey, database *sql.DB, grpcServers map[string]*grpc.ClientConn, authapi string, apiKey string, appCred config.Application) error {
+func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.PublicKey, database *sql.DB, grpcServers map[string]*grpc.ClientConn, authapi string, apiKey string, appCred config.Application, redisc *redisClient.Client) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -36,13 +38,15 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 		logger.Log.Fatal("failed to register GRPC gateway", zap.String("reason", err.Error()))
 
 	}
-
+	repo.SetProductCatalogRepository(database, redisc)
+	dbObj := repo.GetProductCatalogRepository()
 	handler := handler{Db: database,
 		account:     accService.NewAccountServiceClient(grpcServers["account"]),
 		AuthAPI:     authapi,
 		VerifyKey:   verifyKey,
 		APIKey:      apiKey,
 		Application: appCred,
+		pCRepo:      dbObj,
 	}
 
 	muxHTTP.HandleFunc("/debug/pprof/trace", pprof.Trace)
@@ -51,7 +55,9 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 	muxHTTP.HandleFunc("/catalog/editornames", http.HandlerFunc(handler.ListEditorNames))
 	muxHTTP.HandleFunc("/catalog/product", http.HandlerFunc(handler.GetProduct))
 	muxHTTP.HandleFunc("/catalog/products", http.HandlerFunc(handler.GetProducts))
+	muxHTTP.HandleFunc("/catalog/editorfilters", http.HandlerFunc(handler.GetEditorFilters))
 	muxHTTP.HandleFunc("/catalog/index", http.HandlerFunc(handler.GetTesting))
+	muxHTTP.HandleFunc("/catalog/productfilters", http.HandlerFunc(handler.GetProductFilters))
 
 	muxHTTP.Handle("/", gw)
 
@@ -59,13 +65,10 @@ func RunServer(ctx context.Context, grpcPort, httpPort string, verifyKey *rsa.Pu
 		Addr: ":" + httpPort,
 		// Handler: &ochttp.Handler{
 		Handler: &ochttp.Handler{Handler: rest_middleware.AddCORS([]string{"*"},
-			// rest_middleware.ValidateAuth(verifyKey,
-			// rest_middleware.AddLogger(logger.Log,
-			muxHTTP),
+			rest_middleware.AddLogger(logger.Log, muxHTTP)),
 		// ))},
 		},
 	}
-
 	// graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

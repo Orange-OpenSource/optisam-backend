@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -21,16 +22,18 @@ import (
 type ProductCatalogRepository struct {
 	*repo.Queries
 	db *sql.DB
+	r  *redis.Client
 }
 
 var repoObj *ProductCatalogRepository
 
 // NewProductRepository creates new Repository
-func SetProductCatalogRepository(db *sql.DB) *ProductCatalogRepository {
+func SetProductCatalogRepository(db *sql.DB, rc *redis.Client) *ProductCatalogRepository {
 	if repoObj == nil {
 		repoObj = &ProductCatalogRepository{
 			db:      db,
-			Queries: repo.New(db)}
+			Queries: repo.New(db),
+			r:       rc}
 	}
 	return repoObj
 }
@@ -76,21 +79,21 @@ func (p *ProductCatalogRepository) InsertProductTx(ctx context.Context, req *v1.
 		logger.Log.Error("v1/service - InsertProduct - Marshal Error Vendors")
 		return res, status.Error(codes.Internal, err.Error())
 	}
-	if req.OpenSource.IsOpenSource && req.OpenSource.OpenLicences == "" {
-		logger.Log.Error("v1/service - InsertProduct - OpenLicences should not Empty")
-		return res, status.Error(codes.Internal, "OpenLicencesError")
+	// if req.OpenSource.IsOpenSource && req.OpenSource.OpenLicences == "" {
+	// 	logger.Log.Error("v1/service - InsertProduct - OpenLicences should not Empty")
+	// 	return res, status.Error(codes.Internal, "OpenLicencesError")
 
-	}
-	if req.CloseSource.IsCloseSource && len(req.CloseSource.CloseLicences) == 0 {
-		logger.Log.Error("v1/service - InsertProduct - CloseLicences should not Empty")
-		return res, status.Error(codes.Internal, "CloseLicencesError")
-	}
+	// }
+	// if req.CloseSource.IsCloseSource && len(req.CloseSource.CloseLicences) == 0 {
+	// 	logger.Log.Error("v1/service - InsertProduct - CloseLicences should not Empty")
+	// 	return res, status.Error(codes.Internal, "CloseLicencesError")
+	// }
 
-	closesource, err := json.Marshal(req.CloseSource.CloseLicences)
-	if err != nil {
-		logger.Log.Error("v1/service - InsertProduct - Marshal Error CloseLicences")
-		return res, status.Error(codes.Internal, err.Error())
-	}
+	// closesource, err := json.Marshal(req.CloseSource.CloseLicences)
+	// if err != nil {
+	// 	logger.Log.Error("v1/service - InsertProduct - Marshal Error CloseLicences")
+	// 	return res, status.Error(codes.Internal, err.Error())
+	// }
 
 	tx, err := p.db.BeginTx(ctx, nil)
 
@@ -116,29 +119,30 @@ func (p *ProductCatalogRepository) InsertProductTx(ctx context.Context, req *v1.
 
 	req.Id = uuid.New().String()
 	err = pt.Queries.InsertProductCatalog(ctx, db.InsertProductCatalogParams{
-		ID:                  req.Id,
-		Editorid:            req.EditorID,
-		Name:                productname,
-		GenearlInformation:  sql.NullString{String: req.GenearlInformation, Valid: true},
-		ContractTips:        sql.NullString{String: req.ContracttTips, Valid: true},
-		Metrics:             metrics,
-		IsOpensource:        sql.NullBool{Bool: req.OpenSource.IsOpenSource, Valid: true},
-		LicencesOpensource:  sql.NullString{String: req.OpenSource.OpenLicences, Valid: true},
-		IsClosesource:       sql.NullBool{Bool: req.CloseSource.IsCloseSource, Valid: true},
-		LicensesClosesource: closesource,
-		SupportVendors:      vendors,
-		Location:            db.LocationType(req.GetLocationType()),
-		CreatedOn:           time.Now(),
-		UpdatedOn:           time.Now(),
-		Recommendation:      sql.NullString{String: req.Recommendation, Valid: true},
-		UsefulLinks:         usefullinks,
-		SwidTagProduct:      sql.NullString{String: req.SwidtagProduct, Valid: true},
-		EditorName:          editor.Name,
-		OpensourceType:      db.OpensourceType(req.OpenSource.GetOpenSourceType()),
+		ID:                 req.Id,
+		Editorid:           req.EditorID,
+		Name:               productname,
+		GenearlInformation: sql.NullString{String: req.GenearlInformation, Valid: true},
+		ContractTips:       sql.NullString{String: req.ContracttTips, Valid: true},
+		Metrics:            metrics,
+		LicencesOpensource: sql.NullString{String: req.OpenSource.OpenLicences, Valid: true},
+		SupportVendors:     vendors,
+		Location:           db.LocationType(req.GetLocationType()),
+		CreatedOn:          time.Now(),
+		UpdatedOn:          time.Now(),
+		Recommendation:     db.ProductCatalogRecommendation(req.GetRecommendation()),
+		UsefulLinks:        usefullinks,
+		SwidTagProduct:     sql.NullString{String: req.SwidtagProduct, Valid: true},
+		EditorName:         editor.Name,
+		OpensourceType:     db.OpensourceType(req.OpenSource.GetOpenSourceType()),
+		Licensing:          db.ProductCatalogLicensing(req.GetLicensing()),
 	})
 	if err != nil {
-		logger.Log.Error("service/v1 | InsertProduct ", zap.Any("Error while saving records", err))
-		return res, status.Error(codes.Internal, "Error while saving record ")
+		logger.Log.Error("service/v1 | Insert | Insert product", zap.Any("Error while saving record", err))
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return res, status.Error(codes.Internal, "Error while saving record, Duplicate Product Name for an editor")
+		}
+		return res, status.Error(codes.Internal, "Error while saving record")
 	}
 	var swidtag string
 
@@ -208,21 +212,21 @@ func (p *ProductCatalogRepository) UpdateProductTx(ctx context.Context, req *v1.
 		logger.Log.Error("v1/service - UpdateProduct - Marshal Error Vendors")
 		return status.Error(codes.Internal, err.Error())
 	}
-	if req.OpenSource.IsOpenSource && req.OpenSource.OpenLicences == "" {
-		logger.Log.Error("v1/service - UpdateProduct - OpenLicences should not Empty")
-		return status.Error(codes.Internal, "OpenLicencesError")
+	// if req.OpenSource.IsOpenSource && req.OpenSource.OpenLicences == "" {
+	// 	logger.Log.Error("v1/service - UpdateProduct - OpenLicences should not Empty")
+	// 	return status.Error(codes.Internal, "OpenLicencesError")
 
-	}
-	if req.CloseSource.IsCloseSource && len(req.CloseSource.CloseLicences) == 0 {
-		logger.Log.Error("v1/service - UpdateProduct - CloseLicences should not Empty")
-		return status.Error(codes.Internal, "CloseLicencesError")
-	}
+	// }
+	// if req.CloseSource.IsCloseSource && len(req.CloseSource.CloseLicences) == 0 {
+	// 	logger.Log.Error("v1/service - UpdateProduct - CloseLicences should not Empty")
+	// 	return status.Error(codes.Internal, "CloseLicencesError")
+	// }
 
-	closesource, err := json.Marshal(req.CloseSource.CloseLicences)
-	if err != nil {
-		logger.Log.Error("v1/service - UpdateProduct - Marshal Error CloseLicences")
-		return status.Error(codes.Internal, err.Error())
-	}
+	// closesource, err := json.Marshal(req.CloseSource.CloseLicences)
+	// if err != nil {
+	// 	logger.Log.Error("v1/service - UpdateProduct - Marshal Error CloseLicences")
+	// 	return status.Error(codes.Internal, err.Error())
+	// }
 
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -247,24 +251,22 @@ func (p *ProductCatalogRepository) UpdateProductTx(ctx context.Context, req *v1.
 	}
 
 	err = pt.Queries.UpdateProductCatalog(ctx, db.UpdateProductCatalogParams{
-		Name:                productname,
-		Editorid:            req.EditorID,
-		GenearlInformation:  sql.NullString{String: req.GenearlInformation, Valid: true},
-		ContractTips:        sql.NullString{String: req.ContracttTips, Valid: true},
-		SupportVendors:      vendors,
-		Metrics:             metrics,
-		IsOpensource:        sql.NullBool{Bool: req.OpenSource.IsOpenSource, Valid: true},
-		LicencesOpensource:  sql.NullString{String: req.OpenSource.OpenLicences, Valid: true},
-		IsClosesource:       sql.NullBool{Bool: req.CloseSource.IsCloseSource, Valid: true},
-		LicensesClosesource: closesource,
-		Location:            db.LocationType(req.GetLocationType()),
-		UpdatedOn:           time.Now(),
-		Recommendation:      sql.NullString{String: req.Recommendation, Valid: true},
-		UsefulLinks:         usefullinks,
-		SwidTagProduct:      sql.NullString{String: req.SwidtagProduct, Valid: true},
-		EditorName:          editor.Name,
-		OpensourceType:      db.OpensourceType(req.OpenSource.GetOpenSourceType()),
-		ID:                  req.Id,
+		Name:               productname,
+		Editorid:           req.EditorID,
+		GenearlInformation: sql.NullString{String: req.GenearlInformation, Valid: true},
+		ContractTips:       sql.NullString{String: req.ContracttTips, Valid: true},
+		SupportVendors:     vendors,
+		Metrics:            metrics,
+		LicencesOpensource: sql.NullString{String: req.OpenSource.OpenLicences, Valid: true},
+		Location:           db.LocationType(req.GetLocationType()),
+		UpdatedOn:          time.Now(),
+		Recommendation:     db.ProductCatalogRecommendation(req.GetRecommendation()),
+		UsefulLinks:        usefullinks,
+		SwidTagProduct:     sql.NullString{String: req.SwidtagProduct, Valid: true},
+		EditorName:         editor.Name,
+		OpensourceType:     db.OpensourceType(req.OpenSource.GetOpenSourceType()),
+		ID:                 req.Id,
+		Licensing:          db.ProductCatalogLicensing(req.GetLicensing()),
 	})
 
 	if err != nil {

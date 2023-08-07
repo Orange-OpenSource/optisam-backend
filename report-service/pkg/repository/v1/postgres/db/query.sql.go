@@ -21,7 +21,7 @@ func (q *Queries) DeleteReportsByScope(ctx context.Context, scope string) error 
 }
 
 const downloadReport = `-- name: DownloadReport :one
-SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name
+SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name, r.report_metadata
 FROM report r
 JOIN
 report_type rt 
@@ -41,6 +41,7 @@ type DownloadReportRow struct {
 	CreatedOn      time.Time       `json:"created_on"`
 	Scope          string          `json:"scope"`
 	ReportTypeName string          `json:"report_type_name"`
+	ReportMetadata json.RawMessage `json:"report_metadata"`
 }
 
 func (q *Queries) DownloadReport(ctx context.Context, arg DownloadReportParams) (DownloadReportRow, error) {
@@ -52,6 +53,7 @@ func (q *Queries) DownloadReport(ctx context.Context, arg DownloadReportParams) 
 		&i.CreatedOn,
 		&i.Scope,
 		&i.ReportTypeName,
+		&i.ReportMetadata,
 	)
 	return i, err
 }

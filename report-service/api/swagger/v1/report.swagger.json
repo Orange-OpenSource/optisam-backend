@@ -257,6 +257,9 @@
         "created_on": {
           "type": "string",
           "format": "date-time"
+        },
+        "equip_type": {
+          "type": "string"
         }
       }
     },

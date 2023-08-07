@@ -47,13 +47,21 @@ type License interface {
 
 	// MetricOPSComputedLicenses returns the computed licenses
 	// for oracle.processor.standard metric
-	MetricOPSComputedLicenses(ctx context.Context, id string, mat *MetricOPSComputed, scopes ...string) (uint64, error)
+	MetricOPSComputedLicenses(ctx context.Context, id []string, mat *MetricOPSComputed, scopes ...string) (uint64, error)
 
 	MetricOPSComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricOPSComputed, scopes ...string) (uint64, error)
 
-	MetricNUPComputedLicenses(ctx context.Context, id string, mat *MetricNUPComputed, scopes ...string) (uint64, uint64, error)
+	MetricNUPComputedLicenses(ctx context.Context, id []string, mat *MetricNUPComputed, scopes ...string) (uint64, uint64, error)
 
 	MetricNUPComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricNUPComputed, scopes ...string) (uint64, uint64, error)
+
+	MetricUNSComputedLicenses(ctx context.Context, id []string, mat *MetricUNSComputed, scopes ...string) (uint64, uint64, error)
+
+	MetricUNSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricUNSComputed, scopes ...string) (uint64, uint64, error)
+
+	MetricUCSComputedLicenses(ctx context.Context, id []string, mat *MetricUCSComputed, scopes ...string) (uint64, uint64, error)
+
+	MetricUCSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricUCSComputed, scopes ...string) (uint64, uint64, error)
 
 	// ListMetricSPS returns all metrics of type sag.processor.standard
 	ListMetricSPS(ctx context.Context, scopes ...string) ([]*MetricSPS, error)
@@ -61,7 +69,7 @@ type License interface {
 	// TODO: consider scope in computation of licenses ? clarify .
 	// MetricSPSComputedLicenses returns the computed licenses
 	// for sag.processor.standard metric
-	MetricSPSComputedLicenses(ctx context.Context, id string, mat *MetricSPSComputed, scopes ...string) (uint64, uint64, error)
+	MetricSPSComputedLicenses(ctx context.Context, id []string, mat *MetricSPSComputed, scopes ...string) (uint64, uint64, error)
 
 	MetricSPSComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricSPSComputed, scopes ...string) (uint64, uint64, error)
 
@@ -69,21 +77,21 @@ type License interface {
 	ListMetricIPS(ctx context.Context, scopes ...string) ([]*MetricIPS, error)
 
 	// MetricIPSComputedLicenses returns the computed licenses for ibm.pvu.standard metric
-	MetricIPSComputedLicenses(ctx context.Context, id string, mat *MetricIPSComputed, scopes ...string) (uint64, error)
+	MetricIPSComputedLicenses(ctx context.Context, id []string, mat *MetricIPSComputed, scopes ...string) (uint64, error)
 
 	MetricIPSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricIPSComputed, scopes ...string) (uint64, error)
 
 	// MetricACSComputedLicenses returns the computed licenses for attribute.counter.standard metric
-	MetricACSComputedLicenses(ctx context.Context, id string, mat *MetricACSComputed, scopes ...string) (uint64, error)
+	MetricACSComputedLicenses(ctx context.Context, id []string, mat *MetricACSComputed, scopes ...string) (uint64, error)
 
 	// MetricINMComputedLicenses returns the computed licenses for instance.number.standard metric
-	MetricINMComputedLicenses(ctx context.Context, id string, mat *MetricINMComputed, scopes ...string) (uint64, uint64, error)
+	MetricINMComputedLicenses(ctx context.Context, id []string, mat *MetricINMComputed, scopes ...string) (uint64, uint64, error)
 
 	// MetricAttrSumComputedLicenses returns the computed licenses for attribute.sum.standard metric
-	MetricAttrSumComputedLicenses(ctx context.Context, id string, mat *MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error)
+	MetricAttrSumComputedLicenses(ctx context.Context, id []string, mat *MetricAttrSumStandComputed, scopes ...string) (uint64, uint64, error)
 
 	// MetricEquipAttrComputedLicenses returns the computed licenses for equipment.attribute.standard metric
-	MetricEquipAttrComputedLicenses(ctx context.Context, id string, mat *MetricEquipAttrStandComputed, scopes ...string) (uint64, error)
+	MetricEquipAttrComputedLicenses(ctx context.Context, id []string, mat *MetricEquipAttrStandComputed, scopes ...string) (uint64, error)
 
 	// MetricACSComputedLicensesAgg returns the computed licenses for product aggregation for attribute.counter.standard metric
 	MetricACSComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricACSComputed, scopes ...string) (uint64, error)
@@ -98,7 +106,7 @@ type License interface {
 	MetricEquipAttrComputedLicensesAgg(ctx context.Context, name, id string, mat *MetricEquipAttrStandComputed, scopes ...string) (uint64, error)
 
 	// MetricUserSumComputedLicenses returns the computed licenses for user.sum.standard metric
-	MetricUserSumComputedLicenses(ctx context.Context, id string, scopes ...string) (uint64, uint64, error)
+	MetricUserSumComputedLicenses(ctx context.Context, id []string, scopes ...string) (uint64, uint64, error)
 
 	// MetricUserSumComputedLicensesAgg returns the computed licenses for product aggregation for user.sum.standard metric
 	MetricUserSumComputedLicensesAgg(ctx context.Context, name, id string, scopes ...string) (uint64, uint64, error)
@@ -108,6 +116,12 @@ type License interface {
 
 	// ListMetricINM returns all metrics of type instance.number.standard
 	ListMetricINM(ctx context.Context, scopes ...string) ([]*MetricINM, error)
+
+	// ListMetricUNS returns all metrics of type user.nominative.standard
+	ListMetricUNS(ctx context.Context, scopes ...string) ([]*MetricUNS, error)
+
+	// ListMetricUCS returns all metrics of type user.concurrent.standard
+	ListMetricUCS(ctx context.Context, scopes ...string) ([]*MetricUCS, error)
 
 	// ListMetricSS returns all metrics of type static.standard
 	ListMetricSS(ctx context.Context, scopes ...string) ([]*MetricSS, error)
@@ -171,6 +185,11 @@ type License interface {
 
 	// GetMetricNUPByTransformMetricName will return NUP metric info
 	GetMetricNUPByTransformMetricName(ctx context.Context, transformMetricName string, scope string) (*MetricNUPOracle, error)
+
+	// GetProductsByEditorProductName will return all product version with same editor & product name
+	GetProductsByEditorProductName(ctx context.Context, metrics []*Metric, scope, editorName, productName string) ([]*ProductDetail, error)
+
+	GetProductInformationFromAcqRight(ctx context.Context, swidtag string, scopes ...string) (*ProductAdditionalInfo, error)
 }
 
 // Queryable interface provide methods for something that can be queried

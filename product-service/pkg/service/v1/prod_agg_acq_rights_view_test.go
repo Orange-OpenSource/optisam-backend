@@ -216,7 +216,7 @@ func TestListAggregatedAcqRights(t *testing.T) {
 // 	for _, test := range testSet {
 // 		t.Run("", func(t *testing.T) {
 // 			test.mock(test.input)
-// 			s := NewProductServiceServer(dbObj, qObj, nil, "")
+// 			s := NewProductServiceServer(dbObj, qObj, nil, "",nil)
 // 			got, err := s.ListAcqRightsAggregationRecords(test.ctx, test.input)
 // 			if (err != nil) != test.outErr {
 // 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)

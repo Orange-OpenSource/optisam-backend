@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	e_v1 "optisam-backend/equipment-service/pkg/api/v1"
 
@@ -53,6 +54,16 @@ const (
 	UpsertAggregatedRights MessageType = "UpsertAggregatedRights"
 	// DeleteAggregationRights is to delete aggregation rights in dgraph
 	DeleteAggregatedRights MessageType = "DeleteAggregatedRights"
+	// UpsertNominativeUserRequest is request to upsert nominative user in dgraph
+	UpsertNominativeUserRequest MessageType = "UpsertNominativeUser"
+	// UpsertConcurrentUserRequest is request to upsert concurrent user in dgraph
+	UpsertConcurrentUserRequest MessageType = "UpsertConcurrentUser"
+	// DeleteConcurrentUserRequest is request to delete concurrent user in dgraph
+	DeleteConcurrentUserRequest MessageType = "DeleteConcurrentUser"
+	// DeleteNominativeUserRequest is request to delete nominative user in dgraph
+	DeleteNominativeUserRequest MessageType = "DeleteNominativeUser"
+	// DeletSaaSProductRequest is request to delete SaaS Product in dgraph
+	DeletSaaSProductRequest MessageType = "DeletSaaSProduct"
 )
 
 // Envelope ...
@@ -260,7 +271,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			CommitNow: true,
 		}
 		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
-			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
+			logger.Log.Error("Failed to upsert to Dgraph - UpsertProductRequest", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
 			return errRetry
 		}
 		for _, v := range upr.GetEquipments().GetEquipmentusers() {
@@ -505,14 +516,25 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			var(func: eq(aggregatedRights.aggregationId,"` + strconv.Itoa(int(dar.GetID())) + `")) @filter(eq(type_name,"aggregatedRights") AND eq(scopes,` + dar.Scope + `) ){
 					aggRights as uid
 				}
-			}`
+			var(func: eq(type_name,"nominative_user")) @filter( eq(nominative.user.aggregation.id,"` + strconv.Itoa(int(dar.GetID())) + `") AND eq(scopes,` + dar.Scope + `) ){
+					nomUsers as uid
+				}
+			var(func: eq(type_name,"concurrentUser")) @filter( eq(concurrent.user.aggregation.id,"` + strconv.Itoa(int(dar.GetID())) + `") AND eq(scopes,` + dar.Scope + `) ){
+					cuUsers as uid
+				}
+			}
+			`
 		delete := `
 				uid(aggregation) * * .
 				uid(aggRights) * * .
+				uid(nomUsers) * * .
+				uid(cuUsers) * * .
 		`
 		set := `
 				uid(aggregation) <Recycle> "true" .
 				uid(aggRights) <Recycle> "true" .
+				uid(nomUsers) <Recycle> "true" .
+				uid(cuUsers) <Recycle> "true" .
 		`
 		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
 		logger.Log.Info(query)
@@ -545,6 +567,12 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				var(func: type(User)) @filter(eq(scopes,` + dar.Scope + `)){
 					userId as  uid
 				}
+				var(func: eq(type_name,"concurrentUser")) @filter(eq(concurrent.user.is_aggregations,"false") AND  eq(concurrent.user.aggregation.id,"0") AND eq(scopes,` + dar.Scope + `) ){
+					cuUsers as uid
+				}
+				var(func: eq(type_name,"nominative_user")) @filter(eq(nominative.user.aggregation.id,"0") AND eq(scopes,` + dar.Scope + `) ){
+					nomUsers as uid
+				}
 				`
 		}
 		if dar.DeletionType == v1.DropProductDataRequest_ACQRIGHTS || dar.DeletionType == v1.DropProductDataRequest_FULL { //nolint
@@ -571,6 +599,8 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(productApplications) * * .
 				uid(editorType) * * .
 				uid(editors) * * .
+				uid(cuUsers) * * .
+				uid(nomUsers) * * .
 			`
 		}
 		if dar.DeletionType == v1.DropProductDataRequest_ACQRIGHTS || dar.DeletionType == v1.DropProductDataRequest_FULL {
@@ -593,6 +623,8 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				uid(productApplications) <Recycle> "true" .
 				uid(editorType) <Recycle> "true" .
 				uid(editors) <Recycle> "true" .
+				uid(cuUsers) <Recycle> "true" .
+				uid(nomUsers) <Recycle> "true" .
 		`
 		}
 		if dar.DeletionType == v1.DropProductDataRequest_ACQRIGHTS || dar.DeletionType == v1.DropProductDataRequest_FULL {
@@ -647,15 +679,25 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				aggregationType as var(func: type(Aggregation)) @filter(eq(scopes,` + dagg.Scope + `)){
 					aggregation as aggregation.id
 				}
+				var(func: eq(type_name,"concurrentUser")) @filter(eq(concurrent.user.is_aggregations,"true") AND  gt(concurrent.user.aggregation.id,"0") AND eq(scopes,` + dagg.Scope + `) ){
+					cuUsers as uid
+				}
+				var(func: eq(type_name,"nominative_user")) @filter(gt(nominative.user.aggregation.id,"0") AND eq(scopes,` + dagg.Scope + `) ){
+					nomUsers as uid
+				}
 			}`
 
 		delete := `
 				uid(aggregationType) * * .
 				uid(aggregation) * * .
+				uid(cuUsers) * * .
+				uid(nomUsers) * * .
 			`
 		set := `
 				uid(aggregationType) <Recycle> "true" .
 				uid(aggregation) <Recycle> "true" .
+				uid(cuUsers) <Recycle> "true" .
+				uid(nomUsers) <Recycle> "true" .
 		`
 		muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
 		logger.Log.Info(query, zap.Any("set", set), zap.Any("delete", delete))
@@ -692,6 +734,335 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		}
 		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
 			logger.Log.Error("Failed to delete aggregatedRights from Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case UpsertNominativeUserRequest:
+		var unur UpserNominativeUserRequest
+		_ = json.Unmarshal(e.JSON, &unur)
+		var mutations []*api.Mutation
+		queries = append(queries, "query", "{")
+		for i, v := range unur.UserDetails {
+			query := `var(func: eq(nominative.user.email,"` + v.Email + `")) @filter(eq(type_name,"nominative_user") 
+			AND eq(scopes,"` + unur.Scope + `") AND eq(nominative.user.profile,"` + v.Profile + `")
+			AND eq(nominative.user.swidtag,"` + unur.SwidTag + `") AND eq(nominative.user.aggregation.id,"` + strconv.Itoa(int(unur.AggregationId)) + `")){
+				user_` + strconv.Itoa(i) + ` as uid
+			}`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				Cond: `@if(eq(len(user_` + strconv.Itoa(i) + `),0))`,
+				SetNquads: []byte(`
+				uid(user_` + strconv.Itoa(i) + `) <type_name> "nominative_user" .
+				uid(user_` + strconv.Itoa(i) + `) <dgraph.type> "NominativeUser" .
+				uid(user_` + strconv.Itoa(i) + `) <scopes> "` + unur.Scope + `" .
+				uid(user_` + strconv.Itoa(i) + `) <created> "` + unur.CreatedBy + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.swidtag> "` + unur.SwidTag + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.editor> "` + unur.Editor + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.aggregation.id> "` + strconv.Itoa(int(unur.AggregationId)) + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.email> "` + v.Email + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.first_name> "` + v.FirstName + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.name> "` + v.UserName + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.profile> "` + v.Profile + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.activation.date> "` + v.ActivationDate.String() + `" .
+				`),
+				CommitNow: true,
+			})
+			mutations = append(mutations, &api.Mutation{
+				Cond: `@if(NOT eq(len(user_` + strconv.Itoa(i) + `),0))`,
+				SetNquads: []byte(`
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.first_name> "` + v.FirstName + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.name> "` + v.UserName + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.profile> "` + v.Profile + `" .
+				uid(user_` + strconv.Itoa(i) + `) <nominative.user.activation.date> "` + v.ActivationDate.String() + `" .
+				`),
+				CommitNow: true,
+			})
+			if unur.AggregationId > 0 {
+				query = `var(func: eq(aggregation.id,"` + strconv.Itoa(int(unur.AggregationId)) + `")) @filter(eq(type_name,"aggregation") AND eq(scopes,"` + unur.Scope + `")){
+					aggregation_` + strconv.Itoa(i) + ` as uid
+				}`
+				queries = append(queries, query)
+				mutations = append(mutations, &api.Mutation{
+					Cond: `@if(eq(len(user_` + strconv.Itoa(i) + `),0))`,
+					SetNquads: []byte(`
+					uid(aggregation_` + strconv.Itoa(i) + `)  <aggregation.nominative.users> uid(user_` + strconv.Itoa(i) + `) .
+				`),
+					CommitNow: true,
+				})
+			} else if unur.SwidTag != "" {
+				query = `var(func: eq(product.swidtag,"` + unur.SwidTag + `")) @filter(eq(type_name,"product") AND eq(scopes,"` + unur.Scope + `")){
+					product_` + strconv.Itoa(i) + ` as uid
+				}`
+				queries = append(queries, query)
+				mutations = append(mutations, &api.Mutation{
+					Cond: `@if(eq(len(user_` + strconv.Itoa(i) + `),0))`,
+					SetNquads: []byte(`
+					uid(product_` + strconv.Itoa(i) + `)  <product.nominative.users> uid(user_` + strconv.Itoa(i) + `) .
+				`),
+					CommitNow: true,
+				})
+			}
+
+		}
+
+		queries = append(queries, "}")
+		q := strings.Join(queries, "\n")
+		// fmt.Println(q)
+		req := &api.Request{
+			Query:     q,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
+			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
+			return errRetry
+		}
+	case UpsertConcurrentUserRequest:
+		var uar UpserConcurrentUserRequest
+		_ = json.Unmarshal(e.JSON, &uar)
+		agID := strconv.Itoa(int(uar.AggregationID))
+		currentDateTime := time.Now()
+
+		var queries []string
+		var mutations []*api.Mutation
+		queries = append(queries, "query", "{")
+		query := `
+			var(func: eq(type_name,"concurrentUser")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(concurrent.user.purchase_date,"` + uar.PurchaseDate + `") AND eq(concurrent.user.aggregation.id,"` + agID + `")  AND eq(concurrent.user.swidtag,"` + uar.SwidTag + `")  ){
+				cuUser as uid
+				}
+			
+			`
+		queries = append(queries, query)
+
+		mutations = append(mutations, &api.Mutation{
+			Cond: `@if(eq(len(cuUser),0))`,
+			SetNquads: []byte(`
+				uid(cuUser) <concurrent.user.is_aggregations> "` + strconv.FormatBool(uar.IsAggregations) + `" .
+				uid(cuUser) <concurrent.user.aggregation.id> "` + agID + `" .
+				uid(cuUser) <concurrent.user.swidtag> "` + uar.SwidTag + `" .
+				uid(cuUser) <type_name> "concurrentUser" .
+				uid(cuUser) <dgraph.type> "ProductConcurrentUser" .
+				uid(cuUser) <scopes> "` + uar.Scope + `" .
+				
+				uid(cuUser) <concurrent.user.purchase_date> "` + uar.PurchaseDate + `" .
+				uid(cuUser) <created> "` + currentDateTime.String() + `" .
+			`),
+			DelNquads: []byte(`uid(cuUser) * * .`),
+			CommitNow: true,
+		})
+
+		mutations = append(mutations, &api.Mutation{
+			SetNquads: []byte(`
+				uid(cuUser) <concurrent.user.number_of_users> "` + strconv.Itoa(int(uar.NumberOfUsers)) + `" .
+				uid(cuUser) <concurrent.user.profile_user> "` + uar.ProfileUser + `" .
+				uid(cuUser) <concurrent.user.team> "` + uar.Team + `" .
+				uid(cuUser) <updated> "` + currentDateTime.String() + `" .
+			`),
+		})
+
+		// re-establish the link between concurrent user and product or aggregations
+		if uar.IsAggregations && uar.AggregationID > 0 {
+			query := `
+			var(func: eq(type_name,"aggregation")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(aggregation.id,"` + agID + `")){
+				aggUID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				SetNquads: []byte(`
+					uid(aggUID) <aggregation.concurrent.users> uid(cuUser) .
+				`),
+			})
+
+		} else {
+			query := `
+			var(func: eq(type_name,"product")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(product.swidtag,"` + uar.SwidTag + `")){
+				pID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				SetNquads: []byte(`
+					uid(pID) <product.concurrent.users> uid(cuUser) .
+				`),
+			})
+		}
+
+		queries = append(queries, "}")
+		q := strings.Join(queries, "\n")
+		upsertreq := &api.Request{
+			Query:     q,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+		if _, err := w.dg.NewTxn().Do(ctx, upsertreq); err != nil {
+			logger.Log.Error("Failed to upsert to Dgraph - UpsertConcurrentUserRequest", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case DeleteConcurrentUserRequest:
+		var uar UpserConcurrentUserRequest
+		_ = json.Unmarshal(e.JSON, &uar)
+		agID := strconv.Itoa(int(uar.AggregationID))
+		var queries []string
+		var mutations []*api.Mutation
+		queries = append(queries, "query", "{")
+
+		query := `
+			var(func: eq(type_name,"concurrentUser")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(concurrent.user.purchase_date,"` + uar.PurchaseDate + `") AND (eq(concurrent.user.aggregation.id,"` + agID + `")  OR eq(concurrent.user.swidtag,"` + uar.SwidTag + `")  )){
+				cuUser as uid
+				}
+			`
+
+		queries = append(queries, query)
+		mutations = append(mutations, &api.Mutation{
+			Cond: `@if(NOT eq(len(cuUser),0))`,
+			SetNquads: []byte(`
+				uid(cuUser) <Recycle> "true" .
+			`),
+			DelNquads: []byte(`uid(cuUser) * * .`),
+			CommitNow: true,
+		})
+
+		// un-establish the link between concurrent user and product or aggregations
+		if uar.IsAggregations && uar.AggregationID > 0 {
+			query := `
+			var(func: eq(type_name,"aggregation")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(aggregation.id,"` + agID + `")){
+				aggUID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				DelNquads: []byte(`
+					uid(aggUID) <aggregation.concurrent.users> uid(cuUser) .
+				`),
+			})
+
+		} else {
+			query := `
+			var(func: eq(type_name,"product")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(product.swidtag,"` + uar.SwidTag + `")){
+				pID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				DelNquads: []byte(`
+					uid(pID) <product.concurrent.users> uid(cuUser) .
+				`),
+			})
+		}
+
+		queries = append(queries, "}")
+		q := strings.Join(queries, "\n")
+		dropreq := &api.Request{
+			Query:     q,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+
+		if _, err := w.dg.NewTxn().Do(ctx, dropreq); err != nil {
+			logger.Log.Error("Failed to delete concurrent user from Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case DeleteNominativeUserRequest:
+		var uar UpserNominativeUserRequest
+		_ = json.Unmarshal(e.JSON, &uar)
+		agID := strconv.Itoa(int(uar.AggregationId))
+		var queries []string
+		var mutations []*api.Mutation
+		queries = append(queries, "query", "{")
+
+		query := `
+			var(func: eq(nominative.user.email,"` + uar.UserDetails[0].Email + `")) @filter(eq(type_name,"nominative_user") 
+			AND eq(scopes,"` + uar.Scope + `") AND eq(nominative.user.profile,"` + uar.UserDetails[0].Profile + `")
+			AND eq(nominative.user.swidtag,"` + uar.SwidTag + `") AND eq(nominative.user.aggregation.id,"` + agID + `")){
+				nuUser as uid
+				}
+			`
+
+		queries = append(queries, query)
+		mutations = append(mutations, &api.Mutation{
+			Cond: `@if(NOT eq(len(nuUser),0))`,
+			SetNquads: []byte(`
+				uid(nuUser) <Recycle> "true" .
+			`),
+			DelNquads: []byte(`uid(nuUser) * * .`),
+			CommitNow: true,
+		})
+
+		// un-establish the link between nominative user and product or aggregations
+		if uar.AggregationId > 0 {
+			query := `
+			var(func: eq(type_name,"aggregation")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(aggregation.id,"` + agID + `")){
+				aggUID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				DelNquads: []byte(`
+					uid(aggUID) <aggregation.nominative.users> uid(nuUser) .
+				`),
+			})
+
+		} else {
+			query := `
+			var(func: eq(type_name,"product")) @filter(eq(scopes,"` + uar.Scope + `")  AND eq(product.swidtag,"` + uar.SwidTag + `")){
+				pID as uid
+			}
+			`
+			queries = append(queries, query)
+			mutations = append(mutations, &api.Mutation{
+				DelNquads: []byte(`
+					uid(pID) <product.nominative.users> uid(nuUser) .
+				`),
+			})
+		}
+
+		queries = append(queries, "}")
+		q := strings.Join(queries, "\n")
+		dropreq := &api.Request{
+			Query:     q,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+
+		if _, err := w.dg.NewTxn().Do(ctx, dropreq); err != nil {
+			logger.Log.Error("Failed to delete nominative user from Dgraph", zap.Error(err))
+			return errors.New("RETRY")
+		}
+	case DeletSaaSProductRequest:
+		var uar DeleteProductRequest
+		_ = json.Unmarshal(e.JSON, &uar)
+		var queries []string
+		var mutations []*api.Mutation
+		queries = append(queries, "query", "{")
+
+		query := `var(func: eq(product.swidtag,"` + uar.SwidTag + `")) @filter(eq(type_name,"product") AND eq(scopes,"` + uar.Scope + `")){
+			product as uid
+		}`
+		queries = append(queries, query)
+		mutations = append(mutations, &api.Mutation{
+			Cond: `@if(NOT eq(len(product),0))`,
+			SetNquads: []byte(`
+				uid(product) <Recycle> "true" .
+			`),
+			DelNquads: []byte(`uid(product) * * .`),
+			CommitNow: true,
+		})
+
+		queries = append(queries, "}")
+		q := strings.Join(queries, "\n")
+		dropreq := &api.Request{
+			Query:     q,
+			Mutations: mutations,
+			CommitNow: true,
+		}
+
+		if _, err := w.dg.NewTxn().Do(ctx, dropreq); err != nil {
+			logger.Log.Sugar().Errorw("Failed to delete product user from Dgraph-DeletSaaSProductRequest",
+				"scope", uar.Scope,
+				"swidtag", uar.SwidTag,
+				"error", err.Error(),
+				"query", q,
+			)
 			return errors.New("RETRY")
 		}
 	default:

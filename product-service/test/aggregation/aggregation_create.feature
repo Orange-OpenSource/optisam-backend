@@ -4,7 +4,7 @@ Feature: Create Aggregation : admin
   Background:
   # * def productServiceUrl = "https://optisam-product-int.apps.fr01.paas.tech.orange"
     * url productServiceUrl+'/api/v1/product'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+   
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('../common.feature') credentials
     * def access_token = response.access_token
@@ -20,8 +20,8 @@ Feature: Create Aggregation : admin
     And request data.createAgg
     When method post
     Then status 200
+  * header Authorization = 'Bearer '+access_token
     Given path 'aggregations'
-    * header Authorization = 'Bearer '+access_token
     And params {scope:'#(scope)'}
     And params {page_size:50, page_num:1, sort_by:'aggregation_name', sort_order:'asc'}
     When method get
@@ -44,6 +44,7 @@ Feature: Create Aggregation : admin
     When method post
     Then status 200
 
+  
   @verfiy
   Scenario: To verify aggregation name is unique
   Given path 'aggregations'

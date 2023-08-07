@@ -41,6 +41,7 @@ dps = "svc-optisam-dps-performance.optisam-performance.svc:8090"
 simulation = "svc-optisam-simulation-performance.optisam-performance.svc:8090"
 account = "svc-optisam-account-performance.optisam-performance.svc:8090"
 catalog = "svc-optisam-catalog-performance.optisam-performance.svc:8090"
+product = "svc-optisam-product-performance.optisam-performance.svc:8090"
 
 
 

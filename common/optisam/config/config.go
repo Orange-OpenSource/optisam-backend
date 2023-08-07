@@ -9,6 +9,7 @@ import (
 	"optisam-backend/common/optisam/pki"
 	"optisam-backend/common/optisam/postgres"
 	"optisam-backend/common/optisam/prometheus"
+	"optisam-backend/common/optisam/redis"
 	"time"
 )
 
@@ -36,6 +37,9 @@ type Config struct {
 
 	// Postgress connection information
 	Postgres *postgres.Config
+
+	// Redis connection information
+	Redis *redis.Config
 
 	// Dockers Connection information
 	Dockers []docker.Config

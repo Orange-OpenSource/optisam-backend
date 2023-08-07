@@ -58,12 +58,26 @@ agentEndpoint = "jaeger-agent.int-optisam.svc:6831"
 # username = ""
 # password = ""
 
-[postgres]
-host = "127.0.0.1"
+[database]
+host = "localhost"
 port = 5432
-user = "optisam"
-pass = "optisam"
-name = "optisam"
+# should be user of full rights
+[database.admin]
+user = "postgres"
+pass = "orange"
+name = "dps" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "postgres"
+pass = "orange"
+name = "dps" 
+
+[database.migration]
+version = "1_intial_schema.sql"
+direction = "up"
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+
 
 [app.params]
 pageSize = 20

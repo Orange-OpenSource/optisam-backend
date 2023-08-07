@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//nolint: unparam
+// nolint: unparam
 func (s *licenseServiceServer) computedLicensesSS(ctx context.Context, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
 	metrics, err := s.licenseRepo.ListMetricSS(ctx, scope...)

@@ -18,6 +18,13 @@ type DBTX interface {
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 }
 
+//for dgraph connection
+
+// //-destination=dgmock/mock.go -package=mock optisam-backend/product-service/pkg/repository/v1 Product
+// type DgraphConn interface {
+// 	ListMetrices(ctx context.Context, scopes string) error
+// }
+
 // Product interface
 type Product interface {
 	gendb.Querier
@@ -27,4 +34,10 @@ type Product interface {
 
 	// DropProductDataTx handles drop product data
 	DropProductDataTx(ctx context.Context, scope string, deletionType v1.DropProductDataRequestDeletionTypes) error
+
+	// UpsertNominativeUserTx upserts nominative user data
+	UpsertNominativeUsersTx(ctx context.Context, req *v1.UpserNominativeUserRequest, updatedBy, createdBy, swidTag string) error
+
+	// UpsertConcurrentUserTx upserts nominative user data
+	UpsertConcurrentUserTx(ctx context.Context, req *v1.ProductConcurrentUserRequest, createdBy string) error
 }

@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	redisClient "github.com/go-redis/redis/v8"
+
 	// "sample-service/pkg/middleware/logger"
 	"optisam-backend/account-service/pkg/config"
 	"optisam-backend/account-service/pkg/protocol/grpc"
@@ -22,6 +24,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/postgres"
 	"optisam-backend/common/optisam/prometheus"
+	"optisam-backend/common/optisam/redis"
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
@@ -56,7 +59,7 @@ func init() {
 // nolint: funlen, gocyclo
 func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
-
+	isLocal := false
 	pflag.Parse()
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
@@ -67,9 +70,10 @@ func RunServer() error {
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
 	} else if os.Getenv("ENV") == "pc" {
-                viper.SetConfigName("config-pc")
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
+		isLocal = true
 	}
 
 	viper.AddConfigPath("/opt/config/")
@@ -110,21 +114,28 @@ func RunServer() error {
 	// Register SQL stat views
 	ocsql.RegisterAllViews()
 
-	// Create database connection.
-	db, err := postgres.NewConnection(cfg.Database)
+	// Create database connection.and exec migratrions
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
+	// defer db.Close()
+	defer func() {
+		db.Close()
+		// Wait to 4 seconds so that the traces can be exported
+		waitTime := 2 * time.Second
+		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
+		<-time.After(waitTime)
+	}()
 
 	// Record DB stats every 5 seconds until we exit
 	defer ocsql.RecordStats(db, 5*time.Second)()
 
 	// Register database health check
-	{
-		check, error := checkers.NewSQL(&checkers.SQLConfig{Pinger: db})
-		if error != nil {
-			return fmt.Errorf("failed to create health checker: %v", error.Error())
-		}
+
+	check, error := checkers.NewSQL(&checkers.SQLConfig{Pinger: db})
+	if error != nil {
 		error = healthChecker.AddCheck(&health.Config{
 			Name:     "postgres",
 			Checker:  check,
@@ -162,6 +173,26 @@ func RunServer() error {
 			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
+	redisC := &redisClient.Client{}
+	if isLocal {
+		redisC = redis.NewConnection(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis")
+		} else {
+			logger.Log.Info("redis server connected at:" + cfg.Redis.RedisHost)
+		}
+		//defer redisClient.Close()
+	} else {
+		redisC = redis.NewConnectionSentinel(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis sentinel")
+		} else {
+			logger.Log.Info("redis server connected")
+		}
+	}
+	defer redisC.Close()
 	// defer db.Close()
 	defer func() {
 		//	db.Close()
@@ -228,7 +259,7 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	v1API := v1.NewAccountServiceServer(repo.NewAccountRepository(db), grpcClientMap)
+	v1API := v1.NewAccountServiceServer(repo.NewAccountRepository(db, redisC), grpcClientMap)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {

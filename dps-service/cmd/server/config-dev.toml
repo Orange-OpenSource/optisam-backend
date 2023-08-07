@@ -39,7 +39,7 @@ account = "svc-optisam-account-dev.dev-optisam.svc:8090"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
-loglevel = -1
+loglevel = 0
 
 
 [instrumentation]
@@ -57,12 +57,25 @@ agentEndpoint = "jaeger-agent.dev-optisam.svc:6831"
 # username = ""
 # password = ""
 
-[postgres]
+[database]
 host = "svc-optisam-postgres.dev-optisam.svc"
 port = 5432
+# should be user of full rights
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "dps"
+pass = ""
+name = "dps" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "dps" 
+
+[database.migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
 
 [app.params]
 pageSize = 20

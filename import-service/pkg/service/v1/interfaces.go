@@ -14,5 +14,7 @@ type ImportServiceServer interface {
 	UploadGlobalDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	DownloadFile(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	UploadFiles(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	ImportNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	UploadCatalogData(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	DownloadFileNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 }

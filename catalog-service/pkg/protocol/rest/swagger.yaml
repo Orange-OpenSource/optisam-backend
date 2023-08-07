@@ -1,4 +1,5 @@
-swagger: '2.0'
+---
+swagger: "2.0"
 info:
   title: catalog-service
   version: version not set
@@ -11,14 +12,14 @@ paths:
     get:
       operationId: ProductCatalog_GetEditor
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/v1Editor'
+            $ref: "#/definitions/v1Editor"
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       parameters:
         - name: id
           in: query
@@ -30,14 +31,14 @@ paths:
     get:
       operationId: ProductCatalog_GetEditors
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-              $ref: '#/definitions/v1Editors'
+            $ref: "#/definitions/v1Editors"
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       parameters:
         - name: pageNum
           in: query
@@ -47,17 +48,38 @@ paths:
           in: query
           required: true
           type: string
-          enum: [productsCount,name,createdOn]
+          enum:
+            - productsCount
+            - name
+            - createdOn
         - name: sortOrder
           in: query
           required: true
           type: string
-          enum: [asc, dcs]
+          enum:
+            - asc
+            - dcs
         - name: pageSize
           in: query
           required: true
           type: string
         - name: search_params.name.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.group_contract.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.entities.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.countryCodes.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.audityears.filteringkey
           in: query
           required: false
           type: string
@@ -67,28 +89,28 @@ paths:
     get:
       operationId: ProductCatalog_GetEditorsNames
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-              $ref: '#/definitions/v1EditorNames'
+            $ref: "#/definitions/v1EditorNames"
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       tags:
         - ProductCatalog
   /catalog/product:
     get:
       operationId: ProductCatalog_GetProduct
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/v1Product'
+            $ref: "#/definitions/v1Product"
         default:
           description: An unexpected error response.
           schema:
-            $ref: '#/definitions/error'
+            $ref: "#/definitions/error"
       parameters:
         - name: id
           in: query
@@ -96,18 +118,69 @@ paths:
           type: string
       tags:
         - ProductCatalog
-  /catalog/products:
+  /catalog/productfilters:
     get:
-      operationId: ProductCatalog_ListProducts
+      operationId: ProductCatalog_GetProductFilters
       responses:
         '200':
           description: A successful response.
           schema:
-            $ref: '#/definitions/v1ListProductResponse'
+            $ref: '#/definitions/v1FilterResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/error'
+      parameters:
+        - name: page_num
+          description: Page number
+          in: query
+          required: false
+          type: string
+        - name: page_size
+          description: Items per page
+          in: query
+          required: false
+          type: string
+        - name: sort_by
+          in: query
+          required: false
+          type: string
+          enum:
+            - name
+            - createdOn
+          default: createdOn
+        - name: sort_order
+          in: query
+          required: false
+          type: string
+      tags:
+        - ProductCatalog
+  /catalog/editorfilters:
+    get:
+      operationId: ProductCatalog_GetEditorFilters
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1EditorFilterResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/error'
+      tags:
+        - ProductCatalog
+  /catalog/products:
+    get:
+      operationId: ProductCatalog_ListProducts
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: "#/definitions/v1ListProductResponse"
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: "#/definitions/error"
       parameters:
         - name: page_num
           description: Page number
@@ -151,8 +224,24 @@ paths:
           in: query
           required: false
           type: string
+        - name: search_params.deploymentType.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.vendor.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.recommendation.filteringkey
+          in: query
+          required: false
+          type: string
+        - name: search_params.entities.filteringkey
+          in: query
+          required: false
+          type: string
       tags:
-      - ProductCatalog
+        - ProductCatalog
 definitions:
   v1Audits:
     type: object
@@ -171,24 +260,38 @@ definitions:
         type: string
       genearlInformation:
         type: string
+      countryCode:
+        type: string
+      address:
+        type: string
+      groupContract:
+        type: boolean
       vendors:
         type: array
         items:
-          $ref: '#/definitions/v1Vendors'
+          $ref: "#/definitions/v1Vendors"
       partner_managers:
         type: array
         items:
-          $ref: '#/definitions/v1PartnerManagers'
+          $ref: '#/definitions/v1Managers'
       audits:
         type: array
         items:
           $ref: '#/definitions/v1Audits'
+      globalAccountManager:
+        type: array
+        items:
+          $ref: '#/definitions/v1Managers'
+      sourcers:
+        type: array
+        items:
+          $ref: '#/definitions/v1Managers'
       createdOn:
         type: string
         format: date-time
       UpdatedOn:
         type: string
-        format: date-time 
+        format: date-time
       product_count:
         type: number
   v1EditorName:
@@ -204,7 +307,7 @@ definitions:
       editors:
         type: array
         items:
-          $ref: '#/definitions/v1Editor'
+          $ref: "#/definitions/v1Editor"
       totalRecords:
         type: integer
   v1EditorNames:
@@ -214,14 +317,12 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/v1EditorName'
-  v1PartnerManagers:
+  v1Managers:
     type: object
     properties:
       email:
         type: string
-      first_name:
-        type: string
-      last_name:
+      name:
         type: string
   v1Vendors:
     type: object
@@ -238,49 +339,49 @@ definitions:
   v1Product:
     type: object
     properties:
-     id:
+      id:
         type: string
-     editorID:
+      editorID:
         type: string
-     name:
+      name:
         type: string
-     metrics:
-        type: array
-        items:
-            type: string
-     genearlInformation:
-        type: string
-     contracttTips:
-        type: string
-     locationType:
-        type: string
-     openSource:
-        $ref: '#/definitions/v1OpenSource'
-     closeSource:
-        $ref: '#/definitions/v1CloseSource'
-     version:
-        type: array
-        items:
-         $ref: '#/definitions/v1Version'
-     recommendation:
-        type: string
-     usefulLinks:
+      metrics:
         type: array
         items:
           type: string
-     supportVendors:
+      genearlInformation:
+        type: string
+      contracttTips:
+        type: string
+      locationType:
+        type: string
+      openSource:
+        $ref: "#/definitions/v1OpenSource"
+      closeSource:
+        $ref: "#/definitions/v1CloseSource"
+      version:
+        type: array
+        items:
+          $ref: "#/definitions/v1Version"
+      recommendation:
+        type: string
+      usefulLinks:
         type: array
         items:
           type: string
-     createdOn:
+      supportVendors:
+        type: array
+        items:
+          type: string
+      createdOn:
         type: string
         format: date-time
-     UpdatedOn:
+      UpdatedOn:
         type: string
         format: date-time
-     productSwidTag:
+      productSwidTag:
         type: string
-     editorName:
+      editorName:
         type: string
   v1OpenSource:
     type: object
@@ -328,3 +429,45 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/v1Product'
+  v1FilterResponse:
+    type: object
+    properties:
+      deploymentType:
+        $ref: '#/definitions/v1FilterDetails'
+      licensing:
+        $ref: '#/definitions/v1FilterDetails'
+      recommendation:
+        $ref: '#/definitions/v1FilterDetails'
+      entities:
+        $ref: '#/definitions/v1FilterDetails'
+      vendors:
+        $ref: '#/definitions/v1FilterDetails'
+  v1EditorFilterResponse:
+    type: object
+    properties:
+      groupContract:
+        $ref: '#/definitions/v1FilterDetails'
+      year:
+        $ref: '#/definitions/v1FilterDetails'
+      countryCode:
+        $ref: '#/definitions/v1FilterDetails'
+      entities:
+        $ref: '#/definitions/v1FilterDetails'
+  v1FilterDetails:
+    type: object
+    properties:
+      total_count:
+        type: integer
+        format: int32
+      filter:
+        type: array
+        items:
+          $ref: '#/definitions/v1Filter'
+  v1Filter:
+    type: object
+    properties:
+      name:
+        type: string
+      count:
+        type: integer
+        format: int32

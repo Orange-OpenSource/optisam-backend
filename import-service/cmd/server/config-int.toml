@@ -40,6 +40,7 @@ dps = "svc-optisam-dps-int.int-optisam.svc:8090"
 simulation = "svc-optisam-simulation-int.int-optisam.svc:8090"
 account = "svc-optisam-account-int.int-optisam.svc:8090"
 catalog = "svc-optisam-catalog-int.int-optisam.svc:8090"
+product = "svc-optisam-product-int.int-optisam.svc:8090"
 
 
 

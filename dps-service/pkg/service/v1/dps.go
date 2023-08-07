@@ -445,7 +445,6 @@ func (d *dpsServiceServer) ListUploadMetaData(ctx context.Context, req *v1.ListU
 		apiresp.Uploads[i].SuccessRecords = dbresp[i].SuccessRecords
 		apiresp.Uploads[i].TotalRecords = dbresp[i].TotalRecords
 		apiresp.Uploads[i].Comments = dbresp[i].Comments.String
-
 	}
 	return apiresp, nil
 }

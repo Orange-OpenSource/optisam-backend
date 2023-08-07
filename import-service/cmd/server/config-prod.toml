@@ -12,7 +12,7 @@ loglevel = 0
 addr = ":8081"
 
 [instrumentation.prometheus]
-enabled = false
+enabled = true
 
 
 [instrumentation.jaeger]
@@ -40,6 +40,7 @@ dps = "svc-optisam-dps-prod.prod-optisam.svc:8090"
 simulation = "svc-optisam-simulation-prod.prod-optisam.svc:8090"
 account = "svc-optisam-account-prod.prod-optisam.svc:8090"
 catalog = "svc-optisam-catalog-prod.prod-optisam.svc:8090"
+product = "svc-optisam-product-prod.prod-optisam.svc:8090"
 
 
 [upload]

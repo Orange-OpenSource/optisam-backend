@@ -377,6 +377,37 @@ func (r *EquipmentRepository) DeleteEquipmentType(ctx context.Context, eqType, s
 	return nil
 }
 
+// DeleteEquipmentTypeAttr implements Equipment DeleteEquipmentTypeAttr function
+func (r *EquipmentRepository) DeleteEquipmentTypeAttr(ctx context.Context, attrId string, scope string) error {
+	query := `query {
+		var(func: uid(` + attrId + `)) @filter(eq(scopes,` + scope + `)){
+			ID as uid
+		}
+		`
+	delete := `
+			uid(ID) * * .
+	`
+	set := `
+			uid(ID) <Recycle> "true" .
+	`
+	query += `
+	}`
+	muDelete := &api.Mutation{DelNquads: []byte(delete), SetNquads: []byte(set)}
+	logger.Log.Info(query)
+	req := &api.Request{
+		Query:     query,
+		Mutations: []*api.Mutation{muDelete},
+		CommitNow: true,
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, err := r.dg.NewTxn().Do(ctx, req); err != nil {
+		logger.Log.Error("DeleteEquipmentType - ", zap.String("reason", err.Error()), zap.String("query", query))
+		return fmt.Errorf("deleteEquipmentType - cannot complete query transaction")
+	}
+	return nil
+}
+
 // UpdateEquipmentType implements Licence UpdateEquipmentType function
 func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string, typ string, parentID string, req *v1.UpdateEquipmentRequest, scopes []string) (retType []*v1.Attribute, retErr error) {
 	nquads := nquadsForAllAttributes(id, req.AddAttr)
@@ -446,7 +477,7 @@ func (r *EquipmentRepository) UpdateEquipmentType(ctx context.Context, id string
 				}
 				`
 			set := `
-			uid(ID) <attribute.schema_name> "` + attr.SchemaName + `" .
+            uid(ID) <attribute.schema_name> "` + attr.SchemaName + `" .
 			uid(ID) <attribute.searchable> "` + strconv.FormatBool(attr.IsSearchable) + `" .
 			uid(ID) <attribute.displayed> "` + strconv.FormatBool(attr.IsDisplayed) + `" .
 			`
@@ -1148,7 +1179,6 @@ func (r *EquipmentRepository) GetEquipmentInfo(ctx context.Context, equipmentId 
 		logger.Log.Error("dgraph/GetEquipmentInfo -", zap.String("reason", err.Error()), zap.String("query", q))
 		return nil, fmt.Errorf("dgraph/GetEquipmentInfo - cannot unmarshal Json object")
 	}
-	fmt.Printf("d= %s", d)
 
 	return d.EquipInfo[0], err
 }

@@ -104,14 +104,14 @@ func Test_productCatalogServer_CreateEditor(t *testing.T) {
 				CreatedOn:          createdOnObject,
 				UpdatedOn:          updatedOnObject,
 			},
-			s: NewProductCatalogServer(rep, queue, nil).(*productCatalogServer),
+			s: NewProductCatalogServer(rep, queue, nil, nil).(*productCatalogServer),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			s := NewProductCatalogServer(rep, queue, nil)
+			s := NewProductCatalogServer(rep, queue, nil, nil)
 			got, err := s.CreateEditor(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("catalogServiceServer.catalogsPercatalogType() error = %v, wantErr %v", err, tt.wantErr)
@@ -200,14 +200,14 @@ func Test_productCatalogServer_UpdateEditor(t *testing.T) {
 				CreatedOn:          createdOnObject,
 				UpdatedOn:          updatedOnObject,
 			},
-			s: NewProductCatalogServer(rep, queue, nil).(*productCatalogServer),
+			s: NewProductCatalogServer(rep, queue, nil, nil).(*productCatalogServer),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 
-			s := NewProductCatalogServer(rep, queue, nil)
+			s := NewProductCatalogServer(rep, queue, nil, nil)
 			got, err := s.UpdateEditor(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("catalogServiceServer.catalogsPercatalogType() error = %v, wantErr %v", err, tt.wantErr)

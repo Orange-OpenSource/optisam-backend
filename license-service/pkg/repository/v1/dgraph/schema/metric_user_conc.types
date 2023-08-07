@@ -1,0 +1,9 @@
+type MetricUCS {
+    type_name
+    scopes
+    updated
+    created
+    metric.type
+    metric.name
+    metric.user_concurrent.profile
+}

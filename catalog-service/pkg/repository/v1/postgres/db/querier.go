@@ -16,7 +16,7 @@ type Querier interface {
 	GetEditorCatalogByName(ctx context.Context, name string) (EditorCatalog, error)
 	GetEditorCatalogName(ctx context.Context, id string) (GetEditorCatalogNameRow, error)
 	GetProductCatalogByEditorId(ctx context.Context, arg GetProductCatalogByEditorIdParams) (ProductCatalog, error)
-	GetProductCatalogByPrductID(ctx context.Context, id string) (ProductCatalog, error)
+	GetProductCatalogByPrductID(ctx context.Context, id string) (GetProductCatalogByPrductIDRow, error)
 	GetProductCatalogBySwidTag(ctx context.Context, swidTagProduct sql.NullString) (ProductCatalog, error)
 	GetProductsByEditorID(ctx context.Context, editorID string) ([]ProductCatalog, error)
 	GetProductsNamesByEditorID(ctx context.Context, editorID string) ([]GetProductsNamesByEditorIDRow, error)

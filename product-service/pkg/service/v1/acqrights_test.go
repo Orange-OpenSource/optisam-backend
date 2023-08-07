@@ -45,6 +45,7 @@ func getJob(input interface{}, jtype dgworker.MessageType) (json.RawMessage, err
 func TestUpsertAcqRights(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
+	//dgObj := dgmock.NewMockProduct(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
 	testSet := []struct {
 		name   string
@@ -164,6 +165,8 @@ func TestListAcqRights(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	//dgObj := dgmock.NewMockProduct(mockCtrl)
+
 	testSet := []struct {
 		name   string
 		input  *v1.ListAcqRightsRequest

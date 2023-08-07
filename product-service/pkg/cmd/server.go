@@ -28,10 +28,9 @@ import (
 	"os"
 	"time"
 
+	//dgraphRepo "optisam-backend/product-service/pkg/repository/v1/dgraph"
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
-	"github.com/gobuffalo/packr/v2"
-	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"github.com/spf13/pflag"
@@ -120,17 +119,19 @@ func RunServer() error {
 	}
 	logger.Log.Info("Dgraph connection verified to", zap.Any("", cfg.Dgraph.Hosts))
 
+	//for connection of dgraph
+	// productDgRepo, err := dgraphRepo.NewProductRepositoryWithTemplates(dg)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create dgraph product client: %v", err)
+	// }
+
 	// Create database connection.
-	db, err := postgres.NewConnection(cfg.Database)
+	// Create database connection.and exec migratrions
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		logger.Log.Error("failed to open connection with postgres: %v", zap.Error(err))
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
-	// Verify connection.
-	if err = db.Ping(); err != nil {
-		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", err.Error())
-	}
-	logger.Log.Info("Postgres connection verified to", zap.Any("", cfg.Database.Host))
 	// defer db.Close()
 	defer func() {
 		db.Close()
@@ -140,20 +141,11 @@ func RunServer() error {
 		<-time.After(waitTime)
 	}()
 
-	// Run Migration
-	migrations := &migrate.PackrMigrationSource{
-		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
-	}
-	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
-	if err != nil {
-		logger.Log.Error("Migration Error", zap.Error(err))
-	}
-	logger.Log.Info("Migration", zap.Int("Migration Applied", n))
-
 	// Register http health check
 	{
 		check, error := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
 		if error != nil {
+			logger.Log.Error("failed to create health checker: %v", zap.Error(err))
 			return fmt.Errorf("failed to create health checker: %v", error.Error())
 		}
 		error = healthChecker.AddCheck(&health.Config{
@@ -163,6 +155,7 @@ func RunServer() error {
 			Fatal:    true,
 		})
 		if error != nil {
+			logger.Log.Error("failed to add health checker: %v", zap.Error(err))
 			return fmt.Errorf("failed to add health checker: %v", error.Error())
 		}
 	}
@@ -243,6 +236,7 @@ func RunServer() error {
 	}
 
 	rep := repo.NewProductRepository(db)
+
 	licenseWorker := licenseworker.NewWorker("lcalw", grpcClientMap, rep, cfg.Cron.Time)
 	q.RegisterWorker(ctx, licenseWorker)
 

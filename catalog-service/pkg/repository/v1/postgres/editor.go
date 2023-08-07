@@ -27,12 +27,30 @@ func (p *ProductCatalogRepository) UpdateEditorTx(ctx context.Context, req *v1.E
 		logger.Log.Error("v1/service - Update Editor - Marshal Error PartnerManagersJson")
 		return status.Error(codes.Internal, err.Error())
 	}
+	for _, a := range req.Audits {
+		t := a.Date.AsTime()
+		year, _, _ := t.Date()
+		a.Year = int32(year)
+	}
 	audits, err := json.Marshal(req.Audits)
 	if err != nil {
 		logger.Log.Error("v1/service - Update Editor - Marshal Error audits")
 		return status.Error(codes.Internal, err.Error())
 	}
 	vendors, err := json.Marshal(req.Vendors)
+	if err != nil {
+		logger.Log.Error("v1/service - Update Editor - Marshal Error Vendors")
+		return status.Error(codes.Internal, err.Error())
+
+	}
+
+	globalAccountManager, err := json.Marshal(req.GlobalAccountManager)
+	if err != nil {
+		logger.Log.Error("v1/service - Update Editor - Marshal Error Vendors")
+		return status.Error(codes.Internal, err.Error())
+
+	}
+	sourcers, err := json.Marshal(req.Sourcers)
 	if err != nil {
 		logger.Log.Error("v1/service - Update Editor - Marshal Error Vendors")
 		return status.Error(codes.Internal, err.Error())
@@ -54,15 +72,19 @@ func (p *ProductCatalogRepository) UpdateEditorTx(ctx context.Context, req *v1.E
 			tx.Commit()
 		}
 	}()
-
 	err = pt.Queries.UpdateEditorCatalog(ctx, db.UpdateEditorCatalogParams{
-		GeneralInformation: sql.NullString{String: req.GetGenearlInformation(), Valid: true},
-		PartnerManagers:    partnermanagers,
-		Audits:             audits,
-		Vendors:            vendors,
-		UpdatedOn:          time.Now(),
-		ID:                 req.Id,
-		Name:               editorname,
+		GeneralInformation:   sql.NullString{String: req.GetGenearlInformation(), Valid: true},
+		PartnerManagers:      partnermanagers,
+		Audits:               audits,
+		Vendors:              vendors,
+		UpdatedOn:            time.Now(),
+		ID:                   req.Id,
+		Name:                 editorname,
+		CountryCode:          sql.NullString{String: req.CountryCode, Valid: true},
+		Address:              sql.NullString{String: req.Address, Valid: true},
+		GroupContract:        sql.NullBool{Bool: req.GroupContract, Valid: true},
+		GlobalAccountManager: globalAccountManager,
+		Sourcers:             sourcers,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 | Update | Update Editor", zap.Any("Error while saving records", err))

@@ -20,7 +20,7 @@ ORDER BY
 ; 
 
 -- name: DownloadReport :one
-SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name
+SELECT r.report_data, r.created_by, r.created_on, r.scope, rt.report_type_name, r.report_metadata
 FROM report r
 JOIN
 report_type rt 

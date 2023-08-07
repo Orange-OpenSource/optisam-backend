@@ -11,6 +11,7 @@ import (
 
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -21,25 +22,29 @@ import (
 type productCatalogServer struct {
 	productRepo repo.ProductCatalog
 	queue       workerqueue.Workerqueue
+	r           *redis.Client
 }
 
 // NewProductCatalogServer creates Product service
-func NewProductCatalogServer(productRepo repo.ProductCatalog, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn) v1.ProductCatalogServer {
+func NewProductCatalogServer(productRepo repo.ProductCatalog, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn, r *redis.Client) v1.ProductCatalogServer {
 	return &productCatalogServer{
 		productRepo: productRepo,
 		queue:       queue,
+		r:           r,
 	}
 }
 
-//Create Product
+// Create Product
 func (p *productCatalogServer) InsertProduct(ctx context.Context, req *v1.Product) (res *v1.Product, err error) {
 	// logger.Log.Info("req being processed to InsertProduct.")
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Error("v1/service - InsertProduct - ClaimsNotFound")
 		return &v1.Product{}, status.Error(codes.Internal, "ClaimsNotFound")
 	}
 
-	if userClaims.Role != claims.RoleSuperAdmin {
+	if !(userClaims.Role == claims.RoleSuperAdmin || userClaims.Role == claims.RoleAdmin) {
+		logger.Log.Error("v1/service - InsertProduct - ClaimsNotFound")
 		return &v1.Product{}, status.Error(codes.PermissionDenied, "RoleValidationError")
 	}
 	res, err = p.productRepo.InsertProductTx(ctx, req)
@@ -50,19 +55,20 @@ func (p *productCatalogServer) GetProduct(ctx context.Context, req *v1.GetProduc
 	logger.Log.Info("req being processed to GetProduct.")
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Error("v1/service - getProduct - ClaimsNotFound")
 		return &v1.Product{}, status.Error(codes.Internal, "ClaimsNotFound")
 	}
-	if userClaims.Role != claims.RoleSuperAdmin {
+	if !(userClaims.Role == claims.RoleSuperAdmin || userClaims.Role == claims.RoleAdmin) {
+		logger.Log.Error("v1/service - getProduct - RoleValidationError")
 		return &v1.Product{}, status.Error(codes.PermissionDenied, "RoleValidationError")
 	}
 
 	var responseObject v1.Product
 	responseObject.Version = make([]*v1.Version, 0)
-	responseObject.CloseSource = new(v1.CloseSource)
 	responseObject.OpenSource = new(v1.OpenSource)
 	productResponse, err := p.productRepo.GetProductCatalogByPrductID(ctx, req.ProdId)
 	if err != nil {
-		logger.Log.Error("service/v1 - GetPolicy - GetPolicy", zap.String("reason", err.Error()))
+		logger.Log.Error("service/v1 - GetProduct - GetProduct", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	responseObject.Id = productResponse.ID
@@ -70,46 +76,39 @@ func (p *productCatalogServer) GetProduct(ctx context.Context, req *v1.GetProduc
 	responseObject.Name = productResponse.Name
 	responseObject.SwidtagProduct = productResponse.SwidTagProduct.String
 	responseObject.EditorName = productResponse.EditorName
-	responseObject.CloseSource.IsCloseSource = productResponse.IsClosesource.Bool
-	jsonStr, err := json.Marshal(productResponse.LicensesClosesource)
-	if err != nil {
-		logger.Log.Error("service/v1 - getPolicy - Marshal", zap.String("Reason: ", err.Error()))
-		return nil, status.Error(codes.Internal, "Error while ListMetric")
-	}
-	json.Unmarshal(jsonStr, &responseObject.CloseSource.CloseLicences)
 
-	responseObject.OpenSource.IsOpenSource = productResponse.IsOpensource.Bool
-	jsonStr, err = json.Marshal(productResponse.LicencesOpensource.String)
+	jsonStr, err := json.Marshal(productResponse.LicencesOpensource.String)
 	if err != nil {
-		logger.Log.Error("service/v1 - getPolicy - Marshal", zap.String("Reason: ", err.Error()))
-		return nil, status.Error(codes.Internal, "Error while ListMetric")
+		logger.Log.Error("service/v1 - getProduct - Marshal", zap.String("Reason: ", err.Error()))
+		return nil, status.Error(codes.Internal, "Error while marshaling")
 	}
 	json.Unmarshal(jsonStr, &responseObject.OpenSource.OpenLicences)
 
 	responseObject.ContracttTips = productResponse.ContractTips.String
 	responseObject.GenearlInformation = productResponse.GenearlInformation.String
-	responseObject.Recommendation = productResponse.Recommendation.String
+	responseObject.Recommendation = string(productResponse.Recommendation)
 	responseObject.LocationType = string(productResponse.Location)
+	responseObject.Licensing = string(productResponse.Licensing)
 	responseObject.OpenSource.OpenSourceType = string(productResponse.OpensourceType)
 
 	jsonStr, err = json.Marshal(productResponse.Metrics)
 	if err != nil {
-		logger.Log.Error("service/v1 - getPolicy - Marshal", zap.String("Reason: ", err.Error()))
-		return nil, status.Error(codes.Internal, "Error while ListMetric")
+		logger.Log.Error("service/v1 - getProduct - Marshal", zap.String("Reason: ", err.Error()))
+		return nil, status.Error(codes.Internal, "Error while marshaling")
 	}
 	json.Unmarshal(jsonStr, &responseObject.Metrics)
 
 	jsonStr, err = json.Marshal(productResponse.SupportVendors)
 	if err != nil {
-		logger.Log.Error("service/v1 - getPolicy - Marshal", zap.String("Reason: ", err.Error()))
-		return nil, status.Error(codes.Internal, "Error while ListMetric")
+		logger.Log.Error("service/v1 - getProduct - Marshal", zap.String("Reason: ", err.Error()))
+		return nil, status.Error(codes.Internal, "Error while marshaling")
 	}
 	json.Unmarshal(jsonStr, &responseObject.SupportVendors)
 
 	jsonStr, err = json.Marshal(productResponse.UsefulLinks)
 	if err != nil {
-		logger.Log.Error("service/v1 - getPolicy - Marshal", zap.String("Reason: ", err.Error()))
-		return nil, status.Error(codes.Internal, "Error while ListMetric")
+		logger.Log.Error("service/v1 - getProduct - Marshal", zap.String("Reason: ", err.Error()))
+		return nil, status.Error(codes.Internal, "Error while marshaling")
 	}
 	json.Unmarshal(jsonStr, &responseObject.UsefulLinks)
 
@@ -120,7 +119,7 @@ func (p *productCatalogServer) GetProduct(ctx context.Context, req *v1.GetProduc
 	responseObject.UpdatedOn = updatedOnObject
 	versions, err := p.productRepo.GetVersionCatalogByPrductID(ctx, productResponse.ID)
 	if err != nil {
-		logger.Log.Error("service/v1 - Listassets  - GetMetricDetailsByName", zap.String("reason", err.Error()))
+		logger.Log.Error("service/v1 - GetProduct  - GetVersionCatalogByPrductID", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "Error while Getversion")
 
 	}
@@ -148,9 +147,11 @@ func (s *productCatalogServer) DeleteProduct(ctx context.Context, request *v1.Ge
 	logger.Log.Info("req being processed to delete Product.")
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Error("v1/service - delProduct - ClaimsNotFound")
 		return &v1.DeleteResponse{}, status.Error(codes.Internal, "ClaimsNotFound")
 	}
-	if userClaims.Role != claims.RoleSuperAdmin {
+	if !(userClaims.Role == claims.RoleSuperAdmin || userClaims.Role == claims.RoleAdmin) {
+		logger.Log.Error("v1/service - delProduct - ClaimsNotFound")
 		return &v1.DeleteResponse{}, status.Error(codes.PermissionDenied, "RoleValidationError")
 	}
 	delPolicyErr := s.productRepo.DeleteProductCatalog(ctx, request.ProdId)
@@ -161,15 +162,17 @@ func (s *productCatalogServer) DeleteProduct(ctx context.Context, request *v1.Ge
 	return &v1.DeleteResponse{Success: true}, nil
 }
 
-//ListProducts
+// ListProducts
 func (p *productCatalogServer) UpdateProduct(ctx context.Context, req *v1.Product) (product *v1.Product, err error) {
 	// fmt.Println("list products")
 	logger.Log.Info("req being processed to UpdateProduct.")
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Error("v1/service - updateProduct - ClaimsNotFound")
 		return &v1.Product{}, status.Error(codes.Internal, "ClaimsNotFound")
 	}
-	if userClaims.Role != claims.RoleSuperAdmin {
+	if !(userClaims.Role == claims.RoleSuperAdmin || userClaims.Role == claims.RoleAdmin) {
+		logger.Log.Error("v1/service - updateProduct - RoleValidationError")
 		return &v1.Product{}, status.Error(codes.PermissionDenied, "RoleValidationError")
 	}
 	err = p.productRepo.UpdateProductTx(ctx, req)

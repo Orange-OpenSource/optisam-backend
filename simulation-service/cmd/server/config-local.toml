@@ -20,9 +20,22 @@ agentEndpoint = "192.168.99.100:6831"
 [database]
 host = "localhost"
 port = 5432
+# should be user of full rights
+[database.admin]
 user = "optisam"
-pass = "optisam"
-name = "optisam"
+pass = ""
+name = "simulation" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "simulation" 
+
+[database.migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
 
 [grpcservers]
 apikey = "12345678"

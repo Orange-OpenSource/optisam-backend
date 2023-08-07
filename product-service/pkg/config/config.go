@@ -48,6 +48,7 @@ type Config struct {
 	// DashboardTimeZone tells zonal time , eg: UTC, CET etc, bydefault CET time is taken. Europe/Paris
 	DashboardTimeZone string
 
+	//migration path
 	// Handles cron config
 	Cron cron.Config
 
@@ -55,8 +56,7 @@ type Config struct {
 	MaxAPIWorker int
 
 	// Database connection information
-	Database postgres.Config
-
+	Database postgres.DBConfig
 	// Log configuration
 	Log logger.Config
 
@@ -186,7 +186,10 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("dgraph.host")
 
 	// Database Password configuration
-	_ = v.BindEnv("database.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
 
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", "cert.pem")

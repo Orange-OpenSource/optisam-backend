@@ -8,7 +8,9 @@
         "emit_interface": true,
         "path": "./db/",
         "queries": "./query/",
-        "schema": "./schema/"
+        "schema": [
+          "./schema_archive/1_initial_schema.sql"
+        ]
       }
     ]
   }

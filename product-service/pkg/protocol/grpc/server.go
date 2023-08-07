@@ -32,6 +32,7 @@ func RunServer(ctx context.Context, v1API v1.ProductServiceServer, port string, 
 	// add middleware
 	// opts = grpc_middleware.AddLogging(logger.Log, opts)
 	// register service
+	opts = append(opts, grpc.MaxRecvMsgSize(8388608))
 	server := grpc.NewServer(opts...)
 	v1.RegisterProductServiceServer(server, v1API)
 

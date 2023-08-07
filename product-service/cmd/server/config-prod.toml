@@ -19,7 +19,7 @@ loglevel = -1
 addr = ":8081"
 
 [instrumentation.prometheus]
-enabled = false
+enabled = true
 
 
 [instrumentation.jaeger]
@@ -38,9 +38,19 @@ hosts = [
 [database]
 host = "svc-optisam-postgres.prod-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
 name = "product"
+# pass = ""
+[database.user]
+user = "optisam_app_user"
+name = "product"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
+
 
 [redis]
 host = "red-prod-redis-prod-service"

@@ -8,6 +8,7 @@ import (
 	repo "optisam-backend/account-service/pkg/repository/v1/postgres/db"
 	"optisam-backend/common/optisam/logger"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/lib/pq"
 	"go.uber.org/zap"
 )
@@ -163,18 +164,21 @@ const (
 type AccountRepository struct {
 	*repo.Queries
 	db *sql.DB
+	r  *redis.Client
 }
 
 // NewAccountRepository creates new Repository
-func NewAccountRepository(db *sql.DB) *AccountRepository {
+func NewAccountRepository(db *sql.DB, rclient *redis.Client) *AccountRepository {
 	return &AccountRepository{
 		Queries: repo.New(db),
 		db:      db,
+		r:       rclient,
 	}
 }
 
 // UpdateAccount allows user to update their personal information
 func (r *AccountRepository) UpdateAccount(ctx context.Context, userID string, req *v1.UpdateAccount) error {
+
 	result, err := r.db.ExecContext(ctx, updateAccountQuery, req.FirstName, req.LastName, req.Locale, req.ProfilePic, userID)
 	if err != nil {
 		logger.Log.Error("repo/postgres - UpdateAccount - failed to execute query", zap.String("reason", err.Error()))

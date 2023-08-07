@@ -32,6 +32,7 @@ type EquipmentServiceClient interface {
 	GetMetrics(ctx context.Context, in *GetMetricsRequest, opts ...grpc.CallOption) (*GetMetricsResponse, error)
 	CreateEquipmentType(ctx context.Context, in *EquipmentType, opts ...grpc.CallOption) (*EquipmentType, error)
 	DeleteEquipmentType(ctx context.Context, in *DeleteEquipmentTypeRequest, opts ...grpc.CallOption) (*DeleteEquipmentTypeResponse, error)
+	DeleteEquipmentTypeAttr(ctx context.Context, in *DeleteEquipmentTypeAttrRequest, opts ...grpc.CallOption) (*DeleteEquipmentTypeAttrResponse, error)
 	// UpdateEquipmentType provides support for updating equipment
 	// only addition of new attribyte is supported.
 	// 1. Attributes added
@@ -180,6 +181,15 @@ func (c *equipmentServiceClient) DeleteEquipmentType(ctx context.Context, in *De
 	return out, nil
 }
 
+func (c *equipmentServiceClient) DeleteEquipmentTypeAttr(ctx context.Context, in *DeleteEquipmentTypeAttrRequest, opts ...grpc.CallOption) (*DeleteEquipmentTypeAttrResponse, error) {
+	out := new(DeleteEquipmentTypeAttrResponse)
+	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/DeleteEquipmentTypeAttr", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *equipmentServiceClient) UpdateEquipmentType(ctx context.Context, in *UpdateEquipmentTypeRequest, opts ...grpc.CallOption) (*EquipmentType, error) {
 	out := new(EquipmentType)
 	err := c.cc.Invoke(ctx, "/optisam.equipment.v1.EquipmentService/UpdateEquipmentType", in, out, opts...)
@@ -280,6 +290,7 @@ type EquipmentServiceServer interface {
 	GetMetrics(context.Context, *GetMetricsRequest) (*GetMetricsResponse, error)
 	CreateEquipmentType(context.Context, *EquipmentType) (*EquipmentType, error)
 	DeleteEquipmentType(context.Context, *DeleteEquipmentTypeRequest) (*DeleteEquipmentTypeResponse, error)
+	DeleteEquipmentTypeAttr(context.Context, *DeleteEquipmentTypeAttrRequest) (*DeleteEquipmentTypeAttrResponse, error)
 	// UpdateEquipmentType provides support for updating equipment
 	// only addition of new attribyte is supported.
 	// 1. Attributes added
@@ -339,6 +350,9 @@ func (UnimplementedEquipmentServiceServer) CreateEquipmentType(context.Context, 
 }
 func (UnimplementedEquipmentServiceServer) DeleteEquipmentType(context.Context, *DeleteEquipmentTypeRequest) (*DeleteEquipmentTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteEquipmentType not implemented")
+}
+func (UnimplementedEquipmentServiceServer) DeleteEquipmentTypeAttr(context.Context, *DeleteEquipmentTypeAttrRequest) (*DeleteEquipmentTypeAttrResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEquipmentTypeAttr not implemented")
 }
 func (UnimplementedEquipmentServiceServer) UpdateEquipmentType(context.Context, *UpdateEquipmentTypeRequest) (*EquipmentType, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquipmentType not implemented")
@@ -631,6 +645,24 @@ func _EquipmentService_DeleteEquipmentType_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EquipmentService_DeleteEquipmentTypeAttr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteEquipmentTypeAttrRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EquipmentServiceServer).DeleteEquipmentTypeAttr(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.equipment.v1.EquipmentService/DeleteEquipmentTypeAttr",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EquipmentServiceServer).DeleteEquipmentTypeAttr(ctx, req.(*DeleteEquipmentTypeAttrRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _EquipmentService_UpdateEquipmentType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateEquipmentTypeRequest)
 	if err := dec(in); err != nil {
@@ -852,6 +884,10 @@ var _EquipmentService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteEquipmentType",
 			Handler:    _EquipmentService_DeleteEquipmentType_Handler,
+		},
+		{
+			MethodName: "DeleteEquipmentTypeAttr",
+			Handler:    _EquipmentService_DeleteEquipmentTypeAttr_Handler,
 		},
 		{
 			MethodName: "UpdateEquipmentType",

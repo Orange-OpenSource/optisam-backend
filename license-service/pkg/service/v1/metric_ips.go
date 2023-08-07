@@ -28,6 +28,7 @@ func metricNameExistsIPS(metrics []*repo.MetricIPS, name string) int {
 func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
 	scope, _ := input[SCOPES].([]string)
 	metrics, err := s.licenseRepo.ListMetricIPS(ctx, scope...)
+	prodID, _ := input[ProdID].([]string)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesIPS", zap.Error(err))
 		return 0, status.Error(codes.Internal, "cannot fetch metric IPS")
@@ -46,7 +47,7 @@ func (s *licenseServiceServer) computedLicensesIPS(ctx context.Context, eqTypes 
 	if input[IsAgg].(bool) {
 		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricIPSComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesIPS - ", zap.String("reason", err.Error()))

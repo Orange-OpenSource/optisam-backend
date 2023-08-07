@@ -10,7 +10,7 @@ Feature: Metric Service Test - Get metrics and configurations : Normal user
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
     * def scope = 'API'
-
+  @SmokeTest
   @schema
   Scenario: Validate Schema for get metrics list
     Given path 'metrics'
@@ -38,7 +38,7 @@ Feature: Metric Service Test - Get metrics and configurations : Normal user
     @get
   Scenario: Get Metric configuration
     Given path 'metric/config'
-    * params {metric_info.type:'oracle.processor.standard' , metric_info.name:'oracle.processor.standard' , scopes:'#(scope)'}
+    * params {metric_info.type:'oracle.processor.standard' , metric_info.name:'oracle.processor' , scopes:'#(scope)'}
     When method get
     Then status 200
   * response.metric_config.Name == 'oracle_processor'
@@ -55,8 +55,8 @@ Feature: Metric Service Test - Get metrics and configurations : Normal user
     # * match response.metric_config.Name == <name>
   Examples:
     | type | name |
-    | 'oracle.processor.standard' | 'oracle.processor.standard' |
-    | 'oracle.nup.standard' | 'oracle.nup.standard' |
+    | 'oracle.processor.standard' | 'oracle.processor' |
+    | 'oracle.nup.standard' | 'oracle.nup' |
     # | 'sag.processor.standard' | 'sag' |
     # | 'ibm.pvu.standard' | 'ibm_pvu' |
     # | 'instance.number.standard' | 'os_instance' |

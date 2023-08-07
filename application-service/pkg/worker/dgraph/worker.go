@@ -107,10 +107,10 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 				eqUID := `equipment` + strconv.Itoa(i)
 
 				// SCOPE BASED CHANGE
-				query += `
+				query += `{
 				var(func: eq(equipment.id,"` + equipment + `")) @filter(eq(type_name,"equipment") AND eq(scopes,"` + uer.GetScope() + `")){
 					equipment` + strconv.Itoa(i) + ` as uid
-				}
+				}}
 				`
 				// queries = append(queries, query)
 				mutations = append(mutations, &api.Mutation{
@@ -134,7 +134,6 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			Mutations: mutations,
 			CommitNow: true,
 		}
-
 		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
 			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
 			return errors.New("RETRY")

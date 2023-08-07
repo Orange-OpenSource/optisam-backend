@@ -1,3 +1,4 @@
+---
 kind: "Template"
 apiVersion: "v1"
 metadata:
@@ -62,7 +63,7 @@ objects:
         kind: Service
         name: svc-optisam-auth-instrumentation-${ENV}
       tls:
-        termination: edge        
+        termination: edge
   - kind: DeploymentConfig
     apiVersion: v1
     metadata:
@@ -79,7 +80,7 @@ objects:
         metadata:
           labels:
             app: optisam-auth-${ENV}
-            internal-elasticsearch: 'true'  
+            internal-elasticsearch: 'true'
           name: optisam-auth-${ENV}
         spec:
           containers:
@@ -89,16 +90,22 @@ objects:
               env:
                 - name: "ENV"
                   value: ${ENV}
-                - name: "DB_PASSWORD"  
-                  value: ${DB_PASSWORD}
+                - name: "MIG_DIR"
+                  value: ${MIG_DIR}
+                - name: "MIG_VERSION"
+                  value: ${MIG_VERSION}
+              envFrom:
+                - secretRef:
+                    name: user-access
+                - secretRef:
+                    name: db-access
+                - secretRef:
+                    name: db-pass
               ports:
                 - containerPort: 8080
                   protocol: TCP
                 - containerPort: 8081
                   protocol: TCP
-              envFrom:
-                - secretRef:
-                       name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
@@ -118,13 +125,13 @@ objects:
                 initialDelaySeconds: 15
                 periodSeconds: 10
                 successThreshold: 1
-                timeoutSeconds: 2                                    
+                timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "80m"
-                  memory: "128Mi"
+                  cpu: "5m"
+                  memory: "20Mi"
                 limits:
-                  cpu: "100m"
+                  cpu: "80m"
                   memory: "150Mi"
               volumeMounts:
                 - name: config-volume-${ENV}
@@ -140,8 +147,11 @@ objects:
               secret:
                 secretName: secret-apiprivatekey-${ENV}
 parameters:
-  - name: DB_PASSWORD
-    description: Postgres Database Password
+  - name: MIG_DIR
+    description: Postgres Database variable
+    required: true
+  - name: MIG_VERSION
+    description: Postgres Database variable
     required: true
   - name: TAG
     description: Tag for Docker image

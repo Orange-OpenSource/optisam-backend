@@ -96,34 +96,6 @@
       }
     },
     "/api/v1/catalog/editor/{editor_id}": {
-      "get": {
-        "operationId": "ProductCatalog_GetEditor",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1Editor"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "editor_id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ProductCatalog"
-        ]
-      },
       "delete": {
         "operationId": "ProductCatalog_DeleteEditor",
         "responses": {
@@ -346,20 +318,10 @@
         "date": {
           "type": "string",
           "format": "date-time"
-        }
-      }
-    },
-    "v1CloseSource": {
-      "type": "object",
-      "properties": {
-        "isCloseSource": {
-          "type": "boolean"
         },
-        "closeLicences": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "year": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -381,13 +343,34 @@
         "partner_managers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1PartnerManagers"
+            "$ref": "#/definitions/v1Managers"
           }
         },
         "audits": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Audits"
+          }
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "groupContract": {
+          "type": "boolean"
+        },
+        "globalAccountManager": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Managers"
+          }
+        },
+        "sourcers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Managers"
           }
         }
       }
@@ -421,7 +404,7 @@
         "partner_managers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1PartnerManagers"
+            "$ref": "#/definitions/v1Managers"
           }
         },
         "audits": {
@@ -441,30 +424,49 @@
         "products_count": {
           "type": "integer",
           "format": "int32"
-        }
-      }
-    },
-    "v1OpenSource": {
-      "type": "object",
-      "properties": {
-        "isOpenSource": {
+        },
+        "countryCode": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "groupContract": {
           "type": "boolean"
         },
-        "openLicences": {
-          "type": "string"
+        "globalAccountManager": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Managers"
+          }
         },
-        "openSourceType": {
-          "type": "string"
+        "sourcers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Managers"
+          }
         }
       }
     },
-    "v1PartnerManagers": {
+    "v1Managers": {
       "type": "object",
       "properties": {
         "email": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1OpenSource": {
+      "type": "object",
+      "properties": {
+        "openLicences": {
+          "type": "string",
+          "title": "bool isOpenSource =1;"
+        },
+        "openSourceType": {
           "type": "string"
         }
       }
@@ -499,8 +501,8 @@
         "openSource": {
           "$ref": "#/definitions/v1OpenSource"
         },
-        "closeSource": {
-          "$ref": "#/definitions/v1CloseSource"
+        "licensing": {
+          "type": "string"
         },
         "version": {
           "type": "array",
@@ -566,6 +568,9 @@
           "format": "date-time"
         },
         "origin": {
+          "type": "string"
+        },
+        "recommendation": {
           "type": "string"
         }
       }

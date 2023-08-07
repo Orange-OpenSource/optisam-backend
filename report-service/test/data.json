@@ -19,5 +19,7 @@
         "scope":"API",
         "report_type_id":2,
         "product_equipments_report":{"editor":"Servertst1@12","equipType":"servertst1@123"}
-    }
+    },
+    "EXp_by_Editor":
+    {"scope":"API","report_type_id":3}
 }

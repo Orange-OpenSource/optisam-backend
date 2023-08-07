@@ -37,9 +37,22 @@ hosts = [
 [database]
 host = "localhost"
 port = 5432
-user = "product"
-pass = "product"
-name = "product"
+# should be user of full rights
+[database.admin]
+user = "optisam"
+pass = ""
+name = "product" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam"
+pass = ""
+name = "product" 
+
+[database.migration]
+version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
+direction = "up"
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
 
 [redis]
 host = "localhost:6379"
@@ -60,6 +73,7 @@ regopath = "rbac.rego"
 
 [cron]
 time = "@midnight"
+monthTime="0 0 12 1 * *"
 
 [grpcservers]
 apikey = "12345678"
@@ -71,9 +85,10 @@ metric = "localhost:18090"
 application = "localhost:11090"
 account = "localhost:20000"
 equipment = "localhost:14090"
+notification = "localhost:15000"
 
 [httpservers.Address]
-auth = "localhost:9093"
+auth = "localhost:9097"
 
 [application]
 #usernameadmin = ""
@@ -82,3 +97,9 @@ auth = "localhost:9093"
 #passwordsuperadmin = ""
 #usernameuser = ""
 #passworduser = ""
+
+
+[emailtemplate]
+expiringSoonPath = "./../../pkg/worker/templates/expiringSoonMaintenance.html"
+expiredPath = "./../../pkg/worker/templates/expiredMaintenance.html"
+	

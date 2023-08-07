@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
@@ -18,21 +19,34 @@ import (
 	"regexp"
 	"strings"
 
+	prodv1 "optisam-backend/product-service/pkg/api/v1"
+
 	"github.com/golang/protobuf/jsonpb" // nolint: staticcheck
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
 // for report service deployment
 type ReportServiceServer struct {
-	reportRepo repo.Report
-	queue      workerqueue.Workerqueue
+	reportRepo    repo.Report
+	productClient prodv1.ProductServiceClient
+	queue         workerqueue.Workerqueue
+}
+
+type ProductEquipmentType struct {
+	Editor    string `json:"editor"`
+	EquipType string `json:"equipType"`
 }
 
 // NewReportServiceServer creates Auth service
-func NewReportServiceServer(reportRepo repo.Report, queue workerqueue.Workerqueue) v1.ReportServiceServer {
-	return &ReportServiceServer{reportRepo: reportRepo, queue: queue}
+func NewReportServiceServer(reportRepo repo.Report, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn) v1.ReportServiceServer {
+	return &ReportServiceServer{reportRepo: reportRepo,
+		queue:         queue,
+		productClient: prodv1.NewProductServiceClient(grpcServers["product"]),
+	}
 }
 
 func (r *ReportServiceServer) DropReportData(ctx context.Context, req *v1.DropReportDataRequest) (*v1.DropReportDataResponse, error) {
@@ -83,16 +97,28 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 		logger.Log.Error("Service/SubmitReport - Error in db/GetReportType", zap.Error(err))
 		return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 	}
-
 	switch reportType.ReportTypeID {
 	case int32(1):
+		totalEditors, err := r.productClient.ListAggregationEditors(ctx, &prodv1.ListAggregationEditorsRequest{Scope: req.Scope})
+		edList := totalEditors.Editor
 		_, ok := req.ReportMetadata.(*v1.SubmitReportRequest_AcqrightsReport)
 		if !ok {
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Bad Report Request")
 		}
+		ed := req.ReportMetadata.(*v1.SubmitReportRequest_AcqrightsReport).AcqrightsReport.Editor
+		counter := 0
+		for _, s := range edList {
+			if s == ed {
+				counter = 1
+				break
+			}
+		}
+		if counter == 0 {
+			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Editor doesn't exist")
+		}
 		var j bytes.Buffer
 		marshaler := &jsonpb.Marshaler{}
-		err := marshaler.Marshal(&j, req.GetAcqrightsReport())
+		err = marshaler.Marshal(&j, req.GetAcqrightsReport())
 		if err != nil {
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Json Marshal Error")
 		}
@@ -123,13 +149,26 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
 	case int32(2):
+		totalEditors, err := r.productClient.ListAggregationEditors(ctx, &prodv1.ListAggregationEditorsRequest{Scope: req.Scope})
+		edList := totalEditors.Editor
 		_, ok := req.ReportMetadata.(*v1.SubmitReportRequest_ProductEquipmentsReport)
 		if !ok {
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Bad Report Request")
 		}
+		ed := req.ReportMetadata.(*v1.SubmitReportRequest_ProductEquipmentsReport).ProductEquipmentsReport.Editor
+		counter := 0
+		for _, s := range edList {
+			if s == ed {
+				counter = 1
+				break
+			}
+		}
+		if counter == 0 {
+			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Editor doesn't exist")
+		}
 		var j bytes.Buffer
 		marshaler := &jsonpb.Marshaler{}
-		err := marshaler.Marshal(&j, req.GetProductEquipmentsReport())
+		err = marshaler.Marshal(&j, req.GetProductEquipmentsReport())
 		if err != nil {
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.InvalidArgument, "Json Marshal Error")
 		}
@@ -158,6 +197,48 @@ func (r *ReportServiceServer) SubmitReport(ctx context.Context, req *v1.SubmitRe
 		}, "rw")
 		if err != nil {
 			logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
+		}
+	case int32(3):
+		rawJSON := json.RawMessage("[]")
+		reportID, err := r.reportRepo.SubmitReport(ctx, db.SubmitReportParams{
+			Scope:          req.GetScope(),
+			ReportStatus:   db.ReportStatusPENDING,
+			CreatedBy:      userClaims.UserID,
+			ReportTypeID:   req.GetReportTypeId(),
+			ReportMetadata: rawJSON,
+		})
+		if err != nil {
+			logger.Log.Sugar().Errorw("Service/SubmitReport - Error in db/SubmitReportor ",
+				"scope", req.Scope,
+				"ReportTypeID", req.ReportTypeId,
+				"error", err.Error(),
+			)
+			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
+		}
+		e := worker.Envelope{Type: worker.ScopeExpensesByEditorReport, Scope: req.GetScope(), JSON: rawJSON, ReportID: reportID}
+
+		envolveData, err := json.Marshal(e)
+		if err != nil {
+			logger.Log.Sugar().Errorw("Service/SubmitReport - Failed to do json marshalling of worker envelope ",
+				"scope", req.Scope,
+				"ReportTypeID", req.ReportTypeId,
+				"error", err.Error(),
+			)
+			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
+		}
+		_, err = r.queue.PushJob(ctx, job.Job{
+			Type:   sql.NullString{String: "rw"},
+			Status: job.JobStatusPENDING,
+			Data:   envolveData,
+		}, "rw")
+		if err != nil {
+			logger.Log.Sugar().Errorw("Service/SubmitReport - Failed to push job to the queue ",
+				"scope", req.Scope,
+				"ReportTypeID", req.ReportTypeId,
+				"Data", envolveData,
+				"error", err.Error(),
+			)
 			return &v1.SubmitReportResponse{Success: false}, status.Error(codes.Internal, "Internal Server Error")
 		}
 	default:
@@ -215,7 +296,10 @@ func (r *ReportServiceServer) ListReport(ctx context.Context, req *v1.ListReport
 		apiresp.Reports[i].ReportStatus = string(dbresp[i].ReportStatus)
 		apiresp.Reports[i].CreatedBy = dbresp[i].CreatedBy
 		apiresp.Reports[i].CreatedOn = createdOn
-		apiresp.Reports[i].Editor = extractValue(string(dbresp[i].ReportMetadata), "editor")
+		if dbresp[i].ReportTypeName != "Expenses by Editor" {
+			apiresp.Reports[i].Editor = extractValue(string(dbresp[i].ReportMetadata), "editor")
+		}
+
 	}
 	return &apiresp, nil
 
@@ -247,13 +331,22 @@ func (r *ReportServiceServer) DownloadReport(ctx context.Context, req *v1.Downlo
 		return nil, status.Error(codes.Unknown, "failed to get Reports-> "+err.Error())
 	}
 	createdOn, _ := ptypes.TimestampProto(dbresp.CreatedOn)
-
+	metadata := ""
+	if dbresp.ReportTypeName == "ProductEquipments" {
+		var productEquipmentType ProductEquipmentType
+		er := json.Unmarshal(dbresp.ReportMetadata, &productEquipmentType)
+		if er != nil {
+			return nil, fmt.Errorf("productEquipments - cannot unmarshal Json object")
+		}
+		metadata = productEquipmentType.EquipType
+	}
 	apiresp := v1.DownloadReportResponse{
 		ReportType: dbresp.ReportTypeName,
 		ReportData: dbresp.ReportData,
 		Scope:      dbresp.Scope,
 		CreatedBy:  dbresp.CreatedBy,
 		CreatedOn:  createdOn,
+		EquipType:  metadata,
 	}
 	return &apiresp, nil
 }

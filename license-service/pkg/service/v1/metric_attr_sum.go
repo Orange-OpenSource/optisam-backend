@@ -15,6 +15,7 @@ import (
 
 func (s *licenseServiceServer) computedLicensesAttrSum(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricAttrSum(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesAttrSum", zap.Error(err))
@@ -34,7 +35,7 @@ func (s *licenseServiceServer) computedLicensesAttrSum(ctx context.Context, eqTy
 	if input[IsAgg].(bool) {
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricAttrSumComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, computedDetails, err = s.licenseRepo.MetricAttrSumComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricAttrSumComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesAttrSum - ", zap.String("reason", err.Error()))

@@ -30,5 +30,6 @@
     "-v"
 ],
 "karateRunner.tests.activityBarDisplayType": "Deep",
-"workbench.editor.wrapTabs": true
+"workbench.editor.wrapTabs": true,
+"karateRunner.reports.activityBarDisplayType": "Tree"
 }

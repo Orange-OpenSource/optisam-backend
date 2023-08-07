@@ -4,6 +4,9 @@ grpcport = "8090"
 httpport = "8080"
 maxapiworker = 25
 
+# ./schema
+MigrationPath  = "./schema"
+
 [workerqueue]
 retries = 3
 basedelay = 1
@@ -35,12 +38,24 @@ hosts = [
     "svc-optisam-dgraph.dev-optisam.svc:9080"
 ]
 
+
 [database]
 host = "svc-optisam-postgres.dev-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "product"
+pass = ""
+name = "product" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "product" 
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
 
 [app.params]
 pageSize = 20

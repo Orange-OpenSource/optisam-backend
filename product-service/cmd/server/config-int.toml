@@ -38,9 +38,19 @@ hosts = [
 [database]
 host = "svc-optisam-postgres.int-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
 name = "product"
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+name = "product"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
+
 
 [redis]
 host = "red-int-redis-int-service"

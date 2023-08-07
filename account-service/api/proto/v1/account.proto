@@ -148,11 +148,30 @@ service AccountService {
       get: "/api/v1/account/scopes/{scope}"
     };
   }
+   //UpsertScopeExpenses upsert scope expenses for present year
+   rpc UpsertScopeExpenses(UpsertScopeExpensesRequest) returns (CreateScopeResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/account/scopes/expenses"
+      body: "*"
+    };
+  }
   
+  //GetScopeExpenses returns scope details for a particular scope
+  rpc GetScopeExpenses(GetScopeRequest) returns (ScopeExpenses) {
+    option (google.api.http) = {
+      get: "/api/v1/account/scopes/expenses/{scope}"
+    };
+  }
   //GetScope returns scope details for a particular scope
   rpc GetScopeLists(GetScopeListRequest) returns (ScopeListResponse) {
     option (google.api.http) = {
       get: "/api/v1/account/scopes/list"
+    };
+  }
+  //GetScope returns scope details for a particular scope
+  rpc ListComplienceGroups(ListGroupsRequest) returns (ListComplienceGroupsResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/account/complience/groups"
     };
   }
 }
@@ -181,6 +200,7 @@ message Scope {
   google.protobuf.Timestamp created_on = 4;
   repeated string group_names = 5;
   string scope_type = 6 ;
+  double expenditure =7;
 }
 
 message CreateScopeRequest {
@@ -223,6 +243,8 @@ message UpdateGroupRequest {
 
 message UpdateGroup {
   string name  = 1 [(validate.rules).string.pattern = "^[a-zA-Z0-9_-]+$"]; 
+  repeated string scopes = 2;
+  bool group_compliance  = 3;
 }
 
 
@@ -267,6 +289,9 @@ message Group {
     // Not required for creation
     // num_of_users represents number of users who belongs to group
     int32 num_of_users = 7;
+
+    // Group compliance group flag created 
+    bool group_compliance  = 8;
 }
 
 enum ROLE {
@@ -376,6 +401,16 @@ message UserQueryParams{
   bool all_users = 1;
 }
 
+message UpsertScopeExpensesRequest{
+  string scope_code = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  double expenses = 2 [(validate.rules).double = {gte: 0}];
+}
+
+
+message ScopeExpenses {
+  string scope_code = 1;
+  double expenses = 2;
+}
 
 message GetScopeListRequest {
   repeated string scopes =1;
@@ -383,4 +418,16 @@ message GetScopeListRequest {
 
 message ScopeListResponse {
   repeated string scope_names =1;
+}
+
+
+message ListComplienceGroupsResponse {
+  repeated ComplienceGroup complience_groups = 1;
+}
+
+message ComplienceGroup {
+  int64 group_id = 1;
+  string name = 2; 
+  repeated string scope_code = 3;
+  repeated string scope_name = 4;
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"optisam-backend/common/optisam/dgraph"
+	"optisam-backend/common/optisam/grpc"
 	"optisam-backend/common/optisam/iam"
 	"optisam-backend/common/optisam/jaeger"
 	"optisam-backend/common/optisam/logger"
@@ -47,6 +48,8 @@ type Config struct {
 
 	// IAM Configuration
 	IAM iam.Config
+
+	GrpcServers grpc.Config
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.

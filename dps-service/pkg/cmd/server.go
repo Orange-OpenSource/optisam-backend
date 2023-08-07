@@ -31,8 +31,6 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
-	"github.com/gobuffalo/packr/v2"
-	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"optisam-backend/common/optisam/workerqueue"
@@ -133,28 +131,21 @@ func RunServer() error {
 		logger.Log.Info("max MaxDeferWorker set default : 10 ")
 	}
 
-	db, err := postgres.NewConnection(*cfg.Postgres)
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
-
-	// Run Migration
-	migrations := &migrate.PackrMigrationSource{
-		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
-	}
-	_, err = migrate.Exec(db, "postgres", migrations, migrate.Up)
-	if err != nil {
-		logger.Log.Error(err.Error())
-	}
-
+	// defer db.Close()
+	defer func() {
+		db.Close()
+		// Wait to 4 seconds so that the traces can be exported
+		waitTime := 2 * time.Second
+		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
+		<-time.After(waitTime)
+	}()
 	repo.SetDpsRepository(db)
 	dbObj := repo.GetDpsRepository()
-
-	// Verify connection.
-	if error := db.Ping(); error != nil {
-		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", error.Error())
-	}
-	fmt.Printf("Postgres connection verified to %+v \n\n", cfg.Postgres.Host)
 
 	// GRPC Connections
 	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)

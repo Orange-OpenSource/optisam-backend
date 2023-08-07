@@ -112,7 +112,8 @@ func (s *accountServiceServer) UpdateGroup(ctx context.Context, req *v1.UpdateGr
 	case claims.RoleAdmin:
 		return s.updateGroupName(ctx, req)
 	case claims.RoleSuperAdmin:
-		return s.updateGroupName(ctx, req)
+		//s.updateGroupName(ctx, req)
+		return s.updateGroupDetails(ctx, req)
 	default:
 		return nil, status.Error(codes.Unknown, "unknown error")
 	}
@@ -234,6 +235,7 @@ func convertRepoGroupToSrvGroup(grp *repo.Group) *v1.Group {
 		// TODO: cover below fields in test cases
 		NumOfChildGroups: grp.NumberOfGroups,
 		NumOfUsers:       grp.NumberOfUsers,
+		GroupCompliance:  grp.GroupCompliance,
 	}
 }
 
@@ -244,6 +246,7 @@ func convertSrvGroupToRepoGroup(grp *v1.Group) *repo.Group {
 		ParentID:           grp.ParentId,
 		FullyQualifiedName: grp.FullyQualifiedName,
 		Scopes:             grp.Scopes,
+		GroupCompliance:    grp.GroupCompliance,
 	}
 }
 
@@ -265,9 +268,9 @@ func (s *accountServiceServer) updateGroupName(ctx context.Context, req *v1.Upda
 		logger.Log.Error("service/v1 - UpdateGroup - GroupInfo", zap.Error(err))
 		return nil, status.Error(codes.Internal, "failed to get Group")
 	}
-	if group.Name == req.Group.Name {
-		return convertRepoGroupToSrvGroup(group), nil
-	}
+	// if group.Name == req.Group.Name {
+	// 	return convertRepoGroupToSrvGroup(group), nil
+	// }
 	fqnSlice := strings.Split(group.FullyQualifiedName, ".")
 	fqnSlice = fqnSlice[:len(fqnSlice)-1]
 	fqn := strings.Join(append(fqnSlice, req.Group.Name), ".")
@@ -281,13 +284,52 @@ func (s *accountServiceServer) updateGroupName(ctx context.Context, req *v1.Upda
 		return nil, status.Error(codes.InvalidArgument, "group name is not available")
 	}
 	if err := s.accountRepo.UpdateGroup(ctx, req.GroupId, &repo.GroupUpdate{
-		Name: req.Group.Name,
+		Name:            req.Group.Name,
+		Scopes:          req.Group.Scopes,
+		GroupCompliance: group.GroupCompliance,
 	}); err != nil {
 		logger.Log.Error("service/v1 - UpdateGroup - UpdateGroup", zap.Error(err))
 		return nil, status.Error(codes.Internal, "failed to get update group")
 	}
 	group.Name = req.Group.Name
+	group.Scopes = req.Group.Scopes
 	group.FullyQualifiedName = fqn
+	return convertRepoGroupToSrvGroup(group), nil
+}
+
+func (s *accountServiceServer) updateGroupDetails(ctx context.Context, req *v1.UpdateGroupRequest) (*v1.Group, error) {
+	group, err := s.accountRepo.GroupInfo(ctx, req.GroupId)
+	if err != nil {
+		logger.Log.Error("service/v1 - UpdateGroup - GroupInfo", zap.Error(err))
+		return nil, status.Error(codes.Internal, "failed to get Group")
+	}
+	groupName := group.Name
+	if group.Name != req.Group.Name {
+		fqnSlice := strings.Split(group.FullyQualifiedName, ".")
+		fqnSlice = fqnSlice[:len(fqnSlice)-1]
+		fqn := strings.Join(append(fqnSlice, req.Group.Name), ".")
+
+		groupExists, err := s.accountRepo.GroupExistsByFQN(ctx, fqn)
+		if err != nil {
+			logger.Log.Error("service/v1 - UpdateGroup - GroupExistsByFQN", zap.Error(err))
+			return nil, status.Error(codes.Internal, "failed to check GroupExistsByFQN")
+		}
+		if groupExists {
+			return nil, status.Error(codes.InvalidArgument, "group name is not available")
+		}
+		groupName = req.Group.Name
+	}
+	if err := s.accountRepo.UpdateGroup(ctx, req.GroupId, &repo.GroupUpdate{
+		Name:            groupName,
+		Scopes:          req.Group.Scopes,
+		GroupCompliance: req.Group.GroupCompliance,
+	}); err != nil {
+		logger.Log.Error("service/v1 - UpdateGroup - UpdateGroup", zap.Error(err))
+		return nil, status.Error(codes.Internal, "failed to get update group")
+	}
+	group.Name = groupName
+	group.Scopes = req.Group.Scopes
+	group.GroupCompliance = req.Group.GroupCompliance
 	return convertRepoGroupToSrvGroup(group), nil
 }
 
@@ -311,6 +353,40 @@ func (s *accountServiceServer) deleteGroup(ctx context.Context, groupID int64) (
 	return &v1.DeleteGroupResponse{
 		Success: true,
 	}, nil
+}
+
+// ListComplienceGroups list all the groups owned by superadmin with complience.
+func (s *accountServiceServer) ListComplienceGroups(ctx context.Context, req *v1.ListGroupsRequest) (*v1.ListComplienceGroupsResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+
+	if userClaims.Role != claims.RoleSuperAdmin {
+		return &v1.ListComplienceGroupsResponse{}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	totalGrps, err := s.accountRepo.GetComplienceGroups(ctx)
+	if err != nil {
+		logger.Log.Error("service/v1 - ListComplienceGroups - ", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Unknown, "service/v1 - ListSuperAdminGroup - failed to get complience groups ")
+	}
+
+	complienceGroups := &v1.ListComplienceGroupsResponse{
+		ComplienceGroups: make([]*v1.ComplienceGroup, len(totalGrps)),
+	}
+
+	for i, v := range totalGrps {
+		complienceGroups.ComplienceGroups[i] = &v1.ComplienceGroup{
+			GroupId:   int64(v.ID),
+			Name:      v.Name,
+			ScopeCode: v.ScopeCode,
+			ScopeName: v.ScopeName,
+		}
+	}
+
+	return complienceGroups, nil
+
 }
 
 func convertRepoGroupToSrvGroupAll(grps []*repo.Group) []*v1.Group {

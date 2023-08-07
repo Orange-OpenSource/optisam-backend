@@ -12,6 +12,7 @@ type Product {
     product.equipment
     product.acqRights
     product.users
+    product.concurrent.users
     <~application.product>
     <~instance.product>
     <~editor.product>                         

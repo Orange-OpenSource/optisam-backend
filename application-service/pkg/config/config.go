@@ -53,7 +53,7 @@ type Config struct {
 	Dgraph *dgraph.Config
 
 	// Database connection information
-	Database postgres.Config
+	Database postgres.DBConfig
 
 	// MaxAPIWorker
 	MaxAPIWorker int
@@ -188,7 +188,11 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("dgraph.host")
 
 	// Database Password configuration
-	_ = v.BindEnv("database.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
+
 	_ = v.BindEnv("application.usernameadmin", "APP_ADMIN_USERNAME")
 	_ = v.BindEnv("application.passwordadmin", "APP_ADMIN_PASSWORD")
 	_ = v.BindEnv("application.usernamesuperadmin", "APP_SUPER_ADMIN_USERNAME")

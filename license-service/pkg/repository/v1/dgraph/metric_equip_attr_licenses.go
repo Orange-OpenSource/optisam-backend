@@ -11,8 +11,8 @@ import (
 )
 
 // MetricEquipAttrComputedLicenses implements Licence MetricEquipAttrComputedLicenses function
-func (l *LicenseRepository) MetricEquipAttrComputedLicenses(ctx context.Context, id string, mat *v1.MetricEquipAttrStandComputed, scopes ...string) (uint64, error) {
-	q := buildQueryEquipAttr(mat, scopes, id)
+func (l *LicenseRepository) MetricEquipAttrComputedLicenses(ctx context.Context, id []string, mat *v1.MetricEquipAttrStandComputed, scopes ...string) (uint64, error) {
+	q := buildQueryEquipAttr(mat, scopes, id...)
 	sumValue, err := l.licensesForQuery(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricEquipAttrComputedLicenses - licensesForQueryAll", zap.Error(err), zap.String("query", q))

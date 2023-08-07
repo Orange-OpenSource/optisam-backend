@@ -104,6 +104,12 @@ rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {
       delete : "/api/v1/equipment/types/{equip_type}"
     };
   }
+
+  rpc DeleteEquipmentTypeAttr(DeleteEquipmentTypeAttrRequest)returns (DeleteEquipmentTypeAttrResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/equipment/types/attribute"
+    };
+  }
   // UpdateEquipmentType provides support for updating equipment
   // only addition of new attribyte is supported.
   // 1. Attributes added
@@ -383,6 +389,17 @@ message UpdateEquipmentTypeRequest {
   repeated string scopes = 5  [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
+message DeleteEquipmentTypeAttrRequest{
+  string id = 1;
+  string equip_type = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  string scope = 3;
+  DeleteAttr deleteAttributes = 4;
+}
+
+message DeleteEquipmentTypeAttrResponse{
+  bool success = 1;
+}
+
 message DeleteEquipmentTypeRequest{
   string equip_type = 1 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
   string scope = 2 [(validate.rules).string = {
@@ -467,6 +484,11 @@ message Attribute {
     float float_val_old = 14;
     string string_val_old = 15;
   }
+}
+
+message DeleteAttr {
+  string ID = 1;
+  string name = 2;
 }
 
 message UpdAttribute {

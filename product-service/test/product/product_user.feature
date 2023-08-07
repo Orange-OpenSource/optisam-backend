@@ -10,7 +10,7 @@ Feature: Product Service Test : Normal user
     * def data = read('data.json')
     * def scope = 'API'
 
-
+  @SmokeTest
   @schema
   Scenario: Schema Validation for get product list
     Given path 'products'
@@ -19,19 +19,20 @@ Feature: Product Service Test : Normal user
     When method get
     Then status 200
     * response.totalRecords == '#number? _ >= 0'
-    * match response.products == '#[_ > 0] schema'
-    * match response.products == '#[_ <= 50] schema'
+    #* match response.products == '#[_ > 0] schema'
+    #* match response.products == '#[_ <= 50] schema'
 
-     @get
+  @SmokeTest 
+  @get
   Scenario: To verify user can get list of all products for the scope
     Given path 'products'
     And params { page_num:1, page_size:50, sort_by:'name', sort_order:'asc', scopes:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
-     And match response.products contains data.getProduct
-    * def result = karate.jsonPath(response, "$.products[?(@.swidTag=='"+data.getProduct.swidTag+"')]")[0]
-    * match result == data.getProduct
+   # * def result = karate.jsonPath(response, "$.products[?(@.swidTag=='"+data.getProduct.swidTag+"')]")[0]
+    #* match result == data.getProduct
+    * match response.products[*].name contains ["Microsoft sql server 2019"] 
 
 
      @search

@@ -5,8 +5,8 @@ var envAdminuserPassword= java.lang.System.getenv('APP_ADMIN_PASSWORD');
 var envuserName= java.lang.System.getenv('APP_USER_USERNAME');
 var envuserPassword= java.lang.System.getenv('APP_USER_PASSWORD');
 
-//require('dotenv').config()
-//console.log(process.env)
+
+
 function fn() {
   var env = karate.env; // get system property 'karate.env'
 
@@ -15,7 +15,8 @@ function fn() {
 
   }
   karate.log('karate.env system property:', env);
-
+  print(envSuperAdminUserName)
+  print(envSuperAdminUserPassword)
   //Configure Karate
   karate.configure('logPrettyRequest', true)
   karate.configure('logPrettyResponse', true)
@@ -31,15 +32,19 @@ function fn() {
   var config = {
     env: env,
     access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiJyZWcudXNlckB0ZXN0LmNvbSIsIkxvY2FsZSI6ImVuIiwiUm9sZSI6IkFkbWluIiwiU29jcGVzIjpbIk9TUCIsIlRTVCJdLCJleHAiOjE2MDY5ODMzMTcsImlhdCI6MTYwNjk3NjExNywiaXNzIjoiT3JhbmdlIiwic3ViIjoiQWNjZXNzIFRva2VuIn0.OfxXAQP1EU-9sWhqCj_0My3hp4lxnNxyUk3FjjyzQMOArbM3Y6yjb1lKWSZoK6TlWJbzZRaritzBDhVBOGb0BLXmRCIRXCywqojrdNtSXe_cBKe1Ohrfdg4V-8Vy5Ip4cW5wg8Yx7-Bn40Wl_39X3a8XOkTUWvcbDsZ8uPUsDQ56h4-VUNNT6FMF0zmo4HE45MdZITGezUoth2dn7b6I9TC49RtgKkuXWJ5BiB5zio2aRFpZDAYKc9BC4MWfbfuTG6qJ3RcMBm1yW5pbtQMy03QM7OJXG8ZzLE2E5fzXwFyTXRUzbtRKE9RZhrJSpYn1jjJS6CGAWwEYqU8v2C0wrA",
-    authServiceUrl: "",
-    //AdminAccount_UserName: "",
-    //AdminAccount_Password: "",
+  authServiceUrl: "", 
+  //AdminAccount_UserName: "", 
+     //AdminAccount_Password: "",  
     //UserAccount_Username: "",
-    //UserAccount_password: ""
+    //UserAccount_password: ""  
+  
     AdminAccount_UserName: envSuperAdminUserName,
-    AdminAccount_Password: envSuperAdminUserPassword,
+    AdminAccount_Password: envSuperAdminUserPassword,  
     UserAccount_Username: envuserName,
-    UserAccount_password: envuserPassword
+    UserAccount_password: envuserPassword,
+    AdAccount_Username:   envAdminuserName,
+    AdAccount_password:   envAdminuserPassword
+
   };
 
   if (env == 'local') {
@@ -73,6 +78,7 @@ function fn() {
     config.reportServiceUrl = "https://optisam-report-dev.apps.fr01.paas.tech.orange"
     config.metricServiceUrl = "https://optisam-metric-dev.apps.fr01.paas.tech.orange"
     config.simulationServiceUrl = "https://optisam-simulation-dev.apps.fr01.paas.tech.orange"
+    config.catalogServiceUrl ="https://optisam-catalog-dev.apps.fr01.paas.tech.orange"
   } else if (env == 'int') {
     config.authServiceUrl = "https://optisam-auth-int.apps.fr01.paas.tech.orange" 
     config.accountServiceUrl = "https://optisam-account-int.apps.fr01.paas.tech.orange"

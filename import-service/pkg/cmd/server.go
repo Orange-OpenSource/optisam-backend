@@ -57,7 +57,7 @@ func RunServer() error {
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
 	} else if os.Getenv("ENV") == "pc" {
-                viper.SetConfigName("config-pc")
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}

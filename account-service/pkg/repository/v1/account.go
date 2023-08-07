@@ -99,6 +99,18 @@ type Account interface {
 
 	// DropScopeTX delete/update the groups and delete the scope
 	DropScopeTX(ctx context.Context, scope string) error
+
+	// UpsertScopeExpenses allows user to update their scope expenses
+	UpsertScopeExpenses(ctx context.Context, scope_code, created_by, updated_by string, expenses float64, expenses_year int) error
+	// ScopeExpensesByScopeCode implements Account Service ScopeExpensesByScopeCode function
+	ScopeExpensesByScopeCode(ctx context.Context, scopeCode string) (float64, error)
+	//For Redis
+	SetScope(ctx context.Context, scope []*Scope) error
+	GetScopes(ctx context.Context, s []string) ([]*Scope, error)
+	DropScope(ctx context.Context, s string) error
+
+	//GetComplienceGroups returns complienced groups with scopes
+	GetComplienceGroups(ctx context.Context) ([]GetComplienceGroups, error)
 }
 
 func NullString(str string) sql.NullString {

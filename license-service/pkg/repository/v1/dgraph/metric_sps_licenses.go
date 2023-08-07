@@ -12,8 +12,8 @@ import (
 )
 
 // MetricSPSComputedLicenses implements Licence MetricSPSComputedLicenses function
-func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id string, mat *v1.MetricSPSComputed, scopes ...string) (uint64, uint64, error) {
-	q := queryBuilderSPS(mat, scopes, id)
+func (l *LicenseRepository) MetricSPSComputedLicenses(ctx context.Context, id []string, mat *v1.MetricSPSComputed, scopes ...string) (uint64, uint64, error) {
+	q := queryBuilderSPS(mat, scopes, id...)
 	prod, nonProd, err := l.licensesForSPS(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricSPSComputedLicenses - licensesForSPS", zap.Error(err))

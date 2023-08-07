@@ -9,7 +9,7 @@ retries = 3
 basedelay = 1
 
 [cron]
-time = "@every 12h"
+time = "@every 15m"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -38,9 +38,21 @@ hosts = [
 [database]
 host = "svc-optisam-postgres.dev-optisam.svc"
 port = 5432
+# should be user of full rights
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "product"
+pass = ""
+name = "product" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "product" 
+[database.Migration]
+version = ""#version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
+direction = ""
+migrationPath  = "./schema"
 
 [redis]
 host = "red-dev-redis-dev-service"

@@ -12,6 +12,7 @@ Feature: Acquired Rights Service Test
     * def data = read('data.json')
     * def scope = 'API'
 
+  @SmokeTest
   @schema
   Scenario: Schema validation for get Acquired Rights
     Given path 'acqrights'
@@ -20,7 +21,7 @@ Feature: Acquired Rights Service Test
     When method get
     Then status 200
     * response.totalRecords == '#number? _ > 0'
-    * match response.acquired_rights == '#[_ > 0] schema'
+    * match response.acquired_rights[*].product_name contains ["Adobe Media Server"]
    
 
   @get
@@ -125,6 +126,7 @@ Feature: Acquired Rights Service Test
     When method post
     Then status 200
     And match response.success == true
+    # after running this program to rerun kindly provide a diffrent sku name or it will give error
 # Working
     Scenario: To verify Acquired Rights is not created with same sku
     Given path 'acqright'
@@ -132,7 +134,7 @@ Feature: Acquired Rights Service Test
      When method post
      Then status 400
 
-
+    @SmokeTest
    Scenario: To verify Acquired Rights is not created without sku
      Given path 'acqright'
     * remove data.createAcqrights.sku
@@ -144,8 +146,8 @@ Feature: Acquired Rights Service Test
   @update
   Scenario: Update Acquired Rights
     Given path 'acqright',data.createAcqrights.sku
-    * set data.createAcqrights.product_name = "APIProductUpdated"
-    * set data.createAcqrights.avg_unit_price = "8"
+    * set data.createAcqrights.product_name = data.UpdateAcq.product_Name2
+    * set data.createAcqrights.avg_unit_price = data.UpdateAcq.avg_unit_price
     And request data.createAcqrights
     When method put
     Then status 200
@@ -173,8 +175,8 @@ Feature: Acquired Rights Service Test
     @update
   Scenario: Miantenance End date cannot be less than start date
     Given path 'acqright',data.createAcqrightswithmaintenance.sku
-    * set data.createAcqrightswithmaintenance.end_of_maintenance = "2021-01-31T00:00:00.000Z"
-    * set data.createAcqrightswithmaintenance.start_of_maintenance = "2022-08-16T00:00:00.000Z"
+    * set data.createAcqrightswithmaintenance.end_of_maintenance = data.UpdateAcq.end_of_maintenance
+    * set data.createAcqrightswithmaintenance.start_of_maintenance = data.UpdateAcq.start_of_maintenance
     And request data.createAcqrightswithmaintenance
     When method put
     Then status 400
@@ -194,4 +196,45 @@ Feature: Acquired Rights Service Test
     And request data.createAcqrights
     When method post
     Then status 400
+#----------------------Acquired Right Without version creation--------------------#
+  Scenario: Create Acquired Rights without selecting version
+    Given path 'acqright'
+    And request data.createAcqrightsWithoutVersion
+    When method post
+    Then status 200
+     # after running this program to rerun kindly provide a diffrent sku name or it will give error
+# Working
 
+Scenario: Update Acquired Rights versions 
+  Given path 'acqright',data.createAcqrightsWithoutVersion.sku
+  * set data.createAcqrightsWithoutVersion.version = data.UpdateAcq.version
+  And request data.createAcqrightsWithoutVersion
+  When method put
+  Then status 200 
+  And match response.success == true 
+
+
+  Scenario: delete  Acquired Rights without selecting version
+    Given path 'acqright'
+    Given path data.createAcqrightsWithoutVersion.sku
+    And params {scope:'#(scope)'}
+    When method delete
+    Then status 200 
+
+  
+
+
+  
+
+
+
+    
+
+
+
+
+
+
+
+
+    

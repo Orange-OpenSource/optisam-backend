@@ -115,5 +115,6 @@ type AggregatedRightsInfo struct {
 }
 
 type Acqrights struct {
-	Swidtag string `json:"acqRights.swidtag"`
+	Swidtag     string `json:"acqRights.swidtag"`
+	ProductName string `json:"acqRights.productName"`
 }

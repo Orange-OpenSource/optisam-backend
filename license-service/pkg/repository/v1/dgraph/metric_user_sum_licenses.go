@@ -9,8 +9,8 @@ import (
 )
 
 // MetricUserSumComputedLicenses implements Licence MetricUserSumComputedLicenses function
-func (l *LicenseRepository) MetricUserSumComputedLicenses(ctx context.Context, id string, scopes ...string) (uint64, uint64, error) {
-	q := buildQueryUsersForNUP(scopes, "", id)
+func (l *LicenseRepository) MetricUserSumComputedLicenses(ctx context.Context, id []string, scopes ...string) (uint64, uint64, error) {
+	q := buildQueryUsersForNUP(scopes, "", id...)
 	sumValue, err := l.userLicenesForQueryNUP(ctx, q)
 	if err != nil {
 		logger.Log.Error("dgraph/MetricUserSumComputedLicenses - licensesForQuery", zap.Error(err), zap.String("query", q))

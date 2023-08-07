@@ -1,15 +1,16 @@
 {
     "schema_app": {
-        "application_id": "#string",
+        "application_id": "##string",
         "name": "##string",
         "owner": "##string",
-        "domain": "##string",
-        "obsolescence_risk": "##string",
         "num_of_instances": "##number",
         "num_of_products": "##number",
-        "total_cost":"##number",
-        "num_of_equipments": "##number"
-        
+		"total_cost": "##number",
+        "domain": "##string",
+       "obsolescence_risk":"##string",
+       "num_of_equipments": "##number",
+       "environment": "##string"  
+   
     },
     "getApp": {
         "application_id": "App_6",
@@ -63,6 +64,7 @@
             "start_month":0,
             "end_month":11}]
     },
+	
     "matrix":{
     
 	"scope": "API",
@@ -151,7 +153,16 @@
 		"risk_id": 2,
 		"risk_name": "Low"
 	}]
-    }
+    },
+	"product":{
+        "application_id":"car",
+		"product_name":"Oracle_Enterprise_Database_11_Oracle_11.2.0.4",
+		"product_name1":"Adobe_Media_Server_Adobe_5.0.16"
+		
+		
+	}
+
+
 
 
 }

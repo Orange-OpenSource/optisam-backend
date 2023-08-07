@@ -24,6 +24,10 @@ const (
 	MetricStaticStandard MetricType = "static.standard"
 	// MetricEquipAttrStandard is equipment.attribute.standard
 	MetricEquipAttrStandard MetricType = "equipment.attribute.standard"
+	// MetricUserNomStandard is user.nominative.standard
+	MetricUserNomStandard MetricType = "user.nominative.standard"
+	// MetricUserConcurentStandard is user.concurrent.standard
+	MetricUserConcurentStandard MetricType = "user.concurrent.standard"
 )
 
 // String implements Stringer interface
@@ -59,6 +63,8 @@ const (
 	MetricUserSum         MetricTypeID = 8
 	MetricStatic          MetricTypeID = 9
 	MetricEquipAttr       MetricTypeID = 10
+	MetricNominativeUser  MetricTypeID = 11
+	MetricConcurentUser   MetricTypeID = 12
 )
 
 // MetricDescription provide description
@@ -89,6 +95,10 @@ const (
 	MetricDescriptionStaticStandard MetricDescription = "Number of licenses required = Reference_value"
 	// MetricDescriptionEquipAttrStandard provides description of static.standard
 	MetricDescriptionEquipAttrStandard MetricDescription = "Number of licenses required = SUM (each [equipment] on environments [environment]) / [number] [attribute]"
+	// MetricDescriptionUserNomStandard provides description of user.nominative.standard
+	MetricDescriptionUserNomStandard MetricDescription = "sum the number of users with profile = [profile]"
+	// MetricDescriptionUserConcurentStandard provides description of user.concurrent.standard
+	MetricDescriptionUserConcurentStandard MetricDescription = "latest number of users with profile = [profile]"
 )
 
 var (
@@ -154,6 +164,18 @@ var (
 			Href:        "/api/v1/metric/equip_attr",
 			MetricType:  MetricEquipAttr,
 		},
+		{
+			Name:        MetricUserNomStandard,
+			Description: MetricDescriptionUserNomStandard.String(),
+			Href:        "/api/v1/metric/uns",
+			MetricType:  MetricNominativeUser,
+		},
+		{
+			Name:        MetricUserConcurentStandard,
+			Description: MetricDescriptionUserConcurentStandard.String(),
+			Href:        "/api/v1/metric/user_conc",
+			MetricType:  MetricConcurentUser,
+		},
 	}
 	// MetricTypesGeneric is a slice of MetricTypeInfo for generic scopes
 	MetricTypesGeneric = []*MetricTypeInfo{
@@ -217,6 +239,18 @@ var (
 			Href:        "/api/v1/metric/equip_attr",
 			MetricType:  MetricEquipAttr,
 		},
+		{
+			Name:        MetricUserNomStandard,
+			Description: MetricDescriptionUserNomStandard.String(),
+			Href:        "/api/v1/metric/uns",
+			MetricType:  MetricNominativeUser,
+		},
+		{
+			Name:        MetricUserConcurentStandard,
+			Description: MetricDescriptionUserConcurentStandard.String(),
+			Href:        "/api/v1/metric/user_conc",
+			MetricType:  MetricConcurentUser,
+		},
 	}
 	// MetricTypesSpecific is a slice of MetricTypeInfo for specific scopes
 	MetricTypesSpecific = []*MetricTypeInfo{
@@ -273,6 +307,18 @@ var (
 			Description: MetricDescriptionEquipAttrStandard.String(),
 			Href:        "/api/v1/metric/equip_attr",
 			MetricType:  MetricEquipAttr,
+		},
+		{
+			Name:        MetricUserNomStandard,
+			Description: MetricDescriptionUserNomStandard.String(),
+			Href:        "/api/v1/metric/uns",
+			MetricType:  MetricNominativeUser,
+		},
+		{
+			Name:        MetricUserConcurentStandard,
+			Description: MetricDescriptionUserConcurentStandard.String(),
+			Href:        "/api/v1/metric/user_conc",
+			MetricType:  MetricConcurentUser,
 		},
 	}
 )

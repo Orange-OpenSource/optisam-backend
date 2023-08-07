@@ -215,3 +215,15 @@ func (f *Filter) Type() Filtertype {
 func (prodKey ProductSearchKey) ToString() string {
 	return string(prodKey)
 }
+
+// ProductDetail represents product info.
+type ProductDetail struct {
+	ID              string
+	SwidTag         string
+	Name            string
+	Edition         string
+	Editor          string
+	Version         string
+	NumOfEquipments int32
+	AcquiredRights  []*ProductAcquiredRight
+}

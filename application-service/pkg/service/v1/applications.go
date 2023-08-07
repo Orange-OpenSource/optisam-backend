@@ -126,25 +126,25 @@ func (s *applicationServiceServer) UpsertApplicationEquip(ctx context.Context, r
 	}
 
 	// For dgworker Queue
-	// jsonData, err := json.Marshal(req)
-	// if err != nil {
-	// 	logger.Log.Error("Failed to do json marshalling", zap.Error(err))
-	// }
-	// e := dgworker.Envelope{Type: dgworker.UpsertApplicationEquipRequest, JSON: jsonData}
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	}
+	e := dgworker.Envelope{Type: dgworker.UpsertApplicationEquipRequest, JSON: jsonData}
 
-	// envolveData, err := json.Marshal(e)
-	// if err != nil {
-	// 	logger.Log.Error("Failed to do json marshalling", zap.Error(err))
-	// }
+	envolveData, err := json.Marshal(e)
+	if err != nil {
+		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+	}
 
-	// _, err = s.queue.PushJob(ctx, job.Job{
-	// 	Type:   sql.NullString{String: "lw"},
-	// 	Status: job.JobStatusPENDING,
-	// 	Data:   envolveData,
-	// }, "lw")
-	// if err != nil {
-	// 	logger.Log.Error("Failed to push job to the queue", zap.Error(err))
-	// }
+	_, err = s.queue.PushJob(ctx, job.Job{
+		Type:   sql.NullString{String: "lw"},
+		Status: job.JobStatusPENDING,
+		Data:   envolveData,
+	}, "lw")
+	if err != nil {
+		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+	}
 
 	return &v1.UpsertApplicationEquipResponse{Success: true}, nil
 }
@@ -496,7 +496,6 @@ func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req
 	if len(resp) > 0 {
 		ListAppResponse.TotalRecords = int32(resp[0].Totalrecords)
 	}
-
 	for i := range resp {
 		ListAppResponse.Applications[i] = &v1.Application{}
 		ListAppResponse.Applications[i].Name = resp[i].ApplicationName
@@ -504,6 +503,9 @@ func (s *applicationServiceServer) listApplicationsView(ctx context.Context, req
 		// ListAppResponse.Applications[i].Owner = resp[i].ApplicationOwner
 		// ListAppResponse.Applications[i].NumOfInstances = resp[i].NumOfInstances
 		for j := range resp {
+			if app.AppData == nil {
+				break
+			}
 			if resp[i].ApplicationID == app.AppData[j].ApplicationId {
 				ListAppResponse.Applications[i].NumOfProducts = int32(app.AppData[j].NumOfProducts)
 				break

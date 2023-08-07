@@ -44,7 +44,9 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	router.PUT("/api/v1/import/config/:config_id", h.UpdateConfigHandler)
 	router.POST("/api/v1/import/globaldata", h.UploadGlobalDataHandler)
 	router.GET("/api/v1/import/download", h.DownloadFile)
+	router.POST("/api/v1/import/download/nominative", h.DownloadFileNominativeUser)
 	router.POST("/api/v1/import/upload", h.UploadFiles)
+	router.POST("/api/v1/import/nominative/user", h.ImportNominativeUser)
 	router.POST("/api/v1/import/uploadcatalogdata", h.UploadCatalogData)
 
 	srv := &http.Server{

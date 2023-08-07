@@ -1419,6 +1419,76 @@ func (s *equipmentServiceServer) DeleteEquipmentType(ctx context.Context, req *v
 	}, nil
 }
 
+func (s *equipmentServiceServer) DeleteEquipmentTypeAttr(ctx context.Context, req *v1.DeleteEquipmentTypeAttrRequest) (*v1.DeleteEquipmentTypeAttrResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "some claims are not owned by user")
+	}
+	// check if equipment type exists
+	eqTypes, err := s.equipmentRepo.EquipmentTypes(ctx, []string{req.Scope})
+	if err != nil {
+		logger.Log.Debug("service/v1 - DeleteEquipmentTypeAttr - repo/EquipmentTypes -", zap.String("reason", err.Error()))
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot fetch equipment types")
+	}
+	idx := equipmentTypeExistsByType(req.EquipType, eqTypes)
+	if idx == -1 {
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.NotFound, "equipment type does not exist")
+	}
+	// check if equipment type has children
+	_, err = s.equipmentRepo.EquipmentTypeChildren(ctx, eqTypes[idx].ID, len(eqTypes), []string{req.Scope})
+	if err != nil {
+		if err != repo.ErrNoData {
+			logger.Log.Debug("service/v1 - DeleteEquipmentTypeAttr - repo/quipmentTypeChildren - ", zap.String("reason", err.Error()))
+			return &v1.DeleteEquipmentTypeAttrResponse{
+				Success: false,
+			}, status.Error(codes.Internal, "cannot fetch equipment type children")
+		}
+	} else {
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "equipment type has children")
+	}
+	// check if equipments data exists
+	numEquipments, _, err := s.equipmentRepo.Equipments(ctx, eqTypes[idx], &repo.QueryEquipments{
+		PageSize:  50,
+		Offset:    offset(50, 1),
+		SortOrder: sortOrder(v1.SortOrder_ASC),
+	}, []string{req.Scope})
+	if err != nil {
+		if err != repo.ErrNoData {
+			logger.Log.Debug("service/v1 - DeleteEquipmentTypeAttr - repo/Equipments -", zap.String("reason", err.Error()))
+			return &v1.DeleteEquipmentTypeAttrResponse{
+				Success: false,
+			}, status.Error(codes.Internal, "cannot fetch equipments")
+		}
+	}
+	if numEquipments != 0 {
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "equipment type contains equipments data")
+	}
+	if err := s.equipmentRepo.DeleteEquipmentTypeAttr(ctx, req.DeleteAttributes.ID, req.Scope); err != nil {
+		logger.Log.Debug("service/v1 - DeleteEquipmentTypeAttr - repo/DeleteEquipmentTypeAttr - ", zap.String("reason", err.Error()))
+		return &v1.DeleteEquipmentTypeAttrResponse{
+			Success: false,
+		}, status.Error(codes.Internal, "cannot delete equipment type")
+	}
+	return &v1.DeleteEquipmentTypeAttrResponse{
+		Success: true,
+	}, nil
+}
+
 func (s *equipmentServiceServer) CreateEquipmentType(ctx context.Context, req *v1.EquipmentType) (*v1.EquipmentType, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -1689,23 +1759,27 @@ func validateEquipUpdation(mappedTo []string, equip *repo.EquipmentType, parentI
 }
 
 func validateUpdateAttributes(oldAttr []*repo.Attribute, updAttr []*v1.UpdAttribute) error {
-	names := make(map[string]struct{})
-	mappings := make(map[string]string)
+	// names := make(map[string]struct{})
+	// mappings := make(map[string]string)
 
-	for _, attr := range oldAttr {
-		name := strings.ToUpper(attr.Name)
-		names[name] = struct{}{}
-		mappings[attr.MappedTo] = name
-	}
+	// for _, attr := range oldAttr {
+	// 	name := strings.ToUpper(attr.Name)
+	// 	names[name] = struct{}{}
+	// 	mappings[attr.MappedTo] = name
+	// }
 	// vaidations on attributes
 	for _, attr := range updAttr {
 		// check if name if unique or not
-		name := strings.ToUpper(attr.Name)
-		_, ok := names[name]
-		if !ok {
-			// we arlready have this name for some other attribute
-			return status.Errorf(codes.InvalidArgument, "attribute name: %v does not exists", attr.Name)
-		}
+		// for _, attrold := range oldAttr {
+		// 	if attrold.ID != attr.ID {
+		// 		name := strings.ToUpper(attr.Name)
+		// 		_, ok := names[name]
+		// 		if ok {
+		// 			// we arlready have this name for some other attribute
+		// 			return status.Errorf(codes.InvalidArgument, "attribute name: %v already exists", attr.Name)
+		// 		}
+		// 	}
+		// }
 
 		if attr.Searchable {
 			if !attr.Displayed {

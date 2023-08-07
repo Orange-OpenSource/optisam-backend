@@ -2,11 +2,13 @@ package v1
 
 import (
 	"context"
+	"math"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	v1 "optisam-backend/license-service/pkg/api/v1"
 	repo "optisam-backend/license-service/pkg/repository/v1"
+	prodv1 "optisam-backend/product-service/pkg/api/v1"
 	"strings"
 
 	"go.uber.org/zap"
@@ -61,24 +63,32 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 			return nil, status.Error(codes.Internal, "unable to calculate repartition")
 		}
 		for _, prodRights := range repartedResProdAcqRights {
+			licenses, err := s.productClient.GetAvailableLicenses(ctx, &prodv1.GetAvailableLicensesRequest{Sku: prodRights.SKU, Scope: req.GetScope()})
+			if err != nil {
+				logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - GetAvailableLicenses", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "serviceError")
+			}
 			repartedResAggAcqRights = append(repartedResAggAcqRights, &v1.AggregationAcquiredRights{
-				SKU:              prodRights.SKU,
-				AggregationName:  req.Name,
-				SwidTags:         prodRights.SwidTag,
-				Metric:           prodRights.Metric,
-				NumCptLicences:   prodRights.NumCptLicences,
-				NumAcqLicences:   prodRights.NumAcqLicences,
-				TotalCost:        prodRights.TotalCost,
-				DeltaNumber:      prodRights.DeltaNumber,
-				DeltaCost:        prodRights.DeltaCost,
-				AvgUnitPrice:     prodRights.AvgUnitPrice,
-				ComputedDetails:  prodRights.ComputedDetails,
-				MetricNotDefined: prodRights.MetricNotDefined,
-				NotDeployed:      prodRights.NotDeployed,
-				ProductNames:     prodRights.ProductName,
-				PurchaseCost:     prodRights.PurchaseCost,
-				ComputedCost:     prodRights.ComputedCost,
-				CostOptimization: prodRights.CostOptimization,
+				SKU:               prodRights.SKU,
+				AggregationName:   req.Name,
+				SwidTags:          prodRights.SwidTag,
+				Metric:            prodRights.Metric,
+				NumCptLicences:    prodRights.NumCptLicences,
+				NumAcqLicences:    prodRights.NumAcqLicences,
+				TotalCost:         prodRights.TotalCost,
+				DeltaNumber:       prodRights.DeltaNumber,
+				DeltaCost:         prodRights.DeltaCost,
+				AvgUnitPrice:      prodRights.AvgUnitPrice,
+				ComputedDetails:   prodRights.ComputedDetails,
+				MetricNotDefined:  prodRights.MetricNotDefined,
+				NotDeployed:       prodRights.NotDeployed,
+				ProductNames:      prodRights.ProductName,
+				PurchaseCost:      prodRights.PurchaseCost,
+				ComputedCost:      prodRights.ComputedCost,
+				CostOptimization:  prodRights.CostOptimization,
+				AvailableLicences: licenses.AvailableLicenses,
+				SharedLicences:    licenses.TotalSharedLicenses,
+				RecievedLicences:  licenses.TotalRecievedLicenses,
 			})
 		}
 	} else if repoAgg.NumOfEquipments != 0 && len(rgtsWithRepart) == 1 {
@@ -93,20 +103,54 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 	input[SCOPES] = []string{req.Scope}
 	input[IsAgg] = true
 	for i, aggRight := range rgtsWithoutRepart {
-		aggCompLicenses[i] = &v1.AggregationAcquiredRights{
-			SKU:             aggRight.SKU,
-			AggregationName: req.Name,
-			SwidTags:        strings.Join(repoAgg.Swidtags, ","),
-			ProductNames:    strings.Join(repoAgg.ProductNames, ","),
-			Metric:          aggRight.Metric,
-			NumAcqLicences:  int32(aggRight.AcqLicenses),
-			TotalCost:       aggRight.TotalCost,
-			PurchaseCost:    aggRight.TotalPurchaseCost,
-			AvgUnitPrice:    aggRight.AvgUnitPrice,
+		metricType := ""
+		availbleLicences := 0
+		sku := strings.Split(aggRight.SKU, ",")
+		for i := range sku {
+			metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
+				Sku:   sku[i],
+				Scope: req.Scope,
+			})
+			if err != nil {
+				logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - GetMetric", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "serviceError")
+			}
+			for _, v := range metrics {
+				if metricName.Metric == v.Name {
+					metricType = string(v.Type)
+				}
+			}
+			resp, err := s.productClient.GetAvailableLicenses(ctx, &prodv1.GetAvailableLicensesRequest{Sku: sku[i], Scope: req.Scope})
+			if err != nil {
+				logger.Log.Error("service/v1 - ListAcqRightsForProductAggregation - GetAvailableLicenses", zap.String("reason", err.Error()))
+				return nil, status.Error(codes.Internal, "serviceError")
+			}
+			if metricType == "oracle.nup.standard" && aggRight.TransformDetails != "" {
+				availbleLicences += int(math.Ceil(float64(resp.AvailableLicenses) / 50))
+			} else {
+				availbleLicences += int(resp.AvailableLicenses)
+			}
 		}
-		if repoAgg.NumOfEquipments == 0 {
+		aggCompLicenses[i] = &v1.AggregationAcquiredRights{
+			SKU:               aggRight.SKU,
+			AggregationName:   req.Name,
+			SwidTags:          strings.Join(repoAgg.Swidtags, ","),
+			ProductNames:      strings.Join(repoAgg.ProductNames, ","),
+			Metric:            aggRight.Metric,
+			NumAcqLicences:    int32(aggRight.AcqLicenses),
+			TotalCost:         aggRight.TotalCost,
+			PurchaseCost:      aggRight.TotalPurchaseCost,
+			AvgUnitPrice:      aggRight.AvgUnitPrice,
+			AvailableLicences: int32(availbleLicences),
+		}
+		for _, v := range metrics {
+			if aggRight.Metric == v.Name {
+				metricType = string(v.Type)
+			}
+		}
+		if repoAgg.NumOfEquipments == 0 && (metricType != "user.nominative.standard" && metricType != "user.concurrent.standard") {
 			logger.Log.Error("service/v1 - ListAcqRightsForProduct - no equipments linked with product")
-			aggCompLicenses[i].DeltaNumber = int32(aggRight.AcqLicenses)
+			aggCompLicenses[i].DeltaNumber = int32(availbleLicences)
 			aggCompLicenses[i].DeltaCost = aggCompLicenses[i].PurchaseCost
 			aggCompLicenses[i].NotDeployed = true
 			continue
@@ -154,7 +198,7 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 		}
 		if metricExists {
 			aggCompLicenses[i].NumCptLicences = int32(maxComputed)
-			aggCompLicenses[i].DeltaNumber = aggCompLicenses[i].NumAcqLicences - int32(maxComputed)
+			aggCompLicenses[i].DeltaNumber = int32(availbleLicences) - int32(maxComputed)
 			aggCompLicenses[i].DeltaCost = aggCompLicenses[i].PurchaseCost - aggRight.AvgUnitPrice*float64(int32(maxComputed))
 			aggCompLicenses[i].ComputedDetails = computedDetails
 			aggCompLicenses[i].ComputedCost = aggRight.AvgUnitPrice * float64(int32(maxComputed))

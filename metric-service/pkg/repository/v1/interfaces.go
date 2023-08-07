@@ -65,7 +65,14 @@ type Metric interface {
 	// EquipmentTypes fetches all equipment types from database
 	EquipmentTypes(ctx context.Context, scopes string) ([]*EquipmentType, error)
 
+	// CreateMetricInstanceNumberStandard creates an instance.number.standard metric
 	CreateMetricInstanceNumberStandard(ctx context.Context, mat *MetricINM, scopes string) (*MetricINM, error)
+
+	// CreateMetricUserNominativeStandard creates an user.nominative.standard metric
+	CreateMetricUserNominativeStandard(ctx context.Context, met *MetricUNS, scope string) (*MetricUNS, error)
+
+	// CreateMetricUserConcurentStandard creates an user.concurrent.standard metric
+	CreateMetricUserConcurentStandard(ctx context.Context, met *MetricUCS, scope string) (*MetricUCS, error)
 
 	// CreateMetricUSS creates an User.sum.standard metric
 	CreateMetricUSS(ctx context.Context, met *MetricUSS, scope string) (*MetricUSS, error)
@@ -115,6 +122,12 @@ type Metric interface {
 	// GetMetricConfigINM return metric configuration of type instance.number.standard
 	GetMetricConfigINM(ctx context.Context, metName string, scopes string) (*MetricINM, error)
 
+	// GetMetricConfigUNS return metric configuration of type user.nominative.standard
+	GetMetricConfigUNS(ctx context.Context, metName string, scope string) (*MetricUNS, error)
+
+	// GetMetricConfigConcurentUser return metric configuration of type user.concurrent.standard
+	GetMetricConfigConcurentUser(ctx context.Context, metName string, scope string) (*MetricUCS, error)
+
 	// GetMetricConfigSS return metric configuration of type static.standard
 	GetMetricConfigSS(ctx context.Context, metName string, scopes string) (*MetricSS, error)
 
@@ -123,6 +136,12 @@ type Metric interface {
 
 	// UpdateMetricINM updates parameter(coeffitient) of the metric
 	UpdateMetricINM(ctx context.Context, met *MetricINM, scope string) error
+
+	// UpdateMetricUNS updates parameter(profile) of the metric
+	UpdateMetricUNS(ctx context.Context, met *MetricUNS, scope string) error
+
+	// UpdateMetricUCS updates parameter(profile) of the metric
+	UpdateMetricUCS(ctx context.Context, met *MetricUCS, scope string) error
 
 	// UpdateMetricSS updates parameter(Reference Value) of the metric
 	UpdateMetricSS(ctx context.Context, met *MetricSS, scope string) error

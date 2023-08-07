@@ -433,6 +433,8 @@ func (m *Scope) Validate() error {
 
 	// no validation rules for ScopeType
 
+	// no validation rules for Expenditure
+
 	return nil
 }
 
@@ -1030,6 +1032,8 @@ func (m *UpdateGroup) Validate() error {
 		}
 	}
 
+	// no validation rules for GroupCompliance
+
 	return nil
 }
 
@@ -1401,6 +1405,8 @@ func (m *Group) Validate() error {
 	// no validation rules for NumOfChildGroups
 
 	// no validation rules for NumOfUsers
+
+	// no validation rules for GroupCompliance
 
 	return nil
 }
@@ -3094,6 +3100,158 @@ var _ interface {
 	ErrorName() string
 } = UserQueryParamsValidationError{}
 
+// Validate checks the field values on UpsertScopeExpensesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *UpsertScopeExpensesRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if !_UpsertScopeExpensesRequest_ScopeCode_Pattern.MatchString(m.GetScopeCode()) {
+		return UpsertScopeExpensesRequestValidationError{
+			field:  "ScopeCode",
+			reason: "value does not match regex pattern \"\\\\b[A-Z]{3}\\\\b\"",
+		}
+	}
+
+	if m.GetExpenses() < 0 {
+		return UpsertScopeExpensesRequestValidationError{
+			field:  "Expenses",
+			reason: "value must be greater than or equal to 0",
+		}
+	}
+
+	return nil
+}
+
+// UpsertScopeExpensesRequestValidationError is the validation error returned
+// by UpsertScopeExpensesRequest.Validate if the designated constraints aren't met.
+type UpsertScopeExpensesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpsertScopeExpensesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpsertScopeExpensesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpsertScopeExpensesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpsertScopeExpensesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpsertScopeExpensesRequestValidationError) ErrorName() string {
+	return "UpsertScopeExpensesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpsertScopeExpensesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpsertScopeExpensesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpsertScopeExpensesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpsertScopeExpensesRequestValidationError{}
+
+var _UpsertScopeExpensesRequest_ScopeCode_Pattern = regexp.MustCompile("\\b[A-Z]{3}\\b")
+
+// Validate checks the field values on ScopeExpenses with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *ScopeExpenses) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ScopeCode
+
+	// no validation rules for Expenses
+
+	return nil
+}
+
+// ScopeExpensesValidationError is the validation error returned by
+// ScopeExpenses.Validate if the designated constraints aren't met.
+type ScopeExpensesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ScopeExpensesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ScopeExpensesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ScopeExpensesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ScopeExpensesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ScopeExpensesValidationError) ErrorName() string { return "ScopeExpensesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ScopeExpensesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sScopeExpenses.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ScopeExpensesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ScopeExpensesValidationError{}
+
 // Validate checks the field values on GetScopeListRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.
@@ -3227,3 +3385,157 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ScopeListResponseValidationError{}
+
+// Validate checks the field values on ListComplienceGroupsResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListComplienceGroupsResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	for idx, item := range m.GetComplienceGroups() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface {
+			Validate() error
+		}); ok {
+			if err := v.Validate(); err != nil {
+				return ListComplienceGroupsResponseValidationError{
+					field:  fmt.Sprintf("ComplienceGroups[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ListComplienceGroupsResponseValidationError is the validation error returned
+// by ListComplienceGroupsResponse.Validate if the designated constraints
+// aren't met.
+type ListComplienceGroupsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListComplienceGroupsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListComplienceGroupsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListComplienceGroupsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListComplienceGroupsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListComplienceGroupsResponseValidationError) ErrorName() string {
+	return "ListComplienceGroupsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListComplienceGroupsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListComplienceGroupsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListComplienceGroupsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListComplienceGroupsResponseValidationError{}
+
+// Validate checks the field values on ComplienceGroup with the rules defined
+// in the proto definition for this message. If any rules are violated, an
+// error is returned.
+func (m *ComplienceGroup) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for GroupId
+
+	// no validation rules for Name
+
+	return nil
+}
+
+// ComplienceGroupValidationError is the validation error returned by
+// ComplienceGroup.Validate if the designated constraints aren't met.
+type ComplienceGroupValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ComplienceGroupValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ComplienceGroupValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ComplienceGroupValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ComplienceGroupValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ComplienceGroupValidationError) ErrorName() string { return "ComplienceGroupValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ComplienceGroupValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sComplienceGroup.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ComplienceGroupValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ComplienceGroupValidationError{}

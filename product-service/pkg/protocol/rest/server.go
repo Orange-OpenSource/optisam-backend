@@ -74,7 +74,7 @@ func newGateway(ctx context.Context, grpcPort string) (http.Handler, error) {
 			},
 		}),
 	)
-	opts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithStatsHandler(&ocgrpc.ClientHandler{})}
+	opts := []grpc.DialOption{grpc.WithInsecure(), grpc.WithStatsHandler(&ocgrpc.ClientHandler{}), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(10 * 1024 * 1024))}
 	conn, err := grpc.DialContext(ctx, "localhost:"+grpcPort, opts...)
 	if err != nil {
 		return nil, err

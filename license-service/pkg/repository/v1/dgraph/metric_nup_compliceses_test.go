@@ -13,7 +13,7 @@ import (
 func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		id     string
+		id     []string
 		mat    *v1.MetricNUPComputed
 		scopes string
 	}
@@ -50,7 +50,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			l: repo,
 			args: args{
 				ctx: context.Background(),
-				id:  ID,
+				id:  []string{ID},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -93,7 +93,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			l: repo,
 			args: args{
 				ctx: context.Background(),
-				id:  ID,
+				id:  []string{ID},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -128,7 +128,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -169,7 +169,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 						{
@@ -207,7 +207,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID1,
+				id: []string{ID1},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 
@@ -243,7 +243,7 @@ func TestLicenseRepository_MetricNUPComputedLicenses(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 
-				id: ID,
+				id: []string{ID},
 				mat: &v1.MetricNUPComputed{
 					EqTypeTree: []*v1.EquipmentType{
 

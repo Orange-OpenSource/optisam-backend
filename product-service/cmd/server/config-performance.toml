@@ -4,6 +4,7 @@ grpcport = "8090"
 httpport = "8080"
 maxapiworker = 25
 
+
 [workerqueue]
 retries = 3
 basedelay = 1
@@ -38,9 +39,20 @@ hosts = [
 [database]
 host = "svc-optisam-postgres.optisam-performance.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
 name = "product"
+# pass = ""
+# user of inser/update/delete/read access
+[database.user]
+user = "postgresuser"
+name = "product"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
+
 
 [redis]
 host = "red-performance-redis-performance-service"

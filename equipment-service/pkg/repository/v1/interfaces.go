@@ -35,6 +35,9 @@ type Equipment interface {
 	// DeleteEquipmentType deletes equipment type from database
 	DeleteEquipmentType(ctx context.Context, eqType, scope string) error
 
+	// DeleteEquipmentTypeAttr deletes equipment type attribute from database
+	DeleteEquipmentTypeAttr(ctx context.Context, attrId string, scope string) error
+
 	// EquipmentTypeChildren fetches all equipment type children from database
 	EquipmentTypeChildren(ctx context.Context, eqTypeID string, depth int, scopes []string) ([]*EquipmentType, error)
 

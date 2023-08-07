@@ -44,5 +44,56 @@
      "equipments": [0],
      "acqrights": [0]
         
-    }
+    },
+"Error_file":
+{
+    "UploadId":13863,
+    "Type":"error",
+    "Type2":"source"
+
+},
+"Modify_Criticity":{ "scope":"API",
+"domains_criticity":[{"domain_critic_id":1,"domain_critic_name":"",
+"domains":[]},{"domain_critic_id":2,"domain_critic_name":"","domains":
+["mobile","ftth"]},{"domain_critic_id":3,"domain_critic_name":"","domains":[]}]},
+
+"Time_Criticity":{"scope":"API",
+"maintenance_criticy":[{"maintenance_level_id":1,
+"maintenance_level_name":"Level 1",
+"start_month":48,"end_month":72},
+{"maintenance_level_id":2,
+"maintenance_level_name":"Level 2",
+"start_month":36,"end_month":47},
+{"maintenance_level_id":3,
+"maintenance_level_name":"Level 3","start_month":9,"end_month":35},
+{"maintenance_level_id":4,"maintenance_level_name":"Level 4",
+"start_month":0,"end_month":8}]},
+
+"Risk_Metrix":{"scope":"API","risk_matrix":
+[{"domain_critic_id":1,"domain_critic_name":"Critical",
+"maintenance_critic_id":1,"maintenance_critic_name":"Level 1",
+"risk_id":1,"risk_name":"Low"},{"domain_critic_id":2,"domain_critic_name":"Non Critical",
+"maintenance_critic_id":1,"maintenance_critic_name":"Level 1","risk_id":2,
+"risk_name":"Medium"},{"domain_critic_id":3,"domain_critic_name":"Neutral",
+"maintenance_critic_id":1,"maintenance_critic_name":"Level 1","risk_id":2,
+"risk_name":"Medium"},{"domain_critic_id":1,"domain_critic_name":"Critical",
+"maintenance_critic_id":2,"maintenance_critic_name":"Level 2","risk_id":1,
+"risk_name":"Low"},{"domain_critic_id":2,"domain_critic_name":"Non Critical",
+"maintenance_critic_id":2,"maintenance_critic_name":"Level 2","risk_id":1,
+"risk_name":"Low"},{"domain_critic_id":3,"domain_critic_name":"Neutral",
+"maintenance_critic_id":2,"maintenance_critic_name":"Level 2","risk_id":2,
+"risk_name":"Medium"},{"domain_critic_id":1,"domain_critic_name":"Critical",
+"maintenance_critic_id":3,"maintenance_critic_name":"Level 3","risk_id":2,
+"risk_name":"Medium"},{"domain_critic_id":2,"domain_critic_name":"Non Critical",
+"maintenance_critic_id":3,"maintenance_critic_name":"Level 3","risk_id":2,
+"risk_name":"Medium"},{"domain_critic_id":3,"domain_critic_name":"Neutral",
+"maintenance_critic_id":3,"maintenance_critic_name":"Level 3","risk_id":1,
+"risk_name":"Low"},{"domain_critic_id":1,"domain_critic_name":"Critical",
+"maintenance_critic_id":4,"maintenance_critic_name":"Level 4","risk_id":3,
+"risk_name":"High"},{"domain_critic_id":2,"domain_critic_name":"Non Critical",
+"maintenance_critic_id":4,"maintenance_critic_name":"Level 4","risk_id":3,
+"risk_name":"High"},{"domain_critic_id":3,"domain_critic_name":"Neutral",
+"maintenance_critic_id":4,"maintenance_critic_name":"Level 4","risk_id":2,
+"risk_name":"Medium"}]}
+
 }

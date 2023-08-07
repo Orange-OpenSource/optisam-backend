@@ -55,7 +55,7 @@ func (q *Queries) DeleteVersionCatalog(ctx context.Context, id string) error {
 }
 
 const getEditorCatalog = `-- name: GetEditorCatalog :one
-SELECT id, name, general_information, partner_managers, audits, vendors, created_on, updated_on, source from editor_catalog WHERE id = $1
+SELECT id, name, general_information, partner_managers, audits, vendors, created_on, updated_on, source, country_code, address, group_contract, global_account_manager, sourcers from editor_catalog WHERE id = $1
 `
 
 func (q *Queries) GetEditorCatalog(ctx context.Context, id string) (EditorCatalog, error) {
@@ -71,12 +71,17 @@ func (q *Queries) GetEditorCatalog(ctx context.Context, id string) (EditorCatalo
 		&i.CreatedOn,
 		&i.UpdatedOn,
 		&i.Source,
+		&i.CountryCode,
+		&i.Address,
+		&i.GroupContract,
+		&i.GlobalAccountManager,
+		&i.Sourcers,
 	)
 	return i, err
 }
 
 const getEditorCatalogByName = `-- name: GetEditorCatalogByName :one
-SELECT id, name, general_information, partner_managers, audits, vendors, created_on, updated_on, source from editor_catalog WHERE name = $1
+SELECT id, name, general_information, partner_managers, audits, vendors, created_on, updated_on, source, country_code, address, group_contract, global_account_manager, sourcers from editor_catalog WHERE name = $1
 `
 
 func (q *Queries) GetEditorCatalogByName(ctx context.Context, name string) (EditorCatalog, error) {
@@ -92,6 +97,11 @@ func (q *Queries) GetEditorCatalogByName(ctx context.Context, name string) (Edit
 		&i.CreatedOn,
 		&i.UpdatedOn,
 		&i.Source,
+		&i.CountryCode,
+		&i.Address,
+		&i.GroupContract,
+		&i.GlobalAccountManager,
+		&i.Sourcers,
 	)
 	return i, err
 }
@@ -113,7 +123,7 @@ func (q *Queries) GetEditorCatalogName(ctx context.Context, id string) (GetEdito
 }
 
 const getProductCatalogByEditorId = `-- name: GetProductCatalogByEditorId :one
-SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, recommendation, useful_links, swid_tag_product, source, editor_name, opensource_type from product_catalog 
+SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, useful_links, swid_tag_product, source, editor_name, opensource_type, recommendation, licensing from product_catalog 
 WHERE editorID = $1 AND name = $2
 `
 
@@ -140,24 +150,46 @@ func (q *Queries) GetProductCatalogByEditorId(ctx context.Context, arg GetProduc
 		&i.Location,
 		&i.CreatedOn,
 		&i.UpdatedOn,
-		&i.Recommendation,
 		&i.UsefulLinks,
 		&i.SwidTagProduct,
 		&i.Source,
 		&i.EditorName,
 		&i.OpensourceType,
+		&i.Recommendation,
+		&i.Licensing,
 	)
 	return i, err
 }
 
 const getProductCatalogByPrductID = `-- name: GetProductCatalogByPrductID :one
-SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, recommendation, useful_links, swid_tag_product, source, editor_name, opensource_type from product_catalog 
+SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, licences_opensource, location, created_on, updated_on, recommendation, useful_links,swid_tag_product,opensource_type,editor_name,licensing 
+ from product_catalog 
 WHERE id = $1
 `
 
-func (q *Queries) GetProductCatalogByPrductID(ctx context.Context, id string) (ProductCatalog, error) {
+type GetProductCatalogByPrductIDRow struct {
+	ID                 string                       `json:"id"`
+	Name               string                       `json:"name"`
+	Editorid           string                       `json:"editorid"`
+	GenearlInformation sql.NullString               `json:"genearl_information"`
+	ContractTips       sql.NullString               `json:"contract_tips"`
+	SupportVendors     json.RawMessage              `json:"support_vendors"`
+	Metrics            json.RawMessage              `json:"metrics"`
+	LicencesOpensource sql.NullString               `json:"licences_opensource"`
+	Location           LocationType                 `json:"location"`
+	CreatedOn          time.Time                    `json:"created_on"`
+	UpdatedOn          time.Time                    `json:"updated_on"`
+	Recommendation     ProductCatalogRecommendation `json:"recommendation"`
+	UsefulLinks        json.RawMessage              `json:"useful_links"`
+	SwidTagProduct     sql.NullString               `json:"swid_tag_product"`
+	OpensourceType     OpensourceType               `json:"opensource_type"`
+	EditorName         string                       `json:"editor_name"`
+	Licensing          ProductCatalogLicensing      `json:"licensing"`
+}
+
+func (q *Queries) GetProductCatalogByPrductID(ctx context.Context, id string) (GetProductCatalogByPrductIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getProductCatalogByPrductID, id)
-	var i ProductCatalog
+	var i GetProductCatalogByPrductIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -166,25 +198,22 @@ func (q *Queries) GetProductCatalogByPrductID(ctx context.Context, id string) (P
 		&i.ContractTips,
 		&i.SupportVendors,
 		&i.Metrics,
-		&i.IsOpensource,
 		&i.LicencesOpensource,
-		&i.IsClosesource,
-		&i.LicensesClosesource,
 		&i.Location,
 		&i.CreatedOn,
 		&i.UpdatedOn,
 		&i.Recommendation,
 		&i.UsefulLinks,
 		&i.SwidTagProduct,
-		&i.Source,
-		&i.EditorName,
 		&i.OpensourceType,
+		&i.EditorName,
+		&i.Licensing,
 	)
 	return i, err
 }
 
 const getProductCatalogBySwidTag = `-- name: GetProductCatalogBySwidTag :one
-SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, recommendation, useful_links, swid_tag_product, source, editor_name, opensource_type from product_catalog 
+SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, useful_links, swid_tag_product, source, editor_name, opensource_type, recommendation, licensing from product_catalog 
 WHERE swid_tag_product = $1
 `
 
@@ -206,18 +235,19 @@ func (q *Queries) GetProductCatalogBySwidTag(ctx context.Context, swidTagProduct
 		&i.Location,
 		&i.CreatedOn,
 		&i.UpdatedOn,
-		&i.Recommendation,
 		&i.UsefulLinks,
 		&i.SwidTagProduct,
 		&i.Source,
 		&i.EditorName,
 		&i.OpensourceType,
+		&i.Recommendation,
+		&i.Licensing,
 	)
 	return i, err
 }
 
 const getProductsByEditorID = `-- name: GetProductsByEditorID :many
-SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, recommendation, useful_links, swid_tag_product, source, editor_name, opensource_type from product_catalog 
+SELECT id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, useful_links, swid_tag_product, source, editor_name, opensource_type, recommendation, licensing from product_catalog 
 WHERE editorID = $1
 `
 
@@ -245,12 +275,13 @@ func (q *Queries) GetProductsByEditorID(ctx context.Context, editorID string) ([
 			&i.Location,
 			&i.CreatedOn,
 			&i.UpdatedOn,
-			&i.Recommendation,
 			&i.UsefulLinks,
 			&i.SwidTagProduct,
 			&i.Source,
 			&i.EditorName,
 			&i.OpensourceType,
+			&i.Recommendation,
+			&i.Licensing,
 		); err != nil {
 			return nil, err
 		}
@@ -391,19 +422,25 @@ func (q *Queries) GetVersionCatalogBySwidTag(ctx context.Context, swidTagVersion
 }
 
 const insertEditorCatalog = `-- name: InsertEditorCatalog :exec
-INSERT INTO editor_catalog (id,name, general_information,partner_managers,audits,vendors,created_on,updated_on)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+INSERT INTO editor_catalog (id,name, general_information,partner_managers,audits,vendors,created_on,updated_on,source,country_code,address,group_contract,global_account_manager,sourcers)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 `
 
 type InsertEditorCatalogParams struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	GeneralInformation sql.NullString  `json:"general_information"`
-	PartnerManagers    json.RawMessage `json:"partner_managers"`
-	Audits             json.RawMessage `json:"audits"`
-	Vendors            json.RawMessage `json:"vendors"`
-	CreatedOn          time.Time       `json:"created_on"`
-	UpdatedOn          time.Time       `json:"updated_on"`
+	ID                   string          `json:"id"`
+	Name                 string          `json:"name"`
+	GeneralInformation   sql.NullString  `json:"general_information"`
+	PartnerManagers      json.RawMessage `json:"partner_managers"`
+	Audits               json.RawMessage `json:"audits"`
+	Vendors              json.RawMessage `json:"vendors"`
+	CreatedOn            time.Time       `json:"created_on"`
+	UpdatedOn            time.Time       `json:"updated_on"`
+	Source               sql.NullString  `json:"source"`
+	CountryCode          sql.NullString  `json:"country_code"`
+	Address              sql.NullString  `json:"address"`
+	GroupContract        sql.NullBool    `json:"group_contract"`
+	GlobalAccountManager json.RawMessage `json:"global_account_manager"`
+	Sourcers             json.RawMessage `json:"sourcers"`
 }
 
 func (q *Queries) InsertEditorCatalog(ctx context.Context, arg InsertEditorCatalogParams) error {
@@ -416,38 +453,46 @@ func (q *Queries) InsertEditorCatalog(ctx context.Context, arg InsertEditorCatal
 		arg.Vendors,
 		arg.CreatedOn,
 		arg.UpdatedOn,
+		arg.Source,
+		arg.CountryCode,
+		arg.Address,
+		arg.GroupContract,
+		arg.GlobalAccountManager,
+		arg.Sourcers,
 	)
 	return err
 }
 
 const insertProductCatalog = `-- name: InsertProductCatalog :exec
-INSERT INTO product_catalog (id,name,editorID, genearl_information,contract_tips,support_vendors,metrics,is_opensource,licences_opensource,
-is_closesource,licenses_closesource,location,created_on,updated_on,recommendation,useful_links,swid_tag_product,editor_name,opensource_type)
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+
+INSERT INTO product_catalog (id,name,editorID, genearl_information,contract_tips,support_vendors,metrics,licences_opensource,location,created_on,updated_on,recommendation,useful_links,swid_tag_product,editor_name,opensource_type,licensing)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
 `
 
 type InsertProductCatalogParams struct {
-	ID                  string          `json:"id"`
-	Name                string          `json:"name"`
-	Editorid            string          `json:"editorid"`
-	GenearlInformation  sql.NullString  `json:"genearl_information"`
-	ContractTips        sql.NullString  `json:"contract_tips"`
-	SupportVendors      json.RawMessage `json:"support_vendors"`
-	Metrics             json.RawMessage `json:"metrics"`
-	IsOpensource        sql.NullBool    `json:"is_opensource"`
-	LicencesOpensource  sql.NullString  `json:"licences_opensource"`
-	IsClosesource       sql.NullBool    `json:"is_closesource"`
-	LicensesClosesource json.RawMessage `json:"licenses_closesource"`
-	Location            LocationType    `json:"location"`
-	CreatedOn           time.Time       `json:"created_on"`
-	UpdatedOn           time.Time       `json:"updated_on"`
-	Recommendation      sql.NullString  `json:"recommendation"`
-	UsefulLinks         json.RawMessage `json:"useful_links"`
-	SwidTagProduct      sql.NullString  `json:"swid_tag_product"`
-	EditorName          string          `json:"editor_name"`
-	OpensourceType      OpensourceType  `json:"opensource_type"`
+	ID                 string                       `json:"id"`
+	Name               string                       `json:"name"`
+	Editorid           string                       `json:"editorid"`
+	GenearlInformation sql.NullString               `json:"genearl_information"`
+	ContractTips       sql.NullString               `json:"contract_tips"`
+	SupportVendors     json.RawMessage              `json:"support_vendors"`
+	Metrics            json.RawMessage              `json:"metrics"`
+	LicencesOpensource sql.NullString               `json:"licences_opensource"`
+	Location           LocationType                 `json:"location"`
+	CreatedOn          time.Time                    `json:"created_on"`
+	UpdatedOn          time.Time                    `json:"updated_on"`
+	Recommendation     ProductCatalogRecommendation `json:"recommendation"`
+	UsefulLinks        json.RawMessage              `json:"useful_links"`
+	SwidTagProduct     sql.NullString               `json:"swid_tag_product"`
+	EditorName         string                       `json:"editor_name"`
+	OpensourceType     OpensourceType               `json:"opensource_type"`
+	Licensing          ProductCatalogLicensing      `json:"licensing"`
 }
 
+// steps to generate code:
+// add schema changes in migatoin files in product service folder
+// cd to optisam-backend
+// run  $ docker run --rm -v /$(pwd):/src -w //src/catalog-service/pkg/repository/v1/postgres kjconroy/sqlc:1.6.0 generate
 func (q *Queries) InsertProductCatalog(ctx context.Context, arg InsertProductCatalogParams) error {
 	_, err := q.db.ExecContext(ctx, insertProductCatalog,
 		arg.ID,
@@ -457,10 +502,7 @@ func (q *Queries) InsertProductCatalog(ctx context.Context, arg InsertProductCat
 		arg.ContractTips,
 		arg.SupportVendors,
 		arg.Metrics,
-		arg.IsOpensource,
 		arg.LicencesOpensource,
-		arg.IsClosesource,
-		arg.LicensesClosesource,
 		arg.Location,
 		arg.CreatedOn,
 		arg.UpdatedOn,
@@ -469,6 +511,7 @@ func (q *Queries) InsertProductCatalog(ctx context.Context, arg InsertProductCat
 		arg.SwidTagProduct,
 		arg.EditorName,
 		arg.OpensourceType,
+		arg.Licensing,
 	)
 	return err
 }
@@ -504,17 +547,22 @@ func (q *Queries) InsertVersionCatalog(ctx context.Context, arg InsertVersionCat
 }
 
 const updateEditorCatalog = `-- name: UpdateEditorCatalog :exec
-UPDATE editor_catalog SET general_information=$1, partner_managers=$2, audits=$3, vendors=$4, updated_on=$5, name=$7 where id=$6
+UPDATE editor_catalog SET general_information=$1, partner_managers=$2, audits=$3, vendors=$4, updated_on=$5, name=$7, country_code=$8, address=$9, group_contract= $10, global_account_manager= $11 ,sourcers= $12 where id=$6
 `
 
 type UpdateEditorCatalogParams struct {
-	GeneralInformation sql.NullString  `json:"general_information"`
-	PartnerManagers    json.RawMessage `json:"partner_managers"`
-	Audits             json.RawMessage `json:"audits"`
-	Vendors            json.RawMessage `json:"vendors"`
-	UpdatedOn          time.Time       `json:"updated_on"`
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
+	GeneralInformation   sql.NullString  `json:"general_information"`
+	PartnerManagers      json.RawMessage `json:"partner_managers"`
+	Audits               json.RawMessage `json:"audits"`
+	Vendors              json.RawMessage `json:"vendors"`
+	UpdatedOn            time.Time       `json:"updated_on"`
+	ID                   string          `json:"id"`
+	Name                 string          `json:"name"`
+	CountryCode          sql.NullString  `json:"country_code"`
+	Address              sql.NullString  `json:"address"`
+	GroupContract        sql.NullBool    `json:"group_contract"`
+	GlobalAccountManager json.RawMessage `json:"global_account_manager"`
+	Sourcers             json.RawMessage `json:"sourcers"`
 }
 
 func (q *Queries) UpdateEditorCatalog(ctx context.Context, arg UpdateEditorCatalogParams) error {
@@ -526,6 +574,11 @@ func (q *Queries) UpdateEditorCatalog(ctx context.Context, arg UpdateEditorCatal
 		arg.UpdatedOn,
 		arg.ID,
 		arg.Name,
+		arg.CountryCode,
+		arg.Address,
+		arg.GroupContract,
+		arg.GlobalAccountManager,
+		arg.Sourcers,
 	)
 	return err
 }
@@ -546,30 +599,28 @@ func (q *Queries) UpdateEditorNameForProductCatalog(ctx context.Context, arg Upd
 
 const updateProductCatalog = `-- name: UpdateProductCatalog :exec
 UPDATE product_catalog SET 
-name=$1,editorID=$2, genearl_information=$3,contract_tips=$4,support_vendors=$5,metrics=$6,is_opensource=$7,licences_opensource=$8,
-is_closesource=$9,licenses_closesource=$10,location=$11,updated_on=$12,recommendation=$13,useful_links=$14,swid_tag_product=$15,editor_name=$16,opensource_type=$17
-where id =$18
+name=$1,editorID=$2, genearl_information=$3,contract_tips=$4,support_vendors=$5,metrics=$6,licences_opensource=$7,
+location=$8,updated_on=$9,recommendation=$10,useful_links=$11,swid_tag_product=$12,editor_name=$13,opensource_type=$14,licensing=$15
+where id =$16
 `
 
 type UpdateProductCatalogParams struct {
-	Name                string          `json:"name"`
-	Editorid            string          `json:"editorid"`
-	GenearlInformation  sql.NullString  `json:"genearl_information"`
-	ContractTips        sql.NullString  `json:"contract_tips"`
-	SupportVendors      json.RawMessage `json:"support_vendors"`
-	Metrics             json.RawMessage `json:"metrics"`
-	IsOpensource        sql.NullBool    `json:"is_opensource"`
-	LicencesOpensource  sql.NullString  `json:"licences_opensource"`
-	IsClosesource       sql.NullBool    `json:"is_closesource"`
-	LicensesClosesource json.RawMessage `json:"licenses_closesource"`
-	Location            LocationType    `json:"location"`
-	UpdatedOn           time.Time       `json:"updated_on"`
-	Recommendation      sql.NullString  `json:"recommendation"`
-	UsefulLinks         json.RawMessage `json:"useful_links"`
-	SwidTagProduct      sql.NullString  `json:"swid_tag_product"`
-	EditorName          string          `json:"editor_name"`
-	OpensourceType      OpensourceType  `json:"opensource_type"`
-	ID                  string          `json:"id"`
+	Name               string                       `json:"name"`
+	Editorid           string                       `json:"editorid"`
+	GenearlInformation sql.NullString               `json:"genearl_information"`
+	ContractTips       sql.NullString               `json:"contract_tips"`
+	SupportVendors     json.RawMessage              `json:"support_vendors"`
+	Metrics            json.RawMessage              `json:"metrics"`
+	LicencesOpensource sql.NullString               `json:"licences_opensource"`
+	Location           LocationType                 `json:"location"`
+	UpdatedOn          time.Time                    `json:"updated_on"`
+	Recommendation     ProductCatalogRecommendation `json:"recommendation"`
+	UsefulLinks        json.RawMessage              `json:"useful_links"`
+	SwidTagProduct     sql.NullString               `json:"swid_tag_product"`
+	EditorName         string                       `json:"editor_name"`
+	OpensourceType     OpensourceType               `json:"opensource_type"`
+	Licensing          ProductCatalogLicensing      `json:"licensing"`
+	ID                 string                       `json:"id"`
 }
 
 func (q *Queries) UpdateProductCatalog(ctx context.Context, arg UpdateProductCatalogParams) error {
@@ -580,10 +631,7 @@ func (q *Queries) UpdateProductCatalog(ctx context.Context, arg UpdateProductCat
 		arg.ContractTips,
 		arg.SupportVendors,
 		arg.Metrics,
-		arg.IsOpensource,
 		arg.LicencesOpensource,
-		arg.IsClosesource,
-		arg.LicensesClosesource,
 		arg.Location,
 		arg.UpdatedOn,
 		arg.Recommendation,
@@ -591,6 +639,7 @@ func (q *Queries) UpdateProductCatalog(ctx context.Context, arg UpdateProductCat
 		arg.SwidTagProduct,
 		arg.EditorName,
 		arg.OpensourceType,
+		arg.Licensing,
 		arg.ID,
 	)
 	return err

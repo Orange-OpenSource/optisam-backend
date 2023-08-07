@@ -49,20 +49,18 @@ func (l *LicenseRepository) ProductExistsForApplication(ctx context.Context, pro
 // ProductApplicationEquipments implements ProductApplicationEquipments function
 func (l *LicenseRepository) ProductApplicationEquipments(ctx context.Context, prodID, appID string, scopes ...string) ([]*v1.Equipment, error) {
 	q := `{
-		var(func: eq(application.id,"` + appID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `)) {
-		 app_inst as  application.instance
+		var(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
+		 prod_uid as  uid
 		}
 	  
-		 var(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
-		  prod_inst as ~instance.product@filter(uid(app_inst))
+		 var(func: eq(application.id,"` + appID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"application")) {
+			application.product@filter(uid(prod_uid)){
+				Uid as uid
+				}
 		}
 	  
-		var(func: uid(prod_inst)) {
-		  ins_equip as instance.equipment
-		}
-	  
-		Equipments(func: eq(product.swidtag,"` + prodID + `"))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
-		  Equipment: product.equipment@filter(uid(ins_equip)) {
+		Equipments(func: uid(Uid))@filter(eq(scopes,` + strings.Join(scopes, ",") + `) AND eq(type_name,"product")) {
+		  Equipment: product.equipment {
 			uid
 			EquipID: equipment.id
 			Type: equipment.type

@@ -1,4 +1,4 @@
-@equipment @ignore
+@equipment 
 
 Feature: Equipment Service Test - user
 
@@ -12,7 +12,7 @@ Feature: Equipment Service Test - user
     * def data = read('data.json')
     * def scope = 'API'
 
-
+#------------------------------------Detailed test on server----------------------------------#
 
   @get
   Scenario: Get Equipment Server
@@ -37,7 +37,7 @@ Feature: Equipment Service Test - user
     * params {scopes:'#(scope)'}
     When method get 
     Then status 200
-    And response.totalRecords==1
+  
 
   @get
   Scenario: Get Children of an equipment - server

@@ -20,3 +20,4 @@ Update groups set scopes = $2 where id = $1;
 Delete from scopes where scope_code = $1;
 
 
+

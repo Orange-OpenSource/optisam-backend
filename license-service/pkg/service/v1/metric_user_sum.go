@@ -16,6 +16,7 @@ import (
 // nolint: unparam
 func (s *licenseServiceServer) computedLicensesUserSum(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricUserSum(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesUserSum - repo/ListMetricUserSum -", zap.Error(err))
@@ -30,7 +31,7 @@ func (s *licenseServiceServer) computedLicensesUserSum(ctx context.Context, eqTy
 	if input[IsAgg].(bool) {
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricUserSumComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), scope...)
 	} else {
-		computedLicenses, computedDetails, err = s.licenseRepo.MetricUserSumComputedLicenses(ctx, input[ProdID].(string), scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricUserSumComputedLicenses(ctx, prodID, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesUserSum - ", zap.String("reason", err.Error()))

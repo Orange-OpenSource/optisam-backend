@@ -3,6 +3,8 @@ package v1
 import (
 	"context"
 	"optisam-backend/common/optisam/logger"
+	metv1 "optisam-backend/metric-service/pkg/api/v1"
+	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
 	v1 "optisam-backend/product-service/pkg/api/v1"
 	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
 	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
@@ -131,7 +133,7 @@ func TestListProductAggregationView(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			s := NewProductServiceServer(dbObj, qObj, nil, "",nil)
 			got, err := s.ListProductAggregationView(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -236,7 +238,7 @@ func TestGetAggregationProductsExpandedView(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			s := NewProductServiceServer(dbObj, qObj, nil, "",nil)
 			got, err := s.GetAggregationProductsExpandedView(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -352,7 +354,7 @@ func TestGetAggregationProductsExpandedView(t *testing.T) {
 // 	for _, test := range testSet {
 // 		t.Run("", func(t *testing.T) {
 // 			test.mock(test.input)
-// 			s := NewProductServiceServer(dbObj, qObj, nil, "")
+// 			s := NewProductServiceServer(dbObj, qObj, nil, "",nil)
 // 			got, err := s.ListProductAggregationRecords(test.ctx, test.input)
 // 			if (err != nil) != test.outErr {
 // 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -370,6 +372,7 @@ func TestGetAggregationProductsExpandedView(t *testing.T) {
 func Test_productServiceServer_AggregatedRightDetails(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockProduct(mockCtrl)
+	metObj := metmock.NewMockMetricServiceClient(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
 	testSet := []struct {
 		name   string
@@ -391,6 +394,7 @@ func Test_productServiceServer_AggregatedRightDetails(t *testing.T) {
 				Products:        []string{"p1", "p2", "p3"},
 				Versions:        []string{"v1", "v2", "v3"},
 				ProductNames:    []string{"pn1", "pn2"},
+				NotDeployed:     false,
 			},
 			outErr: false,
 			ctx:    ctx,
@@ -407,6 +411,21 @@ func Test_productServiceServer_AggregatedRightDetails(t *testing.T) {
 					NumOfEquipments:   int32(5),
 					ProductNames:      []string{"pn1", "pn2"},
 				}, nil).Times(1)
+				metObj.EXPECT().ListMetrices(ctx, &metv1.ListMetricRequest{
+					Scopes: []string{"s1"},
+				}).Times(1).Return(&metv1.ListMetricResponse{
+					Metrices: []*metv1.Metric{
+						{
+							Type:        "OPS",
+							Name:        "m1",
+							Description: "metric description",
+						},
+						{
+							Type:        "NUP",
+							Name:        "m2",
+							Description: "metricNup description",
+						},
+					}}, nil)
 			},
 		},
 		{

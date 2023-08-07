@@ -113,6 +113,193 @@ func (s *metricServiceServer) ListMetrices(ctx context.Context, req *v1.ListMetr
 
 }
 
+func (s *metricServiceServer) CreateMetric(ctx context.Context, req *v1.CreateMetricRequest) (*v1.CreateMetricResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+	if req.Metric == nil || req.Metric.Name == "" || req.Metric.Type == "" {
+		return nil, status.Error(codes.InvalidArgument, "metric name and type can not be empty")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetSenderScope()) {
+		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	switch req.Metric.Type {
+	case repo.MetricOPSOracleProcessorStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigOPSID(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigOPS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ops config")
+		}
+		_, err = s.metricRepo.CreateMetricOPS(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricOracleNUPStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigNUPID(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigNUP", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric nup")
+		}
+		_, err = s.metricRepo.CreateMetricOracleNUPStandard(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricSPSSagProcessorStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigSPSID(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSPS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric sps")
+		}
+		_, err = s.metricRepo.CreateMetricSPS(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricIPSIbmPvuStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigIPSID(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricIPS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ips")
+		}
+		_, err = s.metricRepo.CreateMetricIPS(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricAttrCounterStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigACS(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricACS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric acs")
+		}
+		eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetRecieverScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricEquipAttrStand - fetching equipments", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch equipment types")
+		}
+		idx := equipmentTypeExistsByType(metric.EqType, eqTypes)
+		if idx == -1 {
+			return nil, status.Error(codes.NotFound, "cannot find equipment type")
+		}
+		attr, err := validateAttributeACSMetric(eqTypes[idx].Attributes, metric.AttributeName)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.metricRepo.CreateMetricACS(ctx, metric, attr, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric acs")
+		}
+	case repo.MetricInstanceNumberStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigINM(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricINM", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric inm")
+		}
+		_, err = s.metricRepo.CreateMetricInstanceNumberStandard(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric inm")
+		}
+	case repo.MetricAttrSumStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigAttrSum(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigAttrSum", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric attr sum")
+		}
+		eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetRecieverScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricEquipAttrStand - fetching equipments", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch equipment types")
+		}
+		idx := equipmentTypeExistsByType(metric.EqType, eqTypes)
+		if idx == -1 {
+			return nil, status.Error(codes.NotFound, "cannot find equipment type")
+		}
+		attr, err := validateAttributeASSMetric(eqTypes[idx].Attributes, metric.AttributeName)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.metricRepo.CreateMetricAttrSum(ctx, metric, attr, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricUserSumStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigUSS(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUSS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric uss")
+		}
+		_, err = s.metricRepo.CreateMetricUSS(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric uss")
+		}
+	case repo.MetricStaticStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigSS(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricSS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric ss")
+		}
+		_, err = s.metricRepo.CreateMetricStaticStandard(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricEquipAttrStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigEquipAttr(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricEquipAttr", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric acs")
+		}
+		eqTypes, err := s.metricRepo.EquipmentTypes(ctx, req.GetRecieverScope())
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricEquipAttrStand - fetching equipments", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch equipment types")
+		}
+		idx := equipmentTypeExistsByType(metric.EqType, eqTypes)
+		if idx == -1 {
+			return nil, status.Error(codes.NotFound, "cannot find equipment type")
+		}
+		attr, err := validateEquipAttStandardMetric(eqTypes[idx].Attributes, metric.AttributeName)
+		if err != nil {
+			return nil, err
+		}
+		_, err = s.metricRepo.CreateMetricEquipAttrStandard(ctx, metric, attr, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric ss")
+		}
+	case repo.MetricUserNomStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigUNS(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUNS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric UNS")
+		}
+		_, err = s.metricRepo.CreateMetricUserNominativeStandard(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricStaticStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric UNS")
+		}
+	case repo.MetricUserConcurentStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigConcurentUser(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUCS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric UCS")
+		}
+		_, err = s.metricRepo.CreateMetricUserConcurentStandard(ctx, metric, req.RecieverScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricUserConcurentStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric UCS")
+		}
+	}
+	return &v1.CreateMetricResponse{Success: true}, nil
+}
+
 // nolint: gocyclo,funlen
 func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v1.GetMetricConfigurationRequest) (*v1.GetMetricConfigurationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
@@ -231,6 +418,18 @@ func (s *metricServiceServer) GetMetricConfiguration(ctx context.Context, req *v
 		if err != nil {
 			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricEquipAttr", zap.String("reason", err.Error()))
 			return nil, status.Error(codes.Internal, "cannot fetch metric acs")
+		}
+	case repo.MetricUserNomStandard:
+		metric, err = s.metricRepo.GetMetricConfigUNS(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUNS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric UNS")
+		}
+	case repo.MetricUserConcurentStandard:
+		metric, err = s.metricRepo.GetMetricConfigConcurentUser(ctx, metrics[idx].Name, req.GetScopes()[0])
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricUCS", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric UNS")
 		}
 	}
 	resMetric, err := json.Marshal(metric)
@@ -354,6 +553,10 @@ func (s *metricServiceServer) discriptionMetric(ctx context.Context, met *repo.M
 		return s.getDescriptionSS(ctx, met.Name, scope)
 	case repo.MetricEquipAttrStandard:
 		return s.getDescriptionEquipAttr(ctx, met.Name, scope)
+	case repo.MetricUserNomStandard:
+		return s.getDescriptionUNS(ctx, met.Name, scope)
+	case repo.MetricUserConcurentStandard:
+		return s.getDescriptionUCS(ctx, met.Name, scope)
 	default:
 		return "", status.Error(codes.Internal, "description not found - "+met.Type.String())
 	}

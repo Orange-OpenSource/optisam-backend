@@ -11,7 +11,7 @@ import (
 func TestLicenseRepository_MetricUserSumComputedLicenses(t *testing.T) {
 	type args struct {
 		ctx    context.Context
-		id     string
+		id     []string
 		mat    *v1.MetricUserSumStand
 		scopes []string
 	}
@@ -41,7 +41,7 @@ func TestLicenseRepository_MetricUserSumComputedLicenses(t *testing.T) {
 			l: NewLicenseRepository(dgClient),
 			args: args{
 				ctx:    context.Background(),
-				id:     ID,
+				id:     []string{ID},
 				scopes: []string{"scope1"},
 			},
 			want:   uint64(5),

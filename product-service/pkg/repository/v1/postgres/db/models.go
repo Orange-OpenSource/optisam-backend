@@ -15,6 +15,49 @@ import (
 	"github.com/tabbed/pqtype"
 )
 
+type FileStatus string
+
+const (
+	FileStatusPARTIAL FileStatus = "PARTIAL"
+	FileStatusSUCCESS FileStatus = "SUCCESS"
+	FileStatusFAILED  FileStatus = "FAILED"
+)
+
+func (e *FileStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FileStatus(s)
+	case string:
+		*e = FileStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FileStatus: %T", src)
+	}
+	return nil
+}
+
+type NullFileStatus struct {
+	FileStatus FileStatus
+	Valid      bool // Valid is true if FileStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullFileStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.FileStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.FileStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullFileStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.FileStatus, nil
+}
+
 type JobStatus string
 
 const (
@@ -148,6 +191,135 @@ func (ns NullOpensourceType) Value() (driver.Value, error) {
 	return ns.OpensourceType, nil
 }
 
+type ProductCatalogLicensing string
+
+const (
+	ProductCatalogLicensingNONE         ProductCatalogLicensing = "NONE"
+	ProductCatalogLicensingCLOSEDSOURCE ProductCatalogLicensing = "CLOSEDSOURCE"
+	ProductCatalogLicensingOPENSOURCE   ProductCatalogLicensing = "OPENSOURCE"
+)
+
+func (e *ProductCatalogLicensing) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductCatalogLicensing(s)
+	case string:
+		*e = ProductCatalogLicensing(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductCatalogLicensing: %T", src)
+	}
+	return nil
+}
+
+type NullProductCatalogLicensing struct {
+	ProductCatalogLicensing ProductCatalogLicensing
+	Valid                   bool // Valid is true if ProductCatalogLicensing is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProductCatalogLicensing) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProductCatalogLicensing, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProductCatalogLicensing.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProductCatalogLicensing) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.ProductCatalogLicensing, nil
+}
+
+type ProductCatalogRecommendation string
+
+const (
+	ProductCatalogRecommendationNONE        ProductCatalogRecommendation = "NONE"
+	ProductCatalogRecommendationAUTHORIZED  ProductCatalogRecommendation = "AUTHORIZED"
+	ProductCatalogRecommendationBLACKLISTED ProductCatalogRecommendation = "BLACKLISTED"
+	ProductCatalogRecommendationRECOMMENDED ProductCatalogRecommendation = "RECOMMENDED"
+)
+
+func (e *ProductCatalogRecommendation) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductCatalogRecommendation(s)
+	case string:
+		*e = ProductCatalogRecommendation(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductCatalogRecommendation: %T", src)
+	}
+	return nil
+}
+
+type NullProductCatalogRecommendation struct {
+	ProductCatalogRecommendation ProductCatalogRecommendation
+	Valid                        bool // Valid is true if ProductCatalogRecommendation is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProductCatalogRecommendation) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProductCatalogRecommendation, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProductCatalogRecommendation.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProductCatalogRecommendation) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.ProductCatalogRecommendation, nil
+}
+
+type ProductType string
+
+const (
+	ProductTypeONPREMISE ProductType = "ONPREMISE"
+	ProductTypeSAAS      ProductType = "SAAS"
+)
+
+func (e *ProductType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductType(s)
+	case string:
+		*e = ProductType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductType: %T", src)
+	}
+	return nil
+}
+
+type NullProductType struct {
+	ProductType ProductType
+	Valid       bool // Valid is true if ProductType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullProductType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ProductType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ProductType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullProductType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.ProductType, nil
+}
+
 type Acqright struct {
 	Sku                       string          `json:"sku"`
 	Swidtag                   string          `json:"swidtag"`
@@ -237,15 +409,20 @@ type DashboardAudit struct {
 }
 
 type EditorCatalog struct {
-	ID                 string                `json:"id"`
-	Name               string                `json:"name"`
-	GeneralInformation sql.NullString        `json:"general_information"`
-	PartnerManagers    pqtype.NullRawMessage `json:"partner_managers"`
-	Audits             pqtype.NullRawMessage `json:"audits"`
-	Vendors            pqtype.NullRawMessage `json:"vendors"`
-	CreatedOn          time.Time             `json:"created_on"`
-	UpdatedOn          time.Time             `json:"updated_on"`
-	Source             sql.NullString        `json:"source"`
+	ID                   string                `json:"id"`
+	Name                 string                `json:"name"`
+	GeneralInformation   sql.NullString        `json:"general_information"`
+	PartnerManagers      pqtype.NullRawMessage `json:"partner_managers"`
+	Audits               pqtype.NullRawMessage `json:"audits"`
+	Vendors              pqtype.NullRawMessage `json:"vendors"`
+	CreatedOn            time.Time             `json:"created_on"`
+	UpdatedOn            time.Time             `json:"updated_on"`
+	Source               sql.NullString        `json:"source"`
+	CountryCode          sql.NullString        `json:"country_code"`
+	Address              sql.NullString        `json:"address"`
+	GroupContract        sql.NullBool          `json:"group_contract"`
+	GlobalAccountManager pqtype.NullRawMessage `json:"global_account_manager"`
+	Sourcers             pqtype.NullRawMessage `json:"sourcers"`
 }
 
 type Job struct {
@@ -259,6 +436,40 @@ type Job struct {
 	CreatedAt  time.Time       `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
 	MetaData   json.RawMessage `json:"meta_data"`
+}
+
+type NominativeUser struct {
+	UserID         int32          `json:"user_id"`
+	Scope          string         `json:"scope"`
+	Swidtag        sql.NullString `json:"swidtag"`
+	AggregationsID sql.NullInt32  `json:"aggregations_id"`
+	ActivationDate sql.NullTime   `json:"activation_date"`
+	UserEmail      string         `json:"user_email"`
+	UserName       sql.NullString `json:"user_name"`
+	FirstName      sql.NullString `json:"first_name"`
+	Profile        sql.NullString `json:"profile"`
+	ProductEditor  sql.NullString `json:"product_editor"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	CreatedAt      time.Time      `json:"created_at"`
+	CreatedBy      string         `json:"created_by"`
+	UpdatedBy      sql.NullString `json:"updated_by"`
+}
+
+type NominativeUserFileUploadedDetail struct {
+	ID                     int32                 `json:"id"`
+	Scope                  string                `json:"scope"`
+	Swidtag                sql.NullString        `json:"swidtag"`
+	AggregationsID         sql.NullInt32         `json:"aggregations_id"`
+	ProductEditor          sql.NullString        `json:"product_editor"`
+	UploadedAt             time.Time             `json:"uploaded_at"`
+	UploadedBy             string                `json:"uploaded_by"`
+	NominativeUsersDetails pqtype.NullRawMessage `json:"nominative_users_details"`
+	RecordSucceed          sql.NullInt32         `json:"record_succeed"`
+	RecordFailed           sql.NullInt32         `json:"record_failed"`
+	FileName               sql.NullString        `json:"file_name"`
+	SheetName              sql.NullString        `json:"sheet_name"`
+	FileStatus             FileStatus            `json:"file_status"`
+	UploadID               string                `json:"upload_id"`
 }
 
 type OverallComputedLicence struct {
@@ -298,29 +509,47 @@ type Product struct {
 	CreatedBy       string         `json:"created_by"`
 	UpdatedOn       time.Time      `json:"updated_on"`
 	UpdatedBy       sql.NullString `json:"updated_by"`
+	ProductType     ProductType    `json:"product_type"`
 }
 
 type ProductCatalog struct {
-	ID                  string                `json:"id"`
-	Name                string                `json:"name"`
-	Editorid            string                `json:"editorid"`
-	GenearlInformation  sql.NullString        `json:"genearl_information"`
-	ContractTips        sql.NullString        `json:"contract_tips"`
-	SupportVendors      pqtype.NullRawMessage `json:"support_vendors"`
-	Metrics             pqtype.NullRawMessage `json:"metrics"`
-	IsOpensource        sql.NullBool          `json:"is_opensource"`
-	LicencesOpensource  sql.NullString        `json:"licences_opensource"`
-	IsClosesource       sql.NullBool          `json:"is_closesource"`
-	LicensesClosesource pqtype.NullRawMessage `json:"licenses_closesource"`
-	Location            LocationType          `json:"location"`
-	CreatedOn           time.Time             `json:"created_on"`
-	UpdatedOn           time.Time             `json:"updated_on"`
-	Recommendation      sql.NullString        `json:"recommendation"`
-	UsefulLinks         pqtype.NullRawMessage `json:"useful_links"`
-	SwidTagProduct      sql.NullString        `json:"swid_tag_product"`
-	Source              sql.NullString        `json:"source"`
-	EditorName          string                `json:"editor_name"`
-	OpensourceType      OpensourceType        `json:"opensource_type"`
+	ID                  string                           `json:"id"`
+	Name                string                           `json:"name"`
+	Editorid            string                           `json:"editorid"`
+	GenearlInformation  sql.NullString                   `json:"genearl_information"`
+	ContractTips        sql.NullString                   `json:"contract_tips"`
+	SupportVendors      pqtype.NullRawMessage            `json:"support_vendors"`
+	Metrics             pqtype.NullRawMessage            `json:"metrics"`
+	IsOpensource        sql.NullBool                     `json:"is_opensource"`
+	LicencesOpensource  sql.NullString                   `json:"licences_opensource"`
+	IsClosesource       sql.NullBool                     `json:"is_closesource"`
+	LicensesClosesource pqtype.NullRawMessage            `json:"licenses_closesource"`
+	Location            LocationType                     `json:"location"`
+	CreatedOn           time.Time                        `json:"created_on"`
+	UpdatedOn           time.Time                        `json:"updated_on"`
+	UsefulLinks         pqtype.NullRawMessage            `json:"useful_links"`
+	SwidTagProduct      sql.NullString                   `json:"swid_tag_product"`
+	Source              sql.NullString                   `json:"source"`
+	EditorName          string                           `json:"editor_name"`
+	OpensourceType      OpensourceType                   `json:"opensource_type"`
+	Recommendation      NullProductCatalogRecommendation `json:"recommendation"`
+	Licensing           NullProductCatalogLicensing      `json:"licensing"`
+}
+
+type ProductConcurrentUser struct {
+	ID             int32          `json:"id"`
+	IsAggregations sql.NullBool   `json:"is_aggregations"`
+	AggregationID  sql.NullInt32  `json:"aggregation_id"`
+	Swidtag        sql.NullString `json:"swidtag"`
+	NumberOfUsers  sql.NullInt32  `json:"number_of_users"`
+	ProfileUser    sql.NullString `json:"profile_user"`
+	Team           sql.NullString `json:"team"`
+	Scope          string         `json:"scope"`
+	PurchaseDate   time.Time      `json:"purchase_date"`
+	CreatedOn      time.Time      `json:"created_on"`
+	CreatedBy      string         `json:"created_by"`
+	UpdatedOn      time.Time      `json:"updated_on"`
+	UpdatedBy      sql.NullString `json:"updated_by"`
 }
 
 type ProductsApplication struct {
@@ -335,6 +564,14 @@ type ProductsEquipment struct {
 	NumOfUsers      sql.NullInt32 `json:"num_of_users"`
 	AllocatedMetric string        `json:"allocated_metric"`
 	Scope           string        `json:"scope"`
+}
+
+type SharedLicense struct {
+	Sku              string `json:"sku"`
+	Scope            string `json:"scope"`
+	SharingScope     string `json:"sharing_scope"`
+	SharedLicences   int32  `json:"shared_licences"`
+	RecievedLicences int32  `json:"recieved_licences"`
 }
 
 type UploadFileLog struct {

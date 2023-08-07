@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
 	v1 "optisam-backend/license-service/pkg/repository/v1"
@@ -395,7 +394,7 @@ func (l *LicenseRepository) ConcatAcqRightForSameMetric(ctx context.Context, met
 							// nupidx := encountered[nupMetric]
 							opsidx, nupidx := getAcqRightsIndex(resAcqRight, opsMetric, nupMetric)
 							resAcqRight[opsidx].SKU = strings.Join([]string{resAcqRight[opsidx].SKU, resAcqRight[nupidx].SKU}, ",")
-							resAcqRight[opsidx].AcqLicenses += uint64(math.Ceil(float64(resAcqRight[nupidx].AcqLicenses) / 50))
+							//resAcqRight[opsidx].AcqLicenses += uint64(math.Ceil(float64(resAcqRight[nupidx].AcqLicenses) / 50))
 							// resAcqRight[opsidx].TotalCost = (resAcqRight[opsidx].TotalCost + acqRight[nupidx].TotalCost) / 2
 							// resAcqRight[opsidx].TotalPurchaseCost = (resAcqRight[opsidx].TotalPurchaseCost + acqRight[nupidx].TotalPurchaseCost) / 2
 							// resAcqRight[opsidx].AvgUnitPrice = resAcqRight[opsidx].AvgUnitPrice
@@ -424,4 +423,103 @@ func getAcqRightsIndex(resAcqRight []*v1.ProductAcquiredRight, metricOps string,
 		}
 	}
 	return opsIndex, nupIndex
+}
+
+// GetProductsByEditorProductName will return all product version of product & editor
+func (l *LicenseRepository) GetProductsByEditorProductName(ctx context.Context, metrics []*v1.Metric, scope, editorName, productName string) ([]*v1.ProductDetail, error) {
+	q := `
+		{
+			Products(func:eq(product.editor,"` + editorName + `"),orderasc: product.version) @filter(eq(scopes,"` + scope + `") AND eq(product.name,"` + productName + `") AND eq(type_name,"product")) {
+				ID : uid
+				SwidTag : 		   product.swidtag
+				Name :    		   product.name
+				Version : 		   product.version
+				Editor :  		   product.editor
+				Edition : 			product.edition
+				NumofEquipments:   count(product.equipment)
+				AcquiredRights: product.acqRights{
+					SKU: acqRights.SKU
+					Metric: acqRights.metric
+					AcqLicenses: acqRights.numOfAcqLicences
+					TotalCost: acqRights.totalCost
+					TotalPurchaseCost: acqRights.totalPurchaseCost
+					AvgUnitPrice: acqRights.averageUnitPrice
+					Repartition: acqRights.repartition 
+				}
+			}
+		}`
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Error("GetProductsByEditorProductName - ", zap.String("reason", err.Error()), zap.String("query", q), zap.Any("query params", editorName))
+		return nil, fmt.Errorf("GetProductsByEditorProductName - cannot complete query transaction")
+	}
+	type product struct {
+		ID              string
+		SwidTag         string
+		Name            string
+		Edition         string
+		Editor          string
+		Version         string
+		NumOfEquipments int32
+		AcquiredRights  []*productAcquiredRight
+	}
+
+	type products struct {
+		Products []*product
+	}
+	data := &products{}
+	if err := json.Unmarshal(resp.GetJson(), &data); err != nil {
+		logger.Log.Error("GetProductsByEditorProductName - ", zap.String("reason", err.Error()), zap.String("query", q), zap.Any("query params", editorName))
+		return nil, fmt.Errorf("GetProductsByEditorProductName - cannot unmarshal Json object")
+	}
+	var Products []*v1.ProductDetail
+	for _, product := range data.Products {
+		var productTmp v1.ProductDetail
+		productTmp.ID = product.ID
+		productTmp.SwidTag = product.SwidTag
+		productTmp.Name = product.Name
+		productTmp.Edition = product.Edition
+		productTmp.Editor = product.Editor
+		productTmp.Version = product.Version
+		productTmp.NumOfEquipments = product.NumOfEquipments
+		prodRights := l.ConcatAcqRightForSameMetric(ctx, metrics, product.AcquiredRights, false, scope)
+		productTmp.AcquiredRights = prodRights
+		Products = append(Products, &productTmp)
+	}
+	// fmt.Println("format string", Products)
+	return Products, nil
+}
+
+// GetProductInformationFromAcqRight will fetch product info from acq rights
+func (l *LicenseRepository) GetProductInformationFromAcqRight(ctx context.Context, swidtag string, scopes ...string) (*v1.ProductAdditionalInfo, error) {
+
+	q := `{
+		Products(func: eq(acqRights.swidtag, ` + swidtag + `)) ` + agregateFilters(scopeFilters(scopes), typeFilters("type_name", "acqRights")) + ` {    
+			Swidtag : 		   acqRights.swidtag
+			Name :    		   acqRights.productName 
+			Version : 		   acqRights.version
+			Editor :  		   acqRights.editor
+		}
+
+	}`
+
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Sugar().Errorw("GetProductInformationFromAcqRight - Error while getting product info from acqights",
+			"error", err.Error(),
+			"query", q,
+		)
+		return nil, fmt.Errorf("GetProductInformationFromAcqRight - cannot complete query transaction")
+	}
+
+	var ProductDetails v1.ProductAdditionalInfo
+
+	if err := json.Unmarshal(resp.GetJson(), &ProductDetails); err != nil {
+		logger.Log.Sugar().Errorw("GetProductInformationFromAcqRight - Error while unmarshal JSON for getting product info from acqights",
+			"error", err.Error(),
+			"query", q,
+		)
+		return nil, fmt.Errorf("GetProductInformationFromAcqRight - cannot unmarshal Json object")
+	}
+	return &ProductDetails, nil
 }

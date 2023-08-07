@@ -21,7 +21,12 @@ var db *sql.DB
 func createDBConnection() error {
 	// Create database connection.
 	var err error
-	db, err = postgres.NewConnection(cfg.Database)
+	db, err = postgres.NewConnection(postgres.Config{
+		Host: cfg.Database.Host,
+		Port: cfg.Database.Port,
+		Name: cfg.Database.User.Name,
+		User: cfg.Database.User.User,
+		Pass: cfg.Database.User.Pass})
 	if err != nil {
 		logger.Log.Error("failed to open connection with postgres: %v", zap.Error(err))
 		return err

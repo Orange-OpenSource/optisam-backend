@@ -1,4 +1,42 @@
 {
+    "createAcqrightsWithoutVersion": 
+    {"sku":"CreatingAcqfromAPIWithoutVersion2",
+    "repartition":false,
+    "product_name":"Axicon Verifer",
+    "version":"",
+    "product_editor":"Axicon Auto ID",
+    "metric_name":"8TB",
+    "num_licenses_acquired":45,
+    "avg_unit_price":1500,
+    "start_of_maintenance":"",
+    "end_of_maintenance":"",
+    "num_licences_maintainance":0,
+    "avg_maintenance_unit_price":0,
+    "scope":"API",
+    "comment":"",
+    "ordering_date":"",
+    "corporate_sourcing_contract":"",
+    "software_provider":"",
+    "last_purchased_order":"",
+    "support_number":"",
+    "maintenance_provider":"",
+    "file_name":""},
+
+    "createConcUser":
+    {"aggregation_id":0,
+    "scope":"API",
+    "product_name":"Adobe Media Server",
+    "product_version":"1.23.4","number_of_users":34,
+    "team":"Admin23",
+    "profile_user":"admi34n",
+    "swidtag":"",
+    "is_aggregations"
+    :false,
+    "product_editor":"Adobe"},
+    
+    
+    
+    
     "schema_acq": {
         "SKU": "#string",
         "swid_tag": "#string",
@@ -24,8 +62,50 @@
         "ordering_date": "##string",
         "repartition": "##boolean",
         "software_provider": "#string",
-        "support_number": "#string"
+        "support_number": "#string",
+        "availableLicences":"##number",
+        "sharedLicences":"##number",
+        "recievedLicences":"##number",
+
+        "shared_data":[
+            {"scope":"#string", 
+            "shared_licenses":"##number", 
+            "recieved_licenses":"##number"}
+        ]
     },
+
+    "schema_acqrights_agg":
+        {
+            "ID":"#number",
+ "aggregation_name":"#string", 
+"sku":"#string",
+ "product_editor":"#string", 
+"metric_name":"#string",
+ "product_names":"#[] #string",
+ "swidtags":"#[] #string",
+ "num_licenses_acquired":"#number", 
+"avg_unit_price":"#number", 
+"start_of_maintenance":"#string",
+ "end_of_maintenance":"#string",
+ "num_licences_maintenance":"#number",
+ "avg_maintenance_unit_price":"#number", 
+"scope":"#string",
+ "comment":"#string",
+ "is_individual_right_exists":"#boolean",
+ "total_purchase_cost":"#number",
+ "total_cost":"##number", 
+"total_maintenance_cost":"##number",
+ "licence_under_maintenance":"#string",
+ "ordering_date":"#string", 
+"corporate_sourcing_contract":"#string",
+ "software_provider":"#string",
+ "last_purchased_order":"#string",
+ "support_number":"#string",
+ "maintenance_provider":"#string", 
+  "file_name":"#string",
+ "repartition":"#boolean"
+},
+
     "getAcqrights": {
         "SKU": "ibm_DB2_pvu",
         "swid_tag": "IBM_DB2_IBM_11.5",
@@ -53,46 +133,53 @@
         "maintenance_provider": "##string"
     },
     "createAcqrights": {
-"avg_unit_price": 100,
-"comment": "abd",
-"corporate_sourcing_contract": "",
-"file_name": "",
-"last_purchased_order": "",
-"metric_name": "oracle.nup",
-"num_licences_maintainance": 0,
-"num_licenses_acquired": 10,
-"ordering_date": "",
-"product_editor": "Oracle",
-"product_name": "Oracle Real Application Cluster 11",
-"repartition": false,
-"scope": "API",
-"sku": "API_Sku",
-"software_provider": "",
-"start_of_maintenance": "",
-"support_number": "",
-"version": "11.1"
+    "avg_unit_price": 123,
+    "comment": "abd",
+    "corporate_sourcing_contract": "",
+    "file_name": "",
+    "last_purchased_order": "",
+    "metric_name": "ibm_pvu",
+    "num_licences_maintainance": 0,
+    "num_licenses_acquired": 12121,
+    "ordering_date": "",
+    "product_editor": "ADSoft",
+    "product_name": "FoxEditor",
+    "repartition": false,
+    "scope": "API",
+    "sku": "simtest21",
+    "software_provider": "",
+    "start_of_maintenance": "",
+    "support_number": "",
+    "version": "11.1"
         
 
     },
     
     "overview": {
-        "total_license_cost": 1392275,
-        "total_maintenance_cost": 400
+        "total_license_cost": 1510300,
+        "total_maintenance_cost": 192130,
+        "num_editors":8,
+         "num_products":36,
+          "total_counterfeiting_amount":-43560,
+           "total_underusage_amount":936976.75,
+           "counterfeiting_percentage": 5.17,
+  "overdeployment_percentage": 93.42
     },
     "schema_overview": {
         "total_license_cost": "#number",
         "total_maintenance_cost": "#number"
     },
     "metrics_products": {
-        "metric_name": "ibm_pvu",
-        "num_products": 3
+      "metric_name": "sag.processor",
+      "num_products": 1
     },
     "counterfeit_products_licenses": {
-        "swid_tag": "ibm_cognos_1",
-        "product_name": "IBM Cognos Analytics 11",
-        "num_licenses_acquired": "100",
-        "num_licenses_computed": "580",
-        "delta": "-480"
+      "swid_tag": "Adobe_Media_Server_Adobe_0,Adobe_Media_Server_Adobe_5.0.16",
+      "product_name": "Adobe Media Server",
+      "aggregation_name": "test_aggr",
+      "num_licenses_acquired": "5",
+      "num_licenses_computed": "389",
+      "delta": "-384"
     },
     "counterfeit_products_costs": {
         "swid_tag": "ibm_cognos_1",
@@ -104,18 +191,19 @@
     "overdeployed_products_licenses": {
         "swid_tag": "Adobe_Media_Server_Adobe_5.0.16",
         "product_name": "Adobe Media Server",
+        "aggregation_name": "",
         "num_licenses_acquired": "125",
         "num_licenses_computed": "50",
-        "delta": "75",
-        "aggregation_name": "#string"
-    },
+        "delta": "75"
+      }
+    ,
     "overdeployed_products_costs": {
         "swid_tag": "Adobe_Media_Server_Adobe_5.0.16",
         "product_name": "Adobe Media Server",
+        "aggregation_name": "",
         "licenses_acquired_cost": 24500,
         "licenses_computed_cost": 9800,
-        "delta_cost": 14700,
-        "aggregation_name": "#string"
+        "delta_cost": 14700
     },
 
     "createAcqrightswithmaintenance": {
@@ -127,7 +215,7 @@
         "file_name": "",
         "last_purchased_order": "",
         "maintenance_provider": "",
-        "metric_name": "oracle.nup",
+        "metric_name": "8TB",
         "num_licences_maintainance": 1,
         "num_licenses_acquired": 1,
         "ordering_date": "",
@@ -144,8 +232,312 @@
 
     "products_not_acquired": {
     "editor": "Microsoft"
-    }
+    },
     
+    "createAcqrights_concurrent": {
+            "avg_unit_price": 20,
+            "comment": "abd",
+            "corporate_sourcing_contract": "",
+            "file_name": "",
+            "last_purchased_order": "",
+            "metric_name": "simtest1",
+            "num_licences_maintainance": 0,
+            "num_licenses_acquired": 10000,
+            "ordering_date": "",
+            "product_editor": "ADSoft",
+            "product_name": "FoxEditor",
+            "repartition": false,
+            "scope": "ACQ",
+            "sku": "simtest21",
+            "software_provider": "",
+            "start_of_maintenance": "",
+            "support_number": "",
+            "version": "11.1"
+        },
+        "editAcqrights_concurrent": {
+                "avg_unit_price": 100,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "simtest1",
+                "num_licences_maintainance": 0,
+                "num_licenses_acquired": 12121,
+                "ordering_date": "",
+                "product_editor": "ADSoft",
+                "product_name": "FoxEditor",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "simtest21",
+                "software_provider": "",
+                "start_of_maintenance": "",
+                "support_number": "",
+                "version": "11.1"
+        },
+        "createAcqrights_nominative": {
+                "avg_unit_price": 123,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "simtest",
+                "num_licences_maintainance": 0,
+                "num_licenses_acquired": 12121,
+                "ordering_date": "",
+                "product_editor": "ADSoft",
+                "product_name": "FoxEditor",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "simtest22",
+                "software_provider": "",
+                "start_of_maintenance": "",
+                "support_number": "",
+                "version": "11.1"
+            },
+            "editAcqrights_nominative": {
+                "avg_unit_price": 200,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "simtest",
+                "num_licences_maintainance": 0,
+                "num_licenses_acquired": 12121,
+                "ordering_date": "",
+                "product_editor": "ADSoft",
+                "product_name": "FoxEditor",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "simtest23",
+                "software_provider": "",
+                "start_of_maintenance": "",
+                "support_number": "",
+                "version": "11.1"
+            },
+            "create_aggrights_conc": {
+                "id": 0,
+                "aggregationID": "",
+                "avg_maintenance_unit_price": 0,
+                "avg_unit_price": 200,
+                "comment": "",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance": "",
+                "file_data": "",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "Concurrent_user",
+                "num_licences_maintenance": 0,
+                "num_licenses_acquired": 1000,
+                "ordering_date": "",
+                "repartition": false,
+                "scope": "API",
+                "sku": "aggregation_concurrent_1",
+                "software_provider": "",
+                "start_of_maintenance": "",
+                "support_number": "",
+                "maintenance_provider": ""
+                
+            },
+            "create_aggrights_nom": {
+                "id": 0,
+                "aggregationID": "",
+                "avg_maintenance_unit_price": 0,
+                "avg_unit_price": 200,
+                "comment": "",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance": "",
+                "file_data": "",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "nominative_user",
+                "num_licences_maintenance": 0,
+                "num_licenses_acquired": 1000,
+                "ordering_date": "",
+                "repartition": false,
+                "scope": "SIM",
+                "sku": "aggregation_nominative_1",
+                "software_provider": "",
+                "start_of_maintenance": "",
+                "support_number": "",
+                "maintenance_provider": ""
+                
+            },
+            "names":{
+            "aggregation_name_conc": "apitest_agg_adobe12",
+            "aggregation_name_nom": "Oracle_enterprice_database"
+            },
+            "share_license_product":{
+                "sku": "simtest",
+                "scope": "ACQ",
+                "license_data":[
+                    {
+                    "reciever_scope": "AAK",
+                    "shared_licenses": 30
+                    }
+                ]
+            },
+            "share_license_aggregations":{
+                "sku": "aggtest",
+                "scope": "ACQ",
+                "license_data":[
+                    {
+                    "reciever_scope": "AAK",
+                    "shared_licenses": 40
+                    },
+                    {
+                    "reciever_scope": "AKA",
+                    "shared_licenses": 40
+                    }
+                ]
+            },
+            "sharedamount":{
+                "total_shared_amount": 7300,
+                "total_recieved_amount":6050
+            },
+            "maintainence_product_conc":{
+                "avg_maintenance_unit_price": 2,
+                "avg_unit_price": 20,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance":"2023-03-26T00:00:00.000Z",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "simtest1",
+                "num_licences_maintenance": 10,
+                "num_licenses_acquired": 20,
+                "ordering_date": "",
+                "product_editor": "Adobe",
+                "product_name": "Adobe Reader",
+                "repartition": false,
+                "scope": "SIM",
+                "sku": "testmaintain_conc",
+                "software_provider": "",
+                "start_of_maintenance": "2023-03-19T00:00:00.000Z",
+                "support_number": "",
+                "version": ""
+            },
+            "maintainence_product_nom":{
+                "avg_maintenance_unit_price": 2,
+                "avg_unit_price": 20,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance":"2023-03-26T00:00:00.000Z",
+                "file_name": "",
+                "last_purchased_order": "",
+                "metric_name": "simtest",
+                "num_licences_maintenance": 20,
+                "num_licenses_acquired": 20,
+                "ordering_date": "",
+                "product_editor": "ADSoft",
+                "product_name": "FoxEditor",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "testmaintain_nom",
+                "software_provider": "",
+                "start_of_maintenance": "2023-03-19T00:00:00.000Z",
+                "support_number": "",
+                "version": ""
+            },
+            "maintainence_agg_conc":{
+                "ID":0,
+                "aggregationID":"",
+                "avg_maintenance_unit_price": 2,
+                "avg_unit_price": 20,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance":"2023-03-26T00:00:00.000Z",
+                "file_data":"",
+                "file_name": "",
+                "last_purchased_order": "",
+                "maintenance_provider":"",
+                "metric_name": "simtest1",
+                "num_licences_maintainance": 10,
+                "num_licenses_acquired": 20,
+                "ordering_date": "",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "testagg_conc",
+                "software_provider": "",
+                "start_of_maintenance": "2023-03-19T00:00:00.000Z",
+                "support_number": ""
+            },
+            "maintainence_agg_nom":{
+                "ID":0,
+                "aggregationID":"",
+                "avg_maintenance_unit_price": 2,
+                "avg_unit_price": 20,
+                "comment": "abd",
+                "corporate_sourcing_contract": "",
+                "end_of_maintenance":"2023-03-26T00:00:00.000Z",
+                "file_data":"",
+                "file_name": "",
+                "last_purchased_order": "",
+                "maintenance_provider":"",
+                "metric_name": "simtest",
+                "num_licences_maintainance": 10,
+                "num_licenses_acquired": 20,
+                "ordering_date": "",
+                "repartition": false,
+                "scope": "ACQ",
+                "sku": "testagg_conc",
+                "software_provider": "",
+                "start_of_maintenance": "2023-03-19T00:00:00.000Z",
+                "support_number": ""
+            },
+            "UpdateAcq":
+            {
+                "product_Name2":"360zip",
+                "avg_unit_price":34,
+                "start_of_maintenance":"2023-02-31T00:00:00.000Z",
+                "end_of_maintenance":"2023-01-31T00:00:00.000Z",
+                "version":"1.3.4"
+            },
+            "Sharing_LIC":
+            {"sku":"adobe_media_instance_1_1",
+            "scope":"API",
+            "license_data":
+            [{"reciever_scope":"ACQ",
+            "shared_licenses":10}]},
+
+            "Sharing_LIC_Mul":
+            {"sku":"adobe_media_instance_1_1",
+            "scope":"API","license_data":
+            [{"reciever_scope":"ACQ","shared_licenses":"10"},
+            {"reciever_scope":"AKA","shared_licenses":5}]},
+
+            "Sharing_LIC_Same":
+            {"sku":"adobe_media_instance_1_1",
+            "scope":"API",
+            "license_data":
+            [{"reciever_scope":"API",
+            "shared_licenses":5}]},
+
+            "Sharing_LIC_Mul_Max":
+            {"sku":"adobe_media_instance_1_1",
+            "scope":"API",
+            "license_data":
+            [{"reciever_scope":"AAK",
+            "shared_licenses":100000}]},
+
+            "Sharing_LIC_Mul_SameScope":
+            {"sku":"adobe_media_instance_1_1",
+            "scope":"API","license_data":
+            [{"reciever_scope":"API","shared_licenses":"10"},
+            {"reciever_scope":"API","shared_licenses":5},
+            {"reciever_scope":"API","shared_licenses":20}]},
+
+            "Sharing_Agg_Lic":
+            {"sku":"testing_agg",
+            "scope":"API","aggregation_name":"oracle_learning_management",
+            "license_data":[{"reciever_scope":"ACQ","shared_licenses":4}]},
+
+            "Sharing_Agg_Lic_Same_Mul":
+            {"sku":"testing_agg",
+            "scope":"API","aggregation_name":"oracle_learning_management",
+            "license_data":[{"reciever_scope":"ACQ","shared_licenses":4},
+            {"reciever_scope":"AAK","shared_licenses":4}]}
+
+            
 
 
 }

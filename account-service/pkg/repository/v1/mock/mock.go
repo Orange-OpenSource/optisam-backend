@@ -207,6 +207,20 @@ func (mr *MockAccountMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockAccount)(nil).DeleteUser), arg0, arg1)
 }
 
+// DropScope mocks base method
+func (m *MockAccount) DropScope(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DropScope", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DropScope indicates an expected call of DropScope
+func (mr *MockAccountMockRecorder) DropScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropScope", reflect.TypeOf((*MockAccount)(nil).DropScope), arg0, arg1)
+}
+
 // DropScopeTX mocks base method
 func (m *MockAccount) DropScopeTX(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -219,6 +233,21 @@ func (m *MockAccount) DropScopeTX(arg0 context.Context, arg1 string) error {
 func (mr *MockAccountMockRecorder) DropScopeTX(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DropScopeTX", reflect.TypeOf((*MockAccount)(nil).DropScopeTX), arg0, arg1)
+}
+
+// GetComplienceGroups mocks base method
+func (m *MockAccount) GetComplienceGroups(arg0 context.Context) ([]v1.GetComplienceGroups, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetComplienceGroups", arg0)
+	ret0, _ := ret[0].([]v1.GetComplienceGroups)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetComplienceGroups indicates an expected call of GetComplienceGroups
+func (mr *MockAccountMockRecorder) GetComplienceGroups(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComplienceGroups", reflect.TypeOf((*MockAccount)(nil).GetComplienceGroups), arg0)
 }
 
 // GetRootGroup mocks base method
@@ -234,6 +263,21 @@ func (m *MockAccount) GetRootGroup(arg0 context.Context) (*v1.Group, error) {
 func (mr *MockAccountMockRecorder) GetRootGroup(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRootGroup", reflect.TypeOf((*MockAccount)(nil).GetRootGroup), arg0)
+}
+
+// GetScopes mocks base method
+func (m *MockAccount) GetScopes(arg0 context.Context, arg1 []string) ([]*v1.Scope, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScopes", arg0, arg1)
+	ret0, _ := ret[0].([]*v1.Scope)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScopes indicates an expected call of GetScopes
+func (mr *MockAccountMockRecorder) GetScopes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopes", reflect.TypeOf((*MockAccount)(nil).GetScopes), arg0, arg1)
 }
 
 // GroupExistsByFQN mocks base method
@@ -340,6 +384,35 @@ func (mr *MockAccountMockRecorder) ScopeByCode(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScopeByCode", reflect.TypeOf((*MockAccount)(nil).ScopeByCode), arg0, arg1)
 }
 
+// ScopeExpensesByScopeCode mocks base method
+func (m *MockAccount) ScopeExpensesByScopeCode(arg0 context.Context, arg1 string) (float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ScopeExpensesByScopeCode", arg0, arg1)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ScopeExpensesByScopeCode indicates an expected call of ScopeExpensesByScopeCode
+func (mr *MockAccountMockRecorder) ScopeExpensesByScopeCode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScopeExpensesByScopeCode", reflect.TypeOf((*MockAccount)(nil).ScopeExpensesByScopeCode), arg0, arg1)
+}
+
+// SetScope mocks base method
+func (m *MockAccount) SetScope(arg0 context.Context, arg1 []*v1.Scope) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetScope", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetScope indicates an expected call of SetScope
+func (mr *MockAccountMockRecorder) SetScope(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetScope", reflect.TypeOf((*MockAccount)(nil).SetScope), arg0, arg1)
+}
+
 // UpdateAccount mocks base method
 func (m *MockAccount) UpdateAccount(arg0 context.Context, arg1 string, arg2 *v1.UpdateAccount) error {
 	m.ctrl.T.Helper()
@@ -380,6 +453,20 @@ func (m *MockAccount) UpdateUserAccount(arg0 context.Context, arg1 string, arg2 
 func (mr *MockAccountMockRecorder) UpdateUserAccount(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserAccount", reflect.TypeOf((*MockAccount)(nil).UpdateUserAccount), arg0, arg1, arg2)
+}
+
+// UpsertScopeExpenses mocks base method
+func (m *MockAccount) UpsertScopeExpenses(arg0 context.Context, arg1, arg2, arg3 string, arg4 float64, arg5 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertScopeExpenses", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpsertScopeExpenses indicates an expected call of UpsertScopeExpenses
+func (mr *MockAccountMockRecorder) UpsertScopeExpenses(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertScopeExpenses", reflect.TypeOf((*MockAccount)(nil).UpsertScopeExpenses), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // UserBelongsToAdminGroup mocks base method

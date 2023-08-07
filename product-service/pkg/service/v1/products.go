@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	accv1 "optisam-backend/account-service/pkg/api/v1"
 	appv1 "optisam-backend/application-service/pkg/api/v1"
 	"optisam-backend/common/optisam/helper"
 	"optisam-backend/common/optisam/logger"
@@ -30,6 +31,7 @@ type productServiceServer struct {
 	queue                 workerqueue.Workerqueue
 	metric                metv1.MetricServiceClient
 	application           appv1.ApplicationServiceClient
+	account               accv1.AccountServiceClient
 	dashboardTimeLocation string
 }
 
@@ -40,6 +42,7 @@ func NewProductServiceServer(productRepo repo.Product, queue workerqueue.Workerq
 		queue:                 queue,
 		metric:                metv1.NewMetricServiceClient(grpcServers["metric"]),
 		application:           appv1.NewApplicationServiceClient(grpcServers["application"]),
+		account:               accv1.NewAccountServiceClient(grpcServers["account"]),
 		dashboardTimeLocation: zone,
 	}
 }
@@ -182,8 +185,15 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 		NumOfApplicationsDesc: strings.Contains(req.GetSortBy(), "numOfApplications") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		NumOfEquipmentsAsc:    strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "asc"),
 		NumOfEquipmentsDesc:   strings.Contains(req.GetSortBy(), "numofEquipments") && strings.Contains(req.GetSortOrder().String(), "desc"),
-		CostAsc:               strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "asc"),
-		CostDesc:              strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		UsersAsc:              strings.Contains(req.GetSortBy(), "numofUsers") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		UsersDesc:             strings.Contains(req.GetSortBy(), "numofUsers") && strings.Contains(req.GetSortOrder().String(), "desc"),
+
+		CostAsc:         strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		CostDesc:        strings.Contains(req.GetSortBy(), "totalCost") && strings.Contains(req.GetSortOrder().String(), "desc"),
+		IsProductType:   !req.GetSearchParams().GetLocation().GetFilterType() && req.GetSearchParams().GetLocation().GetFilteringkey() != "",
+		ProductType:     req.GetSearchParams().GetLocation().GetFilteringkey(),
+		ProductTypeAsc:  strings.Contains(req.GetSortBy(), "location") && strings.Contains(req.GetSortOrder().String(), "asc"),
+		ProductTypeDesc: strings.Contains(req.GetSortBy(), "swidtag") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		// API expect pagenum from 1 but the offset in DB starts
 		PageNum:  req.GetPageSize() * (req.GetPageNum() - 1),
 		PageSize: req.GetPageSize(),
@@ -211,11 +221,21 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 		apiresp.Products[i].NumOfApplications = dbresp[i].NumOfApplications
 		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
 		apiresp.Products[i].TotalCost = dbresp[i].Cost
+		if dbresp[i].PProductType == "SAAS" {
+			if dbresp[i].ConcurrentUsers > dbresp[i].NominativeUsers {
+				apiresp.Products[i].NumofUsers = dbresp[i].ConcurrentUsers
+			} else {
+				apiresp.Products[i].NumofUsers = dbresp[i].NominativeUsers
+			}
+		} else {
+			apiresp.Products[i].NumofUsers = dbresp[i].EquipmentUsers
+		}
 		apiresp.Products[i].EditorId = dbresp[i].EditorID.String
 		apiresp.Products[i].ProductSwidTag = dbresp[i].ProductSwidTag.String
 		apiresp.Products[i].VersionSwidTag = dbresp[i].VersionSwidTag.String
 		apiresp.Products[i].ProductId = dbresp[i].ProductID.String
 
+		apiresp.Products[i].Location = dbresp[i].PProductType
 	}
 	return &apiresp, nil
 }
@@ -343,6 +363,8 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 		apiresp.Products[i].Editor = dbresp[i].ProductEditor
 		apiresp.Products[i].Version = dbresp[i].ProductVersion
 		apiresp.Products[i].TotalCost = dbresp[i].TotalCost
+		apiresp.Products[i].NumofEquipments = dbresp[i].NumOfEquipments
+
 	}
 	return &apiresp, nil
 }
@@ -532,6 +554,15 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 		dbmetrics = dbresp.Metrics
 		apiresp.ProductSwidTag = dbresp.ProductSwidTag.String
 		apiresp.VersionSwidTag = dbresp.VersionSwidTag.String
+		if apiresp.Version == "" || strings.ToLower(apiresp.Version) == "all" {
+			productsResponse, _ := s.productRepo.GetProductByNameEditor(ctx, db.GetProductByNameEditorParams{
+				ProductName:   []string{dbresp.ProductName},
+				ProductEditor: []string{dbresp.ProductEditor},
+			})
+			if len(productsResponse) == 0 {
+				apiresp.NotDeployed = true
+			}
+		}
 	} else {
 		apiresp.SwidTag = dbresp.Swidtag
 		apiresp.ProductName = dbresp.ProductName
@@ -539,20 +570,54 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 		apiresp.Version = dbresp.ProductVersion
 		apiresp.NumApplications = dbresp.NumOfApplications
 		apiresp.NumEquipments = dbresp.NumOfEquipments
-		dbmetrics = dbresp.Metrics
+		apiresp.NotDeployed = false
+		if len(dbresp.Metrics) > 0 {
+			dbmetrics = dbresp.Metrics
+		} else {
+			swittagwithoutversion := strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{dbresp.ProductName, dbresp.ProductEditor}, "_"), " ", "_"), "-", "_")
+			dbrespAcq, err1 := s.productRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
+				Swidtag: swittagwithoutversion,
+				Scope:   req.Scope,
+			})
+			if err1 == nil || errors.Is(err1, sql.ErrNoRows) {
+				if len(dbrespAcq.Metrics) > 0 {
+					dbmetrics = dbrespAcq.Metrics
+				} else {
+					swittagwithoutversion = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{dbresp.ProductName, dbresp.ProductEditor, "all"}, "_"), " ", "_"), "-", "_")
+					dbrespAcqAll, err2 := s.productRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
+						Swidtag: swittagwithoutversion,
+						Scope:   req.Scope,
+					})
+					if err2 == nil || errors.Is(err2, sql.ErrNoRows) {
+						if len(dbrespAcqAll.Metrics) > 0 {
+							dbmetrics = dbrespAcqAll.Metrics
+						}
+					}
+				}
+
+			}
+
+		}
+		if apiresp.NumEquipments == 0 && ((len(apiresp.Version) != 0 && strings.ToLower(apiresp.Version) != "all") || dbresp.ProductType != "SAAS") {
+			apiresp.NotDeployed = true
+		}
 	}
 
 	metrics, err := s.metric.ListMetrices(ctx, &metv1.ListMetricRequest{
 		Scopes: []string{req.Scope},
 	})
 	if err != nil {
-		logger.Log.Error("service/v1 - CreateProductAggregation - ListMetrices", zap.String("reason", err.Error()))
+		logger.Log.Error("service/v1 - GetProductDetail - ListMetrices", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "ServiceError")
 	}
 	if metrics != nil || len(metrics.Metrices) != 0 {
 		for _, met := range dbmetrics {
 			if idx := metricExists(metrics.Metrices, met); idx != -1 {
 				apiresp.DefinedMetrics = append(apiresp.DefinedMetrics, met)
+			}
+			flag := metricTypeOfSaasExists(metrics.Metrices, met)
+			if flag == false {
+				apiresp.NotDeployed = false
 			}
 		}
 	}
@@ -662,4 +727,16 @@ func (s *productServiceServer) DropAggregationData(ctx context.Context, req *v1.
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
 	}
 	return &v1.DropAggregationDataResponse{Success: true}, nil
+}
+
+func metricTypeOfSaasExists(metrics []*metv1.Metric, name string) bool {
+	flag := true
+	for _, met := range metrics {
+		if met.Name == name {
+			if met.Type == "saas.nominative.standard" || met.Type == "saas.concurrent.standard" {
+				flag = false
+			}
+		}
+	}
+	return flag
 }

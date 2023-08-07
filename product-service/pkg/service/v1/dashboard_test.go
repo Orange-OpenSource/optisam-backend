@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	accv1 "optisam-backend/account-service/pkg/api/v1"
+	accmock "optisam-backend/account-service/pkg/api/v1/mock"
+	"optisam-backend/common/optisam/logger"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
 	"optisam-backend/common/optisam/workerqueue"
@@ -20,7 +23,10 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 var (
@@ -36,6 +42,8 @@ func Test_OverviewProductQuality(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
 	var queue workerqueue.Workerqueue
+	//dgObj := dgmock.NewMockProduct(mockCtrl)
+
 	tests := []struct {
 		name      string
 		ctx       context.Context
@@ -136,8 +144,11 @@ func Test_OverviewProductQuality(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				//mockDgraph := dgmock.NewMockProduct(mockCtrl)
+
 				rep = mockRepository
 				queue = mockQueue
+
 				mockRepository.EXPECT().ProductsNotDeployed(ctx, s.Scope).Times(1).Return([]db.ProductsNotDeployedRow{}, nil)
 			},
 			outputErr: true,
@@ -154,6 +165,153 @@ func Test_OverviewProductQuality(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("productServiceServer.OverviewProductQuality() = %v, want %v", got, tt.output)
+			}
+		})
+	}
+}
+
+func Test_SoftwareExpenditureByScope(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3", "OSN", "OFR"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	var acc accv1.AccountServiceClient
+
+	type args struct {
+		ctx context.Context
+		req *v1.SoftwareExpenditureByScopeRequest
+	}
+	tests := []struct {
+		name    string
+		lr      *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.SoftwareExpenditureByScopeResponse
+		wantErr bool
+	}{
+		{
+			name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.SoftwareExpenditureByScopeRequest{
+					Scope: []string{"OSN", "OFR"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				MockAccount := accmock.NewMockAccountServiceClient(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				acc = MockAccount
+				MockAccount.EXPECT().ListScopes(ctx, &accv1.ListScopesRequest{}).Times(1).Return(&accv1.ListScopesResponse{
+					Scopes: []*accv1.Scope{
+						{
+							ScopeCode:   "OSN",
+							ScopeName:   "osn123",
+							ScopeType:   "osn type",
+							CreatedBy:   "abcd@gmail.com",
+							CreatedOn:   &tspb.Timestamp{Seconds: 10},
+							Expenditure: 10,
+							GroupNames:  []string{"G1", "G2"},
+						}, {
+							ScopeCode:   "OFR",
+							ScopeName:   "ofr123",
+							ScopeType:   "ofr type",
+							CreatedBy:   "zxcv@gmail.com",
+							CreatedOn:   &tspb.Timestamp{Seconds: 14},
+							Expenditure: 20,
+							GroupNames:  []string{"G1", "G2"},
+						}, {
+							ScopeCode:   "INM",
+							ScopeName:   "inm123",
+							ScopeType:   "inm type",
+							CreatedBy:   "asdf@gmail.com",
+							CreatedOn:   &tspb.Timestamp{Seconds: 15},
+							Expenditure: 8,
+							GroupNames:  []string{"G1"},
+						},
+					}}, nil)
+				mockRepository.EXPECT().TotalCostOfEachScope(ctx, []string{"OSN", "OFR"}).Times(1).Return([]db.TotalCostOfEachScopeRow{
+					{
+						Scope:     "OSN",
+						TotalCost: decimal.New(50, 0),
+					}, {
+						Scope:     "OFR",
+						TotalCost: decimal.New(60, 0),
+					},
+				}, nil)
+			},
+			want: &v1.SoftwareExpenditureByScopeResponse{
+				ExpensePercent: []*v1.SoftwareExpensePercent{
+					{
+						Scope:              "OSN",
+						Expenditure:        float64(10),
+						TotalCost:          float64(50),
+						ExpenditurePercent: float64(20),
+					}, {
+						Scope:              "OFR",
+						Expenditure:        float64(20),
+						TotalCost:          float64(60),
+						ExpenditurePercent: float64(33.333335876464844),
+					},
+				},
+				TotalExpenditure: float64(30),
+				TotalCost:        110,
+			},
+		},
+		{
+			name: "SoftwareExpenditureByScope without context",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.SoftwareExpenditureByScopeRequest{
+					Scope: []string{"OSN", "OFR"},
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "SoftwareExpenditureByScope ListScopes - ServiceError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.SoftwareExpenditureByScopeRequest{
+					Scope: []string{"OSN", "OFR"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				MockAccount := accmock.NewMockAccountServiceClient(mockCtrl)
+				rep = mockRepository
+				queue = mockQueue
+				acc = MockAccount
+				MockAccount.EXPECT().ListScopes(ctx, &accv1.ListScopesRequest{}).Times(1).Return(nil, errors.New("service error"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.lr = &productServiceServer{
+				productRepo: rep,
+				queue:       queue,
+				account:     acc,
+			}
+			got, err := tt.lr.SoftwareExpenditureByScope(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.SoftwareExpenditureByScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.SoftwareExpenditureByScope() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -310,6 +468,7 @@ func Test_productServiceServer_DashboardOverview(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repo.Product
 	var queue workerqueue.Workerqueue
+
 	type args struct {
 		ctx context.Context
 		req *v1.DashboardOverviewRequest
@@ -705,6 +864,7 @@ func Test_productServiceServer_ProductsPerEditor(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockProduct(mockCtrl)
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+
 				rep = mockRepository
 				queue = mockQueue
 				mockRepository.EXPECT().ListEditors(ctx, []string{"Scope1"}).Times(1).Return(nil, nil)
@@ -716,6 +876,8 @@ func Test_productServiceServer_ProductsPerEditor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
+			//	dgObj := dgmock.NewMockProduct(mockCtrl)
+
 			s := NewProductServiceServer(rep, queue, nil, "")
 			got, err := s.ProductsPerEditor(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
@@ -1895,6 +2057,324 @@ func Test_productServiceServer_CreateDashboardUpdateJob(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("productServiceServer.CreateDashboardUpdateJob() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetProductListByEditorRequest(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dbObj := dbmock.NewMockProduct(mockCtrl)
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	testSet := []struct {
+		name   string
+		input  *v1.GetProductListByEditorRequest
+		output *v1.GetProductListByEditorResponse
+		mock   func(*v1.GetProductListByEditorRequest)
+		ctx    context.Context
+		outErr bool
+	}{
+
+		{
+			name:   "GetProductListByEditorRequest without context",
+			input:  &v1.GetProductListByEditorRequest{Scopes: []string{"AAK", "MON"}, Editor: "Oracle"},
+			ctx:    context.Background(),
+			outErr: true,
+			mock:   func(input *v1.GetProductListByEditorRequest) {},
+		},
+		{
+			name:  "GetProductListByEditor with data",
+			input: &v1.GetProductListByEditorRequest{Scopes: []string{"AAK", "MON"}, Editor: "Oracle"},
+			ctx:   ctx,
+			mock: func(data *v1.GetProductListByEditorRequest) {
+				dbObj.EXPECT().GetProductListByEditor(ctx, db.GetProductListByEditorParams{
+					Scope:  []string{"AAK", "MON"},
+					Editor: "Oracle",
+				}).Return([]string{
+					"Oracle 1",
+					"Oracle 2",
+					"Oracle 3",
+				}, nil).Times(1)
+			},
+			output: &v1.GetProductListByEditorResponse{
+				Products: []string{
+					"Oracle 1",
+					"Oracle 2",
+					"Oracle 3",
+				},
+			},
+			outErr: false,
+		},
+	}
+	for _, test := range testSet {
+		t.Run("", func(t *testing.T) {
+			test.mock(test.input)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			got, err := s.GetProductListByEditor(test.ctx, test.input)
+			if (err != nil) != test.outErr {
+				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
+				return
+			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
+				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
+
+			} else {
+				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}
+
+func TestGroupComplianceProductRequest(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dbObj := dbmock.NewMockProduct(mockCtrl)
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	testSet := []struct {
+		name   string
+		input  *v1.GroupComplianceProductRequest
+		output *v1.GroupComplianceProductResponse
+		mock   func(*v1.GroupComplianceProductRequest)
+		ctx    context.Context
+		outErr bool
+	}{
+
+		{
+			name:   "GroupComplianceProductRequest without context",
+			input:  &v1.GroupComplianceProductRequest{Scopes: []string{"AAK", "MON"}, Editor: "Oracle", ProductName: "Oracle Enterprise Database 10"},
+			ctx:    context.Background(),
+			outErr: true,
+			mock:   func(input *v1.GroupComplianceProductRequest) {},
+		},
+		{
+			name:  "GroupComplianceProduct with data",
+			input: &v1.GroupComplianceProductRequest{Scopes: []string{"AAK", "MON"}, Editor: "Oracle", ProductName: "Oracle Enterprise Database 10"},
+			ctx:   ctx,
+			mock: func(data *v1.GroupComplianceProductRequest) {
+				dbObj.EXPECT().GetOverallLicencesByProduct(ctx, db.GetOverallLicencesByProductParams{
+					Scope:       []string{"AAK", "MON"},
+					Editor:      "Oracle",
+					ProductName: "Oracle Enterprise Database 10",
+				}).Return([]db.GetOverallLicencesByProductRow{
+					{
+						Scope:            "AAK",
+						ComputedLicences: decimal.NewFromFloat(20),
+						AcquiredLicences: decimal.NewFromFloat(50),
+					},
+					{
+						Scope:            "MON",
+						ComputedLicences: decimal.NewFromFloat(30),
+						AcquiredLicences: decimal.NewFromFloat(40),
+					},
+				}, nil).Times(1)
+				dbObj.EXPECT().GetOverallCostByProduct(ctx, db.GetOverallCostByProductParams{
+					Scope:       []string{"AAK", "MON"},
+					Editor:      "Oracle",
+					ProductName: "Oracle Enterprise Database 10",
+				}).Return([]db.GetOverallCostByProductRow{
+					{
+						Scope:              "AAK",
+						CounterfeitingCost: decimal.NewFromFloat(100),
+						UnderusageCost:     decimal.NewFromFloat(0),
+						TotalCost:          decimal.NewFromFloat(100),
+					},
+					{
+						Scope:              "MON",
+						CounterfeitingCost: decimal.NewFromFloat(0),
+						UnderusageCost:     decimal.NewFromFloat(250),
+						TotalCost:          decimal.NewFromFloat(250),
+					},
+				}, nil).Times(1)
+				dbObj.EXPECT().GetTotalCostByProduct(ctx, db.GetTotalCostByProductParams{
+					Scope:       []string{"AAK", "MON"},
+					Editor:      "Oracle",
+					ProductName: "Oracle Enterprise Database 10",
+				}).Return([]db.GetTotalCostByProductRow{
+					{
+						Scope:     "AAK",
+						TotalCost: float64(100),
+					},
+					{
+						Scope:     "MON",
+						TotalCost: float64(250),
+					},
+				}, nil).Times(1)
+			},
+			output: &v1.GroupComplianceProductResponse{
+				Licences: []*v1.LicencesData{
+					{
+						Scope:            "AAK",
+						ComputedLicences: 20,
+						AcquiredLicences: 50,
+					},
+					{
+						Scope:            "MON",
+						ComputedLicences: 30,
+						AcquiredLicences: 40,
+					},
+				},
+				Cost: []*v1.CostData{
+					{
+						Scope:              "AAK",
+						CounterfeitingCost: 100,
+						UnderusageCost:     0,
+						TotalCost:          100,
+					},
+					{
+						Scope:              "MON",
+						CounterfeitingCost: 0,
+						UnderusageCost:     250,
+						TotalCost:          250,
+					},
+				},
+			},
+			outErr: false,
+		},
+	}
+	for _, test := range testSet {
+		t.Run("", func(t *testing.T) {
+			test.mock(test.input)
+			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			got, err := s.GroupComplianceProduct(test.ctx, test.input)
+			if (err != nil) != test.outErr {
+				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
+				return
+			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
+				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
+
+			} else {
+				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}
+
+func Test_productServiceServer_GetUnderusageLicenceByEditorProduct(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "SuperAdmin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+
+	ctxAdmin := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "user@optisam.com",
+		Role:   "Admin",
+		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Product
+	var queue workerqueue.Workerqueue
+	type args struct {
+		ctx context.Context
+		req *v1.GetUnderusageByEditorRequest
+	}
+	tests := []struct {
+		name    string
+		s       *productServiceServer
+		args    args
+		setup   func()
+		want    *v1.GetUnderusageByEditorResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetUnderusageByEditorRequest{
+					Scopes: []string{"Scope1", "Scope2", "Scope3"},
+					Editor: "Oracle",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListUnderusageByEditor(ctx, db.ListUnderusageByEditorParams{
+					Scope:          []string{"Scope1", "Scope2", "Scope3"},
+					Editor:         "Oracle",
+					LkProductNames: false,
+					ProductNames:   "",
+				}).Times(1).Return([]db.ListUnderusageByEditorRow{
+					{
+						Metrics: "INS",
+						Scope:   "Scope1",
+						Delta:   decimal.New(200, 0),
+					},
+				}, nil)
+			},
+			want: &v1.GetUnderusageByEditorResponse{
+				UnderusageByEditorData: []*v1.UnderusageByEditorData{
+					{
+						Metrics:     "INS",
+						Scope:       "Scope1",
+						DeltaNumber: 200,
+					},
+				},
+			},
+		},
+		{name: "FAILURE - productServiceServer/GetUnderusageLicenceByEditorProduct - ClaimsNotFoundError",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.GetUnderusageByEditorRequest{
+					Scopes: []string{"Scope1", "Scope2", "Scope3"},
+					Editor: "Oracle",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{name: "FAILURE - productServiceServer/GetUnderusageLicenceByEditorProduct - RoleValidationError",
+			args: args{
+				ctx: ctxAdmin,
+				req: &v1.GetUnderusageByEditorRequest{
+					Scopes: []string{"Scope1", "Scope2", "Scope3"},
+					Editor: "Oracle",
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		// {name: "FAILURE - productServiceServer/DashboardQuality - ScopeValidationError",
+		// 	args: args{
+		// 		ctx: ctx,
+		// 		req: &v1.GetUnderusageByEditorRequest{
+		// 			Scopes: []string{"Scope4"},
+		// 			Editor: "Oracle",
+		// 		},
+		// 	},
+		// 	setup:   func() {},
+		// 	wantErr: true,
+		// },
+		{name: "FAILURE - productServiceServer/DashboardQuality - db/ProductsNotDeployedCount - DBError",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetUnderusageByEditorRequest{
+					Scopes: []string{"Scope1", "Scope2", "Scope3"},
+					Editor: "Oracle",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListUnderusageByEditor(ctx, db.ListUnderusageByEditorParams{
+					Scope:          []string{"Scope1", "Scope2", "Scope3"},
+					Editor:         "Oracle",
+					LkProductNames: false,
+					ProductNames:   "",
+				}).Times(1).Return(nil, errors.New("Internal"))
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			s := NewProductServiceServer(rep, queue, nil, "")
+			got, err := s.GetUnderusageLicenceByEditorProduct(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("productServiceServer.DashboardQuality() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("productServiceServer.DashboardQuality() = %v, want %v", got, tt.want)
 			}
 		})
 	}

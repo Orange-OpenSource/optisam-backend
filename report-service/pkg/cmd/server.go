@@ -28,8 +28,6 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
-	"github.com/gobuffalo/packr/v2"
-	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"github.com/spf13/pflag"
@@ -67,7 +65,7 @@ func RunServer() error {
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
 	} else if os.Getenv("ENV") == "pc" {
-                viper.SetConfigName("config-pc")
+		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -112,16 +110,11 @@ func RunServer() error {
 	ctx := context.Background()
 
 	// Create database connection.
-	db, err := postgres.NewConnection(cfg.Database)
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %v", err)
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
 	}
-
-	// Verify connection.
-	if error := db.Ping(); error != nil {
-		return fmt.Errorf("failed to verify connection to PostgreSQL: %v", error.Error())
-	}
-	fmt.Println("Postgres connection verified to", cfg.Database.Host)
 	// defer db.Close()
 	defer func() {
 		db.Close()
@@ -139,16 +132,6 @@ func RunServer() error {
 	fmt.Println("Dgraph connection verified to", cfg.Dgraph.Hosts)
 
 	drep := drepo.NewReportRepository(dg)
-
-	// Run Migration
-	migrations := &migrate.PackrMigrationSource{
-		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
-	}
-	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
-	if err != nil {
-		logger.Log.Error(err.Error())
-	}
-	log.Printf("Applied %d migrations!\n", n)
 
 	// Register http health check
 	{
@@ -238,7 +221,7 @@ func RunServer() error {
 	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 
 	rep := repo.NewReportRepository(db)
-	v1API := v1.NewReportServiceServer(rep, q)
+	v1API := v1.NewReportServiceServer(rep, q, grpcClientMap)
 
 	for i := 0; i < cfg.MaxAPIWorker; i++ {
 		rWorker := worker.NewWorker("rw", rep, grpcClientMap, drep, cfg.WorkerQueue.Retries)

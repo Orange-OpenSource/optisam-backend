@@ -8,6 +8,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/workerqueue/job"
 	l_v1 "optisam-backend/license-service/pkg/api/v1"
+	p_v1 "optisam-backend/product-service/pkg/api/v1"
 	repo "optisam-backend/report-service/pkg/repository/v1"
 	"optisam-backend/report-service/pkg/repository/v1/postgres/db"
 	"strings"
@@ -20,6 +21,7 @@ import (
 type Worker struct {
 	id            string
 	licenseClient l_v1.LicenseServiceClient
+	productClient p_v1.ProductServiceClient
 	reportRepo    repo.Report
 	dgraphRepo    repo.DgraphReport
 	maxRetries    int
@@ -28,8 +30,9 @@ type Worker struct {
 type ReportType string
 
 const (
-	AcqRightsReport         ReportType = "AcqRightsReport"
-	ProductEquipmentsReport ReportType = "ProductEquipmentsReport"
+	AcqRightsReport             ReportType = "AcqRightsReport"
+	ProductEquipmentsReport     ReportType = "ProductEquipmentsReport"
+	ScopeExpensesByEditorReport ReportType = "ScopeExpensesByEditorReport"
 )
 
 type Envelope struct {
@@ -66,7 +69,7 @@ type AcqRightsReportStruct struct {
 }
 
 func NewWorker(id string, reportRepo repo.Report, grpcServers map[string]*grpc.ClientConn, dgraphRepo repo.DgraphReport, retries int) *Worker {
-	return &Worker{id: id, reportRepo: reportRepo, licenseClient: l_v1.NewLicenseServiceClient(grpcServers["license"]), dgraphRepo: dgraphRepo, maxRetries: retries}
+	return &Worker{id: id, reportRepo: reportRepo, licenseClient: l_v1.NewLicenseServiceClient(grpcServers["license"]), productClient: p_v1.NewProductServiceClient(grpcServers["product"]), dgraphRepo: dgraphRepo, maxRetries: retries}
 }
 
 func (w *Worker) ID() string {
@@ -257,6 +260,75 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 		if err != nil {
 			logger.Log.Error("worker - ProductEquipmentsReport report - ReportRepo - UpdateReportStatus", zap.Error(err))
 			return handleReportFailure(ctx, j, fmt.Errorf("worker - ProductEquipmentsReport report - ReportRepo - UpdateReportStatus"), w, e.ReportID)
+		}
+	case ScopeExpensesByEditorReport:
+		logger.Log.Sugar().Infow("ScopeExpensesByEditorReport Report genration started ", "scope", e.Scope)
+		editorResponse, err := w.productClient.GetEditorExpensesByScope(ctx, &p_v1.EditorExpensesByScopeRequest{
+			Scope: e.Scope,
+		})
+		if err != nil {
+			logger.Log.Sugar().Errorw("Report Worker - ScopeExpensesByEditorReport - ProductService - GetEditorExpensesByScope",
+				"scope", e.Scope,
+				"error", err.Error(),
+			)
+			return handleReportFailure(ctx, j, fmt.Errorf("Report Worker - ScopeExpensesByEditorReport - ProductService - GetEditorExpensesByScope failed"), w, e.ReportID)
+		}
+		if len(editorResponse.EditorExpensesByScope) > 0 {
+			var jsonEditorArray []string
+			for _, editorData := range editorResponse.EditorExpensesByScope {
+
+				var jsonValues []string
+				editorString := `"editor":"` + editorData.EditorName + `"`
+				purCostString := `"purchaseCost":"` + fmt.Sprintf("%.2f", editorData.TotalPurchaseCost) + `"`
+				maintainceCostString := `"maintenanceCost":"` + fmt.Sprintf("%.2f", editorData.TotalMaintenanceCost) + `"`
+				totalCostString := `"totalCost":"` + fmt.Sprintf("%.2f", editorData.TotalCost) + `"`
+				jsonValues = append(jsonValues, editorString, purCostString, maintainceCostString, totalCostString)
+				jsonEditorArray = append(jsonEditorArray, "{"+strings.Join(jsonValues, ",")+"}")
+			}
+
+			finalJSONRes := "[" + strings.Join(jsonEditorArray, ",") + "]"
+			rawJSON := json.RawMessage(finalJSONRes)
+			bytes, err := rawJSON.MarshalJSON()
+			if err != nil {
+				logger.Log.Sugar().Errorw("Report Worker - ScopeExpensesByEditorReport - json marshall error ",
+					"scope", e.Scope,
+					"ReportID", e.ReportID,
+					"ReportDataJson", rawJSON,
+					"error", err.Error(),
+				)
+				return handleReportFailure(ctx, j, fmt.Errorf("worker - ScopeExpensesByEditorReport - Json Marshalling failed"), w, e.ReportID)
+			}
+			err = w.reportRepo.InsertReportData(ctx, db.InsertReportDataParams{
+				ReportDataJson: bytes,
+				ReportID:       e.ReportID,
+			})
+			if err != nil {
+				logger.Log.Sugar().Errorw("Report Worker - ScopeExpensesByEditorReport - reportRepo - InsertReportData",
+					"scope", e.Scope,
+					"ReportID", e.ReportID,
+					"ReportDataJson", rawJSON,
+					"error", err.Error(),
+				)
+				return handleReportFailure(ctx, j, fmt.Errorf("worker - ScopeExpensesByEditorReport report - ReportRepo - AppendReportData"), w, e.ReportID)
+			}
+
+		} else {
+			logger.Log.Sugar().Debugw("Report Worker - ScopeExpensesByEditorReport - reportRepo - UpdateReportStatus",
+				"scope", e.Scope,
+				"ReportID", e.ReportID,
+				"ReportStatus", db.ReportStatusCOMPLETED,
+				"error", "no data found",
+			)
+		}
+		err = w.reportRepo.UpdateReportStatus(ctx, db.UpdateReportStatusParams{ReportStatus: db.ReportStatusCOMPLETED, ReportID: e.ReportID})
+		if err != nil {
+			logger.Log.Sugar().Errorw("Report Worker - ScopeExpensesByEditorReport - reportRepo - UpdateReportStatus",
+				"scope", e.Scope,
+				"ReportID", e.ReportID,
+				"ReportStatus", db.ReportStatusCOMPLETED,
+				"error", err.Error(),
+			)
+			return handleReportFailure(ctx, j, fmt.Errorf("worker - ScopeExpensesByEditorReport report - ReportRepo - UpdateReportStatus"), w, e.ReportID)
 		}
 	}
 	return nil

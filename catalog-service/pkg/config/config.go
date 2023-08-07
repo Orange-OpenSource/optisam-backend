@@ -7,6 +7,7 @@ import (
 	"optisam-backend/common/optisam/logger"
 	"optisam-backend/common/optisam/pki"
 	"optisam-backend/common/optisam/postgres"
+	"optisam-backend/common/optisam/redis"
 
 	"optisam-backend/common/optisam/grpc"
 	"os"
@@ -41,7 +42,10 @@ type Config struct {
 	HTTPPort string
 
 	// Database connection information
-	Database *postgres.Config
+	Database postgres.DBConfig
+
+	// Redis connection information
+	Redis *redis.Config
 
 	// Log configuration
 	Log logger.Config
@@ -101,6 +105,10 @@ func (c Config) Validate() error {
 	if err := c.PKI.Validate(); err != nil {
 		return err
 	}
+
+	// if err := c.Redis.Validate(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -164,9 +172,14 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	// Database configuration
 	_ = v.BindEnv("database.host")
 	v.SetDefault("database.port", 5432)
-	_ = v.BindEnv("database.user")
-	_ = v.BindEnv("database.pass", "DB_PASSWORD")
-	_ = v.BindEnv("database.name")
+	_ = v.BindEnv("database.admin.user")
+	_ = v.BindEnv("database.user.user")
+	_ = v.BindEnv("database.user.name")
+	_ = v.BindEnv("database.admin.name")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
 
 	_ = v.BindEnv("application.usernameadmin", "APP_ADMIN_USERNAME")
 	_ = v.BindEnv("application.passwordadmin", "APP_ADMIN_PASSWORD")
@@ -176,4 +189,13 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("application.passworduser", "APP_USER_PASSWORD")
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")
+
+	//env mapping for redis
+	//_ = v.BindEnv("redis.redishost", "REDIS_HOST")
+	_ = v.BindEnv("redis.redispassword", "REDIS_PASSWORD")
+	_ = v.BindEnv("redis.db", "REDIS_DB")
+	_ = v.BindEnv("redis.username", "REDIS_USERNAME")
+	_ = v.BindEnv("redis.sentinelhost", "REDIS_SENTINELHOST")
+	_ = v.BindEnv("redis.sentinelport", "REDIS_SENTINELPORT")
+	_ = v.BindEnv("redis.sentinelmastername", "REDIS_SENTINELMASTERNAME")
 }

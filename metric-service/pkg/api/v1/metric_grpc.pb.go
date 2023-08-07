@@ -23,6 +23,7 @@ type MetricServiceClient interface {
 	DeleteMetric(ctx context.Context, in *DeleteMetricRequest, opts ...grpc.CallOption) (*DeleteMetricResponse, error)
 	// ListMetricType
 	ListMetricType(ctx context.Context, in *ListMetricTypeRequest, opts ...grpc.CallOption) (*ListMetricTypeResponse, error)
+	CreateMetric(ctx context.Context, in *CreateMetricRequest, opts ...grpc.CallOption) (*CreateMetricResponse, error)
 	// CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
 	CreateMetricOracleProcessorStandard(ctx context.Context, in *MetricOPS, opts ...grpc.CallOption) (*MetricOPS, error)
 	// UpdateMetricOracleProcessorStandard will update an IBM.pvu.standard metric
@@ -61,6 +62,14 @@ type MetricServiceClient interface {
 	CreateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*MetricEquipAtt, error)
 	// UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
 	UpdateMetricEquipAttrStandard(ctx context.Context, in *MetricEquipAtt, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
+	// CreateMetricUserNominativeStandard will create an user.nominative.standard metric
+	CreateMetricUserNominativeStandard(ctx context.Context, in *MetricUNS, opts ...grpc.CallOption) (*MetricUNS, error)
+	// UpdateMetricUserNominativeStandard will update an user.nominative.standard metric
+	UpdateMetricUserNominativeStandard(ctx context.Context, in *MetricUNS, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
+	// CreateMetricUserConcurentStandard will create an user.concurrent.standard metric
+	CreateMetricUserConcurentStandard(ctx context.Context, in *MetricUCS, opts ...grpc.CallOption) (*MetricUCS, error)
+	// UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric
+	UpdateMetricUserConcurentStandard(ctx context.Context, in *MetricUCS, opts ...grpc.CallOption) (*UpdateMetricResponse, error)
 	//GetMetricConfiguration will get configuration of a metric
 	GetMetricConfiguration(ctx context.Context, in *GetMetricConfigurationRequest, opts ...grpc.CallOption) (*GetMetricConfigurationResponse, error)
 	DropMetricData(ctx context.Context, in *DropMetricDataRequest, opts ...grpc.CallOption) (*DropMetricDataResponse, error)
@@ -95,6 +104,15 @@ func (c *metricServiceClient) DeleteMetric(ctx context.Context, in *DeleteMetric
 func (c *metricServiceClient) ListMetricType(ctx context.Context, in *ListMetricTypeRequest, opts ...grpc.CallOption) (*ListMetricTypeResponse, error) {
 	out := new(ListMetricTypeResponse)
 	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/ListMetricType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) CreateMetric(ctx context.Context, in *CreateMetricRequest, opts ...grpc.CallOption) (*CreateMetricResponse, error) {
+	out := new(CreateMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetric", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -272,6 +290,42 @@ func (c *metricServiceClient) UpdateMetricEquipAttrStandard(ctx context.Context,
 	return out, nil
 }
 
+func (c *metricServiceClient) CreateMetricUserNominativeStandard(ctx context.Context, in *MetricUNS, opts ...grpc.CallOption) (*MetricUNS, error) {
+	out := new(MetricUNS)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetricUserNominativeStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) UpdateMetricUserNominativeStandard(ctx context.Context, in *MetricUNS, opts ...grpc.CallOption) (*UpdateMetricResponse, error) {
+	out := new(UpdateMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/UpdateMetricUserNominativeStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) CreateMetricUserConcurentStandard(ctx context.Context, in *MetricUCS, opts ...grpc.CallOption) (*MetricUCS, error) {
+	out := new(MetricUCS)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/CreateMetricUserConcurentStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *metricServiceClient) UpdateMetricUserConcurentStandard(ctx context.Context, in *MetricUCS, opts ...grpc.CallOption) (*UpdateMetricResponse, error) {
+	out := new(UpdateMetricResponse)
+	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/UpdateMetricUserConcurentStandard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *metricServiceClient) GetMetricConfiguration(ctx context.Context, in *GetMetricConfigurationRequest, opts ...grpc.CallOption) (*GetMetricConfigurationResponse, error) {
 	out := new(GetMetricConfigurationResponse)
 	err := c.cc.Invoke(ctx, "/optisam.metric.v1.MetricService/GetMetricConfiguration", in, out, opts...)
@@ -300,6 +354,7 @@ type MetricServiceServer interface {
 	DeleteMetric(context.Context, *DeleteMetricRequest) (*DeleteMetricResponse, error)
 	// ListMetricType
 	ListMetricType(context.Context, *ListMetricTypeRequest) (*ListMetricTypeResponse, error)
+	CreateMetric(context.Context, *CreateMetricRequest) (*CreateMetricResponse, error)
 	// CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
 	CreateMetricOracleProcessorStandard(context.Context, *MetricOPS) (*MetricOPS, error)
 	// UpdateMetricOracleProcessorStandard will update an IBM.pvu.standard metric
@@ -338,6 +393,14 @@ type MetricServiceServer interface {
 	CreateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*MetricEquipAtt, error)
 	// UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
 	UpdateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*UpdateMetricResponse, error)
+	// CreateMetricUserNominativeStandard will create an user.nominative.standard metric
+	CreateMetricUserNominativeStandard(context.Context, *MetricUNS) (*MetricUNS, error)
+	// UpdateMetricUserNominativeStandard will update an user.nominative.standard metric
+	UpdateMetricUserNominativeStandard(context.Context, *MetricUNS) (*UpdateMetricResponse, error)
+	// CreateMetricUserConcurentStandard will create an user.concurrent.standard metric
+	CreateMetricUserConcurentStandard(context.Context, *MetricUCS) (*MetricUCS, error)
+	// UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric
+	UpdateMetricUserConcurentStandard(context.Context, *MetricUCS) (*UpdateMetricResponse, error)
 	//GetMetricConfiguration will get configuration of a metric
 	GetMetricConfiguration(context.Context, *GetMetricConfigurationRequest) (*GetMetricConfigurationResponse, error)
 	DropMetricData(context.Context, *DropMetricDataRequest) (*DropMetricDataResponse, error)
@@ -355,6 +418,9 @@ func (UnimplementedMetricServiceServer) DeleteMetric(context.Context, *DeleteMet
 }
 func (UnimplementedMetricServiceServer) ListMetricType(context.Context, *ListMetricTypeRequest) (*ListMetricTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMetricType not implemented")
+}
+func (UnimplementedMetricServiceServer) CreateMetric(context.Context, *CreateMetricRequest) (*CreateMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMetric not implemented")
 }
 func (UnimplementedMetricServiceServer) CreateMetricOracleProcessorStandard(context.Context, *MetricOPS) (*MetricOPS, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricOracleProcessorStandard not implemented")
@@ -412,6 +478,18 @@ func (UnimplementedMetricServiceServer) CreateMetricEquipAttrStandard(context.Co
 }
 func (UnimplementedMetricServiceServer) UpdateMetricEquipAttrStandard(context.Context, *MetricEquipAtt) (*UpdateMetricResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricEquipAttrStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) CreateMetricUserNominativeStandard(context.Context, *MetricUNS) (*MetricUNS, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricUserNominativeStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) UpdateMetricUserNominativeStandard(context.Context, *MetricUNS) (*UpdateMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricUserNominativeStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) CreateMetricUserConcurentStandard(context.Context, *MetricUCS) (*MetricUCS, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMetricUserConcurentStandard not implemented")
+}
+func (UnimplementedMetricServiceServer) UpdateMetricUserConcurentStandard(context.Context, *MetricUCS) (*UpdateMetricResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMetricUserConcurentStandard not implemented")
 }
 func (UnimplementedMetricServiceServer) GetMetricConfiguration(context.Context, *GetMetricConfigurationRequest) (*GetMetricConfigurationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMetricConfiguration not implemented")
@@ -481,6 +559,24 @@ func _MetricService_ListMetricType_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MetricServiceServer).ListMetricType(ctx, req.(*ListMetricTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_CreateMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateMetricRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).CreateMetric(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/CreateMetric",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).CreateMetric(ctx, req.(*CreateMetricRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -827,6 +923,78 @@ func _MetricService_UpdateMetricEquipAttrStandard_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MetricService_CreateMetricUserNominativeStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricUNS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).CreateMetricUserNominativeStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/CreateMetricUserNominativeStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).CreateMetricUserNominativeStandard(ctx, req.(*MetricUNS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_UpdateMetricUserNominativeStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricUNS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).UpdateMetricUserNominativeStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/UpdateMetricUserNominativeStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).UpdateMetricUserNominativeStandard(ctx, req.(*MetricUNS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_CreateMetricUserConcurentStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricUCS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).CreateMetricUserConcurentStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/CreateMetricUserConcurentStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).CreateMetricUserConcurentStandard(ctx, req.(*MetricUCS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MetricService_UpdateMetricUserConcurentStandard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MetricUCS)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MetricServiceServer).UpdateMetricUserConcurentStandard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.metric.v1.MetricService/UpdateMetricUserConcurentStandard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MetricServiceServer).UpdateMetricUserConcurentStandard(ctx, req.(*MetricUCS))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MetricService_GetMetricConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMetricConfigurationRequest)
 	if err := dec(in); err != nil {
@@ -878,6 +1046,10 @@ var _MetricService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMetricType",
 			Handler:    _MetricService_ListMetricType_Handler,
+		},
+		{
+			MethodName: "CreateMetric",
+			Handler:    _MetricService_CreateMetric_Handler,
 		},
 		{
 			MethodName: "CreateMetricOracleProcessorStandard",
@@ -954,6 +1126,22 @@ var _MetricService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMetricEquipAttrStandard",
 			Handler:    _MetricService_UpdateMetricEquipAttrStandard_Handler,
+		},
+		{
+			MethodName: "CreateMetricUserNominativeStandard",
+			Handler:    _MetricService_CreateMetricUserNominativeStandard_Handler,
+		},
+		{
+			MethodName: "UpdateMetricUserNominativeStandard",
+			Handler:    _MetricService_UpdateMetricUserNominativeStandard_Handler,
+		},
+		{
+			MethodName: "CreateMetricUserConcurentStandard",
+			Handler:    _MetricService_CreateMetricUserConcurentStandard_Handler,
+		},
+		{
+			MethodName: "UpdateMetricUserConcurentStandard",
+			Handler:    _MetricService_UpdateMetricUserConcurentStandard_Handler,
 		},
 		{
 			MethodName: "GetMetricConfiguration",

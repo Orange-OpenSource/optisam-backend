@@ -14,6 +14,7 @@ import (
 
 func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes []*repo.EquipmentType, input map[string]interface{}) (uint64, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricACS(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesACS", zap.Error(err))
@@ -32,7 +33,7 @@ func (s *licenseServiceServer) computedLicensesACS(ctx context.Context, eqTypes 
 	if input[IsAgg].(bool) {
 		computedLicenses, err = s.licenseRepo.MetricACSComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, err = s.licenseRepo.MetricACSComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, err = s.licenseRepo.MetricACSComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesACS - ", zap.String("reason", err.Error()))

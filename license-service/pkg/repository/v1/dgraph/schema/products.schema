@@ -7,3 +7,4 @@ product.child    : [uid] @count @reverse .
 product.equipment: [uid] @count @reverse .
 product.acqRights: [uid] @count @reverse .
 product.users    :  [uid] @reverse .
+product.concurrent.users :  [uid]  @reverse .

@@ -80,7 +80,7 @@ func TestDropScopeTX(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.r = NewAccountRepository(db)
+			tt.r = NewAccountRepository(db, rc)
 			if err := tt.setup(); err != nil {
 				t.Errorf("Setup is failed TestDeleteScopeResourceTX  %s", err.Error())
 				return
@@ -120,7 +120,7 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user8@test.com",
@@ -167,7 +167,7 @@ func TestAccountRepository_UpdateAccount(t *testing.T) {
 			},
 		},
 		{name: "failure user does not exist",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user9@test.com",
@@ -228,7 +228,7 @@ func TestAccountRepository_UpdateUserAccount(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user8@test.com",
@@ -262,7 +262,7 @@ func TestAccountRepository_UpdateUserAccount(t *testing.T) {
 			},
 		},
 		{name: "failure user does not exist",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user9@test.com",
@@ -322,7 +322,7 @@ func TestAccountRepository_ChangeUserFirstLogin(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user8@test.com",
@@ -399,7 +399,7 @@ func TestAccountRepository_AccountInfo(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "user1@test.com",
@@ -560,7 +560,7 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -603,12 +603,12 @@ func TestAccountRepository_CreateAccount(t *testing.T) {
 			},
 		},
 		{name: "success - with grps specified",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
 			setup: func() (func() error, *v1.AccountInfo, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, nil, err
@@ -721,12 +721,12 @@ func TestAccountRepository_UserExistsByID(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
 			setup: func() (func() error, string, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				q := `
 				INSERT INTO users(username,first_name,last_name,password) VALUES ('root@orange.com','root','user','password')
 				`
@@ -741,7 +741,7 @@ func TestAccountRepository_UserExistsByID(t *testing.T) {
 			want: true,
 		},
 		{name: "success-group not present",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -791,7 +791,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "admin@test.com",
@@ -824,7 +824,7 @@ func TestAccountRepository_UsersAll(t *testing.T) {
 						NumberOfUsers:      2,
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
@@ -941,7 +941,7 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "u1",
@@ -970,7 +970,7 @@ func TestAccountRepository_UsersWithUserSearchParams(t *testing.T) {
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
@@ -1079,7 +1079,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx: context.Background(),
 			},
@@ -1111,7 +1111,7 @@ func TestAccountRepository_GroupUsers(t *testing.T) {
 						NumberOfUsers:      2,
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
@@ -1256,13 +1256,13 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "success - owns direct group",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "u1",
 			},
 			setup: func() (func() error, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, 0, err
@@ -1301,13 +1301,13 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 			want: true,
 		},
 		{name: "success - own subgroup",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "u1",
 			},
 			setup: func() (func() error, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, 0, err
@@ -1346,13 +1346,13 @@ func TestAccountRepository_UserOwnsGroupByID(t *testing.T) {
 			want: true,
 		},
 		{name: "success - doesnt own ",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:    context.Background(),
 				userID: "u1",
 			},
 			setup: func() (func() error, int64, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, 0, err
@@ -1428,14 +1428,14 @@ func TestAccountRepository_ChangePassword(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:      context.Background(),
 				userID:   "m@m.com",
 				password: "abc",
 			},
 			setup: func() (func() error, error) {
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				if err := repo.CreateAccount(context.Background(), &v1.AccountInfo{
 					UserID:    "m@m.com",
 					FirstName: "fn",
@@ -1508,7 +1508,7 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "SUCCESS",
-			r: NewAccountRepository(db),
+			r: NewAccountRepository(db, rc),
 			args: args{
 				ctx:         context.Background(),
 				adminUserID: "admin1@test.com",
@@ -1537,7 +1537,7 @@ func TestAccountRepository_UserBelongsToAdminGroup(t *testing.T) {
 						FullyQualifiedName: "SUPERROOT.A.B.D",
 					},
 				}
-				repo := NewAccountRepository(db)
+				repo := NewAccountRepository(db, rc)
 				rootID := int64(0)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {

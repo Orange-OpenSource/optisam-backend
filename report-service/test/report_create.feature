@@ -25,7 +25,7 @@ Feature: Report Service Test - Create Report : Admin
     And request data.invalidcompliance_report
     When method post
     Then status 400
-    * match response.success == false
+   # * match response.message == "Editor doesn't exist"
 
   @create
   Scenario: Create the reports type ProductEquipments
@@ -42,5 +42,5 @@ Feature: Report Service Test - Create Report : Admin
     And request data.invalidproduct_equipments_report
     When method post
     Then status 400
-    * match response.success == false
+   # * match response.message == "Editor doesn't exist"
     

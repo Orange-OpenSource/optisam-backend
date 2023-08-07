@@ -9,12 +9,54 @@ import (
 	"time"
 )
 
+type FileStatus string
+
+const (
+	FileStatusPARTIAL FileStatus = "PARTIAL"
+	FileStatusSUCCESS FileStatus = "SUCCESS"
+	FileStatusFAILED  FileStatus = "FAILED"
+)
+
+func (e *FileStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = FileStatus(s)
+	case string:
+		*e = FileStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for FileStatus: %T", src)
+	}
+	return nil
+}
+
+type JobStatus string
+
+const (
+	JobStatusPENDING   JobStatus = "PENDING"
+	JobStatusCOMPLETED JobStatus = "COMPLETED"
+	JobStatusFAILED    JobStatus = "FAILED"
+	JobStatusRETRY     JobStatus = "RETRY"
+	JobStatusRUNNING   JobStatus = "RUNNING"
+)
+
+func (e *JobStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = JobStatus(s)
+	case string:
+		*e = JobStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for JobStatus: %T", src)
+	}
+	return nil
+}
+
 type LocationType string
 
 const (
 	LocationTypeNONE      LocationType = "NONE"
-	LocationTypeSAAS      LocationType = "SAAS"
 	LocationTypeOnPremise LocationType = "On Premise"
+	LocationTypeSAAS      LocationType = "SAAS"
 	LocationTypeBoth      LocationType = "Both"
 )
 
@@ -51,39 +93,318 @@ func (e *OpensourceType) Scan(src interface{}) error {
 	return nil
 }
 
+type ProductCatalogLicensing string
+
+const (
+	ProductCatalogLicensingNONE         ProductCatalogLicensing = "NONE"
+	ProductCatalogLicensingCLOSEDSOURCE ProductCatalogLicensing = "CLOSEDSOURCE"
+	ProductCatalogLicensingOPENSOURCE   ProductCatalogLicensing = "OPENSOURCE"
+)
+
+func (e *ProductCatalogLicensing) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductCatalogLicensing(s)
+	case string:
+		*e = ProductCatalogLicensing(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductCatalogLicensing: %T", src)
+	}
+	return nil
+}
+
+type ProductCatalogRecommendation string
+
+const (
+	ProductCatalogRecommendationNONE        ProductCatalogRecommendation = "NONE"
+	ProductCatalogRecommendationAUTHOURIZED ProductCatalogRecommendation = "AUTHOURIZED"
+	ProductCatalogRecommendationBLACKLISTED ProductCatalogRecommendation = "BLACKLISTED"
+	ProductCatalogRecommendationRECOMMENDED ProductCatalogRecommendation = "RECOMMENDED"
+)
+
+func (e *ProductCatalogRecommendation) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductCatalogRecommendation(s)
+	case string:
+		*e = ProductCatalogRecommendation(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductCatalogRecommendation: %T", src)
+	}
+	return nil
+}
+
+type ProductType string
+
+const (
+	ProductTypeONPREMISE ProductType = "ONPREMISE"
+	ProductTypeSAAS      ProductType = "SAAS"
+)
+
+func (e *ProductType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ProductType(s)
+	case string:
+		*e = ProductType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ProductType: %T", src)
+	}
+	return nil
+}
+
+type Acqright struct {
+	Sku                       string         `json:"sku"`
+	Swidtag                   string         `json:"swidtag"`
+	ProductName               string         `json:"product_name"`
+	ProductEditor             string         `json:"product_editor"`
+	Scope                     string         `json:"scope"`
+	Metric                    string         `json:"metric"`
+	NumLicensesAcquired       int32          `json:"num_licenses_acquired"`
+	NumLicencesComputed       int32          `json:"num_licences_computed"`
+	NumLicencesMaintainance   int32          `json:"num_licences_maintainance"`
+	AvgUnitPrice              string         `json:"avg_unit_price"`
+	AvgMaintenanceUnitPrice   string         `json:"avg_maintenance_unit_price"`
+	TotalPurchaseCost         string         `json:"total_purchase_cost"`
+	TotalComputedCost         string         `json:"total_computed_cost"`
+	TotalMaintenanceCost      string         `json:"total_maintenance_cost"`
+	TotalCost                 string         `json:"total_cost"`
+	CreatedOn                 time.Time      `json:"created_on"`
+	CreatedBy                 string         `json:"created_by"`
+	UpdatedOn                 time.Time      `json:"updated_on"`
+	UpdatedBy                 sql.NullString `json:"updated_by"`
+	StartOfMaintenance        sql.NullTime   `json:"start_of_maintenance"`
+	EndOfMaintenance          sql.NullTime   `json:"end_of_maintenance"`
+	LastPurchasedOrder        string         `json:"last_purchased_order"`
+	SupportNumber             string         `json:"support_number"`
+	MaintenanceProvider       string         `json:"maintenance_provider"`
+	Version                   string         `json:"version"`
+	Comment                   sql.NullString `json:"comment"`
+	OrderingDate              sql.NullTime   `json:"ordering_date"`
+	CorporateSourcingContract string         `json:"corporate_sourcing_contract"`
+	SoftwareProvider          string         `json:"software_provider"`
+	FileName                  string         `json:"file_name"`
+	FileData                  []byte         `json:"file_data"`
+	Repartition               bool           `json:"repartition"`
+}
+
+type AggregatedRight struct {
+	Sku                       string         `json:"sku"`
+	AggregationID             int32          `json:"aggregation_id"`
+	Metric                    string         `json:"metric"`
+	OrderingDate              sql.NullTime   `json:"ordering_date"`
+	CorporateSourcingContract string         `json:"corporate_sourcing_contract"`
+	SoftwareProvider          string         `json:"software_provider"`
+	Scope                     string         `json:"scope"`
+	NumLicensesAcquired       int32          `json:"num_licenses_acquired"`
+	NumLicencesComputed       int32          `json:"num_licences_computed"`
+	NumLicencesMaintenance    int32          `json:"num_licences_maintenance"`
+	AvgUnitPrice              string         `json:"avg_unit_price"`
+	AvgMaintenanceUnitPrice   string         `json:"avg_maintenance_unit_price"`
+	TotalPurchaseCost         string         `json:"total_purchase_cost"`
+	TotalComputedCost         string         `json:"total_computed_cost"`
+	TotalMaintenanceCost      string         `json:"total_maintenance_cost"`
+	TotalCost                 string         `json:"total_cost"`
+	StartOfMaintenance        sql.NullTime   `json:"start_of_maintenance"`
+	EndOfMaintenance          sql.NullTime   `json:"end_of_maintenance"`
+	LastPurchasedOrder        string         `json:"last_purchased_order"`
+	SupportNumber             string         `json:"support_number"`
+	MaintenanceProvider       string         `json:"maintenance_provider"`
+	Comment                   sql.NullString `json:"comment"`
+	CreatedOn                 time.Time      `json:"created_on"`
+	CreatedBy                 string         `json:"created_by"`
+	UpdatedOn                 time.Time      `json:"updated_on"`
+	UpdatedBy                 sql.NullString `json:"updated_by"`
+	FileName                  string         `json:"file_name"`
+	FileData                  []byte         `json:"file_data"`
+	Repartition               bool           `json:"repartition"`
+}
+
+type Aggregation struct {
+	ID              int32          `json:"id"`
+	AggregationName string         `json:"aggregation_name"`
+	Scope           string         `json:"scope"`
+	ProductEditor   string         `json:"product_editor"`
+	Products        []string       `json:"products"`
+	Swidtags        []string       `json:"swidtags"`
+	CreatedOn       time.Time      `json:"created_on"`
+	CreatedBy       string         `json:"created_by"`
+	UpdatedOn       sql.NullTime   `json:"updated_on"`
+	UpdatedBy       sql.NullString `json:"updated_by"`
+}
+
+type DashboardAudit struct {
+	ID           int32        `json:"id"`
+	UpdatedAt    time.Time    `json:"updated_at"`
+	NextUpdateAt sql.NullTime `json:"next_update_at"`
+	UpdatedBy    string       `json:"updated_by"`
+	Scope        string       `json:"scope"`
+}
+
 type EditorCatalog struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	GeneralInformation sql.NullString  `json:"general_information"`
-	PartnerManagers    json.RawMessage `json:"partner_managers"`
-	Audits             json.RawMessage `json:"audits"`
-	Vendors            json.RawMessage `json:"vendors"`
-	CreatedOn          time.Time       `json:"created_on"`
-	UpdatedOn          time.Time       `json:"updated_on"`
-	Source             sql.NullString  `json:"source"`
+	ID                   string          `json:"id"`
+	Name                 string          `json:"name"`
+	GeneralInformation   sql.NullString  `json:"general_information"`
+	PartnerManagers      json.RawMessage `json:"partner_managers"`
+	Audits               json.RawMessage `json:"audits"`
+	Vendors              json.RawMessage `json:"vendors"`
+	CreatedOn            time.Time       `json:"created_on"`
+	UpdatedOn            time.Time       `json:"updated_on"`
+	Source               sql.NullString  `json:"source"`
+	CountryCode          sql.NullString  `json:"country_code"`
+	Address              sql.NullString  `json:"address"`
+	GroupContract        sql.NullBool    `json:"group_contract"`
+	GlobalAccountManager json.RawMessage `json:"global_account_manager"`
+	Sourcers             json.RawMessage `json:"sourcers"`
+}
+
+type Job struct {
+	JobID      int32           `json:"job_id"`
+	Type       string          `json:"type"`
+	Status     JobStatus       `json:"status"`
+	Data       json.RawMessage `json:"data"`
+	Comments   sql.NullString  `json:"comments"`
+	StartTime  sql.NullTime    `json:"start_time"`
+	EndTime    sql.NullTime    `json:"end_time"`
+	CreatedAt  time.Time       `json:"created_at"`
+	RetryCount sql.NullInt32   `json:"retry_count"`
+	MetaData   json.RawMessage `json:"meta_data"`
+}
+
+type NominativeUser struct {
+	UserID         int32          `json:"user_id"`
+	Scope          string         `json:"scope"`
+	Swidtag        sql.NullString `json:"swidtag"`
+	AggregationsID sql.NullInt32  `json:"aggregations_id"`
+	ActivationDate sql.NullTime   `json:"activation_date"`
+	UserEmail      string         `json:"user_email"`
+	UserName       sql.NullString `json:"user_name"`
+	FirstName      sql.NullString `json:"first_name"`
+	Profile        sql.NullString `json:"profile"`
+	ProductEditor  sql.NullString `json:"product_editor"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	CreatedAt      time.Time      `json:"created_at"`
+	CreatedBy      string         `json:"created_by"`
+	UpdatedBy      sql.NullString `json:"updated_by"`
+}
+
+type NominativeUserFileUploadedDetail struct {
+	ID                     int32           `json:"id"`
+	Scope                  string          `json:"scope"`
+	Swidtag                sql.NullString  `json:"swidtag"`
+	AggregationsID         sql.NullInt32   `json:"aggregations_id"`
+	ProductEditor          sql.NullString  `json:"product_editor"`
+	UploadedAt             time.Time       `json:"uploaded_at"`
+	UploadedBy             string          `json:"uploaded_by"`
+	NominativeUsersDetails json.RawMessage `json:"nominative_users_details"`
+	RecordSucceed          sql.NullInt32   `json:"record_succeed"`
+	RecordFailed           sql.NullInt32   `json:"record_failed"`
+	FileName               sql.NullString  `json:"file_name"`
+	SheetName              sql.NullString  `json:"sheet_name"`
+	FileStatus             FileStatus      `json:"file_status"`
+	UploadID               string          `json:"upload_id"`
+}
+
+type OverallComputedLicence struct {
+	Sku                 string       `json:"sku"`
+	Swidtags            string       `json:"swidtags"`
+	Scope               string       `json:"scope"`
+	ProductNames        string       `json:"product_names"`
+	AggregationName     string       `json:"aggregation_name"`
+	Metrics             string       `json:"metrics"`
+	NumComputedLicences int32        `json:"num_computed_licences"`
+	NumAcquiredLicences int32        `json:"num_acquired_licences"`
+	TotalCost           string       `json:"total_cost"`
+	PurchaseCost        string       `json:"purchase_cost"`
+	ComputedCost        string       `json:"computed_cost"`
+	DeltaNumber         int32        `json:"delta_number"`
+	DeltaCost           string       `json:"delta_cost"`
+	AvgUnitPrice        string       `json:"avg_unit_price"`
+	ComputedDetails     string       `json:"computed_details"`
+	CostOptimization    sql.NullBool `json:"cost_optimization"`
+	MeticNotDefined     sql.NullBool `json:"metic_not_defined"`
+	NotDeployed         sql.NullBool `json:"not_deployed"`
+	Editor              string       `json:"editor"`
+}
+
+type Product struct {
+	Swidtag         string         `json:"swidtag"`
+	ProductName     string         `json:"product_name"`
+	ProductVersion  string         `json:"product_version"`
+	ProductEdition  string         `json:"product_edition"`
+	ProductCategory string         `json:"product_category"`
+	ProductEditor   string         `json:"product_editor"`
+	Scope           string         `json:"scope"`
+	OptionOf        string         `json:"option_of"`
+	AggregationID   int32          `json:"aggregation_id"`
+	AggregationName string         `json:"aggregation_name"`
+	CreatedOn       time.Time      `json:"created_on"`
+	CreatedBy       string         `json:"created_by"`
+	UpdatedOn       time.Time      `json:"updated_on"`
+	UpdatedBy       sql.NullString `json:"updated_by"`
+	ProductType     ProductType    `json:"product_type"`
 }
 
 type ProductCatalog struct {
-	ID                  string          `json:"id"`
-	Name                string          `json:"name"`
-	Editorid            string          `json:"editorid"`
-	GenearlInformation  sql.NullString  `json:"genearl_information"`
-	ContractTips        sql.NullString  `json:"contract_tips"`
-	SupportVendors      json.RawMessage `json:"support_vendors"`
-	Metrics             json.RawMessage `json:"metrics"`
-	IsOpensource        sql.NullBool    `json:"is_opensource"`
-	LicencesOpensource  sql.NullString  `json:"licences_opensource"`
-	IsClosesource       sql.NullBool    `json:"is_closesource"`
-	LicensesClosesource json.RawMessage `json:"licenses_closesource"`
-	Location            LocationType    `json:"location"`
-	CreatedOn           time.Time       `json:"created_on"`
-	UpdatedOn           time.Time       `json:"updated_on"`
-	Recommendation      sql.NullString  `json:"recommendation"`
-	UsefulLinks         json.RawMessage `json:"useful_links"`
-	SwidTagProduct      sql.NullString  `json:"swid_tag_product"`
-	Source              sql.NullString  `json:"source"`
-	EditorName          string          `json:"editor_name"`
-	OpensourceType      OpensourceType  `json:"opensource_type"`
+	ID                  string                       `json:"id"`
+	Name                string                       `json:"name"`
+	Editorid            string                       `json:"editorid"`
+	GenearlInformation  sql.NullString               `json:"genearl_information"`
+	ContractTips        sql.NullString               `json:"contract_tips"`
+	SupportVendors      json.RawMessage              `json:"support_vendors"`
+	Metrics             json.RawMessage              `json:"metrics"`
+	IsOpensource        sql.NullBool                 `json:"is_opensource"`
+	LicencesOpensource  sql.NullString               `json:"licences_opensource"`
+	IsClosesource       sql.NullBool                 `json:"is_closesource"`
+	LicensesClosesource json.RawMessage              `json:"licenses_closesource"`
+	Location            LocationType                 `json:"location"`
+	CreatedOn           time.Time                    `json:"created_on"`
+	UpdatedOn           time.Time                    `json:"updated_on"`
+	UsefulLinks         json.RawMessage              `json:"useful_links"`
+	SwidTagProduct      sql.NullString               `json:"swid_tag_product"`
+	Source              sql.NullString               `json:"source"`
+	EditorName          string                       `json:"editor_name"`
+	OpensourceType      OpensourceType               `json:"opensource_type"`
+	Recommendation      ProductCatalogRecommendation `json:"recommendation"`
+	Licensing           ProductCatalogLicensing      `json:"licensing"`
+}
+
+type ProductConcurrentUser struct {
+	ID             int32          `json:"id"`
+	IsAggregations sql.NullBool   `json:"is_aggregations"`
+	AggregationID  sql.NullInt32  `json:"aggregation_id"`
+	Swidtag        sql.NullString `json:"swidtag"`
+	NumberOfUsers  sql.NullInt32  `json:"number_of_users"`
+	ProfileUser    sql.NullString `json:"profile_user"`
+	Team           sql.NullString `json:"team"`
+	Scope          string         `json:"scope"`
+	PurchaseDate   time.Time      `json:"purchase_date"`
+	CreatedOn      time.Time      `json:"created_on"`
+	CreatedBy      string         `json:"created_by"`
+	UpdatedOn      time.Time      `json:"updated_on"`
+	UpdatedBy      sql.NullString `json:"updated_by"`
+}
+
+type ProductsApplication struct {
+	Swidtag       string `json:"swidtag"`
+	ApplicationID string `json:"application_id"`
+	Scope         string `json:"scope"`
+}
+
+type ProductsEquipment struct {
+	Swidtag         string        `json:"swidtag"`
+	EquipmentID     string        `json:"equipment_id"`
+	NumOfUsers      sql.NullInt32 `json:"num_of_users"`
+	AllocatedMetric string        `json:"allocated_metric"`
+	Scope           string        `json:"scope"`
+}
+
+type SharedLicense struct {
+	Sku              string `json:"sku"`
+	Scope            string `json:"scope"`
+	SharingScope     string `json:"sharing_scope"`
+	SharedLicences   int32  `json:"shared_licences"`
+	RecievedLicences int32  `json:"recieved_licences"`
 }
 
 type UploadFileLog struct {

@@ -69,7 +69,7 @@ type Config struct {
 
 	RawdataLocation string
 
-	Postgres *postgres.Config
+	Database postgres.DBConfig
 
 	// Log configuration
 	Log logger.Config
@@ -146,7 +146,7 @@ func (c Config) Validate() error {
 		return err
 	}
 
-	if err := c.Postgres.Validate(); err != nil {
+	if err := c.Database.Validate(); err != nil {
 		return err
 	}
 
@@ -214,7 +214,10 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("dgraph.host")
 
 	// Database Password configuration
-	_ = v.BindEnv("postgres.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
 
 	// PKI configuration
 	v.SetDefault("pki.publickeypath", ".")

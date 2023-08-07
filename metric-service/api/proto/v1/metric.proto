@@ -29,6 +29,12 @@ service MetricService {
     };
   }
 
+   rpc CreateMetric(CreateMetricRequest) returns (CreateMetricResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/metric"
+    };
+  }
+
   // CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
   rpc CreateMetricOracleProcessorStandard(MetricOPS)returns (MetricOPS){
     option (google.api.http) = {
@@ -218,6 +224,46 @@ service MetricService {
     };
   }
 
+      // CreateMetricUserNominativeStandard will create an user.nominative.standard metric
+  rpc CreateMetricUserNominativeStandard(MetricUNS)returns (MetricUNS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/uns"
+      body : "*"
+    };
+  }
+
+    // UpdateMetricUserNominativeStandard will update an user.nominative.standard metric
+  rpc UpdateMetricUserNominativeStandard(MetricUNS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/uns"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/uns"
+        body : "*"
+      }
+    };
+  }
+
+    // CreateMetricUserConcurentStandard will create an user.concurrent.standard metric
+  rpc CreateMetricUserConcurentStandard(MetricUCS)returns (MetricUCS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/user_conc"
+      body : "*"
+    };
+  }
+
+      // UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric
+  rpc UpdateMetricUserConcurentStandard(MetricUCS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/user_conc"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/user_conc"
+        body : "*"
+      }
+    };
+  }
+
   //GetMetricConfiguration will get configuration of a metric
   rpc GetMetricConfiguration(GetMetricConfigurationRequest)returns (GetMetricConfigurationResponse){
     option (google.api.http) = {
@@ -250,6 +296,16 @@ message DeleteMetricRequest{
 
 message DeleteMetricResponse { 
   bool success = 1; 
+}
+
+message CreateMetricRequest {
+  Metric metric = 1;
+  string sender_scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string reciever_scope = 3 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; 
+}
+
+message CreateMetricResponse {
+  bool success = 1;
 }
 
 message GetMetricConfigurationRequest{
@@ -348,6 +404,24 @@ message MetricACS {
    
 }
 
+message MetricUNS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string profile = 3;
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricUCS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string profile = 3;
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
 message ListMetricRequest {
   repeated string scopes = 1 [(validate.rules).repeated.min_items = 1,(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
 }
@@ -383,6 +457,8 @@ message MetricType {
     User_Sum = 8;
     Static_Standard = 9;
     Equip_Attr = 10;
+    Nominative_User = 11;
+    User_Concurent = 12;
   }
   string name = 1;
   string description = 2;

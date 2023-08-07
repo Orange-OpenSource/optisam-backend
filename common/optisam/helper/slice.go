@@ -97,3 +97,15 @@ func CompareSlices(a1, a2 []string) bool {
 	}
 	return true
 }
+
+func ExactCompareSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}

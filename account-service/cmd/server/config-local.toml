@@ -20,16 +20,32 @@ agentEndpoint = "192.168.99.100:6831"
 
 [database]
 host = "localhost"
-port = 5431
-user = "optisam"
+port = 5432
+# should be user of full rights
+[database.admin]
+user = "postgres"
 pass = ""
-name = "account"
+name = "account" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "postgres"
+pass = ""
+name = "account" 
+
+[database.migration]
+version = "1.4_schema.sql,1.4.3_schema.sql,1.4.2_schema.sql"
+direction = ""
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
 
 [redis]
-host = "localhost:6379"
-pass = ""
+redishost = "localhost:6379"
+redispassword = ""
 db = 0
 username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
 
 [pki]
 publickeypath = "cert.pem"

@@ -3,7 +3,6 @@ Feature: DPS Service Test - Data : admin user
 
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
@@ -12,16 +11,133 @@ Feature: DPS Service Test - Data : admin user
     * def scope = "API"
 
 
-## notify dps api is used internally by import - no test required
 
 #  Scenario: To verify user is able to Uploads global data  
 #     Given path 'uploads/notify'
-#     Given request { "scope":"TST", 	"type" :"globaldata", "uploadBy": "admin@test.com", "files": ["TST_temp.xlsx"]}
+#     Given request { "scope":"TST", 	"type" :"globaldata", "uploadBy": "xyz", "files": ["TST_temp.xlsx"]}
 #     And header Accept = 'application/json'
 #     When method post
 #     Then status 200 
 #     And response.success == '#boolean? _ >= true'
  
+Scenario: To get the details of Infrastructure inventory 
+  Given path 'uploads/globaldata'
+  And params {page_num:1,page_size:50,sort_order:'desc',sort_by:'uploaded_on',scope:'#(scope)'}
+  When method get 
+  Then status 200
+
+Scenario Outline: To verify the Pagination on Infrastructure inventory Page
+  Given path 'uploads/globaldata'
+  And params { page_num:1,page_size:<pageSize>,sort_order:<sortOrder>,sort_by:'uploaded_on',scope:'#(scope)'}
+When method get 
+Then status 200
+And response.totalRecords > 0
+   
+
+Examples:
+     |pageSize|sortOrder|
+     |50       |asc      |
+     |100      |asc      |
+     |200      |desc     |
+
+
+    Scenario Outline: To verify the Pagination on Infrastructure inventory Page with invalid inputs 
+      Given path 'uploads/globaldata'
+      And params { page_num:1,page_size:<pageSize>,sort_order:<sortOrder>,sort_by:'uploaded_on',scope:'#(scope)'}
+    When method get 
+    Then status 400
+    
+    Examples:
+         |pageSize|sortOrder|
+         |5       |asc      |
+         |1       |asc      |
+         |'A'     |desc     |
+
+
+    Scenario: To get Log Files 
+      Given path 'uploads/data' 
+      And params {page_num:1,page_size:50,sort_order:'desc',sort_by:'uploaded_on',scope:'#(scope)'}
+      When method get 
+      Then status 200
+      And match response.totalRecords == '#number? _ >= 0'
+      And match response.uploads[*].uploaded_on  contains ["2023-03-31T06:35:24.345745Z"]
+
+    Scenario Outline: To verify the Pagination on Log Files
+      Given path 'uploads/data' 
+      And params { page_num:1,page_size:<pageSize>,sort_order:<sortOrder>,sort_by:'uploaded_on',scope:'#(scope)'}
+      When method get 
+      Then status 200 
+      And response.totalRecords > 0
+   
+
+      Examples:
+     |pageSize|sortOrder|
+     |50       |asc      |
+     |100      |asc      |
+     |200      |desc     |
+
+
+    Scenario Outline: To verify the Pagination on Log Files with invalid inputs 
+      Given path 'uploads/data' 
+      And params { page_num:1,page_size:<pageSize>,sort_order:<sortOrder>,sort_by:'uploaded_on',scope:'#(scope)'}
+      When method get 
+      Then status 400
+
+      Examples:
+      |pageSize|sortOrder|
+      |5       |asc      |
+      |1       |asc      |
+      |'A'     |desc     |
+
+
+    Scenario:To get the deletion log 
+      Given path 'deletions'
+      And params {scope:'#(scope)',sort_by:'created_on',sort_order:'asc',page_num:1,page_size:50}
+      When method get 
+      Then status 200
+      And match response.totalRecords == '#number? _ >= 0'
+      And match response.deletions[*].created_on contains ["2022-04-27T08:04:49.861867Z"]
+
+    Scenario Outline: To verify the Pagination on Deletion Log 
+      Given path 'deletions'
+      And params {scope:'#(scope)',sort_by:'created_on',sort_order:<sortOrder>,page_num:1,page_size:<pageSize>}
+      When method get 
+      Then status 200
+
+      Examples:
+     |pageSize|sortOrder|
+     |50       |asc      |
+     |100      |asc      |
+     |200      |desc     |
+
+    Scenario Outline: To verify the Pagination on Deletion Log  with Invalid Input
+      Given path 'deletions'
+      And params {scope:'#(scope)',sort_by:'created_on',sort_order:<sortOrder>,page_num:1,page_size:<pageSize>}
+      When method get 
+      Then status 400
+
+      Examples:
+     |pageSize|sortOrder|
+     |5       |asc      |
+      |1       |asc      |
+      |'A'     |desc     |
+
+
+
+
+
+      
+
+
+
+      
+
+
+
+
+
+
+
 
   Scenario: Schema Validation for List uploads data 
     Given path 'uploads/data'
@@ -87,11 +203,5 @@ Feature: DPS Service Test - Data : admin user
     Then status 400 
     And response.totalRecords == '#number? _ = 0'  
 
-  ## TODO: Verify failed records (dependency to upload wrong file)
-  # Scenario: Get Failed records of Uploaded data
-  #   Given path 'failed/data'
-  #   And params { page_num:1, page_size:10,  scope:'#(scope)'}
-  #   And params { upload_id:200}
-  #   When method get
-  #   Then status 200 
+  
 

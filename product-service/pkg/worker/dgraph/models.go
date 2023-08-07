@@ -1,5 +1,7 @@
 package dgraph
 
+import "time"
+
 // nolint: maligned
 type UpsertAcqRightsRequest struct {
 	Sku                       string  `json:"sku,omitempty"`
@@ -71,4 +73,43 @@ type UpsertAggregatedRight struct {
 type DeleteAggregatedRightRequest struct {
 	Sku   string `json:"sku"`
 	Scope string `json:"scope"`
+}
+
+type UpserNominativeUserRequest struct {
+	Editor         string                   `json:"editor,omitempty"`
+	Scope          string                   `json:"scope,omitempty"`
+	ProductName    string                   `json:"product_name,omitempty"`
+	ProductVersion string                   `json:"product_version,omitempty"`
+	AggregationId  int32                    `json:"aggregation_id,omitempty"`
+	SwidTag        string                   `json:"swid_tag,omitempty"`
+	CreatedBy      string                   `json:"created_by,omitempty"`
+	UserDetails    []*NominativeUserDetails `json:"user_details,omitempty"`
+}
+
+type NominativeUserDetails struct {
+	UserName       string    `json:"user_name,omitempty"`
+	FirstName      string    `json:"first_name,omitempty"`
+	Email          string    `json:"email,omitempty"`
+	Profile        string    `json:"profile,omitempty"`
+	ActivationDate time.Time `json:"activation_date,omitempty"`
+}
+
+type UpserConcurrentUserRequest struct {
+	IsAggregations bool   `json:"is_aggregations,omitempty"`
+	AggregationID  int32  `json:"aggregation_id,omitempty"`
+	Editor         string `json:"product_editor,omitempty"`
+	ProductName    string `json:"product_name,omitempty"`
+	ProductVersion string `json:"product_version,omitempty"`
+	SwidTag        string `json:"swidtag,omitempty"`
+	NumberOfUsers  int32  `json:"number_of_users,omitempty"`
+	ProfileUser    string `json:"profile_user,omitempty"`
+	Team           string `json:"team,omitempty"`
+	Scope          string `json:"scope,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty"`
+	PurchaseDate   string `json:"purchase_date,omitempty"`
+}
+
+type DeleteProductRequest struct {
+	SwidTag string `json:"swidtag"`
+	Scope   string `json:"scope"`
 }

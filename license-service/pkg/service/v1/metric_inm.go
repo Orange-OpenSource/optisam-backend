@@ -15,6 +15,7 @@ import (
 
 func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, input map[string]interface{}) (uint64, string, error) {
 	scope, _ := input[SCOPES].([]string)
+	prodID, _ := input[ProdID].([]string)
 	metrics, err := s.licenseRepo.ListMetricINM(ctx, scope...)
 	if err != nil && err != repo.ErrNoData {
 		logger.Log.Error("service/v1 computedLicensesINM", zap.Error(err))
@@ -31,7 +32,7 @@ func (s *licenseServiceServer) computedLicensesINM(ctx context.Context, input ma
 	if input[IsAgg].(bool) {
 		computedLicenses, computedDetails, err = s.licenseRepo.MetricINMComputedLicensesAgg(ctx, input[ProdAggName].(string), input[MetricName].(string), mat, scope...)
 	} else {
-		computedLicenses, computedDetails, err = s.licenseRepo.MetricINMComputedLicenses(ctx, input[ProdID].(string), mat, scope...)
+		computedLicenses, computedDetails, err = s.licenseRepo.MetricINMComputedLicenses(ctx, prodID, mat, scope...)
 	}
 	if err != nil {
 		logger.Log.Error("service/v1 - computedLicensesINM - ", zap.String("reason", err.Error()))

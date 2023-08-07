@@ -19,6 +19,7 @@ import (
 	"optisam-backend/common/optisam/token/claims"
 	v1 "optisam-backend/dps-service/pkg/api/v1"
 	"optisam-backend/import-service/pkg/config"
+	v1Product "optisam-backend/product-service/pkg/api/v1"
 	v1Simulation "optisam-backend/simulation-service/pkg/api/v1"
 	"os"
 	"path"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
@@ -39,6 +41,7 @@ type importServiceServer struct {
 	// grpcServers map[string]*grpc.ClientConn
 	dpsClient     v1.DpsServiceClient
 	simClient     v1Simulation.SimulationServiceClient
+	productClient v1Product.ProductServiceClient
 	accClient     v1Acc.AccountServiceClient
 	catalogClient v1Catalog.ProductCatalogClient
 	config        *config.Config
@@ -66,6 +69,7 @@ func NewImportServiceServer(grpcServers map[string]*grpc.ClientConn, config *con
 	return &importServiceServer{config: config, dpsClient: v1.NewDpsServiceClient(grpcServers["dps"]),
 		simClient:     v1Simulation.NewSimulationServiceClient(grpcServers["simulation"]),
 		accClient:     v1Acc.NewAccountServiceClient(grpcServers["account"]),
+		productClient: v1Product.NewProductServiceClient(grpcServers["product"]),
 		catalogClient: v1Catalog.NewProductCatalogClient(grpcServers["catalog"]),
 	}
 }
@@ -1102,6 +1106,192 @@ func (i *importServiceServer) DownloadFile(res http.ResponseWriter, req *http.Re
 	return
 }
 
+func (i *importServiceServer) ImportNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		http.Error(res, "import/ImportNominativeUser - cannot retrieve claims", http.StatusInternalServerError)
+		return
+	}
+	if userClaims.Role == claims.RoleUser {
+		http.Error(res, "import/ImportNominativeUser - RoleValidationFailed", http.StatusForbidden)
+		return
+	}
+	// Extract scopes from request
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("import/ImportNominativeUser - scope was empty")
+		http.Error(res, "import/ImportNominativeUser - Can not find scope", http.StatusBadRequest)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		http.Error(res, "import/ImportNominativeUser - scope not found", http.StatusUnauthorized)
+		return
+	}
+
+	productName := req.FormValue("product_name")
+	productVersion := req.FormValue("product_version")
+	aggregationId := req.FormValue("aggregation_id")
+	editor := req.FormValue("editor")
+
+	if (productName == "" && aggregationId == "") || (productName != "" && aggregationId != "") {
+		logger.Log.Error("import/ImportNominativeUser - productName or aggregationId is required")
+		http.Error(res, "import/ImportNominativeUser - productName or aggregationId is required", http.StatusBadRequest)
+		return
+	}
+	aggId, err := strconv.Atoi(aggregationId)
+	if err != nil && aggregationId != "" {
+		logger.Log.Error("import/ImportNominativeUser - invalid aggregationId")
+		http.Error(res, "import/ImportNominativeUser -  invalid aggregationId", http.StatusBadRequest)
+		return
+	}
+	if productName != "" && editor == "" && aggregationId == "" {
+		logger.Log.Error("import/ImportNominativeUser - editor id is required in case of product")
+		http.Error(res, "import/ImportNominativeUser -  editor id is required in case of product", http.StatusBadRequest)
+		return
+	}
+	if len(req.MultipartForm.File) == 0 {
+		logger.Log.Error("import/ImportNominativeUser - No files found")
+		http.Error(res, "import/ImportNominativeUser - No files found", http.StatusBadRequest)
+		return
+	}
+	uploadId := uuid.New().String()
+	users, err, fileName, sheetName := getNominativeUser(req.MultipartForm, res, uploadId, i.config.Upload.UploadDir, scope)
+	if err != nil {
+		return
+	}
+	resp, err := i.productClient.UpsertNominativeUser(req.Context(), &v1Product.UpserNominativeUserRequest{
+		Editor:         editor,
+		Scope:          scope,
+		ProductName:    productName,
+		ProductVersion: productVersion,
+		AggregationId:  int32(aggId),
+		UserDetails:    users,
+		FileName:       fileName,
+		SheetName:      sheetName,
+		UploadId:       uploadId,
+	})
+	if err != nil {
+		logger.Log.Error("import/ImportNominativeUser - UpsertNominativeUser ", zap.Any(":err", err))
+		http.Error(res, "import/ImportNominativeUser - UpsertNominativeUser- err:"+err.Error(), http.StatusBadRequest)
+		return
+	}
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte(strconv.FormatBool(resp.Status)))
+}
+
+func getNominativeUser(multipartForm *multipart.Form, res http.ResponseWriter, uploadId, path, scope string) (userDetails []*v1Product.NominativeUserDetails, err error, fileName, sheetName string) {
+
+	for _, fheaders := range multipartForm.File {
+		for _, hdr := range fheaders {
+			fileName = hdr.Filename
+			if !strings.Contains(hdr.Filename, XLSX) { //check for file extension
+				err = errors.New("InvalidFileExtension")
+				logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Invalid File Extension", zap.Error(err))
+				http.Error(res, "Invalid File Extension", http.StatusInternalServerError)
+				return
+			}
+			userFile, err := hdr.Open()
+			if err != nil {
+				logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Can not open file ", zap.Error(err))
+				http.Error(res, "can not open file", http.StatusInternalServerError)
+				return userDetails, err, fileName, sheetName
+			}
+			defer userFile.Close()
+			f := fmt.Sprintf("%s/moninativeuser/files/%s/%s/%s", path, scope, uploadId, fileName)
+			err = os.MkdirAll(fmt.Sprintf("%s/moninativeuser/files/%s/%s", path, scope, uploadId), os.ModePerm)
+			if err != nil {
+				logger.Log.Error("NominativeUserCreationFailure", zap.Error(err))
+				return userDetails, err, fileName, sheetName
+			}
+			dst, err := os.Create(f)
+			if err != nil {
+				logger.Log.Error("NominativeUserCreationFailure", zap.Error(err))
+				return userDetails, err, fileName, sheetName
+			}
+			defer dst.Close()
+			if _, err = io.Copy(dst, userFile); err != nil {
+				logger.Log.Error("NominativeUserCreationFailure", zap.Error(err))
+				return userDetails, err, fileName, sheetName
+			}
+			file, err := excelize.OpenFile(f)
+			//file, err := excelize.OpenReader(userFile)
+			if err != nil {
+				logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Can not open file ", zap.Error(err))
+				http.Error(res, "can not open file", http.StatusInternalServerError)
+				return userDetails, err, fileName, sheetName
+			}
+			sheets := file.GetSheetMap()
+			for _, name := range sheets {
+				sheetName = name
+				cols, err := file.GetCols(name)
+				if err != nil {
+					logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Unable to read column", zap.Error(err))
+					http.Error(res, "Unable to read column", http.StatusInternalServerError)
+					return userDetails, err, fileName, sheetName
+				}
+
+				rows, err := file.Rows(name)
+				if err != nil {
+					logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Unable to read Row", zap.Error(err))
+					http.Error(res, "Unable to read Row", http.StatusInternalServerError)
+					return userDetails, err, fileName, sheetName
+				}
+				isFirstRow := true
+				i := 0
+				for rows.Next() {
+					if !isFirstRow {
+						row, _ := rows.Columns()
+						if len(row) < 1 {
+							continue
+						}
+						var firstName, email, userName, profile, activationdate string
+						if len(row) >= 5 {
+							activationdate = row[4]
+						}
+						if len(row) >= 4 {
+							profile = row[3]
+						}
+						if len(row) >= 3 {
+							userName = row[2]
+						}
+						if len(row) >= 2 {
+							email = row[1]
+						}
+						if len(row) >= 1 {
+							firstName = row[0]
+						}
+
+						var user = v1Product.NominativeUserDetails{
+							FirstName:      firstName,
+							Email:          email,
+							UserName:       userName,
+							Profile:        profile,
+							ActivationDate: activationdate,
+						}
+						userDetails = append(userDetails, &user)
+					} else {
+						isFirstRow = false
+						row, _ := rows.Columns()
+						if len(cols) != 5 {
+							logger.Log.Error("import/ImportNominativeUser/getNominativeUser:Invalid file format54", zap.Error(errors.New("Invalid file format")))
+							http.Error(res, "Invalid file format", http.StatusBadRequest)
+							return userDetails, err, fileName, sheetName
+						} else if row[0] != "first_name" || row[1] != "email" || row[2] != "user_name" || row[3] != "profile" || row[4] != "activation_date" {
+							logger.Log.Error("import/ImportNominativeUser/getNominativeUser:invalid file format", zap.Error(errors.New("Invalid file format")))
+							http.Error(res, "Invalid file format", http.StatusBadRequest)
+							return userDetails, err, fileName, sheetName
+						}
+					}
+					i = i + 1
+				}
+
+			}
+			return userDetails, err, fileName, sheetName
+		}
+
+	}
+	return
+}
 func (i *importServiceServer) UploadCatalogData(res http.ResponseWriter, req *http.Request, param httprouter.Params) {
 	var err error
 
@@ -1201,9 +1391,12 @@ func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.
 		case "eos":
 			headersindexarray[6] = index
 			headerscount = headerscount + 1
+		case "recommendation":
+			headersindexarray[7] = index
+			headerscount = headerscount + 1
 		}
 	}
-	if headerscount < 7 {
+	if headerscount < 8 {
 		err = errors.New("missing headers")
 		logger.Log.Error("unable to import catalog products from sheet", zap.Error(err))
 		return nil, http.StatusInternalServerError, err
@@ -1231,9 +1424,25 @@ func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.
 			if strings.Contains(v[headersindexarray[5]], "/") {
 				v[headersindexarray[5]] = strings.ReplaceAll(v[headersindexarray[5]], "/", "-")
 			}
-			eoltime, _ = time.Parse("02-01-2006", v[headersindexarray[5]])
+			//yyyy-mm-dd
+			eoltime, err = time.Parse("2006-01-02", v[headersindexarray[5]])
+			if err != nil {
+				eoltime, err = time.Parse("02-01-06", v[headersindexarray[5]])
+				if err != nil {
+					eoltime, err = time.Parse("02-01-2006", v[headersindexarray[5]])
+					if err != nil {
+						eoltime, err = time.Parse("01-02-06", v[headersindexarray[5]])
+						if err != nil {
+							eoltime, err = time.Parse("01-02-06", v[headersindexarray[5]])
+							if err != nil {
+								logger.Log.Sugar().Errorw("error parsing time", err.Error())
+							}
+						}
+					}
+				}
+			}
 		} else {
-			eoltime, _ = time.Parse("02-01-2006", "")
+			eoltime, _ = time.Parse("2006-01-02", "")
 		}
 		eoltimeObject, err := ptypes.TimestampProto(eoltime)
 		if err != nil {
@@ -1244,9 +1453,21 @@ func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.
 			if strings.Contains(v[headersindexarray[6]], "/") {
 				v[headersindexarray[6]] = strings.ReplaceAll(v[headersindexarray[6]], "/", "-")
 			}
-			eostime, _ = time.Parse("02-01-2006", v[headersindexarray[6]])
+			eostime, err = time.Parse("2006-01-02", v[headersindexarray[6]])
+			if err != nil {
+				eostime, err = time.Parse("02-01-06", v[headersindexarray[6]])
+				if err != nil {
+					eostime, err = time.Parse("02-01-2006", v[headersindexarray[6]])
+					if err != nil {
+						eostime, err = time.Parse("01-02-06", v[headersindexarray[6]])
+						if err != nil {
+							logger.Log.Sugar().Errorw("error parsing time", err.Error())
+						}
+					}
+				}
+			}
 		} else {
-			eoltime, _ = time.Parse("02-01-2006", "")
+			eostime, _ = time.Parse("2006-01-02", "")
 		}
 		eostimeObject, err := ptypes.TimestampProto(eostime)
 		if err != nil {
@@ -1257,12 +1478,15 @@ func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.
 		if len(v) > headersindexarray[4] {
 			version = v[headersindexarray[4]]
 		}
-		var generalInfo, licensing string
+		var generalInfo, licensing, recommendation string
 		if len(v) > headersindexarray[3] {
 			generalInfo = v[headersindexarray[3]]
 		}
 		if len(v) > headersindexarray[2] {
 			licensing = v[headersindexarray[2]]
+		}
+		if len(v) > headersindexarray[7] {
+			recommendation = v[headersindexarray[7]]
 		}
 		row := v1Catalog.Upload{
 			Editor:             v[headersindexarray[0]],
@@ -1272,6 +1496,7 @@ func saveCatalogProducts(i *importServiceServer, req *http.Request) (*v1Catalog.
 			Version:            version,
 			EndOfLife:          eoltimeObject,
 			EndOfSupport:       eostimeObject,
+			Recommendation:     recommendation,
 		}
 		dataToSend.Data = append(dataToSend.Data, &row)
 	}
@@ -1292,4 +1517,117 @@ func greaternumber(num1 int, num2 int) int {
 		return num1
 	}
 	return num2
+}
+
+func (i *importServiceServer) DownloadFileNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params) { // nolint
+	userClaims, ok := rest_middleware.RetrieveClaims(req.Context())
+	if !ok {
+		logger.Log.Error("ClaimsNotFound")
+		http.Error(res, "ClaimsNotFound", http.StatusInternalServerError)
+		return
+	}
+	scope := req.FormValue("scope")
+	if scope == "" {
+		logger.Log.Error("ScopeIsMissing")
+		http.Error(res, "ScopeIsMissing", http.StatusBadRequest)
+		return
+	}
+	if !helper.Contains(userClaims.Socpes, scope) {
+		logger.Log.Error("ScopeValidationFailed")
+		http.Error(res, "ScopeValidationFailed", http.StatusUnauthorized)
+		return
+	}
+	if userClaims.Role == claims.RoleUser {
+		logger.Log.Error("RoleValidationFailed")
+		http.Error(res, "RoleValidationFailed", http.StatusForbidden)
+		return
+	}
+
+	fileId := req.FormValue("id")
+	fId, err := strconv.Atoi(fileId)
+	if err != nil {
+		logger.Log.Error("Failed to get file id", zap.Error(err))
+		http.Error(res, "Failed to get file id", http.StatusInternalServerError)
+	}
+
+	filetype := req.FormValue("type")
+	if !(filetype == "actual" || filetype == "error") {
+		logger.Log.Error("invalid file type", zap.Error(err))
+		http.Error(res, "invalid file type", http.StatusInternalServerError)
+	}
+	resp, err := i.productClient.ListNominativeUserFileUpload(req.Context(), &v1Product.ListNominativeUsersFileUploadRequest{
+		Id:        int32(fId),
+		Scope:     scope,
+		PageNum:   1,
+		PageSize:  10,
+		SortBy:    "name",
+		SortOrder: 0,
+	})
+	if err != nil {
+		logger.Log.Error("Failed to get uploaded file data for nominative user", zap.Error(err))
+		http.Error(res, "Failed to get uploaded file data for nominative user", http.StatusInternalServerError)
+		return
+	}
+	if filetype == "actual" {
+		if len(resp.FileDetails) == 1 {
+			f := fmt.Sprintf("%s/moninativeuser/files/%s/%s/%s", i.config.Upload.UploadDir, scope, resp.FileDetails[0].UploadId, resp.FileDetails[0].FileName)
+			fileData, err := ioutil.ReadFile(f)
+			if err != nil {
+				logger.Log.Error("Download - error in reading file", zap.Error(err), zap.String("file", f))
+				http.Error(res, "error in reading file", http.StatusInternalServerError)
+				return
+			}
+			http.ServeContent(res, req, resp.FileDetails[0].FileName, time.Now().UTC(), bytes.NewReader(fileData))
+			return
+		}
+	} else {
+		err, path, fileName := saveNominativeUserFile(resp, i.config.Upload.UploadDir, scope)
+		if err != nil {
+			logger.Log.Error("Failed to save data in file for nominative user", zap.Error(err))
+			http.Error(res, "Failed to save data in file", http.StatusInternalServerError)
+			return
+		}
+		fileData, err := ioutil.ReadFile(path)
+		if err != nil {
+			logger.Log.Error("Download - error in reading file", zap.Error(err), zap.String("file", path))
+			http.Error(res, "error in reading file", http.StatusInternalServerError)
+			return
+		}
+		http.ServeContent(res, req, fileName, time.Now().UTC(), bytes.NewReader(fileData))
+		return
+	}
+
+}
+
+func saveNominativeUserFile(details *v1Product.ListNominativeUsersFileUploadResponse, path, scope string) (err error, filePath, fileName string) {
+	if len(details.FileDetails) == 1 {
+		fd := details.FileDetails[0]
+		fileName = fd.GetFileName()
+		f := excelize.NewFile()
+		f.NewSheet(fd.GetSheetName())
+		//var row  *[]string
+		if err := f.SetSheetRow(fd.GetSheetName(), "A1", &[]interface{}{"first_name", "email", "user_name", "profile", "activation_date", "comments"}); err != nil {
+			logger.Log.Error("failed to add headers in sheet", zap.Any("sheet", fd.GetSheetName()), zap.Error(err))
+			return err, filePath, fileName
+		}
+		for i, v := range fd.NominativeUsersDetails {
+			if err := f.SetSheetRow(fd.GetSheetName(), fmt.Sprintf("A%d", i+2), &[]interface{}{v.GetFirstName(), v.GetEmail(), v.GetUserName(), v.GetProfile(), v.GetActivationDate(), v.GetComments()}); err != nil {
+				logger.Log.Error("failed to write data in file", zap.Any("sheet", fd.GetSheetName()), zap.Error(err))
+				return err, filePath, fileName
+			}
+		}
+		f.DeleteSheet("sheet1")
+		file := fmt.Sprintf("%s/moninativeuser/files/%s/%s", path, scope, fd.GetFileName())
+		filePath = file
+		err := os.MkdirAll(fmt.Sprintf("%s/moninativeuser/files/%s", path, scope), os.ModePerm)
+		if err != nil {
+			logger.Log.Error("AnalysisDirectoryCreationFailure", zap.Error(err))
+			return err, filePath, fileName
+		}
+		if err := f.SaveAs(file); err != nil {
+			logger.Log.Error("failed to create sheet", zap.Any("file", fd.GetFileName()), zap.Error(err))
+			return err, filePath, fileName
+		}
+	}
+	return nil, filePath, fileName
 }

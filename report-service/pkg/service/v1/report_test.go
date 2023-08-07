@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"optisam-backend/common/optisam/token/claims"
@@ -83,7 +84,10 @@ func Test_DropReportData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			r := NewReportServiceServer(rep, queue)
+			r := &ReportServiceServer{
+				reportRepo: rep,
+				queue:      queue,
+			}
 			_, err := r.DropReportData(tt.ctx, tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReportServiceServer.DropReportData() error = %v, wantErr %v", err, tt.wantErr)
@@ -114,6 +118,47 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 		want    *v1.SubmitReportResponse
 		wantErr bool
 	}{
+		{
+			name: "SUCCESS - ScopeExpensesByEditorReport",
+			args: args{
+				ctx: ctx,
+				req: &v1.SubmitReportRequest{
+					Scope:        "Scope1",
+					ReportTypeId: 3,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockReport(mockCtrl)
+				mockworkerqueue := queuemock.NewMockWorkerqueue(mockCtrl)
+
+				rep = mockRepo
+				queue = mockworkerqueue
+
+				mockRepo.EXPECT().GetReportType(ctx, int32(3)).Return(db.ReportType{
+					ReportTypeID:   3,
+					ReportTypeName: "EditorExpenses",
+				}, nil)
+				rawJSON := json.RawMessage("[]")
+				fcall := mockRepo.EXPECT().SubmitReport(ctx, db.SubmitReportParams{
+					Scope:          "Scope1",
+					ReportTypeID:   3,
+					ReportStatus:   db.ReportStatusPENDING,
+					CreatedBy:      "admin@superuser.com",
+					ReportMetadata: rawJSON,
+				}).Return(int32(1), nil).Times(1)
+
+				mockworkerqueue.EXPECT().PushJob(ctx, job.Job{
+					Type:   sql.NullString{String: "rw"},
+					Status: job.JobStatusPENDING,
+					Data:   []byte(`{"report_type":"ScopeExpensesByEditorReport","scope":"Scope1","json":{},"report_id":1}`),
+				}, "rw").Return(int32(1), nil).After(fcall)
+
+			},
+			want: &v1.SubmitReportResponse{
+				Success: true,
+			},
+		},
 		{
 			name: "SUCCESS - ProductEquipmentReport",
 			args: args{
@@ -443,7 +488,10 @@ func TestReportServiceServer_SubmitReport(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			r := NewReportServiceServer(rep, queue)
+			r := &ReportServiceServer{
+				reportRepo: rep,
+				queue:      queue,
+			}
 			got, err := r.SubmitReport(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ReportServiceServer.SubmitReport() error = %v, wantErr %v", err, tt.wantErr)

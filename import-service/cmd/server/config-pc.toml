@@ -41,6 +41,7 @@ dps = "svc-optisam-dps-pc.dev-optisam.svc:8090"
 simulation = "svc-optisam-simulation-dev.dev-optisam.svc:8090"
 account = "svc-optisam-account-pc.dev-optisam.svc:8090"
 catalog = "svc-optisam-catalog-pc.dev-optisam.svc:8090"
+product = "svc-optisam-product-pc.dev-optisam.svc:8090"
 
 
 [upload]

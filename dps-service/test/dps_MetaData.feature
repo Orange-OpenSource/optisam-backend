@@ -3,18 +3,18 @@ Feature: DPS Service Test - Metadata : admin user
 
   Background:
     * url dpsServiceUrl+'/api/v1/dps'
-    #* def credentials = {username:'admin@test.com', password: 'Welcome@123'}
+    
     * def credentials = {username:#(AdminAccount_UserName), password:#(AdminAccount_Password)}
     * callonce read('common.feature') credentials
     * def access_token = response.access_token
     * header Authorization = 'Bearer '+access_token
     * def data = read('data.json')
-    * def scope = "API"
+    * def scope = "OLN"
 
 
   Scenario: Schema validation for List uploads Metadata 
     Given path 'uploads/metadata'
-    * params { page_num:1, page_size:50, sort_by:'upload_id', sort_order:'desc' ,scope:'#(scope)'}
+    * params { page_num:1, page_size:50,sort_order:'desc' , sort_by:'uploaded_on', scope:'#(scope)'}
     When method get
     Then status 200 
     And response.totalRecords == '#number? _ >= 0'
@@ -24,7 +24,7 @@ Feature: DPS Service Test - Metadata : admin user
   @pagination
   Scenario Outline: To verify Pagination is working for list metadata for page_size <page_size>
     Given path 'uploads/metadata'
-    And params { page_num:1, page_size:'<page_size>', sort_by:'upload_id', sort_order:'desc', scope:'#(scope)'}
+    And params { page_num:1, page_size:'<page_size>', sort_by:'uploaded_on', sort_order:'desc', scope:'#(scope)'}
     When method get
     Then status 200
     And response.totalRecords > 0
@@ -48,7 +48,7 @@ Feature: DPS Service Test - Metadata : admin user
     | "A" | 5 |   
 
 
-  # TODO: verify file name and status
+ 
   @sort @ignore
   Scenario Outline: To verify sorting of Meta Data on data management by <sortBy>
     Given path 'uploads/metadata'
