@@ -4,28 +4,38 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
-	"net/mail"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/product-service/pkg/worker/dgraph"
-	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"strconv"
 	"strings"
 	"time"
 
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+	dgworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	//"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const (
+	YYYYMMDD string = "2006-01-02"
+	DDMMYYYY string = "02-01-2006"
+)
+
+var (
+	NoOfRetries = "no_of_retries"
+)
+var dateFormats = []string{YYYYMMDD, DDMMYYYY}
+
 // UpsertProductConcurrentUser will add or update product concurrent users
-func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, req *v1.ProductConcurrentUserRequest) (*v1.ProductConcurrentUserResponse, error) {
+func (s *ProductServiceServer) UpsertProductConcurrentUser(ctx context.Context, req *v1.ProductConcurrentUserRequest) (*v1.ProductConcurrentUserResponse, error) {
 
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -38,7 +48,7 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 	// Check if aggregation is true
 	if !req.IsAggregations {
 
-		// listEditors, err := s.productRepo.ListEditors(ctx, []string{req.GetScope()})
+		// listEditors, err := s.ProductRepo.ListEditors(ctx, []string{req.GetScope()})
 		// if err != nil {
 		// 	logger.Log.Error("service/v1 - ListEditors - ListEditors", zap.Error(err))
 		// 	return nil, status.Error(codes.Internal, "DBError")
@@ -47,13 +57,16 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 		// 	return nil, status.Error(codes.PermissionDenied, "editor doesn't exists")
 		// }
 
+		pName := removeSpecialChars(req.GetProductName())
+		pEditor := removeSpecialChars(req.GetProductEditor())
+
 		if req.GetProductVersion() != "" {
-			swittag = strings.ReplaceAll(strings.Join([]string{req.GetProductName(), req.GetProductEditor(), req.GetProductVersion()}, "_"), " ", "_")
+			swittag = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{pName, pEditor, req.GetProductVersion()}, "_"), " ", "_"), "-", "_")
 		} else {
-			swittag = strings.ReplaceAll(strings.Join([]string{req.GetProductName(), req.GetProductEditor()}, "_"), " ", "_")
+			swittag = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{pName, pEditor}, "_"), " ", "_"), "-", "_")
 		}
 		req.Swidtag = swittag
-		_, errProduct := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{Scope: req.GetScope(), Swidtag: swittag})
+		_, errProduct := s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{Scope: req.GetScope(), Swidtag: swittag})
 		if errProduct != nil {
 			if errProduct == sql.ErrNoRows {
 				productUpsertReq := &v1.UpsertProductRequest{
@@ -76,7 +89,7 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 		}
 
 	} else {
-		_, err := s.productRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+		_, err := s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
 			ID:    req.GetAggregationId(),
 			Scope: req.GetScope(),
 		})
@@ -89,7 +102,7 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 		}
 	}
 
-	err := s.productRepo.UpsertConcurrentUserTx(ctx, req, userClaims.UserID)
+	err := s.ProductRepo.UpsertConcurrentUserTx(ctx, req, userClaims.UserID)
 	if err != nil {
 		logger.Log.Error("can ", zap.Error(err))
 		return nil, status.Error(codes.Internal, "can not add product concurrent users")
@@ -100,7 +113,7 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 	theDate := time.Date(currentDateTime.Year(), currentDateTime.Month(), 1, 00, 00, 00, 000, time.Local)
 
 	if req.GetId() > 0 {
-		pConUser, err := s.productRepo.GetConcurrentUserByID(ctx, db.GetConcurrentUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
+		pConUser, err := s.ProductRepo.GetConcurrentUserByID(ctx, db.GetConcurrentUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
 		if err != nil {
 			logger.Log.Error("failed to update product concurrent user, unable to get data", zap.Error(err))
 		}
@@ -136,7 +149,7 @@ func (s *productServiceServer) UpsertProductConcurrentUser(ctx context.Context, 
 }
 
 // ListConcurrentUsers will return list of concurrent users
-func (s *productServiceServer) ListConcurrentUsers(ctx context.Context, req *v1.ListConcurrentUsersRequest) (*v1.ListConcurrentUsersResponse, error) {
+func (s *ProductServiceServer) ListConcurrentUsers(ctx context.Context, req *v1.ListConcurrentUsersRequest) (*v1.ListConcurrentUsersResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -194,7 +207,7 @@ func (s *productServiceServer) ListConcurrentUsers(ctx context.Context, req *v1.
 		listCouncurrentReq.IsPurchaseDate = true
 		listCouncurrentReq.PurchaseDate = req.GetSearchParams().PurchaseDate.AsTime()
 	}
-	dbresp, err := s.productRepo.ListConcurrentUsers(ctx, listCouncurrentReq)
+	dbresp, err := s.ProductRepo.ListConcurrentUsers(ctx, listCouncurrentReq)
 	if err != nil {
 		logger.Log.Error("service/v1 - listConcurrentUsers - db/ListConcurrentUsers", zap.Error(err))
 		return nil, status.Error(codes.Unknown, "DBError")
@@ -224,7 +237,7 @@ func (s *productServiceServer) ListConcurrentUsers(ctx context.Context, req *v1.
 }
 
 // DeleteConcurrentUsers will be delete a record from storage
-func (s *productServiceServer) DeleteConcurrentUsers(ctx context.Context, req *v1.DeleteConcurrentUsersRequest) (*v1.DeleteConcurrentUsersResponse, error) {
+func (s *ProductServiceServer) DeleteConcurrentUsers(ctx context.Context, req *v1.DeleteConcurrentUsersRequest) (*v1.DeleteConcurrentUsersResponse, error) {
 
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -234,13 +247,13 @@ func (s *productServiceServer) DeleteConcurrentUsers(ctx context.Context, req *v
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	pConUser, err := s.productRepo.GetConcurrentUserByID(ctx, db.GetConcurrentUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
+	pConUser, err := s.ProductRepo.GetConcurrentUserByID(ctx, db.GetConcurrentUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
 	if err != nil {
 		logger.Log.Error("failed to delete product concurrent user, unable to get data", zap.Error(err))
 		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
-	err = s.productRepo.DeletConcurrentUserByID(ctx, db.DeletConcurrentUserByIDParams{
+	err = s.ProductRepo.DeletConcurrentUserByID(ctx, db.DeletConcurrentUserByIDParams{
 		Scope: req.GetScope(), ID: req.GetId(),
 	})
 
@@ -318,170 +331,111 @@ func DeleteConcurrentUserRequest(dbConUser db.ProductConcurrentUser) (resp dgwor
 	return
 }
 
-func (s *productServiceServer) UpsertNominativeUser(ctx context.Context, req *v1.UpserNominativeUserRequest) (resp *v1.UpserNominativeUserResponse, err error) {
-	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
-	if !ok {
-		return nil, status.Error(codes.Internal, "cannot find claims in context")
-	}
-	if req.GetScope() == "" {
-		return nil, status.Error(codes.Internal, "cannot find scope")
-	}
-	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
-		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
-	}
-	if !(req.AggregationId > 0) && (req.Editor == "" || req.ProductName == "") {
-		return nil, status.Error(codes.InvalidArgument, "Either aggrigation or product details are required")
-	}
-	var swid = ""
-	aggr := db.Aggregation{}
-	if req.GetAggregationId() > 0 {
-		aggr, err = s.productRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
-			ID:    req.GetAggregationId(),
-			Scope: req.GetScope(),
-		})
-		if err == sql.ErrNoRows {
-			return nil, status.Error(codes.InvalidArgument, "Aggregation doesn't exists")
-		}
-		if err != nil {
-			logger.Log.Error("service/v1 - UpsertNominativeUser - GetAggregationByID", zap.Error(err))
-			return nil, status.Error(codes.Internal, "DBError")
-		}
-	} else {
-		// listEditors, err := s.productRepo.ListEditors(ctx, []string{req.GetScope()})
-		// if err != nil {
-		// 	logger.Log.Error("service/v1 - UpsertNominativeUser - ListEditors", zap.Error(err))
-		// 	return nil, status.Error(codes.Internal, "DBError")
-		// }
-		// if !helper.Contains(listEditors, req.GetEditor()) {
-		// 	return nil, status.Error(codes.InvalidArgument, "editor doesn't exists")
-		// }
-		if req.GetProductVersion() != "" {
-			swid = strings.ReplaceAll(strings.Join([]string{req.ProductName, req.GetEditor(), req.GetProductVersion()}, "_"), " ", "_")
-		} else {
-			swid = strings.ReplaceAll(strings.Join([]string{req.ProductName, req.GetEditor()}, "_"), " ", "_")
-		}
-		_, err = s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
-			Scope:   req.GetScope(),
-			Swidtag: swid,
-		})
-		if err != nil && err != sql.ErrNoRows {
-			logger.Log.Error("service/v1 - UpsertNominativeUser - GetProductInformation", zap.Error(err))
-			return nil, status.Error(codes.Internal, "DBError")
-		}
-		if err == sql.ErrNoRows {
-			_, err := s.UpsertProduct(ctx, &v1.UpsertProductRequest{
-				SwidTag:     swid,
-				Name:        req.GetProductName(),
-				Editor:      req.GetEditor(),
-				Scope:       req.GetScope(),
-				Version:     req.GetProductVersion(),
-				ProductType: v1.Producttype_saas,
-			})
-			if err != nil {
-				logger.Log.Error("service/v1 - UpsertNominativeUser - UpsertProductRequest :can not add product", zap.Error(err))
-				return nil, status.Error(codes.Internal, "can not add product")
-			}
-		}
-	}
+// func (s *ProductServiceServer) UpsertNominativeUser(ctx context.Context, req *v1.UpserNominativeUserRequest) (resp *v1.UpserNominativeUserResponse, err error) {
+// 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+// 	if !ok {
+// 		return nil, status.Error(codes.Internal, "cannot find claims in context")
+// 	}
+// 	if req.GetScope() == "" {
+// 		return nil, status.Error(codes.Internal, "cannot find scope")
+// 	}
+// 	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+// 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+// 	}
+// 	if !(req.AggregationId > 0) && (req.Editor == "" || req.ProductName == "") {
+// 		return nil, status.Error(codes.InvalidArgument, "Either aggrigation or product details are required")
+// 	}
+// 	var swid = ""
+// 	aggr := db.Aggregation{}
+// 	if req.GetAggregationId() > 0 {
+// 		aggr, err = s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+// 			ID:    req.GetAggregationId(),
+// 			Scope: req.GetScope(),
+// 		})
+// 		if err == sql.ErrNoRows {
+// 			return nil, status.Error(codes.InvalidArgument, "Aggregation doesn't exists")
+// 		}
+// 		if err != nil {
+// 			logger.Log.Error("service/v1 - UpsertNominativeUser - GetAggregationByID", zap.Error(err))
+// 			return nil, status.Error(codes.Internal, "DBError")
+// 		}
+// 	} else {
+// 		// listEditors, err := s.ProductRepo.ListEditors(ctx, []string{req.GetScope()})
+// 		// if err != nil {
+// 		// 	logger.Log.Error("service/v1 - UpsertNominativeUser - ListEditors", zap.Error(err))
+// 		// 	return nil, status.Error(codes.Internal, "DBError")
+// 		// }
+// 		// if !helper.Contains(listEditors, req.GetEditor()) {
+// 		// 	return nil, status.Error(codes.InvalidArgument, "editor doesn't exists")
+// 		// }
 
-	err = s.productRepo.UpsertNominativeUsersTx(ctx, req, userClaims.UserID, userClaims.UserID, swid)
-	if err != nil {
-		logger.Log.Error("service/v1 - UpsertNominativeUser - UpsertNominativeUsersTx : can not upsert users", zap.Error(err))
-		return nil, status.Error(codes.Internal, "can not upsert users")
-	}
-	upsertNominativeReqDgraph := PrepairUpsertNominativeUserDgraphRequest(req, swid, userClaims.UserID, aggr.AggregationName)
+// 		pName := removeSpecialChars(req.ProductName)
+// 		pEditor := removeSpecialChars(req.GetEditor())
 
-	// For Worker Queue
-	jsonData, err := json.Marshal(upsertNominativeReqDgraph)
-	if err != nil {
-		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
-	}
-	e := dgworker.Envelope{Type: dgworker.UpsertNominativeUserRequest, JSON: jsonData}
+// 		if req.GetProductVersion() != "" {
+// 			swid = strings.ReplaceAll(strings.Join([]string{pName, pEditor, req.GetProductVersion()}, "_"), " ", "_")
+// 		} else {
+// 			swid = strings.ReplaceAll(strings.Join([]string{pName, pEditor}, "_"), " ", "_")
+// 		}
+// 		_, err = s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+// 			Scope:   req.GetScope(),
+// 			Swidtag: swid,
+// 		})
+// 		if err != nil && err != sql.ErrNoRows {
+// 			logger.Log.Error("service/v1 - UpsertNominativeUser - GetProductInformation", zap.Error(err))
+// 			return nil, status.Error(codes.Internal, "DBError")
+// 		}
+// 		if err == sql.ErrNoRows {
+// 			_, err := s.UpsertProduct(ctx, &v1.UpsertProductRequest{
+// 				SwidTag:     swid,
+// 				Name:        req.GetProductName(),
+// 				Editor:      req.GetEditor(),
+// 				Scope:       req.GetScope(),
+// 				Version:     req.GetProductVersion(),
+// 				ProductType: v1.Producttype_saas,
+// 			})
+// 			if err != nil {
+// 				logger.Log.Error("service/v1 - UpsertNominativeUser - UpsertProductRequest :can not add product", zap.Error(err))
+// 				return nil, status.Error(codes.Internal, "can not add product")
+// 			}
+// 		}
+// 	}
+// 	ppId := uuid.New().String()
+// 	//validUsers,inValidUsers,err:=filterNominativeUsers(req)
+// 	err, users := s.ProductRepo.UpsertNominativeUsersTx(ctx, req, userClaims.UserID, userClaims.UserID, swid, ppId)
+// 	if err != nil {
+// 		logger.Log.Error("service/v1 - UpsertNominativeUser - UpsertNominativeUsersTx : can not upsert users", zap.Error(err))
+// 		return nil, status.Error(codes.Internal, "can not upsert users")
+// 	}
+// 	upsertNominativeReqDgraph := prepairUpsertNominativeUserDgraphRequest(req, swid, userClaims.UserID, aggr.AggregationName, users)
+// 	for _, v := range upsertNominativeReqDgraph {
 
-	envolveData, err := json.Marshal(e)
-	if err != nil {
-		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
-	}
+// 		// For Worker Queue
+// 		jsonData, err := json.Marshal(v)
+// 		if err != nil {
+// 			logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+// 		}
+// 		e := dgworker.Envelope{Type: dgworker.UpsertNominativeUserRequest, JSON: jsonData}
 
-	_, err = s.queue.PushJob(ctx, job.Job{
-		Type:   sql.NullString{String: "aw"},
-		Status: job.JobStatusPENDING,
-		Data:   envolveData,
-	}, "aw")
-	if err != nil {
-		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
-	}
-	return &v1.UpserNominativeUserResponse{Status: true}, nil
-}
+// 		envolveData, err := json.Marshal(e)
+// 		if err != nil {
+// 			logger.Log.Error("Failed to do json marshalling", zap.Error(err))
+// 		}
 
-func PrepairUpsertNominativeUserDgraphRequest(req *v1.UpserNominativeUserRequest, swidTag, createdBy string, aggrName string) (resp dgworker.UpserNominativeUserRequest) {
-	resp.AggregationId = req.GetAggregationId()
-	resp.Editor = req.GetEditor()
-	resp.ProductName = req.GetProductVersion()
-	resp.ProductVersion = req.GetProductVersion()
-	resp.Scope = req.GetScope()
-	resp.SwidTag = swidTag
-	resp.CreatedBy = createdBy
-	respUsers := []*dgworker.NominativeUserDetails{}
-	users := make(map[string]bool)
-	for _, v := range req.UserDetails {
-		var userDetails dgworker.NominativeUserDetails
-		var startTime time.Time
-		var err error
-		if v.ActivationDate != "" {
-			if len(v.ActivationDate) <= 10 {
-				if strings.Contains(v.ActivationDate, "/") && len(v.ActivationDate) <= 8 {
-					startTime, err = time.Parse("06/2/1", v.ActivationDate)
-				} else if strings.Contains(v.ActivationDate, "/") {
-					startTime, err = time.Parse("2006/01/02", v.ActivationDate)
-				} else {
-					startTime, err = time.Parse("2006-01-02", v.ActivationDate)
-				}
-				if err == nil {
-					userDetails.ActivationDate = startTime
-				}
-			} else if len(v.ActivationDate) > 10 && len(v.ActivationDate) <= 24 {
-				if strings.Contains(v.ActivationDate, "/") && len(v.ActivationDate) <= 8 {
-					startTime, err = time.Parse("06/2/1T15:04:05.000Z", v.ActivationDate)
-				} else if strings.Contains(v.ActivationDate, "/") {
-					startTime, err = time.Parse("2006/01/02T15:04:05.000Z", v.ActivationDate)
-				} else {
-					startTime, err = time.Parse("2006-01-02T15:04:05.000Z", v.ActivationDate)
-				}
-				if err == nil {
-					userDetails.ActivationDate = startTime
-				}
-			}
-			// } else {
-			// 	startTime, err = time.Parse(time.RFC3339Nano, v.ActivationDate)
-			// 	if err != nil {
-			// 		logger.Log.Error("service/v1 - UpsertAcqRights - unable to parse start time", zap.String("reason", err.Error()))
-			// 	}
-			// }
-		}
-		err = nil
-		userDetails.Email = v.GetEmail()
-		userDetails.FirstName = v.GetFirstName()
-		userDetails.Profile = v.GetProfile()
-		userDetails.UserName = v.GetUserName()
-		_, err = mail.ParseAddress(v.GetEmail())
-		if err != nil {
-			err = errors.New("Invalid email format")
-		}
-		if _, ok := users[v.GetEmail()+v.GetProfile()]; ok {
-			err = errors.New("duplicate entry")
-		} else {
-			users[v.Email+v.Profile] = true
-		}
-		if err == nil {
-			respUsers = append(respUsers, &userDetails)
-		}
-	}
-	resp.UserDetails = respUsers
-	return
-}
+// 		_, err = s.queue.PushJob(ctx, job.Job{
+// 			Type:   sql.NullString{String: "aw"},
+// 			Status: job.JobStatusPENDING,
+// 			Data:   envolveData,
+// 			PPID:   ppId,
+// 		}, "aw")
+// 		if err != nil {
+// 			logger.Log.Error("Failed to push job to the queue", zap.Error(err))
+// 		}
+// 	}
+// 	return &v1.UpserNominativeUserResponse{Status: true}, nil
+// }
 
-func (s *productServiceServer) ListNominativeUser(ctx context.Context, req *v1.ListNominativeUsersRequest) (*v1.ListNominativeUsersResponse, error) {
+func (s *ProductServiceServer) ListNominativeUser(ctx context.Context, req *v1.ListNominativeUsersRequest) (*v1.ListNominativeUsersResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -552,7 +506,7 @@ func (s *productServiceServer) ListNominativeUser(ctx context.Context, req *v1.L
 			listNomiDbReq.IsActivationDate = true
 			listNomiDbReq.ActivationDate = strconv.Itoa(year) + "-" + monthInString + "-" + dayInString
 		}
-		dbresp, err := s.productRepo.ListNominativeUsersProducts(ctx, listNomiDbReq)
+		dbresp, err := s.ProductRepo.ListNominativeUsersProducts(ctx, listNomiDbReq)
 		if err != nil {
 			logger.Log.Error("service/v1 - listNominativeUsers - db/ListNominativeUsers", zap.Error(err))
 			return nil, status.Error(codes.Unknown, "DBError")
@@ -631,7 +585,7 @@ func (s *productServiceServer) ListNominativeUser(ctx context.Context, req *v1.L
 			listNomiDbReq.IsActivationDate = true
 			listNomiDbReq.ActivationDate = strconv.Itoa(year) + "-" + monthInString + "-" + dayInString
 		}
-		dbresp, err := s.productRepo.ListNominativeUsersAggregation(ctx, listNomiDbReq)
+		dbresp, err := s.ProductRepo.ListNominativeUsersAggregation(ctx, listNomiDbReq)
 		if err != nil {
 			logger.Log.Error("service/v1 - listNominativeUsers - db/ListNominativeUsers", zap.Error(err))
 			return nil, status.Error(codes.Unknown, "DBError")
@@ -663,7 +617,7 @@ func (s *productServiceServer) ListNominativeUser(ctx context.Context, req *v1.L
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) NominativeUserExport(ctx context.Context, req *v1.NominativeUsersExportRequest) (*v1.ListNominativeUsersExportResponse, error) {
+func (s *ProductServiceServer) NominativeUserExport(ctx context.Context, req *v1.NominativeUsersExportRequest) (*v1.ListNominativeUsersExportResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -725,7 +679,7 @@ func (s *productServiceServer) NominativeUserExport(ctx context.Context, req *v1
 			listNomiDbReq.IsActivationDate = true
 			listNomiDbReq.ActivationDate = strconv.Itoa(year) + "-" + monthInString + "-" + dayInString
 		}
-		dbresp, err := s.productRepo.ExportNominativeUsersProducts(ctx, listNomiDbReq)
+		dbresp, err := s.ProductRepo.ExportNominativeUsersProducts(ctx, listNomiDbReq)
 		if err != nil {
 			logger.Log.Error("service/v1 - listNominativeUsers - db/ListNominativeUsers", zap.Error(err))
 			return nil, status.Error(codes.Unknown, "DBError")
@@ -798,7 +752,7 @@ func (s *productServiceServer) NominativeUserExport(ctx context.Context, req *v1
 			listNomiDbReq.IsActivationDate = true
 			listNomiDbReq.ActivationDate = strconv.Itoa(year) + "-" + monthInString + "-" + dayInString
 		}
-		dbresp, err := s.productRepo.ExportNominativeUsersAggregation(ctx, listNomiDbReq)
+		dbresp, err := s.ProductRepo.ExportNominativeUsersAggregation(ctx, listNomiDbReq)
 		if err != nil {
 			logger.Log.Error("service/v1 - listNominativeUsers - db/ListNominativeUsers", zap.Error(err))
 			return nil, status.Error(codes.Unknown, "DBError")
@@ -828,7 +782,7 @@ func (s *productServiceServer) NominativeUserExport(ctx context.Context, req *v1
 }
 
 // DeleteNominativeUsers will be delete a record from storage
-func (s *productServiceServer) DeleteNominativeUsers(ctx context.Context, req *v1.DeleteNominativeUserRequest) (*v1.DeleteNominativeUserResponse, error) {
+func (s *ProductServiceServer) DeleteNominativeUsers(ctx context.Context, req *v1.DeleteNominativeUserRequest) (*v1.DeleteNominativeUserResponse, error) {
 
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -838,13 +792,13 @@ func (s *productServiceServer) DeleteNominativeUsers(ctx context.Context, req *v
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	pNomUser, err := s.productRepo.GetNominativeUserByID(ctx, db.GetNominativeUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
+	pNomUser, err := s.ProductRepo.GetNominativeUserByID(ctx, db.GetNominativeUserByIDParams{Scope: req.GetScope(), ID: req.GetId()})
 	if err != nil {
 		logger.Log.Error("failed to delete product nominative user, unable to get data", zap.Error(err))
 		return nil, status.Error(codes.Unknown, "DBError")
 	}
 
-	err = s.productRepo.DeleteNominativeUserByID(ctx, db.DeleteNominativeUserByIDParams{
+	err = s.ProductRepo.DeleteNominativeUserByID(ctx, db.DeleteNominativeUserByIDParams{
 		Scope: req.GetScope(), ID: req.GetId(),
 	})
 
@@ -898,7 +852,7 @@ func DeleteNominativeUserRequest(dbNomUser db.NominativeUser) (resp dgworker.Ups
 }
 
 // GetConcurrentUsersHistroy will get all concurrent users data by month or day from storage
-func (s *productServiceServer) GetConcurrentUsersHistroy(ctx context.Context, req *v1.GetConcurrentUsersHistroyRequest) (*v1.GetConcurrentUsersHistroyResponse, error) {
+func (s *ProductServiceServer) GetConcurrentUsersHistroy(ctx context.Context, req *v1.GetConcurrentUsersHistroyRequest) (*v1.GetConcurrentUsersHistroyResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
@@ -922,7 +876,7 @@ func (s *productServiceServer) GetConcurrentUsersHistroy(ctx context.Context, re
 	//daysDifferance := endDate.Sub(startDate).Hours() / 24
 	var response = &v1.GetConcurrentUsersHistroyResponse{}
 	//	if daysDifferance > 60 {
-	concurrentUsersbyMonth, err := s.productRepo.GetConcurrentUsersByMonth(ctx, db.GetConcurrentUsersByMonthParams{
+	concurrentUsersbyMonth, err := s.ProductRepo.GetConcurrentUsersByMonth(ctx, db.GetConcurrentUsersByMonthParams{
 		Scope:               req.GetScope(),
 		IsPurchaseStartDate: req.GetStartDate().IsValid(),
 		StartDate:           startDate,
@@ -942,10 +896,10 @@ func (s *productServiceServer) GetConcurrentUsersHistroy(ctx context.Context, re
 	for i := range concurrentUsersbyMonth {
 		response.ConcurrentUsersByMonths[i] = &v1.ConcurrentUsersByMonth{}
 		response.ConcurrentUsersByMonths[i].PurchaseMonth = concurrentUsersbyMonth[i].Purchasemonthyear.(string)
-		response.ConcurrentUsersByMonths[i].CouncurrentUsers = int32(concurrentUsersbyMonth[i].Totalconusers)
+		response.ConcurrentUsersByMonths[i].ConcurrentUsers = int32(concurrentUsersbyMonth[i].Totalconusers)
 	}
 	//	} else {
-	// 	concurrentUsersbyDay, err := s.productRepo.GetConcurrentUsersByDay(ctx, db.GetConcurrentUsersByDayParams{
+	// 	concurrentUsersbyDay, err := s.ProductRepo.GetConcurrentUsersByDay(ctx, db.GetConcurrentUsersByDayParams{
 	// 		Scope:               req.GetScope(),
 	// 		IsPurchaseStartDate: req.GetStartDate().IsValid(),
 	// 		StartDate:           startDate,
@@ -972,7 +926,7 @@ func (s *productServiceServer) GetConcurrentUsersHistroy(ctx context.Context, re
 	return response, nil
 }
 
-func (s *productServiceServer) ConcurrentUserExport(ctx context.Context, req *v1.ListConcurrentUsersExportRequest) (*v1.ListConcurrentUsersResponse, error) {
+func (s *ProductServiceServer) ConcurrentUserExport(ctx context.Context, req *v1.ListConcurrentUsersExportRequest) (*v1.ListConcurrentUsersResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -1021,7 +975,7 @@ func (s *productServiceServer) ConcurrentUserExport(ctx context.Context, req *v1
 	if req.GetSearchParams().GetPurchaseDate().IsValid() {
 		listCouncurrentReq.PurchaseDate = req.GetSearchParams().PurchaseDate.AsTime()
 	}
-	dbresp, err := s.productRepo.ExportConcurrentUsers(ctx, listCouncurrentReq)
+	dbresp, err := s.ProductRepo.ExportConcurrentUsers(ctx, listCouncurrentReq)
 	if err != nil {
 		logger.Log.Error("service/v1 - ConcurrentUserExport - db/ListConcurrentUsers", zap.Error(err))
 		return nil, status.Error(codes.Unknown, "DBError")
@@ -1049,7 +1003,7 @@ func (s *productServiceServer) ConcurrentUserExport(ctx context.Context, req *v1
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context, req *v1.ListNominativeUsersFileUploadRequest) (*v1.ListNominativeUsersFileUploadResponse, error) {
+func (s *ProductServiceServer) ListNominativeUserFileUpload(ctx context.Context, req *v1.ListNominativeUsersFileUploadRequest) (*v1.ListNominativeUsersFileUploadResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -1062,7 +1016,7 @@ func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context,
 	var err error
 	var fileDetails []db.ListNominativeUsersUploadedFilesRow
 	if req.GetId() > 0 {
-		fileDetails, err = s.productRepo.ListNominativeUsersUploadedFiles(ctx, db.ListNominativeUsersUploadedFilesParams{
+		fileDetails, err = s.ProductRepo.ListNominativeUsersUploadedFiles(ctx, db.ListNominativeUsersUploadedFilesParams{
 			Scope:              []string{req.GetScope()},
 			FileUploadID:       true,
 			ID:                 req.GetId(),
@@ -1086,7 +1040,7 @@ func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context,
 			ProducttypeDesc:    strings.Contains(req.GetSortBy(), "productType") && strings.Contains(req.GetSortOrder().String(), "desc"),
 		})
 	} else {
-		fileDetails, err = s.productRepo.ListNominativeUsersUploadedFiles(ctx, db.ListNominativeUsersUploadedFilesParams{
+		fileDetails, err = s.ProductRepo.ListNominativeUsersUploadedFiles(ctx, db.ListNominativeUsersUploadedFilesParams{
 			Scope:              []string{req.GetScope()},
 			FileUploadID:       false,
 			PageNum:            req.GetPageSize() * (req.GetPageNum() - 1),
@@ -1116,24 +1070,26 @@ func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context,
 	for _, fD := range fileDetails {
 		usrs := []*v1.NominativeUser{}
 		u := []*v1.NominativeUserDetails{}
-		err := json.Unmarshal(fD.NominativeUsersDetails.RawMessage, &usrs)
-		if err != nil {
-			logger.Log.Error("service/v1 - ListNominativeUserFileUpload", zap.Error(err))
-			return nil, status.Error(codes.Unknown, "error Unmarshal")
+		if len(fD.NominativeUsersDetails.RawMessage) > 0 {
+			err := json.Unmarshal(fD.NominativeUsersDetails.RawMessage, &usrs)
+			if err != nil {
+				logger.Log.Error("service/v1 - ListNominativeUserFileUpload", zap.Error(err))
+				return nil, status.Error(codes.Unknown, "error Unmarshal")
+			}
+			for _, v := range usrs {
+				u = append(u, &v1.NominativeUserDetails{
+					UserName:       v.GetUserName(),
+					FirstName:      v.GetFirstName(),
+					Email:          v.GetUserEmail(),
+					Profile:        v.GetProfile(),
+					ActivationDate: v.GetActivationDateString(),
+					Comments:       v.GetComment(),
+				})
+			}
 		}
-		for _, v := range usrs {
-			u = append(u, &v1.NominativeUserDetails{
-				UserName:       v.GetUserName(),
-				FirstName:      v.GetFirstName(),
-				Email:          v.GetUserEmail(),
-				Profile:        v.GetProfile(),
-				ActivationDate: v.GetActivationDateString(),
-				Comments:       v.GetComment(),
-			})
-		}
-		fDetails = append(fDetails, &v1.ListNominativeUsersFileUpload{
-			Id:                     fD.ID,
-			Scope:                  fD.Scope,
+		fDetail := &v1.ListNominativeUsersFileUpload{
+			Id: fD.ID,
+			//	Scope:                  fD.Scope,
 			Swidtag:                fD.Swidtag.String,
 			AggregationsId:         fD.AggregationsID.Int32,
 			ProductEditor:          fD.ProductEditor.String,
@@ -1143,15 +1099,23 @@ func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context,
 			RecordFailed:           fD.RecordFailed.Int32,
 			FileName:               fD.FileName.String,
 			SheetName:              fD.SheetName.String,
-			FileStatus:             string(fD.FileStatus),
-			UploadedAt:             timestamppb.New(fD.UploadedAt),
-			UploadId:               fD.UploadID,
-			ProductName:            fD.ProductName.String,
-			ProductVersion:         fD.ProductVersion.String,
-			AggregationName:        fD.AggregationName.String,
-			Type:                   fD.Nametype.(string),
-			Name:                   fD.Pname.(string),
-		})
+			//FileStatus:             string(fD.FileStatus),
+			UploadedAt:      timestamppb.New(fD.UploadedAt),
+			UploadId:        fD.UploadID,
+			ProductName:     fD.ProductName.String,
+			ProductVersion:  fD.ProductVersion.String,
+			AggregationName: fD.AggregationName.String,
+			Type:            fD.Nametype.(string),
+			Name:            fD.Pname.(string),
+		}
+		if fD.Jobnotcompleted > 0 {
+			fDetail.FileStatus = "PENDING"
+		} else if fD.Jobnotcompleted == 0 {
+			fDetail.FileStatus = "COMPLETED"
+		} else {
+			fDetail.FileStatus = string(fD.FileStatus)
+		}
+		fDetails = append(fDetails, fDetail)
 	}
 	apiresp.FileDetails = fDetails
 	if len(fileDetails) > 0 {
@@ -1161,10 +1125,10 @@ func (s *productServiceServer) ListNominativeUserFileUpload(ctx context.Context,
 }
 
 // DeleteSaasProductUsers will check & delete SAAS product when concurrent & nominative users last user deleted
-func (s *productServiceServer) DeleteSaasProductUsers(ctx context.Context, switag string, scope string) bool {
+func (s *ProductServiceServer) DeleteSaasProductUsers(ctx context.Context, switag string, scope string) bool {
 
 	// Check if product have concurrent & nominative users or not
-	productUsers, err := s.productRepo.GetConcurrentNominativeUsersBySwidTag(ctx, db.GetConcurrentNominativeUsersBySwidTagParams{
+	productUsers, err := s.ProductRepo.GetConcurrentNominativeUsersBySwidTag(ctx, db.GetConcurrentNominativeUsersBySwidTagParams{
 		Swidtag: []string{switag},
 		Scope:   []string{scope},
 	})
@@ -1179,7 +1143,7 @@ func (s *productServiceServer) DeleteSaasProductUsers(ctx context.Context, swita
 	}
 
 	if len(productUsers) == 0 {
-		err = s.productRepo.DeleteProductsBySwidTagScope(ctx, db.DeleteProductsBySwidTagScopeParams{
+		err = s.ProductRepo.DeleteProductsBySwidTagScope(ctx, db.DeleteProductsBySwidTagScopeParams{
 			Scope:   scope,
 			Swidtag: switag,
 		})

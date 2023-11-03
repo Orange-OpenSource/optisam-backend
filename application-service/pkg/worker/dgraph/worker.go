@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	v1 "optisam-backend/application-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
 	"strconv"
 	"sync"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"

@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"

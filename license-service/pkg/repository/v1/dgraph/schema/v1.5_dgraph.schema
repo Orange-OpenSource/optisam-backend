@@ -1,0 +1,186 @@
+metric.mse.reference     : string  .
+metric.mse.cpu         : string .  
+metric.mse.core       : string .
+
+
+metric.wsd.reference     : string  .
+metric.wsd.cpu         : string .  
+metric.wsd.core       : string .
+
+metric.default       :bool .
+
+
+
+type MetricMSE {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name    
+    metric.default 
+    metric.mse.core
+    metric.mse.cpu 
+    metric.mse.reference                    
+}
+
+type MetricWSD {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name   
+    metric.default  
+    metric.wsd.core
+    metric.wsd.cpu 
+    metric.wsd.reference   
+}
+                 
+// OPTISAM-4271_1
+// OPTISAM-4610
+// OPTISAM-4609 
+
+<Predicates>
+<equipment.desktop.desktop_name>: string @index(exact, trigram) .
+
+<Types>
+type <Equipmentdesktop> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.desktop.desktop_name
+}
+
+//OPTISAM-4270
+<Predicates>
+
+<equipment.virtualmachine.environment>: string @index(exact, trigram) .
+<equipment.virtualmachine.vm_name>: string @index(exact, trigram) .
+<equipment.virtualmachine.vcpu>: int @index(int) .
+
+<Types>
+type <EquipmentvirtualMachine> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+	equipment.id
+	equipment.virtualmachine.vm_name
+    equipment.virtualmachine.vcpu
+    equipment.virtualmachine.environment
+	equipment.parent
+}
+
+type <Equipmentvirtualmachine> {
+	type_name
+	scopes
+	updated
+	created
+	equipment.users
+    equipment.id
+	equipment.virtualmachine.vm_name
+    equipment.virtualmachine.vcpu
+    equipment.virtualmachine.environment
+	equipment.parent
+}
+
+
+<Predicates>
+metric.sql.standard.reference     : string  .
+metric.sql.standard.cpu         : string .  
+metric.sql.standard.core       : string .
+
+<Types>
+
+type MetricSQLStandard {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name    
+    metric.default 
+    metric.sql.standard.core
+    metric.sql.standard.cpu 
+    metric.sql.standard.reference                    
+}
+
+<Predicates>
+
+metric.wss.reference     : string  .
+metric.wss.cpu         : string .  
+metric.wss.core       : string .
+
+<Types>
+
+type MetricWSS {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name   
+    metric.default  
+    metric.wss.core
+    metric.wss.cpu 
+    metric.wss.reference                    
+}
+
+// OPTISAM-4752
+// add this one predicate to all the below types
+
+type Metric ACS{
+    metric.default  
+}
+
+type Metric AttrSum{
+    metric.default  
+}
+
+type Metric MetricEquipAttr{
+    metric.default  
+}
+
+type Metric MetricINM{
+    metric.default  
+}
+
+type Metric MetricIPS{
+    metric.default  
+}
+
+type Metric MetricOracleNUP{
+    metric.default  
+}
+
+type Metric MetricOracleOPS{
+    metric.default  
+}
+
+type Metric MetricSPS{
+    metric.default  
+}
+
+type Metric MetricSS{
+    metric.default  
+}
+
+type Metric MetricSPS{
+    metric.default  
+}
+
+type Metric MetricUCS{
+    metric.default  
+}
+
+type Metric MetricUNS{
+    metric.default  
+}
+
+type MetricUSS{
+    metric.default
+}
+
+
+// Remove all predicates for softpartition like equipment.softpartition 

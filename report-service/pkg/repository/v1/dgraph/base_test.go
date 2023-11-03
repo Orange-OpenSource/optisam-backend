@@ -3,13 +3,13 @@ package dgraph
 import (
 	"context"
 	"flag"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/docker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 	"log"
-	"optisam-backend/common/optisam/config"
-	"optisam-backend/common/optisam/dgraph"
-	"optisam-backend/common/optisam/docker"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/equipment-service/pkg/repository/v1/dgraph"
-	"optisam-backend/equipment-service/pkg/repository/v1/dgraph/loader"
+	//v1 "optisam-backend/equipment-service/pkg/repository/v1/dgraph"
+	//"optisam-backend/equipment-service/pkg/repository/v1/dgraph/loader"
 	"os"
 	"strings"
 	"testing"
@@ -102,10 +102,10 @@ func TestMain(m *testing.M) {
 		return
 	}
 	dgClient = conn
-	if err := loadDgraphData(badgerDir); err != nil {
-		logger.Log.Error("test main cannot load data", zap.String("reason", err.Error()))
-		return
-	}
+	// if err := loadDgraphData(badgerDir); err != nil {
+	// 	logger.Log.Error("test main cannot load data", zap.String("reason", err.Error()))
+	// 	return
+	// }
 	log.Println("LOADED ...")
 	code := m.Run()
 	cleanup(dockers)
@@ -113,98 +113,99 @@ func TestMain(m *testing.M) {
 
 }
 
-func loadDgraphData(badgerDir string) error {
-	config := loader.NewDefaultConfig()
-	// hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
-	// zero := fmt.Sprintf("%s:5080", hosts[0])
-	// config.Zero = zero
-	// config.Alpha = cfg.Dgraph.Hosts
-	config.BatchSize = 1000
-	config.CreateSchema = true
-	config.LoadMetadata = false
-	config.LoadStaticData = false
-	config.SchemaFiles = []string{
-		"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.schema",
-		// "schema/application.schema",
-		// "schema/products.schema",
-		// "schema/instance.schema",
-		// "schema/equipment.schema",
-		// "schema/metadata.schema",
-		// "schema/acq_rights.schema",
-		// "schema/metric_ops.schema",
-		// "schema/metric_ips.schema",
-		// "schema/metric_sps.schema",
-		// "schema/metric_oracle_nup.schema",
-		// "schema/editor.schema",
-		// "schema/products_aggregations.schema",
+/*
+	func loadDgraphData(badgerDir string) error {
+		config := loader.NewDefaultConfig()
+		// hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
+		// zero := fmt.Sprintf("%s:5080", hosts[0])
+		// config.Zero = zero
+		// config.Alpha = cfg.Dgraph.Hosts
+		config.BatchSize = 1000
+		config.CreateSchema = true
+		config.LoadMetadata = false
+		config.LoadStaticData = false
+		config.SchemaFiles = []string{
+			"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.schema",
+			// "schema/application.schema",
+			// "schema/products.schema",
+			// "schema/instance.schema",
+			// "schema/equipment.schema",
+			// "schema/metadata.schema",
+			// "schema/acq_rights.schema",
+			// "schema/metric_ops.schema",
+			// "schema/metric_ips.schema",
+			// "schema/metric_sps.schema",
+			// "schema/metric_oracle_nup.schema",
+			// "schema/editor.schema",
+			// "schema/products_aggregations.schema",
+		}
+		config.TypeFiles = []string{
+			"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.types",
+		}
+		config.ScopeSkeleten = "skeletonscope"
+		config.MasterDir = "testdata"
+		config.Scopes = []string{
+			// TODO: ADD scopes directories here like
+			// EX:
+			"scope1",
+			"scope2",
+			"scope3",
+			"scope4",
+		}
+		// config.ProductFiles = []string{
+		// 	"prod.csv",
+		// 	"productsnew.csv",
+		// }
+		// config.ProductEquipmentFiles = []string{
+		// 	"products_equipments.csv",
+		// }
+		// config.AppFiles = []string{
+		// 	"applications.csv",
+		// }
+		// config.AppProdFiles = []string{
+		// 	"applications_products.csv",
+		// }
+		// config.InstFiles = []string{
+		// 	"applications_instances.csv",
+		// }
+		// config.InstProdFiles = []string{
+		// 	"instances_products.csv",
+		// }
+		// config.InstEquipFiles = []string{
+		// 	"instances_equipments.csv",
+		// }
+		// config.AcqRightsFiles = []string{
+		// 	"products_acquiredRights.csv",
+		// }
+		// config.UsersFiles = []string{
+		// 	"products_equipments_users.csv",
+		// }
+		return loader.Load(config)
 	}
-	config.TypeFiles = []string{
-		"../../../../../license-service/pkg/repository/v1/dgraph/schema/all/all.types",
-	}
-	config.ScopeSkeleten = "skeletonscope"
-	config.MasterDir = "testdata"
-	config.Scopes = []string{
-		// TODO: ADD scopes directories here like
-		// EX:
-		"scope1",
-		"scope2",
-		"scope3",
-		"scope4",
-	}
-	// config.ProductFiles = []string{
-	// 	"prod.csv",
-	// 	"productsnew.csv",
-	// }
-	// config.ProductEquipmentFiles = []string{
-	// 	"products_equipments.csv",
-	// }
-	// config.AppFiles = []string{
-	// 	"applications.csv",
-	// }
-	// config.AppProdFiles = []string{
-	// 	"applications_products.csv",
-	// }
-	// config.InstFiles = []string{
-	// 	"applications_instances.csv",
-	// }
-	// config.InstProdFiles = []string{
-	// 	"instances_products.csv",
-	// }
-	// config.InstEquipFiles = []string{
-	// 	"instances_equipments.csv",
-	// }
-	// config.AcqRightsFiles = []string{
-	// 	"products_acquiredRights.csv",
-	// }
-	// config.UsersFiles = []string{
-	// 	"products_equipments_users.csv",
-	// }
-	return loader.Load(config)
-}
 
-func loadEquipments(badgerDir, masterDir string, scopes []string, filenames ...string) error {
-	config := loader.NewDefaultConfig()
-	// hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
-	// zero := fmt.Sprintf("%s:5080", hosts[0])
-	// config.Zero = zero
-	// config.Alpha = cfg.Dgraph.Hosts
-	config.MasterDir = masterDir
-	config.EquipmentFiles = filenames
-	config.Scopes = scopes
-	config.LoadEquipments = true
-	config.IgnoreNew = true
-	dg, err := dgraph.NewDgraphConnection(&dgraph.Config{
-		Hosts: config.Alpha,
-	})
-	if err != nil {
-		log.Println("Failed to get dgclient err", err)
-		return err
+	func loadEquipments(badgerDir, masterDir string, scopes []string, filenames ...string) error {
+		config := loader.NewDefaultConfig()
+		// hosts := strings.Split(cfg.Dgraph.Hosts[0], ":")
+		// zero := fmt.Sprintf("%s:5080", hosts[0])
+		// config.Zero = zero
+		// config.Alpha = cfg.Dgraph.Hosts
+		config.MasterDir = masterDir
+		config.EquipmentFiles = filenames
+		config.Scopes = scopes
+		config.LoadEquipments = true
+		config.IgnoreNew = true
+		dg, err := dgraph.NewDgraphConnection(&dgraph.Config{
+			Hosts: config.Alpha,
+		})
+		if err != nil {
+			log.Println("Failed to get dgclient err", err)
+			return err
+		}
+		config.Repository = v1.NewEquipmentRepository(dg)
+
+		return loader.Load(config)
 	}
-	config.Repository = v1.NewEquipmentRepository(dg)
-
-	return loader.Load(config)
-}
-
+*/
 func dropall() {
 	_ = dgClient.Alter(context.Background(), &api.Operation{DropAll: true})
 }

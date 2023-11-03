@@ -26,6 +26,8 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
+	"github.com/gobuffalo/packr/v2"
+	migrate "github.com/rubenv/sql-migrate"
 	"go.uber.org/zap"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
@@ -66,7 +68,7 @@ func RunServer() error {
 	} else if os.Getenv("ENV") == "dev" {
 		viper.SetConfigName("config-dev")
 	} else if os.Getenv("ENV") == "pc" {
-		viper.SetConfigName("config-pc")
+                viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
 	}
@@ -111,20 +113,20 @@ func RunServer() error {
 	ocsql.RegisterAllViews()
 
 	// Create database connection.
-	// Create database connection.and exec migratrions
-	db, err := postgres.ConnectDBExecMig(cfg.Database)
+	db, err := postgres.NewConnection(cfg.Database)
 	if err != nil {
-		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
-		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
+		return fmt.Errorf("failed to open database: %v", err)
 	}
-	// defer db.Close()
-	defer func() {
-		db.Close()
-		// Wait to 4 seconds so that the traces can be exported
-		waitTime := 2 * time.Second
-		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
-		<-time.After(waitTime)
-	}()
+
+	// Run Migration
+	migrations := &migrate.PackrMigrationSource{
+		Box: packr.New("migrations", "./../../pkg/repository/v1/postgres/schema"),
+	}
+	n, err := migrate.Exec(db, "postgres", migrations, migrate.Up)
+	if err != nil {
+		logger.Log.Error(err.Error())
+	}
+	log.Printf("Applied %d migrations!\n", n)
 
 	// Record DB stats every 5 seconds until we exit
 	defer ocsql.RecordStats(db, 5*time.Second)()

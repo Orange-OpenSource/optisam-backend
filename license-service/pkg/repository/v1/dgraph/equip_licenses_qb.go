@@ -2,8 +2,9 @@ package dgraph
 
 import (
 	"bytes"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"text/template"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 )
 
 func queryBuilderEquipOPS(mat *v1.MetricOPSComputed, templ *template.Template, equipID, eqType string, scopes string) (string, error) {

@@ -3,10 +3,14 @@ package v1
 import (
 	"context"
 	"database/sql"
-	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
 )
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/account-service/pkg/repository/v1 Account
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1 Account
 
 // Account interface
 type Account interface {
@@ -111,6 +115,11 @@ type Account interface {
 
 	//GetComplienceGroups returns complienced groups with scopes
 	GetComplienceGroups(ctx context.Context) ([]GetComplienceGroups, error)
+	GenerateMailBody(acc helper.EmailParams, ctx context.Context, cfg config.Config) (string, error)
+	SetToken(acc helper.EmailParams, ctx context.Context, ttl int) error
+	GenerateRandomPassword() ([]byte, error)
+	CreateToken() string
+	AdminUserForScope(ctx context.Context, scopes []string) ([]*AdminUserForScope, error)
 }
 
 func NullString(str string) sql.NullString {

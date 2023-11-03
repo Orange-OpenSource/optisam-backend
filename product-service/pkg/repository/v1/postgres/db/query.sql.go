@@ -185,6 +185,89 @@ func (q *Queries) AggregatedRightDetails(ctx context.Context, arg AggregatedRigh
 	return i, err
 }
 
+const allNoMaintainenceProducts = `-- name: AllNoMaintainenceProducts :many
+
+
+SELECT
+    result.swidtag :: VARCHAR
+FROM
+    (
+        SELECT
+            unnest(a.swidtags) AS swidtag
+        FROM
+            aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+        WHERE
+            ar.scope = $1
+            AND (
+                start_of_maintenance IS NULL
+                OR (
+                    end_of_maintenance <= CURRENT_DATE
+                    AND start_of_maintenance <= CURRENT_DATE
+                )
+            )
+        UNION
+        SELECT
+            swidtag
+        FROM
+            acqrights AS acq
+        WHERE
+            acq.scope = $1
+            AND (
+                start_of_maintenance IS NULL
+                OR (
+                    end_of_maintenance <= CURRENT_DATE
+                    AND start_of_maintenance <= CURRENT_DATE
+                )
+            )
+    ) as result 
+    where result.swidtag NOT IN( 
+     SELECT final.swidtag
+        FROM (
+            SELECT unnest(a.swidtags) AS swidtag
+            FROM aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+            WHERE ar.scope = $1
+                AND (
+                    ar.start_of_maintenance IS NOT NULL
+                    AND ar.end_of_maintenance > CURRENT_DATE
+                    AND ar.start_of_maintenance < CURRENT_DATE
+                )
+            UNION
+            SELECT acq.swidtag
+            FROM acqrights AS acq
+            WHERE acq.scope = $1
+                AND (
+                    acq.start_of_maintenance IS NOT NULL
+                    AND acq.end_of_maintenance > CURRENT_DATE
+                    AND acq.start_of_maintenance < CURRENT_DATE
+                )
+        ) AS final)
+`
+
+func (q *Queries) AllNoMaintainenceProducts(ctx context.Context, scope string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, allNoMaintainenceProducts, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var result_swidtag string
+		if err := rows.Scan(&result_swidtag); err != nil {
+			return nil, err
+		}
+		items = append(items, result_swidtag)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const counterFeitedProductsCosts = `-- name: CounterFeitedProductsCosts :many
 
 SELECT
@@ -560,6 +643,110 @@ type DeleteSharedLicencesParams struct {
 func (q *Queries) DeleteSharedLicences(ctx context.Context, arg DeleteSharedLicencesParams) error {
 	_, err := q.db.ExecContext(ctx, deleteSharedLicences, arg.Sku, arg.Scope)
 	return err
+}
+
+const deployedProducts = `-- name: DeployedProducts :many
+
+SELECT
+    swidtag
+FROM
+    products
+WHERE
+    products.scope = $1
+    AND swidtag NOT IN (
+        SELECT
+            DISTINCT(swidtag)
+        FROM
+            acqrights
+            LEFT JOIN editor_catalog AS ec ON ec.name = acqrights.product_editor
+        WHERE
+            acqrights.scope = $1
+            AND acqrights.swidtag NOT IN (
+                SELECT
+                    swidtag
+                FROM
+                    products_equipments
+                WHERE
+                    products_equipments.scope = $1
+            )
+        UNION
+        SELECT
+            swidtag
+        FROM
+            products
+            LEFT JOIN editor_catalog AS ec ON ec.name = products.product_editor
+        WHERE
+            products.scope = $1
+            AND products.swidtag NOT IN (
+                SELECT
+                    swidtag
+                FROM
+                    acqrights
+                WHERE
+                    acqrights.scope = $1
+                UNION
+                SELECT
+                    unnest(swidtags) AS swidtags
+                FROM
+                    aggregations
+                    INNER JOIN aggregated_rights ON aggregations.id = aggregated_rights.aggregation_id
+                WHERE
+                    aggregations.scope = $1
+            )
+            AND products.swidtag IN (
+                SELECT
+                    swidtag
+                FROM
+                    products_equipments
+                WHERE
+                    products_equipments.scope = $1
+            )
+    )
+`
+
+func (q *Queries) DeployedProducts(ctx context.Context, scope string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, deployedProducts, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var swidtag string
+		if err := rows.Scan(&swidtag); err != nil {
+			return nil, err
+		}
+		items = append(items, swidtag)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deploymentPercent = `-- name: DeploymentPercent :one
+select
+    coalesce(sum(count(distinct(swidtag))) OVER())::FLOAT AS totalRecords
+from
+    products pro
+where 
+    pro.scope = $1
+    AND pro.product_type = $2
+`
+
+type DeploymentPercentParams struct {
+	Scope       string      `json:"scope"`
+	ProductType ProductType `json:"product_type"`
+}
+
+func (q *Queries) DeploymentPercent(ctx context.Context, arg DeploymentPercentParams) (float64, error) {
+	row := q.db.QueryRowContext(ctx, deploymentPercent, arg.Scope, arg.ProductType)
+	var totalrecords float64
+	err := row.Scan(&totalrecords)
+	return totalrecords, err
 }
 
 const dropAllocatedMetricFromEquipment = `-- name: DropAllocatedMetricFromEquipment :exec
@@ -1482,7 +1669,7 @@ func (q *Queries) ExportNominativeUsersProducts(ctx context.Context, arg ExportN
 
 const getAcqBySwidtag = `-- name: GetAcqBySwidtag :one
 
-Select sku, swidtag, product_name, product_editor, scope, metric, num_licenses_acquired, num_licences_computed, num_licences_maintainance, avg_unit_price, avg_maintenance_unit_price, total_purchase_cost, total_computed_cost, total_maintenance_cost, total_cost, created_on, created_by, updated_on, updated_by, start_of_maintenance, end_of_maintenance, last_purchased_order, support_number, maintenance_provider, version, comment, ordering_date, corporate_sourcing_contract, software_provider, file_name, file_data, repartition
+Select sku, swidtag, product_name, product_editor, scope, metric, num_licenses_acquired, num_licences_computed, num_licences_maintainance, avg_unit_price, avg_maintenance_unit_price, total_purchase_cost, total_computed_cost, total_maintenance_cost, total_cost, created_on, created_by, updated_on, updated_by, start_of_maintenance, end_of_maintenance, last_purchased_order, support_number, maintenance_provider, version, comment, ordering_date, corporate_sourcing_contract, software_provider, file_name, file_data, repartition, support_numbers
 from acqrights
 where
     swidtag = $1
@@ -1530,6 +1717,7 @@ func (q *Queries) GetAcqBySwidtag(ctx context.Context, arg GetAcqBySwidtagParams
 		&i.FileName,
 		&i.FileData,
 		&i.Repartition,
+		pq.Array(&i.SupportNumbers),
 	)
 	return i, err
 }
@@ -1557,7 +1745,7 @@ Select
     software_provider,
     corporate_sourcing_contract,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     file_name
 from acqrights
@@ -1600,7 +1788,7 @@ type GetAcqBySwidtagsRow struct {
 	SoftwareProvider          string          `json:"software_provider"`
 	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	FileName                  string          `json:"file_name"`
 }
@@ -1640,7 +1828,7 @@ func (q *Queries) GetAcqBySwidtags(ctx context.Context, arg GetAcqBySwidtagsPara
 			&i.SoftwareProvider,
 			&i.CorporateSourcingContract,
 			&i.LastPurchasedOrder,
-			&i.SupportNumber,
+			pq.Array(&i.SupportNumbers),
 			&i.MaintenanceProvider,
 			&i.FileName,
 		); err != nil {
@@ -1680,7 +1868,7 @@ SELECT
     software_provider,
     corporate_sourcing_contract,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     file_name,
     file_data,
@@ -1717,7 +1905,7 @@ type GetAcqRightBySKURow struct {
 	SoftwareProvider          string          `json:"software_provider"`
 	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	FileName                  string          `json:"file_name"`
 	FileData                  []byte          `json:"file_data"`
@@ -1748,7 +1936,7 @@ func (q *Queries) GetAcqRightBySKU(ctx context.Context, arg GetAcqRightBySKUPara
 		&i.SoftwareProvider,
 		&i.CorporateSourcingContract,
 		&i.LastPurchasedOrder,
-		&i.SupportNumber,
+		pq.Array(&i.SupportNumbers),
 		&i.MaintenanceProvider,
 		&i.FileName,
 		&i.FileData,
@@ -1963,7 +2151,7 @@ SELECT
     start_of_maintenance,
     end_of_maintenance,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     comment,
     file_name
@@ -1996,7 +2184,7 @@ type GetAggregatedRightBySKURow struct {
 	StartOfMaintenance        sql.NullTime    `json:"start_of_maintenance"`
 	EndOfMaintenance          sql.NullTime    `json:"end_of_maintenance"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	Comment                   sql.NullString  `json:"comment"`
 	FileName                  string          `json:"file_name"`
@@ -2025,7 +2213,7 @@ func (q *Queries) GetAggregatedRightBySKU(ctx context.Context, arg GetAggregated
 		&i.StartOfMaintenance,
 		&i.EndOfMaintenance,
 		&i.LastPurchasedOrder,
-		&i.SupportNumber,
+		pq.Array(&i.SupportNumbers),
 		&i.MaintenanceProvider,
 		&i.Comment,
 		&i.FileName,
@@ -2262,6 +2450,114 @@ func (q *Queries) GetAvailableAggLicenses(ctx context.Context, arg GetAvailableA
 	var acquired_licences int32
 	err := row.Scan(&acquired_licences)
 	return acquired_licences, err
+}
+
+const getComputedCost = `-- name: GetComputedCost :one
+SELECT
+    SUM(computed_cost + (total_cost-purchase_cost)):: Numeric(15, 2) as total_cost,
+    SUM(computed_cost):: Numeric(15, 2) as purchase_cost
+from overall_computed_licences
+WHERE
+    scope = ANY($1:: TEXT [])
+GROUP BY scope
+`
+
+type GetComputedCostRow struct {
+	TotalCost    decimal.Decimal `json:"total_cost"`
+	PurchaseCost decimal.Decimal `json:"purchase_cost"`
+}
+
+func (q *Queries) GetComputedCost(ctx context.Context, scope []string) (GetComputedCostRow, error) {
+	row := q.db.QueryRowContext(ctx, getComputedCost, pq.Array(scope))
+	var i GetComputedCostRow
+	err := row.Scan(&i.TotalCost, &i.PurchaseCost)
+	return i, err
+}
+
+const getComputedCostEditorProducts = `-- name: GetComputedCostEditorProducts :many
+SELECT SUM(computed_cost + (total_cost-purchase_cost)):: FLOAT AS cost, ocl.editor,ocl.product_names,sku,aggregation_name
+FROM overall_computed_licences ocl 
+WHERE
+cost_optimization = FALSE
+  AND scope = ANY($1:: TEXT []) AND editor = $2 GROUP BY ocl.editor,ocl.product_names,ocl.sku,aggregation_name
+`
+
+type GetComputedCostEditorProductsParams struct {
+	Scope  []string `json:"scope"`
+	Editor string   `json:"editor"`
+}
+
+type GetComputedCostEditorProductsRow struct {
+	Cost            float64 `json:"cost"`
+	Editor          string  `json:"editor"`
+	ProductNames    string  `json:"product_names"`
+	Sku             string  `json:"sku"`
+	AggregationName string  `json:"aggregation_name"`
+}
+
+func (q *Queries) GetComputedCostEditorProducts(ctx context.Context, arg GetComputedCostEditorProductsParams) ([]GetComputedCostEditorProductsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getComputedCostEditorProducts, pq.Array(arg.Scope), arg.Editor)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetComputedCostEditorProductsRow
+	for rows.Next() {
+		var i GetComputedCostEditorProductsRow
+		if err := rows.Scan(
+			&i.Cost,
+			&i.Editor,
+			&i.ProductNames,
+			&i.Sku,
+			&i.AggregationName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getComputedCostEditors = `-- name: GetComputedCostEditors :many
+SELECT SUM(computed_cost + (total_cost-purchase_cost)):: FLOAT AS cost, ocl.editor
+FROM overall_computed_licences ocl 
+WHERE
+cost_optimization = FALSE
+  AND scope = ANY($1:: TEXT []) GROUP BY ocl.editor
+`
+
+type GetComputedCostEditorsRow struct {
+	Cost   float64 `json:"cost"`
+	Editor string  `json:"editor"`
+}
+
+func (q *Queries) GetComputedCostEditors(ctx context.Context, scope []string) ([]GetComputedCostEditorsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getComputedCostEditors, pq.Array(scope))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetComputedCostEditorsRow
+	for rows.Next() {
+		var i GetComputedCostEditorsRow
+		if err := rows.Scan(&i.Cost, &i.Editor); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getConcurrentNominativeUsersBySwidTag = `-- name: GetConcurrentNominativeUsersBySwidTag :many
@@ -2594,12 +2890,7 @@ FROM (
         FROM acqrights
         WHERE
             acqrights.scope = ANY($1:: TEXT [])
-        GROUP BY
-            editor,
-            total_purchase_cost,
-            total_maintenance_cost,
-            total_cost
-        UNION
+        UNION ALL
         SELECT
             a.product_editor as editor,
             ar.total_purchase_cost,
@@ -2609,11 +2900,6 @@ FROM (
             INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
         WHERE
             a.scope = ANY($1:: TEXT [])
-        GROUP BY
-            a.product_editor,
-            ar.total_purchase_cost,
-            ar.total_maintenance_cost,
-            ar.total_cost
     ) as editorExpenseByScopeData
 GROUP BY editor
 `
@@ -2636,6 +2922,80 @@ func (q *Queries) GetEditorExpensesByScopeData(ctx context.Context, scope []stri
 		var i GetEditorExpensesByScopeDataRow
 		if err := rows.Scan(
 			&i.Editor,
+			&i.TotalPurchaseCost,
+			&i.TotalMaintenanceCost,
+			&i.TotalCost,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEditorProductExpensesByScopeData = `-- name: GetEditorProductExpensesByScopeData :many
+
+SELECT
+    name,
+    coalesce(SUM(total_purchase_cost), 0.0):: FLOAT as total_purchase_cost,
+    coalesce(
+        SUM(total_maintenance_cost),
+        0.0
+    ):: FLOAT as total_maintenance_cost,
+    coalesce(SUM(total_cost), 0.0):: FLOAT as total_cost
+FROM (
+        SELECT
+            product_name as name,
+            total_purchase_cost,
+            total_maintenance_cost,
+            total_cost
+        FROM acqrights
+        WHERE
+            acqrights.scope = ANY($1:: TEXT [])
+            and acqrights.product_editor = $2
+        UNION ALL
+        SELECT
+            a.aggregation_name as name,
+            ar.total_purchase_cost,
+            ar.total_maintenance_cost,
+            ar.total_cost
+        FROM aggregations as a
+            INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
+        WHERE
+            a.scope = ANY($1:: TEXT []) and a.product_editor = $2
+    ) as editorExpenseByScopeData
+GROUP BY name
+`
+
+type GetEditorProductExpensesByScopeDataParams struct {
+	Scope     []string `json:"scope"`
+	Reqeditor string   `json:"reqeditor"`
+}
+
+type GetEditorProductExpensesByScopeDataRow struct {
+	Name                 string  `json:"name"`
+	TotalPurchaseCost    float64 `json:"total_purchase_cost"`
+	TotalMaintenanceCost float64 `json:"total_maintenance_cost"`
+	TotalCost            float64 `json:"total_cost"`
+}
+
+func (q *Queries) GetEditorProductExpensesByScopeData(ctx context.Context, arg GetEditorProductExpensesByScopeDataParams) ([]GetEditorProductExpensesByScopeDataRow, error) {
+	rows, err := q.db.QueryContext(ctx, getEditorProductExpensesByScopeData, pq.Array(arg.Scope), arg.Reqeditor)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEditorProductExpensesByScopeDataRow
+	for rows.Next() {
+		var i GetEditorProductExpensesByScopeDataRow
+		if err := rows.Scan(
+			&i.Name,
 			&i.TotalPurchaseCost,
 			&i.TotalMaintenanceCost,
 			&i.TotalCost,
@@ -2808,6 +3168,17 @@ func (q *Queries) GetIndividualProductForAggregationCount(ctx context.Context, a
 	return count, err
 }
 
+const getJobsInExecution = `-- name: GetJobsInExecution :one
+SELECT count(*) FROM jobs WHERE status != 'FAILED' AND status != 'COMPLETED' and ppid = $1
+`
+
+func (q *Queries) GetJobsInExecution(ctx context.Context, ppid sql.NullString) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getJobsInExecution, ppid)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getLicensesCost = `-- name: GetLicensesCost :one
 
 SELECT
@@ -2910,6 +3281,76 @@ func (q *Queries) GetNominativeUserByID(ctx context.Context, arg GetNominativeUs
 		&i.UpdatedBy,
 	)
 	return i, err
+}
+
+const getOpenSourceCloseSourceData = `-- name: GetOpenSourceCloseSourceData :many
+SELECT
+    COALESCE(sum(openSourceCount),0):: INTEGER as osCount,
+    COALESCE(sum(closeSourceCount),0):: INTEGER as csCount
+from
+    (
+        SELECT
+            vc.p_id as result
+        FROM
+            version_catalog vc
+            JOIN products p ON vc.swid_tag_system = p.swidtag
+        WHERE
+            p.scope = $1
+        GROUP BY
+            vc.p_id
+    ) as ver
+    JOIN (
+        select
+            id, name, editorid, genearl_information, contract_tips, support_vendors, metrics, is_opensource, licences_opensource, is_closesource, licenses_closesource, location, created_on, updated_on, useful_links, swid_tag_product, source, editor_name, opensource_type, recommendation, licensing,
+            COALESCE(
+                COUNT(
+                    CASE
+                        When licensing = 'OPENSOURCE' Then is_opensource
+                    End
+                ),
+                0
+            ) as openSourceCount,
+            COALESCE(
+                COUNT(
+                    CASE
+                        When licensing = 'CLOSEDSOURCE' Then is_closesource
+                    End
+                ),
+                0
+            ) as closeSourceCount
+        from
+            product_catalog
+        GROUP BY
+            id
+    ) pc ON pc.id = ver.result
+`
+
+type GetOpenSourceCloseSourceDataRow struct {
+	Oscount int32 `json:"oscount"`
+	Cscount int32 `json:"cscount"`
+}
+
+func (q *Queries) GetOpenSourceCloseSourceData(ctx context.Context, scope string) ([]GetOpenSourceCloseSourceDataRow, error) {
+	rows, err := q.db.QueryContext(ctx, getOpenSourceCloseSourceData, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetOpenSourceCloseSourceDataRow
+	for rows.Next() {
+		var i GetOpenSourceCloseSourceDataRow
+		if err := rows.Scan(&i.Oscount, &i.Cscount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOverallCostByProduct = `-- name: GetOverallCostByProduct :many
@@ -3261,6 +3702,58 @@ func (q *Queries) GetProductInformationFromAcqright(ctx context.Context, arg Get
 	return i, err
 }
 
+const getProductInformationFromAcqrightForAll = `-- name: GetProductInformationFromAcqrightForAll :one
+SELECT ac.swidtag,
+       ac.product_name,
+       ac.product_editor,
+       ac.version,
+       p.swid_tag_product as product_swid_tag,
+       v.swid_tag_version as version_swid_tag,
+       ARRAY_AGG(DISTINCT acmetrics)::TEXT[] as metrics
+FROM acqrights ac
+Left JOIN product_catalog p ON ac.product_name = p.name AND ac.product_editor = p.editor_name
+Left JOIN version_catalog v ON p.id = v.p_id  AND v.name = ac.version,
+unnest(string_to_array(ac.metric,',')) as acmetrics
+WHERE ac.scope = $1
+    AND lower(ac.swidtag) = $2
+GROUP BY ac.swidtag,
+         ac.product_name,
+         ac.product_editor,
+         ac.version,
+         p.swid_tag_product,
+         v.swid_tag_version
+`
+
+type GetProductInformationFromAcqrightForAllParams struct {
+	Scope   string `json:"scope"`
+	Swidtag string `json:"swidtag"`
+}
+
+type GetProductInformationFromAcqrightForAllRow struct {
+	Swidtag        string         `json:"swidtag"`
+	ProductName    string         `json:"product_name"`
+	ProductEditor  string         `json:"product_editor"`
+	Version        string         `json:"version"`
+	ProductSwidTag sql.NullString `json:"product_swid_tag"`
+	VersionSwidTag sql.NullString `json:"version_swid_tag"`
+	Metrics        []string       `json:"metrics"`
+}
+
+func (q *Queries) GetProductInformationFromAcqrightForAll(ctx context.Context, arg GetProductInformationFromAcqrightForAllParams) (GetProductInformationFromAcqrightForAllRow, error) {
+	row := q.db.QueryRowContext(ctx, getProductInformationFromAcqrightForAll, arg.Scope, arg.Swidtag)
+	var i GetProductInformationFromAcqrightForAllRow
+	err := row.Scan(
+		&i.Swidtag,
+		&i.ProductName,
+		&i.ProductEditor,
+		&i.Version,
+		&i.ProductSwidTag,
+		&i.VersionSwidTag,
+		pq.Array(&i.Metrics),
+	)
+	return i, err
+}
+
 const getProductListByEditor = `-- name: GetProductListByEditor :many
 
 SELECT
@@ -3351,6 +3844,74 @@ func (q *Queries) GetProductOptions(ctx context.Context, arg GetProductOptionsPa
 			&i.ProductEditor,
 			&i.ProductVersion,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProductSkuExipredMaintenance = `-- name: GetProductSkuExipredMaintenance :many
+select product_name,sku, end_of_maintenance from acqrights 
+where scope=ANY($1:: TEXT []) and end_of_maintenance = CURRENT_DATE - INTERVAL '1 day'
+`
+
+type GetProductSkuExipredMaintenanceRow struct {
+	ProductName      string       `json:"product_name"`
+	Sku              string       `json:"sku"`
+	EndOfMaintenance sql.NullTime `json:"end_of_maintenance"`
+}
+
+func (q *Queries) GetProductSkuExipredMaintenance(ctx context.Context, scope []string) ([]GetProductSkuExipredMaintenanceRow, error) {
+	rows, err := q.db.QueryContext(ctx, getProductSkuExipredMaintenance, pq.Array(scope))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetProductSkuExipredMaintenanceRow
+	for rows.Next() {
+		var i GetProductSkuExipredMaintenanceRow
+		if err := rows.Scan(&i.ProductName, &i.Sku, &i.EndOfMaintenance); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getProductSkuExpiringSoonMaintenance = `-- name: GetProductSkuExpiringSoonMaintenance :many
+select product_name,sku, end_of_maintenance from acqrights 
+where scope=ANY($1:: TEXT []) AND end_of_maintenance = CURRENT_DATE + INTERVAL '1 month'
+`
+
+type GetProductSkuExpiringSoonMaintenanceRow struct {
+	ProductName      string       `json:"product_name"`
+	Sku              string       `json:"sku"`
+	EndOfMaintenance sql.NullTime `json:"end_of_maintenance"`
+}
+
+func (q *Queries) GetProductSkuExpiringSoonMaintenance(ctx context.Context, scope []string) ([]GetProductSkuExpiringSoonMaintenanceRow, error) {
+	rows, err := q.db.QueryContext(ctx, getProductSkuExpiringSoonMaintenance, pq.Array(scope))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetProductSkuExpiringSoonMaintenanceRow
+	for rows.Next() {
+		var i GetProductSkuExpiringSoonMaintenanceRow
+		if err := rows.Scan(&i.ProductName, &i.Sku, &i.EndOfMaintenance); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -3566,41 +4127,28 @@ func (q *Queries) GetScopeCounterfietAmountEditor(ctx context.Context, arg GetSc
 }
 
 const getScopeTotalAmountEditor = `-- name: GetScopeTotalAmountEditor :many
-SELECT
-    editorExpenseByScopeData.scope,
-    coalesce(SUM(total_cost), 0.0):: FLOAT as cost
-FROM (
-        SELECT
-            scope,
-            total_cost
-        FROM acqrights
-        WHERE
-            acqrights.scope = ANY($1::text[]) and acqrights.product_editor=$2 
-        UNION ALL
-        SELECT
-            a.scope,
-            ar.total_cost
-        FROM aggregations as a
-            INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
-        WHERE
-            a.scope = ANY($1::text[]) and
-            a.product_editor = $2
-    ) as editorExpenseByScopeData
-GROUP BY editorExpenseByScopeData.scope
+SELECT coalesce(sum(ocl.total_cost), 0.0) :: FLOAT AS cost, ocl.scope
+FROM overall_computed_licences ocl
+WHERE
+cost_optimization = FALSE
+ AND editor = $2
+  AND scope = ANY($1::text[])
+GROUP BY
+ ocl.scope
 `
 
 type GetScopeTotalAmountEditorParams struct {
-	Column1       []string `json:"column_1"`
-	ProductEditor string   `json:"product_editor"`
+	Column1 []string `json:"column_1"`
+	Editor  string   `json:"editor"`
 }
 
 type GetScopeTotalAmountEditorRow struct {
-	Scope string  `json:"scope"`
 	Cost  float64 `json:"cost"`
+	Scope string  `json:"scope"`
 }
 
 func (q *Queries) GetScopeTotalAmountEditor(ctx context.Context, arg GetScopeTotalAmountEditorParams) ([]GetScopeTotalAmountEditorRow, error) {
-	rows, err := q.db.QueryContext(ctx, getScopeTotalAmountEditor, pq.Array(arg.Column1), arg.ProductEditor)
+	rows, err := q.db.QueryContext(ctx, getScopeTotalAmountEditor, pq.Array(arg.Column1), arg.Editor)
 	if err != nil {
 		return nil, err
 	}
@@ -3608,7 +4156,7 @@ func (q *Queries) GetScopeTotalAmountEditor(ctx context.Context, arg GetScopeTot
 	var items []GetScopeTotalAmountEditorRow
 	for rows.Next() {
 		var i GetScopeTotalAmountEditorRow
-		if err := rows.Scan(&i.Scope, &i.Cost); err != nil {
+		if err := rows.Scan(&i.Cost, &i.Scope); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -3736,67 +4284,6 @@ func (q *Queries) GetSharedLicenses(ctx context.Context, arg GetSharedLicensesPa
 			&i.SharedLicences,
 			&i.RecievedLicences,
 		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTotalCostByProduct = `-- name: GetTotalCostByProduct :many
-SELECT
-    editorExpenseByScopeData.scope,
-    COALESCE(SUM(total_cost), 0.0)::FLOAT AS total_cost
-FROM (
-    SELECT
-        scope,
-        total_cost
-    FROM acqrights
-    WHERE
-        acqrights.scope = ANY($1 :: TEXT []) AND
-        acqrights.product_editor = $2 AND acqrights.product_name = $3
-        group by scope,total_cost
-    UNION ALL
-    SELECT
-        a.scope,
-        ar.total_cost
-    FROM aggregations AS a
-    INNER JOIN aggregated_rights AS ar ON a.id = ar.aggregation_id
-    WHERE
-        a.scope = ANY($1 :: TEXT []) AND
-        a.product_editor = $2 AND $3 = ANY(a.products)
-        group by a.scope,total_cost
-) AS editorExpenseByScopeData
-GROUP BY editorExpenseByScopeData.scope
-`
-
-type GetTotalCostByProductParams struct {
-	Scope       []string `json:"scope"`
-	Editor      string   `json:"editor"`
-	ProductName string   `json:"product_name"`
-}
-
-type GetTotalCostByProductRow struct {
-	Scope     string  `json:"scope"`
-	TotalCost float64 `json:"total_cost"`
-}
-
-func (q *Queries) GetTotalCostByProduct(ctx context.Context, arg GetTotalCostByProductParams) ([]GetTotalCostByProductRow, error) {
-	rows, err := q.db.QueryContext(ctx, getTotalCostByProduct, pq.Array(arg.Scope), arg.Editor, arg.ProductName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetTotalCostByProductRow
-	for rows.Next() {
-		var i GetTotalCostByProductRow
-		if err := rows.Scan(&i.Scope, &i.TotalCost); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -3980,7 +4467,8 @@ INSERT INTO
         record_failed,
         file_name,
         sheet_name,
-        file_status
+        file_status,
+        ppid
     )
 VALUES (
         $1,
@@ -3994,7 +4482,8 @@ VALUES (
         $9,
         $10,
         $11,
-        $12
+        $12,
+        $13
     )
 `
 
@@ -4011,6 +4500,7 @@ type InsertNominativeUserFileUploadDetailsParams struct {
 	FileName               sql.NullString        `json:"file_name"`
 	SheetName              sql.NullString        `json:"sheet_name"`
 	FileStatus             FileStatus            `json:"file_status"`
+	Ppid                   sql.NullString        `json:"ppid"`
 }
 
 func (q *Queries) InsertNominativeUserFileUploadDetails(ctx context.Context, arg InsertNominativeUserFileUploadDetailsParams) error {
@@ -4027,6 +4517,7 @@ func (q *Queries) InsertNominativeUserFileUploadDetails(ctx context.Context, arg
 		arg.FileName,
 		arg.SheetName,
 		arg.FileStatus,
+		arg.Ppid,
 	)
 	return err
 }
@@ -4169,7 +4660,7 @@ SELECT
     a.start_of_maintenance,
     a.end_of_maintenance,
     a.last_purchased_order,
-    a.support_number,
+    a.support_numbers,
     a.maintenance_provider,
     a.comment,
     a.created_on,
@@ -4368,7 +4859,7 @@ type ListAcqRightsAggregationRow struct {
 	StartOfMaintenance        sql.NullTime    `json:"start_of_maintenance"`
 	EndOfMaintenance          sql.NullTime    `json:"end_of_maintenance"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	Comment                   sql.NullString  `json:"comment"`
 	CreatedOn                 time.Time       `json:"created_on"`
@@ -4466,7 +4957,7 @@ func (q *Queries) ListAcqRightsAggregation(ctx context.Context, arg ListAcqRight
 			&i.StartOfMaintenance,
 			&i.EndOfMaintenance,
 			&i.LastPurchasedOrder,
-			&i.SupportNumber,
+			pq.Array(&i.SupportNumbers),
 			&i.MaintenanceProvider,
 			&i.Comment,
 			&i.CreatedOn,
@@ -4496,7 +4987,7 @@ func (q *Queries) ListAcqRightsAggregation(ctx context.Context, arg ListAcqRight
 }
 
 const listAcqRightsIndividual = `-- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition, p.swid_tag_product as product_swid_tag,
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_numbers, a.maintenance_provider, a.file_name, a.repartition, p.swid_tag_product as product_swid_tag,
        v.swid_tag_version as version_swid_tag,ec.id as editor_id,p.id as product_id
 FROM 
 acqrights a
@@ -4626,7 +5117,7 @@ type ListAcqRightsIndividualRow struct {
 	SoftwareProvider          string          `json:"software_provider"`
 	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	FileName                  string          `json:"file_name"`
 	Repartition               bool            `json:"repartition"`
@@ -4719,7 +5210,7 @@ func (q *Queries) ListAcqRightsIndividual(ctx context.Context, arg ListAcqRights
 			&i.SoftwareProvider,
 			&i.CorporateSourcingContract,
 			&i.LastPurchasedOrder,
-			&i.SupportNumber,
+			pq.Array(&i.SupportNumbers),
 			&i.MaintenanceProvider,
 			&i.FileName,
 			&i.Repartition,
@@ -5085,7 +5576,7 @@ FROM
     LEFT JOIN products p on pcu.swidtag = p.swidtag
     AND p.scope = ANY($1:: TEXT [])
 WHERE
-    pcu.scope = ANY($1:: TEXT [])   
+    pcu.scope = ANY($1:: TEXT [])
     AND pcu.is_aggregations = $2:: bool
     AND (
         CASE
@@ -6196,7 +6687,8 @@ SELECT
   	    END AS nametype,
     p.product_name,
     p.product_version,
-    a.aggregation_name
+    a.aggregation_name,
+    (select count(*) from jobs where status != 'COMPLETED' and ppid = fd.ppid) as jobNotCompleted
 FROM
     nominative_user_file_uploaded_details fd
     left join products p on fd.swidtag=p.swidtag and fd.scope=p.scope
@@ -6319,6 +6811,7 @@ type ListNominativeUsersUploadedFilesRow struct {
 	ProductName            sql.NullString        `json:"product_name"`
 	ProductVersion         sql.NullString        `json:"product_version"`
 	AggregationName        sql.NullString        `json:"aggregation_name"`
+	Jobnotcompleted        int64                 `json:"jobnotcompleted"`
 }
 
 func (q *Queries) ListNominativeUsersUploadedFiles(ctx context.Context, arg ListNominativeUsersUploadedFilesParams) ([]ListNominativeUsersUploadedFilesRow, error) {
@@ -6373,6 +6866,7 @@ func (q *Queries) ListNominativeUsersUploadedFiles(ctx context.Context, arg List
 			&i.ProductName,
 			&i.ProductVersion,
 			&i.AggregationName,
+			&i.Jobnotcompleted,
 		); err != nil {
 			return nil, err
 		}
@@ -8274,6 +8768,202 @@ func (q *Queries) OverdeployPercent(ctx context.Context, scope string) (Overdepl
 	return i, err
 }
 
+const productCatalogVersion = `-- name: ProductCatalogVersion :many
+
+Select final.version,
+       final.swidtag
+ FROM   
+ ( SELECT
+    COALESCE(vc.name, '') AS version,
+    vc.swid_tag_system AS swidtag
+FROM
+    version_catalog vc
+WHERE
+    vc.swid_tag_system = ANY($1 :: TEXT [])
+ UNION
+   SELECT
+            acq.version as vesrion,
+            acq.swidtag as swidtag
+        FROM
+            acqrights acq
+        WHERE
+            acq.swidtag = ANY($1 :: TEXT [])
+            AND acq.scope = $2 ) AS final
+`
+
+type ProductCatalogVersionParams struct {
+	Swidtag []string `json:"swidtag"`
+	Scope   string   `json:"scope"`
+}
+
+type ProductCatalogVersionRow struct {
+	Version string `json:"version"`
+	Swidtag string `json:"swidtag"`
+}
+
+func (q *Queries) ProductCatalogVersion(ctx context.Context, arg ProductCatalogVersionParams) ([]ProductCatalogVersionRow, error) {
+	rows, err := q.db.QueryContext(ctx, productCatalogVersion, pq.Array(arg.Swidtag), arg.Scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductCatalogVersionRow
+	for rows.Next() {
+		var i ProductCatalogVersionRow
+		if err := rows.Scan(&i.Version, &i.Swidtag); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const productMaintenanceCount = `-- name: ProductMaintenanceCount :many
+
+WITH swidtag_union AS (
+    SELECT
+        unnest(a.swidtags) as swidtag
+    FROM
+        aggregations a
+    WHERE
+        scope = $1
+    UNION
+    SELECT
+        swidtag
+    FROM
+        acqrights
+    WHERE
+        scope = $1
+)
+SELECT
+    (
+        SELECT COUNT(final.swidtag)
+        FROM (
+            SELECT unnest(a.swidtags) AS swidtag
+            FROM aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+            WHERE ar.scope = $1
+                AND (
+                    ar.start_of_maintenance IS NOT NULL
+                    AND ar.end_of_maintenance > CURRENT_DATE
+                    AND ar.start_of_maintenance < CURRENT_DATE
+                )
+            UNION
+            SELECT acq.swidtag
+            FROM acqrights AS acq
+            WHERE acq.scope = $1
+                AND (
+                    acq.start_of_maintenance IS NOT NULL
+                    AND acq.end_of_maintenance > CURRENT_DATE
+                    AND acq.start_of_maintenance < CURRENT_DATE
+                )
+        ) AS final
+    ) AS number_of_swidtag,
+    (
+        SELECT COUNT(swidtag)
+        FROM swidtag_union
+    ) AS total
+`
+
+type ProductMaintenanceCountRow struct {
+	NumberOfSwidtag int64 `json:"number_of_swidtag"`
+	Total           int64 `json:"total"`
+}
+
+func (q *Queries) ProductMaintenanceCount(ctx context.Context, scope string) ([]ProductMaintenanceCountRow, error) {
+	rows, err := q.db.QueryContext(ctx, productMaintenanceCount, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductMaintenanceCountRow
+	for rows.Next() {
+		var i ProductMaintenanceCountRow
+		if err := rows.Scan(&i.NumberOfSwidtag, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const productNoMaintenance = `-- name: ProductNoMaintenance :many
+SELECT
+    final.swidtag,
+    final.product_name
+FROM
+    (
+        SELECT
+            acq.product_name,
+            acq.swidtag
+        FROM
+            acqrights acq
+        WHERE
+            acq.swidtag = ANY($1 :: TEXT [])
+            AND acq.scope = $2
+        UNION
+        SELECT
+            CASE WHEN agg.product_name IS NULL THEN '' ELSE agg.product_name END AS product_name,
+            agg.swidtag AS swidtag
+        FROM 
+        (
+        SELECT
+            UNNEST(ag.products) AS product_name,
+            UNNEST(ag.swidtags) AS swidtag
+        FROM
+            aggregations ag
+        WHERE
+            ($1 :: TEXT []) && ag.swidtags 
+            AND ag.scope = $2
+        ) AS agg
+    ) AS final
+`
+
+type ProductNoMaintenanceParams struct {
+	Swidtag []string `json:"swidtag"`
+	Scope   string   `json:"scope"`
+}
+
+type ProductNoMaintenanceRow struct {
+	Swidtag     string `json:"swidtag"`
+	ProductName string `json:"product_name"`
+}
+
+func (q *Queries) ProductNoMaintenance(ctx context.Context, arg ProductNoMaintenanceParams) ([]ProductNoMaintenanceRow, error) {
+	rows, err := q.db.QueryContext(ctx, productNoMaintenance, pq.Array(arg.Swidtag), arg.Scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ProductNoMaintenanceRow
+	for rows.Next() {
+		var i ProductNoMaintenanceRow
+		if err := rows.Scan(&i.Swidtag, &i.ProductName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const productsNotAcquired = `-- name: ProductsNotAcquired :many
 SELECT swidtag, product_name, product_editor, product_version,ec.id  FROM products
 Left Join editor_catalog as ec on ec.name = products.product_editor
@@ -8472,6 +9162,89 @@ func (q *Queries) TotalCostOfEachScope(ctx context.Context, scope []string) ([]T
 	return items, nil
 }
 
+const totalProductsOfScope = `-- name: TotalProductsOfScope :many
+
+SELECT Coalesce(COUNT(proacq.product_name),0):: INTEGER as total from
+(SELECT
+    DISTINCT p.product_name
+FROM
+    products as p
+where
+    p.scope = $1
+UNION
+SELECT
+    DISTINCT acq.product_name
+FROM
+    acqrights as acq
+where
+    acq.scope = $1) as proacq
+`
+
+func (q *Queries) TotalProductsOfScope(ctx context.Context, scope string) ([]int32, error) {
+	rows, err := q.db.QueryContext(ctx, totalProductsOfScope, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var total int32
+		if err := rows.Scan(&total); err != nil {
+			return nil, err
+		}
+		items = append(items, total)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const trueCost = `-- name: TrueCost :many
+SELECT editor, product_names,aggregation_name, coalesce(sum(delta_cost), 0.0) :: FLOAT AS cost
+FROM overall_computed_licences
+WHERE delta_cost < 0 and scope = $1
+GROUP BY editor, product_names,aggregation_name
+`
+
+type TrueCostRow struct {
+	Editor          string  `json:"editor"`
+	ProductNames    string  `json:"product_names"`
+	AggregationName string  `json:"aggregation_name"`
+	Cost            float64 `json:"cost"`
+}
+
+func (q *Queries) TrueCost(ctx context.Context, scope string) ([]TrueCostRow, error) {
+	rows, err := q.db.QueryContext(ctx, trueCost, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TrueCostRow
+	for rows.Next() {
+		var i TrueCostRow
+		if err := rows.Scan(
+			&i.Editor,
+			&i.ProductNames,
+			&i.AggregationName,
+			&i.Cost,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateAggregation = `-- name: UpdateAggregation :exec
 
 UPDATE aggregations
@@ -8530,7 +9303,7 @@ INSERT INTO
         version,
         comment,
         last_purchased_order,
-        support_number,
+        support_numbers,
         maintenance_provider,
         ordering_date,
         corporate_sourcing_contract,
@@ -8589,7 +9362,7 @@ SET
     version = $17,
     comment = $18,
     last_purchased_order = $19,
-    support_number = $20,
+    support_numbers = $20,
     maintenance_provider = $21,
     ordering_date = $22,
     corporate_sourcing_contract = $23,
@@ -8619,7 +9392,7 @@ type UpsertAcqRightsParams struct {
 	Version                   string          `json:"version"`
 	Comment                   sql.NullString  `json:"comment"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	OrderingDate              sql.NullTime    `json:"ordering_date"`
 	CorporateSourcingContract string          `json:"corporate_sourcing_contract"`
@@ -8650,7 +9423,7 @@ func (q *Queries) UpsertAcqRights(ctx context.Context, arg UpsertAcqRightsParams
 		arg.Version,
 		arg.Comment,
 		arg.LastPurchasedOrder,
-		arg.SupportNumber,
+		pq.Array(arg.SupportNumbers),
 		arg.MaintenanceProvider,
 		arg.OrderingDate,
 		arg.CorporateSourcingContract,
@@ -8683,7 +9456,7 @@ INSERT INTO
         start_of_maintenance,
         end_of_maintenance,
         last_purchased_order,
-        support_number,
+        support_numbers,
         maintenance_provider,
         num_licences_maintenance,
         comment,
@@ -8735,7 +9508,7 @@ SET
     start_of_maintenance = $15,
     end_of_maintenance = $16,
     last_purchased_order = $17,
-    support_number = $18,
+    support_numbers = $18,
     maintenance_provider = $19,
     num_licences_maintenance = $20,
     comment = $21,
@@ -8762,7 +9535,7 @@ type UpsertAggregatedRightsParams struct {
 	StartOfMaintenance        sql.NullTime    `json:"start_of_maintenance"`
 	EndOfMaintenance          sql.NullTime    `json:"end_of_maintenance"`
 	LastPurchasedOrder        string          `json:"last_purchased_order"`
-	SupportNumber             string          `json:"support_number"`
+	SupportNumbers            []string        `json:"support_numbers"`
 	MaintenanceProvider       string          `json:"maintenance_provider"`
 	NumLicencesMaintenance    int32           `json:"num_licences_maintenance"`
 	Comment                   sql.NullString  `json:"comment"`
@@ -8790,7 +9563,7 @@ func (q *Queries) UpsertAggregatedRights(ctx context.Context, arg UpsertAggregat
 		arg.StartOfMaintenance,
 		arg.EndOfMaintenance,
 		arg.LastPurchasedOrder,
-		arg.SupportNumber,
+		pq.Array(arg.SupportNumbers),
 		arg.MaintenanceProvider,
 		arg.NumLicencesMaintenance,
 		arg.Comment,
@@ -9390,4 +10163,46 @@ func (q *Queries) UpsertSharedLicenses(ctx context.Context, arg UpsertSharedLice
 		arg.SharedLicences,
 	)
 	return err
+}
+
+const wasteCost = `-- name: WasteCost :many
+SELECT editor, product_names,aggregation_name, coalesce(sum(delta_cost), 0.0) :: FLOAT AS cost
+FROM overall_computed_licences
+WHERE delta_cost > 0 and scope = $1
+GROUP BY editor, product_names,aggregation_name
+`
+
+type WasteCostRow struct {
+	Editor          string  `json:"editor"`
+	ProductNames    string  `json:"product_names"`
+	AggregationName string  `json:"aggregation_name"`
+	Cost            float64 `json:"cost"`
+}
+
+func (q *Queries) WasteCost(ctx context.Context, scope string) ([]WasteCostRow, error) {
+	rows, err := q.db.QueryContext(ctx, wasteCost, scope)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []WasteCostRow
+	for rows.Next() {
+		var i WasteCostRow
+		if err := rows.Scan(
+			&i.Editor,
+			&i.ProductNames,
+			&i.AggregationName,
+			&i.Cost,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

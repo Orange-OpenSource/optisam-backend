@@ -1,9 +1,10 @@
 package server
 
 import (
-	oauth2Errors "optisam-backend/auth-service/pkg/oauth2/errors"
-	oauth2Handlers "optisam-backend/auth-service/pkg/oauth2/handler"
 	"time"
+
+	oauth2Errors "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/errors"
+	oauth2Handlers "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/handler"
 
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/errors"

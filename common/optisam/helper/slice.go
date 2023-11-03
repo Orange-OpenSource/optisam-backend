@@ -109,3 +109,32 @@ func ExactCompareSlices(a, b []string) bool {
 	}
 	return true
 }
+
+func IsSubsetSlice(s1, s2 []string) bool {
+	m := make(map[string]bool)
+	for _, val := range s2 {
+		m[val] = true
+	}
+
+	for _, val := range s1 {
+		if !m[val] {
+			return false
+		}
+	}
+	return true
+}
+
+func DifferenceSlice(s1, s2 []string) []string {
+	diff := []string{}
+	m := make(map[string]bool)
+	for _, val := range s2 {
+		m[val] = true
+	}
+
+	for _, val := range s1 {
+		if !m[val] {
+			diff = append(diff, val)
+		}
+	}
+	return diff
+}

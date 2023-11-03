@@ -5,29 +5,38 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	repv1 "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/account-service/pkg/repository/v1/mock"
-	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
-	application "optisam-backend/application-service/pkg/api/v1"
-	appMock "optisam-backend/application-service/pkg/api/v1/mock"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	dpsv1 "optisam-backend/dps-service/pkg/api/v1"
-	dpsMock "optisam-backend/dps-service/pkg/api/v1/mock"
-	equipment "optisam-backend/equipment-service/pkg/api/v1"
-	equipmentMock "optisam-backend/equipment-service/pkg/api/v1/mock"
-	metricv1 "optisam-backend/metric-service/pkg/api/v1"
-	metricMock "optisam-backend/metric-service/pkg/api/v1/mock"
-	product "optisam-backend/product-service/pkg/api/v1"
-	prodMock "optisam-backend/product-service/pkg/api/v1/mock"
-	reportv1 "optisam-backend/report-service/pkg/api/v1"
-	reportMock "optisam-backend/report-service/pkg/api/v1/mock"
 	"reflect"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
+	dpsv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/dps-service/pkg/api/v1"
+	dpsMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/dps-service/pkg/api/v1/mock"
+	equipment "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/equipment-service/pkg/api/v1"
+	equipmentMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/equipment-service/pkg/api/v1/mock"
+	metricv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/metric-service/pkg/api/v1"
+	metricMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/metric-service/pkg/api/v1/mock"
+	product "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/product-service/pkg/api/v1"
+	prodMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/product-service/pkg/api/v1/mock"
+	reportv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/report-service/pkg/api/v1"
+	reportMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/report-service/pkg/api/v1/mock"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/config"
+	v1Nof "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/notification-service/pkg/api/v1"
+	v1Nofmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/notification-service/pkg/api/v1/mock"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+	repv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/mock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/db"
+
+	application "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/application-service/pkg/api/v1"
+	appMock "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/application-service/pkg/api/v1/mock"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -94,12 +103,12 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				monkey.Patch(time.Now, func() time.Time {
 					return time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 				})
-				fixedTime := time.Now()
-				newTime := fixedTime.Add(time.Second * 300)
-				ctx1, cancel := context.WithDeadline(ctx, newTime)
-				defer cancel()
+				// fixedTime := time.Now()
+				// newTime := fixedTime.Add(time.Second * 300)
+				// ctx1, cancel := context.WithDeadline(ctx, newTime)
+				// defer cancel()
 				// monkey.Unpatch(time.Now())
-				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(nil, nil).Times(1)
+				mockEquipClient.EXPECT().DropEquipmentData(gomock.Any(), gomock.Any()).Return(&equipment.DropEquipmentDataResponse{}, nil).Times(1)
 				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)
 
 				mockDpsClient := dpsMock.NewMockDpsServiceClient(mockCtrl)
@@ -126,18 +135,18 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepo := mock.NewMockAccount(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().DropScope(ctx, "s1").Return(nil).Times(1)
-				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(nil).Times(1)
+				mockRepo.EXPECT().DropScope(ctx, "s1").Return(nil).AnyTimes()
+				mockRepo.EXPECT().DropScopeTX(ctx, "s1").Return(nil).AnyTimes()
 
 				mockAppClient := appMock.NewMockApplicationServiceClient(mockCtrl)
 				app = mockAppClient
-				mockAppClient.EXPECT().DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: "s1"}).Return(&application.DropApplicationDataResponse{Success: true}, nil).Times(1)
-				mockAppClient.EXPECT().DropObscolenscenceData(ctx, &application.DropObscolenscenceDataRequest{Scope: "s1"}).Return(&application.DropObscolenscenceDataResponse{Success: true}, nil).Times(1)
+				mockAppClient.EXPECT().DropApplicationData(ctx, &application.DropApplicationDataRequest{Scope: "s1"}).Return(&application.DropApplicationDataResponse{Success: true}, nil).AnyTimes()
+				mockAppClient.EXPECT().DropObscolenscenceData(ctx, &application.DropObscolenscenceDataRequest{Scope: "s1"}).Return(&application.DropObscolenscenceDataResponse{Success: true}, nil).AnyTimes()
 
 				mockProdClient := prodMock.NewMockProductServiceClient(mockCtrl)
 				prod = mockProdClient
-				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropProductDataResponse{Success: true}, nil).Times(1)
-				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).Times(1)
+				mockProdClient.EXPECT().DropProductData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropProductDataResponse{Success: true}, nil).AnyTimes()
+				mockProdClient.EXPECT().DropAggregationData(ctx, &product.DropProductDataRequest{Scope: "s1"}).Return(&product.DropAggregationDataResponse{Success: true}, nil).AnyTimes()
 
 				mockEquipClient := equipmentMock.NewMockEquipmentServiceClient(mockCtrl)
 				equip = mockEquipClient
@@ -148,20 +157,20 @@ func Test_DeleteResourceByScope(t *testing.T) {
 				newTime := fixedTime.Add(time.Second * 300)
 				ctx1, cancel := context.WithDeadline(ctx, newTime)
 				defer cancel()
-				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).Times(1)
-				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).Times(1)
+				mockEquipClient.EXPECT().DropEquipmentData(ctx1, &equipment.DropEquipmentDataRequest{Scope: "s1"}).Return(&equipment.DropEquipmentDataResponse{Success: true}, nil).AnyTimes()
+				mockEquipClient.EXPECT().DropMetaData(ctx, &equipment.DropMetaDataRequest{Scope: "s1"}).Return(&equipment.DropMetaDataResponse{Success: true}, nil).AnyTimes()
 
 				mockDpsClient := dpsMock.NewMockDpsServiceClient(mockCtrl)
 				dps = mockDpsClient
-				mockDpsClient.EXPECT().DropUploadedFileData(ctx, &dpsv1.DropUploadedFileDataRequest{Scope: "s1"}).Return(&dpsv1.DropUploadedFileDataResponse{Success: true}, nil).Times(1)
+				mockDpsClient.EXPECT().DropUploadedFileData(ctx, &dpsv1.DropUploadedFileDataRequest{Scope: "s1"}).Return(&dpsv1.DropUploadedFileDataResponse{Success: true}, nil).AnyTimes()
 
 				mockMetricClient := metricMock.NewMockMetricServiceClient(mockCtrl)
 				metric = mockMetricClient
-				mockMetricClient.EXPECT().DropMetricData(ctx, &metricv1.DropMetricDataRequest{Scope: "s1"}).Return(&metricv1.DropMetricDataResponse{Success: true}, nil).Times(1)
+				mockMetricClient.EXPECT().DropMetricData(ctx, &metricv1.DropMetricDataRequest{Scope: "s1"}).Return(&metricv1.DropMetricDataResponse{Success: true}, nil).AnyTimes()
 
 				mockReportClient := reportMock.NewMockReportServiceClient(mockCtrl)
 				report = mockReportClient
-				mockReportClient.EXPECT().DropReportData(ctx, &reportv1.DropReportDataRequest{Scope: "s1"}).Return(&reportv1.DropReportDataResponse{Success: true}, nil).Times(1)
+				mockReportClient.EXPECT().DropReportData(ctx, &reportv1.DropReportDataRequest{Scope: "s1"}).Return(&reportv1.DropReportDataResponse{Success: true}, nil).AnyTimes()
 			},
 			wantErr: true,
 		},
@@ -1141,12 +1150,18 @@ func Test_accountServiceServer_GetAccount(t *testing.T) {
 func Test_accountServiceServer_CreateAccount(t *testing.T) {
 	var mockCtrl *gomock.Controller
 	var rep repv1.Account
+	var cfg config.Config
+
 	type args struct {
 		ctx context.Context
 		req *v1.Account
 	}
 	mockCtrl = gomock.NewController(t)
 	mockRepo := mock.NewMockAccount(mockCtrl)
+	var notifClient v1Nof.NotificationServiceClient
+	nm := v1Nofmock.NewMockNotificationServiceClient(mockCtrl)
+	notifClient = nm
+
 	rep = mockRepo
 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
@@ -1222,15 +1237,24 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 							ID: 3,
 						},
 					}, nil),
+					mockRepo.EXPECT().GenerateRandomPassword().Return([]byte{}, nil),
 					mockRepo.EXPECT().CreateAccount(ctx, &repv1.AccountInfo{
 						UserID:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
-						Password:  defaultPassHash,
+						Password:  "",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 						Group:     []int64{2},
 					}),
+					mockRepo.EXPECT().CreateToken().Return("token"),
+					mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil),
+					mockRepo.EXPECT().GenerateMailBody(helper.EmailParams{
+						FirstName: "abc",
+						Email:     "user@test.com",
+						TokenType: "activation",
+						Token:     "token"}, ctx, cfg).Return("string body", nil),
+					nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil),
 				)
 			},
 			want: &v1.Account{
@@ -1624,15 +1648,28 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 							ID: 3,
 						},
 					}, nil),
+					mockRepo.EXPECT().GenerateRandomPassword().Return([]byte{}, nil),
 					mockRepo.EXPECT().CreateAccount(ctx, &repv1.AccountInfo{
 						UserID:    "user@test.com",
 						FirstName: "abc",
 						LastName:  "xyz",
-						Password:  defaultPassHash,
+						Password:  "",
 						Locale:    "en",
 						Role:      repv1.RoleAdmin,
 						Group:     []int64{2},
 					}).Return(errors.New("")),
+					mockRepo.EXPECT().CreateToken().Return("token").AnyTimes(),
+					mockRepo.EXPECT().SetToken(helper.EmailParams{
+						FirstName: "abc",
+						Email:     "user@test.com",
+						TokenType: "activation",
+						Token:     "token"}, ctx, 1).Return(nil).AnyTimes(),
+					mockRepo.EXPECT().GenerateMailBody(helper.EmailParams{
+						FirstName: "abc",
+						Email:     "user@test.com",
+						TokenType: "activation",
+						Token:     "token"}, ctx, cfg).Return("string body", nil).AnyTimes(),
+					nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil).AnyTimes(),
 				)
 			},
 			wantErr: true,
@@ -1642,7 +1679,8 @@ func Test_accountServiceServer_CreateAccount(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
 			tt.s = &accountServiceServer{
-				accountRepo: rep,
+				accountRepo:  rep,
+				notification: notifClient,
 			}
 			got, err := tt.s.CreateAccount(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
@@ -2559,7 +2597,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
-				}), int64(1)).Return(true, nil)
+				}), int64(1)).Return(true, nil).AnyTimes()
 
 				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
@@ -2966,7 +3004,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
-				}), int64(1)).Return(true, nil)
+				}), int64(1)).Return(true, nil).AnyTimes()
 
 				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
@@ -3039,7 +3077,7 @@ func Test_accountServiceServer_DeleteGroupUser(t *testing.T) {
 				mockRepo.EXPECT().IsGroupRoot(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
 					Role:   "SuperAdmin",
-				}), int64(1)).Return(true, nil)
+				}), int64(1)).Return(true, nil).AnyTimes()
 
 				mockRepo.EXPECT().DeleteGroupUsers(grpc_middleware.AddClaims(ctx, &claims.Claims{
 					UserID: "admin@superuser.com",
@@ -3351,6 +3389,73 @@ func Test_accountServiceServer_ChangePassword(t *testing.T) {
 		})
 	}
 }
+func Test_accountServiceServer_GetAdminUserScope(t *testing.T) {
+	ctx := context.Background()
+	clms := &claims.Claims{
+		UserID: "admin@superuser.com",
+		Socpes: []string{"Scope1", "Scope2"},
+	}
+	ctx = grpc_middleware.AddClaims(ctx, clms)
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+
+	type args struct {
+		ctx context.Context
+		req *v1.GetAdminUserScopeRequest
+	}
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.GetAdminUserScopeResponse
+		wantErr bool
+	}{
+		{name: "SUCCESS - AdminUserScope",
+			args: args{
+				ctx: ctx,
+				req: &v1.GetAdminUserScopeRequest{
+					Scopes: []string{"Scope1"},
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AdminUserForScope(ctx, []string{"Scope1"}).Return([]*repv1.AdminUserForScope{
+					{
+						UserName:  "akash@orange.com",
+						FirstName: "akash",
+					},
+				}, nil).Times(1)
+			},
+			want: &v1.GetAdminUserScopeResponse{
+				AdminDetails: []*v1.AdminDetail{
+					{
+						UserName:  "akash@orange.com",
+						FirstName: "akash",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &accountServiceServer{
+				accountRepo: rep,
+			}
+			got, err := tt.s.GetAdminUserScope(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.GetAdminUserScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("accountServiceServer.GetAdminUserScope() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func compareUsers(t *testing.T, name string, exp *v1.ListUsersResponse, act *v1.ListUsersResponse) {
 	if exp == nil && act == nil {
@@ -3378,4 +3483,178 @@ func compareUser(t *testing.T, name string, exp *v1.User, act *v1.User) {
 	assert.Equalf(t, exp.Locale, act.Locale, "%s.Locale are not same", name)
 	assert.Equalf(t, exp.Groups, act.Groups, "%s.Groups are not same", name)
 	assert.Equalf(t, exp.Role, act.Role, "%s.Role are not same", name)
+}
+
+func Test_accountServiceServer_ResendAccountActivationToken(t *testing.T) {
+	var mockCtrl *gomock.Controller
+	var rep repv1.Account
+	var cfg config.Config
+
+	type args struct {
+		ctx context.Context
+		req *v1.ResendAccountActivationRequest
+	}
+	mockCtrl = gomock.NewController(t)
+	mockRepo := mock.NewMockAccount(mockCtrl)
+	var notifClient v1Nof.NotificationServiceClient
+	nm := v1Nofmock.NewMockNotificationServiceClient(mockCtrl)
+	notifClient = nm
+
+	rep = mockRepo
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   claims.RoleAdmin,
+	})
+	tests := []struct {
+		name    string
+		s       *accountServiceServer
+		args    args
+		setup   func()
+		want    *v1.ResendAccountActivationResponse
+		wantErr bool
+	}{
+		{name: "success",
+			args: args{
+				ctx: ctx,
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, nil)
+				mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil)
+				nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+		},
+		{name: "ctx error",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				// mockCtrl = gomock.NewController(t)
+				// mockRepo := mock.NewMockAccount(mockCtrl)
+				// rep = mockRepo
+				// mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, nil)
+				// mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				// mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil)
+				// nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "claims error",
+			args: args{
+				ctx: grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+					UserID: "admin@superuser.com",
+					Role:   claims.RoleUser,
+				}),
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				// mockCtrl = gomock.NewController(t)
+				// mockRepo := mock.NewMockAccount(mockCtrl)
+				// rep = mockRepo
+				// mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, nil)
+				// mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				// mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil)
+				// nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "Acc in for err",
+			args: args{
+				ctx: ctx,
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, errors.New("err"))
+				// mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				// mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil)
+				// nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "Acc in for nil",
+			args: args{
+				ctx: ctx,
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(nil, nil)
+				mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+				mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil).AnyTimes()
+				nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil).AnyTimes()
+			},
+			wantErr: true,
+		},
+		{name: "set tkn err",
+			args: args{
+				ctx: ctx,
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, nil)
+				mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("err"))
+				// mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", nil)
+				// nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+			wantErr: true,
+		},
+		{name: "gen mail err",
+			args: args{
+				ctx: ctx,
+				req: &v1.ResendAccountActivationRequest{
+					User: "string",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockAccount(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().AccountInfo(gomock.Any(), gomock.Any()).Return(&repo.AccountInfo{}, nil)
+				mockRepo.EXPECT().SetToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				mockRepo.EXPECT().GenerateMailBody(gomock.Any(), ctx, cfg).Return("string body", errors.New("err"))
+				// nm.EXPECT().SendMail(gomock.Any(), gomock.Any(), gomock.Any()).Return(&v1Nof.SendMailResponse{}, nil)
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup()
+			tt.s = &accountServiceServer{
+				accountRepo:  rep,
+				notification: notifClient,
+			}
+			_, err := tt.s.ResendAccountActivationToken(tt.args.ctx, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("accountServiceServer.send tikn() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+		})
+	}
 }

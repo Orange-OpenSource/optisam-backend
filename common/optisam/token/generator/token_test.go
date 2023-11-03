@@ -1,9 +1,10 @@
 package generator
 
 import (
-	"optisam-backend/common/optisam/token/claims"
 	"os"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 )
 
 func Test_tokenGenerator_GenerateAccessToken(t *testing.T) {

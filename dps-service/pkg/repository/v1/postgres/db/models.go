@@ -101,6 +101,7 @@ const (
 	UploadStatusPROCESSED  UploadStatus = "PROCESSED"
 	UploadStatusSUCCESS    UploadStatus = "SUCCESS"
 	UploadStatusUPLOADED   UploadStatus = "UPLOADED"
+	UploadStatusCANCELLED  UploadStatus = "CANCELLED"
 )
 
 func (e *UploadStatus) Scan(src interface{}) error {

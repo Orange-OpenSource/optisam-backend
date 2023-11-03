@@ -1,0 +1,269 @@
+syntax = "proto3";
+
+option go_package = "report-service/thirdparty/license-service/pkg/api/v1";
+
+package optisam.license.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+service LicenseService {
+  rpc GetOverAllCompliance(GetOverAllComplianceRequest) returns (GetOverAllComplianceResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/overall/compliance"
+    };
+  }
+
+  rpc ListAcqRightsForProduct(ListAcquiredRightsForProductRequest)returns (ListAcquiredRightsForProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/product/{swid_tag}/acquiredrights"
+    };
+  }
+
+  rpc ListAcqRightsForApplicationsProduct(
+      ListAcqRightsForApplicationsProductRequest)
+      returns (ListAcqRightsForApplicationsProductResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/applications/{app_id}/products/{prod_id}"
+    };
+  }
+  // ListComputationDetails
+  rpc ListComputationDetails(ListComputationDetailsRequest) returns (ListComputationDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/computationdetails"
+    };
+  }
+
+  rpc ListAcqRightsForAggregation(ListAcqRightsForAggregationRequest)returns (ListAcqRightsForAggregationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/license/aggregation/{name}/acquiredrights"
+    };
+  }
+
+  rpc ProductLicensesForMetric(ProductLicensesForMetricRequest)returns (ProductLicensesForMetricResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/license/simulation/metric/{metric_name}"
+      body : "*"
+    };
+  }
+
+  rpc LicensesForEquipAndMetric(LicensesForEquipAndMetricRequest)returns (LicensesForEquipAndMetricResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/license/simulation/hardware/equipments/types/{equip_type}/{equip_id}"
+      body : "*"
+    };
+  }
+}
+
+message GetOverAllComplianceRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor = 2 ;
+  bool simulation = 3;
+}
+
+message GetOverAllComplianceResponse {
+  repeated AggregationAcquiredRights acq_rights = 1;
+}
+
+message ListComputationDetailsRequest {
+  string swid_tag = 1;
+  string sku = 2 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$"];
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  string agg_name = 4;
+}
+
+message ListComputationDetailsResponse {
+  repeated ComputedDetails computed_details = 1;
+}
+
+message ComputedDetails {
+  string metric_name = 1;
+  int32 numCptLicences = 2;
+  string computedDetails = 3;
+  int32 numAcqLicences = 4;
+  int32 deltaNumber = 5;
+  double deltaCost = 6;
+  int32 numAvailLicences = 7;
+}
+
+message ListAcqRightsForApplicationsProductRequest {
+  string app_id = 1;
+  string prod_id = 2;
+  string scope = 3 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message ListAcqRightsForApplicationsProductResponse {
+  repeated ProductAcquiredRights acq_rights = 1;
+}
+
+message LicensesForEquipAndMetricRequest {
+  string equip_type = 1;
+  string equip_id = 2;
+  string metric_name = 3;
+  string metric_type = 4;
+  repeated Attribute attributes = 5;
+  string scope = 6 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message LicensesForEquipAndMetricResponse {
+  repeated ProductLicenseForEquipAndMetric licenses = 1;
+}
+
+message ProductLicenseForEquipAndMetric {
+  string swid_tag = 1;
+  string aggregation_name = 2;
+  string editor = 3;
+  string metric_name = 4;
+  string metric_type = 5;
+  int64 old_licences = 6;
+  int64 new_licenses = 7;
+  int64 delta = 8;
+}
+
+message ProductLicensesForMetricRequest {
+  string swid_tag = 1;
+  string aggregation_name = 2;
+  string metric_name = 3;
+  double unit_cost = 4;
+  string scope = 5 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message ProductLicensesForMetricResponse {
+  uint64 numCptLicences = 1;
+  double total_cost = 2;
+  string metric_name = 3;
+}
+
+message ListAcqRightsForAggregationRequest {
+  string name = 1;
+  string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  bool simulation = 3;
+}
+
+message ListAcqRightsForAggregationResponse {
+  repeated AggregationAcquiredRights acq_rights = 1;
+}
+
+message DeleteAggregationRequest { string ID = 1; }
+
+message ListMetricResponse { repeated Metric metrices = 1; }
+
+message Metric {
+  string type = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message ListAcquiredRightsForProductRequest {
+  string swid_tag = 1;
+  string scope = 2 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  bool simulation = 3;
+}
+
+message ListAcquiredRightsForProductResponse {
+  repeated ProductAcquiredRights acq_rights = 1;
+  string aggregation_name = 2;
+}
+
+message Product {
+  string swidTag = 1;
+  string name = 2;
+  string version = 3;
+  string category = 4;
+  string editor = 5;
+  string metric = 6;
+  int32 numCptLicences = 7;
+  int32 numAcqLicences = 8;
+  double totalCost = 9;
+  int32 deltaNumber = 10;
+  double deltaCost = 11;
+  int32 numOfApplications = 12;
+  int32 numofEquipments = 13;
+}
+
+message Application {
+  string applicationId = 1;
+  string name = 2;
+  string application_owner = 3;
+  int32 numOfInstances = 4;
+  int32 numofProducts = 5;
+  double totalCost = 6;
+}
+
+message ProductAcquiredRights {
+  string SKU = 1;
+  string swidTag = 2;
+  string metric = 3;
+  int32 numCptLicences = 4;
+  int32 numAcqLicences = 5;
+  double totalCost = 6;
+  int32 deltaNumber = 7;
+  double deltaCost = 8;
+  double avgUnitPrice = 9;
+  string computedDetails = 10;
+  bool metricNotDefined = 11;
+  bool notDeployed = 12;
+  string productName = 14;
+  double purchaseCost = 15;
+  double computedCost = 16;
+  bool costOptimization = 17;
+  int32 availableLicences = 18 [(validate.rules).int32 = { gte: 0}];
+  int32 sharedLicences = 19 [(validate.rules).int32 = { gte: 0}];
+  int32 recievedLicences = 20 [(validate.rules).int32 = { gte: 0}];
+  bool withoutVerionAcq = 21;
+  int32 oldDeltaNumber = 22;
+}
+
+message AggregationAcquiredRights {
+  string SKU = 1;
+  string aggregationName = 2;
+  string swidTags = 3;
+  string metric = 4;
+  int32 numCptLicences = 5;
+  int32 numAcqLicences = 6;
+  double totalCost = 7;
+  int32 deltaNumber = 8;
+  double deltaCost = 9;
+  double avgUnitPrice = 10;
+  string computedDetails = 11;
+  bool metricNotDefined = 12;
+  bool notDeployed = 13;
+  string productNames = 14;
+  double purchaseCost = 15;
+  double computedCost = 16;
+  bool costOptimization = 17;
+  int32 availableLicences = 18 [(validate.rules).int32 = { gte: 0}];
+  int32 sharedLicences = 19 [(validate.rules).int32 = { gte: 0}];
+  int32 recievedLicences = 20 [(validate.rules).int32 = { gte: 0}];
+}
+
+message Attribute {
+  string ID = 1;
+  string name = 2 [ (validate.rules).string.pattern = "^[-_A-Za-z0-9]+$" ];
+  DataTypes data_type = 3 [ (validate.rules).enum = {in : [ 1, 2, 3 ]} ];
+  bool primary_key = 4;
+  bool displayed = 5;
+  bool searchable = 6;
+  bool parent_identifier = 7;
+  string mapped_to = 8;
+  bool simulated = 9;
+
+  oneof val {
+    int32 int_val = 10;
+    float float_val = 11;
+    string string_val = 12;
+  }
+
+  oneof old_val {
+    int32 int_val_old = 13;
+    float float_val_old = 14;
+    string string_val_old = 15;
+  }
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT = 2;
+  FLOAT = 3;
+}

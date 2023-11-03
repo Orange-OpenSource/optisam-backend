@@ -2,15 +2,16 @@ package config
 
 import (
 	"errors"
-	"optisam-backend/common/optisam/dgraph"
-	"optisam-backend/common/optisam/docker"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pki"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/prometheus"
-	"optisam-backend/common/optisam/redis"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/docker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/pki"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/redis"
 )
 
 // Config is configuration for Server

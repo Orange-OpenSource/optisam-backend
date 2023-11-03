@@ -75,6 +75,258 @@
           }
         }
       }
+    },
+    "/api/v1/set_password": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string"
+                  },
+                  "passwordConfirmation": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "token": {
+                    "type": "string"
+                  },
+                  "action": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "action",
+                  "user",
+                  "password",
+                  "token",
+                  "password_confirmation"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "description": "Badr equest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Badr equest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forgot_password": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "user"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "description": "Badr equest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Badr equest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/activate_account": {
+      "get": {
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "required": true,
+            "description": "An example query parameter.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "description": "An example query parameter.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Redirect to password set",
+        "description": "This endpoint redirects the user to the password setting page.\n",
+        "responses": {
+          "303": {
+            "description": "redirects the user to the password setting page.",
+            "headers": {
+              "Location": {
+                "description": "The URL to redirect to.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "https://optisam-ui-pc.apps.fr01.paas.tech.orange/user-activation?user=devtest3@test.com&token=y_hxP42WLXyNAZGSwkIk4sr8yuOmH7WGsUMjpryPnn3x2SkzP_mTkzvqb1s69t4DdDZsRxnkOhsGfYm8"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reset_password": {
+      "get": {
+        "parameters": [
+          {
+            "name": "user",
+            "in": "query",
+            "required": true,
+            "description": "An example query parameter.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "description": "An example query parameter.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Redirect to password set",
+        "description": "This endpoint redirects the user to the password setting page.\n",
+        "responses": {
+          "303": {
+            "description": "redirects the user to the password setting page.",
+            "headers": {
+              "Location": {
+                "description": "The URL to redirect to.",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "https://optisam-ui-pc.apps.fr01.paas.tech.orange/reset-password?user=devtest3@test.com&token=y_hxP42WLXyNAZGSwkIk4sr8yuOmH7WGsUMjpryPnn3x2SkzP_mTkzvqb1s69t4DdDZsRxnkOhsGfYm8"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

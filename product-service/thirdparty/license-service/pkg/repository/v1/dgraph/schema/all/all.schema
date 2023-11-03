@@ -1,0 +1,173 @@
+application.id       : string @index(exact) @upsert .
+application.name     : string @index(trigram) .
+application.version  : string .
+application.owner    : string @index(trigram) .
+application.domain   : string @index(hash) .
+application.instance : [uid] @count @reverse .
+application.product  : [uid] @count @reverse .
+instance.id         : string @index(exact) .
+instance.environment: string @index(exact) .
+instance.product    : [uid] @count @reverse .
+instance.equipment  : [uid] @count @reverse .
+
+
+acqRights.SKU                           : string @index(exact,trigram) .
+acqRights.swidtag                       : string @index(exact,trigram) .
+acqRights.productName                   : string @index(trigram) .
+acqRights.editor                        : string @index(trigram,exact) .
+acqRights.metric                        : [string] @index(trigram,exact) .
+acqRights.numOfAcqLicences              : int .
+acqRights.numOfLicencesUnderMaintenance : int .
+acqRights.averageUnitPrice              : float .
+acqRights.averageMaintenantUnitPrice    : float .
+acqRights.totalPurchaseCost             : float .
+acqRights.totalMaintenanceCost          : float .
+acqRights.totalCost                     : float .
+acqRights.startOfMaintenance            : string .
+acqRights.endOfMaintenance              : string . 
+acqRights.version                       : string .
+acqRights.orderingDate                  : string .
+acqRights.corporateSourcingContract     : string .
+acqRights.softwareProvider              : string .
+acqRights.lastPurchasedOrder            : string .
+acqRights.supportNumber                 : string .
+acqRights.maintenanceProvider           : string .
+acqRights.repartition                   : bool .
+
+
+product.name     : string @index(trigram,exact) .
+product.version  : string .
+product.category : string .
+product.editor   : string @index(trigram,exact) .
+product.swidtag  : string @index(trigram,exact) @upsert .
+product.child    : [uid] @count @reverse .
+product.equipment: [uid] @count @reverse .
+product.acqRights: [uid] @count @reverse .
+product.users    :  [uid] @reverse .
+product.allocation: [uid] @reverse .
+product.concurrent.users :  [uid]  @reverse .
+
+editor.name: string @index(exact,trigram) @upsert .
+editor.product: [uid] @reverse .
+
+allocation.metric: string @index(exact,trigram) .
+
+aggregation.id               : int @index(int) .
+aggregation.name             : string @index(trigram,exact) .
+aggregation.editor           : string @index(trigram,exact) .
+aggregation.product_names    : [string] @index(trigram,exact) .
+aggregation.swidtags         : [string] @index(trigram,exact) .
+aggregation.products         : [uid] @count @reverse .
+aggregation.concurrent.users :  [uid] @reverse .
+
+aggregatedRights.SKU                           : string @index(exact,trigram) .
+aggregatedRights.aggregationId                 : int @index(int) .
+aggregatedRights.metric                        : [string] @index(trigram,exact) .
+aggregatedRights.numOfAcqLicences              : int .
+aggregatedRights.numOfLicencesUnderMaintenance : int .
+aggregatedRights.averageUnitPrice              : float .
+aggregatedRights.averageMaintenanceUnitPrice   : float .
+aggregatedRights.totalPurchaseCost             : float .
+aggregatedRights.totalMaintenanceCost          : float .
+aggregatedRights.totalCost                     : float .
+aggregatedRights.startOfMaintenance            : string .
+aggregatedRights.endOfMaintenance              : string . 
+aggregatedRights.orderingDate                 : string .
+aggregatedRights.corporateSourcingContract   : string .
+aggregatedRights.softwareProvider             : string .
+aggregatedRights.lastPurchasedOrder          : string .
+aggregatedRights.supportNumber                : string .
+aggregatedRights.maintenanceProvider          : string .
+aggregatedRights.repartition                  : bool .
+
+type_name: string @index(exact) .
+updated  : string .
+created  : string .
+scopes   : [string] @index(exact) .
+
+users.id : string @index(trigram,exact) @upsert .
+users.count: int .
+
+metadata.equipment.type     : string @index(exact) .
+metadata.equipment.attribute: [uid] .
+metadata.equipment.parent   : uid @reverse .
+metadata.equipment.source   : uid @reverse .
+
+metadata.type      : string @index(exact) .
+metadata.source    : string @index(exact) .
+metadata.attributes:  [string] .
+
+attribute.name            : string @index(exact) .
+attribute.searchable      : bool .
+attribute.identifier      : bool .
+attribute.displayed       : bool .
+attribute.parentIdentifier: bool .
+attibute.mapped_to        : string .
+attibute.schema_name      : string .
+
+equipment.type  : string @index(exact) .
+equipment.id    : string @index(exact,trigram) @upsert .
+equipment.parent: [uid] @reverse .
+equipment.users : [uid] @reverse .
+
+metric.type: string @index(exact) .
+metric.name: string @index(exact,trigram) .
+metric.oracle_nup.transform_metric_name: string @index(exact) .
+
+metric.ops.bottom           : [uid] @count @reverse .
+metric.ops.base             : [uid] @count @reverse .
+metric.ops.aggregate        : [uid] @count @reverse .
+metric.ops.top              : [uid] @count @reverse .
+metric.ops.attr_core_factor : [uid] @count @reverse .
+metric.ops.attr_num_cores   : [uid] @count @reverse .
+metric.ops.attr_num_cpu     : [uid] @count @reverse .
+
+metric.ips.base             : [uid] @count @reverse .
+metric.ips.attr_core_factor : [uid] @count @reverse .
+metric.ips.attr_num_cores   : [uid] @count @reverse .
+metric.ips.attr_num_cpu     : [uid] @count @reverse .
+
+metric.sps.base             : [uid] @count @reverse .
+metric.sps.attr_core_factor : [uid] @count @reverse .
+metric.sps.attr_num_cores   : [uid] @count @reverse .
+metric.sps.attr_num_cpu     : [uid] @count @reverse .
+
+metric.oracle_nup.bottom           : [uid] @count @reverse .
+metric.oracle_nup.base             : [uid] @count @reverse .
+metric.oracle_nup.aggregate        : [uid] @count @reverse .
+metric.oracle_nup.top              : [uid] @count @reverse .
+metric.oracle_nup.attr_core_factor : [uid] @count @reverse .
+metric.oracle_nup.attr_num_cores   : [uid] @count @reverse .
+metric.oracle_nup.attr_num_cpu     : [uid] @count @reverse .
+metric.oracle_nup.num_users        : int .
+metric.oracle_nup.transform : bool .
+metric.oracle_nup.transform_metric_name : string .
+
+metric.acs.equipment_type       : string .
+metric.acs.attr_name            : string .
+metric.acs.attr_value           : string .
+
+metric.instancenumber.coefficient       : int .
+
+metric.saas_nominative.profile        : string .
+
+metric.attr_sum.equipment_type       : string .
+metric.attr_sum.attr_name            : string .
+metric.attr_sum.reference_value      : float .
+
+metric.static.reference_value       : int .
+
+metric.equip_attr.equipment_type       : string .
+metric.equip_attr.attr_name            : string .
+metric.equip_attr.environment            : string .
+metric.equip_attr.value      : int .
+
+metric.saas_concurrent.profile        : string .
+
+concurrent.user.swidtag  : string @index(exact) .
+concurrent.user.number_of_users :  int .
+concurrent.user.profile_user : string .
+concurrent.user.team : string .
+concurrent.user.is_aggregations : bool .
+concurrent.user.purchase_date : datetime  .
+concurrent.user.aggregation.id : int .

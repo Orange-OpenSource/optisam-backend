@@ -64,6 +64,7 @@ name = "application"
 version = ""
 direction = "up"
 migrationPath  = "./schema"
+deleteMigrations = true
 
 [app.params]
 pageSize = 20

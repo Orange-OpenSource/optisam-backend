@@ -22,6 +22,7 @@ type ProductServiceClient interface {
 	ProductsPerEditor(ctx context.Context, in *ProductsPerEditorRequest, opts ...grpc.CallOption) (*ProductsPerEditorResponse, error)
 	GetRightsInfoByEditor(ctx context.Context, in *GetRightsInfoByEditorRequest, opts ...grpc.CallOption) (*GetRightsInfoByEditorResponse, error)
 	GetProductDetail(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductResponse, error)
+	ProductsPercOpenClosedSource(ctx context.Context, in *ProductsPercOpenClosedSourceRequest, opts ...grpc.CallOption) (*ProductsPercOpenClosedSourceResponse, error)
 	GetProductOptions(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductOptionsResponse, error)
 	ListProductAggregationView(ctx context.Context, in *ListProductAggregationViewRequest, opts ...grpc.CallOption) (*ListProductAggregationViewResponse, error)
 	AggregatedRightDetails(ctx context.Context, in *AggregatedRightDetailsRequest, opts ...grpc.CallOption) (*AggregatedRightDetailsResponse, error)
@@ -52,6 +53,8 @@ type ProductServiceClient interface {
 	UpdateAggregation(ctx context.Context, in *Aggregation, opts ...grpc.CallOption) (*AggregationResponse, error)
 	DeleteAggregation(ctx context.Context, in *DeleteAggregationRequest, opts ...grpc.CallOption) (*AggregationResponse, error)
 	OverviewProductQuality(ctx context.Context, in *OverviewProductQualityRequest, opts ...grpc.CallOption) (*OverviewProductQualityResponse, error)
+	ProductMaintenancePerc(ctx context.Context, in *ProductMaintenancePercRequest, opts ...grpc.CallOption) (*ProductMaintenancePercResponse, error)
+	ProductNoMaintenanceDetails(ctx context.Context, in *ProductNoMaintenanceDetailsRequest, opts ...grpc.CallOption) (*ProductNoMaintenanceDetailsResponse, error)
 	DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error)
 	DropAggregationData(ctx context.Context, in *DropAggregationDataRequest, opts ...grpc.CallOption) (*DropAggregationDataResponse, error)
 	CreateAcqRight(ctx context.Context, in *AcqRightRequest, opts ...grpc.CallOption) (*AcqRightResponse, error)
@@ -66,10 +69,16 @@ type ProductServiceClient interface {
 	DownloadAcqRightFile(ctx context.Context, in *DownloadAcqRightFileRequest, opts ...grpc.CallOption) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(ctx context.Context, in *GetEquipmentsByProductRequest, opts ...grpc.CallOption) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(ctx context.Context, in *GetAggregationAcqrightsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationAcqrightsExpandedViewResponse, error)
+	GetAggregationById(ctx context.Context, in *GetAggregationByIdRequest, opts ...grpc.CallOption) (*GetAggregationByIdResponse, error)
 	GetAggregationProductsExpandedView(ctx context.Context, in *GetAggregationProductsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationProductsExpandedViewResponse, error)
 	GetApplicationsByProduct(ctx context.Context, in *GetApplicationsByProductRequest, opts ...grpc.CallOption) (*GetApplicationsByProductResponse, error)
 	GetProductCountByApp(ctx context.Context, in *GetProductCountByAppRequest, opts ...grpc.CallOption) (*GetProductCountByAppResponse, error)
-	UpsertNominativeUser(ctx context.Context, in *UpserNominativeUserRequest, opts ...grpc.CallOption) (*UpserNominativeUserResponse, error)
+	//rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {
+	//option (google.api.http) = {
+	//post : "/api/v1/product/nominative/users"
+	//body : "*"
+	//};
+	//}
 	UpsertProductConcurrentUser(ctx context.Context, in *ProductConcurrentUserRequest, opts ...grpc.CallOption) (*ProductConcurrentUserResponse, error)
 	ListNominativeUser(ctx context.Context, in *ListNominativeUsersRequest, opts ...grpc.CallOption) (*ListNominativeUsersResponse, error)
 	NominativeUserExport(ctx context.Context, in *NominativeUsersExportRequest, opts ...grpc.CallOption) (*ListNominativeUsersExportResponse, error)
@@ -86,6 +95,12 @@ type ProductServiceClient interface {
 	DeleteSharedLicenses(ctx context.Context, in *DeleteSharedLicensesRequest, opts ...grpc.CallOption) (*DeleteSharedLicensesResponse, error)
 	ListNominativeUserFileUpload(ctx context.Context, in *ListNominativeUsersFileUploadRequest, opts ...grpc.CallOption) (*ListNominativeUsersFileUploadResponse, error)
 	GetEditorExpensesByScope(ctx context.Context, in *EditorExpensesByScopeRequest, opts ...grpc.CallOption) (*EditorExpensesByScopeResponse, error)
+	GetEditorProductExpensesByScope(ctx context.Context, in *EditorProductsExpensesByScopeRequest, opts ...grpc.CallOption) (*EditorProductExpensesByScopeResponse, error)
+	ProductLocationType(ctx context.Context, in *GetDeploymentTypeRequest, opts ...grpc.CallOption) (*GetDeploymentTypeResponse, error)
+	GetMaintenanceBySwidtag(ctx context.Context, in *GetMaintenanceBySwidtagRequest, opts ...grpc.CallOption) (*GetMaintenanceBySwidtagResponse, error)
+	GetTrueUpLicences(ctx context.Context, in *GetTrueUpLicencesRequest, opts ...grpc.CallOption) (*GetTrueUpLicencesResponse, error)
+	GetWasteUpLicences(ctx context.Context, in *GetWasteUpLicencesRequest, opts ...grpc.CallOption) (*GetWasteUpLicencesResponse, error)
+	GetProductInformationBySwidTag(ctx context.Context, in *GetProductInformationBySwidTagRequest, opts ...grpc.CallOption) (*GetProductInformationBySwidTagResponse, error)
 }
 
 type productServiceClient struct {
@@ -135,6 +150,15 @@ func (c *productServiceClient) GetRightsInfoByEditor(ctx context.Context, in *Ge
 func (c *productServiceClient) GetProductDetail(ctx context.Context, in *ProductRequest, opts ...grpc.CallOption) (*ProductResponse, error) {
 	out := new(ProductResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductDetail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ProductsPercOpenClosedSource(ctx context.Context, in *ProductsPercOpenClosedSourceRequest, opts ...grpc.CallOption) (*ProductsPercOpenClosedSourceResponse, error) {
+	out := new(ProductsPercOpenClosedSourceResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductsPercOpenClosedSource", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -411,6 +435,24 @@ func (c *productServiceClient) OverviewProductQuality(ctx context.Context, in *O
 	return out, nil
 }
 
+func (c *productServiceClient) ProductMaintenancePerc(ctx context.Context, in *ProductMaintenancePercRequest, opts ...grpc.CallOption) (*ProductMaintenancePercResponse, error) {
+	out := new(ProductMaintenancePercResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductMaintenancePerc", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ProductNoMaintenanceDetails(ctx context.Context, in *ProductNoMaintenanceDetailsRequest, opts ...grpc.CallOption) (*ProductNoMaintenanceDetailsResponse, error) {
+	out := new(ProductNoMaintenanceDetailsResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductNoMaintenanceDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) DropProductData(ctx context.Context, in *DropProductDataRequest, opts ...grpc.CallOption) (*DropProductDataResponse, error) {
 	out := new(DropProductDataResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/DropProductData", in, out, opts...)
@@ -537,6 +579,15 @@ func (c *productServiceClient) GetAggregationAcqrightsExpandedView(ctx context.C
 	return out, nil
 }
 
+func (c *productServiceClient) GetAggregationById(ctx context.Context, in *GetAggregationByIdRequest, opts ...grpc.CallOption) (*GetAggregationByIdResponse, error) {
+	out := new(GetAggregationByIdResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetAggregationById", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *productServiceClient) GetAggregationProductsExpandedView(ctx context.Context, in *GetAggregationProductsExpandedViewRequest, opts ...grpc.CallOption) (*GetAggregationProductsExpandedViewResponse, error) {
 	out := new(GetAggregationProductsExpandedViewResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetAggregationProductsExpandedView", in, out, opts...)
@@ -558,15 +609,6 @@ func (c *productServiceClient) GetApplicationsByProduct(ctx context.Context, in 
 func (c *productServiceClient) GetProductCountByApp(ctx context.Context, in *GetProductCountByAppRequest, opts ...grpc.CallOption) (*GetProductCountByAppResponse, error) {
 	out := new(GetProductCountByAppResponse)
 	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductCountByApp", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *productServiceClient) UpsertNominativeUser(ctx context.Context, in *UpserNominativeUserRequest, opts ...grpc.CallOption) (*UpserNominativeUserResponse, error) {
-	out := new(UpserNominativeUserResponse)
-	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/UpsertNominativeUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -717,6 +759,60 @@ func (c *productServiceClient) GetEditorExpensesByScope(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *productServiceClient) GetEditorProductExpensesByScope(ctx context.Context, in *EditorProductsExpensesByScopeRequest, opts ...grpc.CallOption) (*EditorProductExpensesByScopeResponse, error) {
+	out := new(EditorProductExpensesByScopeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetEditorProductExpensesByScope", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) ProductLocationType(ctx context.Context, in *GetDeploymentTypeRequest, opts ...grpc.CallOption) (*GetDeploymentTypeResponse, error) {
+	out := new(GetDeploymentTypeResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/ProductLocationType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetMaintenanceBySwidtag(ctx context.Context, in *GetMaintenanceBySwidtagRequest, opts ...grpc.CallOption) (*GetMaintenanceBySwidtagResponse, error) {
+	out := new(GetMaintenanceBySwidtagResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetMaintenanceBySwidtag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetTrueUpLicences(ctx context.Context, in *GetTrueUpLicencesRequest, opts ...grpc.CallOption) (*GetTrueUpLicencesResponse, error) {
+	out := new(GetTrueUpLicencesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetTrueUpLicences", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetWasteUpLicences(ctx context.Context, in *GetWasteUpLicencesRequest, opts ...grpc.CallOption) (*GetWasteUpLicencesResponse, error) {
+	out := new(GetWasteUpLicencesResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetWasteUpLicences", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) GetProductInformationBySwidTag(ctx context.Context, in *GetProductInformationBySwidTagRequest, opts ...grpc.CallOption) (*GetProductInformationBySwidTagResponse, error) {
+	out := new(GetProductInformationBySwidTagResponse)
+	err := c.cc.Invoke(ctx, "/optisam.products.v1.ProductService/GetProductInformationBySwidTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
@@ -726,6 +822,7 @@ type ProductServiceServer interface {
 	ProductsPerEditor(context.Context, *ProductsPerEditorRequest) (*ProductsPerEditorResponse, error)
 	GetRightsInfoByEditor(context.Context, *GetRightsInfoByEditorRequest) (*GetRightsInfoByEditorResponse, error)
 	GetProductDetail(context.Context, *ProductRequest) (*ProductResponse, error)
+	ProductsPercOpenClosedSource(context.Context, *ProductsPercOpenClosedSourceRequest) (*ProductsPercOpenClosedSourceResponse, error)
 	GetProductOptions(context.Context, *ProductRequest) (*ProductOptionsResponse, error)
 	ListProductAggregationView(context.Context, *ListProductAggregationViewRequest) (*ListProductAggregationViewResponse, error)
 	AggregatedRightDetails(context.Context, *AggregatedRightDetailsRequest) (*AggregatedRightDetailsResponse, error)
@@ -756,6 +853,8 @@ type ProductServiceServer interface {
 	UpdateAggregation(context.Context, *Aggregation) (*AggregationResponse, error)
 	DeleteAggregation(context.Context, *DeleteAggregationRequest) (*AggregationResponse, error)
 	OverviewProductQuality(context.Context, *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error)
+	ProductMaintenancePerc(context.Context, *ProductMaintenancePercRequest) (*ProductMaintenancePercResponse, error)
+	ProductNoMaintenanceDetails(context.Context, *ProductNoMaintenanceDetailsRequest) (*ProductNoMaintenanceDetailsResponse, error)
 	DropProductData(context.Context, *DropProductDataRequest) (*DropProductDataResponse, error)
 	DropAggregationData(context.Context, *DropAggregationDataRequest) (*DropAggregationDataResponse, error)
 	CreateAcqRight(context.Context, *AcqRightRequest) (*AcqRightResponse, error)
@@ -770,10 +869,16 @@ type ProductServiceServer interface {
 	DownloadAcqRightFile(context.Context, *DownloadAcqRightFileRequest) (*DownloadAcqRightFileResponse, error)
 	GetEquipmentsByProduct(context.Context, *GetEquipmentsByProductRequest) (*GetEquipmentsByProductResponse, error)
 	GetAggregationAcqrightsExpandedView(context.Context, *GetAggregationAcqrightsExpandedViewRequest) (*GetAggregationAcqrightsExpandedViewResponse, error)
+	GetAggregationById(context.Context, *GetAggregationByIdRequest) (*GetAggregationByIdResponse, error)
 	GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error)
 	GetApplicationsByProduct(context.Context, *GetApplicationsByProductRequest) (*GetApplicationsByProductResponse, error)
 	GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error)
-	UpsertNominativeUser(context.Context, *UpserNominativeUserRequest) (*UpserNominativeUserResponse, error)
+	//rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {
+	//option (google.api.http) = {
+	//post : "/api/v1/product/nominative/users"
+	//body : "*"
+	//};
+	//}
 	UpsertProductConcurrentUser(context.Context, *ProductConcurrentUserRequest) (*ProductConcurrentUserResponse, error)
 	ListNominativeUser(context.Context, *ListNominativeUsersRequest) (*ListNominativeUsersResponse, error)
 	NominativeUserExport(context.Context, *NominativeUsersExportRequest) (*ListNominativeUsersExportResponse, error)
@@ -790,6 +895,12 @@ type ProductServiceServer interface {
 	DeleteSharedLicenses(context.Context, *DeleteSharedLicensesRequest) (*DeleteSharedLicensesResponse, error)
 	ListNominativeUserFileUpload(context.Context, *ListNominativeUsersFileUploadRequest) (*ListNominativeUsersFileUploadResponse, error)
 	GetEditorExpensesByScope(context.Context, *EditorExpensesByScopeRequest) (*EditorExpensesByScopeResponse, error)
+	GetEditorProductExpensesByScope(context.Context, *EditorProductsExpensesByScopeRequest) (*EditorProductExpensesByScopeResponse, error)
+	ProductLocationType(context.Context, *GetDeploymentTypeRequest) (*GetDeploymentTypeResponse, error)
+	GetMaintenanceBySwidtag(context.Context, *GetMaintenanceBySwidtagRequest) (*GetMaintenanceBySwidtagResponse, error)
+	GetTrueUpLicences(context.Context, *GetTrueUpLicencesRequest) (*GetTrueUpLicencesResponse, error)
+	GetWasteUpLicences(context.Context, *GetWasteUpLicencesRequest) (*GetWasteUpLicencesResponse, error)
+	GetProductInformationBySwidTag(context.Context, *GetProductInformationBySwidTagRequest) (*GetProductInformationBySwidTagResponse, error)
 }
 
 // UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
@@ -810,6 +921,9 @@ func (UnimplementedProductServiceServer) GetRightsInfoByEditor(context.Context, 
 }
 func (UnimplementedProductServiceServer) GetProductDetail(context.Context, *ProductRequest) (*ProductResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductDetail not implemented")
+}
+func (UnimplementedProductServiceServer) ProductsPercOpenClosedSource(context.Context, *ProductsPercOpenClosedSourceRequest) (*ProductsPercOpenClosedSourceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductsPercOpenClosedSource not implemented")
 }
 func (UnimplementedProductServiceServer) GetProductOptions(context.Context, *ProductRequest) (*ProductOptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductOptions not implemented")
@@ -901,6 +1015,12 @@ func (UnimplementedProductServiceServer) DeleteAggregation(context.Context, *Del
 func (UnimplementedProductServiceServer) OverviewProductQuality(context.Context, *OverviewProductQualityRequest) (*OverviewProductQualityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OverviewProductQuality not implemented")
 }
+func (UnimplementedProductServiceServer) ProductMaintenancePerc(context.Context, *ProductMaintenancePercRequest) (*ProductMaintenancePercResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductMaintenancePerc not implemented")
+}
+func (UnimplementedProductServiceServer) ProductNoMaintenanceDetails(context.Context, *ProductNoMaintenanceDetailsRequest) (*ProductNoMaintenanceDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductNoMaintenanceDetails not implemented")
+}
 func (UnimplementedProductServiceServer) DropProductData(context.Context, *DropProductDataRequest) (*DropProductDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DropProductData not implemented")
 }
@@ -943,6 +1063,9 @@ func (UnimplementedProductServiceServer) GetEquipmentsByProduct(context.Context,
 func (UnimplementedProductServiceServer) GetAggregationAcqrightsExpandedView(context.Context, *GetAggregationAcqrightsExpandedViewRequest) (*GetAggregationAcqrightsExpandedViewResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAggregationAcqrightsExpandedView not implemented")
 }
+func (UnimplementedProductServiceServer) GetAggregationById(context.Context, *GetAggregationByIdRequest) (*GetAggregationByIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAggregationById not implemented")
+}
 func (UnimplementedProductServiceServer) GetAggregationProductsExpandedView(context.Context, *GetAggregationProductsExpandedViewRequest) (*GetAggregationProductsExpandedViewResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAggregationProductsExpandedView not implemented")
 }
@@ -951,9 +1074,6 @@ func (UnimplementedProductServiceServer) GetApplicationsByProduct(context.Contex
 }
 func (UnimplementedProductServiceServer) GetProductCountByApp(context.Context, *GetProductCountByAppRequest) (*GetProductCountByAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProductCountByApp not implemented")
-}
-func (UnimplementedProductServiceServer) UpsertNominativeUser(context.Context, *UpserNominativeUserRequest) (*UpserNominativeUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertNominativeUser not implemented")
 }
 func (UnimplementedProductServiceServer) UpsertProductConcurrentUser(context.Context, *ProductConcurrentUserRequest) (*ProductConcurrentUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertProductConcurrentUser not implemented")
@@ -1002,6 +1122,24 @@ func (UnimplementedProductServiceServer) ListNominativeUserFileUpload(context.Co
 }
 func (UnimplementedProductServiceServer) GetEditorExpensesByScope(context.Context, *EditorExpensesByScopeRequest) (*EditorExpensesByScopeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEditorExpensesByScope not implemented")
+}
+func (UnimplementedProductServiceServer) GetEditorProductExpensesByScope(context.Context, *EditorProductsExpensesByScopeRequest) (*EditorProductExpensesByScopeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEditorProductExpensesByScope not implemented")
+}
+func (UnimplementedProductServiceServer) ProductLocationType(context.Context, *GetDeploymentTypeRequest) (*GetDeploymentTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProductLocationType not implemented")
+}
+func (UnimplementedProductServiceServer) GetMaintenanceBySwidtag(context.Context, *GetMaintenanceBySwidtagRequest) (*GetMaintenanceBySwidtagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMaintenanceBySwidtag not implemented")
+}
+func (UnimplementedProductServiceServer) GetTrueUpLicences(context.Context, *GetTrueUpLicencesRequest) (*GetTrueUpLicencesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTrueUpLicences not implemented")
+}
+func (UnimplementedProductServiceServer) GetWasteUpLicences(context.Context, *GetWasteUpLicencesRequest) (*GetWasteUpLicencesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetWasteUpLicences not implemented")
+}
+func (UnimplementedProductServiceServer) GetProductInformationBySwidTag(context.Context, *GetProductInformationBySwidTagRequest) (*GetProductInformationBySwidTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProductInformationBySwidTag not implemented")
 }
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -1101,6 +1239,24 @@ func _ProductService_GetProductDetail_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).GetProductDetail(ctx, req.(*ProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ProductsPercOpenClosedSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductsPercOpenClosedSourceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductsPercOpenClosedSource(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductsPercOpenClosedSource",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductsPercOpenClosedSource(ctx, req.(*ProductsPercOpenClosedSourceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1645,6 +1801,42 @@ func _ProductService_OverviewProductQuality_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_ProductMaintenancePerc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductMaintenancePercRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductMaintenancePerc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductMaintenancePerc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductMaintenancePerc(ctx, req.(*ProductMaintenancePercRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ProductNoMaintenanceDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProductNoMaintenanceDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductNoMaintenanceDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductNoMaintenanceDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductNoMaintenanceDetails(ctx, req.(*ProductNoMaintenanceDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_DropProductData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DropProductDataRequest)
 	if err := dec(in); err != nil {
@@ -1897,6 +2089,24 @@ func _ProductService_GetAggregationAcqrightsExpandedView_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GetAggregationById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAggregationByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetAggregationById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetAggregationById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetAggregationById(ctx, req.(*GetAggregationByIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ProductService_GetAggregationProductsExpandedView_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAggregationProductsExpandedViewRequest)
 	if err := dec(in); err != nil {
@@ -1947,24 +2157,6 @@ func _ProductService_GetProductCountByApp_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ProductServiceServer).GetProductCountByApp(ctx, req.(*GetProductCountByAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ProductService_UpsertNominativeUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpserNominativeUserRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ProductServiceServer).UpsertNominativeUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/optisam.products.v1.ProductService/UpsertNominativeUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProductServiceServer).UpsertNominativeUser(ctx, req.(*UpserNominativeUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2257,6 +2449,114 @@ func _ProductService_GetEditorExpensesByScope_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_GetEditorProductExpensesByScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditorProductsExpensesByScopeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetEditorProductExpensesByScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetEditorProductExpensesByScope",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetEditorProductExpensesByScope(ctx, req.(*EditorProductsExpensesByScopeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_ProductLocationType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeploymentTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).ProductLocationType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/ProductLocationType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).ProductLocationType(ctx, req.(*GetDeploymentTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetMaintenanceBySwidtag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMaintenanceBySwidtagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetMaintenanceBySwidtag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetMaintenanceBySwidtag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetMaintenanceBySwidtag(ctx, req.(*GetMaintenanceBySwidtagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetTrueUpLicences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTrueUpLicencesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetTrueUpLicences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetTrueUpLicences",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetTrueUpLicences(ctx, req.(*GetTrueUpLicencesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetWasteUpLicences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWasteUpLicencesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetWasteUpLicences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetWasteUpLicences",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetWasteUpLicences(ctx, req.(*GetWasteUpLicencesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_GetProductInformationBySwidTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductInformationBySwidTagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).GetProductInformationBySwidTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.products.v1.ProductService/GetProductInformationBySwidTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).GetProductInformationBySwidTag(ctx, req.(*GetProductInformationBySwidTagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ProductService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.products.v1.ProductService",
 	HandlerType: (*ProductServiceServer)(nil),
@@ -2280,6 +2580,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProductDetail",
 			Handler:    _ProductService_GetProductDetail_Handler,
+		},
+		{
+			MethodName: "ProductsPercOpenClosedSource",
+			Handler:    _ProductService_ProductsPercOpenClosedSource_Handler,
 		},
 		{
 			MethodName: "GetProductOptions",
@@ -2402,6 +2706,14 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_OverviewProductQuality_Handler,
 		},
 		{
+			MethodName: "ProductMaintenancePerc",
+			Handler:    _ProductService_ProductMaintenancePerc_Handler,
+		},
+		{
+			MethodName: "ProductNoMaintenanceDetails",
+			Handler:    _ProductService_ProductNoMaintenanceDetails_Handler,
+		},
+		{
 			MethodName: "DropProductData",
 			Handler:    _ProductService_DropProductData_Handler,
 		},
@@ -2458,6 +2770,10 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ProductService_GetAggregationAcqrightsExpandedView_Handler,
 		},
 		{
+			MethodName: "GetAggregationById",
+			Handler:    _ProductService_GetAggregationById_Handler,
+		},
+		{
 			MethodName: "GetAggregationProductsExpandedView",
 			Handler:    _ProductService_GetAggregationProductsExpandedView_Handler,
 		},
@@ -2468,10 +2784,6 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProductCountByApp",
 			Handler:    _ProductService_GetProductCountByApp_Handler,
-		},
-		{
-			MethodName: "UpsertNominativeUser",
-			Handler:    _ProductService_UpsertNominativeUser_Handler,
 		},
 		{
 			MethodName: "UpsertProductConcurrentUser",
@@ -2536,6 +2848,30 @@ var _ProductService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetEditorExpensesByScope",
 			Handler:    _ProductService_GetEditorExpensesByScope_Handler,
+		},
+		{
+			MethodName: "GetEditorProductExpensesByScope",
+			Handler:    _ProductService_GetEditorProductExpensesByScope_Handler,
+		},
+		{
+			MethodName: "ProductLocationType",
+			Handler:    _ProductService_ProductLocationType_Handler,
+		},
+		{
+			MethodName: "GetMaintenanceBySwidtag",
+			Handler:    _ProductService_GetMaintenanceBySwidtag_Handler,
+		},
+		{
+			MethodName: "GetTrueUpLicences",
+			Handler:    _ProductService_GetTrueUpLicences_Handler,
+		},
+		{
+			MethodName: "GetWasteUpLicences",
+			Handler:    _ProductService_GetWasteUpLicences_Handler,
+		},
+		{
+			MethodName: "GetProductInformationBySwidTag",
+			Handler:    _ProductService_GetProductInformationBySwidTag_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

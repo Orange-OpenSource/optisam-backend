@@ -3,10 +3,11 @@ package grpc
 import (
 	"context"
 	"crypto/rsa"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/token/claims"
 
-	rest_middleware "optisam-backend/common/optisam/middleware/rest"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+
+	rest_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/rest"
 
 	"github.com/dgrijalva/jwt-go"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"

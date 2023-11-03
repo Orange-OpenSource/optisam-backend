@@ -7,6 +7,7 @@ type MetricACS struct {
 	EqType        string
 	AttributeName string
 	Value         string
+	Default       bool
 }
 
 // MetricACSComputed has all the information required to be computed

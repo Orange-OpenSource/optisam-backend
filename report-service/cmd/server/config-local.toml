@@ -38,6 +38,7 @@ name = "report"
 version = "1.4_schema.sql,1.4.3_schema.sql,1.4.2_schema.sql"
 direction = "up"
 migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = true
 
 [grpcservers]
 apikey = "12345678"

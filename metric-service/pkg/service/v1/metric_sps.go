@@ -2,11 +2,13 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -64,6 +66,9 @@ func (s *metricServiceServer) UpdateMetricSAGProcessorStandard(ctx context.Conte
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
+	if req.Default == true {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "Default Value True, Metric created by import can't be updated")
+	}
 	_, err := s.metricRepo.GetMetricConfigSPS(ctx, req.Name, req.GetScopes()[0])
 	if err != nil {
 		if err == repo.ErrNoData {
@@ -109,6 +114,7 @@ func serverToRepoMetricSPS(met *v1.MetricSPS) *repo.MetricSPS {
 		NumCPUAttrID:     met.NumCPUAttrId,
 		CoreFactorAttrID: met.CoreFactorAttrId,
 		BaseEqTypeID:     met.BaseEqTypeId,
+		Default:          met.Default,
 	}
 }
 
@@ -120,6 +126,7 @@ func repoToServerMetricSPS(met *repo.MetricSPS) *v1.MetricSPS {
 		NumCPUAttrId:     met.NumCPUAttrID,
 		CoreFactorAttrId: met.CoreFactorAttrID,
 		BaseEqTypeId:     met.BaseEqTypeID,
+		Default:          met.Default,
 	}
 }
 

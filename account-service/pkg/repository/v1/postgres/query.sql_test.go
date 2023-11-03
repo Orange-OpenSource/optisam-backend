@@ -7,7 +7,7 @@ package postgres
 import (
 	"context"
 	"fmt"
-	v1 "optisam-backend/account-service/pkg/repository/v1"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -5,16 +5,19 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/workerqueue/job"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"strings"
 	"time"
+
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/metric-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+	dgworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
@@ -22,7 +25,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *productServiceServer) CreateAggregatedRights(ctx context.Context, req *v1.AggregatedRightsRequest) (*v1.AggregatedRightsResponse, error) {
+func (s *ProductServiceServer) CreateAggregatedRights(ctx context.Context, req *v1.AggregatedRightsRequest) (*v1.AggregatedRightsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -31,7 +34,7 @@ func (s *productServiceServer) CreateAggregatedRights(ctx context.Context, req *
 		logger.Log.Error("service/v1 - CreateProductAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	_, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+	_, err := s.ProductRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	})
@@ -39,6 +42,19 @@ func (s *productServiceServer) CreateAggregatedRights(ctx context.Context, req *
 		if err != sql.ErrNoRows {
 			logger.Log.Error("service/v1 - CreateProductAggregation - GetAggregatedRightBySKU", zap.String("reason", err.Error()))
 			return &v1.AggregatedRightsResponse{}, status.Error(codes.Internal, "DBError")
+		} else {
+			_, err := s.ProductRepo.GetAcqRightBySKU(ctx, db.GetAcqRightBySKUParams{
+				AcqrightSku: req.Sku,
+				Scope:       req.Scope,
+			})
+			if err != nil {
+				if err != sql.ErrNoRows {
+					logger.Log.Error("service/v1 - CreateProductAggregation - GetAggregatedRightBySKU", zap.String("reason", err.Error()))
+					return &v1.AggregatedRightsResponse{}, status.Error(codes.Internal, "DBError")
+				}
+			} else {
+				return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "sku already exists")
+			}
 		}
 	} else {
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "sku already exists")
@@ -48,7 +64,7 @@ func (s *productServiceServer) CreateAggregatedRights(ctx context.Context, req *
 		return &v1.AggregatedRightsResponse{}, err
 	}
 	dbAggRight.CreatedBy = userClaims.UserID
-	uperr := s.productRepo.UpsertAggregatedRights(ctx, dbAggRight)
+	uperr := s.ProductRepo.UpsertAggregatedRights(ctx, dbAggRight)
 	if uperr != nil {
 		logger.Log.Error("service/v1 - CreateProductAggregation - UpsertAggregation", zap.String("reason", uperr.Error()))
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.Unknown, "DBError")
@@ -59,8 +75,8 @@ func (s *productServiceServer) CreateAggregatedRights(ctx context.Context, req *
 }
 
 // nolint: maligned, gocyclo, funlen
-func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req *v1.AggregatedRightsRequest) (db.UpsertAggregatedRightsParams, *dgworker.UpsertAggregatedRight, error) {
-	_, err := s.productRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+func (s *ProductServiceServer) validateAggregatedRight(ctx context.Context, req *v1.AggregatedRightsRequest) (db.UpsertAggregatedRightsParams, *dgworker.UpsertAggregatedRight, error) {
+	_, err := s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
 		ID:    req.AggregationID,
 		Scope: req.Scope,
 	})
@@ -147,6 +163,13 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 		return db.UpsertAggregatedRightsParams{}, nil, status.Error(codes.InvalidArgument, "all or no fields should be present( maintenance licenses, start date, end date)")
 	}
 	totalMaintenanceCost = req.AvgMaintenanceUnitPrice * float64(req.NumLicencesMaintenance)
+	supNum := strings.Split(req.GetSupportNumber(), ",")
+	for _, snum := range supNum {
+		if len(snum) > 16 {
+			logger.Log.Sugar().Errorf("service/v1 - UpsertAcqRights - UpsertAcquiredRights", zap.String("reason", "Support Number %v is greater than 16 characters"))
+			return db.UpsertAggregatedRightsParams{}, nil, status.Error(codes.InvalidArgument, "Support Number is greater than 16 characters")
+		}
+	}
 	return db.UpsertAggregatedRightsParams{
 			Sku:                       req.Sku,
 			AggregationID:             req.AggregationID,
@@ -166,7 +189,7 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 			CorporateSourcingContract: req.CorporateSourcingContract,
 			SoftwareProvider:          req.SoftwareProvider,
 			LastPurchasedOrder:        req.LastPurchasedOrder,
-			SupportNumber:             req.SupportNumber,
+			SupportNumbers:            supNum,
 			MaintenanceProvider:       req.MaintenanceProvider,
 			FileName:                  req.FileName,
 			FileData:                  req.FileData,
@@ -195,7 +218,7 @@ func (s *productServiceServer) validateAggregatedRight(ctx context.Context, req 
 		}, nil
 }
 
-func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *v1.AggregatedRightsRequest) (*v1.AggregatedRightsResponse, error) {
+func (s *ProductServiceServer) UpdateAggregatedRights(ctx context.Context, req *v1.AggregatedRightsRequest) (*v1.AggregatedRightsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -204,7 +227,7 @@ func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *
 		logger.Log.Error("service/v1 - UpdateAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	aggRight, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+	aggRight, err := s.ProductRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	})
@@ -232,7 +255,7 @@ func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *
 		return &v1.AggregatedRightsResponse{}, err
 	}
 	dbAggRight.CreatedBy = userClaims.UserID
-	uperr := s.productRepo.UpsertAggregatedRights(ctx, dbAggRight)
+	uperr := s.ProductRepo.UpsertAggregatedRights(ctx, dbAggRight)
 	if uperr != nil {
 		logger.Log.Error("service/v1 - UpdateAggregation - UpsertAggregation", zap.String("reason", uperr.Error()))
 		return &v1.AggregatedRightsResponse{}, status.Error(codes.Unknown, "DBError")
@@ -242,7 +265,7 @@ func (s *productServiceServer) UpdateAggregatedRights(ctx context.Context, req *
 	return &v1.AggregatedRightsResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context, req *v1.UpdateAggrightsSharedLicensesRequest) (*v1.UpdateSharedLicensesResponse, error) {
+func (s *ProductServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context, req *v1.UpdateAggrightsSharedLicensesRequest) (*v1.UpdateSharedLicensesResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -256,7 +279,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 		logger.Log.Error("service/v1 -UpdateAggrightsSharedLicenses - GetAvailableLicenses", zap.String("reason", err.Error()))
 		return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
 	}
-	senderSku, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+	senderSku, err := s.ProductRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	})
@@ -287,7 +310,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 		return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.InvalidArgument, "LicencesNotAvailable")
 	}
 	for _, v := range req.LicenseData {
-		_, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+		_, err := s.ProductRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
 			Sku:   req.Sku,
 			Scope: v.RecieverScope,
 		})
@@ -303,7 +326,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 					logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - CreateAggregationIfNotExists", zap.String("reason", err.Error()))
 					return &v1.UpdateSharedLicensesResponse{}, err
 				}
-				resp, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+				resp, err := s.ProductRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
 					AggregationName: req.AggregationName,
 					Scope:           v.RecieverScope,
 				})
@@ -333,7 +356,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 					EndOfMaintenance:          endOfMaintenance,
 					NumLicencesMaintenance:    senderSku.NumLicencesMaintenance,
 					LastPurchasedOrder:        senderSku.LastPurchasedOrder,
-					SupportNumber:             senderSku.SupportNumber,
+					SupportNumber:             strings.Join(senderSku.SupportNumbers, ","),
 					MaintenanceProvider:       senderSku.MaintenanceProvider,
 					Comment:                   senderSku.Comment.String,
 					OrderingDate:              orderingDate,
@@ -352,7 +375,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 				return &v1.UpdateSharedLicensesResponse{}, status.Error(codes.Internal, "DBError")
 			}
 		}
-		if dbresp := s.productRepo.UpsertSharedLicenses(ctx, db.UpsertSharedLicensesParams{
+		if dbresp := s.ProductRepo.UpsertSharedLicenses(ctx, db.UpsertSharedLicensesParams{
 			Sku:            req.Sku,
 			Scope:          req.Scope,
 			SharingScope:   v.RecieverScope,
@@ -361,7 +384,7 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 			logger.Log.Error("service/v1 - UpdateAggrightsSharedLicenses - UpsertSharedLicenses", zap.String("reason", dbresp.Error()))
 			return &v1.UpdateSharedLicensesResponse{Success: false}, status.Error(codes.Unknown, "DBError")
 		}
-		if dbresp := s.productRepo.UpsertRecievedLicenses(ctx, db.UpsertRecievedLicensesParams{
+		if dbresp := s.ProductRepo.UpsertRecievedLicenses(ctx, db.UpsertRecievedLicensesParams{
 			Sku:              req.Sku,
 			Scope:            v.RecieverScope,
 			SharingScope:     req.Scope,
@@ -374,14 +397,14 @@ func (s *productServiceServer) UpdateAggrightsSharedLicenses(ctx context.Context
 	return &v1.UpdateSharedLicensesResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) CreateAggregationIfNotExists(ctx context.Context, senderScope string, recieverScope string, aggName string) error {
-	_, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+func (s *ProductServiceServer) CreateAggregationIfNotExists(ctx context.Context, senderScope string, recieverScope string, aggName string) error {
+	_, err := s.ProductRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
 		AggregationName: aggName,
 		Scope:           recieverScope,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			agg, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+			agg, err := s.ProductRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
 				AggregationName: aggName,
 				Scope:           senderScope,
 			})
@@ -420,14 +443,14 @@ func (s *productServiceServer) CreateAggregationIfNotExists(ctx context.Context,
 	return nil
 }
 
-func (s *productServiceServer) CreateProduct(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
-	_, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+func (s *ProductServiceServer) CreateProduct(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
+	_, err := s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{
 		Swidtag: swidtag,
 		Scope:   recieverScope,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			product, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+			product, err := s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{
 				Swidtag: swidtag,
 				Scope:   senderScope,
 			})
@@ -467,14 +490,14 @@ func (s *productServiceServer) CreateProduct(ctx context.Context, swidtag string
 	return nil
 }
 
-func (s *productServiceServer) CreateAcqrights(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
-	_, err := s.productRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
+func (s *ProductServiceServer) CreateAcqrights(ctx context.Context, swidtag string, senderScope string, recieverScope string) error {
+	_, err := s.ProductRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
 		Swidtag: swidtag,
 		Scope:   recieverScope,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			product, err := s.productRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
+			product, err := s.ProductRepo.GetAcqBySwidtag(ctx, db.GetAcqBySwidtagParams{
 				Swidtag: swidtag,
 				Scope:   senderScope,
 			})
@@ -516,7 +539,7 @@ func (s *productServiceServer) CreateAcqrights(ctx context.Context, swidtag stri
 	return nil
 }
 
-func (s *productServiceServer) DeleteAggregatedRights(ctx context.Context, req *v1.DeleteAggregatedRightsRequest) (*v1.DeleteAggregatedRightsResponse, error) {
+func (s *ProductServiceServer) DeleteAggregatedRights(ctx context.Context, req *v1.DeleteAggregatedRightsRequest) (*v1.DeleteAggregatedRightsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.DeleteAggregatedRightsResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -524,7 +547,7 @@ func (s *productServiceServer) DeleteAggregatedRights(ctx context.Context, req *
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return &v1.DeleteAggregatedRightsResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	if err := s.productRepo.DeleteAggregatedRightBySKU(ctx, db.DeleteAggregatedRightBySKUParams{
+	if err := s.ProductRepo.DeleteAggregatedRightBySKU(ctx, db.DeleteAggregatedRightBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	}); err != nil {
@@ -558,7 +581,7 @@ func (s *productServiceServer) DeleteAggregatedRights(ctx context.Context, req *
 	}, nil
 }
 
-func (s *productServiceServer) pushUpsertAggrightWorkerJob(ctx context.Context, req dgworker.UpsertAggregatedRight) {
+func (s *ProductServiceServer) pushUpsertAggrightWorkerJob(ctx context.Context, req dgworker.UpsertAggregatedRight) {
 	jsonData, err := json.Marshal(req)
 	if err != nil {
 		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
@@ -581,7 +604,7 @@ func (s *productServiceServer) pushUpsertAggrightWorkerJob(ctx context.Context, 
 	logger.Log.Info("Successfully pushed job", zap.Int32("jobId", jobID))
 }
 
-func (s *productServiceServer) DownloadAggregatedRightsFile(ctx context.Context, req *v1.DownloadAggregatedRightsFileRequest) (*v1.DownloadAggregatedRightsFileResponse, error) {
+func (s *ProductServiceServer) DownloadAggregatedRightsFile(ctx context.Context, req *v1.DownloadAggregatedRightsFileRequest) (*v1.DownloadAggregatedRightsFileResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.DownloadAggregatedRightsFileResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -590,7 +613,7 @@ func (s *productServiceServer) DownloadAggregatedRightsFile(ctx context.Context,
 		logger.Log.Sugar().Errorf("service/v1 - DownloadAggregatedRightsFile - req scope: %s, available scopes: %v", req.Scope, userClaims.Socpes)
 		return &v1.DownloadAggregatedRightsFileResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	acq, err := s.productRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
+	acq, err := s.ProductRepo.GetAggregatedRightBySKU(ctx, db.GetAggregatedRightBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	})
@@ -604,7 +627,7 @@ func (s *productServiceServer) DownloadAggregatedRightsFile(ctx context.Context,
 	if acq.FileName == "" {
 		return &v1.DownloadAggregatedRightsFileResponse{}, status.Error(codes.InvalidArgument, "Aggregated Right does not contain file")
 	}
-	acqFileData, err := s.productRepo.GetAggregatedRightsFileDataBySKU(ctx, db.GetAggregatedRightsFileDataBySKUParams{
+	acqFileData, err := s.ProductRepo.GetAggregatedRightsFileDataBySKU(ctx, db.GetAggregatedRightsFileDataBySKUParams{
 		Sku:   req.Sku,
 		Scope: req.Scope,
 	})

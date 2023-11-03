@@ -3,8 +3,9 @@ package dgraph
 import (
 	"context"
 	"fmt"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 
 	"github.com/stretchr/testify/assert"
 )

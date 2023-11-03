@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"optisam-backend/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 	"os"
 	"testing"
 )

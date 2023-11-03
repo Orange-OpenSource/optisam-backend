@@ -353,6 +353,7 @@ type Acqright struct {
 	FileName                  string          `json:"file_name"`
 	FileData                  []byte          `json:"file_data"`
 	Repartition               bool            `json:"repartition"`
+	SupportNumbers            []string        `json:"support_numbers"`
 }
 
 type AggregatedRight struct {
@@ -385,6 +386,7 @@ type AggregatedRight struct {
 	FileName                  string          `json:"file_name"`
 	FileData                  []byte          `json:"file_data"`
 	Repartition               bool            `json:"repartition"`
+	SupportNumbers            []string        `json:"support_numbers"`
 }
 
 type Aggregation struct {
@@ -436,6 +438,7 @@ type Job struct {
 	CreatedAt  time.Time       `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
 	MetaData   json.RawMessage `json:"meta_data"`
+	Ppid       sql.NullString  `json:"ppid"`
 }
 
 type NominativeUser struct {
@@ -470,6 +473,7 @@ type NominativeUserFileUploadedDetail struct {
 	SheetName              sql.NullString        `json:"sheet_name"`
 	FileStatus             FileStatus            `json:"file_status"`
 	UploadID               string                `json:"upload_id"`
+	Ppid                   sql.NullString        `json:"ppid"`
 }
 
 type OverallComputedLicence struct {

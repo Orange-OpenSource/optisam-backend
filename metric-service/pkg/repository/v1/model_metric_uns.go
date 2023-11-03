@@ -5,4 +5,5 @@ type MetricUNS struct {
 	ID      string
 	Name    string
 	Profile string
+	Default bool
 }

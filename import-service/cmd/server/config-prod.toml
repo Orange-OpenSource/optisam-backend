@@ -3,6 +3,8 @@ debug = false
 httpport = "8080"
 maxfilesize = 13
 #file size in Mbs
+#file size in Mbs
+NoOfPartitions = 3
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -24,12 +26,22 @@ agentEndpoint = "jaeger-agent.prod-optisam.svc:6831"
 # password = ""
 
 
+
 [database]
 host = "svc-optisam-postgres.prod-optisam.svc"
 port = 5432
+[database.admin]
 user = "optisam"
-#pass = ""
-name = "dps"
+name = "import"
+# pass = ""
+[database.user]
+user = "optisam_app_user"
+name = "import"
+# pass = ""
+[database.Migration]
+version = ""
+direction = "up"
+migrationPath  = "./schema"
 
 [grpcservers]
 apiKey = "12345678"
@@ -57,3 +69,11 @@ MetaDatafileAllowedRegex = ['''^metadata_[a-zA-Z]*\.csv$''']
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[kafka]
+bootstrapservers = "prod-kafka-externel-bootstrap.prod-optisam.svc:9094"
+sslkeylocation = "/opt/secret-key/ssh-privatekey"
+sslcertificatelocation = "/opt/secret-client/ssh-privatekey"
+sslcalocation = "/opt/secret-ca/ssh-privatekey"
+securityprotocol = "ssl"
+

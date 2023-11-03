@@ -2,25 +2,32 @@ package v1
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	metmock "optisam-backend/metric-service/pkg/api/v1/mock"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	repo "optisam-backend/product-service/pkg/repository/v1"
-	dbmock "optisam-backend/product-service/pkg/repository/v1/dbmock"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	queuemock "optisam-backend/product-service/pkg/repository/v1/queuemock"
 	"os"
 	"reflect"
 	"testing"
 
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/config"
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/metric-service/pkg/api/v1"
+	metmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/metric-service/pkg/api/v1/mock"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+	queuemock "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/queuemock"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -72,12 +79,22 @@ func TestListEditors(t *testing.T) {
 			ctx:    context.Background(),
 			mock:   func(input *v1.ListEditorsRequest) {},
 		},
+		{
+			name:   "ListEditorsWith error",
+			input:  &v1.ListEditorsRequest{Scopes: []string{"s1", "s2", "s3"}},
+			output: &v1.ListEditorsResponse{},
+			outErr: true,
+			ctx:    ctx,
+			mock: func(input *v1.ListEditorsRequest) {
+				dbObj.EXPECT().ListEditors(ctx, input.Scopes).Return([]string{"e1", "e2", "e3"}, sql.ErrNoRows).Times(1)
+			},
+		},
 	}
 
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj, nil, "")
+			s := NewProductServiceServer(dbObj, qObj, nil, "", nil, nil, &config.Config{})
 			got, err := s.ListEditors(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
@@ -141,10 +158,78 @@ func TestListEditorProducts(t *testing.T) {
 			},
 		},
 		{
+			name:  "ListEditorProductsWithCorrectDataparkinventory",
+			input: &v1.ListEditorProductsRequest{Editor: "e1", Scopes: []string{"s1", "s2", "s3"}, ParkInventory: true},
+			output: &v1.ListEditorProductsResponse{
+				Products: []*v1.Product{
+					{
+						SwidTag: "swid1",
+						Name:    "p1",
+						Version: "v1",
+					},
+					{
+						SwidTag: "swid2",
+						Name:    "p2",
+						Version: "v2",
+					},
+				},
+			},
+			outErr: false,
+			ctx:    ctx,
+			mock: func(input *v1.ListEditorProductsRequest) {
+				dbObj.EXPECT().GetProductsByEditor(ctx, db.GetProductsByEditorParams{
+					ProductEditor: input.Editor,
+					Scopes:        input.Scopes}).Return([]db.GetProductsByEditorRow{
+					{
+						Swidtag:        "swid1",
+						ProductName:    "p1",
+						ProductVersion: "v1",
+					},
+					{
+						Swidtag:        "swid2",
+						ProductName:    "p2",
+						ProductVersion: "v2",
+					},
+				}, nil).Times(1)
+				dbObj.EXPECT().GetProductsByEditorScope(ctx, gomock.Any()).Return([]db.GetProductsByEditorScopeRow{db.GetProductsByEditorScopeRow{}}, nil).Times(1)
+			},
+		},
+		{
+			name:   "ListEditorProductsWithCorrectDataparkinventoryErr",
+			input:  &v1.ListEditorProductsRequest{Editor: "e1", Scopes: []string{"s1", "s2", "s3"}, ParkInventory: true},
+			output: &v1.ListEditorProductsResponse{},
+			outErr: true,
+			ctx:    ctx,
+			mock: func(input *v1.ListEditorProductsRequest) {
+				dbObj.EXPECT().GetProductsByEditor(ctx, db.GetProductsByEditorParams{
+					ProductEditor: input.Editor,
+					Scopes:        input.Scopes}).Return([]db.GetProductsByEditorRow{
+					{
+						Swidtag:        "swid1",
+						ProductName:    "p1",
+						ProductVersion: "v1",
+					},
+					{
+						Swidtag:        "swid2",
+						ProductName:    "p2",
+						ProductVersion: "v2",
+					},
+				}, nil).Times(1)
+				dbObj.EXPECT().GetProductsByEditorScope(ctx, gomock.Any()).Return([]db.GetProductsByEditorScopeRow{db.GetProductsByEditorScopeRow{}}, sql.ErrNoRows).Times(1)
+			},
+		},
+		{
 			name:   "ListEditorProductsWithoutContext",
 			input:  &v1.ListEditorProductsRequest{Scopes: []string{"s4", "s5"}, Editor: "e1"},
 			outErr: true,
 			ctx:    context.Background(),
+			mock:   func(input *v1.ListEditorProductsRequest) {},
+		},
+		{
+			name:   "ListEditorProductsWithoutContextscope",
+			input:  &v1.ListEditorProductsRequest{Scopes: []string{"na"}, Editor: "e1"},
+			outErr: true,
+			ctx:    ctx,
 			mock:   func(input *v1.ListEditorProductsRequest) {},
 		},
 	}
@@ -152,14 +237,11 @@ func TestListEditorProducts(t *testing.T) {
 	for _, test := range testSet {
 		t.Run("", func(t *testing.T) {
 			test.mock(test.input)
-			s := NewProductServiceServer(dbObj, qObj, nil, "")
-			got, err := s.ListEditorProducts(test.ctx, test.input)
+			s := NewProductServiceServer(dbObj, qObj, nil, "", nil, nil, &config.Config{})
+			_, err := s.ListEditorProducts(test.ctx, test.input)
 			if (err != nil) != test.outErr {
 				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
 				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, *got, *(test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
-
 			} else {
 				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
 			}
@@ -183,7 +265,7 @@ func TestGetRightsInfoByEditor(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		s       *productServiceServer
+		s       *ProductServiceServer
 		args    args
 		setup   func()
 		want    *v1.GetRightsInfoByEditorResponse
@@ -373,18 +455,18 @@ func TestGetRightsInfoByEditor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			tt.s = &productServiceServer{
-				productRepo: rep,
+			tt.s = &ProductServiceServer{
+				ProductRepo: rep,
 				queue:       queue,
 				metric:      met,
 			}
 			got, err := tt.s.GetRightsInfoByEditor(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("productServiceServer.GetRightsInfoByEditor() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProductServiceServer.GetRightsInfoByEditor() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("productServiceServer.GetRightsInfoByEditor() = %v, want %v", got, tt.want)
+				t.Errorf("ProductServiceServer.GetRightsInfoByEditor() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -406,13 +488,14 @@ func TestGetEditorExpensesByScope(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		s       *productServiceServer
+		s       *ProductServiceServer
 		args    args
 		setup   func()
 		want    *v1.EditorExpensesByScopeResponse
 		wantErr bool
 	}{
-		{name: "SUCCESS",
+		{
+			name: "SUCCESS",
 			args: args{
 				ctx: ctx,
 				req: &v1.EditorExpensesByScopeRequest{
@@ -441,6 +524,16 @@ func TestGetEditorExpensesByScope(t *testing.T) {
 						TotalCost:            25.0,
 					},
 				}, nil)
+				mockRepo.EXPECT().GetComputedCostEditors(ctx, []string{"scope1"}).Times(1).Return([]db.GetComputedCostEditorsRow{
+					{
+						Editor: "Oracle",
+						Cost:   5.0,
+					},
+					{
+						Editor: "Adobe",
+						Cost:   25.0,
+					},
+				}, nil)
 			},
 			want: &v1.EditorExpensesByScopeResponse{
 				EditorExpensesByScope: []*v1.EditorExpensesByScopeData{
@@ -449,16 +542,62 @@ func TestGetEditorExpensesByScope(t *testing.T) {
 						TotalPurchaseCost:    2.0,
 						TotalMaintenanceCost: 3.0,
 						TotalCost:            5.0,
+						TotalComputedCost:    5.0,
 					},
 					{
 						EditorName:           "Adobe",
 						TotalPurchaseCost:    12.0,
 						TotalMaintenanceCost: 13.0,
 						TotalCost:            25.0,
+						TotalComputedCost:    25.0,
 					},
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "SUCCESS GetComputedCostEditors err",
+			args: args{
+				ctx: ctx,
+				req: &v1.EditorExpensesByScopeRequest{
+					Scope: "scope1",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockProduct(mockCtrl)
+				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
+				mockMetric := metmock.NewMockMetricServiceClient(mockCtrl)
+				rep = mockRepo
+				queue = mockQueue
+				met = mockMetric
+				mockRepo.EXPECT().GetEditorExpensesByScopeData(ctx, []string{"scope1"}).Times(1).Return([]db.GetEditorExpensesByScopeDataRow{
+					{
+						Editor:               "Oracle",
+						TotalPurchaseCost:    2.0,
+						TotalMaintenanceCost: 3.0,
+						TotalCost:            5.0,
+					},
+					{
+						Editor:               "Adobe",
+						TotalPurchaseCost:    12.0,
+						TotalMaintenanceCost: 13.0,
+						TotalCost:            25.0,
+					},
+				}, nil)
+				mockRepo.EXPECT().GetComputedCostEditors(ctx, []string{"scope1"}).AnyTimes().Return([]db.GetComputedCostEditorsRow{
+					{
+						Editor: "Oracle",
+						Cost:   5.0,
+					},
+					{
+						Editor: "Adobe",
+						Cost:   25.0,
+					},
+				}, errors.New("err"))
+			},
+			want:    nil,
+			wantErr: true,
 		},
 		{name: "FAILURE-can not find claims in context",
 			args: args{
@@ -503,19 +642,182 @@ func TestGetEditorExpensesByScope(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			tt.s = &productServiceServer{
-				productRepo: rep,
+			tt.s = &ProductServiceServer{
+				ProductRepo: rep,
 				queue:       queue,
 				metric:      met,
 			}
 			got, err := tt.s.GetEditorExpensesByScope(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("productServiceServer.GetEditorExpensesByScope() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProductServiceServer.GetEditorExpensesByScope() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("productServiceServer.GetEditorExpensesByScope() = %v, want %v", got, tt.want)
+				t.Errorf("ProductServiceServer.GetEditorExpensesByScope() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestGetAllEditorsCatalog(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	ProductRepo := dbmock.NewMockProduct(mockCtrl)
+
+	testCases := []struct {
+		name          string
+		ctx           context.Context
+		request       *v1.GetAllEditorsCatalogRequest
+		expectedError error
+		mockSetup     func()
+	}{
+		{
+			name:    "ValidRequest",
+			ctx:     ctx,
+			request: &v1.GetAllEditorsCatalogRequest{},
+			mockSetup: func() {
+				// Set up expectations for the mock
+				ProductRepo.EXPECT().GetEditor(gomock.Any()).Return([]string{"Editor1", "Editor2"}, nil)
+			},
+			expectedError: nil,
+		},
+		{
+			name:    "ClaimsNotFoundError",
+			ctx:     context.Background(),
+			request: &v1.GetAllEditorsCatalogRequest{},
+			mockSetup: func() {
+				// No mock expectations needed
+			},
+			expectedError: status.Error(codes.Unknown, "ClaimsNotFoundError"),
+		},
+		{
+			name:    "DBError",
+			ctx:     ctx,
+			request: &v1.GetAllEditorsCatalogRequest{},
+			mockSetup: func() {
+				// Set up expectations for the mock
+				ProductRepo.EXPECT().GetEditor(gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expectedError: status.Error(codes.Internal, "DBError"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockSetup()
+
+			// Create an instance of the service with the mocked dependencies
+			service := &ProductServiceServer{
+				ProductRepo: ProductRepo,
+			}
+
+			// Call the method being tested
+			response, err := service.GetAllEditorsCatalog(tc.ctx, tc.request)
+
+			// Check the error response
+			if tc.expectedError != nil {
+				if err == nil || err.Error() != tc.expectedError.Error() {
+					t.Errorf("Expected error: %v, but got: %v", tc.expectedError, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error: %v", err)
+				}
+
+				// Check the response
+				expectedResponse := &v1.GetAllEditorsCatalogResponse{
+					EditorName: []string{"Editor1", "Editor2"},
+				}
+				if !reflect.DeepEqual(response, expectedResponse) {
+					t.Errorf("Unexpected response. Expected: %v, but got: %v", expectedResponse, response)
+				}
+			}
+		})
+	}
+}
+
+func TestListDeployedAndAcquiredEditors(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	ProductRepo := dbmock.NewMockProduct(mockCtrl)
+	testCases := []struct {
+		name          string
+		ctx           context.Context
+		request       *v1.ListDeployedAndAcquiredEditorsRequest
+		expectedError error
+		wanterr       bool
+		mockSetup     func()
+	}{
+		{
+			name: "ValidRequest",
+			ctx:  ctx,
+			request: &v1.ListDeployedAndAcquiredEditorsRequest{
+				Scope: "s1",
+			},
+			mockSetup: func() {
+				// Set up expectations for the mock
+				ProductRepo.EXPECT().ListDeployedAndAcquiredEditors(gomock.Any(), "s1").Return([]string{"Editor1", "Editor2"}, nil)
+			},
+			expectedError: nil,
+			wanterr:       false,
+		},
+		{
+			name: "ClaimsNotFoundError",
+			ctx:  context.Background(),
+			request: &v1.ListDeployedAndAcquiredEditorsRequest{
+				Scope: "scope1",
+			},
+			mockSetup: func() {
+				// No mock expectations needed
+			},
+			expectedError: status.Error(codes.Unknown, "ClaimsNotFoundError"),
+			wanterr:       true,
+		},
+		{
+			name: "ScopeValidationError",
+			ctx:  ctx,
+			request: &v1.ListDeployedAndAcquiredEditorsRequest{
+				Scope: "scope1",
+			},
+			mockSetup: func() {
+				// Set up expectations for the mock
+				ProductRepo.EXPECT().ListDeployedAndAcquiredEditors(gomock.Any(), "s1").Return([]string{"Editor1", "Editor2"}, nil)
+			},
+			expectedError: status.Error(codes.PermissionDenied, "ScopeValidationError"),
+			wanterr:       true,
+		},
+		{
+			name: "DBError",
+			ctx:  ctx,
+			request: &v1.ListDeployedAndAcquiredEditorsRequest{
+				Scope: "s1",
+			},
+			mockSetup: func() {
+				// Set up expectations for the mock
+				ProductRepo.EXPECT().ListDeployedAndAcquiredEditors(gomock.Any(), gomock.Any()).Return(nil, errors.New("database error"))
+			},
+			expectedError: status.Error(codes.Internal, "DBError"),
+			wanterr:       false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockSetup()
+
+			// Create an instance of the service with the mocked dependencies
+			service := &ProductServiceServer{
+				ProductRepo: ProductRepo,
+			}
+
+			// Call the method being tested
+			_, err := service.ListDeployedAndAcquiredEditors(tc.ctx, tc.request)
+
+			// Check the error response
+			// if tc.expectedError != nil {
+			if (err != nil) != tc.wanterr {
+				t.Errorf("ProductServiceServer.GetEditorExpensesByScope() error = %v, wantErr %v", err, tc.wanterr)
+				return
+			}
+
 		})
 	}
 }

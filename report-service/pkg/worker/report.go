@@ -5,13 +5,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	l_v1 "optisam-backend/license-service/pkg/api/v1"
-	p_v1 "optisam-backend/product-service/pkg/api/v1"
-	repo "optisam-backend/report-service/pkg/repository/v1"
-	"optisam-backend/report-service/pkg/repository/v1/postgres/db"
 	"strings"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1/postgres/db"
+	l_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/thirdparty/license-service/pkg/api/v1"
+	p_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/thirdparty/product-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 

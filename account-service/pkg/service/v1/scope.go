@@ -4,15 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	repo "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
 	"time"
 
-	equipment "optisam-backend/equipment-service/pkg/api/v1"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+
+	equipment "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/equipment-service/pkg/api/v1"
 
 	pTypes "github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
@@ -53,6 +55,7 @@ func (s *accountServiceServer) CreateScope(ctx context.Context, req *v1.CreateSc
 			return nil, status.Error(codes.Internal, "Unable to create Metadata & EqTypes")
 		}
 	}
+
 	scope, err := s.accountRepo.ListScopes(ctx, []string{req.ScopeCode})
 	if err != nil {
 		if err != repo.ErrNoData {

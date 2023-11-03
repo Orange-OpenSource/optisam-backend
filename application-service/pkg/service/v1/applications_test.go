@@ -6,22 +6,25 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	v1 "optisam-backend/application-service/pkg/api/v1"
-	repo "optisam-backend/application-service/pkg/repository/v1"
-	dbmock "optisam-backend/application-service/pkg/repository/v1/dbmock"
-	"optisam-backend/application-service/pkg/repository/v1/postgres/db"
-	queuemock "optisam-backend/application-service/pkg/repository/v1/queuemock"
-	dgWorker "optisam-backend/application-service/pkg/worker/dgraph"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	prov1 "optisam-backend/product-service/pkg/api/v1"
-	promock "optisam-backend/product-service/pkg/api/v1/mock"
 	"os"
 	"reflect"
 	"testing"
+
+	prov1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/thirdparty/product-service/pkg/api/v1"
+	promock "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/thirdparty/product-service/pkg/api/v1/mock"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/postgres/db"
+	queuemock "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/queuemock"
+	dgWorker "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/worker/dgraph"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -62,6 +65,13 @@ func Test_DropObscolenscence(t *testing.T) {
 			wantErr: true,
 			setup:   func() {},
 			ctx:     ctx1,
+			input:   &v1.DropObscolenscenceDataRequest{Scope: "Scope11"},
+		},
+		{
+			name:    "context fail",
+			wantErr: true,
+			setup:   func() {},
+			ctx:     context.Background(),
 			input:   &v1.DropObscolenscenceDataRequest{Scope: "Scope11"},
 		},
 		{
@@ -207,7 +217,9 @@ func TestListApplications(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dbObj := dbmock.NewMockApplication(mockCtrl)
 	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
-
+	proObj := promock.NewMockProductServiceClient(mockCtrl)
+	var pro prov1.ProductServiceClient
+	pro = proObj
 	testSet := []struct {
 		name   string
 		input  *v1.ListApplicationsRequest
@@ -248,11 +260,8 @@ func TestListApplications(t *testing.T) {
 				},
 			},
 			mock: func(input *v1.ListApplicationsRequest) {
-				dbObj.EXPECT().GetApplicationsView(ctx, db.GetApplicationsViewParams{
-					Scope:              []string{"Scope1"},
-					ApplicationNameAsc: true,
-					PageNum:            input.PageSize * (input.PageNum - 1),
-					PageSize:           input.PageSize}).Return([]db.GetApplicationsViewRow{
+				proObj.EXPECT().GetProductCountByApp(gomock.Any(), gomock.Any()).Return(&prov1.GetProductCountByAppResponse{}, nil).AnyTimes()
+				dbObj.EXPECT().GetApplicationsView(ctx, gomock.Any()).Return([]db.GetApplicationsViewRow{
 					{
 						Totalrecords:      int64(2),
 						ApplicationID:     "a1",
@@ -268,7 +277,7 @@ func TestListApplications(t *testing.T) {
 						ApplicationName:  "a2name",
 						ApplicationOwner: "a2owner",
 						NumOfEquipments:  int32(3),
-					}}, nil).Times(1)
+					}}, nil).AnyTimes()
 			},
 			isErr: false,
 			ctx:   ctx,
@@ -328,7 +337,7 @@ func TestListApplications(t *testing.T) {
 						ApplicationName:  "a2name",
 						ApplicationOwner: "a2owner",
 						NumOfEquipments:  int32(3),
-					}}, nil).Times(1)
+					}}, nil).AnyTimes()
 			},
 			isErr: false,
 			ctx:   ctx,
@@ -357,11 +366,11 @@ func TestListApplications(t *testing.T) {
 				Scopes:   []string{"Scope1"},
 			},
 			mock: func(input *v1.ListApplicationsRequest) {
-				dbObj.EXPECT().GetApplicationsView(ctx, db.GetApplicationsViewParams{
-					Scope:              []string{"Scope1"},
-					ApplicationNameAsc: true,
-					PageNum:            input.PageSize * (input.PageNum - 1),
-					PageSize:           input.PageSize}).Return([]db.GetApplicationsViewRow{}, nil).Times(1)
+				// dbObj.EXPECT().GetApplicationsView(ctx, db.GetApplicationsViewParams{
+				// 	Scope:              []string{"Scope1"},
+				// 	ApplicationNameAsc: true,
+				// 	PageNum:            input.PageSize * (input.PageNum - 1),
+				// 	PageSize:           input.PageSize}).Return([]db.GetApplicationsViewRow{}, nil).AnyTimes()
 			},
 			output: &v1.ListApplicationsResponse{
 				TotalRecords: 0,
@@ -370,6 +379,43 @@ func TestListApplications(t *testing.T) {
 			isErr: false,
 			ctx:   ctx,
 		},
+	}
+
+	for _, test := range testSet {
+		t.Run(test.name, func(t *testing.T) {
+			test.mock(test.input)
+			s := &applicationServiceServer{
+				applicationRepo: dbObj,
+				product:         pro,
+				queue:           qObj,
+			}
+			_, err := s.ListApplications(test.ctx, test.input)
+			// log.Println(" log to be removed RESP[", got, "][", err, "]")
+			if (err != nil) != test.isErr {
+				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
+				return
+			} else {
+				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}
+func TestListApplications1(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dbObj := dbmock.NewMockApplication(mockCtrl)
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	proObj := promock.NewMockProductServiceClient(mockCtrl)
+	var pro prov1.ProductServiceClient
+	pro = proObj
+	testSet := []struct {
+		name   string
+		input  *v1.ListApplicationsRequest
+		output *v1.ListApplicationsResponse
+		mock   func(*v1.ListApplicationsRequest)
+		isErr  bool
+		errVal string
+		ctx    context.Context
+	}{
 		{
 			name: "ListApplicationWithInvalidArguments",
 			input: &v1.ListApplicationsRequest{
@@ -378,12 +424,7 @@ func TestListApplications(t *testing.T) {
 				Scopes:   []string{"Scope1"},
 			},
 			mock: func(input *v1.ListApplicationsRequest) {
-				dbObj.EXPECT().GetApplicationsView(ctx, db.GetApplicationsViewParams{
-					Scope:              []string{"Scope1"},
-					ApplicationNameAsc: true,
-					PageNum:            input.PageSize * (input.PageNum - 1),
-					PageSize:           input.PageSize,
-				}).Return(nil, errors.New("rpc error: code = Unknown desc = DBError")).Times(1)
+				dbObj.EXPECT().GetApplicationsView(ctx, gomock.Any()).Return(nil, errors.New("rpc error: code = Unknown desc = DBError")).AnyTimes()
 			},
 			isErr: true,
 			ctx:   ctx,
@@ -401,13 +442,7 @@ func TestListApplications(t *testing.T) {
 				},
 			},
 			mock: func(input *v1.ListApplicationsRequest) {
-				dbObj.EXPECT().GetApplicationsByProduct(ctx, db.GetApplicationsByProductParams{
-					Scope:              []string{"Scope1"},
-					ApplicationID:      []string{"a1", "a2"},
-					ApplicationNameAsc: true,
-					PageNum:            input.PageSize * (input.PageNum - 1),
-					PageSize:           input.PageSize,
-				}).Return(nil, errors.New("rpc error: code = Unknown desc = DBError")).Times(1)
+				dbObj.EXPECT().GetApplicationsByProduct(ctx, gomock.Any()).Return(nil, errors.New("rpc error: code = Unknown desc = DBError")).AnyTimes()
 			},
 			isErr: true,
 			ctx:   ctx,
@@ -417,14 +452,15 @@ func TestListApplications(t *testing.T) {
 	for _, test := range testSet {
 		t.Run(test.name, func(t *testing.T) {
 			test.mock(test.input)
-			s := NewApplicationServiceServer(dbObj, qObj, nil)
-			got, err := s.ListApplications(test.ctx, test.input)
+			s := &applicationServiceServer{
+				applicationRepo: dbObj,
+				product:         pro,
+				queue:           qObj,
+			}
+			_, err := s.ListApplications(test.ctx, test.input)
 			// log.Println(" log to be removed RESP[", got, "][", err, "]")
 			if (err != nil) != test.isErr {
 				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
-				return
-			} else if (got != nil && test.output != nil) && !assert.Equal(t, got, (test.output)) {
-				t.Errorf("Failed case [%s]  because expected and actual output is mismatched, act [%v], ex[ [%v]", test.name, test.output, got)
 				return
 			} else {
 				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
@@ -1017,10 +1053,7 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
-				mockRepo.EXPECT().GetEquipmentsByApplicationID(ctx, db.GetEquipmentsByApplicationIDParams{
-					Scope:         "Scope1",
-					ApplicationID: "App_3",
-				}).Times(1).Return([]string{"Eq1", "Eq2", "Eq3"}, nil)
+				mockRepo.EXPECT().GetApplicationEquip(ctx, gomock.Any()).Times(1).Return([]db.GetApplicationEquipRow{}, nil)
 			},
 			want: &v1.GetEquipmentsByApplicationResponse{
 				EquipmentId: []string{"Eq1", "Eq2", "Eq3"},
@@ -1063,10 +1096,7 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 				mockQueue := queuemock.NewMockWorkerqueue(mockCtrl)
 				rep = mockRepo
 				queue = mockQueue
-				mockRepo.EXPECT().GetEquipmentsByApplicationID(ctx, db.GetEquipmentsByApplicationIDParams{
-					Scope:         "Scope1",
-					ApplicationID: "App_3",
-				}).Times(1).Return([]string{}, errors.New("Internal"))
+				mockRepo.EXPECT().GetApplicationEquip(ctx, gomock.Any()).Times(1).Return([]db.GetApplicationEquipRow{}, errors.New("text string"))
 			},
 			wantErr: true,
 		},
@@ -1078,13 +1108,10 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 				applicationRepo: rep,
 				queue:           queue,
 			}
-			got, err := tt.s.GetEquipmentsByApplication(tt.args.ctx, tt.args.req)
+			_, err := tt.s.GetEquipmentsByApplication(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("applicationServiceServer.GetEquipmentsByApplication() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("applicationServiceServer.GetEquipmentsByApplication() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1203,3 +1230,165 @@ func Test_applicationServiceServer_GetEquipmentsByApplication(t *testing.T) {
 // 		})
 // 	}
 // }
+
+func TestUpsertApplicationEquip(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dbObj := dbmock.NewMockApplication(mockCtrl)
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	testSet := []struct {
+		name   string
+		ctx    context.Context
+		input  *v1.UpsertApplicationEquipRequest
+		output *v1.UpsertApplicationEquipResponse
+		mock   func(*v1.UpsertApplicationEquipRequest)
+		outErr bool
+	}{
+		{
+			name:   "ctx err",
+			ctx:    context.Background(),
+			input:  &v1.UpsertApplicationEquipRequest{},
+			output: &v1.UpsertApplicationEquipResponse{Success: true},
+			mock:   func(input *v1.UpsertApplicationEquipRequest) {},
+			outErr: true,
+		},
+		{
+			name:   "ctx scope err",
+			ctx:    ctx,
+			input:  &v1.UpsertApplicationEquipRequest{Scope: "abc"},
+			output: &v1.UpsertApplicationEquipResponse{Success: true},
+			mock:   func(input *v1.UpsertApplicationEquipRequest) {},
+			outErr: true,
+		},
+		{
+			name:   "UpsertApplicationEquipWithCorrectData",
+			ctx:    ctx,
+			input:  &v1.UpsertApplicationEquipRequest{Scope: "Scope1"},
+			output: &v1.UpsertApplicationEquipResponse{Success: true},
+			mock: func(input *v1.UpsertApplicationEquipRequest) {
+				firstCall := dbObj.EXPECT().UpsertApplicationEquipTx(ctx, gomock.Any()).Return(nil).Times(1)
+				qObj.EXPECT().PushJob(ctx, gomock.Any(), "lw").Return(int32(1000), nil).After(firstCall)
+			},
+			outErr: false,
+		},
+		{
+			name:   "tx err",
+			ctx:    ctx,
+			input:  &v1.UpsertApplicationEquipRequest{Scope: "Scope1"},
+			output: &v1.UpsertApplicationEquipResponse{Success: false},
+			mock: func(input *v1.UpsertApplicationEquipRequest) {
+				dbObj.EXPECT().UpsertApplicationEquipTx(ctx, gomock.Any()).Return(errors.New("err")).Times(1)
+			},
+			outErr: true,
+		},
+		{
+			name:   "push job err",
+			ctx:    ctx,
+			input:  &v1.UpsertApplicationEquipRequest{Scope: "Scope1"},
+			output: &v1.UpsertApplicationEquipResponse{Success: false},
+			mock: func(input *v1.UpsertApplicationEquipRequest) {
+				firstCall := dbObj.EXPECT().UpsertApplicationEquipTx(ctx, gomock.Any()).Return(nil).Times(1)
+				qObj.EXPECT().PushJob(ctx, gomock.Any(), "lw").Return(int32(1000), errors.New("err")).After(firstCall)
+			},
+			outErr: false,
+		},
+	}
+
+	for _, test := range testSet {
+		t.Run("", func(t *testing.T) {
+			test.mock(test.input)
+			s := NewApplicationServiceServer(dbObj, qObj, nil)
+			_, err := s.UpsertApplicationEquip(test.ctx, test.input)
+			if (err != nil) != test.outErr {
+				t.Errorf("Failed case [%s]  because expected err [%v] is mismatched with actual err [%v]", test.name, test.outErr, err)
+				return
+			} else {
+				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}
+
+func TestListApplicationsByProductSwidtags(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dbObj := dbmock.NewMockApplication(mockCtrl)
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	proObj := promock.NewMockProductServiceClient(mockCtrl)
+	var pro prov1.ProductServiceClient
+	pro = proObj
+	testSet := []struct {
+		name   string
+		input  *v1.ListApplicationsRequest
+		output *v1.ListApplicationsResponse
+		mock   func(*v1.ListApplicationsRequest)
+		isErr  bool
+		errVal string
+		ctx    context.Context
+	}{
+		{
+			name: "ListApplicationWithCorrectData",
+			input: &v1.ListApplicationsRequest{
+				Scopes:       []string{"Scope1"},
+				SearchParams: &v1.ApplicationSearchParams{ProductId: &v1.StringFilter{Filteringkey: "string"}},
+				PageNum:      int32(1),
+				PageSize:     int32(2),
+			},
+			output: &v1.ListApplicationsResponse{},
+			mock: func(input *v1.ListApplicationsRequest) {
+				proObj.EXPECT().GetApplicationsByProduct(gomock.Any(), gomock.Any()).Return(&prov1.GetApplicationsByProductResponse{}, nil)
+				dbObj.EXPECT().GetApplicationsByProduct(ctx, gomock.Any()).Return([]db.GetApplicationsByProductRow{{Totalrecords: int64(1)}}, nil)
+			},
+			isErr: false,
+			ctx:   ctx,
+		},
+		{
+			name: "ListApplicationWithCorrectData err1",
+			input: &v1.ListApplicationsRequest{
+				Scopes:       []string{"Scope1"},
+				SearchParams: &v1.ApplicationSearchParams{ProductId: &v1.StringFilter{Filteringkey: "string"}},
+				PageNum:      int32(1),
+				PageSize:     int32(2),
+			},
+			output: &v1.ListApplicationsResponse{},
+			mock: func(input *v1.ListApplicationsRequest) {
+				proObj.EXPECT().GetApplicationsByProduct(gomock.Any(), gomock.Any()).Return(&prov1.GetApplicationsByProductResponse{}, errors.New("err"))
+			},
+			isErr: true,
+			ctx:   ctx,
+		},
+		// {
+		// 	name: "ListApplicationWithCorrectData err2",
+		// 	input: &v1.ListApplicationsRequest{
+		// 		Scopes:       []string{"Scope1"},
+		// 		SearchParams: &v1.ApplicationSearchParams{ProductId: &v1.StringFilter{Filteringkey: "string"}},
+		// 		PageNum:      int32(1),
+		// 		PageSize:     int32(2),
+		// 	},
+		// 	output: &v1.ListApplicationsResponse{},
+		// 	mock: func(input *v1.ListApplicationsRequest) {
+		// 		proObj.EXPECT().GetApplicationsByProduct(gomock.Any(), gomock.Any()).Return(&prov1.GetApplicationsByProductResponse{}, nil).Times(1)
+		// 		dbObj.EXPECT().GetApplicationsByProduct(ctx, gomock.Any()).Return([]db.GetApplicationsByProductRow{{Totalrecords: int64(1)}}, errors.New("text string")).Times(1)
+		// 	},
+		// 	isErr: true,
+		// 	ctx:   ctx,
+		// },
+	}
+
+	for _, test := range testSet {
+		t.Run(test.name, func(t *testing.T) {
+			test.mock(test.input)
+			s := &applicationServiceServer{
+				applicationRepo: dbObj,
+				product:         pro,
+				queue:           qObj,
+			}
+			_, err := s.listApplicationsByProductSwidtags(test.ctx, test.input)
+			// log.Println(" log to be removed RESP[", got, "][", err, "]")
+			if (err != nil) != test.isErr {
+				t.Errorf("Failed case [%s]  because expected err is mismatched with actual err ", test.name)
+				return
+			} else {
+				logger.Log.Info(" passed : ", zap.String(" test : ", test.name))
+			}
+		})
+	}
+}

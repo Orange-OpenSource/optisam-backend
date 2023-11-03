@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"database/sql"
-	base "optisam-backend/account-service/pkg/repository/v1/postgres/common"
-	"optisam-backend/common/optisam/docker"
+
+	base "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/common"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/docker"
 
 	"os"
 	"testing"

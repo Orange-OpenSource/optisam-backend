@@ -1,0 +1,79 @@
+<body id="i4r2" style="box-sizing: border-box; margin: 0;">
+  <meta charset="utf-8">
+  <title>End of maintenance Alert
+  </title>
+  <div id="iwli" class="container" style="box-sizing: border-box; max-width: 600px; margin-top: 0px; margin-right: auto; margin-bottom: 0px; margin-left: auto; padding-top: 20px; padding-right: 20px; padding-bottom: 20px; padding-left: 20px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; background-color: rgb(255, 255, 255); box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 10px;">
+    <p id="iflm" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">Hello,
+    </p>
+    <p id="ie6g" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">The maintenance for the products defined in the sku has expired please have a look.
+    </p>
+    <table style="box-sizing: border-box;width: 100%;border-collapse: collapse;border: 1px solid #040101;">
+      <thead>
+        <tr style="box-sizing: border-box;">
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">Product Name
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">Entity
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">SKU
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">End Of Maintenance
+          </th>
+        </tr>   
+      </thead>
+    <tbody style="box-sizing: border-box;">  
+    {{ range .Items }}
+        <tr style="box-sizing: border-box;">
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .ProductName }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .Scope }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .SKU }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .EndOfMaintenance }}
+          </td>
+        </tr>
+    {{ end }}
+    </tbody>
+    </table>
+    <p id="i805r" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">If you have already renewed the maintenance, please update the maintenance end date in OpTISAM.
+    </p>
+    <p id="ikjyd" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">Thanks </p>
+
+    
+    <p id="iflm" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">Bonjour,
+    </p>
+    <p id="ie6g" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">La maintenance des produits définis dans le sku a expiré, veuillez y jeter un œil.
+    </p>
+    <table style="box-sizing: border-box;width: 100%;border-collapse: collapse;border: 1px solid #040101;">
+      <thead>
+        <tr style="box-sizing: border-box;">
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">Nom du produit
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">Entité
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">SKU
+          </th>
+          <th style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">Fin de maintenance
+          </th>
+        </tr>   
+      </thead>
+    <tbody style="box-sizing: border-box;">  
+    {{ range .Items }}
+        <tr style="box-sizing: border-box;">
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .ProductName }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .Scope }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .SKU }}
+          </td>
+          <td style="box-sizing: border-box; padding: 8px;text-align: left;border: 1px solid #040101;">{{ .EndOfMaintenance }}
+          </td>
+        </tr>
+    {{ end }}
+    </tbody>
+    </table>
+    <p id="i805r" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">Si vous avez déjà renouvelé la maintenance, merci de mettre à jour la date de fin de maintenance dans OpTISAM.
+    </p>
+    <p id="ikjyd" style="box-sizing: border-box; font-size: 16px; color: rgb(0, 0, 0); line-height: 1.5;">Merci </p>
+  </div>
+</body>

@@ -6,16 +6,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/models"
-	product "optisam-backend/product-service/pkg/api/v1"
 	"os"
 	"path/filepath"
 	"time"
+
+	product "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -157,24 +160,23 @@ func HandleDataFileStatus(ctx context.Context, dbObj *gendb.Queries, dataFileSta
 }
 
 func HandleGlobalFileStatus(ctx context.Context, dbObj *gendb.Queries, gid int32, prod grpc.ClientConnInterface) (err error) {
-
 	var dstatus []gendb.UploadStatus
 	gstatus := gendb.UploadStatusCOMPLETED //defau
 	fileRegx := fmt.Sprintf("%s/%d_*.csv", sourceDir, gid)
 	files, _ := filepath.Glob(fileRegx)
 	if files != nil && len(files) > 0 {
-		logger.Log.Error("More transformed file need to be proccessed", zap.Any("gid", gid))
+		logger.Log.Sugar().Errorf("More transformed file need to be processed", "gid", gid)
 		return nil
 	}
 
 	dstatus, err = dbObj.GetAllDataFileStatusByGID(ctx, gid)
 	if err != nil {
-		logger.Log.Error("Failed to get all data file status ", zap.Any("gid", gid), zap.Error(err))
+		logger.Log.Sugar().Errorf("Failed to get all data file status ", "gid", gid, "err", err.Error())
 		return
 	}
 	for _, val := range dstatus {
 		if val == gendb.UploadStatusPENDING || val == gendb.UploadStatusINPROGRESS {
-			logger.Log.Error("Few nifi transformed files are still in pending/progress", zap.Any("gid", gid))
+			logger.Log.Sugar().Errorf("Few nifi transformed files are still in pending/progress", "gid", gid)
 			return
 		}
 		if val == gendb.UploadStatusFAILED || val == gendb.UploadStatusPARTIAL {
@@ -188,15 +190,15 @@ func HandleGlobalFileStatus(ctx context.Context, dbObj *gendb.Queries, gid int32
 		Column2:  gstatus,
 	})
 	if err != nil {
-		logger.Log.Error("Failed to update global file status", zap.Error(err), zap.Any("gid", gid), zap.Any("status", gstatus))
+		logger.Log.Sugar().Errorf("Failed to update global file status", "err", err.Error(), "gid", gid, "status", gstatus)
 		return err
 	}
-	logger.Log.Debug("Global file status update ", zap.Any("gid", gid), zap.Any("status", gstatus))
+	logger.Log.Sugar().Infof("Global file status update ", "gid", gid, "status", gstatus)
 
 	if prod != nil {
-		logger.Log.Info("Calling CreateDashboardUpdateJob........")
-		if resp, err := product.NewProductServiceClient(prod).CreateDashboardUpdateJob(ctx, &product.CreateDashboardUpdateJobRequest{Scope: scope}); err != nil || !resp.Success {
-			logger.Log.Error("Failed to create licences calculation job", zap.Error(err))
+		logger.Log.Sugar().Infof("Calling CreateDashboardUpdateJob........")
+		if resp, err := product.NewProductServiceClient(prod).CreateDashboardUpdateJob(ctx, &product.CreateDashboardUpdateJobRequest{Scope: scope, Ppid: fmt.Sprintf("%v", gid)}); err != nil || !resp.Success {
+			logger.Log.Sugar().Errorf("Failed to create licences calculation job", "err", err)
 			return err
 		}
 	}

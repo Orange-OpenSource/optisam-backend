@@ -5,20 +5,27 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	accv1 "optisam-backend/account-service/pkg/api/v1"
-	appv1 "optisam-backend/application-service/pkg/api/v1"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	repo "optisam-backend/product-service/pkg/repository/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"strings"
 
+	appv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/application-service/pkg/api/v1"
+
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/account-service/pkg/api/v1"
+
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/metric-service/pkg/api/v1"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	dgo "github.com/dgraph-io/dgo/v2"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+	dgworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/config"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,28 +33,106 @@ import (
 )
 
 // productServiceServer is implementation of v1.authServiceServer proto interface
-type productServiceServer struct {
-	productRepo           repo.Product
+type ProductServiceServer struct {
+	ProductRepo           repo.Product
 	queue                 workerqueue.Workerqueue
 	metric                metv1.MetricServiceClient
 	application           appv1.ApplicationServiceClient
 	account               accv1.AccountServiceClient
 	dashboardTimeLocation string
+	KafkaProducer         *kafka.Producer
+	Dg                    *dgo.Dgraph
+	Cfg                   *config.Config
 }
 
 // NewProductServiceServer creates Product service
-func NewProductServiceServer(productRepo repo.Product, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn, zone string) v1.ProductServiceServer {
-	return &productServiceServer{
-		productRepo:           productRepo,
+func NewProductServiceServer(ProductRepo repo.Product, queue workerqueue.Workerqueue, grpcServers map[string]*grpc.ClientConn, zone string, kafkaProducer *kafka.Producer, dgraph *dgo.Dgraph, cfg *config.Config) *ProductServiceServer {
+	return &ProductServiceServer{
+		ProductRepo:           ProductRepo,
 		queue:                 queue,
 		metric:                metv1.NewMetricServiceClient(grpcServers["metric"]),
 		application:           appv1.NewApplicationServiceClient(grpcServers["application"]),
 		account:               accv1.NewAccountServiceClient(grpcServers["account"]),
 		dashboardTimeLocation: zone,
+		KafkaProducer:         kafkaProducer,
+		Dg:                    dgraph,
+		Cfg:                   cfg,
 	}
 }
 
-func (s *productServiceServer) UpsertAllocatedMetricEquipment(ctx context.Context, req *v1.UpsertAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+func (s *ProductServiceServer) GetEditorProductExpensesByScope(ctx context.Context, req *v1.EditorProductsExpensesByScopeRequest) (*v1.EditorProductExpensesByScopeResponse, error) {
+	logger.Log.Sugar().Debug("service/v1 - GetEditorProductExpensesByScope - GetEditorProductExpensesByScope",
+		"scope", req.Scope,
+		"req", req,
+	)
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		logger.Log.Sugar().Errorw("product-v1 - GetEditorProductExpensesByScope - wrong userClaims",
+			"status", codes.Unknown,
+			"reason", "ClaimsNotFoundError",
+		)
+		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Sugar().Errorw("product-v1 - GetEditorProductExpensesByScope - ScopeValidationError",
+			"status", codes.Internal,
+			"reason", "ScopeValidationError",
+		)
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	editor := req.Editor
+	if editor == "" {
+		logger.Log.Sugar().Errorw("product-v1 - GetEditorProductExpensesByScope - Editor Not Found",
+			"status", codes.Internal,
+			"reason", "Editor Not Found",
+		)
+		return nil, status.Error(codes.PermissionDenied, "Editor Not Found")
+	}
+	dbresp, err := s.ProductRepo.GetEditorProductExpensesByScopeData(ctx, db.GetEditorProductExpensesByScopeDataParams{
+		Scope:     []string{req.Scope},
+		Reqeditor: editor,
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - GetEditorProductExpensesByScope - GetEditorProductExpensesByScope",
+			"error", err.Error(),
+			"scope", req.Scope,
+			"status", codes.Internal,
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	dbrespocl, err := s.ProductRepo.GetComputedCostEditorProducts(ctx, db.GetComputedCostEditorProductsParams{
+		Scope:  []string{req.Scope},
+		Editor: editor,
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - GetEditorProductExpensesByScope - GetEditorProductExpensesByScope",
+			"error", err.Error(),
+			"scope", req.Scope,
+			"status", codes.Internal,
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	apiresp := v1.EditorProductExpensesByScopeResponse{}
+	apiresp.EditorProductExpensesByScope = make([]*v1.EditorProductExpensesByScopeData, len(dbresp))
+	for i := range dbresp {
+		apiresp.EditorProductExpensesByScope[i] = &v1.EditorProductExpensesByScopeData{}
+		apiresp.EditorProductExpensesByScope[i].Name = dbresp[i].Name
+		apiresp.EditorProductExpensesByScope[i].TotalPurchaseCost = dbresp[i].TotalPurchaseCost
+		apiresp.EditorProductExpensesByScope[i].TotalMaintenanceCost = dbresp[i].TotalMaintenanceCost
+		apiresp.EditorProductExpensesByScope[i].TotalCost = dbresp[i].TotalCost
+	}
+	for _, oclrow := range dbrespocl {
+		for i, apires := range apiresp.EditorProductExpensesByScope {
+			if oclrow.ProductNames == apires.Name || apires.Name == oclrow.AggregationName {
+				apiresp.EditorProductExpensesByScope[i].TotalComputedCost = oclrow.Cost
+			}
+		}
+	}
+	return &apiresp, nil
+}
+
+func (s *ProductServiceServer) UpsertAllocatedMetricEquipment(ctx context.Context, req *v1.UpsertAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -57,7 +142,7 @@ func (s *productServiceServer) UpsertAllocatedMetricEquipment(ctx context.Contex
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	err := s.productRepo.UpsertProductEquipments(ctx, db.UpsertProductEquipmentsParams{
+	err := s.ProductRepo.UpsertProductEquipments(ctx, db.UpsertProductEquipmentsParams{
 		Swidtag: req.Swidtag, EquipmentID: req.EquipmentId, NumOfUsers: sql.NullInt32{Int32: req.AllocatedUsers,
 			Valid: true}, Scope: req.Scope,
 		AllocatedMetric: req.AllocatedMetrics,
@@ -72,7 +157,7 @@ func (s *productServiceServer) UpsertAllocatedMetricEquipment(ctx context.Contex
 
 }
 
-func (s *productServiceServer) DeleteAllocatedMetricEquipment(ctx context.Context, req *v1.DropAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
+func (s *ProductServiceServer) DeleteAllocatedMetricEquipment(ctx context.Context, req *v1.DropAllocateMetricEquipementRequest) (*v1.UpsertAllocateMetricEquipementResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -82,7 +167,7 @@ func (s *productServiceServer) DeleteAllocatedMetricEquipment(ctx context.Contex
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	err := s.productRepo.DropAllocatedMetricFromEquipment(ctx, db.DropAllocatedMetricFromEquipmentParams{
+	err := s.ProductRepo.DropAllocatedMetricFromEquipment(ctx, db.DropAllocatedMetricFromEquipmentParams{
 		Swidtag:         req.Swidtag,
 		EquipmentID:     req.EquipmentId,
 		Scope:           req.Scope,
@@ -98,12 +183,12 @@ func (s *productServiceServer) DeleteAllocatedMetricEquipment(ctx context.Contex
 
 }
 
-func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.UpsertProductRequest) (*v1.UpsertProductResponse, error) {
+func (s *ProductServiceServer) UpsertProduct(ctx context.Context, req *v1.UpsertProductRequest) (*v1.UpsertProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
 	}
-	err := s.productRepo.UpsertProductTx(ctx, req, userClaims.UserID)
+	err := s.ProductRepo.UpsertProductTx(ctx, req, userClaims.UserID)
 	if err != nil {
 		logger.Log.Error("UpsertProduct Failed", zap.Error(err))
 		return &v1.UpsertProductResponse{Success: false}, status.Error(codes.Internal, "DBError")
@@ -125,6 +210,7 @@ func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.Upsert
 		Type:   sql.NullString{String: "aw"},
 		Status: job.JobStatusPENDING,
 		Data:   envolveData,
+		PPID:   req.Ppid,
 	}, "aw")
 	if err != nil {
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
@@ -132,7 +218,7 @@ func (s *productServiceServer) UpsertProduct(ctx context.Context, req *v1.Upsert
 	return &v1.UpsertProductResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
+func (s *ProductServiceServer) ListProducts(ctx context.Context, req *v1.ListProductsRequest) (*v1.ListProductsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -157,8 +243,8 @@ func (s *productServiceServer) ListProducts(ctx context.Context, req *v1.ListPro
 }
 
 // nolint: gocyclo
-func (s *productServiceServer) listProductView(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
-	dbresp, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
+func (s *ProductServiceServer) listProductView(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+	dbresp, err := s.ProductRepo.ListProductsView(ctx, db.ListProductsViewParams{
 		Scope:                 scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -240,7 +326,7 @@ func (s *productServiceServer) listProductView(ctx context.Context, req *v1.List
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) GetProductCountByApp(ctx context.Context, req *v1.GetProductCountByAppRequest) (*v1.GetProductCountByAppResponse, error) {
+func (s *ProductServiceServer) GetProductCountByApp(ctx context.Context, req *v1.GetProductCountByAppRequest) (*v1.GetProductCountByAppResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFound")
@@ -249,7 +335,7 @@ func (s *productServiceServer) GetProductCountByApp(ctx context.Context, req *v1
 		logger.Log.Error("GetProductCountByApp - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.GetProductCount(ctx, req.Scope)
+	dbresp, err := s.ProductRepo.GetProductCount(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - GetProductCountByApp - error from repo/GetProductCountByApp", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
@@ -265,7 +351,7 @@ func (s *productServiceServer) GetProductCountByApp(ctx context.Context, req *v1
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) GetApplicationsByProduct(ctx context.Context, req *v1.GetApplicationsByProductRequest) (*v1.GetApplicationsByProductResponse, error) {
+func (s *ProductServiceServer) GetApplicationsByProduct(ctx context.Context, req *v1.GetApplicationsByProductRequest) (*v1.GetApplicationsByProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFound")
@@ -274,7 +360,7 @@ func (s *productServiceServer) GetApplicationsByProduct(ctx context.Context, req
 		logger.Log.Error("GetApplicationsByProduct - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	app, err := s.productRepo.GetApplicationsByProductID(ctx, db.GetApplicationsByProductIDParams{
+	app, err := s.ProductRepo.GetApplicationsByProductID(ctx, db.GetApplicationsByProductIDParams{
 		Scope:   req.Scope,
 		Swidtag: req.Swidtag,
 	})
@@ -285,7 +371,7 @@ func (s *productServiceServer) GetApplicationsByProduct(ctx context.Context, req
 	return &v1.GetApplicationsByProductResponse{ApplicationId: app}, nil
 }
 
-func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *v1.GetEquipmentsByProductRequest) (*v1.GetEquipmentsByProductResponse, error) {
+func (s *ProductServiceServer) GetEquipmentsByProduct(ctx context.Context, req *v1.GetEquipmentsByProductRequest) (*v1.GetEquipmentsByProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFound")
@@ -294,7 +380,7 @@ func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *
 		logger.Log.Error("GetEquipmentsByProduct - Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	equipments, err := s.productRepo.GetEquipmentsBySwidtag(ctx, db.GetEquipmentsBySwidtagParams{
+	equipments, err := s.ProductRepo.GetEquipmentsBySwidtag(ctx, db.GetEquipmentsBySwidtagParams{
 		Scope:   req.Scope,
 		Swidtag: req.SwidTag,
 	})
@@ -306,8 +392,8 @@ func (s *productServiceServer) GetEquipmentsByProduct(ctx context.Context, req *
 }
 
 // nolint: gocyclo
-func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
-	products, err := s.productRepo.GetProductsByApplicationID(ctx, db.GetProductsByApplicationIDParams{
+func (s *ProductServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+	products, err := s.ProductRepo.GetProductsByApplicationID(ctx, db.GetProductsByApplicationIDParams{
 		Scope:         scopes[0],
 		ApplicationID: req.SearchParams.ApplicationId.Filteringkey,
 	})
@@ -319,7 +405,7 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 	if products != nil {
 		prodFilter = products
 	}
-	dbresp, err := s.productRepo.ListProductsByApplication(ctx, db.ListProductsByApplicationParams{
+	dbresp, err := s.ProductRepo.ListProductsByApplication(ctx, db.ListProductsByApplicationParams{
 		Scope:               req.Scopes,
 		Swidtag:             prodFilter,
 		ProductName:         req.GetSearchParams().GetName().GetFilteringkey(),
@@ -370,7 +456,7 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 }
 
 // nolint: gocyclo
-// func (s *productServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+// func (s *ProductServiceServer) listProductViewInApplication(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
 // 	appEquipments, err := s.application.GetEquipmentsByApplication(ctx, &appv1.GetEquipmentsByApplicationRequest{
 // 		Scope:         scopes[0],
 // 		ApplicationId: req.SearchParams.ApplicationId.Filteringkey,
@@ -383,7 +469,7 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 // 	if appEquipments != nil {
 // 		equipmentFilter = appEquipments.EquipmentId
 // 	}
-// 	dbresp, err := s.productRepo.ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
+// 	dbresp, err := s.ProductRepo.ListProductsViewRedirectedApplication(ctx, db.ListProductsViewRedirectedApplicationParams{
 // 		Scope:                 scopes,
 // 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 // 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -448,8 +534,8 @@ func (s *productServiceServer) listProductViewInApplication(ctx context.Context,
 // }
 
 // nolint: gocyclo
-func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
-	dbresp, err := s.productRepo.ListProductsViewRedirectedEquipment(ctx, db.ListProductsViewRedirectedEquipmentParams{
+func (s *ProductServiceServer) listProductViewInEquipment(ctx context.Context, req *v1.ListProductsRequest, scopes []string) (*v1.ListProductsResponse, error) {
+	dbresp, err := s.ProductRepo.ListProductsViewRedirectedEquipment(ctx, db.ListProductsViewRedirectedEquipmentParams{
 		Scope:                 scopes,
 		Swidtag:               req.GetSearchParams().GetSwidTag().GetFilteringkey(),
 		IsSwidtag:             req.GetSearchParams().GetSwidTag().GetFilterType() && req.GetSearchParams().GetSwidTag().GetFilteringkey() != "",
@@ -515,7 +601,7 @@ func (s *productServiceServer) listProductViewInEquipment(ctx context.Context, r
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.ProductRequest) (*v1.ProductResponse, error) {
+func (s *ProductServiceServer) GetProductDetail(ctx context.Context, req *v1.ProductRequest) (*v1.ProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -523,7 +609,7 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+	dbresp, err := s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{
 		Swidtag: req.SwidTag,
 		Scope:   req.Scope,
 	})
@@ -535,7 +621,7 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 			return nil, status.Error(codes.Internal, "DBError")
 		}
 		logger.Log.Error("service/v1 - GetProductDetail - db/GetProductInformation - product does not exist", zap.Error(err))
-		dbresp, err1 := s.productRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
+		dbresp, err1 := s.ProductRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
 			Swidtag: req.SwidTag,
 			Scope:   req.Scope,
 		})
@@ -555,7 +641,7 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 		apiresp.ProductSwidTag = dbresp.ProductSwidTag.String
 		apiresp.VersionSwidTag = dbresp.VersionSwidTag.String
 		if apiresp.Version == "" || strings.ToLower(apiresp.Version) == "all" {
-			productsResponse, _ := s.productRepo.GetProductByNameEditor(ctx, db.GetProductByNameEditorParams{
+			productsResponse, _ := s.ProductRepo.GetProductByNameEditor(ctx, db.GetProductByNameEditorParams{
 				ProductName:   []string{dbresp.ProductName},
 				ProductEditor: []string{dbresp.ProductEditor},
 			})
@@ -574,8 +660,10 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 		if len(dbresp.Metrics) > 0 {
 			dbmetrics = dbresp.Metrics
 		} else {
-			swittagwithoutversion := strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{dbresp.ProductName, dbresp.ProductEditor}, "_"), " ", "_"), "-", "_")
-			dbrespAcq, err1 := s.productRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
+			pName := removeSpecialChars(dbresp.ProductName)
+			pEditor := removeSpecialChars(dbresp.ProductEditor)
+			swittagwithoutversion := strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{pName, pEditor}, "_"), " ", "_"), "-", "_")
+			dbrespAcq, err1 := s.ProductRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
 				Swidtag: swittagwithoutversion,
 				Scope:   req.Scope,
 			})
@@ -583,9 +671,9 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 				if len(dbrespAcq.Metrics) > 0 {
 					dbmetrics = dbrespAcq.Metrics
 				} else {
-					swittagwithoutversion = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{dbresp.ProductName, dbresp.ProductEditor, "all"}, "_"), " ", "_"), "-", "_")
-					dbrespAcqAll, err2 := s.productRepo.GetProductInformationFromAcqright(ctx, db.GetProductInformationFromAcqrightParams{
-						Swidtag: swittagwithoutversion,
+					swittagwithoutversion = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{pName, pEditor, "all"}, "_"), " ", "_"), "-", "_")
+					dbrespAcqAll, err2 := s.ProductRepo.GetProductInformationFromAcqrightForAll(ctx, db.GetProductInformationFromAcqrightForAllParams{
+						Swidtag: strings.ToLower(swittagwithoutversion),
 						Scope:   req.Scope,
 					})
 					if err2 == nil || errors.Is(err2, sql.ErrNoRows) {
@@ -625,7 +713,7 @@ func (s *productServiceServer) GetProductDetail(ctx context.Context, req *v1.Pro
 
 }
 
-func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.ProductRequest) (*v1.ProductOptionsResponse, error) {
+func (s *ProductServiceServer) GetProductOptions(ctx context.Context, req *v1.ProductRequest) (*v1.ProductOptionsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -633,7 +721,7 @@ func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.Pr
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.GetProductOptions(ctx, db.GetProductOptionsParams{
+	dbresp, err := s.ProductRepo.GetProductOptions(ctx, db.GetProductOptionsParams{
 		Swidtag: req.GetSwidTag(),
 		Scope:   req.Scope,
 	})
@@ -659,7 +747,7 @@ func (s *productServiceServer) GetProductOptions(ctx context.Context, req *v1.Pr
 	return &apiresp, nil
 }
 
-func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.DropProductDataRequest) (*v1.DropProductDataResponse, error) {
+func (s *ProductServiceServer) DropProductData(ctx context.Context, req *v1.DropProductDataRequest) (*v1.DropProductDataResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
@@ -668,7 +756,7 @@ func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.Drop
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	if err := s.productRepo.DropProductDataTx(ctx, req.Scope, req.DeletionType); err != nil {
+	if err := s.ProductRepo.DropProductDataTx(ctx, req.Scope, req.DeletionType); err != nil {
 		return &v1.DropProductDataResponse{Success: false}, status.Error(codes.Internal, "DBError")
 	}
 	// For dgworker Queue
@@ -687,6 +775,7 @@ func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.Drop
 		Type:   sql.NullString{String: "aw"},
 		Status: job.JobStatusPENDING,
 		Data:   envolveData,
+		PPID:   req.Ppid,
 	}, "aw")
 	if err != nil {
 		logger.Log.Error("Failed to push job to the queue", zap.Error(err))
@@ -694,7 +783,7 @@ func (s *productServiceServer) DropProductData(ctx context.Context, req *v1.Drop
 	return &v1.DropProductDataResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) DropAggregationData(ctx context.Context, req *v1.DropAggregationDataRequest) (*v1.DropAggregationDataResponse, error) {
+func (s *ProductServiceServer) DropAggregationData(ctx context.Context, req *v1.DropAggregationDataRequest) (*v1.DropAggregationDataResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
@@ -703,7 +792,7 @@ func (s *productServiceServer) DropAggregationData(ctx context.Context, req *v1.
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	if err := s.productRepo.DeleteAggregationByScope(ctx, req.Scope); err != nil {
+	if err := s.ProductRepo.DeleteAggregationByScope(ctx, req.Scope); err != nil {
 		return &v1.DropAggregationDataResponse{Success: false}, status.Error(codes.Internal, "DBError")
 	}
 	// For dgworker Queue
@@ -739,4 +828,34 @@ func metricTypeOfSaasExists(metrics []*metv1.Metric, name string) bool {
 		}
 	}
 	return flag
+}
+
+func (s *ProductServiceServer) GetProductInformationBySwidTag(ctx context.Context, req *v1.GetProductInformationBySwidTagRequest) (*v1.GetProductInformationBySwidTagResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	dbresp, err := s.ProductRepo.GetProductInformation(ctx, db.GetProductInformationParams{
+		Swidtag: req.SwidTag,
+		Scope:   req.Scope,
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &v1.GetProductInformationBySwidTagResponse{}, nil
+		}
+		logger.Log.Error("service/v1 - GetProductInformationBySwidTag - GetProductInformation", zap.String("reason", err.Error()))
+		return &v1.GetProductInformationBySwidTagResponse{}, status.Error(codes.Internal, "DBError")
+	}
+	return &v1.GetProductInformationBySwidTagResponse{
+		Swidtag:           dbresp.Swidtag,
+		ProductName:       dbresp.ProductName,
+		ProductEditor:     dbresp.ProductEditor,
+		ProductVersion:    dbresp.ProductVersion,
+		Metrics:           dbresp.Metrics,
+		NumOfApplications: dbresp.NumOfApplications,
+		NumOfEquipments:   dbresp.NumOfEquipments,
+	}, nil
 }

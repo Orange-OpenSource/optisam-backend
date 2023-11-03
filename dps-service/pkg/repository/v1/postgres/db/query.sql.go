@@ -1076,6 +1076,29 @@ func (q *Queries) UpdateFileStatus(ctx context.Context, arg UpdateFileStatusPara
 	return err
 }
 
+const updateFileStatusCancelled = `-- name: UpdateFileStatusCancelled :one
+UPDATE uploaded_data_files SET status = $1, updated_on = NOW() , comments = $2 where upload_id = $3 AND file_name = $4 AND status='UPLOADED' RETURNING status
+`
+
+type UpdateFileStatusCancelledParams struct {
+	Status   UploadStatus   `json:"status"`
+	Comments sql.NullString `json:"comments"`
+	UploadID int32          `json:"upload_id"`
+	FileName string         `json:"file_name"`
+}
+
+func (q *Queries) UpdateFileStatusCancelled(ctx context.Context, arg UpdateFileStatusCancelledParams) (UploadStatus, error) {
+	row := q.db.QueryRowContext(ctx, updateFileStatusCancelled,
+		arg.Status,
+		arg.Comments,
+		arg.UploadID,
+		arg.FileName,
+	)
+	var status UploadStatus
+	err := row.Scan(&status)
+	return status, err
+}
+
 const updateFileSuccessRecord = `-- name: UpdateFileSuccessRecord :one
 UPDATE uploaded_data_files SET success_records = success_records + $3 where upload_id = $1 AND file_name = $2 RETURNING   total_records = (success_records) as isSuccess, total_records = (failed_records) as isFailed, total_records = (success_records + failed_records) as isPartial
 `

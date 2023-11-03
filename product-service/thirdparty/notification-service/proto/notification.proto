@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option go_package = "account-service/thirdparty/account-service/pkg/api/v1";
+
+package notification.v1;
+
+import "google/api/annotations.proto";
+
+
+service NotificationService {
+    
+    //ListScopes returns list of available scopes in system
+    rpc SendMail(SendMailRequest) returns (SendMailResponse) {
+      option (google.api.http) = {
+        post: "/api/v1/notify/sendmail"
+        body: "*"
+      };
+    }
+  
+}
+ message SendMailRequest {
+  string mail_subject  = 1;
+  string mail_message = 2;
+  repeated string mail_to = 3;
+ }
+ message SendMailResponse {
+   string success =1;
+ }

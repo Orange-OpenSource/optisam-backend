@@ -2,12 +2,15 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
-	prodv1 "optisam-backend/product-service/pkg/api/v1"
+
+	prodv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/thirdparty/product-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

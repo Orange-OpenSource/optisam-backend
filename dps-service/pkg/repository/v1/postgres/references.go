@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/repository/v1/postgres/db"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"

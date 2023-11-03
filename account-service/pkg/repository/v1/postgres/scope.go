@@ -4,12 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	v1 "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/logger"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/lib/pq"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -204,4 +208,12 @@ func (r *AccountRepository) ScopeExpensesByScopeCode(ctx context.Context, scopeC
 	default:
 		return expenses, nil
 	}
+}
+func (r *AccountRepository) GenerateRandomPassword() ([]byte, error) {
+	b, e := bcrypt.GenerateFromPassword([]byte(helper.CreateRandomString()), 11)
+	return b, e
+}
+func (r *AccountRepository) CreateToken() string {
+	tkn := helper.CreateToken()
+	return tkn
 }

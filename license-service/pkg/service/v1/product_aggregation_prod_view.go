@@ -3,13 +3,16 @@ package v1
 import (
 	"context"
 	"math"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
-	prodv1 "optisam-backend/product-service/pkg/api/v1"
 	"strings"
+
+	prodv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/thirdparty/product-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -102,10 +105,13 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 	input[ProdAggName] = repoAgg.Name
 	input[SCOPES] = []string{req.Scope}
 	input[IsAgg] = true
+	input[IsSa] = false
+	var maintenance *prodv1.GetMaintenanceBySwidtagResponse
 	for i, aggRight := range rgtsWithoutRepart {
 		metricType := ""
 		availbleLicences := 0
 		sku := strings.Split(aggRight.SKU, ",")
+
 		for i := range sku {
 			metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
 				Sku:   sku[i],
@@ -126,9 +132,26 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 				return nil, status.Error(codes.Internal, "serviceError")
 			}
 			if metricType == "oracle.nup.standard" && aggRight.TransformDetails != "" {
-				availbleLicences += int(math.Ceil(float64(resp.AvailableLicenses) / 50))
+				availbleLicences += int(math.Floor(float64(resp.AvailableLicenses) / 50))
 			} else {
 				availbleLicences += int(resp.AvailableLicenses)
+			}
+			if metricType == "microsoft.sql.standard" || metricType == "microsoft.sql.enterprise" || metricType == "windows.server.standard" || metricType == "windows.server.datacenter" {
+				maintenance, err = s.productClient.GetMaintenanceBySwidtag(ctx, &prodv1.GetMaintenanceBySwidtagRequest{
+					Scope:  req.GetScope(),
+					Acqsku: sku[i],
+				})
+				if err != nil {
+					logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - GetMaintenanceBySwidtag-acqRight.SKU", zap.String("reason", err.Error()))
+					return nil, status.Error(codes.Internal, "serviceError")
+				}
+				if maintenance != nil {
+					sa := maintenance.Success
+					if sa {
+						input[IsSa] = sa
+					}
+				}
+
 			}
 		}
 		aggCompLicenses[i] = &v1.AggregationAcquiredRights{
@@ -171,10 +194,42 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 		if aggRight.TransformDetails != "" {
 			computedDetails = aggRight.TransformDetails
 		}
+		var nupLicence, opsLicence int32
+		var nupUprice, opsUprice float64
+		sku1 := strings.Split(aggRight.SKU, ",")
+		var maintenance *prodv1.GetMaintenanceBySwidtagResponse
+		if aggRight.TransformDetails != "" {
+			for i := range sku1 {
+				metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
+					Sku:   sku1[i],
+					Scope: req.Scope,
+				})
+				for _, v := range metrics {
+					if metricName.Metric == v.Name {
+						metricType = string(v.Type)
+					}
+				}
+				maintenance, err = s.productClient.GetMaintenanceBySwidtag(ctx, &prodv1.GetMaintenanceBySwidtagRequest{
+					Scope:  req.GetScope(),
+					Acqsku: sku1[i],
+				})
+				if err != nil {
+					logger.Log.Sugar().Errorf("service/v1 -  ListAcqRightsForProductAggregation - GetMaintenanceBySwidtag-sku1[i]", zap.String("reason", err.Error()))
+					return nil, status.Error(codes.Internal, "serviceError")
+				}
+				if metricType == "oracle.nup.standard" && aggRight.TransformDetails != "" {
+					nupLicence = maintenance.AcqLicenses
+					nupUprice = maintenance.UnitPrice
+				} else if metricType == "oracle.processor.standard" && aggRight.TransformDetails != "" {
+					opsLicence = maintenance.AcqLicenses
+					opsUprice = maintenance.UnitPrice
+				}
+			}
+		}
 		metricExists := false
 		for _, met := range rightsMetrics {
 			if ind = metricNameExistsAll(metrics, met); ind == -1 {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - metric name doesnt exist - " + met)
+				logger.Log.Error("service/v1 -  ListAcqRightsForProductAggregation - metric name doesnt exist - " + met)
 				continue
 			}
 			input[MetricName] = metrics[ind].Name
@@ -184,7 +239,7 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 			}
 			resp, err := MetricCalculation[metrics[ind].Type](ctx, s, eqTypes, input)
 			if err != nil {
-				logger.Log.Error("service/v1 - Failed ListAcqRightsForProduct  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
+				logger.Log.Error("service/v1 - Failed  ListAcqRightsForProductAggregation  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
 				continue
 			}
 			computedLicenses := resp[ComputedLicenses].(uint64)
@@ -199,7 +254,13 @@ func (s *licenseServiceServer) ListAcqRightsForAggregation(ctx context.Context, 
 		if metricExists {
 			aggCompLicenses[i].NumCptLicences = int32(maxComputed)
 			aggCompLicenses[i].DeltaNumber = int32(availbleLicences) - int32(maxComputed)
-			aggCompLicenses[i].DeltaCost = aggCompLicenses[i].PurchaseCost - aggRight.AvgUnitPrice*float64(int32(maxComputed))
+			if aggRight.TransformDetails != "" {
+				aggCompLicenses[i].DeltaCost = float64(float64(availbleLicences)*float64(opsUprice) - float64(opsUprice)*float64(maxComputed))
+				aggCompLicenses[i].TotalCost = float64(float64(opsLicence)*float64(opsUprice) + float64(nupLicence)*float64(nupUprice))
+			} else {
+				//aggCompLicenses[i].DeltaCost = aggCompLicenses[i].PurchaseCost - aggRight.AvgUnitPrice*float64(int32(maxComputed))
+				aggCompLicenses[i].DeltaCost = (float64(availbleLicences) * aggRight.AvgUnitPrice) - aggRight.AvgUnitPrice*float64(int32(maxComputed))
+			}
 			aggCompLicenses[i].ComputedDetails = computedDetails
 			aggCompLicenses[i].ComputedCost = aggRight.AvgUnitPrice * float64(int32(maxComputed))
 		} else {

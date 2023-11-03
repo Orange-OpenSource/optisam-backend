@@ -3,9 +3,12 @@ package rest
 import (
 	"context"
 	"net/http"
-	"optisam-backend/auth-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
-	rest_middleware "optisam-backend/common/optisam/middleware/rest"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	rest_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/rest"
 
 	"os"
 	"os/signal"
@@ -19,15 +22,19 @@ import (
 )
 
 // RunServer runs HTTP/REST gateway
-func RunServer(ctx context.Context, service v1.AuthService, serv *server.Server, httpPort string) error {
+func RunServer(ctx context.Context, service v1.AuthService, serv *server.Server, httpPort string, cfg config.Config) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	router := httprouter.New()
 
-	handler := newHandler(service, serv)
+	handler := newHandler(service, serv, cfg)
 
 	router.POST("/api/v1/token", handler.token)
+	router.GET("/api/v1/activate_account", handler.activateAccount)
+	router.GET("/api/v1/reset_password", handler.resetPassword)
+	router.POST("/api/v1/set_password", handler.setPassword)
+	router.POST("/api/v1/forgot_password", handler.forgotPassword)
 
 	srv := &http.Server{
 		Addr: ":" + httpPort,

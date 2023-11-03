@@ -6,12 +6,14 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
 	AddComputedLicenses(ctx context.Context, arg AddComputedLicensesParams) error
 	AddComputedLicensesToAggregation(ctx context.Context, arg AddComputedLicensesToAggregationParams) error
 	AggregatedRightDetails(ctx context.Context, arg AggregatedRightDetailsParams) (AggregatedRightDetailsRow, error)
+	AllNoMaintainenceProducts(ctx context.Context, scope string) ([]string, error)
 	CounterFeitedProductsCosts(ctx context.Context, arg CounterFeitedProductsCostsParams) ([]CounterFeitedProductsCostsRow, error)
 	CounterFeitedProductsLicences(ctx context.Context, arg CounterFeitedProductsLicencesParams) ([]CounterFeitedProductsLicencesRow, error)
 	CounterfeitPercent(ctx context.Context, scope string) (CounterfeitPercentRow, error)
@@ -30,6 +32,8 @@ type Querier interface {
 	DeleteProductsBySwidTagScope(ctx context.Context, arg DeleteProductsBySwidTagScopeParams) error
 	DeleteSharedDataByScope(ctx context.Context, scope string) error
 	DeleteSharedLicences(ctx context.Context, arg DeleteSharedLicencesParams) error
+	DeployedProducts(ctx context.Context, scope string) ([]string, error)
+	DeploymentPercent(ctx context.Context, arg DeploymentPercentParams) (float64, error)
 	DropAllocatedMetricFromEquipment(ctx context.Context, arg DropAllocatedMetricFromEquipmentParams) error
 	EquipmentProducts(ctx context.Context, equipmentID string) ([]ProductsEquipment, error)
 	ExportConcurrentUsers(ctx context.Context, arg ExportConcurrentUsersParams) ([]ExportConcurrentUsersRow, error)
@@ -51,6 +55,9 @@ type Querier interface {
 	GetApplicationsByProductID(ctx context.Context, arg GetApplicationsByProductIDParams) ([]string, error)
 	GetAvailableAcqLicenses(ctx context.Context, arg GetAvailableAcqLicensesParams) (int32, error)
 	GetAvailableAggLicenses(ctx context.Context, arg GetAvailableAggLicensesParams) (int32, error)
+	GetComputedCost(ctx context.Context, scope []string) (GetComputedCostRow, error)
+	GetComputedCostEditorProducts(ctx context.Context, arg GetComputedCostEditorProductsParams) ([]GetComputedCostEditorProductsRow, error)
+	GetComputedCostEditors(ctx context.Context, scope []string) ([]GetComputedCostEditorsRow, error)
 	GetConcurrentNominativeUsersBySwidTag(ctx context.Context, arg GetConcurrentNominativeUsersBySwidTagParams) ([]GetConcurrentNominativeUsersBySwidTagRow, error)
 	GetConcurrentUserByID(ctx context.Context, arg GetConcurrentUserByIDParams) (ProductConcurrentUser, error)
 	GetConcurrentUsersByDay(ctx context.Context, arg GetConcurrentUsersByDayParams) ([]GetConcurrentUsersByDayRow, error)
@@ -58,20 +65,26 @@ type Querier interface {
 	GetDashboardUpdates(ctx context.Context, arg GetDashboardUpdatesParams) (GetDashboardUpdatesRow, error)
 	GetEditor(ctx context.Context) ([]string, error)
 	GetEditorExpensesByScopeData(ctx context.Context, scope []string) ([]GetEditorExpensesByScopeDataRow, error)
+	GetEditorProductExpensesByScopeData(ctx context.Context, arg GetEditorProductExpensesByScopeDataParams) ([]GetEditorProductExpensesByScopeDataRow, error)
 	GetEquipmentsBySwidtag(ctx context.Context, arg GetEquipmentsBySwidtagParams) ([]string, error)
 	GetIndividualProductDetailByAggregation(ctx context.Context, arg GetIndividualProductDetailByAggregationParams) ([]GetIndividualProductDetailByAggregationRow, error)
 	GetIndividualProductForAggregationCount(ctx context.Context, arg GetIndividualProductForAggregationCountParams) (int64, error)
+	GetJobsInExecution(ctx context.Context, ppid sql.NullString) (int64, error)
 	GetLicensesCost(ctx context.Context, scope []string) (GetLicensesCostRow, error)
 	GetMetricsBySku(ctx context.Context, arg GetMetricsBySkuParams) (GetMetricsBySkuRow, error)
 	GetNominativeUserByID(ctx context.Context, arg GetNominativeUserByIDParams) (NominativeUser, error)
+	GetOpenSourceCloseSourceData(ctx context.Context, scope string) ([]GetOpenSourceCloseSourceDataRow, error)
 	GetOverallCostByProduct(ctx context.Context, arg GetOverallCostByProductParams) ([]GetOverallCostByProductRow, error)
 	GetOverallLicencesByProduct(ctx context.Context, arg GetOverallLicencesByProductParams) ([]GetOverallLicencesByProductRow, error)
 	GetProductByNameEditor(ctx context.Context, arg GetProductByNameEditorParams) ([]Product, error)
 	GetProductCount(ctx context.Context, scope string) ([]GetProductCountRow, error)
 	GetProductInformation(ctx context.Context, arg GetProductInformationParams) (GetProductInformationRow, error)
 	GetProductInformationFromAcqright(ctx context.Context, arg GetProductInformationFromAcqrightParams) (GetProductInformationFromAcqrightRow, error)
+	GetProductInformationFromAcqrightForAll(ctx context.Context, arg GetProductInformationFromAcqrightForAllParams) (GetProductInformationFromAcqrightForAllRow, error)
 	GetProductListByEditor(ctx context.Context, arg GetProductListByEditorParams) ([]string, error)
 	GetProductOptions(ctx context.Context, arg GetProductOptionsParams) ([]GetProductOptionsRow, error)
+	GetProductSkuExipredMaintenance(ctx context.Context, scope []string) ([]GetProductSkuExipredMaintenanceRow, error)
+	GetProductSkuExpiringSoonMaintenance(ctx context.Context, scope []string) ([]GetProductSkuExpiringSoonMaintenanceRow, error)
 	GetProductsByApplicationID(ctx context.Context, arg GetProductsByApplicationIDParams) ([]string, error)
 	GetProductsByEditor(ctx context.Context, arg GetProductsByEditorParams) ([]GetProductsByEditorRow, error)
 	GetProductsByEditorScope(ctx context.Context, arg GetProductsByEditorScopeParams) ([]GetProductsByEditorScopeRow, error)
@@ -80,7 +93,6 @@ type Querier interface {
 	GetScopeUnderUsageCostEditor(ctx context.Context, arg GetScopeUnderUsageCostEditorParams) ([]GetScopeUnderUsageCostEditorRow, error)
 	GetSharedData(ctx context.Context, scope string) ([]SharedLicense, error)
 	GetSharedLicenses(ctx context.Context, arg GetSharedLicensesParams) ([]SharedLicense, error)
-	GetTotalCostByProduct(ctx context.Context, arg GetTotalCostByProductParams) ([]GetTotalCostByProductRow, error)
 	GetTotalCounterfietAmount(ctx context.Context, scope string) (float64, error)
 	GetTotalDeltaCost(ctx context.Context, scope string) (float64, error)
 	GetTotalSharedLicenses(ctx context.Context, arg GetTotalSharedLicensesParams) (GetTotalSharedLicensesRow, error)
@@ -117,10 +129,15 @@ type Querier interface {
 	OverDeployedProductsCosts(ctx context.Context, arg OverDeployedProductsCostsParams) ([]OverDeployedProductsCostsRow, error)
 	OverDeployedProductsLicences(ctx context.Context, arg OverDeployedProductsLicencesParams) ([]OverDeployedProductsLicencesRow, error)
 	OverdeployPercent(ctx context.Context, scope string) (OverdeployPercentRow, error)
+	ProductCatalogVersion(ctx context.Context, arg ProductCatalogVersionParams) ([]ProductCatalogVersionRow, error)
+	ProductMaintenanceCount(ctx context.Context, scope string) ([]ProductMaintenanceCountRow, error)
+	ProductNoMaintenance(ctx context.Context, arg ProductNoMaintenanceParams) ([]ProductNoMaintenanceRow, error)
 	ProductsNotAcquired(ctx context.Context, scope string) ([]ProductsNotAcquiredRow, error)
 	ProductsNotDeployed(ctx context.Context, scope string) ([]ProductsNotDeployedRow, error)
 	ProductsPerMetric(ctx context.Context, scope string) ([]ProductsPerMetricRow, error)
 	TotalCostOfEachScope(ctx context.Context, scope []string) ([]TotalCostOfEachScopeRow, error)
+	TotalProductsOfScope(ctx context.Context, scope string) ([]int32, error)
+	TrueCost(ctx context.Context, scope string) ([]TrueCostRow, error)
 	UpdateAggregation(ctx context.Context, arg UpdateAggregationParams) error
 	UpsertAcqRights(ctx context.Context, arg UpsertAcqRightsParams) error
 	UpsertAggregatedRights(ctx context.Context, arg UpsertAggregatedRightsParams) error
@@ -145,6 +162,7 @@ type Querier interface {
 	UpsertProductPartial(ctx context.Context, arg UpsertProductPartialParams) error
 	UpsertRecievedLicenses(ctx context.Context, arg UpsertRecievedLicensesParams) error
 	UpsertSharedLicenses(ctx context.Context, arg UpsertSharedLicensesParams) error
+	WasteCost(ctx context.Context, scope string) ([]WasteCostRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

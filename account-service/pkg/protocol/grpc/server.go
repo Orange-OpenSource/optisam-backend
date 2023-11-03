@@ -5,11 +5,13 @@ import (
 	"crypto/rsa"
 	"log"
 	"net"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
-	mw "optisam-backend/common/optisam/middleware/grpc"
 	"os"
 	"os/signal"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	mw "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"

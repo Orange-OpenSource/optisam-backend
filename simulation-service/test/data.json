@@ -1,42 +1,19 @@
 {
 	"metricsimulation": {
 		"request": {
-			"swid_tag": "Acronis_Backup_&_Recovery_Management_Console_Acronis_5.5ibm_websphere_1",
-			"scope": "API",
+			"swid_tag": "ibm_websphere_1",
+			"scope": "AUT",
 			"metric_details": [
 				{
-					"metric_name": "ibm_pvu",
+					"metric_name": "oracle.processor.standard",
 					"unit_cost": 1000
 				},
 				{
-					"metric_name": " sag.processor",
+					"metric_name": "os_instance",
 					"unit_cost": 1500
 				}
 			]
-		},
-		"request3":
-		{"swid_tag":"Adobe_Reader_Adobe_7.0.12_build_2318",
-		"metric_details":[{"metric_name":"8TB","unit_cost":"2"},
-		{"metric_name":"hyperthreading","unit_cost":"3"}],"scope":"API"},
-
-		"request4":
-		{"swid_tag":"Adobe_Reader_Adobe_7.0.12_build_2318",
-		"metric_details":[{"metric_name":"8TB",
-		"unit_cost":"2"}],
-		"scope":"API"},
-
-		"request5":
-		{
-			"swid_tag":"",
-			"aggregation_name":null,
-			"metric_details":
-			[
-				{"metric_name":"ibm_pvu",
-				"unit_cost":"234"},
-				{"metric_name":"sag.processor",
-				"unit_cost":"43"}],"scope":"API"
-			} 
-	
+		}
 	},
 	"metric_sim_result": [
 		{
@@ -129,7 +106,7 @@
 				"float_val": 0.25
 			}
 		],
-		"scope": "API",
+		"scope": "AUT",
 		"metric_details": [
 			{
 				"metric_type": "instance.number.standard",
@@ -172,59 +149,5 @@
 		"created_by": "#string",
 		"created_on": "##string",
 		"config_attributes": "#[_ > 0]"
-	},
-	"Editor":
-	{
-		"editor1":"Adobe"
-	},
-
-	"SwidTag":
-	{
-		"swidtag":"Acronis_True_Image_Acronis_5.0.7",
-		"editor":"Acronis",
-		"editor2":"Adobe",
-		"product":"Adobe_Media_Server_Adobe_5.0.16"
-	},
-	
-	"Costsimulation":
-	{  "request":{
-		"editor":"Adobe",
-		"cost_details":
-		[
-			{"sku":"adobe_media_instance_1_1",
-			"swidtag":"Adobe_Media_Server_Adobe_5.0.16",
-			"aggregation_name":"",
-			"metric_name":"instance_1",
-			"unit_cost":100}
-			],
-			"scope":"API"
-		},
-		"request2":{"editor":"IBM",
-		"cost_details":[{"sku":"ibm_DB2_pvu",
-		"swidtag":"IBM_DB2_IBM_11.5","aggregation_name":"",
-		"metric_name":"ibm_pvu","unit_cost":500},{"sku":"ibm_cognos_pvu",
-		"swidtag":"IBM_Cognos_Analytics_IBM_11.1.7","aggregation_name":"",
-		"metric_name":"ibm_pvu","unit_cost":3500}],
-		"scope":"API"},
-			
-		
-		
-		
-		"request6":{
-				"editor":"IBM",
-				"cost_details":[
-					{"sku":"ibm_DB2_pvu", 
-				"swidtag":"IBM_DB2_IBM_11.5", 
-				"aggregation_name":"",
-				 "metric_name":"ibm_pvu", 
-				 "avg_unit_price":500, 
-				 "num_licenses_acquired":30}]
-
-			}
-
-
 	}
-
-
-	
 }

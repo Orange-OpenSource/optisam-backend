@@ -27,37 +27,10 @@
         "server_id": "server_aixa",
         "server_parent_id": "#string",
         "server_child_id": "#string",
-        "ID": "0x2f5324",
+        "ID": "0x28a04b",
         "swid_tag": "ibm_websphere_1",
-        "agg_name": "Aggregation",
-        "product_name": "Adobe Media Server",
-        "editor_name":"Adobe",
-        "product_swidTag" :"Adobe_Media_Server_Adobe_5.0.16"
-    
+        "agg_name": "Aggregation"
     },
-
-    "Softpartition":
-    {  "ID": "part_esx-servera1",
-       "Softpartition_Name": "sp1",
-       "environment": "production",
-       "vcpu": 4 ,
-       "softpartition_parent_id": "0x2b036a",
-        "softpartition_child_id": "#string",
-        "product_swidTag" :"Adobe_Media_Server_Adobe_5.0.16",
-        "product_Editor"  :"Adobe"
-
-     },
-
-     "Cluster":{
-        "cluster_name": "cl01",
-        "vcenter_name": "vc01",
-       "vcenter_version":" ",
-         "vcenter_parentID":"0x2f5338",
-         "vcenter_childID":"0x289f96",
-         "vcenter_childname":"cluster_name=cl01"
-
-     },
-
     "overview": {
         "equip_type": "vcenter",
         "num_equipments": 6
@@ -68,153 +41,12 @@
     },
 
     "equipmentID":
-    {   "softpartition_id" :"0x2eaf28", 
-         "server_id" : "0x2eaf1b", 
-        "cluster_id" :"0x2eaf13",
-        "vcenter_id" : "0x2eaf10" 
-    },
-    "Eqp_product_Edit":
-    {"scope":"API",
-    "swidtag":"Adobe_Media_Server_Adobe_5.0.16",
-    "equipment_id":"0x2bd365",
-    "eq_type":"softpartition",
-    "equipment_user":3,
-    "allocated_metrics":"oracle.processor"},
-
-    "Equipment_Type_Detail":
-    {
-      "ID": "0x2eaf10",
-      "type": "vcenter",
-      "parent_id": "",
-      "parent_type": "",
-      "metadata_id": "0x2eaf0e",
-      "metadata_source": "metadata_vcenter.csv",
-      "attributes": [
-        {
-          "ID": "0x2eaf0f",
-          "name": "vcenter_version",
-          "data_type": "STRING",
-          "primary_key": false,
-          "displayed": true,
-          "searchable": true,
-          "parent_identifier": false,
-          "mapped_to": "vcenter_version",
-          "simulated": false,
-          "schema_name": "vcenter_version"
-        },
-        {
-          "ID": "0x2eaf11",
-          "name": "vcenter_name",
-          "data_type": "STRING",
-          "primary_key": true,
-          "displayed": true,
-          "searchable": true,
-          "parent_identifier": false,
-          "mapped_to": "vcenter_name",
-          "simulated": false,
-          "schema_name": "vcenter_name"
-        }
-      ],
-      "scopes": [
-        "API"
-      ]
-    },
-
-      "metaData":
-      {
-        "ID": "0x2eaf27",
-  "name": "metadata_softpartition.csv",
-  "scopes": [
-    "API"
-  ],
-  "attributes": [
-    "environment",
-    "softpartition_id",
-    "parent_id",
-    "softpartition_name",
-    "vcpu"
-  ]
-},
-"metaData_server":
-{"ID":"0x2eaf16",
-"name":"metadata_server.csv",
-"scopes":["API"],
-"attributes":[
-  "environment","hyperthreading",
-"ibm_pvu","cores_per_processor",
-"server_type","cpu_model",
-"server_processors_numbers","oracle_core_factor",
-"datacenter_name","parent_id",
-"server_os","server_name",
-"server_id","sag_uvu","cpu_manufacturer"]},
-
-"metaData_Cluster":
-{"ID":"0x2eaf12",
-"name":"metadata_cluster.csv",
-"scopes":["API"],
-"attributes":
-["parent_id",
-"cluster_name"]},
-
-"metadata_Vcenter":
-{"ID": "0x2eaf0e",
-  "name": "metadata_vcenter.csv",
-  "scopes": [
-    "API"
-  ],
-  "attributes": [
-    "vcenter_name",
-    "vcenter_version"
-  ]
-},
+    {   "softpartition_id" :"0x289fab", 
+         "server_id" : "0x289f9e", 
+        "cluster_id" :"0x289f96",
+        "vcenter_id" : "0x289f92" 
 
 
-"Update_Eqp":
-{"attributes":[],
-"parent_id":"0x2eaf1b",
-"updattr":[
-  {"ID":"0x289fad",
-  "name":"softpartition_name",
-  "schema_name":"Softpartition Name",
-  "displayed":true,
-  "searchable":false}],
-  "scopes":["API"]},
+    }
 
-  "Update_Server":
-  {
-    "attributes":[],
-  "parent_id":"0x2eaf13",
-  "updattr":[
-    {"ID":"0x289f9a",
-    "name":"datacenter_name",
-  "schema_name":"datacenter_name",
-  "displayed":true,
-  "searchable":true}],
-  "scopes":["API"]
-  },
-  
-  "Update_Cluster":
-  {"attributes":[],
-  "parent_id":"0x2eaf10",
-  "updattr":[{"ID":"0x2eaf14","name":"cluster_name",
-  "displayed":true,"searchable":true,
-  "schema_name":"cluster_name"}],
-  "scopes":["API"]},
-
-  "Update_Vcenter":
-  {"attributes":[],
-  "updattr":
-  [{"ID":"0x289f94","name":"vcenter_version",
-  "schema_name":"vcenter_version","displayed":true,
-  "searchable":true} ],
-  "scopes":["API"]}
-
-
-
-  
 }
-
-
-  
-
-

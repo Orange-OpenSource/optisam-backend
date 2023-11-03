@@ -23,9 +23,10 @@ type DBConfig struct {
 }
 
 type Migration struct {
-	Version       string
-	Direction     string
-	MigrationPath string
+	Version          string
+	Direction        string
+	MigrationPath    string
+	DeleteMigrations bool
 }
 type DBuserInfo struct {
 	User string

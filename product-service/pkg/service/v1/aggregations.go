@@ -5,21 +5,24 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
-	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+	dgworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (s *productServiceServer) ListAggregationProducts(ctx context.Context, req *v1.ListAggregationProductsRequest) (*v1.ListAggregationProductsResponse, error) {
+func (s *ProductServiceServer) ListAggregationProducts(ctx context.Context, req *v1.ListAggregationProductsRequest) (*v1.ListAggregationProductsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -28,7 +31,7 @@ func (s *productServiceServer) ListAggregationProducts(ctx context.Context, req 
 		logger.Log.Error("service/v1 - ListAggregationProducts", zap.String("reason", "ScopeError"))
 		return &v1.ListAggregationProductsResponse{}, status.Error(codes.Unknown, "ScopeValidationError")
 	}
-	availProds, err := s.productRepo.ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
+	availProds, err := s.ProductRepo.ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 		Editor: req.GetEditor(),
 		Scope:  req.GetScope(),
 	})
@@ -42,7 +45,7 @@ func (s *productServiceServer) ListAggregationProducts(ctx context.Context, req 
 
 	var selectedProds []db.ListSelectedProductsForAggregrationRow
 	if req.ID != 0 {
-		selectedProds, err = s.productRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
+		selectedProds, err = s.ProductRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
 			ID:     req.ID,
 			Scope:  req.Scope,
 			Editor: req.Editor,
@@ -63,7 +66,7 @@ func (s *productServiceServer) ListAggregationProducts(ctx context.Context, req 
 	}, nil
 }
 
-func (s *productServiceServer) ListAggregationEditors(ctx context.Context, req *v1.ListAggregationEditorsRequest) (*v1.ListAggregationEditorsResponse, error) {
+func (s *ProductServiceServer) ListAggregationEditors(ctx context.Context, req *v1.ListAggregationEditorsRequest) (*v1.ListAggregationEditorsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -74,7 +77,7 @@ func (s *productServiceServer) ListAggregationEditors(ctx context.Context, req *
 		return &v1.ListAggregationEditorsResponse{}, status.Error(codes.Internal, "ScopeValidationError")
 	}
 
-	dbresp, err := s.productRepo.ListEditorsForAggregation(ctx, scopes)
+	dbresp, err := s.ProductRepo.ListEditorsForAggregation(ctx, scopes)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return &v1.ListAggregationEditorsResponse{}, nil
@@ -87,7 +90,7 @@ func (s *productServiceServer) ListAggregationEditors(ctx context.Context, req *
 	}, nil
 }
 
-func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Aggregation) (*v1.AggregationResponse, error) {
+func (s *ProductServiceServer) CreateAggregation(ctx context.Context, req *v1.Aggregation) (*v1.AggregationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Error("service/v1 - CreateAggregation ", zap.String("reason", "ClaimsError"))
@@ -97,7 +100,7 @@ func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Ag
 		logger.Log.Error("service/v1 - CreateAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.AggregationResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	_, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+	_, err := s.ProductRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
 		AggregationName: req.AggregationName,
 		Scope:           req.Scope,
 	})
@@ -114,7 +117,7 @@ func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Ag
 		logger.Log.Error("service/v1 - CreateAggregation - validateAggregation", zap.String("reason", err.Error()))
 		return nil, err
 	}
-	aggid, inerr := s.productRepo.InsertAggregation(ctx, db.InsertAggregationParams{
+	aggid, inerr := s.ProductRepo.InsertAggregation(ctx, db.InsertAggregationParams{
 		AggregationName: req.AggregationName,
 		Scope:           req.Scope,
 		ProductEditor:   req.ProductEditor,
@@ -138,7 +141,7 @@ func (s *productServiceServer) CreateAggregation(ctx context.Context, req *v1.Ag
 	return &v1.AggregationResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.ListAggregationsRequest) (*v1.ListAggregationsResponse, error) {
+func (s *ProductServiceServer) ListAggregations(ctx context.Context, req *v1.ListAggregationsRequest) (*v1.ListAggregationsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -147,7 +150,7 @@ func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.Lis
 		logger.Log.Error("service/v1 - ListAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.ListAggregationsResponse{}, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.ListAggregations(ctx, db.ListAggregationsParams{
+	dbresp, err := s.ProductRepo.ListAggregations(ctx, db.ListAggregationsParams{
 		IsAggName:         !req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
 		LsAggName:         req.GetSearchParams().GetAggregationName().GetFilterType() && req.GetSearchParams().GetAggregationName().GetFilteringkey() != "",
 		AggregationName:   req.GetSearchParams().GetAggregationName().GetFilteringkey(),
@@ -179,7 +182,7 @@ func (s *productServiceServer) ListAggregations(ctx context.Context, req *v1.Lis
 	}, nil
 }
 
-func (s *productServiceServer) UpdateAggregation(ctx context.Context, req *v1.Aggregation) (*v1.AggregationResponse, error) {
+func (s *ProductServiceServer) UpdateAggregation(ctx context.Context, req *v1.Aggregation) (*v1.AggregationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.AggregationResponse{}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -188,7 +191,7 @@ func (s *productServiceServer) UpdateAggregation(ctx context.Context, req *v1.Ag
 		logger.Log.Error("service/v1 - UpdateAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.AggregationResponse{}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	_, err := s.productRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+	_, err := s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
 		ID:    req.ID,
 		Scope: req.Scope,
 	})
@@ -203,7 +206,7 @@ func (s *productServiceServer) UpdateAggregation(ctx context.Context, req *v1.Ag
 	if err != nil {
 		return &v1.AggregationResponse{}, err
 	}
-	uperr := s.productRepo.UpdateAggregation(ctx, db.UpdateAggregationParams{
+	uperr := s.ProductRepo.UpdateAggregation(ctx, db.UpdateAggregationParams{
 		ID:              req.ID,
 		AggregationName: req.AggregationName,
 		Scope:           req.Scope,
@@ -228,7 +231,7 @@ func (s *productServiceServer) UpdateAggregation(ctx context.Context, req *v1.Ag
 	return &v1.AggregationResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) DeleteAggregation(ctx context.Context, req *v1.DeleteAggregationRequest) (*v1.AggregationResponse, error) {
+func (s *ProductServiceServer) DeleteAggregation(ctx context.Context, req *v1.DeleteAggregationRequest) (*v1.AggregationResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.AggregationResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -237,7 +240,7 @@ func (s *productServiceServer) DeleteAggregation(ctx context.Context, req *v1.De
 		logger.Log.Error("service/v1 - DeleteAggregation ", zap.String("reason", "ScopeError"))
 		return &v1.AggregationResponse{Success: false}, status.Error(codes.InvalidArgument, "ScopeValidationError")
 	}
-	_, er := s.productRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+	_, er := s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
 		ID:    req.ID,
 		Scope: req.Scope,
 	})
@@ -248,7 +251,7 @@ func (s *productServiceServer) DeleteAggregation(ctx context.Context, req *v1.De
 		}
 		return &v1.AggregationResponse{}, status.Error(codes.InvalidArgument, "aggregation does not exist")
 	}
-	if err := s.productRepo.DeleteAggregation(ctx, db.DeleteAggregationParams{
+	if err := s.ProductRepo.DeleteAggregation(ctx, db.DeleteAggregationParams{
 		ID:    req.ID,
 		Scope: req.Scope,
 	}); err != nil {
@@ -280,8 +283,8 @@ func (s *productServiceServer) DeleteAggregation(ctx context.Context, req *v1.De
 }
 
 // nolint: maligned, gocyclo, funlen
-func (s *productServiceServer) validateAggregation(ctx context.Context, req *v1.Aggregation) error {
-	availProds, err := s.productRepo.ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
+func (s *ProductServiceServer) validateAggregation(ctx context.Context, req *v1.Aggregation) error {
+	availProds, err := s.ProductRepo.ListProductsForAggregation(ctx, db.ListProductsForAggregationParams{
 		Editor: req.ProductEditor,
 		Scope:  req.Scope,
 	})
@@ -292,7 +295,7 @@ func (s *productServiceServer) validateAggregation(ctx context.Context, req *v1.
 		}
 	}
 	if req.ID != 0 {
-		selectedProds, err := s.productRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
+		selectedProds, err := s.ProductRepo.ListSelectedProductsForAggregration(ctx, db.ListSelectedProductsForAggregrationParams{
 			ID:     req.ID,
 			Scope:  req.Scope,
 			Editor: req.ProductEditor,
@@ -314,7 +317,7 @@ func (s *productServiceServer) validateAggregation(ctx context.Context, req *v1.
 	return nil
 }
 
-func (s *productServiceServer) pushUpsertAggrightsWorkerJob(ctx context.Context, req *dgworker.UpsertAggregationRequest) {
+func (s *ProductServiceServer) pushUpsertAggrightsWorkerJob(ctx context.Context, req *dgworker.UpsertAggregationRequest) {
 	jsonData, err := json.Marshal(req)
 	if err != nil {
 		logger.Log.Error("Failed to do json marshalling", zap.Error(err))
@@ -408,11 +411,6 @@ func dbAggProductsToSrvAggProductsAll(aggprods []db.ListProductsForAggregationRo
 		}
 		servAggProds = append(servAggProds, dbAggProductsToSrvAggProducts(aggprod))
 	}
-	for i, aggprod := range servAggProds {
-		if aggp[aggprod.ProductName] && aggprod.ProductVersion == "" { //test not empty product name with empty version too
-			servAggProds = append(servAggProds[:i], servAggProds[i+1:]...)
-		}
-	}
 	return servAggProds
 }
 
@@ -440,4 +438,39 @@ func dbSelectedProductsToSrvSelectedProducts(selectedProd db.ListSelectedProduct
 		Editor:         selectedProd.ProductEditor,
 		ProductVersion: selectedProd.ProductVersion,
 	}
+}
+
+func (s *ProductServiceServer) GetAggregationById(ctx context.Context, req *v1.GetAggregationByIdRequest) (*v1.GetAggregationByIdResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
+		logger.Log.Error("service/v1 - ListAggregationById", zap.String("reason", "ScopeError"))
+		return &v1.GetAggregationByIdResponse{}, status.Error(codes.Unknown, "ScopeValidationError")
+	}
+	aggr, err := s.ProductRepo.GetAggregationByID(ctx, db.GetAggregationByIDParams{
+		ID:    req.GetAggregationId(),
+		Scope: req.GetScope(),
+	})
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return &v1.GetAggregationByIdResponse{}, nil
+		}
+		logger.Log.Error("service/v1 - ListAggregationById - GetAggregationByID", zap.String("reason", err.Error()))
+		return &v1.GetAggregationByIdResponse{}, status.Error(codes.Internal, "DBError")
+	}
+
+	return &v1.GetAggregationByIdResponse{
+		Id:              aggr.ID,
+		AggregationName: aggr.AggregationName,
+		Scope:           aggr.Scope,
+		ProductEditor:   aggr.ProductEditor,
+		Products:        aggr.Products,
+		Swidtags:        aggr.Swidtags,
+		CreatedOn:       timestamppb.New(aggr.CreatedOn),
+		CreatedBy:       aggr.CreatedBy,
+		UpdatedOn:       timestamppb.New(aggr.UpdatedOn.Time),
+		UpdatedBy:       aggr.UpdatedBy.String,
+	}, nil
 }

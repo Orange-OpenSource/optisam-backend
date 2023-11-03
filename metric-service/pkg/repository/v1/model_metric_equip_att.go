@@ -8,4 +8,5 @@ type MetricEquipAttrStand struct {
 	AttributeName string
 	Environment   string
 	Value         int32
+	Default       bool
 }

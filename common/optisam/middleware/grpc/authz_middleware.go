@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"optisam-backend/common/optisam/opa"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/opa"
 
 	"github.com/open-policy-agent/opa/rego"
 	"golang.org/x/net/context"

@@ -5,8 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 )
 
 func main() {

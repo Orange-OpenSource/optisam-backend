@@ -4,6 +4,11 @@
     "title": "application.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "ApplicationService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

@@ -3,8 +3,9 @@ package job
 import (
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/logger"
-	dbgen "optisam-backend/common/optisam/workerqueue/repository/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	dbgen "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/postgres/db"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
@@ -37,6 +38,7 @@ type Job struct {
 	CreatedAt  sql.NullTime    `json:"created_at"`
 	RetryCount sql.NullInt32   `json:"retry_count"`
 	MetaData   metadata.MD     `json:"meta_data"`
+	PPID       string          `json:"pp_id"`
 }
 
 // ToRepoJob handles data modelling from queue job to repo job
@@ -50,6 +52,7 @@ func ToRepoJob(j *Job) *dbgen.Job {
 		StartTime:  j.StartTime,
 		EndTime:    j.EndTime,
 		RetryCount: j.RetryCount,
+		Ppid:       sql.NullString{String: j.PPID},
 	}
 }
 
@@ -70,5 +73,6 @@ func FromRepoJob(j *dbgen.Job) *Job {
 		EndTime:    j.EndTime,
 		RetryCount: j.RetryCount,
 		MetaData:   md,
+		PPID:       j.Ppid.String,
 	}
 }

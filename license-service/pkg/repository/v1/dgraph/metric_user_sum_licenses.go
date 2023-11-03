@@ -3,7 +3,8 @@ package dgraph
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/logger"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

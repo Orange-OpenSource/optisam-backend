@@ -5,6 +5,7 @@ type MetricINM struct {
 	ID          string
 	Name        string
 	Coefficient int32
+	Default     bool
 }
 
 // MetricINMConfig is a representation of metric Instance.number.standard
@@ -12,4 +13,5 @@ type MetricINMConfig struct {
 	ID          string
 	Name        string
 	Coefficient int32
+	Default     bool
 }

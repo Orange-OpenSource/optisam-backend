@@ -2,7 +2,8 @@ package postgres
 
 import (
 	"database/sql"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
+
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
 )
 
 var repoObj *DpsRepository

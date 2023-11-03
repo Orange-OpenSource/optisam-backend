@@ -53,13 +53,13 @@ host = "localhost"
 port = 5432
 # should be user of full rights
 [database.admin]
-user = "optisam"
+user = "postgres"
 pass = "orange"
 name = "application" 
 
 # user of inser/update/delete/read access
 [database.user]
-user = "optisam"
+user = "postgres"
 pass = "orange"
 name = "application" 
 
@@ -67,6 +67,7 @@ name = "application"
 version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
 direction = "up"
 migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = true
 
 [app.params]
 pageSize = 20

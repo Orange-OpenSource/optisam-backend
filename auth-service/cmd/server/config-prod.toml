@@ -2,7 +2,9 @@ environment = "PRODUCTION"
 debug = false
 grpcport = 8090
 httpport = 8080
-jwtprivatekey = "/opt/secret/ssh-privatekey"
+jwtprivatekey = "/opt/secret-jwt/ssh-privatekey"
+activationtimeout = 43200
+forgotpasstimeout = 120
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -43,3 +45,41 @@ migrationPath  = "./schema"
 
 [dgraph]
 host = "svc-optisam-dgraph.prod-optisam.svc:9080"
+
+[redis]
+redishost = ""
+redispassword = ""
+db = 0
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
+
+[emailtemplate]
+passwordresetpath = "./templates/passwordreset.html"
+activationpath = "./templates/activation.html"
+redirecbaseurl = "https://optisam-auth-prod.apps.fr01.paas.tech.orange"
+redirectappactivation = "https://optisam-ui-prod.apps.fr01.paas.tech.orange/user-activation?"
+redirectappurlforgotpass = "https://optisam-ui-prod.apps.fr01.paas.tech.orange/reset-password?"
+
+[grpcservers.Address]
+notification = "svc-optisam-notification-prod.prod-optisam.svc:8090"
+
+[httpservers.Address]
+auth = "svc-optisam-auth-prod.prod-optisam.svc:80"
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10000
+
+[kafka]
+bootstrapservers = "prod-kafka-externel-bootstrap.prod-optisam.svc:9094"
+sslkeylocation = "/opt/secret-key/ssh-privatekey"
+sslcertificatelocation = "/opt/secret-client/ssh-privatekey"
+sslcalocation = "/opt/secret-ca/ssh-privatekey"
+securityprotocol = "ssl"

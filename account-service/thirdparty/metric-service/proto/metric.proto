@@ -1,0 +1,601 @@
+syntax = "proto3";
+
+option go_package = "account-service/thirdparty/metric-service/pkg/api/v1";
+
+package optisam.metric.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+service MetricService {
+   // ListMetrices
+   rpc ListMetrices(ListMetricRequest) returns (ListMetricResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metrics"
+    };
+  }
+
+   // DeleteMetric deletes the metric that is not used in the particular scope
+   rpc DeleteMetric(DeleteMetricRequest) returns (DeleteMetricResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/metric/{metric_name}"
+    };
+  }
+
+  // ListMetricType
+  rpc ListMetricType(ListMetricTypeRequest) returns (ListMetricTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/metric/types"
+    };
+  }
+
+   rpc CreateMetric(CreateMetricRequest) returns (CreateMetricResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/metric"
+    };
+  }
+
+  // CreateMetricOracleProcessorStandard will create an oracle.processor.standard metric
+  rpc CreateMetricOracleProcessorStandard(MetricOPS)returns (MetricOPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ops"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricOracleProcessorStandard will update an IBM.pvu.standard metric
+  rpc UpdateMetricOracleProcessorStandard(MetricOPS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/ops"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/ops"
+        body : "*"
+      }
+    };
+  }
+
+  // CreateMetricOracleNUPStandard will create an oracle.nup.standard metric
+  rpc CreateMetricOracleNUPStandard(MetricNUP)returns (MetricNUP){
+    option (google.api.http) = {
+      post : "/api/v1/metric/oracle_nup"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricOracleNUPStandard will update an IBM.pvu.standard metric
+  rpc UpdateMetricOracleNUPStandard(MetricNUP)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/oracle_nup"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/oracle_nup"
+        body : "*"
+      }
+    };
+  }
+
+  // CreateMetricSAGProcessorStandard will create an sag.processor.standard metric
+  rpc CreateMetricSAGProcessorStandard(MetricSPS)returns (MetricSPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/sps"
+      body : "*"
+    };
+  }
+
+    // UpdateMetricSAGProcessorStandard will update an IBM.pvu.standard metric
+  rpc UpdateMetricSAGProcessorStandard(MetricSPS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/sps"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/sps"
+        body : "*"
+      }
+    };
+  }
+
+   // CreateMetricIBMPvuStandard will create an IBM.pvu.standard metric
+   rpc CreateMetricIBMPvuStandard(MetricIPS)returns (MetricIPS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ips"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricIBMPvuStandard will update an IBM.pvu.standard metric
+  rpc UpdateMetricIBMPvuStandard(MetricIPS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/ips"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/ips"
+        body : "*"
+      }
+    };
+  }
+
+  // CreateMetricAttrCounterStandard will create an attribute.counter.standard metric
+  rpc CreateMetricAttrCounterStandard(MetricACS)returns (MetricACS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/acs"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricAttrCounterStandard will update an metric.acs.attr_value metric
+  rpc UpdateMetricAttrCounterStandard(MetricACS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/acs"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/acs"
+        body : "*"
+      }
+    };
+  }
+
+  // CreateMetricInstanceNumberStandard will create an instance.number.standard metric
+  rpc CreateMetricInstanceNumberStandard(MetricINM)returns (MetricINM){
+    option (google.api.http) = {
+      post : "/api/v1/metric/inm"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricInstanceNumberStandard will update an instance.number.standard metric
+  rpc UpdateMetricInstanceNumberStandard(MetricINM)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/inm"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/inm"
+        body : "*"
+      }
+    };
+  }
+
+   // CreateMetricStaticStandard will create an static.standard metric
+  rpc CreateMetricStaticStandard(MetricSS)returns (MetricSS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/ss"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricStaticStandard will update an static.standard metric
+  rpc UpdateMetricStaticStandard(MetricSS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/ss"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/ss"
+        body : "*"
+      }
+    };
+  }
+
+
+  // CreateMetricUserSumStandard will create an oracle.processor.standard metric
+  rpc CreateMetricUserSumStandard(MetricUSS)returns (MetricUSS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/uss"
+      body : "*"
+    };
+  }
+
+  // CreateMetricAttrSumStandard will create an attribute.sum.standard metric
+  rpc CreateMetricAttrSumStandard(MetricAttrSum)returns (MetricAttrSum){
+    option (google.api.http) = {
+      post : "/api/v1/metric/attr_sum"
+      body : "*"
+    };
+  }
+
+  // UpdateMetricAttrSumStandard will update an instance.number.standard metric
+  rpc UpdateMetricAttrSumStandard(MetricAttrSum)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/attr_sum"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/attr_sum"
+        body : "*"
+      }
+    };
+  }
+
+  // CreateMetricEquipAttrStandard will create an equipment.attribute.standard metric
+  rpc CreateMetricEquipAttrStandard(MetricEquipAtt)returns (MetricEquipAtt){
+    option (google.api.http) = {
+      post : "/api/v1/metric/equip_attr"
+      body : "*"
+    };
+  }
+
+    // UpdateMetricEquipAttrStandard will update an equipment.attribute.standard metric
+  rpc UpdateMetricEquipAttrStandard(MetricEquipAtt)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/equip_attr"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/equip_attr"
+        body : "*"
+      }
+    };
+  }
+
+      // CreateMetricUserNominativeStandard will create an user.nominative.standard metric
+  rpc CreateMetricUserNominativeStandard(MetricUNS)returns (MetricUNS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/uns"
+      body : "*"
+    };
+  }
+
+    // UpdateMetricUserNominativeStandard will update an user.nominative.standard metric
+  rpc UpdateMetricUserNominativeStandard(MetricUNS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/uns"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/uns"
+        body : "*"
+      }
+    };
+  }
+
+    // CreateMetricUserConcurentStandard will create an user.concurrent.standard metric
+  rpc CreateMetricUserConcurentStandard(MetricUCS)returns (MetricUCS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/user_conc"
+      body : "*"
+    };
+  }
+
+      // UpdateMetricUserConcurentStandard will update an user.concurrent.standard metric
+  rpc UpdateMetricUserConcurentStandard(MetricUCS)returns (UpdateMetricResponse){
+    option (google.api.http) = {
+      put : "/api/v1/metric/user_conc"
+      body : "*"
+      additional_bindings{
+        patch : "/api/v1/metric/user_conc"
+        body : "*"
+      }
+    };
+  }
+
+      // CreateMetricImport will create all metrics requested with default value
+  rpc CreateMetricImport(MetricImportRequest)returns (MetricImportResponse){
+    option (google.api.http) = {
+      post : "/api/v1/metric/import_metric"
+      body : "*"
+    };
+  }
+  
+    rpc CreateMetricWindowServerStandard(MetricWSS)returns (MetricWSS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/wind_serv_stand"
+      body : "*"
+    };
+  } 
+  rpc CreateScopeMetric(CreateScopeMetricRequest) returns(CreateScopeMetricResponse){
+      }
+
+    // CreateMetricSQLStandard will create an user.concurrent.standard metric
+  rpc CreateMetricSQLStandard(MetricScopeSQL)returns (MetricScopeSQL){
+    option (google.api.http) = {
+      post : "/api/v1/metric/sql_standard"
+      body : "*"
+    };
+  }
+  //GetMetricConfiguration will get configuration of a metric
+  rpc GetMetricConfiguration(GetMetricConfigurationRequest)returns (GetMetricConfigurationResponse){
+    option (google.api.http) = {
+      get : "/api/v1/metric/config"
+    };
+  }
+
+  rpc DropMetricData(DropMetricDataRequest) returns (DropMetricDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/metrics/{scope}"
+    };
+  } 
+}
+
+message DropMetricDataRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message DropMetricDataResponse{
+  bool success = 1;
+}
+
+message DeleteMetricRequest{
+  string metric_name = 1 [ (validate.rules).string.pattern = "[.-_A-Za-z0-9]+$" ];
+  string scope = 2 [(validate.rules).string = {
+    pattern : "^[A-Z]+$",
+    min_len : 3,
+    max_len: 3,
+  }];
+}
+
+message DeleteMetricResponse { 
+  bool success = 1; 
+}
+
+message CreateMetricRequest {
+  Metric metric = 1;
+  string sender_scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string reciever_scope = 3 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"]; 
+}
+
+message CreateMetricResponse {
+  bool success = 1;
+}
+
+message GetMetricConfigurationRequest{
+  Metric metric_info = 1;
+  bool GetID = 2;
+  repeated string scopes = 3 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message GetMetricConfigurationResponse{
+  string metric_config = 1;
+}
+
+message MetricUSS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  repeated string scopes = 3 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricINM {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  int32 num_of_deployments = 3 [(validate.rules).int32 = { gt: 0}];
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricSS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  int32 reference_value = 3 [(validate.rules).int32 = { gte: 0}];
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+} 
+
+message UpdateMetricResponse { 
+  bool success = 1; 
+}
+
+message MetricAttrSum {
+  // ID is not required for creation
+  string ID = 1;
+  string name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string eq_type = 3;
+  string attribute_name = 4;
+  double reference_value = 5 [(validate.rules).double = { gt: 0}];
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
+}
+
+message MetricEquipAtt {
+  // ID is not required for creation
+  string ID = 1;
+  string name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string eq_type = 3;
+  string attribute_name = 4;
+  string environment = 5 [(validate.rules).string = { min_len : 1, pattern : "^[a-zA-Z0-9,]+$"}];
+  int32 value = 6 [(validate.rules).int32 = { gt: 0}];
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
+}
+
+message MetricIPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;  
+  string base_eq_type_id = 6;
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricSPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;  
+  string base_eq_type_id = 6;
+  repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricACS {
+  // ID is not required for creation
+  string ID = 1;
+  string name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string eq_type = 3;
+  string attribute_name = 4;
+  string value = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+   
+}
+
+message MetricUNS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string profile = 3;
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricUCS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string profile = 3;
+  repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+
+}
+
+message MetricWSS {
+   // ID is not required for creation
+  string ID = 1;
+  string MetricType = 2;
+  string MetricName = 3 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string Reference = 4;
+  string Core = 5;
+  string CPU = 6;
+  bool Default = 7;
+  repeated string scopes = 8 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message ListMetricRequest {
+  repeated string scopes = 1 [(validate.rules).repeated.min_items = 1,(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ListMetricResponse {
+  repeated Metric metrices = 1;
+}
+
+message Metric {
+  string type = 1;
+  string name = 2;
+  string description = 3;
+  bool default = 4;
+}
+
+message ListMetricTypeRequest {
+  repeated string scopes = 1 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ListMetricTypeResponse {
+  repeated MetricType types = 1;
+}
+
+message MetricType {
+  enum Type {
+    Unknown = 0;
+    Oracle_Processor  = 1;
+    Oracle_NUP = 2;
+    SAG_Processor = 3;
+    IBM_PVU = 4;
+    Attr_Counter = 5;
+    Instance_Number = 6;
+    Attr_Sum = 7;
+    User_Sum = 8;
+    Static_Standard = 9;
+    Equip_Attr = 10;
+    Nominative_User = 11;
+    User_Concurent = 12;
+    SQL_Standard = 13;
+    Win_Server_Standard = 14;
+  }
+  string name = 1;
+  string description = 2;
+  string href = 3;
+  Type type_id = 4;
+}
+
+message MetricOPS {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;
+  string start_eq_type_id = 6;
+  string base_eq_type_id = 7;
+  string aggerateLevel_eq_type_id = 8;
+  string end_eq_type_id = 9;
+  repeated string scopes = 10 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message MetricNUP {
+  // ID is not required for creation
+  string ID = 1;
+  string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string num_core_attr_id = 3;
+  string numCPU_attr_id = 4;
+  string core_factor_attr_id = 5;
+  string start_eq_type_id = 6;
+  string base_eq_type_id = 7;
+  string aggerateLevel_eq_type_id = 8;
+  string end_eq_type_id = 9;
+  uint32  number_of_users = 10 [(validate.rules).uint32.gt  = 0];
+  repeated string scopes = 11 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  bool transform = 12;
+  string transform_metric_name = 13;
+}
+
+message ScopeFilter{
+  repeated string scopes =1;
+}
+
+message AggregationFilter {
+  // Not For metric means aggregation for a product should not exist for a given metric
+  string NotForMetric = 1;
+}
+
+message StringFilter {
+  enum Type{
+    REGEX=0;
+    EQ=1;
+  }
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  Type filter_type = 3;
+  repeated string filteringkey_multiple=4;
+}
+
+enum SortOrder {
+  option allow_alias = true;
+  ASC = 0;
+  asc = 0;
+  DESC = 1;
+  desc = 1;
+}
+
+enum DataTypes {
+  UNKNOWN = 0;
+  STRING = 1;
+  INT    = 2;
+  FLOAT  = 3;
+}
+
+message CreateScopeMetricRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message CreateScopeMetricResponse{
+  bool Success =1;
+}
+
+message MetricImportRequest{
+  repeated string metric = 1;
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message MetricImportResponse{
+  bool success = 1;
+}
+  
+message MetricScopeSQL {
+  // ID is not required for creation
+  string ID = 1;
+  string MetricType = 2;
+  string MetricName = 3 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string Reference = 4;
+  string Core = 5;
+  string CPU = 6;
+  bool Default = 7;
+  repeated string scopes = 8 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+  

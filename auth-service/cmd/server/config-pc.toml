@@ -43,3 +43,12 @@ migrationPath  = "./schema"
 
 [dgraph]
 host = "svc-optisam-dgraph.dev-optisam.svc:9080"
+
+[redis]
+redishost = ""
+redispassword = ""
+db = 0
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""

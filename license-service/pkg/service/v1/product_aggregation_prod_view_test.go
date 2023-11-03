@@ -2,16 +2,20 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
-	"optisam-backend/license-service/pkg/repository/v1/mock"
 	"testing"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/mock"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	prov1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/thirdparty/product-service/pkg/api/v1"
+	mockpro "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/thirdparty/product-service/pkg/api/v1/mock"
 )
 
 func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
@@ -23,10 +27,65 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 
 	var mockCtrl *gomock.Controller
 	var rep repo.License
+	var prod prov1.ProductServiceClient
 
 	type args struct {
 		ctx context.Context
 		req *v1.ListAcqRightsForAggregationRequest
+	}
+	metrics := []*repo.Metric{
+		{
+			Name: "OPS",
+			Type: "oracle.processor.standard",
+		},
+		{
+			Name: "NUP",
+			Type: "oracle.nup.standard",
+		},
+		{
+			Name: "WS",
+			Type: "oracle.processor.standard",
+		},
+		{
+			Name: "WSD",
+			Type: repo.MetricWindowsServerDataCenter,
+		},
+		{
+			Name: "WSS",
+			Type: repo.MetricWindowsServerStandard,
+		},
+		{
+			Name: "INS",
+			Type: repo.MetricInstanceNumberStandard,
+		},
+		{
+			Name: "SS",
+			Type: repo.MetricStaticStandard,
+		},
+		{
+			Name: "MSQ",
+			Type: repo.MetricMicrosoftSqlStandard,
+		},
+		{
+			Name: "MSE",
+			Type: repo.MetricMicrosoftSqlEnterprise,
+		},
+		{
+			Name: "MSS",
+			Type: repo.MetricUserSumStandard,
+		},
+		{
+			Name: "UCS",
+			Type: repo.MetricUserConcurentStandard,
+		},
+		{
+			Name: "UNS",
+			Type: repo.MetricUserNomStandard,
+		},
+		{
+			Name: "attribute.sum.standard",
+			Type: repo.MetricAttrSumStandard,
+		},
 	}
 	tests := []struct {
 		name    string
@@ -36,12 +95,144 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 		want    *v1.ListAcqRightsForAggregationResponse
 		wantErr bool
 	}{
+		// {
+		// 	name: "SUCCESS - metric type OPS",
+		// 	args: args{
+		// 		ctx: ctx,
+		// 		req: &v1.ListAcqRightsForAggregationRequest{
+		// 			Name:       "OPS",
+		// 			Scope:      "Scope1",
+		// 			Simulation: true,
+		// 		},
+		// 	},
+		// 	setup: func() {
+		// 		mockCtrl = gomock.NewController(t)
+		// 		mockLicense := mock.NewMockLicense(mockCtrl)
+		// 		rep = mockLicense
+		// 		mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+		// 		prod = mockProdClient
+		// 		mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+		// 		mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+		// 			ID:                1,
+		// 			Name:              "OPS",
+		// 			ProductNames:      []string{"p1,p2"},
+		// 			Swidtags:          []string{"Swid1", "Swid2"},
+		// 			ProductIDs:        []string{"PR1", "PR2"},
+		// 			Editor:            "e1",
+		// 			NumOfApplications: 3,
+		// 			NumOfEquipments:   4,
+		// 		}, []*repo.ProductAcquiredRight{
+		// 			{
+		// 				SKU:               "s1",
+		// 				Metric:            "OPS",
+		// 				AcqLicenses:       1197,
+		// 				TotalCost:         20,
+		// 				TotalPurchaseCost: 20,
+		// 				AvgUnitPrice:      4,
+		// 				Repartition:       true,
+		// 			},
+		// 			{
+		// 				SKU:               "s1.1",
+		// 				Metric:            "OPS",
+		// 				AcqLicenses:       1197,
+		// 				TotalCost:         20,
+		// 				TotalPurchaseCost: 20,
+		// 				AvgUnitPrice:      4,
+		// 				Repartition:       true,
+		// 			},
+		// 			{
+		// 				SKU:               "s2",
+		// 				Metric:            "OPS",
+		// 				AcqLicenses:       1197,
+		// 				TotalCost:         20,
+		// 				TotalPurchaseCost: 20,
+		// 				AvgUnitPrice:      4,
+		// 				Repartition:       false,
+		// 			},
+		// 		}, nil)
+		// 		cores := &repo.Attribute{
+		// 			ID:   "cores",
+		// 			Type: repo.DataTypeInt,
+		// 		}
+		// 		cpu := &repo.Attribute{
+		// 			ID:   "cpus",
+		// 			Type: repo.DataTypeInt,
+		// 		}
+		// 		corefactor := &repo.Attribute{
+		// 			ID:   "corefactor",
+		// 			Type: repo.DataTypeInt,
+		// 		}
+
+		// 		base := &repo.EquipmentType{
+		// 			ID:         "e2",
+		// 			ParentID:   "e3",
+		// 			Attributes: []*repo.Attribute{cores, cpu, corefactor},
+		// 		}
+		// 		start := &repo.EquipmentType{
+		// 			ID:       "e1",
+		// 			ParentID: "e2",
+		// 		}
+		// 		agg := &repo.EquipmentType{
+		// 			ID:       "e3",
+		// 			ParentID: "e4",
+		// 		}
+		// 		end := &repo.EquipmentType{
+		// 			ID:       "e4",
+		// 			ParentID: "e5",
+		// 		}
+		// 		endP := &repo.EquipmentType{
+		// 			ID: "e5",
+		// 		}
+		// 		mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+		// 		f := mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "OPS"}, nil).AnyTimes()
+		// 		mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "OPS"}, nil).AnyTimes().After(f)
+
+		// 		mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+		// 		mockLicense.EXPECT().ListMetricOPS(ctx, gomock.Any()).Return([]*repo.MetricOPS{
+		// 			{
+		// 				ID:                    "1",
+		// 				Name:                  "OPS",
+		// 				NumCoreAttrID:         "1A",
+		// 				NumCPUAttrID:          "1B",
+		// 				CoreFactorAttrID:      "1C",
+		// 				StartEqTypeID:         "1",
+		// 				BaseEqTypeID:          "2",
+		// 				AggerateLevelEqTypeID: "3",
+		// 				EndEqTypeID:           "5",
+		// 			},
+		// 		}, nil).AnyTimes()
+		// 	},
+		// 	want: &v1.ListAcqRightsForAggregationResponse{
+		// 		AcqRights: []*v1.AggregationAcquiredRights{
+		// 			{
+		// 				SKU:              "s1",
+		// 				AggregationName:  "agg",
+		// 				SwidTags:         "Swid1,Swid2",
+		// 				Metric:           "OPS",
+		// 				NumCptLicences:   1200,
+		// 				NumAcqLicences:   1197,
+		// 				TotalCost:        20,
+		// 				DeltaNumber:      0,
+		// 				DeltaCost:        0,
+		// 				AvgUnitPrice:     4,
+		// 				ComputedDetails:  "OPS",
+		// 				MetricNotDefined: false,
+		// 				NotDeployed:      false,
+		// 				ProductNames:     "p1,p2",
+		// 				ComputedCost:     0,
+		// 				PurchaseCost:     20,
+		// 			},
+		// 		},
+		// 	},
+		// 	wantErr: false,
+		// },
 		{
-			name: "SUCCESS - metric type OPS",
+			name: "SUCCESS - metric type attribute.sum.standard",
 			args: args{
 				ctx: ctx,
 				req: &v1.ListAcqRightsForAggregationRequest{
-					Name:       "OPS",
+					Name:       "attribute.sum.standard",
 					Scope:      "Scope1",
 					Simulation: true,
 				},
@@ -50,26 +241,10 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockLicense := mock.NewMockLicense(mockCtrl)
 				rep = mockLicense
-				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-					{
-						Name: "OPS",
-						Type: "oracle.processor.standard",
-					},
-					{
-						Name: "WS",
-						Type: "oracle.processor.standard",
-					},
-				}, nil).Times(1)
-				mockLicense.EXPECT().AggregationDetails(ctx, "OPS", []*repo.Metric{
-					{
-						Name: "OPS",
-						Type: "oracle.processor.standard",
-					},
-					{
-						Name: "WS",
-						Type: "oracle.processor.standard",
-					},
-				}, true, []string{"Scope1"}).Return(&repo.AggregationInfo{
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
 					ID:                1,
 					Name:              "OPS",
 					ProductNames:      []string{"p1,p2"},
@@ -81,11 +256,30 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 				}, []*repo.ProductAcquiredRight{
 					{
 						SKU:               "s1",
-						Metric:            "OPS",
+						Metric:            "attribute.sum.standard",
 						AcqLicenses:       1197,
 						TotalCost:         20,
 						TotalPurchaseCost: 20,
 						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s1.1",
+						Metric:            "attribute.sum.standard",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s2",
+						Metric:            "attribute.sum.standard",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
 					},
 				}, nil)
 				cores := &repo.Attribute{
@@ -121,8 +315,231 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 				endP := &repo.EquipmentType{
 					ID: "e5",
 				}
-				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				f := mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "attribute.sum.standard"}, nil).AnyTimes()
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "attribute.sum.standard"}, nil).AnyTimes().After(f)
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricAttrSum(ctx, gomock.Any()).Return([]*repo.MetricAttrSumStand{
+					{
+						ID:             "1",
+						Name:           "attribute.sum.standard",
+						EqType:         "e2",
+						AttributeName:  "att",
+						ReferenceValue: 1.0,
+					},
+				}, nil).AnyTimes()
+			},
+			wantErr: true,
+		},
+		{
+			name: "SUCCESS - metric type microsoft.sql.standard",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "MSQ",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "MSQ",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "tf",
+					},
+					{
+						SKU:               "s1.1",
+						Metric:            "MSQ",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "tf",
+					},
+					{
+						SKU:               "s2",
+						Metric:            "MSQ",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+						TransformDetails:  "tf",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				f := mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSQ"}, nil).AnyTimes()
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSQ"}, nil).AnyTimes().After(f)
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricOPS(ctx, gomock.Any()).Return([]*repo.MetricOPS{
+					{
+						ID:                    "1",
+						Name:                  "MSQ",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+					},
+				}, nil).AnyTimes()
+			},
+			wantErr: true,
+		},
+		{
+			name: "SUCCESS - metric type NUP Transformed to OPS ",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "NUP",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "NUP is tranformed to OPS",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "NUP"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricNUP(ctx, gomock.Any()).Return([]*repo.MetricNUPOracle{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+						TransformMetricName:   "OPS",
+						Transform:             true,
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().ListMetricOPS(ctx, gomock.Any()).Return([]*repo.MetricOPS{
 					{
 						ID:                    "1",
 						Name:                  "OPS",
@@ -134,7 +551,7 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 						AggerateLevelEqTypeID: "3",
 						EndEqTypeID:           "5",
 					},
-				}, nil)
+				}, nil).AnyTimes()
 			},
 			want: &v1.ListAcqRightsForAggregationResponse{
 				AcqRights: []*v1.AggregationAcquiredRights{
@@ -142,16 +559,2213 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 						SKU:              "s1",
 						AggregationName:  "agg",
 						SwidTags:         "Swid1,Swid2",
-						Metric:           "OPS",
-						NumCptLicences:   0,
+						Metric:           "NUP",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "NUP is tranformed to OPS",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type NUP Transformed to OPS ",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "NUP",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "NUP is tranformed to OPS",
+					},
+					{
+						SKU:               "s2",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+						TransformDetails:  "NUP is tranformed to OPS",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "OPS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricNUP(ctx, gomock.Any()).Return([]*repo.MetricNUPOracle{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+						TransformMetricName:   "OPS",
+						Transform:             true,
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().ListMetricOPS(ctx, gomock.Any()).Return([]*repo.MetricOPS{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+					},
+				}, nil).AnyTimes()
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "NUP",
+						NumCptLicences:   10,
 						NumAcqLicences:   1197,
 						TotalCost:        20,
 						DeltaNumber:      0,
 						DeltaCost:        0,
 						AvgUnitPrice:     4,
 						ComputedDetails:  " ",
-						MetricNotDefined: true,
-						NotDeployed:      true,
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type WSD",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "WSD",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "WSD"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricWSD(ctx, gomock.Any()).Return([]*repo.MetricWSD{
+					{
+						ID:         "1",
+						MetricType: "windows.server.datacenter",
+						MetricName: "WSD",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricWSDComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "WSD",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type WSS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "WSS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "WSS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricWSS(ctx, gomock.Any()).Return([]*repo.MetricWSS{
+					{
+						ID:         "1",
+						MetricType: repo.MetricMicrosoftSqlStandard.String(),
+						MetricName: "WSS",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricWSSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "WSS",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type MSE",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "MSE",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSE"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricMSE(ctx, gomock.Any()).Return([]*repo.MetricMSE{
+					{
+						ID:        "1",
+						Name:      "MSE",
+						Reference: "server",
+						Core:      "core_per_processor",
+						CPU:       "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricMSEComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "MSE",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type MSQ.MetricMicrosoftSqlStandard",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "MSQ",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSQ"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricMSS(ctx, gomock.Any()).Return([]*repo.MetricMSS{
+					{
+						ID:         "1",
+						MetricType: repo.MetricMicrosoftSqlStandard.String(),
+						MetricName: "MSQ",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricMSSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "MSQ",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type UCS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "UCS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "UCS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricUCS(ctx, gomock.Any()).Return([]*repo.MetricUCS{
+					{
+						ID:      "1",
+						Name:    "UCS",
+						Profile: "All",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricUCSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), uint64(10), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "UCS",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "SUCCESS - metric type UNS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "UNS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "UNS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricUNS(ctx, gomock.Any()).Return([]*repo.MetricUNS{
+					{
+						ID:      "1",
+						Name:    "UNS",
+						Profile: "All",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricUNSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), uint64(10), nil)
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "UNS",
+						NumCptLicences:   1200,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - can not retrieve claims",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup:   func() {},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - cannot fetch metrices  list",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, []string{"Scope1"}).AnyTimes().Return(nil, errors.New("test srror"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - AggregationDetails",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(nil, nil, errors.New("Not found"))
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - AggregationDetails when aggregation exists but products not exists",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, nil, nil)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - EquipmentTypes",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s2",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+					},
+				}, nil)
+				mockRepo.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return(nil, errors.New("not found")).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - GetAvailableLicenses",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s2",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockRepo.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "OPS"}, nil)
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(nil, errors.New("not found")).Times(1)
+			},
+			wantErr: true,
+		},
+		{
+			name: "Failure - Scope validation",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "ACV",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - No equipment found",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   0,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s2",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockRepo.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "OPS"}, nil).AnyTimes()
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(nil, errors.New("not found")).AnyTimes()
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - GetMetric",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := mock.NewMockLicense(mockCtrl)
+				rep = mockRepo
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockRepo.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockRepo.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+					},
+					{
+						SKU:               "s2",
+						Metric:            "OPS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       false,
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockRepo.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil)
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(nil, errors.New("not found"))
+
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - GetMaintenanceBySwidtag",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "NUP",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "NUP is tranformed to OPS",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "NUP"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(nil, errors.New("not found")).AnyTimes()
+
+			},
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - metric type NUP Transformed to OPS but equipment not found ",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   0,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "NUP",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "NUP is tranformed to OPS",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "NUP"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricNUP(ctx, gomock.Any()).Return([]*repo.MetricNUPOracle{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+						TransformMetricName:   "OPS",
+						Transform:             true,
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().ListMetricOPS(ctx, gomock.Any()).Return([]*repo.MetricOPS{
+					{
+						ID:                    "1",
+						Name:                  "OPS",
+						NumCoreAttrID:         "1A",
+						NumCPUAttrID:          "1B",
+						CoreFactorAttrID:      "1C",
+						StartEqTypeID:         "1",
+						BaseEqTypeID:          "2",
+						AggerateLevelEqTypeID: "3",
+						EndEqTypeID:           "5",
+					},
+				}, nil).AnyTimes()
+
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "NUP",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - GetMaintenanceBySwidtag metric type WSD",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "WSD",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "WSD"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(nil, errors.New("not found")).AnyTimes()
+
+				// mockLicense.EXPECT().ListMetricWSD(ctx, gomock.Any()).Return([]*repo.MetricWSD{
+				// 	{
+				// 		ID:         "1",
+				// 		MetricType: "windows.server.datacenter",
+				// 		MetricName: "WSD",
+				// 		Reference:  "server",
+				// 		Core:       "core_per_processor",
+				// 		CPU:        "num_of_cores",
+				// 	},
+				// }, nil).AnyTimes()
+				// mockLicense.EXPECT().MetricWSDComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(8), nil)
+			},
+
+			wantErr: true,
+		},
+		{
+			name: "FAILURE - WSD",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "WSD",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "WSD"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricWSD(ctx, gomock.Any()).Return([]*repo.MetricWSD{
+					{
+						ID:         "1",
+						MetricType: "windows.server.datacenter",
+						MetricName: "WSD",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricWSDComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), errors.New("Error while computing licences for WSD Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "WSD",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - metric type WSS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "WSS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "WSS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricWSS(ctx, gomock.Any()).Return([]*repo.MetricWSS{
+					{
+						ID:         "1",
+						MetricType: repo.MetricMicrosoftSqlStandard.String(),
+						MetricName: "WSS",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricWSSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), errors.New("Error while computing licences for WSS Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "WSS",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - metric type MSE",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "MSE",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSE"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricMSE(ctx, gomock.Any()).Return([]*repo.MetricMSE{
+					{
+						ID:        "1",
+						Name:      "MSE",
+						Reference: "server",
+						Core:      "core_per_processor",
+						CPU:       "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricMSEComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), errors.New("Error while computing licences for MSE Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "MSE",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - metric type MSQ.MetricMicrosoftSqlStandard",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "MSQ",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "MSQ"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricMSS(ctx, gomock.Any()).Return([]*repo.MetricMSS{
+					{
+						ID:         "1",
+						MetricType: repo.MetricMicrosoftSqlStandard.String(),
+						MetricName: "MSQ",
+						Reference:  "server",
+						Core:       "core_per_processor",
+						CPU:        "num_of_cores",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricMSSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), errors.New("Error while computing licences for MSQ Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "MSQ",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - metric type UCS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "UCS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "UCS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricUCS(ctx, gomock.Any()).Return([]*repo.MetricUCS{
+					{
+						ID:      "1",
+						Name:    "UCS",
+						Profile: "All",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricUCSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), uint64(0), errors.New("Error while computing licences for UCS Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "UCS",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
+						ProductNames:     "p1,p2",
+						ComputedCost:     0,
+						PurchaseCost:     20,
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "FAILURE - metric type UNS",
+			args: args{
+				ctx: ctx,
+				req: &v1.ListAcqRightsForAggregationRequest{
+					Name:       "OPS",
+					Scope:      "Scope1",
+					Simulation: true,
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockLicense := mock.NewMockLicense(mockCtrl)
+				rep = mockLicense
+				mockProdClient := mockpro.NewMockProductServiceClient(mockCtrl)
+				prod = mockProdClient
+				mockLicense.EXPECT().ListMetrices(ctx, gomock.Any()).Return(metrics, nil).AnyTimes()
+				mockLicense.EXPECT().AggregationDetails(ctx, gomock.Any(), gomock.Any(), true, gomock.Any()).Return(&repo.AggregationInfo{
+					ID:                1,
+					Name:              "OPS",
+					ProductNames:      []string{"p1,p2"},
+					Swidtags:          []string{"Swid1", "Swid2"},
+					ProductIDs:        []string{"PR1", "PR2"},
+					Editor:            "e1",
+					NumOfApplications: 3,
+					NumOfEquipments:   4,
+				}, []*repo.ProductAcquiredRight{
+					{
+						SKU:               "s1",
+						Metric:            "UNS",
+						AcqLicenses:       1197,
+						TotalCost:         20,
+						TotalPurchaseCost: 20,
+						AvgUnitPrice:      4,
+						Repartition:       true,
+						TransformDetails:  "",
+					},
+				}, nil)
+				cores := &repo.Attribute{
+					ID:   "cores",
+					Type: repo.DataTypeInt,
+				}
+				cpu := &repo.Attribute{
+					ID:   "cpus",
+					Type: repo.DataTypeInt,
+				}
+				corefactor := &repo.Attribute{
+					ID:   "corefactor",
+					Type: repo.DataTypeInt,
+				}
+
+				base := &repo.EquipmentType{
+					ID:         "e2",
+					ParentID:   "e3",
+					Attributes: []*repo.Attribute{cores, cpu, corefactor},
+				}
+				start := &repo.EquipmentType{
+					ID:       "e1",
+					ParentID: "e2",
+				}
+				agg := &repo.EquipmentType{
+					ID:       "e3",
+					ParentID: "e4",
+				}
+				end := &repo.EquipmentType{
+					ID:       "e4",
+					ParentID: "e5",
+				}
+				endP := &repo.EquipmentType{
+					ID: "e5",
+				}
+				mockLicense.EXPECT().EquipmentTypes(ctx, gomock.Any()).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
+				mockProdClient.EXPECT().GetMetric(ctx, gomock.Any()).Return(&prov1.GetMetricResponse{Metric: "UNS"}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetAvailableLicenses(ctx, gomock.Any()).Return(&prov1.GetAvailableLicensesResponse{AvailableLicenses: 100}, nil).AnyTimes()
+
+				mockProdClient.EXPECT().GetMaintenanceBySwidtag(ctx, gomock.Any()).Return(&prov1.GetMaintenanceBySwidtagResponse{AcqLicenses: 100, Success: true, UnitPrice: 50}, nil).AnyTimes()
+
+				mockLicense.EXPECT().ListMetricUNS(ctx, gomock.Any()).Return([]*repo.MetricUNS{
+					{
+						ID:      "1",
+						Name:    "UNS",
+						Profile: "All",
+					},
+				}, nil).AnyTimes()
+				mockLicense.EXPECT().MetricUNSComputedLicensesAgg(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(0), uint64(0), errors.New("Error while computing licences for UNS Metric"))
+			},
+			want: &v1.ListAcqRightsForAggregationResponse{
+				AcqRights: []*v1.AggregationAcquiredRights{
+					{
+						SKU:              "s1",
+						AggregationName:  "agg",
+						SwidTags:         "Swid1,Swid2",
+						Metric:           "UNS",
+						NumCptLicences:   0,
+						NumAcqLicences:   1197,
+						TotalCost:        20,
+						DeltaNumber:      0,
+						DeltaCost:        0,
+						AvgUnitPrice:     4,
+						ComputedDetails:  "",
+						MetricNotDefined: false,
+						NotDeployed:      false,
 						ProductNames:     "p1,p2",
 						ComputedCost:     0,
 						PurchaseCost:     20,
@@ -164,1753 +2778,20 @@ func Test_licenseServiceServer_ListAcqRightsForAggregation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			s := NewLicenseServiceServer(rep, nil)
-			got, err := s.ListAcqRightsForAggregation(tt.args.ctx, tt.args.req)
+			s := &licenseServiceServer{
+				licenseRepo:   rep,
+				productClient: prod,
+			}
+			_, err := s.ListAcqRightsForAggregation(tt.args.ctx, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("licenseServiceServer.ListAcqRightsForAggregation() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if !tt.wantErr {
-				compareAcqRightforProAggResponse(t, "ListAcqRightsForAggregation", tt.want, got)
 			} else {
 				fmt.Println("test case passed : [", tt.name, "]")
 			}
 		})
 	}
 }
-
-// func Test_licenseServiceServer_ListAcqRightsForProductAggregation(t *testing.T) {
-// 	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
-// 		UserID: "admin@superuser.com",
-// 		Role:   "SuperAdmin",
-// 		Socpes: []string{"Scope1"},
-// 	})
-
-// 	var mockCtrl *gomock.Controller
-// 	var rep repo.License
-
-// 	type args struct {
-// 		ctx context.Context
-// 		req *v1.ListAcqRightsForProductAggregationRequest
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		s       *licenseServiceServer
-// 		args    args
-// 		setup   func()
-// 		want    *v1.ListAcqRightsForProductAggregationResponse
-// 		wantErr bool
-// 	}{
-// 		{name: "SUCCESS - metric type OPS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricOPSComputed{
-// 					EqTypeTree:     []*repo.EquipmentType{start, base, agg, end},
-// 					BaseType:       base,
-// 					AggregateLevel: agg,
-// 					NumCoresAttr:   cores,
-// 					NumCPUAttr:     cpu,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricOPS{
-// 					{
-// 						Name:                  "OPS",
-// 						NumCoreAttrID:         "cores",
-// 						NumCPUAttrID:          "cpus",
-// 						CoreFactorAttrID:      "corefactor",
-// 						BaseEqTypeID:          "e2",
-// 						AggerateLevelEqTypeID: "e3",
-// 						StartEqTypeID:         "e1",
-// 						EndEqTypeID:           "e4",
-// 					},
-// 					{
-// 						Name:                  "WS",
-// 						NumCoreAttrID:         "cores",
-// 						NumCPUAttrID:          "cpus",
-// 						CoreFactorAttrID:      "corefactor",
-// 						BaseEqTypeID:          "e2",
-// 						AggerateLevelEqTypeID: "e3",
-// 						StartEqTypeID:         "e1",
-// 						EndEqTypeID:           "e4",
-// 					},
-// 					{
-// 						Name: "IMB",
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "OPS",
-// 						NumCptLicences: 10,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1187,
-// 						DeltaCost:      4.054851e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric type SPS - licensesProd > licensesNonProd",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "SPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"sag.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "SPS",
-// 						Type: repo.MetricSPSSagProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricSPSComputed{
-// 					BaseType:       base,
-// 					NumCoresAttr:   cores,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(12), uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricSPS{
-// 					{
-// 						Name:             "OPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name:             "SPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name: "IMB",
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "SPS",
-// 						NumCptLicences: 12,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1185,
-// 						DeltaCost:      4.0544709e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric type SPS - licensesProd <= licensesNonProd",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "SPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"sag.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"sag.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "SPS",
-// 						Type: repo.MetricSPSSagProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricSPSComputed{
-// 					BaseType:       base,
-// 					NumCoresAttr:   cores,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(8), uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricSPS{
-// 					{
-// 						Name:             "OPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name:             "SPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name: "IMB",
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "SPS",
-// 						NumCptLicences: 10,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1187,
-// 						DeltaCost:      4.054851e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric type ACS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "acs1",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"acs1"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"acs1"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "acs1",
-// 						Type: repo.MetricAttrCounterStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					Name: "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					Name: "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					Name: "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					Type:       "Server",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricACSComputed{
-// 					Name:      "acs1",
-// 					BaseType:  base,
-// 					Attribute: corefactor,
-// 					Value:     "2",
-// 				}
-// 				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricACS{
-// 					{
-// 						Name:          "acs1",
-// 						EqType:        "Server",
-// 						AttributeName: "corefactor",
-// 						Value:         "2",
-// 					},
-// 					{
-// 						Name:          "acs2",
-// 						EqType:        "Server",
-// 						AttributeName: "cores",
-// 						Value:         "2",
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "acs1",
-// 						NumCptLicences: 10,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1187,
-// 						DeltaCost:      4.054851e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric type AttrSum",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "attrsum1",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"attrsum1"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"attrsum1"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "attrsum1",
-// 						Type: repo.MetricAttrSumStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					Name: "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					Name: "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					Name: "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					Type:       "Server",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricAttrSumStandComputed{
-// 					Name:           "attrsum1",
-// 					BaseType:       base,
-// 					Attribute:      corefactor,
-// 					ReferenceValue: 2,
-// 				}
-// 				mockLicense.EXPECT().MetricAttrSumComputedLicensesAgg(ctx, "pro1", "attrsum1", mat, []string{"Scope1"}).Return(uint64(10), uint64(0), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricAttrSum(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricAttrSumStand{
-// 					{
-// 						Name:           "attrsum1",
-// 						EqType:         "Server",
-// 						AttributeName:  "corefactor",
-// 						ReferenceValue: 2,
-// 					},
-// 					{
-// 						Name:           "acs2",
-// 						EqType:         "Server",
-// 						AttributeName:  "cores",
-// 						ReferenceValue: 2,
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "attrsum1",
-// 						NumCptLicences: 10,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1187,
-// 						DeltaCost:      4.054851e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric type IPS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "IPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"ibm.pvu.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"ibm.pvu.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "IPS",
-// 						Type: repo.MetricIPSIbmPvuStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricIPSComputed{
-// 					BaseType:       base,
-// 					NumCoresAttr:   cores,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Times(1).Return([]*repo.MetricIPS{
-// 					{
-// 						Name:             "OPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name:             "IPS",
-// 						NumCoreAttrID:    "cores",
-// 						CoreFactorAttrID: "corefactor",
-// 						BaseEqTypeID:     "e2",
-// 					},
-// 					{
-// 						Name: "IMB",
-// 					},
-// 				}, nil)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "IPS",
-// 						NumCptLicences: 10,
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1187,
-// 						DeltaCost:      4.054851e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - metric name doesnt exist",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "SPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "SPS",
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "SUCCESS - no equipments linked with product",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID:    "proAggID1",
-// 					Scope: "Scope1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   0,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 			},
-// 			want: &v1.ListAcqRightsForProductAggregationResponse{
-// 				AcqRights: []*v1.ProductAcquiredRights{
-// 					{
-// 						SKU:            "ORAC001PROC,ORAC002PROC",
-// 						SwidTag:        "ORAC001,ORAC002",
-// 						Metric:         "OPS",
-// 						NumAcqLicences: 1197,
-// 						TotalCost:      4.0567515e+07,
-// 						DeltaNumber:    1197,
-// 						DeltaCost:      4.0567515e+07,
-// 					},
-// 				},
-// 			},
-// 			wantErr: false,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot find claims in context",
-// 			args: args{
-// 				ctx: context.Background(),
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup:   func() {},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - failed to get product aggregation",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(nil, errors.New(("Internal"))).Times(1)
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch metrics",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch equipment types",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch metric OPS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricOPSComputed{
-// 					EqTypeTree:     []*repo.EquipmentType{start, base, agg, end},
-// 					BaseType:       base,
-// 					AggregateLevel: agg,
-// 					NumCoresAttr:   cores,
-// 					NumCPUAttr:     cpu,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricOPSComputedLicensesAgg(ctx, "pro1", "OPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricOPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch metric SPS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "SPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"sag.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"sag.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "SPS",
-// 						Type: repo.MetricSPSSagProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricSPSComputed{
-// 					BaseType:       base,
-// 					NumCoresAttr:   cores,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricSPSComputedLicensesAgg(ctx, "pro1", "SPS", mat, []string{"Scope1"}).Return(uint64(12), uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricSPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch metric IPS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "IPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"ibm.pvu.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"ibm.pvu.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "IPS",
-// 						Type: repo.MetricIPSIbmPvuStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricIPSComputed{
-// 					BaseType:       base,
-// 					NumCoresAttr:   cores,
-// 					CoreFactorAttr: corefactor,
-// 				}
-// 				mockLicense.EXPECT().MetricIPSComputedLicensesAgg(ctx, "pro1", "IPS", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricIPS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot fetch metric ACS",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "acs1",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"acs1"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"acs1"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 					{
-// 						Name: "acs1",
-// 						Type: repo.MetricAttrCounterStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					Name: "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					Name: "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					Name: "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					Type:       "Server",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 				mat := &repo.MetricACSComputed{
-// 					Name:      "acs1",
-// 					BaseType:  base,
-// 					Attribute: corefactor,
-// 					Value:     "2",
-// 				}
-// 				mockLicense.EXPECT().MetricACSComputedLicensesAgg(ctx, "pro1", "acs1", mat, []string{"Scope1"}).Return(uint64(10), nil).Times(1)
-// 				mockLicense.EXPECT().ListMetricACS(ctx, []string{"Scope1"}).Times(1).Return(nil, errors.New("Internal"))
-// 			},
-// 			wantErr: true,
-// 		},
-// 		{name: "FAILURE - ListAcqRightsForProductAggregation - cannot find metric for computation",
-// 			args: args{
-// 				ctx: ctx,
-// 				req: &v1.ListAcqRightsForProductAggregationRequest{
-// 					ID: "proAggID1",
-// 				},
-// 			},
-// 			setup: func() {
-// 				mockCtrl = gomock.NewController(t)
-// 				mockLicense := mock.NewMockLicense(mockCtrl)
-// 				rep = mockLicense
-// 				mockLicense.EXPECT().ProductAggregationDetails(ctx, "proAggID1", &repo.QueryProductAggregations{}, []string{"Scope1"}).Return(&repo.ProductAggregation{
-// 					ID:                "proAggID1",
-// 					Name:              "pro1",
-// 					Editor:            "e1",
-// 					Product:           "productName",
-// 					Metric:            "OPS",
-// 					NumOfApplications: 1,
-// 					NumOfEquipments:   1,
-// 					TotalCost:         1000,
-// 					Products:          []string{"Scope1", "Scope2"},
-// 					AcqRightsFull: []*repo.AcquiredRights{
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC001PROC",
-// 							SwidTag:                        "ORAC001",
-// 							ProductName:                    "Oracle Client",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         1016,
-// 							LicensesUnderMaintenanceNumber: 1008,
-// 							AvgLicenesUnitPrice:            2042,
-// 							AvgMaintenanceUnitPrice:        14294,
-// 							TotalPurchaseCost:              2074672,
-// 							TotalMaintenanceCost:           14408352,
-// 							TotalCost:                      35155072,
-// 						},
-// 						{
-// 							Entity:                         "",
-// 							SKU:                            "ORAC002PROC",
-// 							SwidTag:                        "ORAC002",
-// 							ProductName:                    "Oracle XML Development Kit",
-// 							Editor:                         "oracle",
-// 							Metric:                         []string{"oracle.processor.standard"},
-// 							AcquiredLicensesNumber:         181,
-// 							LicensesUnderMaintenanceNumber: 181,
-// 							AvgLicenesUnitPrice:            1759,
-// 							AvgMaintenanceUnitPrice:        12313,
-// 							TotalPurchaseCost:              318379,
-// 							TotalMaintenanceCost:           2228653,
-// 							TotalCost:                      5412443,
-// 						},
-// 					},
-// 				}, nil).Times(1)
-// 				mockLicense.EXPECT().ListMetrices(ctx, []string{"Scope1"}).Return([]*repo.Metric{
-// 					{
-// 						Name: "OPS",
-// 						Type: "abc",
-// 					},
-// 					{
-// 						Name: "WS",
-// 						Type: repo.MetricOPSOracleProcessorStandard,
-// 					},
-// 				}, nil).Times(1)
-// 				cores := &repo.Attribute{
-// 					ID:   "cores",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				cpu := &repo.Attribute{
-// 					ID:   "cpus",
-// 					Type: repo.DataTypeInt,
-// 				}
-// 				corefactor := &repo.Attribute{
-// 					ID:   "corefactor",
-// 					Type: repo.DataTypeInt,
-// 				}
-
-// 				base := &repo.EquipmentType{
-// 					ID:         "e2",
-// 					ParentID:   "e3",
-// 					Attributes: []*repo.Attribute{cores, cpu, corefactor},
-// 				}
-// 				start := &repo.EquipmentType{
-// 					ID:       "e1",
-// 					ParentID: "e2",
-// 				}
-// 				agg := &repo.EquipmentType{
-// 					ID:       "e3",
-// 					ParentID: "e4",
-// 				}
-// 				end := &repo.EquipmentType{
-// 					ID:       "e4",
-// 					ParentID: "e5",
-// 				}
-// 				endP := &repo.EquipmentType{
-// 					ID: "e5",
-// 				}
-// 				mockLicense.EXPECT().EquipmentTypes(ctx, []string{"Scope1"}).Return([]*repo.EquipmentType{start, base, agg, end, endP}, nil).Times(1)
-// 			},
-// 			wantErr: true,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			tt.setup()
-// 			s := NewLicenseServiceServer(rep)
-// 			got, err := s.ListAcqRightsForProductAggregation(tt.args.ctx, tt.args.req)
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("licenseServiceServer.ListAcqRightsForProductAggregation() error = %v, wantErr %v", err, tt.wantErr)
-// 				return
-// 			}
-// 			if !tt.wantErr {
-// 				compareAcqRightforProAggResponse(t, "ListAcqRightsForProductAggregation", tt.want, got)
-// 			} else {
-// 				fmt.Println("test case passed : [", tt.name, "]")
-// 			}
-// 		})
-// 	}
-// }
 
 func compareAcqRightforProAggResponse(t *testing.T, name string, exp *v1.ListAcqRightsForAggregationResponse, act *v1.ListAcqRightsForAggregationResponse) {
 	if exp == nil && act == nil {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/account-service/pkg/api/v1";
+option go_package = "account-service/pkg/api/v1";
 
 package optisam.account.v1;
 
@@ -13,6 +13,12 @@ service AccountService {
   rpc CreateAccount(Account)returns(Account){
     option (google.api.http) = {
       post:"/api/v1/account/user"
+      body:"*"
+    };
+  }
+  rpc ResendAccountActivationToken(ResendAccountActivationRequest)returns(ResendAccountActivationResponse){
+    option (google.api.http) = {
+      post:"/api/v1/account/resend_activation_token"
       body:"*"
     };
   }
@@ -174,6 +180,23 @@ service AccountService {
       get:"/api/v1/account/complience/groups"
     };
   }
+  //GetAdminUserScope returns admin details for a particular scope
+  rpc GetAdminUserScope(GetAdminUserScopeRequest) returns (GetAdminUserScopeResponse) {
+    option (google.api.http) = {
+      get:"/api/v1/account/adminuserscope"
+    };
+  }
+}
+
+message GetAdminUserScopeRequest{
+  repeated string scopes = 1 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message GetAdminUserScopeResponse{
+ repeated AdminDetail adminDetails = 1;
+}
+message AdminDetail {
+  string user_name = 1;
+  string first_name = 2;
 }
 
 message GetScopeRequest{
@@ -382,9 +405,10 @@ message User {
   string locale = 4;
   repeated string groups = 5;
   ROLE role = 6;
+  string account_status=7;
 }
 
-message ListUsersResponse{
+message   ListUsersResponse{
     repeated User users = 1;
 }
 
@@ -430,4 +454,11 @@ message ComplienceGroup {
   string name = 2; 
   repeated string scope_code = 3;
   repeated string scope_name = 4;
+}
+
+message ResendAccountActivationRequest {
+  string user = 1; 
+}
+message ResendAccountActivationResponse {
+  bool success = 1; 
 }

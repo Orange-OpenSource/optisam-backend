@@ -2,13 +2,15 @@ package v1
 
 import (
 	"context"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	repo "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
-	"optisam-backend/common/optisam/token/claims"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -268,20 +270,21 @@ func (s *accountServiceServer) updateGroupName(ctx context.Context, req *v1.Upda
 		logger.Log.Error("service/v1 - UpdateGroup - GroupInfo", zap.Error(err))
 		return nil, status.Error(codes.Internal, "failed to get Group")
 	}
-	// if group.Name == req.Group.Name {
-	// 	return convertRepoGroupToSrvGroup(group), nil
-	// }
-	fqnSlice := strings.Split(group.FullyQualifiedName, ".")
-	fqnSlice = fqnSlice[:len(fqnSlice)-1]
-	fqn := strings.Join(append(fqnSlice, req.Group.Name), ".")
+	groupName := group.Name
+	if group.Name != req.Group.Name {
+		fqnSlice := strings.Split(group.FullyQualifiedName, ".")
+		fqnSlice = fqnSlice[:len(fqnSlice)-1]
+		fqn := strings.Join(append(fqnSlice, req.Group.Name), ".")
 
-	groupExists, err := s.accountRepo.GroupExistsByFQN(ctx, fqn)
-	if err != nil {
-		logger.Log.Error("service/v1 - UpdateGroup - GroupExistsByFQN", zap.Error(err))
-		return nil, status.Error(codes.Internal, "failed to check GroupExistsByFQN")
-	}
-	if groupExists {
-		return nil, status.Error(codes.InvalidArgument, "group name is not available")
+		groupExists, err := s.accountRepo.GroupExistsByFQN(ctx, fqn)
+		if err != nil {
+			logger.Log.Error("service/v1 - UpdateGroup - GroupExistsByFQN", zap.Error(err))
+			return nil, status.Error(codes.Internal, "failed to check GroupExistsByFQN")
+		}
+		if groupExists {
+			return nil, status.Error(codes.InvalidArgument, "group name is not available")
+		}
+		groupName = req.Group.Name
 	}
 	if err := s.accountRepo.UpdateGroup(ctx, req.GroupId, &repo.GroupUpdate{
 		Name:            req.Group.Name,
@@ -291,9 +294,9 @@ func (s *accountServiceServer) updateGroupName(ctx context.Context, req *v1.Upda
 		logger.Log.Error("service/v1 - UpdateGroup - UpdateGroup", zap.Error(err))
 		return nil, status.Error(codes.Internal, "failed to get update group")
 	}
-	group.Name = req.Group.Name
+	group.Name = groupName
 	group.Scopes = req.Group.Scopes
-	group.FullyQualifiedName = fqn
+	//	group.GroupCompliance = group.GroupCompliance
 	return convertRepoGroupToSrvGroup(group), nil
 }
 

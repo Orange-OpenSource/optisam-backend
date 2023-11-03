@@ -45,6 +45,7 @@ type AccountInfo struct {
 	CreatedOn       time.Time
 	Group           []int64
 	GroupName       []string
+	AccountStatus   string
 }
 
 // UpdateAccount ...
@@ -59,4 +60,9 @@ type UpdateUserAccount struct {
 	Role Role
 }
 type UserQueryParams struct {
+}
+
+type AdminUserForScope struct {
+	UserName  string `json:"user_name"`
+	FirstName string `json:"first_name"`
 }

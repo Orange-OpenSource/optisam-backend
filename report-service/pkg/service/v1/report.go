@@ -6,20 +6,22 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/report-service/pkg/api/v1"
-	repo "optisam-backend/report-service/pkg/repository/v1"
-	"optisam-backend/report-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/report-service/pkg/worker"
 	"regexp"
 	"strings"
 
-	prodv1 "optisam-backend/product-service/pkg/api/v1"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/worker"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+
+	prodv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/thirdparty/product-service/pkg/api/v1"
 
 	"github.com/golang/protobuf/jsonpb" // nolint: staticcheck
 	"github.com/golang/protobuf/ptypes"

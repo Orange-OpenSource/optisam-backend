@@ -1,9 +1,10 @@
 package workerqueue
 
 import (
-	"optisam-backend/common/optisam/logger"
 	"os"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 )
 
 func TestMain(m *testing.M) {

@@ -3,13 +3,15 @@ package v1
 import (
 	"context"
 	"errors"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
-	"optisam-backend/metric-service/pkg/repository/v1/mock"
 	"reflect"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1/mock"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 )
@@ -253,6 +255,22 @@ func Test_metricServiceServer_UpdateMetricUNS(t *testing.T) {
 			},
 			outErr: true,
 		},
+		{name: "FAILURE - UpdateMetricUNS - Default Value True, Metric created by import can't be updated error",
+			input: args{
+				ctx: context.Background(),
+				req: &v1.MetricUNS{
+					Name:    "Met_UNS1",
+					Profile: "P1",
+					Scopes:  []string{"Scope1"},
+					Default: true,
+				},
+			},
+			setup: func() {},
+			output: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			outErr: true,
+		},
 		{name: "FAILURE - UpdateMetricUNS - cannot fetch metrics",
 			input: args{
 				ctx: ctx,
@@ -333,6 +351,56 @@ func Test_metricServiceServer_UpdateMetricUNS(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("metricServiceServer.UpdateMetricUserNominativeStandard() got = %v, want %v", got, tt.output)
+			}
+		})
+	}
+}
+
+func TestGetDescriptionUNS(t *testing.T) {
+	ctx := context.Background()
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockMetricRepo := mock.NewMockMetric(mockCtrl)
+	s := &metricServiceServer{
+		metricRepo: mockMetricRepo,
+	}
+
+	tests := []struct {
+		name          string
+		metricName    string
+		scope         string
+		metric        string
+		expected      string
+		expectedError error
+	}{
+		{
+			name:          "Success",
+			metricName:    "MetricName",
+			scope:         "Scope",
+			metric:        "Profile1",
+			expected:      "ExpectedDescription",
+			expectedError: nil,
+		},
+		{
+			name:          "Error",
+			metricName:    "MetricName",
+			scope:         "Scope",
+			metric:        "",
+			expected:      "",
+			expectedError: errors.New("some error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockMetricRepo.EXPECT().GetMetricConfigUNS(ctx, tt.metricName, tt.scope).Return(&repo.MetricUNS{}, tt.expectedError)
+
+			_, err := s.getDescriptionUNS(ctx, tt.metricName, tt.scope)
+			if (err != nil) != (tt.expectedError != nil) {
+				t.Errorf("metricServiceServer.CreateMetricWindowServerStandard() error = %v, wantErr %v", err, tt.expected)
+				return
 			}
 		})
 	}

@@ -1,0 +1,485 @@
+syntax = "proto3";
+
+option go_package = "account-service/thirdparty/application-service/pkg/api/v1";
+
+package optisam.applications.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  security_definitions : {
+    security : {
+      key : "bearer"
+      value : {
+        type : TYPE_API_KEY
+        in : IN_HEADER
+        name : "Authorization"
+        description :
+            "Authentication token, prefixed by Bearer: Bearer <token>"
+      }
+    }
+  }
+  security : {security_requirement : {key : "bearer"}}
+};
+
+service ApplicationService {
+  rpc UpsertApplication(UpsertApplicationRequest)
+      returns (UpsertApplicationResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/application"
+      body : "*"
+    };
+  }
+
+rpc UpsertApplicationEquip(UpsertApplicationEquipRequest)returns (UpsertApplicationEquipResponse) {
+  option (google.api.http) = {
+      post : "/api/v1/application/equip"
+      body : "*"
+  };
+}
+
+  rpc DropApplicationData(DropApplicationDataRequest)returns (DropApplicationDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/application/{scope}"
+    };
+  }
+
+  rpc DeleteApplication(DeleteApplicationRequest)returns (DeleteApplicationResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/application/{application_id}"
+    };
+  }
+
+  rpc UpsertInstance(UpsertInstanceRequest) returns (UpsertInstanceResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/application/{application_id}/instances"
+      body : "*"
+    };
+  }
+
+  rpc DeleteInstance(DeleteInstanceRequest) returns (DeleteInstanceResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/application/{application_id}/instances/{instance_id}"
+    };
+  }
+  // rpc ListProductsForApplication(ListProductsForApplicationRequest)
+  //     returns (ListProductsForApplicationResponse) {
+  //   option (google.api.http) = {
+  //     get : "/api/v1/application/{application_id}/products"
+  //   };
+  // }
+
+  rpc ListApplications(ListApplicationsRequest)returns (ListApplicationsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/applications"
+    };
+  }
+
+  rpc ListInstances(ListInstancesRequest) returns (ListInstancesResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/instances"
+    };
+  }
+
+  // Obsolescense APIs
+  rpc ApplicationDomains(ApplicationDomainsRequest)
+      returns (ApplicationDomainsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/domains"
+    };
+  }
+
+  rpc ObsolescenceDomainCriticityMeta(DomainCriticityMetaRequest)
+      returns (DomainCriticityMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/meta/domaincriticity"
+    };
+  }
+
+  rpc ObsolescenceMaintenanceCriticityMeta(MaintenanceCriticityMetaRequest)
+      returns (MaintenanceCriticityMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/meta/maintenancecriticity"
+    };
+  }
+
+  rpc ObsolescenceRiskMeta(RiskMetaRequest) returns (RiskMetaResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/meta/risks"
+    };
+  }
+
+  rpc ObsolescenceDomainCriticity(DomainCriticityRequest)
+      returns (DomainCriticityResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/domains"
+    };
+  }
+
+  rpc PostObsolescenceDomainCriticity(PostDomainCriticityRequest)
+      returns (PostDomainCriticityResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/application/obsolescence/domains"
+      body : "*"
+    };
+  }
+
+  rpc ObsolescenseMaintenanceCriticity(MaintenanceCriticityRequest)
+      returns (MaintenanceCriticityResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/maintenance"
+    };
+  }
+
+  rpc PostObsolescenseMaintenanceCriticity(PostMaintenanceCriticityRequest)
+      returns (PostMaintenanceCriticityResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/application/obsolescence/maintenance"
+      body : "*"
+    };
+  }
+
+  rpc ObsolescenseRiskMatrix(RiskMatrixRequest) returns (RiskMatrixResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/obsolescence/matrix"
+    };
+  }
+
+  rpc PostObsolescenseRiskMatrix(PostRiskMatrixRequest)
+      returns (PostRiskMatrixResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/application/obsolescence/matrix"
+      body : "*"
+    };
+  }
+
+  rpc DropObscolenscenceData(DropObscolenscenceDataRequest)returns (DropObscolenscenceDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/application/obsolescence/resource/{scope}"
+    };
+  }
+
+  rpc GetEquipmentsByApplication(GetEquipmentsByApplicationRequest)returns (GetEquipmentsByApplicationResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/application/equipments"
+    };
+  }
+}
+
+message GetEquipmentsByApplicationRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string application_id = 2;
+}
+
+message GetEquipmentsByApplicationResponse { 
+  repeated string equipment_id = 1; 
+  int32 totalRecords = 2;
+}
+
+message DropObscolenscenceDataRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropObscolenscenceDataResponse { 
+  bool success = 1; 
+}
+
+message UpsertApplicationRequest {
+  string application_id = 1;
+  string name = 2;
+  string environment = 3;
+  string domain = 4;
+  string scope = 5 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message UpsertApplicationResponse { bool success = 1; }
+
+message UpsertApplicationEquipRequest {
+  string application_id = 1;
+  string scope = 2;
+  equipment equipments = 3;
+
+  message equipment {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string equipment_id = 2;
+    }
+}
+
+message UpsertApplicationEquipResponse { bool success = 1; }
+
+message DropApplicationDataRequest {  
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DropApplicationDataResponse { 
+  bool success = 1; 
+}
+
+message DeleteApplicationRequest { string application_id = 1; }
+
+message DeleteApplicationResponse { bool success = 1; }
+
+message UpsertInstanceRequest {
+  string application_id = 1;
+  string instance_id = 2;
+  string instance_name = 3;
+  product products = 4;
+  equipment equipments = 5;
+  //SCOPE BASED CHANGE
+  string scope = 6 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  message product {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string product_id = 2;
+
+    // message product_add {
+    //   string operation = 1 [ (validate.rules).string.const = "add" ];
+    //   repeated string product_id = 2;
+    // }
+    // message product_delete {
+    //   string operation = 1 [ (validate.rules).string.const = "delete" ];
+    //   repeated string product_id = 2;
+    // }
+  }
+
+  message equipment {
+    string operation = 1
+        [ (validate.rules).string = {in : [ "add", "delete" ]} ];
+    repeated string equipment_id = 2;
+
+    // message equipment_add {
+    //   string operation = 1 [ (validate.rules).string.const = "add" ];
+    //   repeated string equipment_id = 2;
+    // }
+    // message equipment_delete {
+    //   string operation = 1 [ (validate.rules).string.const = "delete" ];
+    //   repeated string equipment_id = 2;
+    // }
+  }
+}
+
+message UpsertInstanceResponse { bool success = 1; }
+
+message DeleteInstanceRequest {
+  string application_id = 1;
+  string instance_id = 2;
+}
+
+message DeleteInstanceResponse { bool success = 1; }
+
+message ListApplicationsRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lte : 200},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {minimum : 10, maximum : 200, description : "Items per page"}
+  ];
+  enum SortBy {
+    name = 0;
+    owner = 1;
+    num_of_instances = 2;
+    num_of_products = 3;
+    num_of_equipments = 4;
+    domain = 5;
+    total_cost = 6;
+    obsolescence_risk = 7;
+    environment = 8;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  ApplicationSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message ListApplicationsResponse {
+  int32 totalRecords = 1;
+  repeated Application applications = 2;
+}
+
+message Application {
+  string application_id = 1;
+  string name = 2;
+  string owner = 3;
+  int32 num_of_instances = 4;
+  int32 num_of_products = 5;
+  double total_cost = 6;
+  string domain = 7;
+  string obsolescence_risk = 8;
+  int32 num_of_equipments = 9;
+  string environment = 10;
+}
+
+message ApplicationSearchParams {
+  StringFilter name = 1;
+  StringFilter owner = 2;
+  StringFilter product_id = 3;
+  StringFilter domain = 4;
+  StringFilter obsolescence_risk = 5;
+  string environment = 6;
+}
+
+message ListInstancesRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lte : 200},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {minimum : 10, maximum : 200, description : "Items per page"}
+  ];
+  enum SortBy {
+    instance_id = 0;
+    instance_environment = 1;
+    num_of_products = 2;
+    num_of_equipments = 3;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  InstanceSearchParams search_params = 5;
+  repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
+
+message InstanceSearchParams {
+  StringFilter application_id = 1;
+  StringFilter product_id = 2;
+}
+
+message ListInstancesResponse {
+  int32 totalRecords = 1;
+  repeated Instance instances = 2;
+}
+
+message Instance {
+  string id = 1;
+  string environment = 2;
+  int32 num_of_equipments = 3;
+  int32 num_of_products = 4;
+}
+
+message StringFilter {
+  int32 filteringOrder = 1;
+  string filteringkey = 2;
+  bool filter_type = 3;
+  repeated string filteringkey_multiple = 4;
+}
+
+enum SortOrder {
+  asc = 0;
+  desc = 1;
+}
+
+message ApplicationDomainsRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message ApplicationDomainsResponse { repeated string domains = 1; }
+
+message DomainCriticityMetaRequest {}
+
+message DomainCriticityMeta {
+  int32 domain_critic_id = 1;
+  string domain_critic_name = 2;
+}
+message DomainCriticityMetaResponse {
+  repeated DomainCriticityMeta domain_criticity_meta = 1;
+}
+
+message MaintenanceCriticityMetaRequest {}
+
+message MaintenanceCriticityMeta {
+  int32 maintenance_critic_id = 1;
+  string maintenance_critic_name = 2;
+}
+message MaintenanceCriticityMetaResponse {
+  repeated MaintenanceCriticityMeta maintenance_criticity_meta = 1;
+}
+
+message RiskMetaRequest {}
+
+message RiskMeta {
+  int32 risk_id = 1;
+  string risk_name = 2;
+}
+message RiskMetaResponse { repeated RiskMeta risk_meta = 1; }
+
+message DomainCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message DomainCriticity {
+  int32 domain_critic_id = 1;
+  string domain_critic_name = 2;
+  repeated string domains = 3;
+}
+
+message DomainCriticityResponse {
+  repeated DomainCriticity domains_criticity = 1;
+}
+
+message PostDomainCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated DomainCriticity domains_criticity = 2;
+}
+
+message PostDomainCriticityResponse {
+  bool success = 1;
+}
+
+message MaintenanceCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message MaintenanceCriticity {
+  int32 maintenance_critic_id = 1;
+  int32 maintenance_level_id = 2;
+  string maintenance_level_name = 3;
+  int32 start_month = 4;
+  int32 end_month = 5;
+}
+
+
+message PostMaintenanceCriticityRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated MaintenanceCriticity maintenance_criticy = 2;
+}
+
+message MaintenanceCriticityResponse {
+  repeated MaintenanceCriticity maintenance_criticy = 1;
+}
+
+message PostMaintenanceCriticityResponse {
+  bool success = 1;
+}
+
+message RiskMatrixRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+}
+
+message RiskMatrix {
+  int32 configuration_id = 1;
+  int32 domain_critic_id = 2;
+  string domain_critic_name = 3;
+  int32 maintenance_critic_id = 4;
+  string maintenance_critic_name = 5;
+  int32 risk_id = 6;
+  string risk_name = 7;
+}
+message RiskMatrixResponse { repeated RiskMatrix risk_matrix = 1; }
+
+message PostRiskMatrixRequest {
+  string scope = 1 [ (validate.rules).string.pattern = "\\b[A-Z]{3}\\b" ];
+  repeated RiskMatrix risk_matrix = 2;
+}
+
+message PostRiskMatrixResponse {
+  bool success = 1;
+}

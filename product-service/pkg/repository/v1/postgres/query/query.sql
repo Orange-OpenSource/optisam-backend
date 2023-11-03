@@ -1031,7 +1031,7 @@ INSERT INTO
         version,
         comment,
         last_purchased_order,
-        support_number,
+        support_numbers,
         maintenance_provider,
         ordering_date,
         corporate_sourcing_contract,
@@ -1090,7 +1090,7 @@ SET
     version = $17,
     comment = $18,
     last_purchased_order = $19,
-    support_number = $20,
+    support_numbers = $20,
     maintenance_provider = $21,
     ordering_date = $22,
     corporate_sourcing_contract = $23,
@@ -1100,7 +1100,7 @@ SET
     repartition = $27;
 
 -- name: ListAcqRightsIndividual :many
-SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_number, a.maintenance_provider, a.file_name, a.repartition, p.swid_tag_product as product_swid_tag,
+SELECT count(*) OVER() AS totalRecords,a.sku,a.swidtag,a.product_name,a.product_editor,a.metric,a.num_licenses_acquired,a.num_licences_maintainance,a.avg_unit_price,a.avg_maintenance_unit_price,a.total_purchase_cost,a.total_maintenance_cost,a.total_cost ,a.start_of_maintenance, a.end_of_maintenance , a.version, a.comment, a.ordering_date, a.software_provider, a.corporate_sourcing_contract, a.last_purchased_order, a.support_numbers, a.maintenance_provider, a.file_name, a.repartition, p.swid_tag_product as product_swid_tag,
        v.swid_tag_version as version_swid_tag,ec.id as editor_id,p.id as product_id
 FROM 
 acqrights a
@@ -1175,7 +1175,7 @@ SELECT
     a.software_provider,
     a.corporate_sourcing_contract,
     a.last_purchased_order,
-    a.support_number,
+    a.support_numbers,
     a.maintenance_provider,
     a.file_name,
     a.repartition
@@ -1482,7 +1482,7 @@ SELECT
     a.start_of_maintenance,
     a.end_of_maintenance,
     a.last_purchased_order,
-    a.support_number,
+    a.support_numbers,
     a.maintenance_provider,
     a.comment,
     a.created_on,
@@ -1678,7 +1678,7 @@ INSERT INTO
         start_of_maintenance,
         end_of_maintenance,
         last_purchased_order,
-        support_number,
+        support_numbers,
         maintenance_provider,
         num_licences_maintenance,
         comment,
@@ -1730,7 +1730,7 @@ SET
     start_of_maintenance = $15,
     end_of_maintenance = $16,
     last_purchased_order = $17,
-    support_number = $18,
+    support_numbers = $18,
     maintenance_provider = $19,
     num_licences_maintenance = $20,
     comment = $21,
@@ -2267,7 +2267,7 @@ SELECT
     start_of_maintenance,
     end_of_maintenance,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     comment,
     file_name
@@ -2303,7 +2303,7 @@ SELECT
     software_provider,
     corporate_sourcing_contract,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     file_name,
     file_data,
@@ -2404,7 +2404,7 @@ Select
     software_provider,
     corporate_sourcing_contract,
     last_purchased_order,
-    support_number,
+    support_numbers,
     maintenance_provider,
     file_name
 from acqrights
@@ -2506,7 +2506,142 @@ left join editor_catalog ec on pc.editorid = ec.id
 WHERE ec.name =  @editor
 AND vc.swid_tag_system  IN (SELECT UNNEST(agg.swidtags) from aggregations agg where agg.scope = @scope and agg.id = @id);
 
+-- name: DeployedProducts :many
 
+SELECT
+    swidtag
+FROM
+    products
+WHERE
+    products.scope = @scope
+    AND swidtag NOT IN (
+        SELECT
+            DISTINCT(swidtag)
+        FROM
+            acqrights
+            LEFT JOIN editor_catalog AS ec ON ec.name = acqrights.product_editor
+        WHERE
+            acqrights.scope = @scope
+            AND acqrights.swidtag NOT IN (
+                SELECT
+                    swidtag
+                FROM
+                    products_equipments
+                WHERE
+                    products_equipments.scope = @scope
+            )
+        UNION
+        SELECT
+            swidtag
+        FROM
+            products
+            LEFT JOIN editor_catalog AS ec ON ec.name = products.product_editor
+        WHERE
+            products.scope = @scope
+            AND products.swidtag NOT IN (
+                SELECT
+                    swidtag
+                FROM
+                    acqrights
+                WHERE
+                    acqrights.scope = @scope
+                UNION
+                SELECT
+                    unnest(swidtags) AS swidtags
+                FROM
+                    aggregations
+                    INNER JOIN aggregated_rights ON aggregations.id = aggregated_rights.aggregation_id
+                WHERE
+                    aggregations.scope = @scope
+            )
+            AND products.swidtag IN (
+                SELECT
+                    swidtag
+                FROM
+                    products_equipments
+                WHERE
+                    products_equipments.scope = @scope
+            )
+    );
+
+-- name: ProductMaintenanceCount :many
+
+WITH swidtag_union AS (
+    SELECT
+        unnest(a.swidtags) as swidtag
+    FROM
+        aggregations a
+    WHERE
+        scope = @scope
+    UNION
+    SELECT
+        swidtag
+    FROM
+        acqrights
+    WHERE
+        scope = @scope
+)
+SELECT
+    (
+        SELECT COUNT(final.swidtag)
+        FROM (
+            SELECT unnest(a.swidtags) AS swidtag
+            FROM aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+            WHERE ar.scope = @scope
+                AND (
+                    ar.start_of_maintenance IS NOT NULL
+                    AND ar.end_of_maintenance > CURRENT_DATE
+                    AND ar.start_of_maintenance < CURRENT_DATE
+                )
+            UNION
+            SELECT acq.swidtag
+            FROM acqrights AS acq
+            WHERE acq.scope = @scope
+                AND (
+                    acq.start_of_maintenance IS NOT NULL
+                    AND acq.end_of_maintenance > CURRENT_DATE
+                    AND acq.start_of_maintenance < CURRENT_DATE
+                )
+        ) AS final
+    ) AS number_of_swidtag,
+    (
+        SELECT COUNT(swidtag)
+        FROM swidtag_union
+    ) AS total;
+
+
+-- name: ProductNoMaintenance :many
+SELECT
+    final.swidtag,
+    final.product_name
+FROM
+    (
+        SELECT
+            acq.product_name,
+            acq.swidtag
+        FROM
+            acqrights acq
+        WHERE
+            acq.swidtag = ANY(@swidtag :: TEXT [])
+            AND acq.scope = @scope
+        UNION
+        SELECT
+            CASE WHEN agg.product_name IS NULL THEN '' ELSE agg.product_name END AS product_name,
+            agg.swidtag AS swidtag
+        FROM 
+        (
+        SELECT
+            UNNEST(ag.products) AS product_name,
+            UNNEST(ag.swidtags) AS swidtag
+        FROM
+            aggregations ag
+        WHERE
+            (@swidtag :: TEXT []) && ag.swidtags 
+            AND ag.scope = @scope
+        ) AS agg
+    ) AS final;
+    
 -- name: GetAggregationByID :one
 
 SELECT * FROM aggregations WHERE id = @id AND scope = @scope;
@@ -2533,28 +2668,18 @@ WHERE
 GROUP BY
  ocl.scope;
 
+
+
+
 -- name: GetScopeTotalAmountEditor :many
-SELECT
-    editorExpenseByScopeData.scope,
-    coalesce(SUM(total_cost), 0.0):: FLOAT as cost
-FROM (
-        SELECT
-            scope,
-            total_cost
-        FROM acqrights
-        WHERE
-            acqrights.scope = ANY($1::text[]) and acqrights.product_editor=$2 
-        UNION ALL
-        SELECT
-            a.scope,
-            ar.total_cost
-        FROM aggregations as a
-            INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
-        WHERE
-            a.scope = ANY($1::text[]) and
-            a.product_editor = $2
-    ) as editorExpenseByScopeData
-GROUP BY editorExpenseByScopeData.scope;
+SELECT coalesce(sum(ocl.total_cost), 0.0) :: FLOAT AS cost, ocl.scope
+FROM overall_computed_licences ocl
+WHERE
+cost_optimization = FALSE
+ AND editor = $2
+  AND scope = ANY($1::text[])
+GROUP BY
+ ocl.scope;
 
 -- name: GetScopeUnderUsageCostEditor :many
 SELECT coalesce(sum(ocl.delta_cost), 0.0) :: FLOAT AS cost, ocl.scope
@@ -2792,32 +2917,6 @@ WHERE
     AND scope = ANY(@scope :: TEXT [])
 GROUP BY
     scope;
-
--- name: GetTotalCostByProduct :many
-SELECT
-    editorExpenseByScopeData.scope,
-    COALESCE(SUM(total_cost), 0.0)::FLOAT AS total_cost
-FROM (
-    SELECT
-        scope,
-        total_cost
-    FROM acqrights
-    WHERE
-        acqrights.scope = ANY(@scope :: TEXT []) AND
-        acqrights.product_editor = @editor AND acqrights.product_name = @product_name
-        group by scope,total_cost
-    UNION ALL
-    SELECT
-        a.scope,
-        ar.total_cost
-    FROM aggregations AS a
-    INNER JOIN aggregated_rights AS ar ON a.id = ar.aggregation_id
-    WHERE
-        a.scope = ANY(@scope :: TEXT []) AND
-        a.product_editor = @editor AND @product_name = ANY(a.products)
-        group by a.scope,total_cost
-) AS editorExpenseByScopeData
-GROUP BY editorExpenseByScopeData.scope;
 
 -- name: GetProductListByEditor :many
 
@@ -3445,7 +3544,7 @@ FROM
     LEFT JOIN products p on pcu.swidtag = p.swidtag
     AND p.scope = ANY(@scope:: TEXT [])
 WHERE
-    pcu.scope = ANY(@scope:: TEXT [])   
+    pcu.scope = ANY(@scope:: TEXT [])
     AND pcu.is_aggregations = @is_aggregations:: bool
     AND (
         CASE
@@ -4230,7 +4329,8 @@ INSERT INTO
         record_failed,
         file_name,
         sheet_name,
-        file_status
+        file_status,
+        ppid
     )
 VALUES (
         $1,
@@ -4244,7 +4344,8 @@ VALUES (
         $9,
         $10,
         $11,
-        $12
+        $12,
+        $13
     );
 
 -- name: ListNominativeUsersUploadedFiles :many
@@ -4275,7 +4376,8 @@ SELECT
   	    END AS nametype,
     p.product_name,
     p.product_version,
-    a.aggregation_name
+    a.aggregation_name,
+    (select count(*) from jobs where status != 'COMPLETED' and ppid = fd.ppid) as jobNotCompleted
 FROM
     nominative_user_file_uploaded_details fd
     left join products p on fd.swidtag=p.swidtag and fd.scope=p.scope
@@ -4371,12 +4473,7 @@ FROM (
         FROM acqrights
         WHERE
             acqrights.scope = ANY(@scope:: TEXT [])
-        GROUP BY
-            editor,
-            total_purchase_cost,
-            total_maintenance_cost,
-            total_cost
-        UNION
+        UNION ALL
         SELECT
             a.product_editor as editor,
             ar.total_purchase_cost,
@@ -4386,13 +4483,41 @@ FROM (
             INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
         WHERE
             a.scope = ANY(@scope:: TEXT [])
-        GROUP BY
-            a.product_editor,
+    ) as editorExpenseByScopeData
+GROUP BY editor;
+
+-- name: GetEditorProductExpensesByScopeData :many
+
+SELECT
+    name,
+    coalesce(SUM(total_purchase_cost), 0.0):: FLOAT as total_purchase_cost,
+    coalesce(
+        SUM(total_maintenance_cost),
+        0.0
+    ):: FLOAT as total_maintenance_cost,
+    coalesce(SUM(total_cost), 0.0):: FLOAT as total_cost
+FROM (
+        SELECT
+            product_name as name,
+            total_purchase_cost,
+            total_maintenance_cost,
+            total_cost
+        FROM acqrights
+        WHERE
+            acqrights.scope = ANY(@scope:: TEXT [])
+            and acqrights.product_editor = @reqeditor
+        UNION ALL
+        SELECT
+            a.aggregation_name as name,
             ar.total_purchase_cost,
             ar.total_maintenance_cost,
             ar.total_cost
+        FROM aggregations as a
+            INNER JOIN aggregated_rights as ar ON a.id = ar.aggregation_id
+        WHERE
+            a.scope = ANY(@scope:: TEXT []) and a.product_editor = @reqeditor
     ) as editorExpenseByScopeData
-GROUP BY editor;
+GROUP BY name;
 
 -- name: GetConcurrentNominativeUsersBySwidTag :many
 
@@ -4424,3 +4549,221 @@ SELECT * from products
     WHERE 
     product_name=ANY(@product_name:: TEXT [])
     AND product_editor=ANY(@product_editor:: TEXT []);
+-- name: DeploymentPercent :one
+select
+    coalesce(sum(count(distinct(swidtag))) OVER())::FLOAT AS totalRecords
+from
+    products pro
+where 
+    pro.scope = @scope
+    AND pro.product_type = @product_type;
+    
+-- name: GetProductSkuExpiringSoonMaintenance :many
+select product_name,sku, end_of_maintenance from acqrights 
+where scope=ANY(@scope:: TEXT []) AND end_of_maintenance = CURRENT_DATE + INTERVAL '1 month';
+
+
+-- name: GetProductSkuExipredMaintenance :many
+select product_name,sku, end_of_maintenance from acqrights 
+where scope=ANY(@scope:: TEXT []) and end_of_maintenance = CURRENT_DATE - INTERVAL '1 day';
+
+-- name: WasteCost :many
+SELECT editor, product_names,aggregation_name, coalesce(sum(delta_cost), 0.0) :: FLOAT AS cost
+FROM overall_computed_licences
+WHERE delta_cost > 0 and scope = $1
+GROUP BY editor, product_names,aggregation_name;
+
+-- name: TrueCost :many
+SELECT editor, product_names,aggregation_name, coalesce(sum(delta_cost), 0.0) :: FLOAT AS cost
+FROM overall_computed_licences
+WHERE delta_cost < 0 and scope = $1
+GROUP BY editor, product_names,aggregation_name;
+
+-- name: GetOpenSourceCloseSourceData :many
+SELECT
+    COALESCE(sum(openSourceCount),0):: INTEGER as osCount,
+    COALESCE(sum(closeSourceCount),0):: INTEGER as csCount
+from
+    (
+        SELECT
+            vc.p_id as result
+        FROM
+            version_catalog vc
+            JOIN products p ON vc.swid_tag_system = p.swidtag
+        WHERE
+            p.scope = @scope
+        GROUP BY
+            vc.p_id
+    ) as ver
+    JOIN (
+        select
+            *,
+            COALESCE(
+                COUNT(
+                    CASE
+                        When licensing = 'OPENSOURCE' Then is_opensource
+                    End
+                ),
+                0
+            ) as openSourceCount,
+            COALESCE(
+                COUNT(
+                    CASE
+                        When licensing = 'CLOSEDSOURCE' Then is_closesource
+                    End
+                ),
+                0
+            ) as closeSourceCount
+        from
+            product_catalog
+        GROUP BY
+            id
+    ) pc ON pc.id = ver.result;
+
+
+-- name: TotalProductsOfScope :many
+
+SELECT Coalesce(COUNT(proacq.product_name),0):: INTEGER as total from
+(SELECT
+    DISTINCT p.product_name
+FROM
+    products as p
+where
+    p.scope = @scope
+UNION
+SELECT
+    DISTINCT acq.product_name
+FROM
+    acqrights as acq
+where
+    acq.scope = @scope) as proacq;
+
+-- name: GetComputedCost :one
+SELECT
+    SUM(computed_cost + (total_cost-purchase_cost)):: Numeric(15, 2) as total_cost,
+    SUM(computed_cost):: Numeric(15, 2) as purchase_cost
+from overall_computed_licences
+WHERE
+    scope = ANY(@scope:: TEXT [])
+GROUP BY scope;
+
+-- name: GetComputedCostEditors :many
+SELECT SUM(computed_cost + (total_cost-purchase_cost)):: FLOAT AS cost, ocl.editor
+FROM overall_computed_licences ocl 
+WHERE
+cost_optimization = FALSE
+  AND scope = ANY(@scope:: TEXT []) GROUP BY ocl.editor;
+
+-- name: GetComputedCostEditorProducts :many
+SELECT SUM(computed_cost + (total_cost-purchase_cost)):: FLOAT AS cost, ocl.editor,ocl.product_names,sku,aggregation_name
+FROM overall_computed_licences ocl 
+WHERE
+cost_optimization = FALSE
+  AND scope = ANY(@scope:: TEXT []) AND editor = @editor GROUP BY ocl.editor,ocl.product_names,ocl.sku,aggregation_name;
+
+-- name: AllNoMaintainenceProducts :many
+
+
+SELECT
+    result.swidtag :: VARCHAR
+FROM
+    (
+        SELECT
+            unnest(a.swidtags) AS swidtag
+        FROM
+            aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+        WHERE
+            ar.scope = @scope
+            AND (
+                start_of_maintenance IS NULL
+                OR (
+                    end_of_maintenance <= CURRENT_DATE
+                    AND start_of_maintenance <= CURRENT_DATE
+                )
+            )
+        UNION
+        SELECT
+            swidtag
+        FROM
+            acqrights AS acq
+        WHERE
+            acq.scope = @scope
+            AND (
+                start_of_maintenance IS NULL
+                OR (
+                    end_of_maintenance <= CURRENT_DATE
+                    AND start_of_maintenance <= CURRENT_DATE
+                )
+            )
+    ) as result 
+    where result.swidtag NOT IN( 
+     SELECT final.swidtag
+        FROM (
+            SELECT unnest(a.swidtags) AS swidtag
+            FROM aggregated_rights AS ar
+            JOIN aggregations AS a ON ar.aggregation_id = a.id
+            WHERE ar.scope = @scope
+                AND (
+                    ar.start_of_maintenance IS NOT NULL
+                    AND ar.end_of_maintenance > CURRENT_DATE
+                    AND ar.start_of_maintenance < CURRENT_DATE
+                )
+            UNION
+            SELECT acq.swidtag
+            FROM acqrights AS acq
+            WHERE acq.scope = @scope
+                AND (
+                    acq.start_of_maintenance IS NOT NULL
+                    AND acq.end_of_maintenance > CURRENT_DATE
+                    AND acq.start_of_maintenance < CURRENT_DATE
+                )
+        ) AS final);
+
+-- name: ProductCatalogVersion :many
+
+Select final.version,
+       final.swidtag
+ FROM   
+ ( SELECT
+    COALESCE(vc.name, '') AS version,
+    vc.swid_tag_system AS swidtag
+FROM
+    version_catalog vc
+WHERE
+    vc.swid_tag_system = ANY(@swidtag :: TEXT [])
+ UNION
+   SELECT
+            acq.version as vesrion,
+            acq.swidtag as swidtag
+        FROM
+            acqrights acq
+        WHERE
+            acq.swidtag = ANY(@swidtag :: TEXT [])
+            AND acq.scope = @scope ) AS final;
+
+-- name: GetJobsInExecution :one
+SELECT count(*) FROM jobs WHERE status != 'FAILED' AND status != 'COMPLETED' and ppid = @ppid;
+
+
+
+-- name: GetProductInformationFromAcqrightForAll :one
+SELECT ac.swidtag,
+       ac.product_name,
+       ac.product_editor,
+       ac.version,
+       p.swid_tag_product as product_swid_tag,
+       v.swid_tag_version as version_swid_tag,
+       ARRAY_AGG(DISTINCT acmetrics)::TEXT[] as metrics
+FROM acqrights ac
+Left JOIN product_catalog p ON ac.product_name = p.name AND ac.product_editor = p.editor_name
+Left JOIN version_catalog v ON p.id = v.p_id  AND v.name = ac.version,
+unnest(string_to_array(ac.metric,',')) as acmetrics
+WHERE ac.scope = @scope
+    AND lower(ac.swidtag) = @swidtag
+GROUP BY ac.swidtag,
+         ac.product_name,
+         ac.product_editor,
+         ac.version,
+         p.swid_tag_product,
+         v.swid_tag_version;

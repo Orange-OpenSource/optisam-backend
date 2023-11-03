@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/addcolumn"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/equipments"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/equipmentstypes"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/metadata"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/schema"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/cmd/staticdata"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/config"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/addcolumn"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/equipments"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/equipmentstypes"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/metadata"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/schema"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/cmd/staticdata"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

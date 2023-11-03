@@ -12,25 +12,26 @@ import (
 	redisClient "github.com/go-redis/redis/v8"
 
 	// "sample-service/pkg/middleware/logger"
-	"optisam-backend/account-service/pkg/config"
-	"optisam-backend/account-service/pkg/protocol/grpc"
-	"optisam-backend/account-service/pkg/protocol/rest"
-	repo "optisam-backend/account-service/pkg/repository/v1/postgres"
-	v1 "optisam-backend/account-service/pkg/service/v1"
-	"optisam-backend/common/optisam/buildinfo"
-	"optisam-backend/common/optisam/healthcheck"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/prometheus"
-	"optisam-backend/common/optisam/redis"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/protocol/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/protocol/rest"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/service/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/buildinfo"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/healthcheck"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/redis"
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
 	"go.uber.org/zap"
 
-	gconn "optisam-backend/common/optisam/grpc"
+	gconn "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
 	// pq driver
@@ -259,7 +260,7 @@ func RunServer() error {
 		_ = instrumentationServer.ListenAndServe()
 	}()
 
-	v1API := v1.NewAccountServiceServer(repo.NewAccountRepository(db, redisC), grpcClientMap)
+	v1API := v1.NewAccountServiceServer(repo.NewAccountRepository(db, redisC), grpcClientMap, cfg)
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
 	if err != nil {

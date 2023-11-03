@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	v1 "optisam-backend/application-service/pkg/api/v1"
-	dbm "optisam-backend/application-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/logger"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/api/v1"
+	dbm "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

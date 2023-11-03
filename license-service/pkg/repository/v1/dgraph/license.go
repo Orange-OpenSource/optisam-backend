@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
 	"text/template"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2"
 	"go.uber.org/zap"
@@ -114,6 +116,46 @@ func (l *LicenseRepository) GetAcqRights(ctx context.Context, swidtags []string,
 		return nil, v1.ErrNoData
 	}
 	return data.AcquiredRights[0].GroupBySwidtag, nil
+}
+
+// licensesQuery will execute dGraph statement
+func (l *LicenseRepository) licensesQuery(ctx context.Context, q string) (uint64, error) {
+	resp, err := l.dg.NewTxn().Query(ctx, q)
+	if err != nil {
+		logger.Log.Sugar().Errorw("dgraph/licensesForWSD - query failed",
+			"error", err.Error(),
+			"query", q,
+		)
+		return 0, fmt.Errorf("query failed, err: %v", err)
+	}
+
+	type licenses struct {
+		Licenses float64
+	}
+
+	type totalLicenses struct {
+		Licenses []*licenses
+	}
+
+	data := &totalLicenses{}
+
+	if err := json.Unmarshal(resp.Json, data); err != nil {
+		logger.Log.Sugar().Errorw("dgraph/licensesForWSD - Unmarshal failed",
+			"error", err.Error(),
+			"response", resp.Json,
+		)
+		return 0, fmt.Errorf("unmarshal failed, err: %v", err)
+	}
+
+	if len(data.Licenses) == 0 {
+		logger.Log.Sugar().Errorw("dgraph/licensesForWSD -"+v1.ErrNoData.Error(),
+			"error", v1.ErrNoData.Error(),
+			"response", resp.Json,
+		)
+		return 0, v1.ErrNoData
+	}
+
+	return uint64(data.Licenses[0].Licenses), nil
 }
 
 type RightsInfo struct {

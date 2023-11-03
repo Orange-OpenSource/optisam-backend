@@ -2,19 +2,21 @@ package v1
 
 import (
 	"context"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"sync"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *productServiceServer) GroupComplianceEditorCost(ctx context.Context, req *v1.GroupComplianceEditorRequest) (*v1.GroupComplianceEditorResponse, error) {
+func (s *ProductServiceServer) GroupComplianceEditorCost(ctx context.Context, req *v1.GroupComplianceEditorRequest) (*v1.GroupComplianceEditorResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Error("rest - GroupComplianceEditorCost ", zap.String("Reason: ", "ClaimsNotFoundError"))
@@ -59,9 +61,9 @@ func (s *productServiceServer) GroupComplianceEditorCost(ctx context.Context, re
 	return &apiresp, nil
 }
 
-func counterfietCosts(s *productServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
+func counterfietCosts(s *ProductServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
 	defer wg.Done()
-	dbresp, err := s.productRepo.GetScopeCounterfietAmountEditor(ctx, db.GetScopeCounterfietAmountEditorParams{
+	dbresp, err := s.ProductRepo.GetScopeCounterfietAmountEditor(ctx, db.GetScopeCounterfietAmountEditorParams{
 		Column1: scopes,
 		Editor:  editor,
 	})
@@ -95,9 +97,9 @@ func counterfietCosts(s *productServiceServer, scopes []string, editor string, c
 	costs.CounterFeiting = ccosts
 }
 
-func underUsageCosts(s *productServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
+func underUsageCosts(s *ProductServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
 	defer wg.Done()
-	dbresp, err := s.productRepo.GetScopeUnderUsageCostEditor(ctx, db.GetScopeUnderUsageCostEditorParams{
+	dbresp, err := s.ProductRepo.GetScopeUnderUsageCostEditor(ctx, db.GetScopeUnderUsageCostEditorParams{
 		Column1: scopes,
 		Editor:  editor,
 	})
@@ -129,12 +131,12 @@ func underUsageCosts(s *productServiceServer, scopes []string, editor string, co
 	costs.UnderUsage = ccosts
 }
 
-func totalCosts(s *productServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
+func totalCosts(s *ProductServiceServer, scopes []string, editor string, costs *v1.ScopesEditorCosts, ctx context.Context, errorChan chan error, wg *sync.WaitGroup, groupTotal *float64) {
 	defer wg.Done()
 	// res.Costs.CounterFeiting
-	dbresp, err := s.productRepo.GetScopeTotalAmountEditor(ctx, db.GetScopeTotalAmountEditorParams{
-		Column1:       scopes,
-		ProductEditor: editor,
+	dbresp, err := s.ProductRepo.GetScopeTotalAmountEditor(ctx, db.GetScopeTotalAmountEditorParams{
+		Column1: scopes,
+		Editor:  editor,
 	})
 	if err != nil {
 		logger.Log.Error("service/v1 - GroupComplianceEditorCost - totalCosts", zap.Error(err))

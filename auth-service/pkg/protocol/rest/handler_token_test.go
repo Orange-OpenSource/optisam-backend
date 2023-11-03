@@ -5,20 +5,23 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"optisam-backend/common/optisam/logger"
 	"os"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"optisam-backend/auth-service/pkg/api/v1"
-	mock_authService "optisam-backend/auth-service/pkg/api/v1/mock"
-	mock_acctok "optisam-backend/auth-service/pkg/oauth2/generators/access/mock"
-	optisam_oauth2Server "optisam-backend/auth-service/pkg/oauth2/server"
-	mock_clientstore "optisam-backend/auth-service/pkg/oauth2/stores/client/mock"
-	mock_tokenstore "optisam-backend/auth-service/pkg/oauth2/stores/token/mock"
 	"strings"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1"
+	mock_authService "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1/mock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+	mock_acctok "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/generators/access/mock"
+	optisam_oauth2Server "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/server"
+	mock_clientstore "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/stores/client/mock"
+	mock_tokenstore "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/stores/token/mock"
 
 	"gopkg.in/oauth2.v3/models"
 
@@ -55,6 +58,7 @@ func Test_handler_token(t *testing.T) {
 	var service v1.AuthService
 	var srv *server.Server
 	var mockCtrl *gomock.Controller
+	var cfg config.Config
 	type args struct {
 		grantType string
 		username  string
@@ -145,7 +149,7 @@ func Test_handler_token(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			handler := newHandler(service, srv)
+			handler := newHandler(service, srv, cfg)
 			router := httprouter.New()
 			router.POST("/api/v1/token", handler.token)
 			tServer := httptest.NewServer(router)

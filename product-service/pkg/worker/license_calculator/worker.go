@@ -4,14 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	a_v1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	l_v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/product-service/pkg/repository/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"time"
+
+	l_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/license-service/pkg/api/v1"
+
+	a_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/account-service/pkg/api/v1"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"github.com/robfig/cron/v3"
 	"github.com/shopspring/decimal"
@@ -49,9 +53,6 @@ type DataUpdateWorker struct {
 
 // DoWork ...
 func (w *LicenseCalWorker) DoWork(ctx context.Context, j *job.Job) error {
-	logger.Log.Sugar().Infof("before sleep")
-	time.Sleep(60 * time.Second)
-	logger.Log.Sugar().Infof("running worker")
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Error("Panic recovered from cron job", zap.Any("recover", r))

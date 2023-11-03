@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package = "import-service/thirdparty/notification-service/pkg/api/v1";
+
+package optisam.import.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+//import "validate/validate.proto";
+//import "google/protobuf/timestamp.proto";
+
+
+service NotificationService {
+    
+    //ListScopes returns list of available scopes in system
+    rpc SendMail(SendMailRequest) returns (SendMailResponse) {
+      option (google.api.http) = {
+        post: "/api/v1/notify/sendmail"
+        body: "*"
+      };
+    }
+  
+}
+ message SendMailRequest {
+  string mail_subject  = 1;
+  string mail_message = 2;
+  repeated string mail_to = 3;
+  int32 no_of_retiries =4;
+ }
+ message SendMailResponse {
+   string success =1;
+ }

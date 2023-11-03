@@ -3,14 +3,16 @@ package rest
 import (
 	"context"
 	"crypto/rsa"
-	"google.golang.org/protobuf/encoding/protojson"
 	"net/http"
-	"optisam-backend/common/optisam/logger"
-	rest_middleware "optisam-backend/common/optisam/middleware/rest"
-	v1 "optisam-backend/report-service/pkg/api/v1"
 	"os"
 	"os/signal"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	rest_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/rest"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.opencensus.io/plugin/ocgrpc"

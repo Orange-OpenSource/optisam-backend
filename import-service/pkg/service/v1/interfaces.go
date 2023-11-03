@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type ImportServiceServer interface {
+type ImportService interface {
 	UploadDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	UploadMetaDataHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	CreateConfigHandler(res http.ResponseWriter, req *http.Request, param httprouter.Params)
@@ -17,4 +17,6 @@ type ImportServiceServer interface {
 	ImportNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	UploadCatalogData(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 	DownloadFileNominativeUser(res http.ResponseWriter, req *http.Request, param httprouter.Params)
+	//ImportConsumer() error
+	ListNominativeUserFileUploads(res http.ResponseWriter, req *http.Request, param httprouter.Params)
 }

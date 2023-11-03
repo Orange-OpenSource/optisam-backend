@@ -2,6 +2,8 @@ environment = "DEVELOPMENT"
 debug = false
 grpcport = 8090
 httpport = 8080
+activationtimeout = 43200
+forgotpasstimeout = 120
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -39,6 +41,7 @@ name = "account"
 version = ""#version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
 direction = ""
 migrationPath  = "./schema"
+deleteMigrations = true
 
 [redis]
 redishost = ""
@@ -65,8 +68,19 @@ dps = "svc-optisam-dps-dev.dev-optisam.svc:8090"
 metric = "svc-optisam-metric-dev.dev-optisam.svc:8090"
 equipment = "svc-optisam-equipment-dev.dev-optisam.svc:8090"
 report = "svc-optisam-report-dev.dev-optisam.svc:8090"
+notification = "svc-optisam-notification-dev.dev-optisam.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[emailtemplate]
+passwordresetpath = "./templates/passwordreset.html"
+activationpath = "./templates/activation.html"
+redirecbaseurl = "https://optisam-auth-dev.apps.fr01.paas.tech.orange"
+redirectappactivation = "https://optisam-ui-dev.apps.fr01.paas.tech.orange/user-activation?"
+redirectappurlforgotpass = "https://optisam-ui-dev.apps.fr01.paas.tech.orange/reset-password?"
+
+[httpservers.Address]
+auth = "svc-optisam-auth-dev.dev-optisam.svc:80"

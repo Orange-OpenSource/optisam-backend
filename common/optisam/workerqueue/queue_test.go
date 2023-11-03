@@ -3,14 +3,15 @@ package workerqueue
 import (
 	"context"
 	"fmt"
-	"optisam-backend/common/optisam/workerqueue/repository"
-	"optisam-backend/common/optisam/workerqueue/repository/mock"
-	"optisam-backend/common/optisam/workerqueue/repository/postgres/db"
-	worker "optisam-backend/common/optisam/workerqueue/worker"
-	workermock "optisam-backend/common/optisam/workerqueue/worker/mock"
 	"sync"
 	"testing"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/mock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/postgres/db"
+	worker "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/worker"
+	workermock "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/worker/mock"
 
 	"github.com/golang/mock/gomock"
 )

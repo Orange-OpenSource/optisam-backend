@@ -4,53 +4,67 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	repo "optisam-backend/account-service/pkg/repository/v1"
-	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
 	"time"
-	"unicode"
 
-	application "optisam-backend/application-service/pkg/api/v1"
-	dps "optisam-backend/dps-service/pkg/api/v1"
-	equipment "optisam-backend/equipment-service/pkg/api/v1"
-	metric "optisam-backend/metric-service/pkg/api/v1"
-	product "optisam-backend/product-service/pkg/api/v1"
-	report "optisam-backend/report-service/pkg/api/v1"
+	dps "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/dps-service/pkg/api/v1"
+	equipment "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/equipment-service/pkg/api/v1"
+	metric "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/metric-service/pkg/api/v1"
+	product "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/product-service/pkg/api/v1"
+	report "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/report-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/config"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/db"
+
+	application "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/application-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+
+	notification "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/thirdparty/notification-service/pkg/api/v1"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/sync/errgroup"
 
-	"optisam-backend/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+const (
+	ActivationSubject     = "Welcome to OPTISAM: Activate your account to get started"
+	ForgotPasswordSubject = "Password reset requested: Follow these instructions to access your account"
+)
+
 type accountServiceServer struct {
-	accountRepo repo.Account
-	application application.ApplicationServiceClient
-	product     product.ProductServiceClient
-	report      report.ReportServiceClient
-	metric      metric.MetricServiceClient
-	equipment   equipment.EquipmentServiceClient
-	dps         dps.DpsServiceClient
+	accountRepo  repo.Account
+	application  application.ApplicationServiceClient
+	product      product.ProductServiceClient
+	report       report.ReportServiceClient
+	metric       metric.MetricServiceClient
+	equipment    equipment.EquipmentServiceClient
+	dps          dps.DpsServiceClient
+	notification notification.NotificationServiceClient
+	config       config.Config
 }
 
 // NewAccountServiceServer creates Auth service
-func NewAccountServiceServer(accountRepo repo.Account, grpcConnections map[string]*grpc.ClientConn) v1.AccountServiceServer {
+func NewAccountServiceServer(accountRepo repo.Account, grpcConnections map[string]*grpc.ClientConn, config config.Config) v1.AccountServiceServer {
 	return &accountServiceServer{
-		accountRepo: accountRepo,
-		application: application.NewApplicationServiceClient(grpcConnections["application"]),
-		product:     product.NewProductServiceClient(grpcConnections["product"]),
-		metric:      metric.NewMetricServiceClient(grpcConnections["metric"]),
-		dps:         dps.NewDpsServiceClient(grpcConnections["dps"]),
-		report:      report.NewReportServiceClient(grpcConnections["report"]),
-		equipment:   equipment.NewEquipmentServiceClient(grpcConnections["equipment"]),
+		accountRepo:  accountRepo,
+		application:  application.NewApplicationServiceClient(grpcConnections["application"]),
+		product:      product.NewProductServiceClient(grpcConnections["product"]),
+		metric:       metric.NewMetricServiceClient(grpcConnections["metric"]),
+		dps:          dps.NewDpsServiceClient(grpcConnections["dps"]),
+		report:       report.NewReportServiceClient(grpcConnections["report"]),
+		equipment:    equipment.NewEquipmentServiceClient(grpcConnections["equipment"]),
+		notification: notification.NewNotificationServiceClient(grpcConnections["notification"]),
+		config:       config,
 	}
 }
 
@@ -352,36 +366,66 @@ func (s *accountServiceServer) GetAccount(ctx context.Context, req *v1.GetAccoun
 func (s *accountServiceServer) CreateAccount(ctx context.Context, req *v1.Account) (*v1.Account, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount - Error while getting claims ",
+			"status", codes.Internal,
+			"reason", "cannot find claims in context",
+		)
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
 
 	if userClaims.Role != claims.RoleAdmin && userClaims.Role != claims.RoleSuperAdmin {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount - Error while getting claims ",
+			"status", codes.PermissionDenied,
+			"reason", "only admin users can create users",
+		)
 		return nil, status.Error(codes.PermissionDenied, "only admin users can create users")
 	}
 
 	userExists, err := s.accountRepo.UserExistsByID(ctx, req.UserId)
 	if err != nil {
-		logger.Log.Error("service/v1 - CreateAccount - ", zap.Error(err))
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount -  "+err.Error(),
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
 		return nil, status.Error(codes.Internal, "cannot find user by ID")
 	}
 	if userExists {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount - username already exists",
+			"status", codes.AlreadyExists,
+			"reason", "username already exists",
+		)
 		return nil, status.Error(codes.AlreadyExists, "username already exists")
 	}
 
 	if req.FirstName == "" {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount -  first name should be non-empty",
+			"status", codes.InvalidArgument,
+			"reason", "first name should be non-empty",
+		)
 		return nil, status.Error(codes.InvalidArgument, "first name should be non-empty")
 	}
 	if req.LastName == "" {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount -  last name should be non-empty",
+			"status", codes.InvalidArgument,
+			"reason", "last name should be non-empty",
+		)
 		return nil, status.Error(codes.InvalidArgument, "last name should be non-empty")
 	}
 
 	if req.Locale == "" {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount -  Locale should be non-empty",
+			"status", codes.InvalidArgument,
+			"reason", "Locale should be non-empty",
+		)
 		return nil, status.Error(codes.InvalidArgument, "Locale should be non-empty")
 	}
 
 	if req.Role == v1.ROLE_UNDEFINED || req.Role == v1.ROLE_SUPER_ADMIN {
+		logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount - only admin and user roles are allowed",
+			"status", codes.PermissionDenied,
+			"reason", "only admin and user roles are allowed",
+		)
 		return nil, status.Error(codes.PermissionDenied, "only admin and user roles are allowed")
-
 	}
 	rootGroup, err := s.accountRepo.GetRootGroup(ctx)
 	if err != nil {
@@ -409,18 +453,149 @@ func (s *accountServiceServer) CreateAccount(ctx context.Context, req *v1.Accoun
 
 	for _, grp := range req.Groups {
 		if !groupExists(grp, userGroups) {
+			logger.Log.Sugar().Errorw("accountservice/v1 - CreateAccount -  "+fmt.Sprintf("cannot create user account group: %d not owned by user", grp),
+				"status", codes.PermissionDenied,
+				"reason", "cannot create user account group: %d not owned by user", grp,
+			)
 			return nil, status.Errorf(codes.PermissionDenied, "cannot create user account group: %d not owned by user", grp)
 		}
 	}
 
 	acc := serviceAccountToRepoAccount(req)
-	acc.Password = defaultPassHash
+	randomPass, err := s.accountRepo.GenerateRandomPassword()
+	if err != nil {
+		logger.Log.Error("service -CheckPassword - GenerateFromPassword", zap.Error(err))
+		return nil, status.Error(codes.Internal, "unknown error")
+	}
+	acc.Password = string(randomPass)
 	if err := s.accountRepo.CreateAccount(ctx, acc); err != nil {
 		logger.Log.Error("service/v1 CreateAccount - CreateAccount", zap.Error(err))
 		return nil, status.Error(codes.Internal, "cannot create user account")
 	}
+	// // sendMail()
+	// set in redis
+	email := helper.EmailParams{
+		FirstName: acc.FirstName,
+		Email:     acc.UserID,
+		TokenType: "activation",
+		Token:     s.accountRepo.CreateToken(),
+	}
 
+	err = s.accountRepo.SetToken(email, ctx, s.config.Activationtimeout)
+	if err != nil {
+		logger.Log.Error("service/v1 CreateAccount - Set Token", zap.Error(err))
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	// generate email body
+	emailText, err := s.accountRepo.GenerateMailBody(email, ctx, s.config)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Create Account- GenerateMailBody - "+err.Error(),
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	in := notification.SendMailRequest{
+		MailSubject: ActivationSubject,
+		MailMessage: emailText,
+		MailTo:      []string{email.Email},
+	}
+	rpcres, err := s.notification.SendMail(ctx, &in)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Create Account- "+err.Error(),
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	logger.Log.Sugar().Debugw("accountservice/v1 -Create Account - RPC response - "+rpcres.Success,
+		"status", codes.OK,
+		"response", rpcres,
+	)
 	return req, nil
+}
+
+func (s *accountServiceServer) ResendAccountActivationToken(ctx context.Context, req *v1.ResendAccountActivationRequest) (*v1.ResendAccountActivationResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - Error while getting claims ",
+			"status", codes.Internal,
+			"reason", "cannot find claims in context",
+		)
+		return nil, status.Error(codes.Internal, "cannot find claims in context")
+	}
+
+	if userClaims.Role != claims.RoleAdmin && userClaims.Role != claims.RoleSuperAdmin {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - Error while getting claims ",
+			"status", codes.PermissionDenied,
+			"reason", "only admin users can send link to users",
+		)
+		return nil, status.Error(codes.PermissionDenied, "only admin users can send link to users")
+	}
+
+	accountInfo, err := s.accountRepo.AccountInfo(ctx, req.User)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - Error while getting claims ",
+			"status", codes.Internal,
+			"reason", "cannot find user by ID",
+		)
+		return nil, status.Error(codes.Internal, "cannot find user by ID")
+	}
+	if accountInfo == nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - Error while getting claims ",
+			"status", codes.Internal,
+			"reason", "cannot find user by ID",
+		)
+		return nil, status.Error(codes.Internal, "username does not exists")
+	}
+	// set in redis
+	email := helper.EmailParams{
+		FirstName: accountInfo.FirstName,
+		Email:     accountInfo.UserID,
+		TokenType: "activation",
+		Token:     helper.CreateToken(),
+	}
+
+	err = s.accountRepo.SetToken(email, ctx, s.config.Activationtimeout)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - Error while getting claims ",
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	// generate email body
+	emailText, err := s.accountRepo.GenerateMailBody(email, ctx, s.config)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - "+err.Error(),
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	in := notification.SendMailRequest{
+		MailSubject: ActivationSubject,
+		MailMessage: emailText,
+		MailTo:      []string{email.Email},
+	}
+	rpcres, err := s.notification.SendMail(ctx, &in)
+	if err != nil {
+		logger.Log.Sugar().Errorw("accountservice/v1 - Resend Token - "+err.Error(),
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	logger.Log.Sugar().Debugw("accountservice/v1 -Create Account - RPC response - "+rpcres.Success,
+		"status", codes.OK,
+		"response", rpcres,
+	)
+	//call rpc
+	res := v1.ResendAccountActivationResponse{
+		Success: true,
+	}
+	return &res, nil
 }
 func init() {
 	// admin rights are required for this function
@@ -631,7 +806,7 @@ func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.Chang
 	if req.Old == req.New {
 		return nil, status.Error(codes.InvalidArgument, "old and new passwords are same")
 	}
-	passValid, err := validatePassword(req.New)
+	passValid, err := helper.ValidatePassword(req.New)
 	if !passValid {
 		return nil, err
 	}
@@ -653,6 +828,26 @@ func (s *accountServiceServer) ChangePassword(ctx context.Context, req *v1.Chang
 	return &v1.ChangePasswordResponse{
 		Success: true,
 	}, nil
+}
+
+// GetAdminUserScope -
+func (s *accountServiceServer) GetAdminUserScope(ctx context.Context, req *v1.GetAdminUserScopeRequest) (*v1.GetAdminUserScopeResponse, error) {
+
+	adminDetails, err := s.accountRepo.AdminUserForScope(ctx, req.Scopes)
+	if err != nil {
+		logger.Log.Error("service - AccountInfo", zap.Error(err))
+		return nil, status.Error(codes.Internal, "unknown error occurred")
+	}
+	var response v1.GetAdminUserScopeResponse
+
+	for _, ad := range adminDetails {
+		var adminDetail v1.AdminDetail
+		adminDetail.FirstName = ad.FirstName
+		adminDetail.UserName = ad.UserName
+
+		response.AdminDetails = append(response.AdminDetails, &adminDetail)
+	}
+	return &response, nil
 }
 
 func groupExists(groupID int64, groups []*repo.Group) bool {
@@ -723,58 +918,19 @@ func (s *accountServiceServer) convertRepoUserToSrvUserAll(users []*repo.Account
 
 func (s *accountServiceServer) convertRepoUserToSrvUser(user *repo.AccountInfo) *v1.User {
 	return &v1.User{
-		UserId:    user.UserID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Locale:    user.Locale,
-		Groups:    user.GroupName,
-		Role:      v1.ROLE(user.Role),
+		UserId:        user.UserID,
+		FirstName:     user.FirstName,
+		LastName:      user.LastName,
+		Locale:        user.Locale,
+		Groups:        user.GroupName,
+		Role:          v1.ROLE(user.Role),
+		AccountStatus: user.AccountStatus,
 	}
 }
 
 func userExistsInGroup(userID string, users []*repo.AccountInfo) bool {
 	for _, user := range users {
 		if userID == user.UserID {
-			return true
-		}
-	}
-	return false
-}
-
-func validatePassword(s string) (bool, error) {
-	var number, upper, lower, special bool
-	for _, c := range s {
-		switch {
-		case unicode.IsNumber(c):
-			number = true
-		case unicode.IsUpper(c):
-			upper = true
-		case unicode.IsLower(c):
-			lower = true
-		case specialCharacter(c):
-			special = true
-		}
-	}
-	if !number {
-		return false, status.Error(codes.InvalidArgument, "password must contain at least one number")
-	}
-	if !upper {
-		return false, status.Error(codes.InvalidArgument, "password must contain at least one upper case letter")
-	}
-	if !lower {
-		return false, status.Error(codes.InvalidArgument, "password must contain at least one lower case letter")
-	}
-	if !special {
-		return false, status.Error(codes.InvalidArgument, "password must contain at least one special character(./@/#/$/&/*/_/,)")
-	}
-	return true, nil
-}
-
-func specialCharacter(c rune) bool {
-	s := fmt.Sprintf("%c", c)
-	specialList := []string{".", "@", "#", "$", "&", "*", "_", ","}
-	for _, a := range specialList {
-		if a == s {
 			return true
 		}
 	}

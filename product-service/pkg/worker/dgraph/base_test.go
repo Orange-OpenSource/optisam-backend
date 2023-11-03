@@ -2,10 +2,11 @@ package dgraph
 
 import (
 	"log"
-	"optisam-backend/common/optisam/dgraph"
-	"optisam-backend/common/optisam/logger"
 	"os"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 )

@@ -5,4 +5,5 @@ type MetricUCS struct {
 	ID      string
 	Name    string
 	Profile string
+	Default bool
 }

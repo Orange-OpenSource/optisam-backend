@@ -3,10 +3,12 @@ package v1
 import (
 	"context"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/strcomp"
-	repo "optisam-backend/license-service/pkg/repository/v1"
 	"strconv"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

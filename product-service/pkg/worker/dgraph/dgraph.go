@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/product-service/pkg/api/v1"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	e_v1 "optisam-backend/equipment-service/pkg/api/v1"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+
+	e_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/equipment-service/pkg/api/v1"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -91,6 +93,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 	var updatePartialFlag bool
 	_ = json.Unmarshal(j.Data, &e)
 	var queries []string
+	logger.Log.Info("Worker started")
 	switch e.Type {
 	case UpsertProductRequest:
 		queries = append(queries, "query", "{")
@@ -359,6 +362,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			uid(acRights) <acqRights.swidtag> "` + uar.Swidtag + `" .
 			uid(acRights) <acqRights.productName> "` + uar.ProductName + `" .
 			uid(acRights) <acqRights.editor> "` + uar.ProductEditor + `" .
+			uid(acRights) <acqRights.version> "` + uar.Version + `" .
 			uid(acRights) <acqRights.numOfAcqLicences> "` + strconv.Itoa(int(uar.NumLicensesAcquired)) + `" .
 			uid(acRights) <acqRights.numOfLicencesUnderMaintenance> "` + strconv.Itoa(int(uar.NumLicencesMaintenance)) + `" .
 			uid(acRights) <acqRights.averageUnitPrice> "` + fmt.Sprintf("%.2f", uar.AvgUnitPrice) + `" .
@@ -737,6 +741,7 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			return errors.New("RETRY")
 		}
 	case UpsertNominativeUserRequest:
+		logger.Log.Info("Worker for upsert nominative user request started")
 		var unur UpserNominativeUserRequest
 		_ = json.Unmarshal(e.JSON, &unur)
 		var mutations []*api.Mutation
@@ -813,8 +818,10 @@ func (w *Worker) DoWork(ctx context.Context, j *job.Job) error {
 			CommitNow: true,
 		}
 		if _, err := w.dg.NewTxn().Do(ctx, req); err != nil {
-			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err), zap.String("query", req.Query), zap.Any("mutation", req.Mutations))
+			logger.Log.Error("Failed to upsert to Dgraph", zap.Error(err))
 			return errRetry
+		} else {
+			logger.Log.Info("Nominative users upsert request to Dgraph is completed successfully")
 		}
 	case UpsertConcurrentUserRequest:
 		var uar UpserConcurrentUserRequest

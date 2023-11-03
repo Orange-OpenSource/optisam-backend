@@ -4,12 +4,12 @@ import (
 	"context"
 )
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/metric-service/pkg/repository/v1 Metric
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1 Metric
 
 // Metric interface
 type Metric interface {
 	// ListMetricTypeInfo gives a list of supported metric types
-	ListMetricTypeInfo(ctx context.Context, scopetype ScopeType, scope string) ([]*MetricTypeInfo, error)
+	ListMetricTypeInfo(ctx context.Context, scopetype ScopeType, scope string, flag bool) ([]*MetricTypeInfo, error)
 
 	// ListMetrices gives a list of supported metric types
 	ListMetrices(ctx context.Context, scopes string) ([]*MetricInfo, error)
@@ -166,6 +166,29 @@ type Metric interface {
 
 	// UpdateMetricEquipAttr updates parameter(metric Value, EqType, AttributeName, Environment) of the metric
 	UpdateMetricEquipAttr(ctx context.Context, met *MetricEquipAttrStand, scope string) error
+
+	//CreateMetricSQLForScope
+	CreateMetricSQLForScope(ctx context.Context, met *ScopeMetric) (retmet *ScopeMetric, retErr error)
+
+	//CreateMetricDataCenterForScope
+	CreateMetricDataCenterForScope(ctx context.Context, met *ScopeMetric) (retmet *ScopeMetric, retErr error)
+
+	//CreateMetricWindowServerStandard creates metric window.server.standard
+	CreateMetricWindowServerStandard(ctx context.Context, met *MetricWSS) (retmet *MetricWSS, retErr error)
+	//CreateMetricSQLStandard for the metric microsoft.sql.standard
+	CreateMetricSQLStandard(ctx context.Context, met *MetricSQLStand) (retmet *MetricSQLStand, retErr error)
+
+	// GetMetricConfigSQLStandard return metric configuration of type microsoft.sql.standard
+	GetMetricConfigSQLStandard(ctx context.Context, metName string, scope string) (*MetricSQLStand, error)
+
+	// GetMetricConfigSQLForScope return metric configuration of type microsoft.sql.enterprise
+	GetMetricConfigSQLForScope(ctx context.Context, metName string, scope string) (*ScopeMetric, error)
+
+	// GetMetricConfigDataCenterForScope return metric configuration of type windows.datacenter
+	GetMetricConfigDataCenterForScope(ctx context.Context, metName string, scope string) (*ScopeMetric, error)
+
+	// GetMetricConfigWindowServerStandard return metric configuration of type windows.server.standard
+	GetMetricConfigWindowServerStandard(ctx context.Context, metName string, scope string) (*MetricWSS, error)
 }
 
 // Filtertype ...

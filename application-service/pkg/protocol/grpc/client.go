@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	v1 "optisam-backend/application-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

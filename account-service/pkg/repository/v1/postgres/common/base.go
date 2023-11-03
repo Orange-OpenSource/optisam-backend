@@ -5,13 +5,14 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"optisam-backend/common/optisam/config"
-	"optisam-backend/common/optisam/docker"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
 	"os"
 	"strings"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/docker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

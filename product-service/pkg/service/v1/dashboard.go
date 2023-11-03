@@ -7,23 +7,26 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	accv1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"strings"
 	"time"
+
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/account-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *productServiceServer) CreateDashboardUpdateJob(ctx context.Context, req *v1.CreateDashboardUpdateJobRequest) (*v1.CreateDashboardUpdateJobResponse, error) {
+func (s *ProductServiceServer) CreateDashboardUpdateJob(ctx context.Context, req *v1.CreateDashboardUpdateJobRequest) (*v1.CreateDashboardUpdateJobResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -31,25 +34,44 @@ func (s *productServiceServer) CreateDashboardUpdateJob(ctx context.Context, req
 
 	// Checking if user has the permission to see this scope
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
-		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		logger.Log.Sugar().Errorf("Permission Error", "Scopes", userClaims.Socpes, "Requested Scope", req.GetScope())
 		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	if req.Ppid == "" {
+		logger.Log.Sugar().Infof("not looking for sibling jobs as ppid blank")
+	} else {
+		for {
+			res, err := s.ProductRepo.GetJobsInExecution(ctx, sql.NullString{String: req.Ppid, Valid: true})
+			if err != nil {
+				logger.Log.Sugar().Errorf("DB Error", "Scopes", userClaims.Socpes, "error", err.Error())
+				return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+			}
+			if res > 0 {
+				logger.Log.Sugar().Infof("jobs still under execution", "count", res)
+				time.Sleep(time.Second * 1)
+			} else {
+				logger.Log.Sugar().Infof("All jobs of same parent jobId are executed")
+				break
+			}
+		}
 	}
 
 	jobID, err := s.queue.PushJob(ctx, job.Job{
 		Type:   sql.NullString{String: "lcalw"},
 		Status: job.JobStatusPENDING,
 		Data:   json.RawMessage(fmt.Sprintf(`{"updatedBy":"data_update" , "scope" :"%s"}`, req.Scope)),
+		PPID:   req.Ppid,
 	}, "lcalw")
 
 	if err != nil {
-		logger.Log.Info("Error in push job in CreateDashboardUpdateJob", zap.Error(err), zap.Any("Scope", req.Scope))
+		logger.Log.Sugar().Errorf("Error in push job in CreateDashboardUpdateJob", "err", err.Error(), "Scope", req.Scope)
 		return &v1.CreateDashboardUpdateJobResponse{Success: false}, status.Error(codes.Internal, "PushJobFailure")
 	}
-	logger.Log.Info("Successfully pushed job by CreateDashboardUpdateJob", zap.Int32("jobId", jobID), zap.Any("Scope", req.Scope))
+	logger.Log.Sugar().Infof("Successfully pushed job by CreateDashboardUpdateJob", "jobId", jobID, "Scope", req.Scope)
 	return &v1.CreateDashboardUpdateJobResponse{Success: true}, nil
 }
 
-func (s *productServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerRequest) (*v1.GetBannerResponse, error) {
+func (s *ProductServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerRequest) (*v1.GetBannerResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -62,7 +84,7 @@ func (s *productServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerR
 	}
 
 	resp := &v1.GetBannerResponse{}
-	dbresp, err := s.productRepo.GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
+	dbresp, err := s.ProductRepo.GetDashboardUpdates(ctx, db.GetDashboardUpdatesParams{
 		Scope:   req.GetScope(),
 		Column2: req.GetTimeZone(),
 	})
@@ -77,7 +99,7 @@ func (s *productServiceServer) GetBanner(ctx context.Context, req *v1.GetBannerR
 	return resp, nil
 }
 
-func (s *productServiceServer) GetTotalSharedAmount(ctx context.Context, req *v1.GetTotalSharedAmountRequest) (*v1.GetTotalSharedAmountResponse, error) {
+func (s *ProductServiceServer) GetTotalSharedAmount(ctx context.Context, req *v1.GetTotalSharedAmountRequest) (*v1.GetTotalSharedAmountResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -87,13 +109,13 @@ func (s *productServiceServer) GetTotalSharedAmount(ctx context.Context, req *v1
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	totalSharedAmount, totalRecievedAmount := 0.00, 0.00
-	sharedData, err := s.productRepo.GetSharedData(ctx, req.Scope)
+	sharedData, err := s.ProductRepo.GetSharedData(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - GetTotalSharedAmount - db/GetSharedData", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	for _, v := range sharedData {
-		acq, err := s.productRepo.GetUnitPriceBySku(ctx, db.GetUnitPriceBySkuParams{
+		acq, err := s.ProductRepo.GetUnitPriceBySku(ctx, db.GetUnitPriceBySkuParams{
 			Scope: v.Scope,
 			Sku:   v.Sku,
 		})
@@ -111,7 +133,7 @@ func (s *productServiceServer) GetTotalSharedAmount(ctx context.Context, req *v1
 	}, nil
 }
 
-func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *v1.OverviewProductQualityRequest) (*v1.OverviewProductQualityResponse, error) {
+func (s *ProductServiceServer) OverviewProductQuality(ctx context.Context, req *v1.OverviewProductQualityRequest) (*v1.OverviewProductQualityResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -123,19 +145,19 @@ func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	productsNotDeployed, err := s.productRepo.ProductsNotDeployed(ctx, req.Scope)
+	productsNotDeployed, err := s.ProductRepo.ProductsNotDeployed(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - OverviewProductQuality - db/ProductsNotDeployed - error in getting count of products with no deployement", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	productsNotAcquried, err := s.productRepo.ProductsNotAcquired(ctx, req.Scope)
+	productsNotAcquried, err := s.ProductRepo.ProductsNotAcquired(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - OverviewProductQuality - db/ProductsNotAcquired - error in getting count of products with no license", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 	productsNotDeployedCount := len(productsNotDeployed)
 	productsNotAcquriedCount := len(productsNotAcquried)
-	products, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
+	products, err := s.ProductRepo.ListProductsView(ctx, db.ListProductsViewParams{
 		Scope:    []string{req.Scope},
 		PageNum:  0,
 		PageSize: 1,
@@ -160,7 +182,148 @@ func (s *productServiceServer) OverviewProductQuality(ctx context.Context, req *
 	}, nil
 }
 
-func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.DashboardOverviewRequest) (*v1.DashboardOverviewResponse, error) {
+func (s *ProductServiceServer) ProductMaintenancePerc(ctx context.Context, req *v1.ProductMaintenancePercRequest) (*v1.ProductMaintenancePercResponse, error) {
+	// Finding Claims of User
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	productMaintenance, err := s.ProductRepo.ProductMaintenanceCount(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - ProductMaintenancePerc - db/ProductMaintenanceCount - error in getting maintenance of deployed products", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	var productWithMaintenancePerc, productWithoutMainPerc float64
+
+	if productMaintenance[0].Total == 0 {
+		productWithMaintenancePerc = 0
+		productWithoutMainPerc = 0
+	} else {
+		productWithMaintenancePerc = (float64(productMaintenance[0].NumberOfSwidtag) / float64(productMaintenance[0].Total)) * 100
+		productWithoutMainPerc = 100 - productWithMaintenancePerc
+	}
+
+	return &v1.ProductMaintenancePercResponse{
+		ProductWithMaintenancePercentage:    productWithMaintenancePerc,
+		ProductWithoutMaintenancePercentage: productWithoutMainPerc,
+	}, nil
+}
+
+func (s *ProductServiceServer) ProductNoMaintenanceDetails(ctx context.Context, req *v1.ProductNoMaintenanceDetailsRequest) (*v1.ProductNoMaintenanceDetailsResponse, error) {
+	// Finding Claims of User
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Sugar().Errorf("service/v1 - GetMaintenanceBySwidtag - req scope: %s, available scopes: %v", req.Scope, userClaims.Socpes)
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	productsDeployed, err := s.ProductRepo.AllNoMaintainenceProducts(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - ProductNoMaintenanceDetails - ProductMaintenancePerc - db/AllNoMaintainenceProducts - error in getting count of products deployed",
+			"scope", req.Scope,
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	productNoMaintenance, err := s.ProductRepo.ProductNoMaintenance(ctx, db.ProductNoMaintenanceParams{
+		Swidtag: productsDeployed,
+		Scope:   req.Scope,
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - ProductNoMaintenanceDetails - ProductNoMaintenanceDetails - db/ProductNoMaintenance - error in getting maintenance of deployed products",
+			"scope", req.Scope,
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	ProductsVer, err := s.ProductRepo.ProductCatalogVersion(ctx, db.ProductCatalogVersionParams{
+		Swidtag: productsDeployed,
+		Scope:   req.Scope,
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorw("service/v1 - ProductNoMaintenanceDetails - ProductNoMaintenanceDetails - db/ProductCatalogVersion - error in getting maintenance of deployed products",
+			"scope", req.Scope,
+			"status", codes.Internal,
+			"reason", err.Error(),
+		)
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	var ProductNoMain []*v1.ProductNoMain
+	countProduct := 0
+	productNameMap := make(map[string]string)
+	replacedString := ""
+	finalString := ""
+	for i := range productNoMaintenance {
+		if productNoMaintenance[i].ProductName != "" {
+			replacedString = strings.ReplaceAll(productNoMaintenance[i].ProductName, " ", "_")
+			finalString = replacedString + "_"
+			productNameMap[finalString] = productNoMaintenance[i].ProductName
+		}
+		for j := range productsDeployed {
+			if productsDeployed[j] == productNoMaintenance[i].Swidtag {
+				countProduct++
+				// if productNoMaintenance[i].ProductName == "" || !strings.Contains(productNoMaintenance[i].Swidtag, finalString) {
+				// 	length := 0
+				// 	for key, value := range productNameMap {
+				// 		l := 0
+				// 		if strings.Contains(productNoMaintenance[i].Swidtag, key) {
+				// 			l = len(value)
+				// 			if l > length {
+				// 				productNoMaintenance[i].ProductName = value
+				// 				length = l
+				// 			}
+				// 		}
+				// 	}
+				// }
+				ProductNoMain = append(ProductNoMain, &v1.ProductNoMain{
+					ProductName: productNoMaintenance[i].ProductName,
+					Swidtag:     productNoMaintenance[i].Swidtag,
+				})
+			}
+		}
+	}
+
+	for j := range ProductsVer {
+		for i := range ProductNoMain {
+			if ProductsVer[j].Swidtag == ProductNoMain[i].Swidtag {
+				ProductNoMain[i].Version = ProductsVer[j].Version
+			}
+		}
+	}
+
+	for i := range ProductNoMain {
+		length := 0
+		for key, value := range productNameMap {
+			l := 0
+			if strings.Contains(ProductNoMain[i].Swidtag, key) {
+				l = len(value)
+				if l > length {
+					ProductNoMain[i].ProductName = value
+					length = l
+				}
+			}
+		}
+	}
+	return &v1.ProductNoMaintenanceDetailsResponse{
+		TotalProducts: int32(countProduct),
+		ProductNoMain: ProductNoMain,
+	}, nil
+}
+
+func (s *ProductServiceServer) DashboardOverview(ctx context.Context, req *v1.DashboardOverviewRequest) (*v1.DashboardOverviewResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -180,7 +343,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	resp := &v1.DashboardOverviewResponse{}
 
 	// Find Total Number of Products in the System and in this scope
-	products, err := s.productRepo.ListProductsView(ctx, db.ListProductsViewParams{
+	products, err := s.ProductRepo.ListProductsView(ctx, db.ListProductsViewParams{
 		Scope:    scopes,
 		PageNum:  0,
 		PageSize: 1,
@@ -194,7 +357,7 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	}
 
 	// Find Total Number of Editors in the system and in this scope
-	editors, err := s.productRepo.ListEditorsScope(ctx, scopes)
+	editors, err := s.ProductRepo.ListEditorsScope(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - DashboardOverview - db/ListEditorsScope", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
@@ -202,26 +365,33 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	resp.NumEditors = int32(len(editors))
 
 	// Get the total cost and maintenance cost
-	costs, err := s.productRepo.GetLicensesCost(ctx, scopes)
+	costs, err := s.ProductRepo.GetLicensesCost(ctx, scopes)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetLicensesCost", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
-	cfAmount, err := s.productRepo.GetTotalCounterfietAmount(ctx, req.Scope)
+	cfAmount, err := s.ProductRepo.GetTotalCounterfietAmount(ctx, req.Scope)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalCounterfietAmount", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	usAmount, err := s.productRepo.GetTotalUnderusageAmount(ctx, req.Scope)
+	usAmount, err := s.ProductRepo.GetTotalUnderusageAmount(ctx, req.Scope)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalUnderusageAmount", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	TotalSum, err := s.productRepo.GetTotalDeltaCost(ctx, req.Scope)
+	TotalSum, err := s.ProductRepo.GetTotalDeltaCost(ctx, req.Scope)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		logger.Log.Error("service/v1 - DashboardOverview - db/GetTotalDeltaCost", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
+	}
+	computedTotal, err := s.ProductRepo.GetComputedCost(ctx, scopes)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		logger.Log.Sugar().Debug("service/v1 - DashboardOverview - db/GetComputedCost- DBError",
+			"scope", req.Scope,
+			"req", req,
+		)
 	}
 	if TotalSum < 0 {
 		cfAmount += TotalSum
@@ -234,13 +404,76 @@ func (s *productServiceServer) DashboardOverview(ctx context.Context, req *v1.Da
 	if !errors.Is(err, sql.ErrNoRows) {
 		resp.TotalLicenseCost, _ = costs.TotalCost.Float64()
 		resp.TotalMaintenanceCost, _ = costs.TotalMaintenanceCost.Float64()
+		resp.ComputedMaintenance, _ = computedTotal.TotalCost.Float64()
+		resp.ComputedWithoutMaintenance, _ = computedTotal.PurchaseCost.Float64()
 	}
 
 	// Return Results
 	return resp, nil
 }
 
-func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.ProductsPerEditorRequest) (*v1.ProductsPerEditorResponse, error) {
+func (s *ProductServiceServer) ProductsPercOpenClosedSource(ctx context.Context, req *v1.ProductsPercOpenClosedSourceRequest) (*v1.ProductsPercOpenClosedSourceResponse, error) {
+	// Finding Claims of User
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	totalProducts, err := s.ProductRepo.TotalProductsOfScope(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - TotalProductsOfScope - db/productsDeployed - error in getting count of total products", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	data, err := s.ProductRepo.GetOpenSourceCloseSourceData(ctx, req.Scope)
+	if err != nil {
+		logger.Log.Error("service/v1 - GetOpenSourceCloseSourceData - db/ProductMaintenanceCount - error in getting opensource and closesource data of products", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+
+	var openSource []*v1.OpenSource
+	var closeSource []*v1.CloseSource
+	var totalData []*v1.TotalProductData
+
+	if totalProducts[0] != 0 {
+		openSource = append(openSource, &v1.OpenSource{
+			AmountOs:     int32(data[0].Oscount),
+			PrecentageOs: float64((float64(data[0].Oscount) / float64(totalProducts[0])) * 100),
+		})
+
+		closeSource = append(closeSource, &v1.CloseSource{
+			AmountCs:     int32(data[0].Cscount),
+			PrecentageCs: float64((float64(data[0].Cscount) / float64(totalProducts[0])) * 100),
+		})
+	} else {
+		openSource = append(openSource, &v1.OpenSource{
+			AmountOs:     int32(data[0].Oscount),
+			PrecentageOs: 0,
+		})
+
+		closeSource = append(closeSource, &v1.CloseSource{
+			AmountCs:     int32(data[0].Cscount),
+			PrecentageCs: 0,
+		})
+	}
+
+	totalData = append(totalData, &v1.TotalProductData{
+		Amount:     totalProducts[0] - openSource[0].AmountOs - closeSource[0].AmountCs,
+		Precentage: 100 - openSource[0].PrecentageOs - closeSource[0].PrecentageCs,
+	})
+
+	return &v1.ProductsPercOpenClosedSourceResponse{
+		OpenSource:   openSource,
+		ClosedSource: closeSource,
+		TotalAmount:  totalData,
+	}, nil
+}
+
+func (s *ProductServiceServer) ProductsPerEditor(ctx context.Context, req *v1.ProductsPerEditorRequest) (*v1.ProductsPerEditorResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -257,7 +490,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 	scopes = append(scopes, req.Scope)
 
 	// Find Total Number of Editors in the system and in this scope
-	editors, err := s.productRepo.ListEditorsScope(ctx, scopes)
+	editors, err := s.ProductRepo.ListEditorsScope(ctx, scopes)
 	if err != nil {
 		logger.Log.Error("service/v1 - ProductsPerEditor - db/ListEditorsScope", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
@@ -271,7 +504,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 
 	// Find Number of Products per Editor and Scopes
 	for _, editor := range editors {
-		products, err := s.productRepo.GetProductsByEditorScope(ctx, db.GetProductsByEditorScopeParams{ProductEditor: editor, Scopes: scopes})
+		products, err := s.ProductRepo.GetProductsByEditorScope(ctx, db.GetProductsByEditorScopeParams{ProductEditor: editor, Scopes: scopes})
 		if err != nil {
 			logger.Log.Error("service/v1 - ListEditorProducts - db/GetProductsByEditorScope ", zap.Error(err))
 			return nil, status.Error(codes.Internal, "DBError")
@@ -289,7 +522,7 @@ func (s *productServiceServer) ProductsPerEditor(ctx context.Context, req *v1.Pr
 
 }
 
-func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v1.ProductsPerMetricTypeRequest) (*v1.ProductsPerMetricTypeResponse, error) {
+func (s *ProductServiceServer) ProductsPerMetricType(ctx context.Context, req *v1.ProductsPerMetricTypeRequest) (*v1.ProductsPerMetricTypeResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -302,7 +535,7 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 	}
 
 	// Find Products Per Metric
-	productsPerMetric, err := s.productRepo.ProductsPerMetric(ctx, req.Scope)
+	productsPerMetric, err := s.ProductRepo.ProductsPerMetric(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -317,7 +550,7 @@ func (s *productServiceServer) ProductsPerMetricType(ctx context.Context, req *v
 	}, nil
 }
 
-func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v1.CounterfeitedProductsRequest) (*v1.CounterfeitedProductsResponse, error) {
+func (s *ProductServiceServer) CounterfeitedProducts(ctx context.Context, req *v1.CounterfeitedProductsRequest) (*v1.CounterfeitedProductsResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -332,7 +565,7 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 	var licenses []*v1.ProductsLicenses
 
 	// Counterfeited Product Licenses
-	dbLicenses, err := s.productRepo.CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
+	dbLicenses, err := s.ProductRepo.CounterFeitedProductsLicences(ctx, db.CounterFeitedProductsLicencesParams{
 		Scope:  req.Scope,
 		Editor: req.Editor,
 	})
@@ -347,7 +580,7 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 	var costs []*v1.ProductsCosts
 
 	// Counterfeited Product Costs
-	dbCosts, err := s.productRepo.CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
+	dbCosts, err := s.ProductRepo.CounterFeitedProductsCosts(ctx, db.CounterFeitedProductsCostsParams{
 		Scope:  req.Scope,
 		Editor: req.Editor,
 	})
@@ -367,16 +600,12 @@ func (s *productServiceServer) CounterfeitedProducts(ctx context.Context, req *v
 
 }
 
-func (s *productServiceServer) SoftwareExpenditureByScope(ctx context.Context, req *v1.SoftwareExpenditureByScopeRequest) (*v1.SoftwareExpenditureByScopeResponse, error) {
+func (s *ProductServiceServer) SoftwareExpenditureByScope(ctx context.Context, req *v1.SoftwareExpenditureByScopeRequest) (*v1.SoftwareExpenditureByScopeResponse, error) {
 	// Finding claims for user
-	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	_, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Error("rest - SoftwareExpenditureByScope ", zap.String("Reason: ", "ClaimsNotFoundError"))
 		return nil, status.Error(codes.Unknown, "ClaimsNotFoundError")
-	}
-	if userClaims.Role != claims.RoleSuperAdmin {
-		logger.Log.Error("rest - SoftwareExpenditureByScope ", zap.String("Reason: ", "user doesnot have access to Group Compliance EditorCost"))
-		return nil, status.Error(codes.PermissionDenied, "user doesnot have access to Group Compliance EditorCost")
 	}
 
 	scopes, err := s.account.ListScopes(ctx, &accv1.ListScopesRequest{})
@@ -388,7 +617,7 @@ func (s *productServiceServer) SoftwareExpenditureByScope(ctx context.Context, r
 	m := scopeNamesWithExpense(scopes.Scopes)
 	var expense []*v1.SoftwareExpensePercent
 	// scpoes
-	dbresp, err := s.productRepo.TotalCostOfEachScope(ctx, req.Scope)
+	dbresp, err := s.ProductRepo.TotalCostOfEachScope(ctx, req.Scope)
 
 	if err != nil {
 		logger.Log.Error("service/v1 - SoftwareExpenditureByScope - db/TotalCostOfEachScope", zap.Error(err))
@@ -415,7 +644,7 @@ func (s *productServiceServer) SoftwareExpenditureByScope(ctx context.Context, r
 	}
 
 	// // OverDeployed Product Costs
-	// dbCosts, err := s.productRepo.OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
+	// dbCosts, err := s.ProductRepo.OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
 	// 	Scope:  req.Scope,
 	// 	Editor: req.Editor,
 	// })
@@ -436,7 +665,7 @@ func (s *productServiceServer) SoftwareExpenditureByScope(ctx context.Context, r
 
 }
 
-func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1.OverdeployedProductsRequest) (*v1.OverdeployedProductsResponse, error) {
+func (s *ProductServiceServer) OverdeployedProducts(ctx context.Context, req *v1.OverdeployedProductsRequest) (*v1.OverdeployedProductsResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -451,7 +680,7 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 	var licenses []*v1.ProductsLicenses
 
 	// OverDeployed Product Licenses
-	dbLicenses, err := s.productRepo.OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
+	dbLicenses, err := s.ProductRepo.OverDeployedProductsLicences(ctx, db.OverDeployedProductsLicencesParams{
 		Scope:  req.Scope,
 		Editor: req.Editor,
 	})
@@ -466,7 +695,7 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 	var costs []*v1.ProductsCosts
 
 	// OverDeployed Product Costs
-	dbCosts, err := s.productRepo.OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
+	dbCosts, err := s.ProductRepo.OverDeployedProductsCosts(ctx, db.OverDeployedProductsCostsParams{
 		Scope:  req.Scope,
 		Editor: req.Editor,
 	})
@@ -486,7 +715,7 @@ func (s *productServiceServer) OverdeployedProducts(ctx context.Context, req *v1
 
 }
 
-func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.ComplianceAlertRequest) (*v1.ComplianceAlertResponse, error) {
+func (s *ProductServiceServer) ComplianceAlert(ctx context.Context, req *v1.ComplianceAlertRequest) (*v1.ComplianceAlertResponse, error) {
 	// Finding Claims of User
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
@@ -499,7 +728,7 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 
-	cfRow, err := s.productRepo.CounterfeitPercent(ctx, req.Scope)
+	cfRow, err := s.ProductRepo.CounterfeitPercent(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -515,7 +744,7 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 	}
 	cfDeltaRights, _ := cfRow.DeltaRights.Float64()
 
-	odRow, err := s.productRepo.OverdeployPercent(ctx, req.Scope)
+	odRow, err := s.ProductRepo.OverdeployPercent(ctx, req.Scope)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "NoDataFound")
@@ -545,7 +774,7 @@ func (s *productServiceServer) ComplianceAlert(ctx context.Context, req *v1.Comp
 }
 
 // DashboardQuality gives number of products that are not deployed and not acquired respectively
-func (s *productServiceServer) DashboardQualityProducts(ctx context.Context, req *v1.DashboardQualityProductsRequest) (*v1.DashboardQualityProductsResponse, error) {
+func (s *ProductServiceServer) DashboardQualityProducts(ctx context.Context, req *v1.DashboardQualityProductsRequest) (*v1.DashboardQualityProductsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -554,12 +783,12 @@ func (s *productServiceServer) DashboardQualityProducts(ctx context.Context, req
 		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	productsNotDeployed, err := s.productRepo.ProductsNotDeployed(ctx, req.Scope)
+	productsNotDeployed, err := s.ProductRepo.ProductsNotDeployed(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - DashboardQuality - db/ProductsNotDeployed - error in getting count of products with no deployement", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	productsNotAcquried, err := s.productRepo.ProductsNotAcquired(ctx, req.Scope)
+	productsNotAcquried, err := s.ProductRepo.ProductsNotAcquired(ctx, req.Scope)
 	if err != nil {
 		logger.Log.Error("service/v1 - DashboardQuality - db/ProductsNotAcquired - error in getting count of products with no license", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
@@ -719,8 +948,7 @@ func dbToServSoftwareExpenditureByScope(dbLic []db.TotalCostOfEachScopeRow) (map
 
 	return m, sum
 }
-
-func (s *productServiceServer) GetProductListByEditor(ctx context.Context, req *v1.GetProductListByEditorRequest) (*v1.GetProductListByEditorResponse, error) {
+func (s *ProductServiceServer) GetProductListByEditor(ctx context.Context, req *v1.GetProductListByEditorRequest) (*v1.GetProductListByEditorResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Error("rest - GetProductListByEditor ", zap.String("Reason: ", "ClaimsNotFoundError"))
@@ -730,7 +958,7 @@ func (s *productServiceServer) GetProductListByEditor(ctx context.Context, req *
 		logger.Log.Error("rest - GetProductListByEditor ", zap.String("Reason: ", "user does not have access to Group Compliance Products"))
 		return nil, status.Error(codes.PermissionDenied, "user does not have access to Group Compliance Products")
 	}
-	dbresp, err := s.productRepo.GetProductListByEditor(ctx, db.GetProductListByEditorParams{
+	dbresp, err := s.ProductRepo.GetProductListByEditor(ctx, db.GetProductListByEditorParams{
 		Editor: req.Editor,
 		Scope:  req.GetScopes(),
 	})
@@ -740,7 +968,8 @@ func (s *productServiceServer) GetProductListByEditor(ctx context.Context, req *
 	}
 	return &v1.GetProductListByEditorResponse{Products: dbresp}, nil
 }
-func (s *productServiceServer) GroupComplianceProduct(ctx context.Context, req *v1.GroupComplianceProductRequest) (*v1.GroupComplianceProductResponse, error) {
+
+func (s *ProductServiceServer) GroupComplianceProduct(ctx context.Context, req *v1.GroupComplianceProductRequest) (*v1.GroupComplianceProductResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Error("rest - GroupComplianceProduct ", zap.String("Reason: ", "ClaimsNotFoundError"))
@@ -750,7 +979,7 @@ func (s *productServiceServer) GroupComplianceProduct(ctx context.Context, req *
 		logger.Log.Error("rest - GroupComplianceProduct ", zap.String("Reason: ", "user does not have access to Group Compliance Products"))
 		return nil, status.Error(codes.PermissionDenied, "user does not have access to Group Compliance Products")
 	}
-	licenceResp, err := s.productRepo.GetOverallLicencesByProduct(ctx, db.GetOverallLicencesByProductParams{
+	licenceResp, err := s.ProductRepo.GetOverallLicencesByProduct(ctx, db.GetOverallLicencesByProductParams{
 		Editor:      req.Editor,
 		ProductName: req.ProductName,
 		Scope:       req.Scopes,
@@ -759,7 +988,7 @@ func (s *productServiceServer) GroupComplianceProduct(ctx context.Context, req *
 		logger.Log.Error("service/v1 - GroupComplianceProduct - db/GetOverallLicencesByProduct", zap.Error(err))
 		return nil, status.Error(codes.Internal, "DBError")
 	}
-	costResp, err := s.productRepo.GetOverallCostByProduct(ctx, db.GetOverallCostByProductParams{
+	costResp, err := s.ProductRepo.GetOverallCostByProduct(ctx, db.GetOverallCostByProductParams{
 		Editor:      req.Editor,
 		ProductName: req.ProductName,
 		Scope:       req.Scopes,
@@ -798,7 +1027,7 @@ func (s *productServiceServer) GroupComplianceProduct(ctx context.Context, req *
 }
 
 // GetUnderusageLicenceByEditorProduct gives number of unused licence by editor,product & scopes
-func (s *productServiceServer) GetUnderusageLicenceByEditorProduct(ctx context.Context, req *v1.GetUnderusageByEditorRequest) (*v1.GetUnderusageByEditorResponse, error) {
+func (s *ProductServiceServer) GetUnderusageLicenceByEditorProduct(ctx context.Context, req *v1.GetUnderusageByEditorRequest) (*v1.GetUnderusageByEditorResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		logger.Log.Sugar().Errorw("Error while getting claims",
@@ -834,7 +1063,7 @@ func (s *productServiceServer) GetUnderusageLicenceByEditorProduct(ctx context.C
 		// PageSize: req.GetPageSize(),
 	}
 
-	listUnderUageByEditor, err := s.productRepo.ListUnderusageByEditor(ctx, dbReqParams)
+	listUnderUageByEditor, err := s.ProductRepo.ListUnderusageByEditor(ctx, dbReqParams)
 	if err != nil {
 		logger.Log.Sugar().Errorw("Error while getting underusage data - service/v1 - GetUnderusageLicenceByEditorProduct - db/listUnderUageByEditor ",
 			"error", err.Error(),
@@ -868,4 +1097,150 @@ func (s *productServiceServer) GetUnderusageLicenceByEditorProduct(ctx context.C
 	}
 
 	return &apiresp, nil
+}
+
+// ProductLocationType -
+func (s *ProductServiceServer) ProductLocationType(ctx context.Context, req *v1.GetDeploymentTypeRequest) (*v1.GetDeploymentTypeResponse, error) {
+	// Finding Claims of User
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
+	}
+
+	// Checking if user has the permission to see this scope
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	saasRow, err := s.ProductRepo.DeploymentPercent(ctx, db.DeploymentPercentParams{
+		Scope:       req.Scope,
+		ProductType: db.ProductTypeSAAS,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "NoDataFound")
+		}
+		logger.Log.Error("service/v1 - ComplianceAlert - db/DeploymentPercentForSAAS", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	// if saasRow == 0 {
+	// 	return &v1.GetDeploymentTypeResponse{}, nil
+	// }
+	onPremiseRow, err := s.ProductRepo.DeploymentPercent(ctx, db.DeploymentPercentParams{
+		Scope:       req.Scope,
+		ProductType: db.ProductTypeONPREMISE,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, status.Error(codes.NotFound, "NoDataFound")
+		}
+		logger.Log.Error("service/v1 - ComplianceAlert - db/DeploymentPercentForOnPremise", zap.Error(err))
+		return nil, status.Error(codes.Internal, "DBError")
+	}
+	// if onPremiseRow == 0 {
+	// 	return &v1.GetDeploymentTypeResponse{}, nil
+	// }
+	totalAcq := saasRow + onPremiseRow
+	if totalAcq == 0 {
+		return &v1.GetDeploymentTypeResponse{}, nil
+	}
+	saasPer := (saasRow / totalAcq) * 100
+	onPremisePer := (onPremiseRow / totalAcq) * 100
+
+	saasPercent := helper.ToFixed(saasPer, 2)
+	onPremisePercent := helper.ToFixed(onPremisePer, 2)
+
+	return &v1.GetDeploymentTypeResponse{
+		SaasPercentage:      saasPercent,
+		OnPremisePercentage: onPremisePercent,
+	}, nil
+}
+
+// GetWasteUpLicences - total cost of licenses in underusage - positive integer
+func (s *ProductServiceServer) GetWasteUpLicences(ctx context.Context, req *v1.GetWasteUpLicencesRequest) (*v1.GetWasteUpLicencesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.GetWasteUpLicencesResponse{}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.GetWasteUpLicencesResponse{}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	wasteCost, _ := s.ProductRepo.WasteCost(ctx, req.Scope)
+	var response v1.GetWasteUpLicencesResponse
+
+	// Map to store the editors' waste up costs
+	editorMap := make(map[string]float64)
+	productsMap := make(map[string][]*v1.ProductsCost)
+	// Iterate over the database response and populate the response struct
+	for _, entry := range wasteCost {
+
+		// Check if the editor already exists in the map
+		editorMap[entry.Editor] += entry.Cost
+		productCost := &v1.ProductsCost{
+			Product:         entry.ProductNames,
+			ProductCost:     entry.Cost,
+			AggregationName: entry.AggregationName,
+		}
+		productsMap[entry.Editor] = append(productsMap[entry.Editor], productCost)
+		response.TotalWasteUpCost += entry.Cost
+
+	}
+	for editorkey, editorValue := range editorMap {
+		editorWasteUpCost := &v1.EditorsWasteCost{
+			Editor:     editorkey,
+			EditorCost: editorValue,
+		}
+		if productValue, exists := productsMap[editorkey]; exists {
+			editorWasteUpCost.ProductsWasteUpCost = productValue
+		}
+		response.EditorsWasteUpCost = append(response.EditorsWasteUpCost, editorWasteUpCost)
+	}
+
+	return &response, nil
+}
+
+// GetTrueUpLicences - total cost of licenses in counterfeiting-Negative integer
+func (s *ProductServiceServer) GetTrueUpLicences(ctx context.Context, req *v1.GetTrueUpLicencesRequest) (*v1.GetTrueUpLicencesResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		return &v1.GetTrueUpLicencesResponse{}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Error("Permission Error", zap.Any("Scopes", userClaims.Socpes), zap.String("Requested Scope", req.GetScope()))
+		return &v1.GetTrueUpLicencesResponse{}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+	trueCost, _ := s.ProductRepo.TrueCost(ctx, req.Scope)
+	var response v1.GetTrueUpLicencesResponse
+
+	// Map to store the editors and products' true up costs
+	editorMap := make(map[string]float64)
+	productsMap := make(map[string][]*v1.ProductsCost)
+	// Iterate over the database response and populate the response struct
+	for _, entry := range trueCost {
+
+		// Check if the editor already exists in the map
+		editorMap[entry.Editor] += entry.Cost
+		productCost := &v1.ProductsCost{
+			Product:         entry.ProductNames,
+			ProductCost:     entry.Cost,
+			AggregationName: entry.AggregationName,
+		}
+		productsMap[entry.Editor] = append(productsMap[entry.Editor], productCost)
+		response.TotalTrueUpCost += entry.Cost
+
+	}
+	for editorkey, editorValue := range editorMap {
+		editorTrueUpCost := &v1.EditorsCost{
+			Editor:     editorkey,
+			EditorCost: editorValue,
+		}
+		if productValue, exists := productsMap[editorkey]; exists {
+			editorTrueUpCost.ProductsTrueUpCost = productValue
+		}
+		response.EditorsTrueUpCost = append(response.EditorsTrueUpCost, editorTrueUpCost)
+	}
+
+	return &response, nil
 }

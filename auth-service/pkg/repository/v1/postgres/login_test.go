@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	v1 "optisam-backend/auth-service/pkg/repository/v1"
 	"reflect"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1"
 
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -78,7 +79,7 @@ func Test_Default_UserInfo(t *testing.T) {
 			defer func() {
 				require.Empty(t, cleanup())
 			}()
-			tt.d = NewRepository(db)
+			tt.d = NewRepository(db, r)
 			got, err := tt.d.UserInfo(tt.args.ctx, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Default.UserInfo() error = %v, wantErr %v", err, tt.wantErr)
@@ -147,7 +148,7 @@ func Test_Default_IncreaseFailedLoginCount(t *testing.T) {
 			defer func() {
 				require.Empty(t, cleanup())
 			}()
-			tt.d = NewRepository(db)
+			tt.d = NewRepository(db, r)
 			err = tt.d.IncreaseFailedLoginCount(tt.args.ctx, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Default.IncreaseFailedLoginCount() error = %v, wantErr %v", err, tt.wantErr)
@@ -213,7 +214,7 @@ func Test_Default_ResetLoginCount(t *testing.T) {
 			defer func() {
 				require.Empty(t, cleanup())
 			}()
-			tt.d = NewRepository(db)
+			tt.d = NewRepository(db, r)
 			err = tt.d.ResetLoginCount(tt.args.ctx, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Default.ResetLoginCount() error = %v, wantErr %v", err, tt.wantErr)

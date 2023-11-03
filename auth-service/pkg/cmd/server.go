@@ -6,31 +6,42 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"optisam-backend/auth-service/pkg/oauth2/generators/access"
-	"optisam-backend/auth-service/pkg/oauth2/server"
-	"optisam-backend/auth-service/pkg/oauth2/stores/client"
-	"optisam-backend/auth-service/pkg/oauth2/stores/token"
-	repv1_postgres "optisam-backend/auth-service/pkg/repository/v1/postgres"
-	"optisam-backend/common/optisam/token/generator"
 	"os"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/generators/access"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/server"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/stores/client"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/stores/token"
+	repv1_postgres "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1/postgres"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/redis"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/generator"
+
+	redisClient "github.com/go-redis/redis/v8"
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
 	"go.uber.org/zap"
 
-	"optisam-backend/auth-service/pkg/config"
-	"optisam-backend/auth-service/pkg/protocol/rest"
-	v1 "optisam-backend/auth-service/pkg/service/v1"
-	"optisam-backend/common/optisam/buildinfo"
-	"optisam-backend/common/optisam/healthcheck"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	postgres "optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/protocol/rest"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/service/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/buildinfo"
+	gconn "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/healthcheck"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	postgres "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+
+	kafkaConnector "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/kafka"
 
 	"contrib.go.opencensus.io/integrations/ocsql"
+
 	// pq driver
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	_ "github.com/lib/pq"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -57,6 +68,7 @@ func RunServer() error {
 	config.Configure(viper.GetViper(), pflag.CommandLine)
 
 	pflag.Parse()
+	isLocal := false
 	if os.Getenv("ENV") == "prod" { // nolint: gocritic
 		viper.SetConfigName("config-prod")
 	} else if os.Getenv("ENV") == "performance" {
@@ -69,6 +81,7 @@ func RunServer() error {
 		viper.SetConfigName("config-pc")
 	} else {
 		viper.SetConfigName("config-local")
+		isLocal = true
 	}
 
 	viper.AddConfigPath("/opt/config/")
@@ -108,6 +121,26 @@ func RunServer() error {
 
 	// Register SQL stat views
 	ocsql.RegisterAllViews()
+	p, err := kafkaConnector.BuildProducer(cfg.Kafka)
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open producer: %v", err)
+		return fmt.Errorf("failed to open producer: %v", err)
+	}
+	defer p.Close()
+
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					fmt.Printf("Failed to deliver message: %v\n", ev.TopicPartition)
+				} else {
+					fmt.Printf("Produced event to topic: %s \n",
+						*ev.TopicPartition.Topic)
+				}
+			}
+		}
+	}()
 
 	// Create database connection.
 	db, err := postgres.NewConnection(postgres.Config{
@@ -147,6 +180,16 @@ func RunServer() error {
 		}
 	}
 
+	// GRPC Connections
+	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize GRPC client")
+	}
+	logger.Log.Info("grpc Connections list", zap.Any("grpcConnections", grpcClientMap))
+	for _, conn := range grpcClientMap {
+		defer conn.Close()
+	}
+
 	// Register http health check
 	{
 		check, error := checkers.NewHTTP(&checkers.HTTPConfig{URL: &url.URL{Scheme: "http", Host: "localhost:8080"}})
@@ -164,6 +207,26 @@ func RunServer() error {
 		}
 	}
 	// defer db.Close()
+	redisC := &redisClient.Client{}
+	if isLocal {
+		redisC = redis.NewConnection(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis")
+		} else {
+			logger.Log.Info("redis server connected at:" + cfg.Redis.RedisHost)
+		}
+		//defer redisClient.Close()
+	} else {
+		redisC = redis.NewConnectionSentinel(*cfg.Redis)
+		_, err = redisC.Ping(ctx).Result()
+		if err != nil {
+			logger.Log.Fatal("Failed to connect redis sentinel")
+		} else {
+			logger.Log.Info("redis server connected")
+		}
+	}
+	defer redisC.Close()
 	defer func() {
 		//	db.Close()
 		// Wait to 4 seconds so that the traces can be exported
@@ -229,17 +292,18 @@ func RunServer() error {
 		logger.Log.Fatal("cannot create token generator", zap.String("reason", err.Error()))
 	}
 
-	optisamDB := repv1_postgres.NewRepository(db)
-	service := v1.NewAuthServiceServer(optisamDB)
+	optisamDB := repv1_postgres.NewRepository(db, redisC)
+
+	service := v1.NewAuthServiceServer(optisamDB, cfg, grpcClientMap, p)
 
 	oauth2Server := server.NewServer(token.NewStore(), client.NewStore(), access.NewGenerator(generator, service))
 
 	// server
-	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
+	logger.Log.Sugar().Infow("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Sugar().Debug("Recovered in RunServer", r)
 		}
 	}()
-	return rest.RunServer(ctx, service, oauth2Server, cfg.HTTPPort)
+	return rest.RunServer(ctx, service, oauth2Server, cfg.HTTPPort, cfg)
 }

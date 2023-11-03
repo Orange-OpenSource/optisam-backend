@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/license-service/pkg/api/v1";
+option go_package = "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1";
 
 package optisam.license.v1;
 

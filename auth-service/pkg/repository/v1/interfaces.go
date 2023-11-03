@@ -1,8 +1,16 @@
 package v1
 
-import "context"
+import (
+	"context"
 
-// go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/auth-service/pkg/repository/v1 Repository
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+)
+
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1 Repository
+
 // TODO fix this reflect files should be removed automatically go:generate rm -r gomock_reflect_*
 
 // Repository interface has all the methods we need to operate on database
@@ -24,7 +32,14 @@ type Repository interface {
 
 	// UserOwnedGroupsDirect return the groups directly owned by user
 	UserOwnedGroupsDirect(ctx context.Context, userID string) ([]*Group, error)
-
+	GetToken(ctx context.Context, acc helper.EmailParams) error
+	SetToken(ctx context.Context, acc helper.EmailParams, ttl int) error
+	DelToken(ctx context.Context, acc helper.EmailParams) error
+	GenerateMailBody(ctx context.Context, acc helper.EmailParams, cfg config.Config) (string, error)
+	AccountInfo(ctx context.Context, userID string) (*v1.AccountInfo, error)
+	ChangeUserFirstLogin(ctx context.Context, userID string) error
+	ChangePassword(ctx context.Context, userID, password string) error
+	CreateAuthContext(cfg config.Config) (context.Context, error)
 	// // CheckPassword check for users password in database
 	// CheckPassword(ctx context.Context, userID, password string) (bool, error)
 }

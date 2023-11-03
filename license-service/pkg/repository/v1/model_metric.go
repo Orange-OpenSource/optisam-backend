@@ -28,6 +28,14 @@ const (
 	MetricUserNomStandard MetricType = "user.nominative.standard"
 	// MetricUserConcurentStandard is user.concurrent.standard
 	MetricUserConcurentStandard MetricType = "user.concurrent.standard"
+	// MetricMicrosoftSqlEnterprise is microsoft.sql.enterprise
+	MetricMicrosoftSqlEnterprise MetricType = "microsoft.sql.enterprise"
+	// MetricWindowsServerDataCenter is windows.server.datacenter
+	MetricWindowsServerDataCenter MetricType = "windows.server.datacenter"
+	// MetricMicrosoftSqlStandard is microsoft.sql.standard
+	MetricMicrosoftSqlStandard MetricType = "microsoft.sql.standard"
+	// MetricWindowsServerStandard is windows.server.standard
+	MetricWindowsServerStandard MetricType = "windows.server.standard"
 )
 
 // String implements Stringer interface
@@ -65,6 +73,7 @@ const (
 	MetricEquipAttr       MetricTypeID = 10
 	MetricNominativeUser  MetricTypeID = 11
 	MetricConcurentUser   MetricTypeID = 12
+	MetricMicrosoftSE     MetricTypeID = 13
 )
 
 // MetricDescription provide description
@@ -97,6 +106,8 @@ const (
 	MetricDescriptionUserNomStandard MetricDescription = "sum the number of users with profile = [profile]"
 	// MetricDescriptionUserConcurentStandard provides description of user.concurrent.standard
 	MetricDescriptionUserConcurentStandard MetricDescription = "latest number of users with profile = [profile]"
+	// MetricDescriptionMicrosoftSqlEnterprise provides description of microsoft.sql.enterprise
+	MetricDescriptionMicrosoftSqlEnterprise MetricDescription = "Number of licenses required = CPU nb x MAX(Core of the server(per CPU), 4)"
 )
 
 var (
@@ -167,6 +178,12 @@ var (
 			Description: MetricDescriptionUserConcurentStandard.String(),
 			Href:        "/api/v1/metric/user_conc",
 			MetricType:  MetricConcurentUser,
+		},
+		{
+			Name:        MetricMicrosoftSqlEnterprise,
+			Description: MetricDescriptionMicrosoftSqlEnterprise.String(),
+			Href:        "",
+			MetricType:  MetricMicrosoftSE,
 		},
 	}
 )

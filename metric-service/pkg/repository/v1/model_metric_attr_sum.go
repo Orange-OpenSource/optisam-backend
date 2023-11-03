@@ -7,6 +7,7 @@ type MetricAttrSumStand struct {
 	EqType         string
 	AttributeName  string
 	ReferenceValue float64
+	Default        bool
 }
 
 // MetricAttrSumStandComputed has all the information required to be computed

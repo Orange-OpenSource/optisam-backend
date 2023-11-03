@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/license-service/pkg/repository/v1 License
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1 License
 
 // License interface
 type License interface {
@@ -43,6 +43,9 @@ type License interface {
 	// ListMetricOPS returns all metrics of type oracle.processor.standard
 	ListMetricOPS(ctx context.Context, scopes ...string) ([]*MetricOPS, error)
 
+	// ListMetricMSE returns all metrics of type microsoft.sql.enterprise
+	ListMetricMSE(ctx context.Context, scopes ...string) ([]*MetricMSE, error)
+
 	ListMetricNUP(ctx context.Context, scopes ...string) ([]*MetricNUPOracle, error)
 
 	// MetricOPSComputedLicenses returns the computed licenses
@@ -72,6 +75,11 @@ type License interface {
 	MetricSPSComputedLicenses(ctx context.Context, id []string, mat *MetricSPSComputed, scopes ...string) (uint64, uint64, error)
 
 	MetricSPSComputedLicensesAgg(ctx context.Context, name, mertic string, mat *MetricSPSComputed, scopes ...string) (uint64, uint64, error)
+
+	// MetricMSEComputedLicenses returns the computed licenses for microsoft.sql.enterprise
+	MetricMSEComputedLicenses(ctx context.Context, sa bool, id []string, mat *MetricMSEComputed, scopes ...string) (uint64, error)
+
+	MetricMSEComputedLicensesAgg(ctx context.Context, sa bool, name, mertic string, mat *MetricMSEComputed, scopes ...string) (uint64, error)
 
 	// ListMetricIPS returns all metrics of type ibm.pvu.standard
 	ListMetricIPS(ctx context.Context, scopes ...string) ([]*MetricIPS, error)
@@ -190,6 +198,33 @@ type License interface {
 	GetProductsByEditorProductName(ctx context.Context, metrics []*Metric, scope, editorName, productName string) ([]*ProductDetail, error)
 
 	GetProductInformationFromAcqRight(ctx context.Context, swidtag string, scopes ...string) (*ProductAdditionalInfo, error)
+
+	// ListMetricWSD returns all metrics of type windows.server.datacenter
+	ListMetricWSD(ctx context.Context, scopes ...string) ([]*MetricWSD, error)
+
+	// MetricWSDComputedLicenses returns the computed licenses for windows.server.datacenter metric
+	MetricWSDComputedLicenses(ctx context.Context, id []string, mat *MetricWSDComputed, scopes ...string) (uint64, error)
+
+	// MetricWSDComputedLicensesAgg returns the computed licenses for windows.server.datacenter metric for aggregation
+	MetricWSDComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricWSDComputed, scopes ...string) (uint64, error)
+
+	// MetricMSSComputedLicenses returns the computed licenses for metric.sql.standard metric
+	MetricMSSComputedLicenses(ctx context.Context, id []string, mat *MetricMSSComputed, scopes ...string) (uint64, error)
+
+	// MetricMSSComputedLicensesAgg returns the computed licenses for metric.sql.standard metric for aggregation
+	MetricMSSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricMSSComputed, scopes ...string) (uint64, error)
+
+	// ListMetricMSS returns all metrics of type metric.sql.standard
+	ListMetricMSS(ctx context.Context, scopes ...string) ([]*MetricMSS, error)
+
+	// MetricWSSComputedLicenses returns the computed licenses for windows.server.standard metric
+	MetricWSSComputedLicenses(ctx context.Context, id []string, mat *MetricWSSComputed, scopes ...string) (uint64, error)
+
+	// MetricWSSComputedLicensesAgg returns the computed licenses for windows.server.standard metric for aggregation
+	MetricWSSComputedLicensesAgg(ctx context.Context, name, metric string, mat *MetricWSSComputed, scopes ...string) (uint64, error)
+
+	// ListMetricWSS returns all metrics of type windows.server.standard
+	ListMetricWSS(ctx context.Context, scopes ...string) ([]*MetricWSS, error)
 }
 
 // Queryable interface provide methods for something that can be queried

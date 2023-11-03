@@ -1921,6 +1921,7 @@
         ]
       },
       "post": {
+        "summary": "rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {\noption (google.api.http) = {\npost : \"/api/v1/product/nominative/users\"\nbody : \"*\"\n};\n}",
         "operationId": "ProductService_UpsertProductConcurrentUser",
         "responses": {
           "200": {
@@ -2258,6 +2259,7 @@
         ]
       },
       "put": {
+        "summary": "rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {\noption (google.api.http) = {\npost : \"/api/v1/product/nominative/users\"\nbody : \"*\"\n};\n}",
         "operationId": "ProductService_UpsertProductConcurrentUser2",
         "responses": {
           "200": {
@@ -2488,6 +2490,36 @@
         ]
       }
     },
+    "/api/v1/product/dashboard/editor_expenses": {
+      "get": {
+        "operationId": "ProductService_GetEditorExpensesByScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EditorExpensesByScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/dashboard/editors/products": {
       "get": {
         "operationId": "ProductService_ProductsPerEditor",
@@ -2704,6 +2736,126 @@
         ]
       }
     },
+    "/api/v1/product/dashboard/product/deployment_type": {
+      "get": {
+        "operationId": "ProductService_ProductLocationType",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDeploymentTypeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/product/maintenance": {
+      "get": {
+        "operationId": "ProductService_ProductMaintenancePerc",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductMaintenancePercResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/product/no_maintenance": {
+      "get": {
+        "operationId": "ProductService_ProductNoMaintenanceDetails",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductNoMaintenanceDetailsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/product/open_close_source": {
+      "get": {
+        "operationId": "ProductService_ProductsPercOpenClosedSource",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ProductsPercOpenClosedSourceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/dashboard/product/quality": {
       "get": {
         "operationId": "ProductService_OverviewProductQuality",
@@ -2734,6 +2886,42 @@
         ]
       }
     },
+    "/api/v1/product/dashboard/product_expenses": {
+      "get": {
+        "operationId": "ProductService_GetEditorProductExpensesByScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1EditorProductExpensesByScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "editor",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
     "/api/v1/product/dashboard/quality/products": {
       "get": {
         "operationId": "ProductService_DashboardQualityProducts",
@@ -2742,6 +2930,36 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1DashboardQualityProductsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/trueup": {
+      "get": {
+        "operationId": "ProductService_GetTrueUpLicences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTrueUpLicencesResponse"
             }
           },
           "default": {
@@ -2819,6 +3037,36 @@
           },
           {
             "name": "product_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/dashboard/wasteup": {
+      "get": {
+        "operationId": "ProductService_GetWasteUpLicences",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetWasteUpLicencesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scope",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3013,6 +3261,43 @@
           },
           {
             "name": "aggregation_name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product/get_aggregation_by_id": {
+      "get": {
+        "operationId": "ProductService_GetAggregationById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAggregationByIdResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "aggregation_id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "scope",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3356,36 +3641,6 @@
             "in": "query",
             "required": false,
             "type": "boolean"
-          }
-        ],
-        "tags": [
-          "ProductService"
-        ]
-      },
-      "post": {
-        "operationId": "ProductService_UpsertNominativeUser",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1UpserNominativeUserResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1UpserNominativeUserRequest"
-            }
           }
         ],
         "tags": [
@@ -3965,6 +4220,12 @@
               "PARK"
             ],
             "default": "ACQRIGHTS"
+          },
+          {
+            "name": "ppid",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4030,6 +4291,42 @@
             "name": "swid_tag",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProductService"
+        ]
+      }
+    },
+    "/api/v1/product_information_by_swidtag": {
+      "get": {
+        "operationId": "ProductService_GetProductInformationBySwidTag",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetProductInformationBySwidTagResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "swid_tag",
+            "in": "query",
+            "required": false,
             "type": "string"
           },
           {
@@ -4996,6 +5293,19 @@
         }
       }
     },
+    "v1CloseSource": {
+      "type": "object",
+      "properties": {
+        "precentage_cs": {
+          "type": "number",
+          "format": "double"
+        },
+        "amount_cs": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "v1ComplianceAlertResponse": {
       "type": "object",
       "properties": {
@@ -5100,7 +5410,7 @@
         "purchase_month": {
           "type": "string"
         },
-        "councurrent_users": {
+        "concurrent_users": {
           "type": "integer",
           "format": "int32"
         }
@@ -5175,6 +5485,14 @@
           "format": "double"
         },
         "total_underusage_amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "computed_maintenance": {
+          "type": "number",
+          "format": "double"
+        },
+        "computed_without_maintenance": {
           "type": "number",
           "format": "double"
         }
@@ -5308,6 +5626,10 @@
         "total_cost": {
           "type": "number",
           "format": "double"
+        },
+        "total_computed_cost": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -5318,6 +5640,44 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1EditorExpensesByScopeData"
+          }
+        }
+      }
+    },
+    "v1EditorProductExpensesByScopeData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "total_purchase_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_maintenance_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "total_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "type": {
+          "type": "string"
+        },
+        "total_computed_cost": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1EditorProductExpensesByScopeResponse": {
+      "type": "object",
+      "properties": {
+        "editorProductExpensesByScope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EditorProductExpensesByScopeData"
           }
         }
       }
@@ -5334,6 +5694,42 @@
         }
       }
     },
+    "v1EditorsCost": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "editor_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "products_true_up_cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductsCost"
+          }
+        }
+      }
+    },
+    "v1EditorsWasteCost": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "editor_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "products_waste_up_cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductsCost"
+          }
+        }
+      }
+    },
     "v1GetAggregationAcqrightsExpandedViewResponse": {
       "type": "object",
       "properties": {
@@ -5346,6 +5742,50 @@
           "items": {
             "$ref": "#/definitions/v1AcqRights"
           }
+        }
+      }
+    },
+    "v1GetAggregationByIdResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "aggregation_name": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "product_editor": {
+          "type": "string"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "swidtags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "created_on": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string"
+        },
+        "updated_on": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_by": {
+          "type": "string"
         }
       }
     },
@@ -5437,6 +5877,19 @@
         }
       }
     },
+    "v1GetDeploymentTypeResponse": {
+      "type": "object",
+      "properties": {
+        "saas_percentage": {
+          "type": "number",
+          "format": "double"
+        },
+        "on_premise_percentage": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
     "v1GetEquipmentsByProductResponse": {
       "type": "object",
       "properties": {
@@ -5445,6 +5898,22 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "v1GetMaintenanceBySwidtagResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "acqLicenses": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "unit_price": {
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -5464,6 +5933,37 @@
           "items": {
             "$ref": "#/definitions/GetProductCountByAppResponseapplications"
           }
+        }
+      }
+    },
+    "v1GetProductInformationBySwidTagResponse": {
+      "type": "object",
+      "properties": {
+        "swidtag": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "product_editor": {
+          "type": "string"
+        },
+        "product_version": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "num_of_applications": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "num_of_equipments": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -5502,6 +6002,21 @@
         }
       }
     },
+    "v1GetTrueUpLicencesResponse": {
+      "type": "object",
+      "properties": {
+        "total_true_up_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "editors_true_up_cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EditorsCost"
+          }
+        }
+      }
+    },
     "v1GetUnderusageByEditorResponse": {
       "type": "object",
       "properties": {
@@ -5511,6 +6026,21 @@
             "$ref": "#/definitions/v1UnderusageByEditorData"
           },
           "title": "int32 totalRecords = 1;"
+        }
+      }
+    },
+    "v1GetWasteUpLicencesResponse": {
+      "type": "object",
+      "properties": {
+        "total_waste_up_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "editors_waste_up_cost": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1EditorsWasteCost"
+          }
         }
       }
     },
@@ -5983,6 +6513,9 @@
         },
         "activation_date_string": {
           "type": "string"
+        },
+        "activation_date_valid": {
+          "type": "boolean"
         }
       }
     },
@@ -6085,6 +6618,19 @@
         },
         "editor": {
           "$ref": "#/definitions/v1StringFilter"
+        }
+      }
+    },
+    "v1OpenSource": {
+      "type": "object",
+      "properties": {
+        "precentage_os": {
+          "type": "number",
+          "format": "double"
+        },
+        "amount_os": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -6351,6 +6897,48 @@
         }
       }
     },
+    "v1ProductMaintenancePercResponse": {
+      "type": "object",
+      "properties": {
+        "product_with_maintenance_percentage": {
+          "type": "number",
+          "format": "double"
+        },
+        "product_without_maintenance_percentage": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "v1ProductNoMain": {
+      "type": "object",
+      "properties": {
+        "product_name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "swidtag": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ProductNoMaintenanceDetailsResponse": {
+      "type": "object",
+      "properties": {
+        "total_products": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "product_no_main": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ProductNoMain"
+          }
+        }
+      }
+    },
     "v1ProductOptionsResponse": {
       "type": "object",
       "properties": {
@@ -6432,6 +7020,21 @@
         }
       }
     },
+    "v1ProductsCost": {
+      "type": "object",
+      "properties": {
+        "product": {
+          "type": "string"
+        },
+        "product_cost": {
+          "type": "number",
+          "format": "double"
+        },
+        "aggregation_name": {
+          "type": "string"
+        }
+      }
+    },
     "v1ProductsCosts": {
       "type": "object",
       "properties": {
@@ -6502,6 +7105,29 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1MetricProducts"
+          }
+        }
+      }
+    },
+    "v1ProductsPercOpenClosedSourceResponse": {
+      "type": "object",
+      "properties": {
+        "open_source": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1OpenSource"
+          }
+        },
+        "closed_source": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1CloseSource"
+          }
+        },
+        "total_amount": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1TotalProductData"
           }
         }
       }
@@ -6650,6 +7276,19 @@
         }
       }
     },
+    "v1TotalProductData": {
+      "type": "object",
+      "properties": {
+        "precentage": {
+          "type": "number",
+          "format": "double"
+        },
+        "amount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "v1UnderusageByEditorData": {
       "type": "object",
       "properties": {
@@ -6740,50 +7379,6 @@
         }
       }
     },
-    "v1UpserNominativeUserRequest": {
-      "type": "object",
-      "properties": {
-        "editor": {
-          "type": "string"
-        },
-        "scope": {
-          "type": "string"
-        },
-        "product_name": {
-          "type": "string"
-        },
-        "product_version": {
-          "type": "string"
-        },
-        "aggregation_id": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "file_name": {
-          "type": "string"
-        },
-        "sheet_name": {
-          "type": "string"
-        },
-        "user_details": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1NominativeUserDetails"
-          }
-        },
-        "upload_id": {
-          "type": "string"
-        }
-      }
-    },
-    "v1UpserNominativeUserResponse": {
-      "type": "object",
-      "properties": {
-        "status": {
-          "type": "boolean"
-        }
-      }
-    },
     "v1UpsertAcqRightsRequest": {
       "type": "object",
       "properties": {
@@ -6865,6 +7460,9 @@
         },
         "comment": {
           "type": "string"
+        },
+        "ppid": {
+          "type": "string"
         }
       }
     },
@@ -6920,6 +7518,9 @@
         },
         "productType": {
           "$ref": "#/definitions/v1producttype"
+        },
+        "ppid": {
+          "type": "string"
         }
       }
     },

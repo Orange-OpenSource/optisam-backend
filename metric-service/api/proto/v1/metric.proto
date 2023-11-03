@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/metric-service/pkg/api/v1";
+option go_package = "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1";
 
 package optisam.metric.v1;
 
@@ -264,6 +264,30 @@ service MetricService {
     };
   }
 
+      // CreateMetricImport will create all metrics requested with default value
+  rpc CreateMetricImport(MetricImportRequest)returns (MetricImportResponse){
+    option (google.api.http) = {
+      post : "/api/v1/metric/import_metric"
+      body : "*"
+    };
+  }
+  
+    rpc CreateMetricWindowServerStandard(MetricWSS)returns (MetricWSS){
+    option (google.api.http) = {
+      post : "/api/v1/metric/wind_serv_stand"
+      body : "*"
+    };
+  } 
+  rpc CreateScopeMetric(CreateScopeMetricRequest) returns(CreateScopeMetricResponse){
+      }
+
+    // CreateMetricSQLStandard will create an user.concurrent.standard metric
+  rpc CreateMetricSQLStandard(MetricScopeSQL)returns (MetricScopeSQL){
+    option (google.api.http) = {
+      post : "/api/v1/metric/sql_standard"
+      body : "*"
+    };
+  }
   //GetMetricConfiguration will get configuration of a metric
   rpc GetMetricConfiguration(GetMetricConfigurationRequest)returns (GetMetricConfigurationResponse){
     option (google.api.http) = {
@@ -323,7 +347,7 @@ message MetricUSS {
   string ID = 1;
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   repeated string scopes = 3 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 4;
 }
 
 message MetricINM {
@@ -332,7 +356,7 @@ message MetricINM {
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   int32 num_of_deployments = 3 [(validate.rules).int32 = { gt: 0}];
   repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 5;
 }
 
 message MetricSS {
@@ -341,7 +365,7 @@ message MetricSS {
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   int32 reference_value = 3 [(validate.rules).int32 = { gte: 0}];
   repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 5;
 } 
 
 message UpdateMetricResponse { 
@@ -356,6 +380,7 @@ message MetricAttrSum {
   string attribute_name = 4;
   double reference_value = 5 [(validate.rules).double = { gt: 0}];
   repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
+  bool Default = 7;
 }
 
 message MetricEquipAtt {
@@ -367,6 +392,7 @@ message MetricEquipAtt {
   string environment = 5 [(validate.rules).string = { min_len : 1, pattern : "^[a-zA-Z0-9,]+$"}];
   int32 value = 6 [(validate.rules).int32 = { gt: 0}];
   repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3]; 
+  bool Default = 8;
 }
 
 message MetricIPS {
@@ -378,7 +404,7 @@ message MetricIPS {
   string core_factor_attr_id = 5;  
   string base_eq_type_id = 6;
   repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 8;
 }
 
 message MetricSPS {
@@ -390,7 +416,7 @@ message MetricSPS {
   string core_factor_attr_id = 5;  
   string base_eq_type_id = 6;
   repeated string scopes = 7 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 8;
 }
 
 message MetricACS {
@@ -401,7 +427,7 @@ message MetricACS {
   string attribute_name = 4;
   string value = 5;
   repeated string scopes = 6 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-   
+  bool Default = 7;
 }
 
 message MetricUNS {
@@ -410,7 +436,7 @@ message MetricUNS {
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   string profile = 3;
   repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
-
+  bool Default = 5;
 }
 
 message MetricUCS {
@@ -419,7 +445,19 @@ message MetricUCS {
   string Name = 2 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
   string profile = 3;
   repeated string scopes = 4 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  bool Default = 5;
+}
 
+message MetricWSS {
+   // ID is not required for creation
+  string ID = 1;
+  string MetricType = 2;
+  string MetricName = 3 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string Reference = 4;
+  string Core = 5;
+  string CPU = 6;
+  bool Default = 7;
+  repeated string scopes = 8 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
 }
 
 message ListMetricRequest {
@@ -434,10 +472,12 @@ message Metric {
   string type = 1;
   string name = 2;
   string description = 3;
+  bool default = 4;
 }
 
 message ListMetricTypeRequest {
   repeated string scopes = 1 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.pattern = "\\b[A-Z]{3}\\b"];
+  bool is_import = 2;
 }
 
 message ListMetricTypeResponse {
@@ -464,6 +504,8 @@ message MetricType {
   string description = 2;
   string href = 3;
   Type type_id = 4;
+  bool is_exist = 5;
+  repeated string default_metrics = 6;
 }
 
 message MetricOPS {
@@ -478,6 +520,7 @@ message MetricOPS {
   string aggerateLevel_eq_type_id = 8;
   string end_eq_type_id = 9;
   repeated string scopes = 10 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+  bool Default = 11;
 }
 
 message MetricNUP {
@@ -495,6 +538,7 @@ message MetricNUP {
   repeated string scopes = 11 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
   bool transform = 12;
   string transform_metric_name = 13;
+  bool Default = 14;
 }
 
 message ScopeFilter{
@@ -532,8 +576,32 @@ enum DataTypes {
   FLOAT  = 3;
 }
 
+message CreateScopeMetricRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string type =2;
+}
+message CreateScopeMetricResponse{
+  bool Success =1;
+}
 
+message MetricImportRequest{
+  repeated string metric = 1;
+  string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
 
+message MetricImportResponse{
+  bool success = 1;
+}
   
-
+message MetricScopeSQL {
+  // ID is not required for creation
+  string ID = 1;
+  string MetricType = 2;
+  string MetricName = 3 [(validate.rules).string = { min_len : 1, pattern : "[.-_A-Za-z0-9]+$"}];
+  string Reference = 4;
+  string Core = 5;
+  string CPU = 6;
+  bool Default = 7;
+  repeated string scopes = 8 [(validate.rules).repeated = {min_items: 1, max_items: 1},(validate.rules).repeated.items.string.len = 3];
+}
   

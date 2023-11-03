@@ -36,6 +36,148 @@ var (
 // define the regex for a UUID once up-front
 var _dps_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
+// Validate checks the field values on CancelUploadRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CancelUploadRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for UploadId
+
+	// no validation rules for Scope
+
+	// no validation rules for FileName
+
+	return nil
+}
+
+// CancelUploadRequestValidationError is the validation error returned by
+// CancelUploadRequest.Validate if the designated constraints aren't met.
+type CancelUploadRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CancelUploadRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CancelUploadRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CancelUploadRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CancelUploadRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CancelUploadRequestValidationError) ErrorName() string {
+	return "CancelUploadRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CancelUploadRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCancelUploadRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CancelUploadRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CancelUploadRequestValidationError{}
+
+// Validate checks the field values on CancelUploadResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *CancelUploadResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Success
+
+	return nil
+}
+
+// CancelUploadResponseValidationError is the validation error returned by
+// CancelUploadResponse.Validate if the designated constraints aren't met.
+type CancelUploadResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CancelUploadResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CancelUploadResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CancelUploadResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CancelUploadResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CancelUploadResponseValidationError) ErrorName() string {
+	return "CancelUploadResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CancelUploadResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCancelUploadResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CancelUploadResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CancelUploadResponseValidationError{}
+
 // Validate checks the field values on GetAnalysisFileInfoRequest with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

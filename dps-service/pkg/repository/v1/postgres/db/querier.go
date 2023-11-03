@@ -35,6 +35,7 @@ type Querier interface {
 	UpdateFileFailedRecord(ctx context.Context, arg UpdateFileFailedRecordParams) (UpdateFileFailedRecordRow, error)
 	UpdateFileFailure(ctx context.Context, arg UpdateFileFailureParams) error
 	UpdateFileStatus(ctx context.Context, arg UpdateFileStatusParams) error
+	UpdateFileStatusCancelled(ctx context.Context, arg UpdateFileStatusCancelledParams) (UploadStatus, error)
 	UpdateFileSuccessRecord(ctx context.Context, arg UpdateFileSuccessRecordParams) (UpdateFileSuccessRecordRow, error)
 	UpdateFileTotalRecord(ctx context.Context, arg UpdateFileTotalRecordParams) error
 	UpdateGlobalFileStatus(ctx context.Context, arg UpdateGlobalFileStatusParams) (string, error)

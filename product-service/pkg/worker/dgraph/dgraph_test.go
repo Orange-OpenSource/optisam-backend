@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"math/rand"
-	"optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/product-service/pkg/api/v1"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +

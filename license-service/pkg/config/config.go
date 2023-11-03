@@ -1,16 +1,16 @@
 package config
 
 import (
-	"optisam-backend/common/optisam/dgraph"
-	"optisam-backend/common/optisam/grpc"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"os"
 	"time"
 
-	"optisam-backend/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
 
 	"errors"
 	"fmt"

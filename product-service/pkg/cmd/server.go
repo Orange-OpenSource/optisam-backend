@@ -6,31 +6,36 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"optisam-backend/common/optisam/buildinfo"
-	"optisam-backend/common/optisam/cron"
-	"optisam-backend/common/optisam/dgraph"
-	gconn "optisam-backend/common/optisam/grpc"
-	"optisam-backend/common/optisam/healthcheck"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/prometheus"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/product-service/pkg/config"
-	cronJob "optisam-backend/product-service/pkg/cron"
-	"optisam-backend/product-service/pkg/protocol/grpc"
-	"optisam-backend/product-service/pkg/protocol/rest"
-	repo "optisam-backend/product-service/pkg/repository/v1/postgres"
-	v1 "optisam-backend/product-service/pkg/service/v1"
-	dgworker "optisam-backend/product-service/pkg/worker/dgraph"
-	licenseworker "optisam-backend/product-service/pkg/worker/license_calculator"
 	"os"
 	"time"
 
-	//dgraphRepo "optisam-backend/product-service/pkg/repository/v1/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/buildinfo"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/cron"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	gconn "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/healthcheck"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	kafkaConnect "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/kafka"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/config"
+	cronJob "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/cron"
+	v1kaf "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/kafka/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/protocol/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/protocol/rest"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/service/v1"
+	dgworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/dgraph"
+	licenseworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/license_calculator"
+	maintenanceworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/worker/maintenance_notify"
+
+	//dgraphRepo "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/dgraph"
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"go.uber.org/zap"
 
 	"github.com/spf13/pflag"
@@ -207,6 +212,31 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Error("Failed to register server stats view")
 	}
+	p, err := kafkaConnect.BuildProducer(cfg.Kafka, map[string]string{
+		"message.max.bytes":  "120971520",
+		"message.timeout.ms": "1200000",
+		"compression.type":   "gzip",
+		//"max.poll.interval.ms": "90000",
+	})
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open producer: %v", err)
+		return fmt.Errorf("failed to open producer: %v", err)
+	}
+	defer p.Close()
+
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					fmt.Printf("Failed to deliver message: %v\n", ev.TopicPartition)
+				} else {
+					fmt.Printf("Produced event to topic: %s\n",
+						*ev.TopicPartition.Topic)
+				}
+			}
+		}
+	}()
 
 	// Run Instumentation Server
 	instrumentationServer := &http.Server{
@@ -222,7 +252,7 @@ func RunServer() error {
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize GRPC client")
 	}
-	log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
+	// log.Printf(" config %+v  grpcConn %+v", cfg, grpcClientMap)
 
 	// Worker Queue Initialization
 	q, err := workerqueue.NewQueue(ctx, "product-service", db, cfg.WorkerQueue)
@@ -236,13 +266,19 @@ func RunServer() error {
 	}
 
 	rep := repo.NewProductRepository(db)
-
+	//wait 45sec for dev environment
+	if cfg.Environment == "DEVELOPMENT" {
+		time.Sleep(time.Minute * 3)
+	}
 	licenseWorker := licenseworker.NewWorker("lcalw", grpcClientMap, rep, cfg.Cron.Time)
 	q.RegisterWorker(ctx, licenseWorker)
 
+	maintenanceWorker := maintenanceworker.NewWorker("mw", grpcClientMap, rep, cfg.Cron.MaintenanceTime, cfg)
+	q.RegisterWorker(ctx, maintenanceWorker)
+
 	q.IsWorkerRegCompleted = true
 
-	v1API := v1.NewProductServiceServer(rep, q, grpcClientMap, cfg.DashboardTimeZone)
+	v1API := v1.NewProductServiceServer(rep, q, grpcClientMap, cfg.DashboardTimeZone, p, dg, cfg)
 
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(cfg.IAM)
@@ -262,6 +298,9 @@ func RunServer() error {
 	// Run once the service is up and then once in 12~ hours
 	cronJob.Job()
 	cron.AddCronJob(cronJob.Job)
+
+	cronJob.MaintenanceJob()
+	cron.AddCronMaintenaceJob(cronJob.MaintenanceJob)
 	// run HTTP gateway
 	fmt.Printf("%s - grpc port,%s - http port", cfg.GRPCPort, cfg.HTTPPort)
 	defer func() {
@@ -269,6 +308,18 @@ func RunServer() error {
 			logger.Log.Sugar().Debug("Recovered in RunServer", r)
 		}
 	}()
+	c, err := kafkaConnect.BuildConsumer(cfg.Kafka, map[string]string{})
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open consumer: %v", err)
+		return fmt.Errorf("failed to open consumer: %v", err)
+	}
+
+	defer c.Close()
+	err = v1kaf.ProductConsumer(c, v1API)
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open consumer: %v", err)
+		return fmt.Errorf("failed to open consumer: %v", err)
+	}
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort, verifyKey)
 	}()

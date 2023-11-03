@@ -1,0 +1,63 @@
+environment = "development"
+debug = false
+grpcport = 15000
+httpport = 15001
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = 0
+
+[instrumentation.prometheus]
+enabled = false
+
+[instrumentation.jaeger]
+enabled = false
+serviceName = "account-service"
+collectorEndpoint = "http://192.168.99.100:14268/api/traces"
+agentEndpoint = "192.168.99.100:6831"
+# username = ""
+# password = ""
+
+[smtp]
+host = "smtp.tech.orange"
+port = 25
+from = "di-diod.openshift-noreply-optisam@orange.com"
+password = "nsnjpqb64B6c6sfA"
+
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"
+
+[kafka]
+bootstrapservers = "dev-kafka-externel-bootstrap-dev-optisam.apps.fr01.paas.tech.orange:443"
+securityprotocol = "ssl"
+sslkeylocation = "client.key.pem"
+sslcertificatelocation = "client.crt.pem"
+sslcalocation = "ca.crt.pem"
+
+[database]
+host = "localhost"
+port = 5430
+# should be user of full rights
+[database.admin]
+user = "root"
+pass = "Optisam@19"
+name = "notification" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "root"
+pass = "Optisam@19"
+name = "notification"
+
+[database.migration]
+version = "1_intial_schema.sql"
+direction = ""
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = true

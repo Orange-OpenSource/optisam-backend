@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"strings"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
@@ -19,7 +21,7 @@ import (
 )
 
 // nolint: gocyclo, funlen
-func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req *v1.ListAggregatedAcqRightsRequest) (*v1.ListAggregatedAcqRightsResponse, error) {
+func (s *ProductServiceServer) ListAggregatedAcqRights(ctx context.Context, req *v1.ListAggregatedAcqRightsRequest) (*v1.ListAggregatedAcqRightsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -44,7 +46,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		}
 		orderingdate = sql.NullTime{Time: orderingTime, Valid: true}
 	}
-	dbresp, err := s.productRepo.ListAcqRightsAggregation(ctx, db.ListAcqRightsAggregationParams{
+	dbresp, err := s.ProductRepo.ListAcqRightsAggregation(ctx, db.ListAcqRightsAggregationParams{
 		AggregationName:             req.GetSearchParams().GetName().GetFilteringkey(),
 		IsAggName:                   req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
 		LkAggName:                   !req.GetSearchParams().GetName().GetFilterType() && req.GetSearchParams().GetName().GetFilteringkey() != "",
@@ -111,7 +113,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.AggregationName = dbresp[i].AggregationName
 		temp.Sku = dbresp[i].Sku
 		temp.Swidtags = dbresp[i].Swidtags
-		// resp, err := s.productRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
+		// resp, err := s.ProductRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
 		// 	Swidtag: dbresp[i].Swidtags,
 		// 	Scope:   dbresp[i].Scope,
 		// })
@@ -131,7 +133,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 		temp.CorporateSourcingContract = dbresp[i].CorporateSourcingContract
 		temp.SoftwareProvider = dbresp[i].SoftwareProvider
 		temp.LastPurchasedOrder = dbresp[i].LastPurchasedOrder
-		temp.SupportNumber = dbresp[i].SupportNumber
+		temp.SupportNumber = strings.Join(dbresp[i].SupportNumbers, ",")
 		temp.MaintenanceProvider = dbresp[i].MaintenanceProvider
 		temp.FileName = dbresp[i].FileName
 		temp.EditorId = dbresp[i].EditorID.String
@@ -167,7 +169,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 	return &apiresp, nil
 }
 
-// func (s *productServiceServer) ListAcqRightsAggregationRecords(ctx context.Context, req *v1.ListAcqRightsAggregationRecordsRequest) (*v1.ListAcqRightsAggregationRecordsResponse, error) {
+// func (s *ProductServiceServer) ListAcqRightsAggregationRecords(ctx context.Context, req *v1.ListAcqRightsAggregationRecordsRequest) (*v1.ListAcqRightsAggregationRecordsResponse, error) {
 // 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 // 	if !ok {
 // 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -177,7 +179,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 // 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 // 	}
 
-// 	dbresp, err := s.productRepo.ListAcqRightsAggregationIndividual(ctx, db.ListAcqRightsAggregationIndividualParams{
+// 	dbresp, err := s.ProductRepo.ListAcqRightsAggregationIndividual(ctx, db.ListAcqRightsAggregationIndividualParams{
 // 		Scope:         req.Scopes,
 // 		AggregationID: req.AggregationId,
 // 	})
@@ -209,7 +211,7 @@ func (s *productServiceServer) ListAggregatedAcqRights(ctx context.Context, req 
 // 	return &apiresp, nil
 // }
 
-func (s *productServiceServer) GetAggregationAcqrightsExpandedView(ctx context.Context, req *v1.GetAggregationAcqrightsExpandedViewRequest) (*v1.GetAggregationAcqrightsExpandedViewResponse, error) {
+func (s *ProductServiceServer) GetAggregationAcqrightsExpandedView(ctx context.Context, req *v1.GetAggregationAcqrightsExpandedViewRequest) (*v1.GetAggregationAcqrightsExpandedViewResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -218,7 +220,7 @@ func (s *productServiceServer) GetAggregationAcqrightsExpandedView(ctx context.C
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	resp, err := s.productRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
+	resp, err := s.ProductRepo.GetAggregationByName(ctx, db.GetAggregationByNameParams{
 		AggregationName: req.AggregationName,
 		Scope:           req.Scope,
 	})
@@ -230,7 +232,7 @@ func (s *productServiceServer) GetAggregationAcqrightsExpandedView(ctx context.C
 		return nil, status.Error(codes.Internal, "DBError")
 	}
 
-	expandedAcq, err := s.productRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
+	expandedAcq, err := s.ProductRepo.GetAcqBySwidtags(ctx, db.GetAcqBySwidtagsParams{
 		Swidtag:  resp.Swidtags,
 		Scope:    req.Scope,
 		IsMetric: true,
@@ -254,7 +256,7 @@ func (s *productServiceServer) GetAggregationAcqrightsExpandedView(ctx context.C
 		temp.CorporateSourcingContract = v.CorporateSourcingContract
 		temp.SoftwareProvider = v.SoftwareProvider
 		temp.LastPurchasedOrder = v.LastPurchasedOrder
-		temp.SupportNumber = v.SupportNumber
+		temp.SupportNumber = strings.Join(v.SupportNumbers, ",")
 		temp.MaintenanceProvider = v.MaintenanceProvider
 		temp.AcquiredLicensesNumber = v.NumLicensesAcquired
 		temp.AvgLicenesUnitPrice, _ = v.AvgUnitPrice.Float64()

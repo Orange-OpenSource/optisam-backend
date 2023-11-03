@@ -1,0 +1,42 @@
+# Binaries for programs and plugins
+**/server/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+gomock_*
+badger
+mapping_badger
+study
+
+# sensitive info 
+# **/cert.pem
+# **/key.pem
+
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+*.testCoverage
+
+# VSCode
+.vscode/*
+.vs/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# VSCode
+.idea/*
+
+graphql
+
+# Karate
+**/target/*
+*karate.jar*
+*karate-0.9.6.jar*
+# *karate-config.js*

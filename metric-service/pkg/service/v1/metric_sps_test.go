@@ -3,13 +3,15 @@ package v1
 import (
 	"context"
 	"errors"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
-	"optisam-backend/metric-service/pkg/repository/v1/mock"
 	"reflect"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1/mock"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 	//"github.com/stretchr/testify/assert"
@@ -714,6 +716,25 @@ func Test_metricServiceServer_UpdateMetricSPS(t *testing.T) {
 					CoreFactorAttrId: "a3",
 					BaseEqTypeId:     "e2",
 					Scopes:           []string{"Scope1"},
+				},
+			},
+			setup: func() {},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
+		{name: "FAILURE - Default Value True, Metric created by import can't be updated error",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.MetricSPS{
+					Name:             "SPS",
+					NumCoreAttrId:    "a1",
+					NumCPUAttrId:     "a2",
+					CoreFactorAttrId: "a3",
+					BaseEqTypeId:     "e2",
+					Scopes:           []string{"Scope1"},
+					Default:          true,
 				},
 			},
 			setup: func() {},

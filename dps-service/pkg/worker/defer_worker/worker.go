@@ -4,14 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/models"
 	"time"
+
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	apiworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/api_worker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

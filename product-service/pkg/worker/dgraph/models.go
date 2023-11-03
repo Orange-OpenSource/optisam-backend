@@ -84,6 +84,7 @@ type UpserNominativeUserRequest struct {
 	SwidTag        string                   `json:"swid_tag,omitempty"`
 	CreatedBy      string                   `json:"created_by,omitempty"`
 	UserDetails    []*NominativeUserDetails `json:"user_details,omitempty"`
+	UploadId       string                   `json:"upload_id,omitempty"`
 }
 
 type NominativeUserDetails struct {

@@ -4,13 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
-	application "optisam-backend/application-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/models"
-	equipment "optisam-backend/equipment-service/pkg/api/v1"
-	product "optisam-backend/product-service/pkg/api/v1"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	application "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/application-service/pkg/api/v1"
+
+	product "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	equipment "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
 
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/grpc"
@@ -157,16 +163,17 @@ func sendUpsertAcqRightsReq(ctx context.Context, data models.Envlope, cc grpc.Cl
 	appData := product.UpsertAcqRightsRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
-		log.Println("Failed to marshal data ")
+		logger.Log.Sugar().Errorf("Failed to marshal data ", "err", err.Error())
 		return
 	}
+	appData.Ppid = fmt.Sprintf("%v", data.GlobalFileID)
 	resp, err := product.NewProductServiceClient(cc).UpsertAcqRights(ctx, &appData)
 	if err != nil {
-		log.Println("FAILED sendUpsertAcqRightsReq err :", err, " for data ", appData)
+		logger.Log.Sugar().Errorf("FAILED sendUpsertAcqRightsReq err :", "err", err, "for data ", appData)
 		return err
 	}
-	if resp.Success == false {
-		log.Println("FAILEDTOSEND")
+	if !resp.Success {
+		logger.Log.Sugar().Errorf("FAILEDTOSEND")
 	}
 	return
 }
@@ -178,16 +185,17 @@ func sendUpsertProductReq(ctx context.Context, data models.Envlope, cc grpc.Clie
 	appData := product.UpsertProductRequest{}
 	err = json.Unmarshal(data.Data, &appData)
 	if err != nil {
-		log.Println("Failed to marshal data ")
+		logger.Log.Sugar().Errorf("Failed to marshal data ", "err", err.Error())
 		return
 	}
+	appData.Ppid = fmt.Sprintf("%v", data.GlobalFileID)
 	resp, err := product.NewProductServiceClient(cc).UpsertProduct(ctx, &appData)
 	if err != nil {
-		log.Println("FAILED sendUpsertProductReq err :", err, " for data ", appData)
+		logger.Log.Sugar().Errorf("FAILED sendUpsertProductReq err :", "err", err, " for data ", appData)
 		return err
 	}
-	if resp.Success == false {
-		log.Println("FAILEDTOSEND")
+	if !resp.Success {
+		logger.Log.Sugar().Errorf("FAILEDTOSEND")
 	}
 	return
 }
@@ -366,15 +374,17 @@ func sendDropProductDataReq(ctx context.Context, data models.Envlope, cc grpc.Cl
 	prodReq := &product.DropProductDataRequest{}
 	err = json.Unmarshal(data.Data, &prodReq)
 	if err != nil {
+		logger.Log.Sugar().Errorf("unmarshalling error", "err", err.Error())
 		return
 	}
+	prodReq.Ppid = fmt.Sprintf("%v", data.GlobalFileID)
 	resp, err := product.NewProductServiceClient(cc).DropProductData(ctx, prodReq)
 	if err != nil {
-		log.Println("FAILED sendDropProductDataReq err :", err, " for data ", prodReq)
+		logger.Log.Sugar().Errorf("FAILED sendDropProductDataReq err :", "err", err.Error(), " for data ", prodReq)
 		return err
 	}
 	if !resp.Success {
-		log.Println("FAILEDTOSEND")
+		logger.Log.Sugar().Errorf("FAILEDTOSEND sendDropProductDataReq")
 	}
 	return
 }

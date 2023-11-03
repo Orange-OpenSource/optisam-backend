@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"strconv"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
@@ -120,6 +122,11 @@ func (l *MetricRepository) CreateMetricOracleNUPStandard(ctx context.Context, ma
 			Subject:     blankID,
 			Predicate:   "metric.oracle_nup.transform_metric_name",
 			ObjectValue: stringObjectValue(mat.TransformMetricName),
+		},
+		{
+			Subject:     blankID,
+			Predicate:   "metric.default",
+			ObjectValue: boolObjectValue(mat.Default),
 		},
 		{
 			Subject:   blankID,

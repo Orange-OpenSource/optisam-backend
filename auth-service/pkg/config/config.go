@@ -1,16 +1,20 @@
 package config
 
 import (
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
+	"errors"
+	"fmt"
 	"os"
 	"time"
 
-	"optisam-backend/common/optisam/prometheus"
-
-	"errors"
-	"fmt"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	kafkaConnector "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/kafka"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/redis"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -30,7 +34,9 @@ type Config struct {
 
 	// HTTP/REST gateway start parameters section
 	// HTTPPort is TCP port to listen by HTTP/REST gateway
-	HTTPPort string
+	HTTPPort          string
+	Activationtimeout int
+	Forgotpasstimeout int
 
 	// Private key path dor jwt token generation.
 	JWTPrivateKey string
@@ -43,6 +49,23 @@ type Config struct {
 
 	// Instrumentation configuration
 	Instrumentation InstrumentationConfig
+	Redis           *redis.Config
+	Emailtemplate   Emailtemplate
+	GrpcServers     grpc.Config
+	HTTPServers     HttpConfg
+	Application     config.Application
+	IAM             iam.Config
+	Kafka           kafkaConnector.KafkaConfig
+}
+type HttpConfg struct {
+	Address map[string]string
+}
+type Emailtemplate struct {
+	Passwordresetpath        string
+	Activationpath           string
+	Redirecbaseurl           string
+	Redirectappactivation    string
+	Redirectappurlforgotpass string
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.
@@ -76,7 +99,9 @@ func (c Config) Validate() error {
 	if err := c.Database.Validate(); err != nil {
 		return err
 	}
-
+	if err := c.Kafka.Validate(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -146,4 +171,21 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
 	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
 	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
+	//env mapping for redis
+	//_ = v.BindEnv("redis.redishost", "REDIS_HOST")
+	_ = v.BindEnv("redis.redispassword", "REDIS_PASSWORD")
+	_ = v.BindEnv("redis.db", "REDIS_DB")
+	_ = v.BindEnv("redis.username", "REDIS_USERNAME")
+	_ = v.BindEnv("redis.sentinelhost", "REDIS_SENTINELHOST")
+	_ = v.BindEnv("redis.sentinelport", "REDIS_SENTINELPORT")
+	_ = v.BindEnv("redis.sentinelmastername", "REDIS_SENTINELMASTERNAME")
+
+	_ = v.BindEnv("kafka.bootstrapservers", "KAFKA_BOOTSTRAPSERVER")
+	_ = v.BindEnv("kafka.securityprotocol", "KAFKA_SECURITYPROTOCOL")
+	_ = v.BindEnv("kafka.sslkeylocation", "KAFKA_SSLKEYLOCATION")
+	_ = v.BindEnv("kafka.sslcertificatelocation", "KAFKA_SSLCERTIFICATELOCATION")
+	_ = v.BindEnv("kafka.sslcalocation", "KAFKA_SSLCALOCATION")
+
+	_ = v.BindEnv("application.usernamesuperadmin", "APP_SUPER_ADMIN_USERNAME")
+	_ = v.BindEnv("application.passwordsuperadmin", "APP_SUPER_ADMIN_PASSWORD")
 }

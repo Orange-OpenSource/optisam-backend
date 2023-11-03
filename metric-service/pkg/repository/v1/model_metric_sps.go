@@ -8,6 +8,7 @@ type MetricSPS struct {
 	NumCPUAttrID     string
 	CoreFactorAttrID string
 	BaseEqTypeID     string
+	Default          bool
 }
 
 // MetricSPSComputed has all the information required to be computed

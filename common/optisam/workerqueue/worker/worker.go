@@ -2,11 +2,13 @@ package worker
 
 import (
 	"context"
-	"optisam-backend/common/optisam/workerqueue/job"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 )
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/common/optisam/workerqueue/worker Worker
 // Worker represents a worker for handling Jobs
+//
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/worker Worker
 type Worker interface {
 	// DoWork is called when a worker picks up a job from the queue
 	DoWork(context.Context, *job.Job) error

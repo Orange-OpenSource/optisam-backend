@@ -3,9 +3,10 @@ package postgres
 import (
 	"database/sql"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pgmigration"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/pgmigration"
 
 	// pq driver
 	"github.com/gobuffalo/packr/v2"
@@ -96,7 +97,7 @@ func ConnectDBExecMig(dbcfg DBConfig) (db *sql.DB, err error) {
 	version := strings.Split(dbcfg.Migration.Version, ";")
 	direction := dbcfg.Migration.Direction
 	logger.Log.Info("migration parameters dir: " + dbcfg.Migration.Direction + " versions: " + dbcfg.Migration.Version + " dir path: " + dbcfg.Migration.MigrationPath)
-	n, err := pgmigration.ExecMigrations(dba, migrations, direction, version)
+	n, err := pgmigration.ExecMigrations(dba, migrations, direction, version, dbcfg.Migration.MigrationPath, dbcfg.Migration.DeleteMigrations)
 	dba.Close()
 	if err != nil {
 		logger.Log.Error("failed to execute database migration: ", zap.Error(err))

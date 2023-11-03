@@ -5,10 +5,12 @@ import (
 	"encoding/csv"
 	"io"
 	"log"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"path/filepath"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
@@ -20,6 +22,7 @@ const (
 	Cluster   = "Cluster"
 	Vcenter   = "Vcenter"
 	Partition = "Partition"
+	Desktop   = "Desktop"
 	// DataCenter="Datacenter"
 )
 
@@ -313,6 +316,22 @@ var (
 			},
 		},
 	}
+	// EqTypeDesktop
+	EqTypeDesktop = &v1.EquipmentType{
+		Type:       "Desktop",
+		SourceName: "equipment_desktops.csv",
+		Attributes: []*v1.Attribute{
+			{
+				Name:               "DesktopName",
+				Type:               v1.DataTypeString,
+				IsIdentifier:       true,
+				IsDisplayed:        true,
+				IsSearchable:       true,
+				IsParentIdentifier: false,
+				MappedTo:           "desktop_name",
+			},
+		},
+	}
 )
 
 // LoadDefaultEquipmentTypes ...
@@ -323,6 +342,7 @@ func LoadDefaultEquipmentTypes(repo v1.License) error {
 		EqTypeCluster,
 		EqTypeServer,
 		EqTypePartition,
+		EqTypeDesktop,
 	}
 	metas, err := repo.MetadataAllWithType(context.Background(), v1.MetadataTypeEquipment, "")
 	if err != nil {

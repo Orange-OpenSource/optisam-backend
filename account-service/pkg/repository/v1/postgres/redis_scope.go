@@ -3,7 +3,8 @@ package postgres
 import (
 	"context"
 	"encoding/json"
-	v1 "optisam-backend/account-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
 )
 
 // func (r *AccountRepository) FetchScopes(ctx context.Context,scopeCodes []string) ([]*v1.Scope, error) {

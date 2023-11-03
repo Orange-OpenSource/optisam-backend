@@ -10,6 +10,9 @@ VALUES($1,$2) returning *;
 -- name: UpdateFileStatus :exec
 UPDATE uploaded_data_files SET status = $1, updated_on = NOW() , comments = $2 where upload_id = $3 AND file_name = $4;
 
+-- name: UpdateFileStatusCancelled :one
+UPDATE uploaded_data_files SET status = $1, updated_on = NOW() , comments = $2 where upload_id = $3 AND file_name = $4 AND status='UPLOADED' RETURNING status;
+
 -- name: GetFileStatus :one
 SELECT status FROM uploaded_data_files WHERE upload_id = $1 AND file_name = $2;
 

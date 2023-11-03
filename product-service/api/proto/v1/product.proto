@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/product-service/pkg/api/v1";
+option go_package = "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1";
 
 package optisam.products.v1;
 
@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/timestamp.proto";
+
 
 
 service ProductService {
@@ -40,6 +41,12 @@ service ProductService {
   rpc GetProductDetail(ProductRequest) returns (ProductResponse) {
     option (google.api.http) = {
       get : "/api/v1/product/{swid_tag}"
+    };
+  }
+  
+   rpc ProductsPercOpenClosedSource(ProductsPercOpenClosedSourceRequest) returns (ProductsPercOpenClosedSourceResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/product/open_close_source"
     };
   }
 
@@ -248,8 +255,19 @@ service ProductService {
       get : "/api/v1/product/dashboard/product/quality"
     };
   }
-
   
+  rpc ProductMaintenancePerc(ProductMaintenancePercRequest) returns (ProductMaintenancePercResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/product/maintenance"
+    };
+  }
+  
+  rpc ProductNoMaintenanceDetails(ProductNoMaintenanceDetailsRequest) returns (ProductNoMaintenanceDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/product/no_maintenance"
+    };
+  }
+
   rpc DropProductData(DropProductDataRequest)returns (DropProductDataResponse) {
     option (google.api.http) = {
       delete : "/api/v1/product/{scope}"
@@ -333,6 +351,12 @@ service ProductService {
     };
   }
 
+  rpc GetAggregationById(GetAggregationByIdRequest)returns (GetAggregationByIdResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/get_aggregation_by_id"
+    };
+  }
+  
   rpc GetAggregationProductsExpandedView(GetAggregationProductsExpandedViewRequest)returns (GetAggregationProductsExpandedViewResponse) {
     option (google.api.http) = {
       get : "/api/v1/product/expand/aggregation_products"
@@ -345,12 +369,12 @@ service ProductService {
   rpc GetProductCountByApp(GetProductCountByAppRequest)returns (GetProductCountByAppResponse) {   
   }
 
-  rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {
+  /*rpc UpsertNominativeUser(UpserNominativeUserRequest)returns (UpserNominativeUserResponse) {
     option (google.api.http) = {
       post : "/api/v1/product/nominative/users"
       body : "*"
     };
-  }
+  }*/
   rpc UpsertProductConcurrentUser(ProductConcurrentUserRequest) returns (ProductConcurrentUserResponse) {
     option (google.api.http) = {
       post : "/api/v1/product/concurrent"
@@ -443,6 +467,42 @@ service ProductService {
     };
   }
   rpc GetEditorExpensesByScope(EditorExpensesByScopeRequest) returns (EditorExpensesByScopeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/editor_expenses"
+    };
+  }
+  
+  rpc GetEditorProductExpensesByScope(EditorProductsExpensesByScopeRequest) returns (EditorProductExpensesByScopeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/product_expenses"
+    };
+  }
+
+  rpc ProductLocationType(GetDeploymentTypeRequest) returns (GetDeploymentTypeResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/product/deployment_type"
+    };
+  }
+
+  rpc GetMaintenanceBySwidtag(GetMaintenanceBySwidtagRequest) returns (GetMaintenanceBySwidtagResponse) {
+  }
+
+  rpc GetTrueUpLicences(GetTrueUpLicencesRequest)returns (GetTrueUpLicencesResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/trueup"
+    };
+  }
+
+  rpc GetWasteUpLicences(GetWasteUpLicencesRequest)returns (GetWasteUpLicencesResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product/dashboard/wasteup"
+    };
+  }
+
+rpc GetProductInformationBySwidTag(GetProductInformationBySwidTagRequest)returns (GetProductInformationBySwidTagResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/product_information_by_swidtag"
+    };
   }
 }
 
@@ -454,6 +514,17 @@ message DeleteSharedLicensesRequest {
 
 message DeleteSharedLicensesResponse {
   bool success = 1;
+}
+
+message GetMaintenanceBySwidtagRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string acqsku = 2;
+}
+
+message GetMaintenanceBySwidtagResponse {
+  bool success = 1;
+  int32 acqLicenses = 2;
+  double unit_price =3;
 }
 
 message GetMetricRequest {
@@ -639,6 +710,7 @@ message DownloadAggregatedRightsFileResponse {
 
 message CreateDashboardUpdateJobRequest{
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string ppid =2;
 }
 
 message UpsertAllocateMetricEquipementRequest{
@@ -684,9 +756,9 @@ message GetBannerResponse{
 
 message AcqRightRequest {
   string sku = 1 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
-  string product_name = 2 [(validate.rules).string.pattern = "^[\\sa-zA-Z0-9().+-]+$" ];
+  string product_name = 2 [(validate.rules).string.min_len = 1 ];
   string version = 3;
-  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string product_editor = 4 [(validate.rules).string.min_len = 1 ];
   string metric_name = 5 [(validate.rules).string.min_len = 1 ];
   int32 num_licenses_acquired = 6 [(validate.rules).int32 = { gte: 0}];
   double avg_unit_price = 7 [(validate.rules).double = { gte: 0}];
@@ -695,7 +767,7 @@ message AcqRightRequest {
   int32 num_licences_maintainance = 10 [(validate.rules).int32 = { gte: 0}];
   double avg_maintenance_unit_price = 11 [(validate.rules).double = { gte: 0}];
   string last_purchased_order = 12 [(validate.rules).string.max_len = 16 ];
-  string support_number = 13 [(validate.rules).string.max_len = 16 ];
+  string support_number = 13;
   string maintenance_provider = 14 [(validate.rules).string.max_len = 16 ];
   string scope = 15 [(validate.rules).string.min_len = 1 ];
   string comment = 16 [(validate.rules).string.max_len = 100 ];
@@ -714,8 +786,8 @@ message AcqRightResponse {
 message Aggregation {
   int32 ID = 1;
   string aggregation_name = 2;
-  string product_editor = 3 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
-  repeated string product_names = 4 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().+-]+$"];
+  string product_editor = 3 [(validate.rules).string.min_len = 1 ];
+  repeated string product_names = 4 [(validate.rules).repeated  = {min_items: 1}];
   repeated string swidtags = 5 [(validate.rules).repeated  = {min_items: 1}];
   string scope = 6 [(validate.rules).string.min_len = 1 ];
   string editor_id = 7;
@@ -739,7 +811,7 @@ message AggregatedRightsRequest {
   string start_of_maintenance = 6 ; 
   string end_of_maintenance = 7 ;
   string last_purchased_order= 8 [(validate.rules).string.max_len = 16 ];
-  string support_number= 9 [(validate.rules).string.max_len = 16 ];
+  string support_number= 9;
   string maintenance_provider= 10 [(validate.rules).string.max_len = 16 ];
   int32 num_licences_maintenance = 11 [(validate.rules).int32 = { gte: 0}];
   double avg_maintenance_unit_price = 12 [(validate.rules).double = { gte: 0}];
@@ -757,9 +829,9 @@ message AggregatedRightsView {
   int32 ID = 1;
   string aggregation_name = 2;
   string sku = 3 [(validate.rules).string.pattern = "^[a-zA-Z0-9_.]+$" ];
-  string product_editor = 4 [(validate.rules).string.pattern =  "^[\\sa-zA-Z0-9.-]+$"];
+  string product_editor = 4 [(validate.rules).string.min_len = 1 ];
   string metric_name = 5 [(validate.rules).string.min_len = 1 ];
-  repeated string product_names = 6 [(validate.rules).repeated  = {min_items: 1},(validate.rules).repeated.items.string.pattern = "^[\\sa-zA-Z0-9().+-]+$"];
+  repeated string product_names = 6 [(validate.rules).repeated  = {min_items: 1}];
   repeated string swidtags = 7 [(validate.rules).repeated  = {min_items: 1}];
   int32 num_licenses_acquired = 8 [(validate.rules).int32 = { gte: 0}];
   double avg_unit_price = 9 [(validate.rules).double = { gte: 0}];
@@ -805,6 +877,29 @@ message OverviewProductQualityResponse{
  double not_deployed_products_percentage = 4;
 }
 
+message ProductMaintenancePercRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ProductMaintenancePercResponse{
+ double product_with_maintenance_percentage = 1;
+ double product_without_maintenance_percentage = 2;
+}
+
+message ProductNoMaintenanceDetailsRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ProductNoMaintenanceDetailsResponse{
+  int32 total_products = 1;
+  repeated ProductNoMain product_no_main = 2;
+}
+
+message ProductNoMain {
+  string product_name = 1;
+  string version = 2;
+  string swidtag = 3;
+}
 
 message ProductsPerEditorRequest {
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
@@ -1099,7 +1194,7 @@ message UpsertProductRequest {
     }
   }
   producttype productType =11;
-
+  string ppid = 12;
 }
 
 message UpsertProductResponse { bool success = 1; }
@@ -1212,6 +1307,8 @@ message DashboardOverviewResponse {
     int32 num_products = 4;
     double total_counterfeiting_amount = 5;
     double total_underusage_amount = 6;
+    double computed_maintenance = 7;
+    double computed_without_maintenance = 8;
 }
 
 message UpsertAcqRightsRequest {
@@ -1239,6 +1336,7 @@ message UpsertAcqRightsRequest {
   string support_number = 22;
   bool repartition = 23;
   string comment = 24;
+  string ppid = 25;
 }
 
 
@@ -1493,6 +1591,7 @@ message DropProductDataRequest {
     PARK = 2;
   }
   deletion_types deletion_type = 2 [(validate.rules).enum = {in: [0,1,2]}];
+  string ppid = 3;
 }
 
 message DropProductDataResponse { 
@@ -1507,6 +1606,31 @@ message DropAggregationDataResponse {
   bool success = 1; 
 }
 
+message ProductsPercOpenClosedSourceRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ProductsPercOpenClosedSourceResponse{
+  repeated OpenSource open_source = 1;
+  repeated CloseSource closed_source = 2;
+  repeated TotalProductData total_amount = 3; 
+}
+
+message OpenSource{
+  double precentage_os = 1;
+  int32 amount_os = 2;
+}
+
+message CloseSource{
+  double precentage_cs = 1;
+  int32 amount_cs = 2;
+}
+
+message TotalProductData{
+  double precentage = 1;
+  int32 amount = 2;
+}
+
 message UpserNominativeUserRequest{
   string editor =1;
   string scope = 2 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
@@ -1517,7 +1641,13 @@ message UpserNominativeUserRequest{
   string sheet_name=7;  
   repeated NominativeUserDetails user_details = 8;
   string upload_id =9;
+  string updated_by=10;
+  string created_by=11;
+  string swid_tag=12;
+  string aggregation_name=13;
+  repeated NominativeUser valid_nominative_users=14;
 }
+
 message NominativeUserDetails{
   string user_name =1;
   string first_name =2;
@@ -1633,6 +1763,7 @@ message NominativeUser {
   int32 id =11;
   string comment =12;
   string activation_date_string=13;
+  bool activation_date_valid=14;
 }
 message ProductConcurrentUserRequest {
   string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
@@ -1767,7 +1898,7 @@ message ConcurrentUsersByDay {
 
 message ConcurrentUsersByMonth {
   string purchase_month =1;
-  int32 councurrent_users =2;
+  int32 concurrent_users =2;
 }
 
 message GroupComplianceEditorRequest {
@@ -1896,4 +2027,121 @@ message EditorExpensesByScopeData {
   double total_purchase_cost = 2;
   double total_maintenance_cost = 3;
   double total_cost = 4;
+  double total_computed_cost = 5;
+}
+
+message EditorProductsExpensesByScopeRequest {
+  string scope =1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  string editor =2;
+}
+
+message EditorProductExpensesByScopeResponse {
+  repeated EditorProductExpensesByScopeData editorProductExpensesByScope =1;
+}
+
+message EditorProductExpensesByScopeData {
+  string name =1 ;
+  double total_purchase_cost = 2;
+  double total_maintenance_cost = 3;
+  double total_cost = 4;
+  string type =5;
+  double total_computed_cost = 6;
+}
+
+
+message GetDeploymentTypeRequest {
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message GetDeploymentTypeResponse {
+  double saas_percentage = 1;
+  double on_premise_percentage = 2;
+}
+
+message GetTrueUpLicencesRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message GetTrueUpLicencesResponse{
+  double total_true_up_cost  =1;
+  repeated EditorsCost editors_true_up_cost = 2;
+}
+message EditorsCost{
+  string editor = 1;
+  double editor_cost =2;
+  repeated ProductsCost products_true_up_cost = 3;
+}
+message ProductsCost{
+  string product = 1;
+  double product_cost =2;
+  string aggregation_name =3;
+}
+
+message GetWasteUpLicencesRequest{
+  string scope = 1 [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message GetWasteUpLicencesResponse{
+  double total_waste_up_cost  = 1;
+  repeated EditorsWasteCost editors_waste_up_cost = 2;
+}
+message EditorsWasteCost{
+  string editor = 1;
+  double editor_cost = 2;
+  repeated ProductsCost products_waste_up_cost = 3;
+}
+
+message GetAggregationByIdRequest{
+  int32 aggregation_id =1;
+  string scope =2;
+}
+
+message GetAggregationByIdResponse{
+  int32 id =1;
+	string aggregation_name =2;
+	string scope=3;
+	string product_editor=4;
+	repeated string products=5;
+	repeated string swidtags=6;
+	google.protobuf.Timestamp created_on=7;
+	string created_by=8;
+	google.protobuf.Timestamp updated_on=9;
+	string updated_by=10;
+}
+
+message GetProductInformationBySwidTagRequest{
+    string swid_tag = 1;
+    string scope =2;
+}
+
+message GetProductInformationBySwidTagResponse{
+  string  swidtag =1;
+	string product_name =2;
+	string product_editor=3;
+  string product_version=4; 
+	repeated string metrics=5;
+	int32 num_of_applications=6;
+	int32 num_of_equipments =7;
+}
+
+message UpdateNominativeUserRequest{
+  repeated NominativeUser record_succeed=1;
+  repeated NominativeUser record_failed=2;
+  int32 total_dgraph_batches=3;
+  string upload_id =4;
+}
+
+message DeadLetterQueue{
+  string topic_name =1;
+  string message = 2;
+  string error= 3;
+}
+message UpdatePostgresBatchSucessNomUSers{
+  bool success=1;
+  string upload_id =2;
+  string scope =3;
+}
+
+message UpdateDgraphBatchSuccessCount{
+  bool success=1;
+  string upload_id =2;
+  string scope =3;
 }

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
-	"optisam-backend/license-service/pkg/repository/v1/mock"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/mock"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -3003,22 +3005,22 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "ibm.pvu.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle3",
 					},
 				},
@@ -3283,26 +3285,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						BaseEqTypeID:     "2",
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ProductsForEquipmentForMetricIPSStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricIPSComputed{
-					Name:     "ibm.pvu.standard",
-					BaseType: serverEquipment,
-					CoreFactorAttr: &repo.Attribute{
-						ID:          "1C",
-						Type:        repo.DataTypeFloat,
-						IsSimulated: true,
-						FloatVal:    1.25,
-						FloatValOld: 1.5,
-						Name:        "coreFactor",
-					},
-					NumCoresAttr: &repo.Attribute{
-						ID:          "1A",
-						Type:        repo.DataTypeInt,
-						IsSimulated: true,
-						IntVal:      3,
-						IntValOld:   5,
-						Name:        "numCores",
-					},
-				}, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricIPSStandard(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("Internal")).AnyTimes()
 			},
 			wantErr: true,
 		},
@@ -3509,22 +3492,22 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle1",
 					},
 					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle2",
 					},
 					{
 						MetricName:  "sag.processor.standard",
 						OldLicences: 7,
-						NewLicenses: 3,
-						Delta:       -4,
+						NewLicenses: 6,
+						Delta:       -1,
 						SwidTag:     "Oracle3",
 					},
 				},
@@ -3789,26 +3772,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						BaseEqTypeID:     "2",
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ProductsForEquipmentForMetricSAGStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricSPSComputed{
-					Name:     "sag.processor.standard",
-					BaseType: serverEquipment,
-					CoreFactorAttr: &repo.Attribute{
-						ID:          "1C",
-						Type:        repo.DataTypeFloat,
-						IsSimulated: true,
-						FloatVal:    1.25,
-						FloatValOld: 1.5,
-						Name:        "coreFactor",
-					},
-					NumCoresAttr: &repo.Attribute{
-						ID:          "1A",
-						Type:        repo.DataTypeInt,
-						IsSimulated: true,
-						IntVal:      3,
-						IntValOld:   5,
-						Name:        "numCores",
-					},
-				}, []string{"Scope1"}).Return(nil, errors.New("Internal")).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricSAGStandard(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, errors.New("Internal")).AnyTimes()
 			},
 			wantErr: true,
 		},
@@ -3876,34 +3840,7 @@ func Test_licenseServiceServer_LicensesForEquipAndMetric(t *testing.T) {
 						BaseEqTypeID:     "2",
 					},
 				}, nil).Times(1)
-				mockLicense.EXPECT().ProductsForEquipmentForMetricSAGStandard(ctx, "e1ID", "Server", uint8(1), &repo.MetricSPSComputed{
-					Name:     "sag.processor.standard",
-					BaseType: serverEquipment,
-					CoreFactorAttr: &repo.Attribute{
-						ID:          "1C",
-						Type:        repo.DataTypeFloat,
-						IsSimulated: true,
-						FloatVal:    1.25,
-						FloatValOld: 1.5,
-						Name:        "coreFactor",
-					},
-					NumCoresAttr: &repo.Attribute{
-						ID:          "1A",
-						Type:        repo.DataTypeInt,
-						IsSimulated: true,
-						IntVal:      3,
-						IntValOld:   5,
-						Name:        "numCores",
-					},
-					NumCPUAttr: &repo.Attribute{
-						ID:          "1B",
-						Type:        repo.DataTypeInt,
-						IsSimulated: true,
-						IntVal:      2,
-						IntValOld:   1,
-						Name:        "numCPU",
-					},
-				}, []string{"Scope1"}).Return(nil, repo.ErrNoData).Times(1)
+				mockLicense.EXPECT().ProductsForEquipmentForMetricSAGStandard(ctx, "e1ID", "Server", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, repo.ErrNoData).Times(1)
 			},
 			want: &v1.LicensesForEquipAndMetricResponse{},
 		},

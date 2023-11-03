@@ -3,21 +3,28 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/mail"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	gendb "optisam-backend/product-service/pkg/repository/v1/postgres/db"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/tabbed/pqtype"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+
+	"github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+const (
+	YYYYMMDD string = "2006-01-02"
+	DDMMYYYY string = "02-01-2006"
+)
+
+var dateFormats = []string{YYYYMMDD, DDMMYYYY}
 
 // ProductRepository ...
 type ProductRepository struct {
@@ -217,35 +224,38 @@ func filterNominativeUsers(req *v1.UpserNominativeUserRequest) (nomUsersValid, n
 		var err error
 		nomUser := v1.NominativeUser{}
 		if v.ActivationDate != "" {
-			if len(v.ActivationDate) <= 10 {
-				if strings.Contains(v.ActivationDate, "/") && len(v.ActivationDate) <= 8 {
-					startTime, err = time.Parse("06/2/1", v.ActivationDate)
-					if err != nil {
-						startTime, err = time.Parse("2006/02/01", v.ActivationDate)
+			ts, err := strconv.Atoi(v.ActivationDate)
+			if err == nil {
+				startTime, _ = excelize.ExcelDateToTime(float64(ts), false)
+			}
+			if startTime.IsZero() {
+				if len(v.ActivationDate) <= 10 {
+					if strings.Contains(v.ActivationDate, "/") {
+						v.ActivationDate = strings.ReplaceAll(v.ActivationDate, "/", "-")
 					}
-				} else if strings.Contains(v.ActivationDate, "/") {
-					startTime, err = time.Parse("2006/01/02", v.ActivationDate)
-				} else {
-					startTime, err = time.Parse("2006-01-02", v.ActivationDate)
-					if err != nil {
-						startTime, err = time.Parse("06-02-01", v.ActivationDate)
+					for _, format := range dateFormats {
+						startTime, err = time.Parse(format, v.ActivationDate)
+						if err == nil {
+							break
+						}
 					}
-					if err != nil {
-						startTime, err = time.Parse("01-02-06", v.ActivationDate)
+					if startTime.IsZero() {
+						logger.Log.Sugar().Errorw("error parsing time")
 					}
-				}
-			} else if len(v.ActivationDate) > 10 && len(v.ActivationDate) <= 24 {
-				if strings.Contains(v.ActivationDate, "/") && len(v.ActivationDate) <= 8 {
-					startTime, err = time.Parse("06/2/1T15:04:05.000Z", v.ActivationDate)
-				} else if strings.Contains(v.ActivationDate, "/") {
-					startTime, err = time.Parse("2006/01/02T15:04:05.000Z", v.ActivationDate)
-				} else {
-					startTime, err = time.Parse("2006-01-02T15:04:05.000Z", v.ActivationDate)
+				} else if len(v.ActivationDate) > 10 && len(v.ActivationDate) <= 24 {
+					if strings.Contains(v.ActivationDate, "/") && len(v.ActivationDate) <= 8 {
+						startTime, err = time.Parse("06/2/1T15:04:05.000Z", v.ActivationDate)
+					} else if strings.Contains(v.ActivationDate, "/") {
+						startTime, err = time.Parse("2006/01/02T15:04:05.000Z", v.ActivationDate)
+					} else {
+						startTime, err = time.Parse("2006-01-02T15:04:05.000Z", v.ActivationDate)
+					}
 				}
 			}
 			nomUser.ActivationDateString = v.ActivationDate
 			if err == nil {
 				nomUser.ActivationDate = timestamppb.New(startTime)
+				nomUser.ActivationDateValid = true
 			}
 			err = nil
 		}
@@ -347,7 +357,7 @@ func bulkUpsertNomProduct(nomUsers []*v1.NominativeUser, updatedBy, createdBy, s
 }
 
 // UpsertNominativeUserTx upserts nominative user data
-func (p *ProductRepository) UpsertNominativeUsersTx(ctx context.Context, req *v1.UpserNominativeUserRequest, updatedBy, createdBy, swidTag string) error {
+func (p *ProductRepository) UpsertNominativeUsersTx(ctx context.Context, req *v1.UpserNominativeUserRequest) (err error) {
 	// Create Transaction
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -362,18 +372,19 @@ func (p *ProductRepository) UpsertNominativeUsersTx(ctx context.Context, req *v1
 		err = tx.Commit()
 	}()
 	//t := time.Now()
-	pt := NewProductRepositoryTx(tx)
-
+	//pt := NewProductRepositoryTx(tx)
+	//var inValidNomUsers []*v1.NominativeUser
+	usersBatch := createBatchNominativeUsers(req.GetValidNominativeUsers())
 	if req.GetAggregationId() > 0 {
-		validNomUsers, inValidNomUsers, err := filterNominativeUsers(req)
-		if err != nil {
-			tx.Rollback() // nolint: errcheck
-			logger.Log.Error("failed to upsert product", zap.Error(err))
-			return err
-		}
-		usersBatch := createBatchNominativeUsers(validNomUsers)
+		// validNomUsers, inValidNomUsers, err = filterNominativeUsers(req)
+		// if err != nil {
+		// 	tx.Rollback() // nolint: errcheck
+		// 	logger.Log.Error("failed to upsert product", zap.Error(err))
+		// 	return err, nil
+		// }
+
 		for _, users := range usersBatch {
-			query, args := bulkUpsertNomAgg(users, updatedBy, createdBy, swidTag, req.GetScope(), req.GetEditor(), int(req.AggregationId))
+			query, args := bulkUpsertNomAgg(users, req.GetUpdatedBy(), req.GetCreatedBy(), req.GetSwidTag(), req.GetScope(), req.GetEditor(), int(req.AggregationId))
 			_, err = tx.Exec(query, args...)
 			if err != nil {
 				tx.Rollback() // nolint: errcheck
@@ -381,46 +392,46 @@ func (p *ProductRepository) UpsertNominativeUsersTx(ctx context.Context, req *v1
 				return err
 			}
 		}
-		if req.FileName != "" {
-			users, _ := json.Marshal(inValidNomUsers)
-			r := gendb.InsertNominativeUserFileUploadDetailsParams{
-				Scope:          req.GetScope(),
-				AggregationsID: sql.NullInt32{Int32: req.AggregationId, Valid: true},
-				UploadedBy:     updatedBy,
-				RecordSucceed:  sql.NullInt32{Int32: int32(len(validNomUsers)), Valid: true},
-				RecordFailed:   sql.NullInt32{Int32: int32(len(inValidNomUsers)), Valid: true},
-				FileName:       sql.NullString{String: req.GetFileName(), Valid: true},
-				SheetName:      sql.NullString{String: req.GetSheetName(), Valid: true},
-				UploadID:       req.GetUploadId(),
-			}
-			if len(inValidNomUsers) > 0 && len(validNomUsers) > 0 {
-				r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
-				r.FileStatus = gendb.FileStatusPARTIAL
-			} else if len(inValidNomUsers) > 0 && len(validNomUsers) == 0 {
-				r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
-				r.FileStatus = gendb.FileStatusFAILED
-			} else if len(validNomUsers) > 0 && len(inValidNomUsers) == 0 {
-				r.FileStatus = gendb.FileStatusFAILED
-			}
-			err = pt.InsertNominativeUserFileUploadDetails(ctx, r)
-			if err != nil {
-				tx.Rollback() // nolint: errcheck
-				logger.Log.Error("failed to upsert product", zap.Error(err))
-				return err
-			}
-		}
-		return nil
-	} else if swidTag != "" {
-		validNomUsers, inValidNomUsers, err := filterNominativeUsers(req)
-		if err != nil {
-			tx.Rollback() // nolint: errcheck
-			logger.Log.Error("failed to upsert product", zap.Error(err))
-			return err
-		}
-		usersBatch := createBatchNominativeUsers(validNomUsers)
+		// if req.FileName != "" {
+		// 	users, _ := json.Marshal(inValidNomUsers)
+		// 	r := gendb.InsertNominativeUserFileUploadDetailsParams{
+		// 		Scope:          req.GetScope(),
+		// 		AggregationsID: sql.NullInt32{Int32: req.AggregationId, Valid: true},
+		// 		UploadedBy:     updatedBy,
+		// 		RecordSucceed:  sql.NullInt32{Int32: int32(len(validNomUsers)), Valid: true},
+		// 		RecordFailed:   sql.NullInt32{Int32: int32(len(inValidNomUsers)), Valid: true},
+		// 		FileName:       sql.NullString{String: req.GetFileName(), Valid: true},
+		// 		SheetName:      sql.NullString{String: req.GetSheetName(), Valid: true},
+		// 		UploadID:       req.GetUploadId(),
+		// 	}
+		// 	if len(inValidNomUsers) > 0 && len(validNomUsers) > 0 {
+		// 		r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
+		// 		r.FileStatus = gendb.FileStatusPARTIAL
+		// 	} else if len(inValidNomUsers) > 0 && len(validNomUsers) == 0 {
+		// 		r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
+		// 		r.FileStatus = gendb.FileStatusFAILED
+		// 	} else if len(validNomUsers) > 0 && len(inValidNomUsers) == 0 {
+		// 		r.FileStatus = gendb.FileStatusFAILED
+		// 	}
+		// 	err = pt.InsertNominativeUserFileUploadDetails(ctx, r)
+		// 	if err != nil {
+		// 		tx.Rollback() // nolint: errcheck
+		// 		logger.Log.Error("failed to upsert product", zap.Error(err))
+		// 		return err, nil
+		// 	}
+		// }
+		//return nil, validNomUsers
+	} else if req.GetSwidTag() != "" {
+		// validNomUsers, inValidNomUsers, err = filterNominativeUsers(req)
+		// if err != nil {
+		// 	tx.Rollback() // nolint: errcheck
+		// 	logger.Log.Error("failed to upsert product", zap.Error(err))
+		// 	return err, nil
+		// }
+		//usersBatch := createBatchNominativeUsers(validNomUsers)
 		for _, users := range usersBatch {
-			query, args := bulkUpsertNomProduct(users, updatedBy, createdBy, swidTag, req.GetScope(), req.GetEditor(), int(req.AggregationId))
-			logger.Log.Sugar().Debugw("Nominative users", "args", args)
+			query, args := bulkUpsertNomProduct(users, req.GetUpdatedBy(), req.GetCreatedBy(), req.GetSwidTag(), req.GetScope(), req.GetEditor(), int(req.AggregationId))
+			//logger.Log.Sugar().Debugw("Nominative users", "args", args)
 			_, err = tx.Exec(query, args...)
 			if err != nil {
 				tx.Rollback() // nolint: errcheck
@@ -428,35 +439,36 @@ func (p *ProductRepository) UpsertNominativeUsersTx(ctx context.Context, req *v1
 				return err
 			}
 		}
-		if req.FileName != "" {
-			users, _ := json.Marshal(inValidNomUsers)
-			r := gendb.InsertNominativeUserFileUploadDetailsParams{
-				Scope:         req.GetScope(),
-				Swidtag:       sql.NullString{String: swidTag, Valid: true},
-				ProductEditor: sql.NullString{String: req.Editor, Valid: true},
-				UploadedBy:    updatedBy,
-				RecordSucceed: sql.NullInt32{Int32: int32(len(validNomUsers)), Valid: true},
-				RecordFailed:  sql.NullInt32{Int32: int32(len(inValidNomUsers)), Valid: true},
-				FileName:      sql.NullString{String: req.GetFileName(), Valid: true},
-				SheetName:     sql.NullString{String: req.GetSheetName(), Valid: true},
-				UploadID:      req.GetUploadId(),
-			}
-			if len(inValidNomUsers) > 0 && len(validNomUsers) > 0 {
-				r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
-				r.FileStatus = gendb.FileStatusPARTIAL
-			} else if len(inValidNomUsers) > 0 && len(validNomUsers) == 0 {
-				r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
-				r.FileStatus = gendb.FileStatusFAILED
-			} else if len(validNomUsers) > 0 && len(inValidNomUsers) == 0 {
-				r.FileStatus = gendb.FileStatusFAILED
-			}
-			err = pt.InsertNominativeUserFileUploadDetails(ctx, r)
-			if err != nil {
-				tx.Rollback() // nolint: errcheck
-				logger.Log.Error("failed to upsert product", zap.Error(err))
-				return err
-			}
-		}
+		// if req.FileName != "" {
+		// 	users, _ := json.Marshal(inValidNomUsers)
+		// 	r := gendb.InsertNominativeUserFileUploadDetailsParams{
+		// 		Scope:         req.GetScope(),
+		// 		Swidtag:       sql.NullString{String: swidTag, Valid: true},
+		// 		ProductEditor: sql.NullString{String: req.Editor, Valid: true},
+		// 		UploadedBy:    updatedBy,
+		// 		RecordSucceed: sql.NullInt32{Int32: int32(len(validNomUsers)), Valid: true},
+		// 		RecordFailed:  sql.NullInt32{Int32: int32(len(inValidNomUsers)), Valid: true},
+		// 		FileName:      sql.NullString{String: req.GetFileName(), Valid: true},
+		// 		SheetName:     sql.NullString{String: req.GetSheetName(), Valid: true},
+		// 		UploadID:      req.GetUploadId(),
+		// 		Ppid:          sql.NullString{String: ppid, Valid: true},
+		// 	}
+		// 	if len(inValidNomUsers) > 0 && len(validNomUsers) > 0 {
+		// 		r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
+		// 		r.FileStatus = gendb.FileStatusPARTIAL
+		// 	} else if len(inValidNomUsers) > 0 && len(validNomUsers) == 0 {
+		// 		r.NominativeUsersDetails = pqtype.NullRawMessage{RawMessage: users, Valid: true}
+		// 		r.FileStatus = gendb.FileStatusFAILED
+		// 	} else if len(validNomUsers) > 0 && len(inValidNomUsers) == 0 {
+		// 		r.FileStatus = gendb.FileStatusFAILED
+		// 	}
+		// 	err = pt.InsertNominativeUserFileUploadDetails(ctx, r)
+		// 	if err != nil {
+		// 		tx.Rollback() // nolint: errcheck
+		// 		logger.Log.Error("failed to upsert product", zap.Error(err))
+		// 		return err, nil
+		// 	}
+		// }
 	}
 	//tx.Commit() // nolint: errcheck
 	return nil
@@ -476,12 +488,12 @@ func createBatchNominativeUsers(allUsers []*v1.NominativeUser) (batchUsers [][]*
 // UpsertConcurrentUserTx upserts concurrent user data
 func (p *ProductRepository) UpsertConcurrentUserTx(ctx context.Context, req *v1.ProductConcurrentUserRequest, createdBy string) error {
 	// Create Transaction
+
 	tx, err := p.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("Failed to start Transaction", zap.Error(err))
 		return err
 	}
-	fmt.Println("started")
 	currentDateTime := time.Now()
 	theDate := time.Date(currentDateTime.Year(), currentDateTime.Month(), 1, 00, 00, 00, 000, time.Local)
 

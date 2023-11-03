@@ -4,16 +4,19 @@ import (
 	"context"
 	"errors"
 	"math"
-	"optisam-backend/common/optisam/helper"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
-	prodv1 "optisam-backend/product-service/pkg/api/v1"
 	"strconv"
 	"strings"
 
-	"optisam-backend/common/optisam/logger"
+	prodv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/thirdparty/product-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -28,30 +31,30 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 		return nil, status.Error(codes.Internal, "cannot find claims in context")
 	}
 	if !helper.Contains(userClaims.Socpes, req.GetScope()) {
-		logger.Log.Error("service/v1 - ListAcqRightsForProduct", zap.String("reason", "ScopeError"))
+		logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct", zap.String("reason", "ScopeError"))
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
 	metrics, err := s.licenseRepo.ListMetrices(ctx, req.GetScope())
 	if err != nil && err != repo.ErrNoData {
-		logger.Log.Debug("service/v1 - ListAcqRightsForProduct - ListMetrices - unable to fetch metrics:%v", zap.Error(err))
+		logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - ListMetrices - unable to fetch metrics:%v", zap.Error(err))
 		return nil, status.Error(codes.Internal, "cannot fetch metrics")
 	}
 	if !req.Simulation {
 		aggregationName, err := s.licenseRepo.IsProductPurchasedInAggregation(ctx, req.SwidTag, req.Scope)
 		if err != nil {
-			logger.Log.Error("service/v1 - ListAcqRightsForProduct - failed to check is swidtag is part of aggregation", zap.Error(err))
+			logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - failed to check is swidtag is part of aggregation", zap.Error(err))
 			return nil, status.Error(codes.Internal, "couldn't check is swidtag part of aggregation")
 		} else if aggregationName != "" {
 			_, aggRights, err := s.licenseRepo.AggregationDetails(ctx, aggregationName, metrics, req.Simulation, req.GetScope())
 			if err != nil {
-				logger.Log.Error("service/v1 - ListAcqRightsForProduct - repo/AggregationDetails - failed to get aggregation details", zap.String("reason", err.Error()))
+				logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - repo/AggregationDetails - failed to get aggregation details", zap.String("reason", err.Error()))
 				return nil, status.Error(codes.Internal, "failed to get aggregation details")
 			}
 			if aggRights != nil {
-				logger.Log.Info("service/v1 - ListAcqRightsForProduct - aggregation found", zap.String("swidtag", req.SwidTag), zap.String("aggName", aggregationName))
+				logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - aggregation found", zap.String("swidtag", req.SwidTag), zap.String("aggName", aggregationName))
 				return &v1.ListAcquiredRightsForProductResponse{AggregationName: aggregationName}, nil
 			}
-			logger.Log.Info("service/v1 - ListAcqRightsForProduct - aggregation found but no licenses bought for the aggregation", zap.String("swidtag", req.SwidTag), zap.String("aggName", aggregationName))
+			logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - aggregation found but no licenses bought for the aggregation", zap.String("swidtag", req.SwidTag), zap.String("aggName", aggregationName))
 			return &v1.ListAcquiredRightsForProductResponse{AggregationName: aggregationName}, nil
 		}
 	}
@@ -125,7 +128,7 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 
 			} else {
 				// when product without version acq have all value in version
-				swittagWithoutVersion = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{res.Products[0].Name, res.Products[0].Editor, "all"}, "_"), " ", "_"), "-", "_")
+				swittagWithoutVersion = strings.ReplaceAll(strings.ReplaceAll(strings.Join([]string{res.Products[0].Name, res.Products[0].Editor, "All"}, "_"), " ", "_"), "-", "_")
 				if swittagWithoutVersion != req.SwidTag {
 					ID, _, prodRights, _ := s.licenseRepo.ProductAcquiredRights(ctx, swittagWithoutVersion, metrics, req.Simulation, req.GetScope())
 					if len(prodRights) > 0 {
@@ -210,7 +213,7 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 				Rights:      rgtsWithRepart,
 			}, eqTypes, metrics, req.Scope)
 			if err != nil {
-				logger.Log.Info("service/v1 - ListAcqRightsForProduct - findRepartition - error from repartition calculation", zap.String("swidtag", req.SwidTag), zap.String("error", err.Error()))
+				logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - findRepartition - error from repartition calculation", zap.String("swidtag", req.SwidTag), zap.String("error", err.Error()))
 				return nil, status.Error(codes.Internal, "unable to calculate repartition")
 			}
 		} else if numEquips != 0 && len(rgtsWithRepart) == 1 {
@@ -229,13 +232,15 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 			metricType := ""
 			availbleLicences := 0
 			sku := strings.Split(acqRight.SKU, ",")
+			var maintenance *prodv1.GetMaintenanceBySwidtagResponse
+			input[IsSa] = false
 			for i := range sku {
 				metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
 					Sku:   sku[i],
 					Scope: req.Scope,
 				})
 				if err != nil {
-					logger.Log.Error("service/v1 - ListAcqRightsForProduct - GetMetric", zap.String("reason", err.Error()))
+					logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - GetMetric", zap.String("reason", err.Error()))
 					return nil, status.Error(codes.Internal, "serviceError")
 				}
 				for _, v := range metrics {
@@ -245,13 +250,31 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 				}
 				resp, err := s.productClient.GetAvailableLicenses(ctx, &prodv1.GetAvailableLicensesRequest{Sku: sku[i], Scope: req.Scope})
 				if err != nil {
-					logger.Log.Error("service/v1 - ListAcqRightsForProduct - GetAvailableLicenses", zap.String("reason", err.Error()))
+					logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - GetAvailableLicenses", zap.String("reason", err.Error()))
 					return nil, status.Error(codes.Internal, "serviceError")
 				}
 				if metricType == "oracle.nup.standard" && acqRight.TransformDetails != "" {
-					availbleLicences += int(math.Ceil(float64(resp.AvailableLicenses) / 50))
+					availbleLicences += int(math.Floor(float64(resp.AvailableLicenses) / 50))
 				} else {
 					availbleLicences += int(resp.AvailableLicenses)
+				}
+
+				if metricType == repo.MetricMicrosoftSqlStandard.String() || metricType == repo.MetricMicrosoftSqlEnterprise.String() || metricType == repo.MetricWindowsServerStandard.String() || metricType == repo.MetricWindowsServerDataCenter.String() {
+					maintenance, err = s.productClient.GetMaintenanceBySwidtag(ctx, &prodv1.GetMaintenanceBySwidtagRequest{
+						Scope:  req.GetScope(),
+						Acqsku: sku[i],
+					})
+					if err != nil {
+						logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - GetMaintenanceBySwidtag-acqRight.SKU", zap.String("reason", err.Error()))
+						return nil, status.Error(codes.Internal, "serviceError")
+					}
+					if maintenance != nil {
+						sa := maintenance.Success
+						if sa {
+							input[IsSa] = sa
+						}
+					}
+
 				}
 			}
 			prodAcqRights := &v1.ProductAcquiredRights{
@@ -273,7 +296,7 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 					metricType = string(v.Type)
 				}
 			}
-			if (!isWithoutVersionProductExists && (product.Version != "" || strings.ToLower(product.Version) != "all")) && numEquips == 0 && (metricType != "user.nominative.standard" && metricType != "user.concurrent.standard") {
+			if (!prodAcqRights.WithoutVerionAcq && (product.Version != "" || strings.ToLower(product.Version) != "all")) && numEquips == 0 && (metricType != repo.MetricUserNomStandard.String() && metricType != repo.MetricUserConcurentStandard.String()) {
 				logger.Log.Sugar().Errorw("service/v1 - ListAcqRightsForProduct - no equipments linked with product",
 					"product", product,
 					"numEquips", numEquips,
@@ -292,6 +315,38 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 			if acqRight.TransformDetails != "" {
 				computedDetails = acqRight.TransformDetails
 			}
+			var nupLicence, opsLicence int32
+			var nupUprice, opsUprice float64
+			sku1 := strings.Split(acqRight.SKU, ",")
+
+			if acqRight.TransformDetails != "" {
+				for i := range sku1 {
+					metricName, err := s.productClient.GetMetric(ctx, &prodv1.GetMetricRequest{
+						Sku:   sku1[i],
+						Scope: req.Scope,
+					})
+					for _, v := range metrics {
+						if metricName.Metric == v.Name {
+							metricType = string(v.Type)
+						}
+					}
+					maintenance, err = s.productClient.GetMaintenanceBySwidtag(ctx, &prodv1.GetMaintenanceBySwidtagRequest{
+						Scope:  req.GetScope(),
+						Acqsku: sku1[i],
+					})
+					if err != nil {
+						logger.Log.Sugar().Errorf("service/v1 - ListAcqRightsForProduct - GetMaintenanceBySwidtag-sku[i]", zap.String("reason", err.Error()))
+						return nil, status.Error(codes.Internal, "serviceError")
+					}
+					if metricType == "oracle.nup.standard" && acqRight.TransformDetails != "" {
+						nupLicence = maintenance.AcqLicenses
+						nupUprice = maintenance.UnitPrice
+					} else if metricType == "oracle.processor.standard" && acqRight.TransformDetails != "" {
+						opsLicence = maintenance.AcqLicenses
+						opsUprice = maintenance.UnitPrice
+					}
+				}
+			}
 			metricExists := false
 			acqMetrics = append(acqMetrics, acqRight.Metric)
 
@@ -309,7 +364,9 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 					resp, err := MetricCalculation[metrics[ind].Type](ctx, s, eqTypes, input)
 					if err != nil {
 						logger.Log.Sugar().Infow("Compalince for metric", "input", input, "compliance", err.Error())
-						logger.Log.Error("service/v1 - Failed ListAcqRightsForProduct  ", zap.String("metric name", metrics[ind].Name), zap.Any("metric type", metrics[ind].Type), zap.String("reason", err.Error()))
+						logger.Log.Sugar().Errorf("service/v1 - Failed ListAcqRightsForProduct  ", "metric name", metrics[ind].Name,
+							"metric type", metrics[ind].Type,
+							"error", err.Error())
 						continue
 					}
 					computedLicenses := resp[ComputedLicenses].(uint64)
@@ -328,13 +385,18 @@ func (s *licenseServiceServer) ListAcqRightsForProduct(ctx context.Context, req 
 			if metricExists {
 				prodAcqRights.NumCptLicences = int32(maxComputed)
 				prodAcqRights.DeltaNumber = int32(availbleLicences) - int32(maxComputed)
-				prodAcqRights.DeltaCost = prodAcqRights.PurchaseCost - acqRight.AvgUnitPrice*float64(int32(maxComputed))
+				if acqRight.TransformDetails != "" {
+					prodAcqRights.DeltaCost = float64(float64(availbleLicences)*float64(opsUprice) - float64(opsUprice)*float64(maxComputed))
+					prodAcqRights.TotalCost = float64(float64(opsLicence)*float64(opsUprice) + float64(nupLicence)*float64(nupUprice))
+				} else {
+					//prodAcqRights.DeltaCost = prodAcqRights.PurchaseCost - acqRight.AvgUnitPrice*float64(int32(maxComputed))
+					prodAcqRights.DeltaCost = (float64(availbleLicences) * acqRight.AvgUnitPrice) - acqRight.AvgUnitPrice*float64(int32(maxComputed))
+				}
 				prodAcqRights.ComputedCost = acqRight.AvgUnitPrice * float64(int32(maxComputed))
 				prodAcqRights.ComputedDetails = computedDetails
 			} else {
 				prodAcqRights.MetricNotDefined = true
 			}
-
 			ProdAcqRights = append(ProdAcqRights, prodAcqRights)
 		}
 

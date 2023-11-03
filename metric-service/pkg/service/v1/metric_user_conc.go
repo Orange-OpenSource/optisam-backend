@@ -4,11 +4,12 @@ import (
 	"context"
 	"strings"
 
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -31,13 +32,11 @@ func (s *metricServiceServer) CreateMetricUserConcurentStandard(ctx context.Cont
 	if metricNameExistsAll(metrics, req.Name) != -1 {
 		return nil, status.Error(codes.InvalidArgument, "metric name already exists")
 	}
-
 	met, err := s.metricRepo.CreateMetricUserConcurentStandard(ctx, serverToRepoUCS(req), req.GetScopes()[0])
 	if err != nil {
 		logger.Log.Error("service/v1 - CreateMetricUserConcurentStandard  in repo", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot create metric uns")
 	}
-
 	return repoToServerUCS(met), nil
 }
 
@@ -48,6 +47,9 @@ func (s *metricServiceServer) UpdateMetricUserConcurentStandard(ctx context.Cont
 	}
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	if req.Default == true {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "Default Value True, Metric created by import can't be updated")
 	}
 	_, err := s.metricRepo.GetMetricConfigConcurentUser(ctx, req.Name, req.GetScopes()[0])
 	if err != nil {
@@ -78,6 +80,7 @@ func serverToRepoUCS(met *v1.MetricUCS) *repo.MetricUCS {
 	return &repo.MetricUCS{
 		Name:    met.Name,
 		Profile: met.Profile,
+		Default: met.Default,
 		//	Description: v,
 	}
 }
@@ -87,6 +90,7 @@ func repoToServerUCS(met *repo.MetricUCS) *v1.MetricUCS {
 		Name:    met.Name,
 		ID:      met.ID,
 		Profile: met.Profile,
+		Default: met.Default,
 	}
 }
 

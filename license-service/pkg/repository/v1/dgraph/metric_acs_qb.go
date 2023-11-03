@@ -1,8 +1,9 @@
 package dgraph
 
 import (
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 )
 
 func buildQueryACS(metric *v1.MetricACSComputed, scopes []string, id ...string) string {

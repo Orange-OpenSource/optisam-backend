@@ -119,6 +119,7 @@ type MetricUSS {
     created
     metric.type
     metric.name
+    metric.default 
 }
 
 type MetricINM {
@@ -129,6 +130,7 @@ type MetricINM {
     metric.type
     metric.name
     metric.instancenumber.coefficient
+    metric.default 
 }
 
 type MetricUNS {
@@ -139,6 +141,7 @@ type MetricUNS {
     metric.type
     metric.name
     metric.user_nominative.profile
+    metric.default 
 }
 
 type MetricUCS {
@@ -149,6 +152,7 @@ type MetricUCS {
     metric.type
     metric.name
     metric.user_concurrent.profile
+    metric.default 
 }
 
 type MetricSS {
@@ -159,6 +163,7 @@ type MetricSS {
     metric.type
     metric.name
     metric.static.reference_value
+    metric.default 
 }
 
 type MetricACS {
@@ -170,7 +175,8 @@ type MetricACS {
     metric.name
     metric.acs.equipment_type      
     metric.acs.attr_name           
-    metric.acs.attr_value                            
+    metric.acs.attr_value        
+    metric.default                     
 }
 
 type MetricAttrSum {
@@ -182,7 +188,8 @@ type MetricAttrSum {
     metric.name
     metric.attr_sum.equipment_type      
     metric.attr_sum.attr_name           
-    metric.attr_sum.reference_value                           
+    metric.attr_sum.reference_value  
+    metric.default                          
 }
 
 type MetricEquipAttr {
@@ -195,7 +202,8 @@ type MetricEquipAttr {
     metric.equip_attr.equipment_type      
     metric.equip_attr.attr_name        
     metric.equip_attr.environment        
-    metric.equip_attr.value                           
+    metric.equip_attr.value    
+    metric.default                        
 } 
 
 type MetricIPS {
@@ -208,7 +216,8 @@ type MetricIPS {
     metric.ips.base            
     metric.ips.attr_core_factor
     metric.ips.attr_num_cores   
-    metric.ips.attr_num_cpu                 
+    metric.ips.attr_num_cpu   
+    metric.default               
 }
 
 type MetricOracleOPS {
@@ -224,7 +233,8 @@ type MetricOracleOPS {
     metric.ops.top             
     metric.ops.attr_core_factor
     metric.ops.attr_num_cores  
-    metric.ops.attr_num_cpu                     
+    metric.ops.attr_num_cpu   
+    metric.default                   
 }
 
 type MetricOracleNUP {
@@ -243,7 +253,8 @@ type MetricOracleNUP {
     metric.oracle_nup.attr_num_cpu    
     metric.oracle_nup.num_users     
     metric.oracle_nup.transform
-    metric.oracle_nup.transform_metric_name              
+    metric.oracle_nup.transform_metric_name     
+    metric.default          
 }
 
 type MetricSPS {
@@ -256,7 +267,8 @@ type MetricSPS {
     metric.sps.base            
     metric.sps.attr_core_factor
     metric.sps.attr_num_cores 
-    metric.sps.attr_num_cpu                    
+    metric.sps.attr_num_cpu      
+    metric.default               
 }
 
 type Aggregation {
@@ -353,4 +365,52 @@ type ProductConcurrentUser {
     concurrent.user.is_aggregations
     concurrent.user.purchase_date
     concurrent.user.aggregation.id
+}
+
+type MetricMSE {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name    
+    metric.default 
+    metric.mse.core
+    metric.mse.cpu 
+    metric.mse.reference                    
+}
+
+type MetricWSD {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name   
+    metric.default  
+    metric.wsd.core
+    metric.wsd.cpu 
+    metric.wsd.reference                    
+}
+
+type MetricWSS {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name   
+    metric.default  
+    metric.wss.core
+    metric.wss.cpu 
+    metric.wss.reference                    
+}
+
+type MetricSQLStandard {
+    type_name
+    scopes
+    created
+    metric.type
+    metric.name    
+    metric.default 
+    metric.sql.standard.core
+    metric.sql.standard.cpu 
+    metric.sql.standard.reference                    
 }

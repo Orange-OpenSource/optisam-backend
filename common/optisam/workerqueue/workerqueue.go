@@ -2,11 +2,12 @@ package workerqueue
 
 import (
 	"context"
-	"optisam-backend/common/optisam/workerqueue/job"
-	"optisam-backend/common/optisam/workerqueue/worker"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/worker"
 )
 
-//go:generate mockgen -destination=mock/mock.go -package=mock optisam-backend/common/optisam/workerqueue Workerqueue
+//go:generate mockgen -destination=mock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue Workerqueue
 
 type Workerqueue interface {
 	Close(ctx context.Context)

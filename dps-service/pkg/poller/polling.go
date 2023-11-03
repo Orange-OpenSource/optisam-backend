@@ -9,17 +9,19 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"optisam-backend/common/optisam/config"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/workerqueue"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
 	"os"
 	"path/filepath"
 	"strings"
 
-	repo "optisam-backend/dps-service/pkg/repository/v1"
-	"optisam-backend/dps-service/pkg/repository/v1/postgres/db"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
@@ -43,6 +45,7 @@ const (
 	PROCESSING        string = "PROCESSING"
 	NIFIIsDown        string = "NIFIIsDown"
 	NIFIInternalError string = "NIFIInternalError"
+	FAILUPDATESTATUS  string = "Failed to update the status"
 )
 
 func Init(q workerqueue.Queue, authapi, sourceDir, archieveDir, rawdataDir string, obj v1.DpsServiceServer, key *rsa.PublicKey, apiKey string, db repo.Dps, waitLimitCount int, config config.Application) {
@@ -72,26 +75,26 @@ func Job() { //nolint
 	logger.Log.Info("cron job started...")
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Log.Error("Panic recovered from cron job", zap.Any("recover", r))
+			logger.Log.Sugar().Errorf("Panic recovered from cron job", "error", zap.Any("recover", r))
 		}
 	}()
 	cronCtx, err := createSharedContext(AuthAPI, AppConfig)
 	if err != nil {
-		logger.Log.Error("couldnt fetch token, will try next time when cron will execute", zap.Any("error", err))
+		logger.Log.Sugar().Errorf("couldnt fetch token, will try next time when cron will execute", "error", zap.Any("error", err))
 		return
 	}
 	if cronCtx != nil {
 		cronAPIKeyCtx, err := grpc.AddClaimsInContext(*cronCtx, VerifyKey, APIKey)
 		if err != nil {
-			logger.Log.Error("Cron AddClaims Failed", zap.Error(err))
+			logger.Log.Sugar().Errorf("Cron AddClaims Failed", "err", zap.Error(err))
 			return
 		} else if cronAPIKeyCtx == nil {
-			logger.Log.Error("Failed to get context. nil pointer ctx")
+			logger.Log.Sugar().Errorf("Failed to get context. nil pointer ctx", "err", "nil pointer ctx")
 			return
 		}
 		resp, err := dbObj.GetTransformedGlobalFileInfo(cronAPIKeyCtx)
 		if err != nil {
-			logger.Log.Error("Failed to get unprocessed global files info", zap.Error(err))
+			logger.Log.Sugar().Errorf("Failed to get unprocessed global files info", "error", zap.Error(err))
 			return
 		}
 		logger.Log.Debug("Processing global file ", zap.Any("data", resp))
@@ -109,7 +112,7 @@ func Job() { //nolint
 			errFileRegax := fmt.Sprintf("%s/%s/error/%d_%s_error_ft_%s.zip", RawdataDir, globalFileDir, int(global.UploadID), global.Scope, fileNameWithoutExt)
 			errFiles, err := filepath.Glob(errFileRegax)
 			if err != nil {
-				logger.Log.Error("Failed to read error dir", zap.Any("filepath", errFileRegax), zap.Error(err))
+				logger.Log.Sugar().Errorf("Failed to read error dir", "filepath", zap.Any("filepath", errFileRegax), "error", zap.Error(err))
 				continue
 			}
 
@@ -121,13 +124,13 @@ func Job() { //nolint
 					FileName: global.FileName,
 					Comments: sql.NullString{String: NIFIInternalError, Valid: true},
 				}); err != nil {
-					logger.Log.Error("Failed to update the status", zap.Any("uid", global.UploadID), zap.Any("scope", global.Scope), zap.Error(err))
+					logger.Log.Sugar().Errorf(FAILUPDATESTATUS, "uid", zap.Any("uid", global.UploadID), "scope", zap.Any("scope", global.Scope), "error", zap.Error(err))
 				}
 				continue
 			} else if global.Status == db.UploadStatusUPLOADED {
 				err = handleNifiErrors(cronAPIKeyCtx, global.Scope, globalFileDir, global.FileName, int(global.UploadID))
 				if err != nil {
-					logger.Log.Error("Failed to handle nifi error", zap.Error(err))
+					logger.Log.Sugar().Errorf("Failed to handle nifi error", "error", zap.Error(err))
 					continue
 				}
 			}
@@ -136,18 +139,31 @@ func Job() { //nolint
 			dataFileRegex := fmt.Sprintf("%s/%d_*.csv", SourceDir, global.UploadID)
 			dataFiles, err := filepath.Glob(dataFileRegex)
 			if err != nil {
-				logger.Log.Error("Failed to read data dir", zap.Error(err))
+				logger.Log.Sugar().Errorf("Failed to read data dir", "error", zap.Error(err))
 				continue
 			} else if dataFiles == nil {
 				continue
 			}
 			logger.Log.Debug("Global Id transformed data files ", zap.Any("gid", global.UploadID), zap.Any("dataFiles", dataFiles))
+			status, err := dbObj.GetFileStatus(cronAPIKeyCtx, db.GetFileStatusParams{
+				UploadID: global.UploadID,
+				FileName: global.FileName,
+			})
+			if err != nil {
+				logger.Log.Sugar().Errorf("Failed to get file status", "error", zap.Error(err))
+				continue
+			}
+
+			if status == db.UploadStatusCANCELLED {
+				logger.Log.Sugar().Infof("skipping canceled global_data_file")
+				continue
+			}
 
 			if _, err = dbObj.UpdateGlobalFileStatus(cronAPIKeyCtx, db.UpdateGlobalFileStatusParams{
 				Column2:  db.UploadStatusPROCESSED,
 				UploadID: global.UploadID,
 			}); err != nil {
-				logger.Log.Error("Failed to update the status", zap.Any("uid", global.UploadID), zap.Any("scope", global.Scope), zap.Error(err))
+				logger.Log.Sugar().Errorf(FAILUPDATESTATUS, "uid", zap.Any("uid", global.UploadID), "scope", zap.Any("scope", global.Scope), "error", zap.Error(err))
 			}
 
 			var filesToSend []string
@@ -155,7 +171,7 @@ func Job() { //nolint
 				_, df := filepath.Split(val)
 				newFile := fmt.Sprintf("%s#%s", PROCESSING, df)
 				if err = os.Rename(fmt.Sprintf("%s/%s", SourceDir, df), fmt.Sprintf("%s/%s", SourceDir, newFile)); err != nil {
-					logger.Log.Error("Failed to mark processing the global_data_file", zap.Any("oldFile", df), zap.Any("newFileName", newFile), zap.Error(err))
+					logger.Log.Sugar().Errorf("Failed to mark processing the global_data_file", "oldfile", zap.Any("oldFile", df), "newFile", zap.Any("newFileName", newFile), "error", zap.Error(err))
 					continue
 				}
 				filesToSend = append(filesToSend, newFile)
@@ -171,7 +187,7 @@ func Job() { //nolint
 				ScopeType:  scopeType,
 				Files:      filesToSend})
 			if err != nil || (notifyResp != nil && !notifyResp.Success) {
-				logger.Log.Error("Notify uplaod failed for nifi transformed files", zap.Error(err))
+				logger.Log.Sugar().Errorf("Notify uplaod failed for nifi transformed files", "error", zap.Error(err))
 				revertProcessingFilesName(filesToSend)
 			}
 		}
@@ -187,7 +203,6 @@ func handleNifiErrors(ctx context.Context, scope, globalFileDir, fileName string
 		} else {
 			archivedFile := fmt.Sprintf("%s/%s/archive/%d_*", RawdataDir, globalFileDir, id)
 			res, _ = filepath.Glob(archivedFile)
-			fmt.Println("ARCHIVE ", res, archivedFile)
 			errComment := NIFIIsDown
 			if len(res) > 0 {
 				errComment = NIFIInternalError
@@ -200,7 +215,7 @@ func handleNifiErrors(ctx context.Context, scope, globalFileDir, fileName string
 				FileName: fileName,
 				Comments: sql.NullString{String: errComment, Valid: true},
 			}); err != nil {
-				logger.Log.Error("Failed to update the status", zap.Any("uid", id), zap.Any("scope", scope), zap.Error(err))
+				logger.Log.Sugar().Errorf(FAILUPDATESTATUS, "uid", zap.Any("uid", id), "scope", zap.Any("scope", scope), "error", zap.Error(err))
 				return err
 			}
 		}
@@ -218,7 +233,7 @@ func handleNifiErrors(ctx context.Context, scope, globalFileDir, fileName string
 					FileName: fileName,
 					Comments: sql.NullString{String: NIFIInternalError, Valid: true},
 				}); err != nil {
-					logger.Log.Error("Failed to update the status", zap.Any("uid", id), zap.Any("scope", scope), zap.Error(err))
+					logger.Log.Sugar().Errorf(FAILUPDATESTATUS, "uid", zap.Any("uid", id), "scope", zap.Any("scope", scope), "error", zap.Error(err))
 					return err
 				}
 			}
@@ -233,7 +248,7 @@ func revertProcessingFilesName(files []string) {
 	for _, file := range files {
 		oldFile := fmt.Sprintf("%s/%s", SourceDir, strings.Split(file, fmt.Sprintf("%s#", PROCESSING))[1])
 		if err := os.Rename(fmt.Sprintf("%s/%s", SourceDir, file), oldFile); err != nil {
-			logger.Log.Error("Failed to revert the processing file", zap.Error(err))
+			logger.Log.Sugar().Errorf("Failed to revert the processing file", "error", zap.Error(err))
 		}
 	}
 }

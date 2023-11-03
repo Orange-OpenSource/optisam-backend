@@ -5,16 +5,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math/rand"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	repoInterface "optisam-backend/common/optisam/workerqueue/repository"
-	repo "optisam-backend/common/optisam/workerqueue/repository/postgres"
-	dbgen "optisam-backend/common/optisam/workerqueue/repository/postgres/db"
-	"optisam-backend/common/optisam/workerqueue/worker"
 	"os"
 	"os/signal"
 	"sync"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+	repoInterface "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/postgres"
+	dbgen "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/worker"
 
 	"go.uber.org/zap"
 	metadata "google.golang.org/grpc/metadata"
@@ -27,9 +28,12 @@ type JobChan struct {
 	ctx        context.Context
 }
 
-/* multilevel queue is conecpt of bucket filling, once
+/*
+	multilevel queue is conecpt of bucket filling, once
+
 bucket is fulled , new bucket is added to system, and when
-old bucket is empty and old bucket is reuesd */
+old bucket is empty and old bucket is reuesd
+*/
 type mlQueue struct {
 	notifier  []chan JobChan
 	pushIndex int
@@ -195,7 +199,7 @@ func (q *Queue) RegisterWorker(ctx context.Context, w worker.Worker) {
 					metaData, _ := json.Marshal(mdCopy)
 					repoJob := job.ToRepoJob(&jobC.jobData)
 					jobID, err := q.repo.CreateJob(ctx, dbgen.CreateJobParams{Type: repoJob.Type, Status: repoJob.Status, Data: repoJob.Data,
-						Comments: repoJob.Comments, StartTime: repoJob.StartTime, EndTime: repoJob.EndTime, MetaData: metaData})
+						Comments: repoJob.Comments, StartTime: repoJob.StartTime, EndTime: repoJob.EndTime, MetaData: metaData, Ppid: sql.NullString{String: repoJob.Ppid.String, Valid: true}})
 					if err != nil {
 						logger.Log.Error("Unable to push job to db: %s, requeueing the job", zap.Error(err))
 						q.PushJob(ctx, jobC.jobData, jobC.workerName)

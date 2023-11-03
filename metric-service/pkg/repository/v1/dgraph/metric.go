@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"sync"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"
@@ -16,8 +18,8 @@ import (
 )
 
 // ListMetricTypeInfo implements Licence ListMetricTypeInfo function
-func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopetype v1.ScopeType, scope string) ([]*v1.MetricTypeInfo, error) {
-	return scopetype.ListMetricTypes(), nil
+func (l *MetricRepository) ListMetricTypeInfo(ctx context.Context, scopetype v1.ScopeType, scope string, flag bool) ([]*v1.MetricTypeInfo, error) {
+	return scopetype.ListMetricTypes(flag), nil
 }
 
 // DropMetrics deletes all metrics in a scope
@@ -56,10 +58,11 @@ func (l *MetricRepository) DropMetrics(ctx context.Context, scope string) error 
 func (l *MetricRepository) ListMetrices(ctx context.Context, scope string) ([]*v1.MetricInfo, error) {
 
 	q := `   {
-             Metrics(func:eq(type_name,"metric"))@filter(eq(scopes,` + scope + `)){
+		Metrics(func:eq(type_name,"metric"))@filter(eq(scopes,` + scope + `)){
 			   ID  : uid
 			   Name: metric.name
 			   Type: metric.type
+			   Default : metric.default
 		   }
 		}
 		  `
@@ -106,6 +109,7 @@ func (l *MetricRepository) MetricInfoWithAcqAndAgg(ctx context.Context, metricNa
 				ID  : uid
 				Name: metric.name
 				Type: metric.type
+				Default: metric.default
 		 	}
    			var(func:eq(aggregatedRights.metric,["` + metricName + `"]))@filter(eq(scopes,"` + scope + `")){
 	 			tagg as count(aggregatedRights.SKU)
@@ -146,6 +150,7 @@ func (l *MetricRepository) MetricInfoWithAcqAndAgg(ctx context.Context, metricNa
 		retMetric.ID = metricInfo.Metric[0].ID
 		retMetric.Name = metricInfo.Metric[0].Name
 		retMetric.Type = metricInfo.Metric[0].Type
+		retMetric.Default = metricInfo.Metric[0].Default
 	}
 	if len(metricInfo.AggregationCount) != 0 {
 		retMetric.TotalAggregations = int32(metricInfo.AggregationCount[0].TotalAggregations)

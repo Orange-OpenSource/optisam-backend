@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/application-service/pkg/api/v1";
+option go_package = "application-service/pkg/api/v1";
 
 package optisam.applications.v1;
 

@@ -5,14 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"optisam-backend/common/optisam/files"
-	"optisam-backend/common/optisam/logger"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/files"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

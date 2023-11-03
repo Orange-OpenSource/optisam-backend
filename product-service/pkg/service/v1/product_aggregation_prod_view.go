@@ -4,12 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/repository/v1/postgres/db"
+
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/thirdparty/metric-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -17,7 +20,7 @@ import (
 )
 
 // nolint: gocyclo
-func (s *productServiceServer) ListProductAggregationView(ctx context.Context, req *v1.ListProductAggregationViewRequest) (*v1.ListProductAggregationViewResponse, error) {
+func (s *ProductServiceServer) ListProductAggregationView(ctx context.Context, req *v1.ListProductAggregationViewRequest) (*v1.ListProductAggregationViewResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -25,7 +28,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
-	dbresp, err := s.productRepo.ListProductAggregation(ctx, db.ListProductAggregationParams{
+	dbresp, err := s.ProductRepo.ListProductAggregation(ctx, db.ListProductAggregationParams{
 		Scope:    req.GetScopes()[0],
 		PageNum:  req.GetPageSize() * (req.GetPageNum() - 1),
 		PageSize: req.GetPageSize(),
@@ -46,7 +49,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 		temp.NumApplications = dbresp[i].NumOfApplications
 		temp.NumEquipments = dbresp[i].NumOfEquipments
 		temp.EditorId = dbresp[i].EditorID.String
-		individualCount, err := s.productRepo.GetIndividualProductForAggregationCount(ctx, db.GetIndividualProductForAggregationCountParams{
+		individualCount, err := s.ProductRepo.GetIndividualProductForAggregationCount(ctx, db.GetIndividualProductForAggregationCountParams{
 			Scope:    req.Scopes[0],
 			Swidtags: dbresp[i].Swidtags,
 		})
@@ -74,7 +77,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 	return &apiresp, nil
 }
 
-// func (s *productServiceServer) ListProductAggregationRecords(ctx context.Context, req *v1.ListProductAggregationRecordsRequest) (*v1.ListProductAggregationRecordsResponse, error) {
+// func (s *ProductServiceServer) ListProductAggregationRecords(ctx context.Context, req *v1.ListProductAggregationRecordsRequest) (*v1.ListProductAggregationRecordsResponse, error) {
 // 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 // 	if !ok {
 // 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -82,7 +85,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 // 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 // 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 // 	}
-// 	dbresp, err := s.productRepo.ListProductsAggregationIndividual(ctx, db.ListProductsAggregationIndividualParams{
+// 	dbresp, err := s.ProductRepo.ListProductsAggregationIndividual(ctx, db.ListProductsAggregationIndividualParams{
 // 		AggregationName: req.AggregationName,
 // 		Scope:           req.Scopes,
 // 	})
@@ -107,7 +110,7 @@ func (s *productServiceServer) ListProductAggregationView(ctx context.Context, r
 
 // }
 
-func (s *productServiceServer) AggregatedRightDetails(ctx context.Context, req *v1.AggregatedRightDetailsRequest) (*v1.AggregatedRightDetailsResponse, error) {
+func (s *ProductServiceServer) AggregatedRightDetails(ctx context.Context, req *v1.AggregatedRightDetailsRequest) (*v1.AggregatedRightDetailsResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -115,7 +118,7 @@ func (s *productServiceServer) AggregatedRightDetails(ctx context.Context, req *
 	if !helper.Contains(userClaims.Socpes, req.Scope) {
 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 	}
-	dbresp, err := s.productRepo.AggregatedRightDetails(ctx, db.AggregatedRightDetailsParams{
+	dbresp, err := s.ProductRepo.AggregatedRightDetails(ctx, db.AggregatedRightDetailsParams{
 		ID:    req.GetID(),
 		Scope: req.Scope,
 	})
@@ -162,7 +165,7 @@ func (s *productServiceServer) AggregatedRightDetails(ctx context.Context, req *
 	}, nil
 }
 
-func (s *productServiceServer) GetAggregationProductsExpandedView(ctx context.Context, req *v1.GetAggregationProductsExpandedViewRequest) (*v1.GetAggregationProductsExpandedViewResponse, error) {
+func (s *ProductServiceServer) GetAggregationProductsExpandedView(ctx context.Context, req *v1.GetAggregationProductsExpandedViewRequest) (*v1.GetAggregationProductsExpandedViewResponse, error) {
 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 	if !ok {
 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -171,7 +174,7 @@ func (s *productServiceServer) GetAggregationProductsExpandedView(ctx context.Co
 		return nil, status.Error(codes.PermissionDenied, "Do not have access to the scope")
 	}
 
-	expandedProd, err := s.productRepo.GetIndividualProductDetailByAggregation(ctx, db.GetIndividualProductDetailByAggregationParams{
+	expandedProd, err := s.ProductRepo.GetIndividualProductDetailByAggregation(ctx, db.GetIndividualProductDetailByAggregationParams{
 		AggregationName: req.AggregationName,
 		Scope:           req.Scope,
 	})
@@ -196,7 +199,7 @@ func (s *productServiceServer) GetAggregationProductsExpandedView(ctx context.Co
 	return apiresp, nil
 }
 
-// func (s *productServiceServer) ProductAggregationProductViewOptions(ctx context.Context, req *v1.ProductAggregationProductViewOptionsRequest) (*v1.ProductAggregationProductViewOptionsResponse, error) {
+// func (s *ProductServiceServer) ProductAggregationProductViewOptions(ctx context.Context, req *v1.ProductAggregationProductViewOptionsRequest) (*v1.ProductAggregationProductViewOptionsResponse, error) {
 // 	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
 // 	if !ok {
 // 		return nil, status.Error(codes.Internal, "ClaimsNotFoundError")
@@ -205,7 +208,7 @@ func (s *productServiceServer) GetAggregationProductsExpandedView(ctx context.Co
 // 		return nil, status.Error(codes.PermissionDenied, "ScopeValidationError")
 // 	}
 
-// 	dbresp, err := s.productRepo.ProductAggregationChildOptions(ctx, db.ProductAggregationChildOptionsParams{
+// 	dbresp, err := s.ProductRepo.ProductAggregationChildOptions(ctx, db.ProductAggregationChildOptionsParams{
 // 		AggregationID: req.GetID(),
 // 		Scope:         req.Scopes,
 // 	})

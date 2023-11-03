@@ -2,8 +2,9 @@ package rest
 
 import (
 	"net/http"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/opa"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/opa"
 
 	"github.com/open-policy-agent/opa/rego"
 )

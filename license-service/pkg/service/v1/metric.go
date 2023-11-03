@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"optisam-backend/common/optisam/strcomp"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
 
-	repo "optisam-backend/license-service/pkg/repository/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 )
 
 func metricNameExistsAll(metrics []*repo.Metric, name string) int {

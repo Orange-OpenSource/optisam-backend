@@ -65,11 +65,11 @@ objects:
                   protocol: TCP
               resources:
                 requests:
-                  cpu: "5m"
-                  memory: "10Mi"
+                  cpu: "1m"
+                  memory: "5Mi"
                 limits:
-                  cpu: "20m"
-                  memory: "50Mi"
+                  cpu: "100m"
+                  memory: "150Mi"
 parameters:
   - name: TAG
     description: Tag for Docker image

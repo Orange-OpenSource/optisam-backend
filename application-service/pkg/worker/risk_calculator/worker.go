@@ -4,12 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"math"
-	repo "optisam-backend/application-service/pkg/repository/v1"
-	"optisam-backend/application-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	pro_v1 "optisam-backend/product-service/pkg/api/v1"
 	"time"
+
+	pro_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/thirdparty/product-service/pkg/api/v1"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

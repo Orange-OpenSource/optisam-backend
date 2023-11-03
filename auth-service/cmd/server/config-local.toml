@@ -1,8 +1,10 @@
 environment = "development"
 debug = false
 grpcport = 9092
-httpport = 9093
+httpport = 9097
 jwtprivatekey = "key.pem"
+activationtimeout = 43200
+forgotpasstimeout = 120
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -24,16 +26,54 @@ port = 5432
 # should be user of full rights
 [database.admin]
 user = "postgres"
-pass = ""
+pass = "orange"
 name = "account" 
 
 # user of inser/update/delete/read access
 [database.user]
 user = "postgres"
-pass = ""
+pass = "orange"
 name = "account" 
 
 [database.migration]
 version = "1.4_schema.sql,1.4.3_schema.sql,1.4.2_schema.sql"
 direction = ""
 migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+
+[redis]
+redishost = "localhost:6379"
+redispassword = ""
+db = 0
+username = ""
+sentinelhost=""
+sentinelport=""
+sentinelmastername = ""
+
+[emailtemplate]
+passwordresetpath = "./../../../common/optisam/email/templates/passwordreset.html"
+activationpath = "./../../../common/optisam/email/templates/activation.html"
+redirecbaseurl = "http://127.0.0.1:9093"
+redirectappactivation = "https://optisam-ui-pc.apps.fr01.paas.tech.orange/user-activation"
+redirectappurlforgotpass = "https://optisam-ui-pc.apps.fr01.paas.tech.orange/reset-password"
+
+[grpcservers.Address]
+notification = "localhost:15000"
+
+[httpservers.Address]
+auth = "localhost:9093"
+
+[iam]
+publickeypath = "cert.pem"
+apiKey = "12345678"
+regopath = "rbac.rego"
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10000
+
+[kafka]
+bootstrapservers = "dev-kafka-externel-bootstrap-dev-optisam.apps.fr01.paas.tech.orange:443"
+securityprotocol = "ssl"
+sslkeylocation = "client.key.pem"
+sslcertificatelocation = "client.crt.pem"
+sslcalocation = "ca.crt.pem"

@@ -1,0 +1,362 @@
+syntax = "proto3";
+
+option go_package = "import-service/thirdparty/dps-service/pkg/api/v1";
+
+package optisam.dps.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+service DpsService {
+  rpc StoreCoreFactorReference(StoreReferenceDataRequest) returns (StoreReferenceDataResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/dps/corefactor"
+      body : "*"
+    };
+  }
+
+  rpc GetAnalysisFileInfo(GetAnalysisFileInfoRequest) returns (GetAnalysisFileInfoResponse) {
+
+  }
+
+  rpc ViewFactorReference(ViewReferenceDataRequest) returns (ViewReferenceDataResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/corefactor"
+    };
+  }
+
+  rpc GetAllocMetricDetails(GetAllocMetricDetailsRequest) returns (GetAllocMetricDetailsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/metrics"
+    };
+  }
+
+  rpc ViewCoreFactorLogs(ViewCoreFactorLogsRequest) returns (ViewCoreFactorLogsResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/corefactorlogs"
+    };
+  }
+
+  rpc DataAnalysis(DataAnalysisRequest) returns (DataAnalysisResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/dps/data/analysis"
+      body : "*"
+    };
+  }
+
+  rpc NotifyUpload(NotifyUploadRequest) returns (NotifyUploadResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/dps/uploads/notify"
+      body : "*"
+    };
+  }
+
+  rpc DashboardQualityOverview(DashboardQualityOverviewRequest) returns (DashboardQualityOverviewResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/dashboard/quality"
+    };
+  }
+
+  // rpc DashboardDataFailureRate(DataFailureRateRequest) returns (DataFailureRateResponse) {
+  //   option (google.api.http) = {
+  //     get : "/api/v1/dps/dashboard/quality/datafailurerate"
+  //   };
+  // }
+
+  rpc ListUploadData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/uploads/data"
+    };
+  }
+  rpc ListUploadMetaData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/uploads/metadata"
+    };
+  }
+  rpc ListUploadGlobalData(ListUploadRequest) returns (ListUploadResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/uploads/globaldata"
+    };
+  }
+  rpc ListFailedRecord(ListFailedRequest) returns (ListFailedResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/failed/data"
+    };
+  } 
+
+  // rpc ListFailureReasonsRatio(ListFailureReasonRequest) returns (ListFailureReasonResponse) {
+  //   option (google.api.http) = {
+  //     get : "/api/v1/dps/dashboard/quality/failurereasonsratio"
+  //   };
+  // }
+
+  rpc DeleteInventory(DeleteInventoryRequest) returns (DeleteInventoryResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/dps/data/{scope}"
+    };
+  } 
+
+  rpc DropUploadedFileData(DropUploadedFileDataRequest) returns (DropUploadedFileDataResponse) {
+    option (google.api.http) = {
+      delete : "/api/v1/dps/resource/{scope}"
+    };
+  } 
+
+  rpc ListDeletionRecords(ListDeletionRequest) returns (ListDeletionResponse) {
+    option (google.api.http) = {
+      get : "/api/v1/dps/deletions"
+    };
+  }
+}
+
+
+message GetAnalysisFileInfoRequest{
+  int32  upload_id = 1;
+  string scope = 2;
+  string fileType =3;
+}
+
+message GetAnalysisFileInfoResponse{
+  string file_name =1;
+  string scope_type =2;
+  bool is_older_generic = 3;
+}
+
+message ViewCoreFactorLogsRequest{
+
+}
+
+message CoreFactorlogs {
+  string filename =1;
+  google.protobuf.Timestamp uploaded_on = 2;
+}
+
+message ViewCoreFactorLogsResponse{
+  repeated CoreFactorlogs corefactorlogs = 1;
+}
+
+message CoreFactorReference{
+  string manufacturer = 1;
+  string model = 2;
+  string corefactor = 3;
+}
+
+message ViewReferenceDataRequest{
+  int32 pageNo = 1;
+  int32 pageSize = 2;
+}
+
+message ViewReferenceDataResponse{
+  repeated CoreFactorReference references = 1;
+  int32 totalRecord = 2;
+}
+
+message GetAllocMetricDetailsRequest{
+  string scope = 1;
+}
+
+message GetAllocMetricDetailsResponse{
+  repeated string name = 1;
+  repeated string type = 2;
+}
+
+message StoreReferenceDataRequest{
+  bytes referenceData = 1;
+  string filename = 2  ;
+}
+
+message StoreReferenceDataResponse{
+  bool Success = 1;
+}
+
+message DataAnalysisRequest{
+  string file = 1 ;
+  string scope = 2  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message DataAnalysisResponse{
+  string status = 1;
+  string report = 2;
+  string targetFile = 3;
+  string errorFile = 4;
+  string description = 5;
+
+}
+
+message ListDeletionRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lte : 200},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 200}
+  ];
+  enum SortBy {
+    deletion_type = 0;
+    status = 1;
+    created_by = 2;
+    created_on = 3;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  enum SortOrder {
+    asc = 0;
+    desc = 1;
+  }
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  string scope = 5  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+message ListDeletionResponse {
+  int32 totalRecords = 1;
+  repeated Deletion deletions = 2;
+}
+
+message Deletion {
+  string deletion_type = 1;
+  string created_by = 2;
+  string status = 3;
+  google.protobuf.Timestamp created_on = 4;
+}
+
+message DropUploadedFileDataRequest{
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+message DropUploadedFileDataResponse{
+  bool success = 1;
+}
+
+
+// message ListFailureReasonRequest{
+//   string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+// }
+// message ListFailureReasonResponse{
+//   map <string,float> failureReasons = 1;
+// }
+
+// message DataFailureRateRequest{
+//   string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+// }
+
+// message DataFailureRateResponse{
+//   float failureRate = 1;
+// }
+
+message DashboardQualityOverviewRequest{
+  enum Frequency {
+    DAILY = 0;
+    MONTHLY = 1;
+  }
+  Frequency frequency =1 [(validate.rules).enum = {in: [0,1]}];
+  int32  noOfDataPoints = 2 [(validate.rules).int32.lte = 12]; 
+  string scope = 3  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+}
+
+
+message DashboardQualityOverviewResponse{
+  repeated float applications =1;
+  repeated float products =2;
+  repeated float equipments =3;
+  repeated float acqrights =4;
+}
+
+message NotifyUploadRequest {
+  string scope = 1;
+  string type = 2 [(validate.rules).string = {in : [ "data", "metadata","globaldata" ]}];
+  int32 upload_id = 3;
+  string uploaded_by = 4;
+  repeated string files = 5 [ (validate.rules).repeated .min_items = 1 ];
+  enum scope_types{
+    GENERIC = 0;
+    SPECIFIC = 1;
+  };
+  scope_types scope_type = 6;
+  string analysis_id = 7;
+}
+
+message NotifyUploadResponse {
+   bool success = 1; 
+   map<string, int32> fileUploadId =2;
+  }
+
+message ListFailedRequest {
+  string scope = 1 [(validate.rules).string.min_len = 1];
+  int32 upload_id = 2 [(validate.rules).int32.gt = 0];
+  int32 page_num = 3 [(validate.rules).int32.gte = 1];
+  int32 page_size = 4 [(validate.rules).int32.gte = 1];
+}
+
+message ListFailedResponse { 
+  repeated FailedRecord  failedRecords = 1;
+  int32 totalRecords = 2;
+}
+
+message FailedRecord {
+  map <string,string> data = 1;
+  string reason = 2;
+}
+
+message ListUploadRequest {
+  int32 page_num = 1 [
+    (validate.rules).int32 = {gte : 1, lt : 1000},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Page number", minimum : 1, maximum : 1000}
+  ];
+  int32 page_size = 2 [
+    (validate.rules).int32 = {gte : 10, lte : 200},
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+        {description : "Items per page", minimum : 10, maximum : 200}
+  ];
+  enum SortBy {
+    upload_id = 0;
+    file_name = 1;
+    status = 2;
+    uploaded_by = 3;
+    uploaded_on = 4;
+  }
+  SortBy sort_by = 3 [ (validate.rules).enum.defined_only = true ];
+  enum SortOrder {
+    asc = 0;
+    desc = 1;
+  }
+  SortOrder sort_order = 4 [ (validate.rules).enum.defined_only = true ];
+  string scope = 5  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  int32 global_file_id = 6 [(validate.rules).int32.gte = 0];
+}
+
+message ListUploadResponse {
+  int32 totalRecords = 1;
+  repeated Upload uploads = 2;
+}
+
+message Upload {
+  int32 upload_id = 1;
+  string scope = 2;
+  string file_name = 3;
+  string status = 4;
+  string uploaded_by = 5;
+  google.protobuf.Timestamp uploaded_on = 6;
+  int32 total_records = 7;
+  int32 success_records = 8;
+  int32 failed_records = 9;
+  string comments = 10;
+  string error_file_api = 11;
+}
+
+message DeleteInventoryRequest {
+  string scope = 1  [(validate.rules).string.pattern = "\\b[A-Z]{3}\\b"];
+  enum deletion_types {
+    ACQRIGHTS = 0;
+    FULL = 1;
+    PARK =2;
+  }
+  deletion_types deletion_type = 2 [(validate.rules).enum = {in: [0,1,2]}];
+}
+
+message DeleteInventoryResponse { 
+  bool success = 1; 
+}

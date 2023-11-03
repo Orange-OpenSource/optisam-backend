@@ -3,12 +3,14 @@ package v1
 import (
 	"context"
 
-	accv1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/thirdparty/account-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -51,13 +53,15 @@ func (s *metricServiceServer) CreateMetricUserSumStandard(ctx context.Context, r
 
 func serverToRepoUSS(met *v1.MetricUSS) *repo.MetricUSS {
 	return &repo.MetricUSS{
-		Name: met.Name,
+		Name:    met.Name,
+		Default: met.Default,
 	}
 }
 
 func repoToServerUSS(met *repo.MetricUSS) *v1.MetricUSS {
 	return &v1.MetricUSS{
-		Name: met.Name,
-		ID:   met.ID,
+		Name:    met.Name,
+		ID:      met.ID,
+		Default: met.Default,
 	}
 }

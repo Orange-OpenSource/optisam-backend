@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/rsa"
 	"net/http"
-	v1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
-	rest_middleware "optisam-backend/common/optisam/middleware/rest"
 	"os"
 	"os/signal"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	rest_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/rest"
 
 	"google.golang.org/protobuf/encoding/protojson"
 

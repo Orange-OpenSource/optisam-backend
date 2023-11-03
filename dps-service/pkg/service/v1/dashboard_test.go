@@ -2,17 +2,132 @@ package v1
 
 import (
 	"context"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
+	"errors"
+	"fmt"
+	"testing"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	queuemock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/queuemock"
+	equipV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1"
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/metric-service/pkg/api/v1"
+	prodV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	"github.com/golang/mock/gomock"
 )
 
 var (
 	ctx = grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
 		Role:   "Admin",
-		Socpes: []string{"Scope1", "Scope2", "Scope3"},
+		Socpes: []string{"Scope1", "Scope2", "Scope3", "AAK"},
 	})
 )
+
+func Test_DashboardQualityOverview(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Dps
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	var met metv1.MetricServiceClient
+	var equip equipV1.EquipmentServiceClient
+	var prod prodV1.ProductServiceClient
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.DashboardQualityOverviewRequest
+		setup   func(*v1.DashboardQualityOverviewRequest)
+		output  *v1.DashboardQualityOverviewResponse
+		wantErr bool
+		s       *dpsServiceServer
+	}{
+		{
+			name: "claims Not found",
+			ctx:  context.Background(),
+			input: &v1.DashboardQualityOverviewRequest{
+				Scope:          "Scope1",
+				NoOfDataPoints: int32(10),
+			},
+			setup:   func(*v1.DashboardQualityOverviewRequest) {},
+			output:  &v1.DashboardQualityOverviewResponse{},
+			wantErr: true,
+		},
+		{
+			name: "Scope Not found",
+			ctx:  ctx,
+			input: &v1.DashboardQualityOverviewRequest{
+				Scope:          "Scope10",
+				NoOfDataPoints: int32(10),
+			},
+			setup:   func(*v1.DashboardQualityOverviewRequest) {},
+			output:  &v1.DashboardQualityOverviewResponse{},
+			wantErr: true,
+		},
+
+		{
+			name: "correct sheet",
+			ctx:  ctx,
+			input: &v1.DashboardQualityOverviewRequest{
+				Scope:          "AAK",
+				NoOfDataPoints: int32(10),
+			},
+			setup: func(*v1.DashboardQualityOverviewRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetEntityMonthWise(gomock.Any(), gomock.Any()).Return([]db.GetEntityMonthWiseRow{
+					{Filename: "aak_applications.csv", Sum: int64(10)},
+					{Filename: "aak_products.csv", Sum: int64(10)},
+					{Filename: "aak_products_acquiredrights.csv", Sum: int64(10)},
+					{Filename: "aak_equipments.csv", Sum: int64(10)},
+				}, nil)
+			},
+			output:  &v1.DashboardQualityOverviewResponse{},
+			wantErr: false,
+		},
+		{
+			name: "correct db err",
+			ctx:  ctx,
+			input: &v1.DashboardQualityOverviewRequest{
+				Scope:          "AAK",
+				NoOfDataPoints: int32(10),
+			},
+			setup: func(*v1.DashboardQualityOverviewRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetEntityMonthWise(gomock.Any(), gomock.Any()).Return([]db.GetEntityMonthWiseRow{
+					{Filename: "aak_applications.csv", Sum: int64(10)},
+					{Filename: "aak_products.csv", Sum: int64(10)},
+					{Filename: "aak_products_acquiredrights.csv", Sum: int64(10)},
+					{Filename: "aak_equipments.csv", Sum: int64(10)},
+				}, errors.New("err"))
+			},
+			output:  &v1.DashboardQualityOverviewResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			tt.s = &dpsServiceServer{
+				dpsRepo:   rep,
+				queue:     qObj,
+				equipment: equip,
+				metric:    met,
+				product:   prod,
+			}
+			_, err := tt.s.DashboardQualityOverview(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.DashboardQualityOverview() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Println("Test passed ", tt.name)
+		})
+	}
+}
 
 // func Test_ListFailureReasons(t *testing.T) {
 // 	var mockCtrl *gomock.Controller

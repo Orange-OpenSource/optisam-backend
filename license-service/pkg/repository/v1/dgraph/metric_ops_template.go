@@ -1,9 +1,10 @@
 package dgraph
 
 import (
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
 	"text/template"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 )
 
 const opsEquipTemplate templateType = "opsEquipmentTemplate"

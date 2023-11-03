@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"regexp"
 	"sort"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )
@@ -375,7 +377,7 @@ func (l *LicenseRepository) ConcatAcqRightForSameMetric(ctx context.Context, met
 	for _, acq := range resAcqRight {
 		if acq.AcqLicenses != 0 {
 			acq.AvgUnitPrice = acq.TotalPurchaseCost / float64(acq.AcqLicenses)
-		} else {
+		} else if acq.TotalPurchaseCost > 0 {
 			acq.AvgUnitPrice = acq.TotalPurchaseCost / float64(len(strings.Split(acq.SKU, ",")))
 		}
 	}

@@ -4,23 +4,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/config"
-	prodV1 "optisam-backend/product-service/pkg/api/v1"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	prodV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/config"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
+
 	excel "github.com/xuri/excelize/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -56,11 +58,13 @@ const (
 	FAILED               string = "FAILED"
 	PARTIAL              string = "PARTIAL"
 	servers              string = "servers"
-	softpartitions       string = "softpartitions"
+	virtualMachines      string = "virtualmachines"
 	products             string = "products"
 	applications         string = "applications"
 	acquiredRights       string = "acquiredRights"
+	desktops             string = "desktops"
 	DEFAULT              string = "default"
+	BLANKSTRING          string = ""
 )
 
 type Info struct {
@@ -79,11 +83,12 @@ var (
 	dataTypes map[int]string = map[int]string{0: "string", 1: "integer", 2: "float", 3: "DD-MM-YYYY or DD/MM/YYYY"}
 
 	sheetsAndHeaders map[string]map[string]Info = map[string]map[string]Info{
-		servers:        {"server_name": Info{MandatoryWithBlank, STRING}, "server_id": Info{Mandatory, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "server_type": Info{MandatoryWithBlank, STRING}, "server_os": Info{MandatoryWithBlank, STRING}, "cpu_model": Info{Mandatory, STRING}, "cores_per_processor": Info{Mandatory, INT}, "hyperthreading": Info{MandatoryWithBlank, STRING}, "cluster_name": Info{MandatoryWithBlank, STRING}, "vcenter_name": Info{MandatoryWithBlank, STRING}, "vcenter_version": Info{MandatoryWithBlank, STRING}, "datacenter_name": Info{MandatoryWithBlank, STRING}, "ibm_pvu": Info{MandatoryWithBlank, FLOAT64}, "sag_uvu": Info{MandatoryWithBlank, INT}, "cpu_manufacturer": Info{MandatoryWithBlank, STRING}, "server_processors_numbers": Info{Mandatory, INT}},
-		acquiredRights: {"maintenance_provider": Info{MandatoryWithBlank, STRING}, "last_po": Info{MandatoryWithBlank, STRING}, "support_number": Info{MandatoryWithBlank, STRING}, "software_provider": Info{MandatoryWithBlank, STRING}, "ordering_date": Info{MandatoryWithBlank, DATE}, "csc": Info{MandatoryWithBlank, STRING}, "sku": Info{Mandatory, STRING}, "product_name": Info{Mandatory, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{Mandatory, STRING}, "metric": Info{Mandatory, STRING}, "licence_type": Info{MandatoryWithBlank, STRING}, "acquired_licenses": Info{Mandatory, INT}, "unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_licences": Info{MandatoryWithBlank, INT}, "maintenance_unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_start": Info{MandatoryWithBlank, DATE}, "maintenance_end": Info{MandatoryWithBlank, DATE}},
-		softpartitions: {"softpartition_name": Info{MandatoryWithBlank, STRING}, "softpartition_id": Info{Mandatory, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "vcpu": Info{MandatoryWithBlank, INT}, "server_id": Info{Mandatory, STRING}},
-		products:       {"product_name": Info{Mandatory, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{Mandatory, STRING}, "host_id": Info{Mandatory, STRING}, "allocated_metric": Info{MandatoryWithBlank, STRING}, "allocated_users": Info{MandatoryWithBlank, INT}},
-		applications:   {"application_name": Info{Mandatory, STRING}, "application_id": Info{MandatoryWithBlank, STRING}, "product_name": Info{MandatoryWithBlank, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{MandatoryWithBlank, STRING}, "host_id": Info{Mandatory, STRING}, "domain": Info{MandatoryWithBlank, STRING}, "environment": Info{MandatoryWithBlank, STRING}}}
+		servers:         {"server_name": Info{MandatoryWithBlank, STRING}, "server_id": Info{Mandatory, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "server_type": Info{MandatoryWithBlank, STRING}, "server_os": Info{MandatoryWithBlank, STRING}, "cpu_model": Info{Mandatory, STRING}, "cores_per_processor": Info{Mandatory, INT}, "hyperthreading": Info{MandatoryWithBlank, STRING}, "cluster_name": Info{MandatoryWithBlank, STRING}, "vcenter_name": Info{MandatoryWithBlank, STRING}, "vcenter_version": Info{MandatoryWithBlank, STRING}, "datacenter_name": Info{MandatoryWithBlank, STRING}, "ibm_pvu": Info{MandatoryWithBlank, FLOAT64}, "sag_uvu": Info{MandatoryWithBlank, INT}, "cpu_manufacturer": Info{MandatoryWithBlank, STRING}, "server_processors_numbers": Info{Mandatory, INT}},
+		acquiredRights:  {"maintenance_provider": Info{MandatoryWithBlank, STRING}, "last_po": Info{MandatoryWithBlank, STRING}, "support_number": Info{MandatoryWithBlank, STRING}, "software_provider": Info{MandatoryWithBlank, STRING}, "ordering_date": Info{MandatoryWithBlank, DATE}, "csc": Info{MandatoryWithBlank, STRING}, "sku": Info{Mandatory, STRING}, "product_name": Info{Mandatory, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{Mandatory, STRING}, "metric": Info{Mandatory, STRING}, "licence_type": Info{MandatoryWithBlank, STRING}, "acquired_licenses": Info{Mandatory, INT}, "unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_licences": Info{MandatoryWithBlank, INT}, "maintenance_unit_price": Info{MandatoryWithBlank, FLOAT64}, "maintenance_start": Info{MandatoryWithBlank, DATE}, "maintenance_end": Info{MandatoryWithBlank, DATE}},
+		virtualMachines: {"vm_name": Info{MandatoryWithBlank, STRING}, "vm_id": Info{Mandatory, STRING}, "environment": Info{MandatoryWithBlank, STRING}, "vcpu": Info{MandatoryWithBlank, INT}, "server_id": Info{Mandatory, STRING}},
+		products:        {"product_name": Info{Mandatory, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{Mandatory, STRING}, "host_id": Info{Mandatory, STRING}, "allocated_metric": Info{MandatoryWithBlank, STRING}, "allocated_users": Info{MandatoryWithBlank, INT}},
+		applications:    {"application_name": Info{Mandatory, STRING}, "application_id": Info{MandatoryWithBlank, STRING}, "product_name": Info{MandatoryWithBlank, STRING}, "product_version": Info{MandatoryWithBlank, STRING}, "product_editor": Info{MandatoryWithBlank, STRING}, "host_id": Info{Mandatory, STRING}, "domain": Info{MandatoryWithBlank, STRING}, "environment": Info{MandatoryWithBlank, STRING}},
+		desktops:        {"desktop_name": Info{MandatoryWithBlank, STRING}}}
 
 	actionAndColors map[string]string = map[string]string{Inconsistent1: "#FFC0CB", Inconsistent2: "#C0C0C0", WrongTypeField: "#FFA500", DuplicateLine: "#1986EE", MandatoryHeader: "#7FFD4", MissingField: "#008000", DuplicateHeader: "#808000", BadReference: "#F5CBA7", isCatalog: "#19EE3C"}
 
@@ -247,12 +252,13 @@ func (d *dpsServiceServer) DataAnalysis(ctx context.Context, req *v1.DataAnalysi
 		logger.Log.Error("Failed to get metrics", zap.Error(err))
 	}
 
-	goodObjQueue := make(chan map[string][][]string, 5)
-	badObjQueue := make(chan map[string][][]string, 5)
-	mainObjQueueWithoutBlank := make(chan map[string][][]string, 5)
-	mainObjQueue := make(chan map[string][]ObjectCommentInfo, 5)
+	goodObjQueue := make(chan map[string][][]string, 6)
+	badObjQueue := make(chan map[string][][]string, 6)
+	mainObjQueue := make(chan map[string][]ObjectCommentInfo, 6)
+	mainObjQueueWithoutBlank := make(chan map[string][][]string, 6)
 	badServersQueue := make(chan map[string]int, 1)
-	badSoftpartitionsQueue := make(chan map[string]int, 1)
+	badVirtualMachinesQueue := make(chan map[string]int, 1)
+	goodProductQueue := make(chan map[string]int, 1)
 	serverInfo := make(map[string]int)
 
 	if err := cacheCorefactor(ctx, d); err != nil {
@@ -271,15 +277,19 @@ func (d *dpsServiceServer) DataAnalysis(ctx context.Context, req *v1.DataAnalysi
 	})
 
 	g.Go(func() error {
-		err := analyzeSoftpartitionSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badServersQueue, badSoftpartitionsQueue, headersIndex[softpartitions], serverInfo)
+		err := analyzeVirtualMachineSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badServersQueue, badVirtualMachinesQueue, headersIndex[virtualMachines], serverInfo)
 		return err
 	})
 	g.Go(func() error {
-		err := analyzeProductSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badSoftpartitionsQueue, headersIndex[products], metrics, edList, serverInfo)
+		err := analyzeDesktopsSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, headersIndex[desktops])
 		return err
 	})
 	g.Go(func() error {
-		err := analyzeApplicationSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badSoftpartitionsQueue, headersIndex[applications], edList)
+		err := analyzeProductSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badVirtualMachinesQueue, serverInfo, headersIndex[products], metrics, edList, goodProductQueue)
+		return err
+	})
+	g.Go(func() error {
+		err := analyzeApplicationSheet(fp, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank, mainObjQueue, badVirtualMachinesQueue, headersIndex[applications], edList, goodProductQueue)
 		return err
 	})
 	g.Go(func() error {
@@ -340,7 +350,7 @@ func isFileExtensionValid(name string) bool {
 func isSheetMissing(fp *excel.File) error {
 	errMsg := ""
 	count := 0
-	expectedSheets := map[string]bool{"servers": false, "softpartitions": false, "products": false, "applications": false, "acquiredRights": false}
+	expectedSheets := map[string]bool{"servers": false, "virtualmachines": false, "products": false, "applications": false, "acquiredRights": false, "desktops": false}
 	for _, v := range fp.GetSheetList() {
 		expectedSheets[v] = true
 	}
@@ -357,6 +367,7 @@ func isSheetMissing(fp *excel.File) error {
 		} else {
 			errMsg += " sheet is missing"
 		}
+		logger.Log.Error(errMsg)
 		return fmt.Errorf("%s", errMsg)
 	}
 	return nil
@@ -405,7 +416,7 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueW
 		// serverOs := getCellValue(fp, "server_os", i+1, headersIndex, servers)
 		// cpuManufacturer := getCellValue(fp, "cpu_manufacturer", i+1, headersIndex, servers)
 		// cpuModdel := getCellValue(fp, "cpu_model", i+1, headersIndex, servers)
-		// serverProcessor := getCellValue(fp, "server_processors_number", i+1, headersIndex, servers)
+		// serverProcessor := getCellValue(fp, "server_processors_numbers", i+1, headersIndex, servers)
 		// coresProcessor := getCellValue(fp, "cores_per_processor", i+1, headersIndex, servers)
 		// hyperthreading := getCellValue(fp, "hyperthreading", i+1, headersIndex, servers)
 		// clusterName := getCellValue(fp, "cluster_name", i+1, headersIndex, servers)
@@ -432,17 +443,11 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueW
 				return err
 			}
 			if ok {
-				obj, ok := handleServerSheetInconsistency(serverID, r, inconsitency, headersIndex, i+1)
+				obj, ok := handleServerSheetInconsistency(fp, serverID, r, inconsitency, headersIndex, i+1, r)
 				if ok {
 					goodObj = append(goodObj, r)
 					badServers[serverID] = 2
 				} else {
-					col, err := excel.ColumnNumberToName(headersIndex["server_id"])
-					if err != nil {
-						logger.Log.Error("Failed to get column in server ", zap.Any("col_number", headersIndex["server_id"]), zap.Error(err))
-						return err
-					}
-					obj.Column = fmt.Sprintf("%s%d", col, i)
 					badObj = append(badObj, r)
 					mainObj[servers] = append(mainObj[servers], obj)
 					badServers[serverID] = 1
@@ -460,12 +465,13 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueW
 				Coordinates: []int{len(r), i + 1},
 			})
 			badObj = append(badObj, r)
-			badServers[serverID] = 1
+			// The following line is commented as there can be a case where serverID can have a prior instance and it's stored in goodObj
+			// But because of this other duplicate row occurunce, serverID was also being stored in badObj
+			//	badServers[serverID] = 1
 		}
 		i++
 		currentRow++
 	}
-	fmt.Println(mainObjWithoutBlanks)
 	logger.Log.Debug("Filtered server msg objects ", zap.Any("goodObj", goodObj), zap.Any("baddObj", badObj), zap.Any("mainObj", mainObj), zap.Any("BadServers", badServers))
 	queueData := make(map[string][][]string)
 	queueData[servers] = goodObj
@@ -482,19 +488,19 @@ func analyzeServerSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueW
 	return nil
 }
 
-func analyzeSoftpartitionSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badServersQueue, badSoftpartitionsQueue chan map[string]int, headersIndex map[string]int, serverInfo map[string]int) error {
+func analyzeVirtualMachineSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badServersQueue, badVirtualMachinesQueue chan map[string]int, headersIndex map[string]int, serverInfo map[string]int) error {
 	logger.Log.Debug("Starting partition=================================================")
 
 	checkDuplicates := make(map[string]int)
 	inconsitency := make(map[string]string)
 	var goodObj, badObj, mainObjWithoutBlanks [][]string
-	badSoftpartitions := make(map[string]int)
-	softpartitionInfo := make(map[string]BadReferenceInfo)
+	badVirtualMachines := make(map[string]int)
+	virtualMachineInfo := make(map[string]BadReferenceInfo)
 	mainObj := make(map[string][]ObjectCommentInfo)
-	rows, err := fp.Rows(softpartitions)
+	rows, err := fp.Rows(virtualMachines)
 	if err != nil {
-		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.Any("sheet", softpartitions))
-		return errors.New("failedToReadSoftpartitionSheet")
+		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.Any("sheet", virtualMachines))
+		return errors.New("failedToReadVirtualMachineSheet")
 	}
 	continuousSpace := 0
 	i := 0
@@ -520,11 +526,11 @@ func analyzeSoftpartitionSheet(fp *excel.File, goodObjQueue, badObjQueue, mainOb
 		if continuousSpace == 10 {
 			break
 		}
-		serverID := getCellValue(fp, "server_id", i+1, headersIndex, softpartitions)
-		partitionID := getCellValue(fp, "softpartition_id", i+1, headersIndex, softpartitions)
-		// partitionName := getCellValue(fp, "softpartition_name", i+1, headersIndex, softpartitions)
-		// environment := getCellValue(fp, "environment", i+1, headersIndex, softpartitions)
-		// vcpu := getCellValue(fp, "vcpu", i+1, headersIndex, softpartitions)
+		serverID := getCellValue(fp, "server_id", i+1, headersIndex, virtualMachines)
+		partitionID := getCellValue(fp, "vm_id", i+1, headersIndex, virtualMachines)
+		// partitionName := getCellValue(fp, "vm_name", i+1, headersIndex, virtualMachines)
+		// environment := getCellValue(fp, "environment", i+1, headersIndex, virtualMachines)
+		// vcpu := getCellValue(fp, "vcpu", i+1, headersIndex, virtualMachines)
 		//blankRow := serverID + partitionID + partitionName + environment + vcpu
 		r, _ := rows.Columns()
 		mainObjWithoutBlanks = append(mainObjWithoutBlanks, r)
@@ -536,49 +542,51 @@ func analyzeSoftpartitionSheet(fp *excel.File, goodObjQueue, badObjQueue, mainOb
 		continuousSpace = 0
 		if checkDuplicates[strings.Join(r, "|")] == 0 {
 			checkDuplicates[strings.Join(r, "|")] = i
-			objects, ok, err := handleMandatoryFieldMissingAndWrongType(fp, i+1, softpartitions, headersIndex, r)
+			objects, ok, err := handleMandatoryFieldMissingAndWrongType(fp, i+1, virtualMachines, headersIndex, r)
 			if err != nil {
-				logger.Log.Error("Error in handleMandatoryFieldMissingAndWrongType ", zap.Any("sheet", softpartitions), zap.Error(err))
+				logger.Log.Error("Error in handleMandatoryFieldMissingAndWrongType ", zap.Any("sheet", virtualMachines), zap.Error(err))
 				return err
 			}
 			if ok {
-				obj, ok := handleSoftpartitionInconsistency(fp, headersIndex, inconsitency, i+1)
+				obj, ok := handleVirtualMachineInconsistency(fp, headersIndex, inconsitency, i+1)
 				if ok {
-					if _, y := softpartitionInfo[serverID]; !y {
-						softpartitionInfo[serverID] = BadReferenceInfo{}
+					if _, y := virtualMachineInfo[serverID]; !y {
+						virtualMachineInfo[serverID] = BadReferenceInfo{}
 					}
-					temp := softpartitionInfo[serverID]
+					temp := virtualMachineInfo[serverID]
 					temp.Data = append(temp.Data, r)
 					temp.RowIndics = append(temp.RowIndics, i)
-					softpartitionInfo[serverID] = temp
-					if badSoftpartitions[partitionID] == 0 {
-						badSoftpartitions[partitionID] = 2
+					virtualMachineInfo[serverID] = temp
+					if badVirtualMachines[partitionID] == 0 {
+						badVirtualMachines[partitionID] = 2
 					}
 				} else {
 					badObj = append(badObj, r)
-					mainObj[softpartitions] = append(mainObj[softpartitions], obj)
-					if badSoftpartitions[partitionID] == 0 {
-						badSoftpartitions[partitionID] = 1
+					mainObj[virtualMachines] = append(mainObj[virtualMachines], obj)
+					if badVirtualMachines[partitionID] == 0 {
+						badVirtualMachines[partitionID] = 1
 					}
 				}
 			} else {
 				badObj = append(badObj, r)
-				mainObj[softpartitions] = append(mainObj[softpartitions], objects...)
-				if badSoftpartitions[partitionID] == 0 {
-					badSoftpartitions[partitionID] = 1
+				mainObj[virtualMachines] = append(mainObj[virtualMachines], objects...)
+				if badVirtualMachines[partitionID] == 0 {
+					badVirtualMachines[partitionID] = 1
 				}
 			}
 		} else {
-			mainObj[softpartitions] = append(mainObj[softpartitions], ObjectCommentInfo{
+			mainObj[virtualMachines] = append(mainObj[virtualMachines], ObjectCommentInfo{
 				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(r, "|")]+1),
 				Action:      DuplicateLine,
 				IsFullRow:   true,
 				Coordinates: []int{len(r), i + 1},
 			})
 			badObj = append(badObj, r)
-			if badSoftpartitions[partitionID] == 0 {
-				badSoftpartitions[partitionID] = 1
-			}
+			// The following line is commented as there can be a case where serverID can have a prior instance and it's stored in goodObj
+			// But because of this other duplicate row occurunce, serverID was also being stored in badObj
+			// if badVirtualMachines[partitionID] == 0 {
+			// 	badVirtualMachines[partitionID] = 1
+			// }
 		}
 		i++
 		currentRow++
@@ -590,35 +598,34 @@ func analyzeSoftpartitionSheet(fp *excel.File, goodObjQueue, badObjQueue, mainOb
 			//	serverInfo := make(map[string]int)
 			for key, val := range <-badServersQueue {
 				serverInfo[key] = val
-				if _, ok := badSoftpartitions[key]; !ok {
-					badSoftpartitions[key] = val
+				if _, ok := badVirtualMachines[key]; !ok {
+					badVirtualMachines[key] = val
 				}
 			}
-			for server, val := range softpartitionInfo {
+			for server, val := range virtualMachineInfo {
 				var obj []ObjectCommentInfo
 				if serverInfo[server] == GoodObject {
 					goodObj = append(goodObj, val.Data...)
 				} else {
 					badObj = append(badObj, val.Data...)
-					obj = getBadObjectsForComment(val, server, badSoftpartitions, headersIndex, "softpartition_id")
+					obj = getBadObjectsForComment(val, server, badVirtualMachines, headersIndex, "vm_id")
 				}
 				if len(obj) > 0 {
-					mainObj[softpartitions] = append(mainObj[softpartitions], obj...)
+					mainObj[virtualMachines] = append(mainObj[virtualMachines], obj...)
 				}
 			}
-			fmt.Println(mainObjWithoutBlanks)
-			logger.Log.Debug("Filtered softpartition msg objects ", zap.Any("goodObj", goodObj), zap.Any("baddObj", badObj), zap.Any("mainObj", mainObj), zap.Any("softpartitionInfo", badSoftpartitions))
+			logger.Log.Debug("Filtered virtualMachine msg objects ", zap.Any("goodObj", goodObj), zap.Any("baddObj", badObj), zap.Any("mainObj", mainObj), zap.Any("virtualMachineInfo", badVirtualMachines))
 			queueData := make(map[string][][]string)
-			queueData[softpartitions] = badObj
+			queueData[virtualMachines] = badObj
 			badObjQueue <- queueData
 			mainObjQueue <- mainObj
 			queueData = make(map[string][][]string)
-			queueData[softpartitions] = goodObj
+			queueData[virtualMachines] = goodObj
 			goodObjQueue <- queueData
 			queueData = make(map[string][][]string)
-			queueData[softpartitions] = mainObjWithoutBlanks
+			queueData[virtualMachines] = mainObjWithoutBlanks
 			mainObjQueueWithoutBlank <- queueData
-			badSoftpartitionsQueue <- badSoftpartitions
+			badVirtualMachinesQueue <- badVirtualMachines
 			break
 		} else {
 			time.Sleep(100 * time.Millisecond)
@@ -635,14 +642,14 @@ func getBadObjectsForComment(data BadReferenceInfo, key string, badObjectsForQue
 		var colName string
 		id := ""
 		var err error
-		if badObjKey == "softpartition_id" {
+		if badObjKey == "vm_id" {
 			id = "server_id"
 		} else {
 			id = "host_id"
 		}
 		colName, err = excel.ColumnNumberToName(headersIndex[id])
 		if err != nil {
-			logger.Log.Error("Failed to get colm name for server in softpartiton analysis", zap.Error(err))
+			logger.Log.Error("Failed to get colm name for server in virtualMachine analysis", zap.Error(err))
 			colName = "A"
 		}
 		obj = append(obj, ObjectCommentInfo{
@@ -657,7 +664,7 @@ func getBadObjectsForComment(data BadReferenceInfo, key string, badObjectsForQue
 	return obj
 }
 
-func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badSoftpartitionQueue chan map[string]int, headersIndex map[string]int, metrics *v1.GetAllocMetricDetailsResponse, edList []string, serverInfo map[string]int) error {
+func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badVirtualMachineQueue chan map[string]int, serverInfo map[string]int, headersIndex map[string]int, metrics *v1.GetAllocMetricDetailsResponse, edList []string, goodProductQueue chan map[string]int) error {
 	logger.Log.Debug("Starting product=================================================")
 
 	checkDuplicates := make(map[string]int)
@@ -669,23 +676,24 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 	inconsitency := make(map[string]string)
 	var goodObj, badObj, mainObjWithoutBlanks [][]string
 	productInfo := make(map[string]BadReferenceInfo)
+	goodProducts := make(map[string]int)
 	mainObj := make(map[string][]ObjectCommentInfo)
 	rows, err := fp.Rows(products)
 	if err != nil {
 		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.Any("sheet", products))
 		return errors.New("failedToReadProductSheet")
 	}
-	badSoftpartition := make(map[string]int)
+	badVirtualMachines := make(map[string]int)
 	for {
-		if len(badSoftpartitionQueue) == 1 {
-			close(badSoftpartitionQueue)
-			for hostID, val := range <-badSoftpartitionQueue {
-				badSoftpartition[hostID] = val
+		if len(badVirtualMachineQueue) == 1 {
+			close(badVirtualMachineQueue)
+			for hostID, val := range <-badVirtualMachineQueue {
+				badVirtualMachines[hostID] = val
 			}
 			break
 		} else {
 			time.Sleep(100 * time.Millisecond)
-			logger.Log.Debug("Wainting for bad SoftpartitionQuue and badServerQueue.....")
+			logger.Log.Debug("Wainting for bad virtualMachineQuue and badServerQueue.....")
 		}
 	}
 	continuousSpace := 0
@@ -722,7 +730,7 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 		allocatedMetric := getCellValue(fp, "allocated_metric", i+1, headersIndex, products)
 		//allocUser := getCellValue(fp, "allocated_users", i+1, headersIndex, products)
 		name := prodName + prodEditor + prodVersion + hostID
-		//blankRow := prodName + prodEditor + prodVersion + hostID + allocUser + allocatedMetric
+		blankRow := prodName + prodEditor + prodVersion + hostID
 		r, _ := rows.Columns()
 		mainObjWithoutBlanks = append(mainObjWithoutBlanks, r)
 		if len(r) == 0 {
@@ -738,7 +746,7 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 				return err
 			}
 			if ok {
-				obj, ObjCatalog, isHost, err := handleProductSheetInconsistency(fp, headersIndex, inconsitency, i+1, edList, serverInfo, badSoftpartition)
+				obj, ObjCatalog, isHost, err := handleProductSheetInconsistency(fp, headersIndex, inconsitency, i+1, edList, serverInfo, badVirtualMachines)
 				if err != nil {
 					logger.Log.Error("handleProductSheetInconsistency err", zap.Error(err))
 					return err
@@ -746,6 +754,9 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 				if isHost {
 					badObj = append(badObj, r)
 					mainObj[products] = append(mainObj[products], obj)
+					if goodProducts[blankRow] == 0 {
+						goodProducts[blankRow] = 1
+					}
 					i++
 					continue
 				}
@@ -763,8 +774,11 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 									temp.Data = append(temp.Data, r)
 									temp.RowIndics = append(temp.RowIndics, i)
 									productInfo[hostID] = temp
-
 									goodObj = append(goodObj, r)
+
+									if goodProducts[blankRow] == 0 {
+										goodProducts[blankRow] = 2
+									}
 									if len(ObjCatalog) > 0 {
 										mainObj[products] = append(mainObj[products], ObjCatalog...)
 									}
@@ -775,6 +789,9 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 										IsFullRow:   true,
 										Coordinates: []int{len(r) - 1, i + 1},
 									})
+									if goodProducts[blankRow] == 0 {
+										goodProducts[blankRow] = 1
+									}
 								}
 							} else {
 								badObj = append(badObj, r)
@@ -783,6 +800,9 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 									IsFullRow:   true,
 									Coordinates: []int{len(r) - 1, i + 1},
 								})
+								if goodProducts[blankRow] == 0 {
+									goodProducts[blankRow] = 1
+								}
 							}
 						} else {
 							if _, y := productInfo[hostID]; !y {
@@ -792,8 +812,12 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 							temp.Data = append(temp.Data, r)
 							temp.RowIndics = append(temp.RowIndics, i)
 							productInfo[hostID] = temp
-
 							goodObj = append(goodObj, r)
+
+							if goodProducts[blankRow] == 0 {
+								goodProducts[blankRow] = 2
+							}
+
 							if len(ObjCatalog) > 0 {
 								mainObj[products] = append(mainObj[products], ObjCatalog...)
 							}
@@ -805,6 +829,9 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 							IsFullRow:   true,
 							Coordinates: []int{len(r), i + 1},
 						})
+						if goodProducts[blankRow] == 0 {
+							goodProducts[blankRow] = 1
+						}
 						badObj = append(badObj, r)
 					}
 				} else {
@@ -813,11 +840,17 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 						IsFullRow:   true,
 						Coordinates: []int{len(r), i + 1},
 					})
+					if goodProducts[blankRow] == 0 {
+						goodProducts[blankRow] = 1
+					}
 					badObj = append(badObj, r)
 				}
 			} else {
 				badObj = append(badObj, r)
 				mainObj[products] = append(mainObj[products], objects...)
+				if goodProducts[blankRow] == 0 {
+					goodProducts[blankRow] = 1
+				}
 			}
 
 		} else {
@@ -827,6 +860,9 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 				IsFullRow:   true,
 				Coordinates: []int{len(r), i + 1},
 			})
+			if goodProducts[blankRow] == 0 {
+				goodProducts[blankRow] = 1
+			}
 			badObj = append(badObj, r)
 		}
 		i++
@@ -844,13 +880,12 @@ func analyzeProductSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueue
 	queueData = make(map[string][][]string)
 	queueData[products] = mainObjWithoutBlanks
 	mainObjQueueWithoutBlank <- queueData
-
-	fmt.Println(mainObjWithoutBlanks)
+	goodProductQueue <- goodProducts
 	logger.Log.Debug("end product =================================================")
 	return nil
 }
 
-func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badSoftpartitionQueue chan map[string]int, headersIndex map[string]int, edList []string) error {
+func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, badVirtualMachineQueue chan map[string]int, headersIndex map[string]int, edList []string, goodProductQueue chan map[string]int) error {
 	logger.Log.Debug("Starting application=================================================")
 
 	checkDuplicates := make(map[string]int)
@@ -858,9 +893,22 @@ func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQ
 	var goodObj, badObj, mainObjWithoutBlanks [][]string
 	mainObj := make(map[string][]ObjectCommentInfo)
 	rows, err := fp.Rows(applications)
+	goodProducts := make(map[string]int)
 	if err != nil {
 		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.Any("sheet", applications))
 		return errors.New("failedToReadApplicationSheet")
+	}
+	for {
+		if len(goodProductQueue) == 1 {
+			close(goodProductQueue)
+			for data, val := range <-goodProductQueue {
+				goodProducts[data] = val
+			}
+			break
+		} else {
+			time.Sleep(100 * time.Millisecond)
+			logger.Log.Debug("Wainting for good Products....")
+		}
 	}
 	continuousSpace := 0
 	i := 0
@@ -894,7 +942,7 @@ func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQ
 		// applicationId := getCellValue(fp, "application_id", i+1, headersIndex, applications)
 		// domain := getCellValue(fp, "domain", i+1, headersIndex, applications)
 		// environment := getCellValue(fp, "environment", i+1, headersIndex, applications)
-		//blankRow := applicationName + applicationId + domain + environment + prodName + prodEditor + prodVersion + hostId
+		// blankRow := prodName + prodEditor + prodVersion + hostId
 		r, _ := rows.Columns()
 		mainObjWithoutBlanks = append(mainObjWithoutBlanks, r)
 		if len(r) == 0 {
@@ -911,10 +959,16 @@ func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQ
 				return err
 			}
 			if ok {
-				obj, ObjCatalog, ok, err := handleApplicationSheetInconsistency(fp, headersIndex, inconsitency, i+1, edList)
+				obj, ObjCatalog, ok, isHost, err := handleApplicationSheetInconsistency(fp, headersIndex, inconsitency, i+1, edList, goodProducts)
 				if err != nil {
 					logger.Log.Error("handleApplicationSheetInconsistency err", zap.Error(err))
 					return err
+				}
+				if isHost {
+					badObj = append(badObj, r)
+					mainObj[applications] = append(mainObj[applications], obj...)
+					i++
+					continue
 				}
 				if ok {
 					goodObj = append(goodObj, r)
@@ -941,7 +995,6 @@ func analyzeApplicationSheet(fp *excel.File, goodObjQueue, badObjQueue, mainObjQ
 		i++
 		currentRow++
 	}
-	fmt.Println(mainObjWithoutBlanks)
 	logger.Log.Debug("Filtered Application msg objects ", zap.Any("goodObj", goodObj), zap.Any("baddObj", badObj), zap.Any("mainObj", mainObj))
 	queueData := make(map[string][][]string)
 	queueData[applications] = goodObj
@@ -1029,7 +1082,7 @@ func analyzeAcquiredRightSheet(fp *excel.File, goodObjQueue, badObjQueue, mainOb
 				return err
 			}
 			if ok {
-				obj, objCatalog, ok, err := handleAcquiredRightSheetInconsistency(fp, headersIndex, inconsitency, len(r), i+1, edList)
+				obj, objCatalog, ok, err := handleAcquiredRightSheetInconsistency(fp, headersIndex, inconsitency, len(r), i+1, edList, r)
 				if err != nil {
 					logger.Log.Error("handleAcquiredRightSheetInconsistency err", zap.Error(err))
 					return err
@@ -1071,6 +1124,94 @@ func analyzeAcquiredRightSheet(fp *excel.File, goodObjQueue, badObjQueue, mainOb
 	queueData[acquiredRights] = mainObjWithoutBlanks
 	mainObjQueueWithoutBlank <- queueData
 	logger.Log.Debug("end acq=================================================")
+	return nil
+}
+
+func analyzeDesktopsSheet(fp *excel.File, goodObjQueue, badObjQueue chan map[string][][]string, mainObjQueueWithoutBlank chan map[string][][]string, mainObjQueue chan map[string][]ObjectCommentInfo, headersIndex map[string]int) error {
+	logger.Log.Debug("Starting desktops=================================================")
+
+	checkDuplicates := make(map[string]int)
+	// inconsitency := make(map[string]string)
+	var goodObj, badObj, mainObjWithoutBlanks [][]string
+	mainObj := make(map[string][]ObjectCommentInfo)
+	rows, err := fp.Rows(desktops)
+	if err != nil {
+		logger.Log.Error("Failed to read the sheet", zap.Error(err), zap.Any("sheet", desktops))
+		return errors.New("failedToReadDesktopsSheet")
+	}
+
+	continuousSpace := 0
+	i := 0
+	currentRow := 0
+	for rows.Next() {
+		var tempRow []string
+		if currentRow == 0 {
+			currentRow++
+			tempRow, _ = rows.Columns()
+			i++
+			continue
+		}
+		if len(tempRow) == 0 {
+		}
+		if i == 0 {
+			//currentRow++
+
+			_, _ = rows.Columns()
+			i++
+			continue
+		}
+		// if len(tempRow) == 0 {
+		// }
+		if continuousSpace == 10 {
+			break
+		}
+
+		r, _ := rows.Columns()
+		mainObjWithoutBlanks = append(mainObjWithoutBlanks, r)
+		if len(r) == 0 {
+			continuousSpace++
+			i++
+			continue
+		}
+		continuousSpace = 0
+		if checkDuplicates[strings.Join(r, "|")] == 0 {
+			checkDuplicates[strings.Join(r, "|")] = i
+			objects, ok, err := handleMandatoryFieldMissingAndWrongType(fp, i+1, desktops, headersIndex, r)
+			if err != nil {
+				logger.Log.Error("handleMandatoryFieldMissingAndWrongType error", zap.Error(err))
+				return err
+			}
+			if ok {
+				goodObj = append(goodObj, r)
+			} else {
+				badObj = append(badObj, r)
+				mainObj[desktops] = append(mainObj[desktops], objects...)
+			}
+		} else {
+			mainObj[desktops] = append(mainObj[desktops], ObjectCommentInfo{
+				Msg:         fmt.Sprintf("This row is duplicate with row no %d", checkDuplicates[strings.Join(r, "|")]+1),
+				Action:      DuplicateLine,
+				IsFullRow:   true,
+				Coordinates: []int{len(r), i + 1},
+			})
+			badObj = append(badObj, r)
+		}
+		i++
+		currentRow++
+	}
+
+	logger.Log.Debug("Filtered desktops msg objects ", zap.Any("goodObj", goodObj), zap.Any("baddObj", badObj), zap.Any("mainObj", mainObj))
+	queueData := make(map[string][][]string)
+	queueData[desktops] = goodObj
+	goodObjQueue <- queueData
+	queueData = make(map[string][][]string)
+	queueData[desktops] = badObj
+	badObjQueue <- queueData
+	mainObjQueue <- mainObj
+	queueData = make(map[string][][]string)
+	queueData[desktops] = mainObjWithoutBlanks
+	mainObjQueueWithoutBlank <- queueData
+	logger.Log.Debug("end desktops =================================================")
 	return nil
 }
 
@@ -1400,17 +1541,17 @@ func handleDuplicateHeader(fp *excel.File, sheetName, headerName string, column 
 	return nil
 }
 
-func handleSoftpartitionInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int) (ObjectCommentInfo, bool) {
-	key := getCellValue(fp, "softpartition_id", y, headersIndex, softpartitions)
-	val := getCellValue(fp, "server_id", y, headersIndex, softpartitions)
+func handleVirtualMachineInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int) (ObjectCommentInfo, bool) {
+	key := getCellValue(fp, "vm_id", y, headersIndex, virtualMachines)
+	val := getCellValue(fp, "server_id", y, headersIndex, virtualMachines)
 	if inconsistency[key] != "" && val != "" && inconsistency[key] != val {
-		colName, err := excel.ColumnNumberToName(headersIndex["softpartition_id"])
+		colName, err := excel.ColumnNumberToName(headersIndex["vm_id"])
 		if err != nil {
-			logger.Log.Error("Softpartition/Failed to get server_id column namne", zap.Error(err))
+			logger.Log.Error("VirtualMachine/Failed to get server_id column namne", zap.Error(err))
 			colName = "A"
 		}
 		return ObjectCommentInfo{
-			Msg:    "same softpartition id cannot have multiple server_id",
+			Msg:    "same vm id cannot have multiple server_id",
 			Action: Inconsistent1,
 			Column: fmt.Sprintf("%s%d", colName, y),
 		}, false
@@ -1420,12 +1561,12 @@ func handleSoftpartitionInconsistency(fp *excel.File, headersIndex map[string]in
 	return ObjectCommentInfo{}, true
 }
 
-func handleServerSheetInconsistency(serverID string, data []string, inconsistency map[string]string, headersIndex map[string]int, y int) (ObjectCommentInfo, bool) {
+func handleServerSheetInconsistency(fp *excel.File, serverID string, data []string, inconsistency map[string]string, headersIndex map[string]int, y int, r []string) (ObjectCommentInfo, bool) {
 	value := strings.Join(data, "|")
 	if inconsistency[serverID] != "" {
 		colName, err := excel.ColumnNumberToName(headersIndex["server_id"])
 		if err != nil {
-			logger.Log.Error("Server/Failed to get server_id column namne", zap.Error(err))
+			logger.Log.Error("Server/Failed to get server_id column name", zap.Error(err))
 			colName = "A"
 		}
 		return ObjectCommentInfo{
@@ -1436,10 +1577,36 @@ func handleServerSheetInconsistency(serverID string, data []string, inconsistenc
 	} else if serverID != "" {
 		inconsistency[serverID] = value
 	}
+	vn := getCellValue(fp, "vcenter_name", y, headersIndex, servers)
+	cn := getCellValue(fp, "cluster_name", y, headersIndex, servers)
+	hyperthreading := getCellValue(fp, "hyperthreading", y, headersIndex, servers)
+
+	if !(strings.ToLower(hyperthreading) == "yes" || strings.ToLower(hyperthreading) == "no") {
+		r[headersIndex["hyperthreading"]-1] = BLANKSTRING
+	}
+
+	if cn != "" && vn == "" {
+		col, err := excel.ColumnNumberToName(headersIndex["vcenter_name"])
+		if err != nil {
+			logger.Log.Error("Failed to get vcenter name colum name in server Sheet", zap.Any("colNumber", headersIndex["vcenter_name"]), zap.Error(err))
+			return ObjectCommentInfo{
+				Msg:    "Failed to get vcenter name colum name in server Sheet",
+				Action: Inconsistent1,
+				Column: fmt.Sprintf("%s%d", col, y),
+			}, false
+		} else {
+			logger.Log.Error("server contains cluster information without a vcenter in Server Sheet", zap.Any("colNumber", headersIndex["vcenter_name"]), zap.Error(err))
+			return ObjectCommentInfo{
+				Msg:    "server contains cluster information without a vcenter",
+				Action: MissingField,
+				Column: fmt.Sprintf("%s%d", col, y),
+			}, false
+		}
+	}
 	return ObjectCommentInfo{}, true
 }
 
-func handleProductSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int, edList []string, serverInfo map[string]int, badSoftpartition map[string]int) (ObjectCommentInfo, []ObjectCommentInfo, bool, error) {
+func handleProductSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int, edList []string, serverInfo map[string]int, badVirtualMachines map[string]int) (ObjectCommentInfo, []ObjectCommentInfo, bool, error) {
 	prode := getCellValue(fp, "product_editor", y, headersIndex, products)
 	hostID := getCellValue(fp, "host_id", y, headersIndex, products)
 
@@ -1464,7 +1631,7 @@ func handleProductSheetInconsistency(fp *excel.File, headersIndex map[string]int
 			}
 		}
 	}
-	if !(badSoftpartition[hostID] == GoodObject && serverInfo[hostID] == GoodObject) {
+	if !(badVirtualMachines[hostID] == GoodObject) && !(serverInfo[hostID] == GoodObject) {
 		col, err := excel.ColumnNumberToName(headersIndex["host_id"])
 		if err != nil {
 			logger.Log.Error("Failed to get colname in products Sheet", zap.Any("colNumber", headersIndex["host_id"]), zap.Error(err))
@@ -1477,13 +1644,18 @@ func handleProductSheetInconsistency(fp *excel.File, headersIndex map[string]int
 		}
 		return ob1, objCatalog, true, nil
 	}
+
 	return ob1, objCatalog, false, nil
 }
 
-func handleApplicationSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int, edList []string) ([]ObjectCommentInfo, []ObjectCommentInfo, bool, error) {
+func handleApplicationSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, y int, edList []string, goodProducts map[string]int) ([]ObjectCommentInfo, []ObjectCommentInfo, bool, bool, error) {
 	val := getCellValue(fp, "application_name", y, headersIndex, applications)
 	key := getCellValue(fp, "application_id", y, headersIndex, applications)
+	prodName := getCellValue(fp, "product_name", y, headersIndex, applications)
+	prodVersion := getCellValue(fp, "product_version", y, headersIndex, applications)
+	hostId := getCellValue(fp, "host_id", y, headersIndex, applications)
 	prode := getCellValue(fp, "product_editor", y, headersIndex, applications)
+	data := prodName + prode + prodVersion + hostId
 
 	var obj []ObjectCommentInfo
 	var objCatalog []ObjectCommentInfo
@@ -1502,7 +1674,7 @@ func handleApplicationSheetInconsistency(fp *excel.File, headersIndex map[string
 	peCol, er := excel.ColumnNumberToName(headersIndex["product_editor"])
 	if er != nil {
 		logger.Log.Error("Failed to get colname in acqRights Sheet", zap.Any("colNumber", headersIndex["product_editor"]), zap.Error(er))
-		return nil, nil, false, er
+		return nil, nil, false, false, er
 	}
 	if prode != "" {
 		for _, ed := range edList {
@@ -1517,10 +1689,24 @@ func handleApplicationSheetInconsistency(fp *excel.File, headersIndex map[string
 			}
 		}
 	}
-	if len(obj) > 0 {
-		return obj, objCatalog, false, nil
+	v, ok := goodProducts[data]
+	if !(v == GoodObject) || !ok {
+		col, err := excel.ColumnNumberToName(headersIndex["product_name"])
+		if err != nil {
+			logger.Log.Error("Failed to get colname in Application Sheet", zap.Any("colNumber", headersIndex["product_name"]), zap.Error(err))
+			return obj, nil, false, false, err
+		}
+		obj = append(obj, ObjectCommentInfo{
+			Msg:    " combination of Product name, product editor, version and host_id not in product sheet",
+			Action: Inconsistent1,
+			Column: fmt.Sprintf("%s%d", col, y),
+		})
+		return obj, objCatalog, false, true, nil
 	}
-	return nil, objCatalog, true, nil
+	if len(obj) > 0 {
+		return obj, objCatalog, false, false, nil
+	}
+	return nil, objCatalog, true, false, nil
 }
 
 func getCellValue(fp *excel.File, key string, rowNo int, headersIndex map[string]int, sheetName string) (val string) {
@@ -1538,7 +1724,7 @@ func getCellValue(fp *excel.File, key string, rowNo int, headersIndex map[string
 	return
 }
 
-func handleAcquiredRightSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, x, y int, edList []string) ([]ObjectCommentInfo, []ObjectCommentInfo, bool, error) { // nolint
+func handleAcquiredRightSheetInconsistency(fp *excel.File, headersIndex map[string]int, inconsistency map[string]string, x, y int, edList, r []string) ([]ObjectCommentInfo, []ObjectCommentInfo, bool, error) { // nolint
 	sku := getCellValue(fp, "sku", y, headersIndex, acquiredRights)
 	mp := getCellValue(fp, "maintenance_provider", y, headersIndex, acquiredRights)
 	sp := getCellValue(fp, "software_provider", y, headersIndex, acquiredRights)
@@ -1550,64 +1736,25 @@ func handleAcquiredRightSheetInconsistency(fp *excel.File, headersIndex map[stri
 	var objCatalog []ObjectCommentInfo
 
 	if len(mp) > 16 {
-		col, err := excel.ColumnNumberToName(headersIndex["maintenance_provider"])
-		if err != nil {
-			logger.Log.Error("Failed to get maintenance_provider colname in acqRights Sheet", zap.Any("colNumber", headersIndex["maintenance_provider"]), zap.Error(err))
-			return nil, nil, false, err
-		}
-		obj = append(obj, ObjectCommentInfo{
-			Msg:    "maintenance_provider characters max limit is 16",
-			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, y),
-		})
+		r[headersIndex["maintenance_provider"]-1] = BLANKSTRING
 	}
-	if len(sn) > 16 {
-		col, err := excel.ColumnNumberToName(headersIndex["support_number"])
-		if err != nil {
-			logger.Log.Error("Failed to get support_number colname in acqRights Sheet", zap.Any("colNumber", headersIndex["support_number"]), zap.Error(err))
-			return nil, nil, false, err
+	if sn != "" {
+		supNum := []string{}
+		for _, snum := range strings.Split(sn, ",") {
+			if len(snum) < 16 {
+				supNum = append(supNum, snum)
+			}
 		}
-		obj = append(obj, ObjectCommentInfo{
-			Msg:    "support_number characters max limit is 16",
-			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, y),
-		})
+		r[headersIndex["support_number"]-1] = strings.Join(supNum, ",")
 	}
 	if len(sp) > 16 {
-		col, err := excel.ColumnNumberToName(headersIndex["software_provider"])
-		if err != nil {
-			logger.Log.Error("Failed to get software_provider colname in acqRights Sheet", zap.Any("colNumber", headersIndex["software_provider"]), zap.Error(err))
-			return nil, nil, false, err
-		}
-		obj = append(obj, ObjectCommentInfo{
-			Msg:    "software_provider characters max limit is 16",
-			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, y),
-		})
+		r[headersIndex["software_provider"]-1] = BLANKSTRING
 	}
 	if len(csc) > 16 {
-		col, err := excel.ColumnNumberToName(headersIndex["csc"])
-		if err != nil {
-			logger.Log.Error("Failed to get csc colname in acqRights Sheet", zap.Any("colNumber", headersIndex["csc"]), zap.Error(err))
-			return nil, nil, false, err
-		}
-		obj = append(obj, ObjectCommentInfo{
-			Msg:    "csc characters max limit is 16",
-			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, y),
-		})
+		r[headersIndex["csc"]-1] = BLANKSTRING
 	}
 	if len(lpo) > 16 {
-		col, err := excel.ColumnNumberToName(headersIndex["last_po"])
-		if err != nil {
-			logger.Log.Error("Failed to get last_po colname in acqRights Sheet", zap.Any("colNumber", headersIndex["last_po"]), zap.Error(err))
-			return nil, nil, false, err
-		}
-		obj = append(obj, ObjectCommentInfo{
-			Msg:    "last_purchase_order characters max limit is 16",
-			Action: Inconsistent1,
-			Column: fmt.Sprintf("%s%d", col, y),
-		})
+		r[headersIndex["last_po"]-1] = BLANKSTRING
 	}
 	if strings.Contains(sku, "+") {
 		col, err := excel.ColumnNumberToName(headersIndex["sku"])
@@ -1837,7 +1984,7 @@ func handleMandatoryFieldMissingAndWrongType(fp *excel.File, yLen int, sheetName
 			msg = "This mandatory value is missing."
 			action = MissingField
 			column = cell
-		} else if !isTypeMatched(celVal, sheetsAndHeaders[sheetName][k].DataType) { // wrong type
+		} else if !isTypeMatched(celVal, sheetsAndHeaders[sheetName][k].DataType) && sheetsAndHeaders[sheetName][k].IsMandatory == Mandatory { // wrong type
 			if dataTypes[sheetsAndHeaders[sheetName][k].DataType] == "integer" {
 				msg = `This value is wrongType, expected :Positive ` + dataTypes[sheetsAndHeaders[sheetName][k].DataType] + `.`
 			} else {
@@ -1850,17 +1997,27 @@ func handleMandatoryFieldMissingAndWrongType(fp *excel.File, yLen int, sheetName
 					return nil, isGoodObject, err
 				}
 			}
+		} else if !isTypeMatched(celVal, sheetsAndHeaders[sheetName][k].DataType) && sheetsAndHeaders[sheetName][k].IsMandatory != Mandatory {
+			if v <= len(row) {
+				row[v-1] = BLANKSTRING
+			}
 		} else if sheetsAndHeaders[sheetName][k].DataType == STRING {
 			if strings.Contains(celVal, ";") { // semi-colon is not allowed
-				msg = "Semi-Colon is not allowed in data"
-				action = BadData
-				column = cell
-			}
-
-			if strings.Contains(celVal, "\"") { // "" is not allowed
-				msg = "Inveted-Comma is not allowed in data"
-				action = BadData
-				column = cell
+				if v <= len(row) && sheetsAndHeaders[sheetName][k].IsMandatory != Mandatory {
+					row[v-1] = BLANKSTRING
+				} else {
+					msg = "Semi-Colon is not allowed in data"
+					action = BadData
+					column = cell
+				}
+			} else if strings.Contains(celVal, "\"") { // "" is not allowed
+				if v <= len(row) && sheetsAndHeaders[sheetName][k].IsMandatory != Mandatory {
+					row[v-1] = BLANKSTRING
+				} else {
+					msg = "Inveted-Comma is not allowed in data"
+					action = BadData
+					column = cell
+				}
 			}
 		}
 		if msg != "" {

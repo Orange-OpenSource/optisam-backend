@@ -89,17 +89,8 @@ objects:
               env:
                 - name: "ENV"
                   value: ${ENV}
-                - name: "MIG_DIR"
-                  value: ${MIG_DIR}
-                - name: "MIG_VERSION"
-                  value: ${MIG_VERSION}
-              envFrom:
-                - secretRef:
-                    name: user-access
-                - secretRef:
-                    name: db-access
-                - secretRef:
-                    name: db-pass
+                - name: "DB_PASSWORD"
+                  value: ${DB_PASSWORD}
               ports:
                 - containerPort: 8080
                   protocol: TCP
@@ -107,6 +98,9 @@ objects:
                   protocol: TCP
                 - containerPort: 8090
                   protocol: TCP
+              envFrom:
+                - secretRef:
+                    name: user-access
               livenessProbe:
                 failureThreshold: 3
                 httpGet:
@@ -129,11 +123,11 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "5m"
-                  memory: "20Mi"
+                  cpu: "80m"
+                  memory: "128Mi"
                 limits:
-                  cpu: "40m"
-                  memory: "100Mi"
+                  cpu: "100m"
+                  memory: "150Mi"
               volumeMounts:
                 - name: config-volume-${ENV}
                   mountPath: /opt/config
@@ -148,11 +142,8 @@ objects:
               secret:
                 secretName: secret-apipublickey-${ENV}
 parameters:
-  - name: MIG_DIR
-    description: Postgres Database variable
-    required: true
-  - name: MIG_VERSION
-    description: Postgres Database variable
+  - name: DB_PASSWORD
+    description: Postgres Database Password
     required: true
   - name: TAG
     description: Tag for Docker image

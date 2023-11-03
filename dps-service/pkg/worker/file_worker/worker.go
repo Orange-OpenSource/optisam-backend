@@ -7,15 +7,18 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue"
-	"optisam-backend/common/optisam/workerqueue/job"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/models"
 
-	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
-	prodV1 "optisam-backend/product-service/pkg/api/v1"
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+
+	prodV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	apiworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/api_worker"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

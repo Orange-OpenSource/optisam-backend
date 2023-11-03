@@ -43,6 +43,7 @@ name = "report"
 version = ""
 direction = "up"
 migrationPath  = "./schema"
+deleteMigrations = true
 
 [dgraph]
 hosts = [

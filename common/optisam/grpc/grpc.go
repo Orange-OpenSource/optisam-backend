@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"context"
-	"optisam-backend/common/optisam/logger"
-	middleware "optisam-backend/common/optisam/middleware/grpc"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.uber.org/zap"

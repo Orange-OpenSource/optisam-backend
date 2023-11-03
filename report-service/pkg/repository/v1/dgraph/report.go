@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	repo "optisam-backend/report-service/pkg/repository/v1"
 	"strconv"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2"
 	"go.uber.org/zap"

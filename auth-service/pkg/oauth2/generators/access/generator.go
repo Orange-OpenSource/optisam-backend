@@ -3,9 +3,10 @@ package access
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/token"
-	"optisam-backend/common/optisam/token/claims"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"go.uber.org/zap"
 

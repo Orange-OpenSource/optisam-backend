@@ -4,6 +4,11 @@
     "title": "report.proto",
     "version": "version not set"
   },
+  "tags": [
+    {
+      "name": "ReportService"
+    }
+  ],
   "consumes": [
     "application/json"
   ],

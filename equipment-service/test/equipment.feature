@@ -36,14 +36,14 @@ Feature: Equipment Service Test
   #   Then status 200
   #   And match response.equipments != 'W10='
 
-#-------------------------------Detailed Tst work on server----------------------------------#
+
   @get
-  #Scenario: Get Details of an Equipment - Server
-  #Given path  data.equipmentID.server_id,'equipments', data.server.ID
-  #* params {scopes:'#(scope)'}
-  #When method get
-  #Then status 200
-  #And response.server_id == data.server.server_id
+  Scenario: Get Details of an Equipment - Server
+  Given path  data.equipmentID.server_id,'equipments', data.server.server_id
+  * params {scopes:'#(scope)'}
+  When method get
+  Then status 200
+  And response.server_id == data.server.server_id
 
 
 
@@ -53,7 +53,7 @@ Feature: Equipment Service Test
   * params {scopes:'#(scope)'}
   When method get 
   Then status 200
- 
+  And response.totalRecords==1
 
   @get
   Scenario: Get Children of an equipment - server
@@ -79,7 +79,7 @@ Feature: Equipment Service Test
   #   Then status 200
   #   And match response.equipments != 'W10='
 
-#--------------------------Sorting on server,vcenter,cluster----------------------------------#
+
  @sort
   Scenario Outline: Sorting_sort Equipment data for server
     Given path   data.equipmentID.server_id , 'equipments'
@@ -118,11 +118,7 @@ Feature: Equipment Service Test
   Examples:
       | sortBy | sortOrder |  
       | cluster_name | desc | 
-      | cluster_name | asc |  
-      
-      
-
-
+      | cluster_name | asc |   
 
   @sort
   Scenario Outline: Sorting_sort Equipment data for Server
@@ -137,7 +133,7 @@ Feature: Equipment Service Test
       | softpartition_name | asc |
       | softpartition_name| desc | 
      
-#------------------------------Pagination on Server------------------------------------------#
+
  @pagination
   Scenario Outline: To verify Pagination on Server Page
     Given path  data.equipmentID.server_id ,'equipments'
@@ -153,8 +149,6 @@ Feature: Equipment Service Test
     | 100 |
     | 200 |
 
-    
-
 
 
     Scenario Outline: To verify Pagination on Equipment Page(server) with Invalid inputs
@@ -166,10 +160,8 @@ Feature: Equipment Service Test
     | page_size | page_num |
     | 5 | 5 |
     | 10 | 0 |
-    | "a" | 5 | 
+    | "A" | 5 | 
 
-
-#--------------------------Pagination on Softpartition---------------------------------------#
     @pagination
   Scenario Outline: To verify Pagination on Softpartition Page
     Given path  data.equipmentID.softpartition_id ,'equipments'
@@ -185,13 +177,13 @@ Feature: Equipment Service Test
     | 100 |
     | 200 |
 
-#-----------------------------Pagination on Cluster --------------------------------------#
+
       @pagination
   Scenario Outline: To verify Pagination on Cluster Page
     Given path  data.equipmentID.cluster_id ,'equipments'
     And params {page_num:1, page_size:'<page_size>', sort_by:'cluster_name', sort_order:'asc', scopes:'#(scope)'}
     When method get
-    Then status 200 
+    Then status 200
     And response.totalRecords > 0
     And match response.equipments != 'W10='
 
@@ -214,7 +206,7 @@ Feature: Equipment Service Test
     | 10 | 0 |
     | "A" | 5 | 
     
-#-------------------------------Pagination on Vcenter-------------------------------------------#
+
       @pagination
   Scenario Outline: To verify Pagination on Vcenter Page
     Given path  data.equipmentID.vcenter_id , 'equipments'

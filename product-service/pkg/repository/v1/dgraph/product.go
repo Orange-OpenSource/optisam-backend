@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/metric-service/pkg/repository/v1"
+
+	//	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"sync"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2"
 	"go.uber.org/zap"
@@ -17,6 +19,16 @@ type ProductRepository struct {
 	dg *dgo.Dgraph
 	mu sync.Mutex
 }
+
+type MetricInfo struct {
+	ID      string
+	Name    string
+	Type    MetricType
+	Default bool
+}
+
+// MetricType is an alias for string
+type MetricType string
 
 func NewProductRepository(dg *dgo.Dgraph) *ProductRepository {
 	return &ProductRepository{
@@ -46,7 +58,7 @@ func (p *ProductRepository) ListMetrices(ctx context.Context, scope string) erro
 		return errors.New("listMetrices - cannot complete query transaction")
 	}
 	type Data struct {
-		Metrics []*v1.MetricInfo
+		Metrics []MetricInfo
 	}
 	var metricList Data
 	if err := json.Unmarshal(resp.GetJson(), &metricList); err != nil {

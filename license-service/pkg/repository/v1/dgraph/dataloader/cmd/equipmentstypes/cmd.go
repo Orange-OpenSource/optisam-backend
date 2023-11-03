@@ -2,11 +2,13 @@ package equipmentstypes
 
 import (
 	"fmt"
-	optisam_dg "optisam-backend/common/optisam/dgraph"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/config"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/loader"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/loader"
+
+	optisam_dg "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
 
 	"github.com/spf13/cobra"
 )

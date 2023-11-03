@@ -2,8 +2,9 @@ package v1
 
 import (
 	"fmt"
-	v1 "optisam-backend/license-service/pkg/api/v1"
-	repo "optisam-backend/license-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,4 +57,14 @@ func servAttrToRepoAttr(attr *v1.Attribute) *repo.Attribute {
 
 	return repoAttr
 
+}
+
+func getChildEquipmentsByParentType(parentType string, eqTypes []*repo.EquipmentType) []string {
+	var equipIndex []string
+	for i := 0; i < len(eqTypes); i++ {
+		if eqTypes[i].ParentType == parentType {
+			equipIndex = append(equipIndex, eqTypes[i].Type)
+		}
+	}
+	return equipIndex
 }

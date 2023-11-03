@@ -4,16 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	repo "optisam-backend/application-service/pkg/repository/v1"
-	dbmock "optisam-backend/application-service/pkg/repository/v1/dbmock"
-	"optisam-backend/application-service/pkg/repository/v1/postgres/db"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue/job"
-	pro_v1 "optisam-backend/product-service/pkg/api/v1"
-	mockacqs "optisam-backend/product-service/pkg/api/v1/mock"
 	"testing"
 	"time"
+
+	pro_v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/thirdparty/product-service/pkg/api/v1"
+	mockacqs "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/thirdparty/product-service/pkg/api/v1/mock"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/postgres/db"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"github.com/golang/mock/gomock"
 	"google.golang.org/protobuf/types/known/timestamppb"

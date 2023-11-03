@@ -23,7 +23,7 @@ agentEndpoint = "192.168.99.100:6831"
 [dgraph]
 hosts = [
     "localhost:9080"
-#"10.171.44.163:9082"
+# "10.171.44.163:9082"
 ]
 
 [grpcservers]
@@ -32,6 +32,7 @@ timeout = 1000
 
 [grpcservers.Address]
 account = "localhost:20000"
+equipment = "localhost:14090"
 
 [app.params]
 pageSize = 20

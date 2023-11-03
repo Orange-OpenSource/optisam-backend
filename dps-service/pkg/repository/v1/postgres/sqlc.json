@@ -9,7 +9,9 @@
         "path": "./db/",
         "queries": "./query/",
         "schema": [
-          "./schema_archive/1_intial_schema.sql"
+          "./schema_archive/1_intial_schema.sql",
+          "./schema/1_initial_schema.sql",
+          "./schema/1.5_schema.sql"
         ]
       }
     ]

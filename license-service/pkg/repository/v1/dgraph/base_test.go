@@ -4,15 +4,17 @@ import (
 	"context"
 	"flag"
 	"log"
-	"optisam-backend/common/optisam/config"
-	"optisam-backend/common/optisam/dgraph"
-	"optisam-backend/common/optisam/docker"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/loader"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/loader"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/dgraph"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/docker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	dgo "github.com/dgraph-io/dgo/v2"
 	"github.com/dgraph-io/dgo/v2/protos/api"

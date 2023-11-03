@@ -261,6 +261,12 @@
             "type": "string"
           },
           {
+            "name": "metric_info.default",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
             "name": "GetID",
             "in": "query",
             "required": false,
@@ -369,6 +375,39 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/v1MetricEquipAtt"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
+    "/api/v1/metric/import_metric": {
+      "post": {
+        "summary": "CreateMetricImport will create all metrics requested with default value",
+        "operationId": "MetricService_CreateMetricImport",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricImportResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricImportRequest"
             }
           }
         ],
@@ -852,6 +891,39 @@
         ]
       }
     },
+    "/api/v1/metric/sql_standard": {
+      "post": {
+        "summary": "CreateMetricSQLStandard will create an user.concurrent.standard metric",
+        "operationId": "MetricService_CreateMetricSQLStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricScopeSQL"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricScopeSQL"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
     "/api/v1/metric/ss": {
       "post": {
         "summary": "CreateMetricStaticStandard will create an static.standard metric",
@@ -975,6 +1047,12 @@
               "type": "string"
             },
             "collectionFormat": "multi"
+          },
+          {
+            "name": "is_import",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1205,6 +1283,38 @@
         ]
       }
     },
+    "/api/v1/metric/wind_serv_stand": {
+      "post": {
+        "operationId": "MetricService_CreateMetricWindowServerStandard",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1MetricWSS"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1MetricWSS"
+            }
+          }
+        ],
+        "tags": [
+          "MetricService"
+        ]
+      }
+    },
     "/api/v1/metric/{metric_name}": {
       "delete": {
         "summary": "DeleteMetric deletes the metric that is not used in the particular scope",
@@ -1347,6 +1457,14 @@
         }
       }
     },
+    "v1CreateScopeMetricResponse": {
+      "type": "object",
+      "properties": {
+        "Success": {
+          "type": "boolean"
+        }
+      }
+    },
     "v1DeleteMetricResponse": {
       "type": "object",
       "properties": {
@@ -1404,6 +1522,9 @@
         },
         "description": {
           "type": "string"
+        },
+        "default": {
+          "type": "boolean"
         }
       }
     },
@@ -1431,6 +1552,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1459,6 +1583,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1490,6 +1617,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1512,6 +1642,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1542,6 +1675,31 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1MetricImportRequest": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "v1MetricImportResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
         }
       }
     },
@@ -1591,6 +1749,9 @@
         },
         "transform_metric_name": {
           "type": "string"
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1630,6 +1791,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1660,6 +1824,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1676,6 +1843,42 @@
         "reference_value": {
           "type": "integer",
           "format": "int32"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Default": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1MetricScopeSQL": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "MetricType": {
+          "type": "string"
+        },
+        "MetricName": {
+          "type": "string"
+        },
+        "Reference": {
+          "type": "string"
+        },
+        "Core": {
+          "type": "string"
+        },
+        "CPU": {
+          "type": "string"
+        },
+        "Default": {
+          "type": "boolean"
         },
         "scopes": {
           "type": "array",
@@ -1699,6 +1902,15 @@
         },
         "type_id": {
           "$ref": "#/definitions/v1MetricTypeType"
+        },
+        "is_exist": {
+          "type": "boolean"
+        },
+        "default_metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1739,6 +1951,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1760,6 +1975,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Default": {
+          "type": "boolean"
         }
       }
     },
@@ -1772,6 +1990,42 @@
         },
         "Name": {
           "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Default": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1MetricWSS": {
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string",
+          "title": "ID is not required for creation"
+        },
+        "MetricType": {
+          "type": "string"
+        },
+        "MetricName": {
+          "type": "string"
+        },
+        "Reference": {
+          "type": "string"
+        },
+        "Core": {
+          "type": "string"
+        },
+        "CPU": {
+          "type": "string"
+        },
+        "Default": {
+          "type": "boolean"
         },
         "scopes": {
           "type": "array",

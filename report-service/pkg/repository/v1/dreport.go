@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-//go:generate mockgen -destination=dmock/mock.go -package=mock optisam-backend/report-service/pkg/repository/v1 DgraphReport
+//go:generate mockgen -destination=dmock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1 DgraphReport
 
 // DgraphReport ...
 type DgraphReport interface {

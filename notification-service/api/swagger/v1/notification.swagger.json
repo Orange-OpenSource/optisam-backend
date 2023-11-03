@@ -1,0 +1,114 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "notification.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "NotificationService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/notify/sendmail": {
+      "post": {
+        "summary": "ListScopes returns list of available scopes in system",
+        "operationId": "NotificationService_SendMail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SendMailResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SendMailRequest"
+            }
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1SendMailRequest": {
+      "type": "object",
+      "properties": {
+        "mail_subject": {
+          "type": "string"
+        },
+        "mail_message": {
+          "type": "string"
+        },
+        "mail_to": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "no_of_retiries": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "v1SendMailResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

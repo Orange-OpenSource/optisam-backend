@@ -8,22 +8,30 @@ import (
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"go.uber.org/zap"
 
 	"net/http"
 	"net/url"
-	"optisam-backend/common/optisam/buildinfo"
-	"optisam-backend/common/optisam/healthcheck"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/prometheus"
-	"optisam-backend/import-service/pkg/config"
 
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/import-service/pkg/protocol/rest"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/config"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/buildinfo"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/healthcheck"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/protocol/rest"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"time"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	kafkaConnect "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/kafka"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/repository/v1/postgres"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
@@ -161,7 +169,31 @@ func RunServer() error {
 	); err != nil {
 		logger.Log.Error("Failed to register server stats view")
 	}
+	p, err := kafkaConnect.BuildProducer(cfg.Kafka, map[string]string{
+		"message.max.bytes":  "120971520",
+		"message.timeout.ms": "1200000",
+		"compression.type":   "gzip",
+		//"max.block.ms":       "90000",
+	})
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open producer: %v", err)
+		return fmt.Errorf("failed to open producer: %v", err)
+	}
+	defer p.Close()
 
+	go func() {
+		for e := range p.Events() {
+			switch ev := e.(type) {
+			case *kafka.Message:
+				if ev.TopicPartition.Error != nil {
+					fmt.Printf("Failed to deliver message: %v\n", ev.TopicPartition)
+				} else {
+					fmt.Printf("Produced event to topic: %s\n",
+						*ev.TopicPartition.Topic)
+				}
+			}
+		}
+	}()
 	// Run Instumentation Server
 	instrumentationServer := &http.Server{
 		Addr:    cfg.Instrumentation.Addr,
@@ -170,12 +202,32 @@ func RunServer() error {
 	go func() {
 		_ = instrumentationServer.ListenAndServe()
 	}()
-
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
+	if err != nil {
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
+	}
+	// defer db.Close()
+	defer func() {
+		db.Close()
+		// Wait to 4 seconds so that the traces can be exported
+		waitTime := 2 * time.Second
+		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
+		<-time.After(waitTime)
+	}()
+	repo.SetImportRepository(db)
+	dbObj := repo.GetImportRepository()
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Sugar().Debug("Recovered in RunServer", r)
 		}
 	}()
+	c, err := kafkaConnect.BuildConsumer(cfg.Kafka, map[string]string{})
+	if err != nil {
+		logger.Log.Sugar().Debug("failed to open consumer: %v", err)
+		return fmt.Errorf("failed to open consumer: %v", err)
+	}
+	defer c.Close()
 
-	return rest.RunServer(ctx, cfg)
+	return rest.RunServer(ctx, cfg, dbObj, p, c)
 }

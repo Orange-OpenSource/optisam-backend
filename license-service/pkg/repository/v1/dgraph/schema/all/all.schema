@@ -171,3 +171,21 @@ concurrent.user.team : string .
 concurrent.user.is_aggregations : bool .
 concurrent.user.purchase_date : datetime  .
 concurrent.user.aggregation.id : int .
+
+
+metric.mse.reference     : string  .
+metric.mse.cpu         : string .  
+metric.mse.core       : string .
+
+metric.wsd.reference     : string  .
+metric.wsd.cpu         : string .  
+metric.wsd.core       : string .
+metric.default       :bool .
+
+metric.wss.reference     : string  .
+metric.wss.cpu         : string .  
+metric.wss.core       : string .
+
+metric.sql.standard.reference     : string  .
+metric.sql.standard.cpu         : string .  
+metric.sql.standard.core       : string .

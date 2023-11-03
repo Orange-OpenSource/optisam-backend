@@ -1,8 +1,9 @@
 package dgraph
 
 import (
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
 )
 
 const (
@@ -201,9 +202,9 @@ func getToBase(eqTypes []*v1.EquipmentType, allotedMetricsEq map[string]interfac
 		currentTypeCondition := ""
 		if i == 0 {
 			if eqTypes[i].Type != "server" {
-				if _, ok := allotedMetricsEq["notAllotedSoftpartition"]; ok {
-					if allotedMetricsEq["notAllotedSoftpartition"].(string) != "" {
-						currentTypeCondition = " AND not( uid(" + allotedMetricsEq["notAllotedSoftpartition"].(string) + "))"
+				if _, ok := allotedMetricsEq["notAllotedVirtualMachine"]; ok {
+					if allotedMetricsEq["notAllotedVirtualMachine"].(string) != "" {
+						currentTypeCondition = " AND not( uid(" + allotedMetricsEq["notAllotedVirtualMachine"].(string) + "))"
 					}
 				}
 			} else {

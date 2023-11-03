@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	v1 "optisam-backend/account-service/pkg/repository/v1"
-	repo "optisam-backend/account-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/common/optisam/logger"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/db"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/lib/pq"
@@ -61,6 +63,7 @@ const (
 	first_name,
 	last_name,
 	locale,
+	account_status,
 	-- all the groups owned by users
 	ARRAY(
 		SELECT 
@@ -82,6 +85,7 @@ const (
 	first_name,
 	last_name,
 	locale,
+	account_status,
 	-- all the groups owned by users
 	ARRAY(
 		SELECT 
@@ -157,6 +161,14 @@ const (
 			)
 		)
 	) AND username = $2;
+	`
+	selectAdminFromScopes = `
+	SELECT u.username, u.first_name
+	FROM users u
+	JOIN group_ownership go ON u.username = go.user_id
+	JOIN groups g ON go.group_id = g.id
+	WHERE u.role = 'Admin'
+  	AND g.scopes && $1
 	`
 )
 
@@ -463,7 +475,7 @@ func scanUserRowsWithGroupInfo(rows *sql.Rows) ([]*v1.AccountInfo, error) {
 		user := &v1.AccountInfo{}
 		var userRole role
 		if err := rows.Scan(&user.UserID, &user.FirstName, &user.LastName,
-			&user.Locale, pq.Array(&user.GroupName), &userRole); err != nil {
+			&user.Locale, &user.AccountStatus, pq.Array(&user.GroupName), &userRole); err != nil {
 			return nil, err
 		}
 		roleDB, err := postgresRoleToDBRole(userRole)
@@ -538,4 +550,22 @@ func (r *AccountRepository) DropScopeTX(ctx context.Context, reqScope string) er
 		return err
 	}
 	return nil
+}
+
+// UsersAll implements Account AdminUserForScope function
+func (r *AccountRepository) AdminUserForScope(ctx context.Context, scopes []string) ([]*v1.AdminUserForScope, error) {
+	rows, err := r.db.QueryContext(ctx, selectAdminFromScopes, pq.Array(scopes))
+	if err != nil {
+		logger.Log.Error("repo/postgres - UsersAll - failed to execute query", zap.String("reason", err.Error()))
+		return nil, err
+	}
+	var users []*v1.AdminUserForScope
+	for rows.Next() {
+		user := &v1.AdminUserForScope{}
+		if err := rows.Scan(&user.UserName, &user.FirstName); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

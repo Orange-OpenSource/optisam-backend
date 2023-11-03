@@ -3,10 +3,11 @@ debug = false
 httpport = "9093"
 maxfilesize = 13
 #file size in Mbs
+NoOfPartitions = 1
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
-loglevel = -1
+loglevel = 0
 
 [instrumentation]
 addr = ":8092"
@@ -25,10 +26,24 @@ agentEndpoint = "192.168.99.100:6831"
 
 [database]
 host = "localhost"
-port = 5432
-user = "postgres"
-pass = "1@34567b"
+port = 5430
+# should be user of full rights
+[database.admin]
+user = "root"
+pass = "Optisam@19"
+name = "import" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "root"
+pass = "Optisam@19"
 name = "import"
+
+[database.migration]
+version = "1_intial_schema.sql"
+direction = ""
+migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = false
 
 [grpcservers]
 apiKey = "12345678"
@@ -54,3 +69,10 @@ MetaDatafileAllowedRegex = ['''^metadata_[a-zA-Z]*\.csv$''']
 publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[kafka]
+bootstrapservers = "dev-kafka-externel-bootstrap-dev-optisam.apps.fr01.paas.tech.orange:443"
+securityprotocol = "ssl"
+sslkeylocation = "client.key.pem"
+sslcertificatelocation = "client.crt.pem"
+sslcalocation = "ca.crt.pem"

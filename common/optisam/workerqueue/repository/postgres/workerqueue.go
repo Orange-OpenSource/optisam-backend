@@ -2,7 +2,8 @@ package postgres
 
 import (
 	"database/sql"
-	gendb "optisam-backend/common/optisam/workerqueue/repository/postgres/db"
+
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/repository/postgres/db"
 )
 
 type Repository struct {

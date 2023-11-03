@@ -1,0 +1,71 @@
+environment = "DEVELOPMENT"
+debug = false
+grpcport = 8090
+httpport = 8080
+
+[log]
+customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
+loglevel = -1
+
+[instrumentation]
+addr = ":8081"
+
+[instrumentation.prometheus]
+enabled = true
+
+
+[instrumentation.jaeger]
+enabled = true
+serviceName = "account-service"
+collectorEndpoint = "http://jaeger-collector.dev-optisam.svc:14268/api/traces"
+agentEndpoint = "jaeger-agent.dev-optisam.svc:6831"
+# username = ""
+# password = ""
+
+[smtp]
+host = ""
+port = ""
+from = ""
+password = ""
+email = ""
+
+[grpcservers]
+apikey = "12345678"
+timeout = 10
+
+
+[pki]
+publickeypath = "/opt/secret/ssh-privatekey"
+
+[iam]
+publickeypath = "/opt/secret/ssh-privatekey"
+apiKey = "12345678"
+regopath = "rbac.rego"
+
+[kafka]
+bootstrapservers = "dev-kafka-externel-bootstrap.dev-optisam.svc:9094"
+sslkeylocation = "/opt/secret-key/ssh-privatekey"
+sslcertificatelocation = "/opt/secret-client/ssh-privatekey"
+sslcalocation = "/opt/secret-ca/ssh-privatekey"
+securityprotocol = "ssl"
+
+[database]
+host = "svc-optisam-postgres.dev-optisam.svc"
+port = 5432
+# should be user of full rights
+[database.admin]
+user = "optisam"
+pass = ""
+name = "notification" 
+
+# user of inser/update/delete/read access
+[database.user]
+user = "optisam_app_user"
+pass = ""
+name = "notification"
+
+[database.Migration]
+version = "1_intial_schema.sql"
+direction = ""
+migrationPath  = "./schema"
+deleteMigrations = false

@@ -1,0 +1,5 @@
+cpu_model;cores_per_processor;server_processors_numbers;ibm_pvu
+Intel 4004;1;1;16
+Intel 4040;4;2;4
+Intel 8048;8;4;8
+Intel 8051;16;8;2

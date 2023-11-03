@@ -5,12 +5,14 @@ import (
 	"crypto/rsa"
 	"log"
 	"net"
-	"optisam-backend/common/optisam/logger"
-	mw "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/errors"
 	"os"
 	"os/signal"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/errors"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	mw "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/open-policy-agent/opa/rego"

@@ -3,23 +3,26 @@ package rest
 import (
 	"context"
 	"net/http"
-	"optisam-backend/common/optisam/grpc"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/logger"
-	rest_middleware "optisam-backend/common/optisam/middleware/rest"
-	"optisam-backend/import-service/pkg/config"
-	v1 "optisam-backend/import-service/pkg/service/v1"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/julienschmidt/httprouter"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	rest_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/rest"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/config"
+	v1kaf "gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/kafka/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/repository/v1/postgres"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/import-service/pkg/service/v1"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 )
 
 // RunServer runs HTTP/REST gateway
-func RunServer(ctx context.Context, config *config.Config) error {
+func RunServer(ctx context.Context, config *config.Config, db *repo.ImportRepository, kafkaProducer *kafka.Producer, kafkaConsumer *kafka.Consumer) error {
 	// get the verify key to validate jwt
 	verifyKey, err := iam.GetVerifyKey(config.IAM)
 	if err != nil {
@@ -36,7 +39,11 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	if err != nil {
 		logger.Log.Fatal("Failed to initialize GRPC client")
 	}
-	h := v1.NewImportServiceServer(grpcClientMap, config)
+	h := v1.NewImportServiceServer(grpcClientMap, config, db, kafkaProducer, kafkaConsumer)
+	err = v1kaf.ImportConsumer(*h)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize import consumer")
+	}
 	// TODO add a import handler here
 	router.POST("/api/v1/import/data", h.UploadDataHandler)
 	router.POST("/api/v1/import/metadata", h.UploadMetaDataHandler)
@@ -48,6 +55,9 @@ func RunServer(ctx context.Context, config *config.Config) error {
 	router.POST("/api/v1/import/upload", h.UploadFiles)
 	router.POST("/api/v1/import/nominative/user", h.ImportNominativeUser)
 	router.POST("/api/v1/import/uploadcatalogdata", h.UploadCatalogData)
+	router.GET("/api/v1/import/nominative/users/fileupload", h.ListNominativeUserFileUploads)
+
+	//api/v1/product/nominative/users/fileupload?scope=AAA&page_num=1&page_size=50&sort_by=name&sort_order=asc
 
 	srv := &http.Server{
 		Addr: ":" + config.HTTPPort,

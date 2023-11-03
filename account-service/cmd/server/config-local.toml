@@ -2,6 +2,8 @@ environment = "development"
 debug = false
 grpcport = 20000
 httpport = 20001
+activationtimeout = 43200
+forgotpasstimeout = 120
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -24,19 +26,20 @@ port = 5432
 # should be user of full rights
 [database.admin]
 user = "postgres"
-pass = ""
+pass = "orange"
 name = "account" 
 
 # user of inser/update/delete/read access
 [database.user]
 user = "postgres"
-pass = ""
+pass = "orange"
 name = "account" 
 
 [database.migration]
 version = "1.4_schema.sql,1.4.3_schema.sql,1.4.2_schema.sql"
 direction = ""
 migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = true
 
 [redis]
 redishost = "localhost:6379"
@@ -61,9 +64,14 @@ timeout = 10000
 #dps = "localhost:10000"
 #metric = "localhost:18090"
 #equipment = "localhost:14090"
-#report = "localhost:19090"
+notification = "localhost:15000"
 
 [iam]
 publickeypath = "cert.pem"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[emailtemplate]
+passwordresetpath = "./../../../common/optisam/email/templates/passwordreset.html"
+activationpath = "./../../../common/optisam/email/templates/activation.html"
+redirecbaseurl = "http://127.0.0.1:9093"

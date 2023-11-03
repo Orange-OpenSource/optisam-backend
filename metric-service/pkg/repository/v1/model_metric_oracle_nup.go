@@ -14,6 +14,7 @@ type MetricNUPOracle struct {
 	NumberOfUsers         uint32
 	Transform             bool
 	TransformMetricName   string
+	Default               bool
 }
 
 // MetricOPS return metric ops

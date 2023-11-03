@@ -2,12 +2,13 @@ package v1
 
 import (
 	"context"
-	v1 "optisam-backend/application-service/pkg/api/v1"
-	gendb "optisam-backend/application-service/pkg/repository/v1/postgres/db"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/api/v1"
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1/postgres/db"
 )
 
-//go:generate mockgen -destination=dbmock/mock.go -package=mock optisam-backend/application-service/pkg/repository/v1 Application
-//go:generate mockgen -destination=queuemock/mock.go -package=mock optisam-backend/common/optisam/workerqueue  Workerqueue
+//go:generate mockgen -destination=dbmock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/application-service/pkg/repository/v1 Application
+//go:generate mockgen -destination=queuemock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue  Workerqueue
 
 // Application interface
 type Application interface {

@@ -3,7 +3,8 @@ package postgres
 import (
 	"context"
 	"fmt"
-	v1 "optisam-backend/auth-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1"
 )
 
 const (

@@ -4,24 +4,37 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	v1 "optisam-backend/auth-service/pkg/api/v1"
-	"optisam-backend/auth-service/pkg/oauth2/errors"
-	repoV1 "optisam-backend/auth-service/pkg/repository/v1"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/token/claims"
 
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/oauth2/errors"
+	repoV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/grpc"
 )
 
 // AuthServiceServer is implementation of v1.AuthServiceServer proto interface
 type AuthServiceServer struct {
-	rep repoV1.Repository
+	rep           repoV1.Repository
+	cfg           config.Config
+	notification  v1.NotificationServiceClient
+	kafkaProducer *kafka.Producer
 }
 
 // NewAuthServiceServer creates Auth service
-func NewAuthServiceServer(rep repoV1.Repository) *AuthServiceServer {
-	return &AuthServiceServer{rep: rep}
+func NewAuthServiceServer(rep repoV1.Repository, cfg config.Config, grpcConnections map[string]*grpc.ClientConn, kafkaProducer *kafka.Producer) *AuthServiceServer {
+	return &AuthServiceServer{
+		rep:           rep,
+		cfg:           cfg,
+		notification:  v1.NewNotificationServiceClient(grpcConnections["notification"]),
+		kafkaProducer: kafkaProducer,
+	}
 }
 
 // Login implements AuthService Login function

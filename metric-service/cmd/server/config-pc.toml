@@ -33,6 +33,7 @@ timeout = 1000
 
 [grpcservers.Address]
 account = "svc-optisam-account-pc.dev-optisam.svc:8090"
+equipment = "svc-optisam-equipment-pc.dev-optisam.svc:8090"
 
 [app.params]
 pageSize = 20

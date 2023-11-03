@@ -2,6 +2,8 @@ environment = "PRODUCTION"
 debug = false
 grpcport = 8090
 httpport = 8080
+activationtimeout = 43200
+forgotpasstimeout = 120
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -64,8 +66,19 @@ dps = "svc-optisam-dps-prod.prod-optisam.svc:8090"
 metric = "svc-optisam-metric-prod.prod-optisam.svc:8090"
 equipment = "svc-optisam-equipment-prod.prod-optisam.svc:8090"
 report = "svc-optisam-report-prod.prod-optisam.svc:8090"
+notification = "svc-optisam-notification-prod.prod-optisam.svc:8090"
 
 [iam]
 publickeypath = "/opt/secret/ssh-privatekey"
 apiKey = "12345678"
 regopath = "rbac.rego"
+
+[emailtemplate]
+passwordresetpath = "./templates/passwordreset.html"
+activationpath = "./templates/activation.html"
+redirecbaseurl = "https://optisam-auth-prod.apps.fr01.paas.tech.orange"
+redirectappactivation = "https://optisam-ui-prod.apps.fr01.paas.tech.orange/user-activation?"
+redirectappurlforgotpass = "https://optisam-ui-prod.apps.fr01.paas.tech.orange/reset-password?"
+
+[httpservers.Address]
+auth = "svc-optisam-auth-prod.prod-optisam.svc:80"

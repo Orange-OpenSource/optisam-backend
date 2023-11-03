@@ -3,15 +3,20 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	accv1 "optisam-backend/account-service/pkg/api/v1"
-	"optisam-backend/common/optisam/helper"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/strcomp"
-	"optisam-backend/common/optisam/token/claims"
 
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
+	equipv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/thirdparty/equipment-service/pkg/api/v1"
+
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/thirdparty/account-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/strcomp"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -23,6 +28,7 @@ import (
 type metricServiceServer struct {
 	metricRepo repo.Metric
 	account    accv1.AccountServiceClient
+	equipments equipv1.EquipmentServiceClient
 }
 
 // NewLicenseServiceServer creates License service
@@ -30,6 +36,7 @@ func NewMetricServiceServer(metricRepo repo.Metric, grpcServers map[string]*grpc
 	return &metricServiceServer{
 		metricRepo: metricRepo,
 		account:    accv1.NewAccountServiceClient(grpcServers["account"]),
+		equipments: equipv1.NewEquipmentServiceClient(grpcServers["equipment"]),
 	}
 }
 
@@ -67,11 +74,11 @@ func (s *metricServiceServer) ListMetricType(ctx context.Context, req *v1.ListMe
 		return nil, status.Error(codes.Internal, "unable to fetch scope info")
 	}
 
-	// metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
-	// if err != nil && err != repo.ErrNoData {
-	// 	logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching metrics", zap.String("reason", err.Error()))
-	// 	return nil, status.Error(codes.Internal, "cannot fetch metrics")
-	// }
+	metrics, err := s.metricRepo.ListMetrices(ctx, req.GetScopes()[0])
+	if err != nil && err != repo.ErrNoData {
+		logger.Log.Error("service/v1 -CreateMetricSAGProcessorStandard - fetching metrics", zap.String("reason", err.Error()))
+		return nil, status.Error(codes.Internal, "cannot fetch metrics")
+	}
 	// var opsExists, nupExists bool
 	// if metricTypeExistsAll(metrics, repo.MetricOPSOracleProcessorStandard) != -1 {
 	// 	opsExists = true
@@ -80,14 +87,26 @@ func (s *metricServiceServer) ListMetricType(ctx context.Context, req *v1.ListMe
 	// 	nupExists = true
 	// }
 
-	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, repo.GetScopeType(scopeinfo.ScopeType), req.GetScopes()[0])
+	metricTypes, err := s.metricRepo.ListMetricTypeInfo(ctx, repo.GetScopeType(scopeinfo.ScopeType), req.GetScopes()[0], req.IsImport)
 	if err != nil {
 		logger.Log.Error("service/v1 - ListMetricType - fetching metric types", zap.String("reason", err.Error()))
 		return nil, status.Error(codes.Internal, "cannot fetch metric types")
 	}
+	types := repoMetricTypeToServiceMetricTypeAll(metricTypes, req.GetScopes()[0])
 
+	for _, val := range metrics {
+		if val.Default == false {
+			continue
+		} else {
+			for _, data := range types {
+				if data.Name == string(val.Type) {
+					data.IsExist = true
+				}
+			}
+		}
+	}
 	return &v1.ListMetricTypeResponse{
-		Types: repoMetricTypeToServiceMetricTypeAll(metricTypes),
+		Types: types,
 	}, nil
 }
 
@@ -296,6 +315,54 @@ func (s *metricServiceServer) CreateMetric(ctx context.Context, req *v1.CreateMe
 			logger.Log.Error("service/v1 - CreateMetricUserConcurentStandard  in repo", zap.String("reason", err.Error()))
 			return nil, status.Error(codes.Internal, "cannot create metric UCS")
 		}
+	case repo.MetricMicrosoftSQLStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigSQLStandard(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigSQLStandard", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric sql_standard")
+		}
+		metric.Scope = req.RecieverScope
+		_, err = s.metricRepo.CreateMetricSQLStandard(ctx, metric)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricSQLStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric sql_standard")
+		}
+	case repo.MetricMicrosoftSQLEnterprise.String():
+		metric, err := s.metricRepo.GetMetricConfigSQLForScope(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigSQLForScope", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric sql")
+		}
+		metric.Scope = req.RecieverScope
+		_, err = s.metricRepo.CreateMetricSQLForScope(ctx, metric)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricSQLForScope  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric sql")
+		}
+	case repo.MetricWindowsServerDataCenter.String():
+		metric, err := s.metricRepo.GetMetricConfigDataCenterForScope(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigDataCenterForScope", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric win_dcenter")
+		}
+		metric.Scope = req.RecieverScope
+		_, err = s.metricRepo.CreateMetricDataCenterForScope(ctx, metric)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricDataCenterForScope  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric win_dcenter")
+		}
+	case repo.MetricWindowsServerStandard.String():
+		metric, err := s.metricRepo.GetMetricConfigWindowServerStandard(ctx, req.Metric.Name, req.SenderScope)
+		if err != nil {
+			logger.Log.Error("service/v1 - GetMetricConfiguration - GetMetricConfigWindowServerStandard", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot fetch metric win_server_stand")
+		}
+		metric.Scope = req.RecieverScope
+		_, err = s.metricRepo.CreateMetricWindowServerStandard(ctx, metric)
+		if err != nil {
+			logger.Log.Error("service/v1 - CreateMetricWindowServerStandard  in repo", zap.String("reason", err.Error()))
+			return nil, status.Error(codes.Internal, "cannot create metric win_server_stand")
+		}
 	}
 	return &v1.CreateMetricResponse{Success: true}, nil
 }
@@ -463,6 +530,11 @@ func (s *metricServiceServer) DeleteMetric(ctx context.Context, req *v1.DeleteMe
 			Success: false,
 		}, status.Error(codes.Internal, "can not get metric info")
 	}
+	if metric.Default == true {
+		return &v1.DeleteMetricResponse{
+			Success: false,
+		}, status.Error(codes.InvalidArgument, "metric imported, can't be deleted")
+	}
 	if metric.Name == "" {
 		return &v1.DeleteMetricResponse{
 			Success: false,
@@ -494,20 +566,67 @@ func (s *metricServiceServer) DeleteMetric(ctx context.Context, req *v1.DeleteMe
 	}, nil
 }
 
-func repoMetricTypeToServiceMetricTypeAll(met []*repo.MetricTypeInfo) []*v1.MetricType {
+func repoMetricTypeToServiceMetricTypeAll(met []*repo.MetricTypeInfo, scope string) []*v1.MetricType {
 	servMetrics := make([]*v1.MetricType, len(met))
+	myMap := make(map[string][]string)
+	metadata := repo.GlobalMetricMetadata(scope)
+	dataScope := repo.GetScopeMetric(scope)
+	for i, val := range metadata {
+		switch i {
+		case "oracle.processor.standard":
+			myMap[i] = append(myMap[i], val.MetadataOPS.Name)
+		case "oracle.nup.standard":
+			myMap[i] = append(myMap[i], val.MetadataNUP.Name)
+		case "instance.number.standard":
+			myMap[i] = append(myMap[i], val.MetadataINM.Name)
+		case "user.sum.standard":
+			myMap[i] = append(myMap[i], val.MetadataUSS.Name)
+		case "sag.processor.standard":
+			myMap[i] = append(myMap[i], val.MetadataSPS.Name)
+		case "ibm.pvu.standard":
+			myMap[i] = append(myMap[i], val.MetadataSPS.Name)
+		case "microsoft.sql.standard":
+			myMap[i] = append(myMap[i], val.MetadataSQL.MetricName)
+		case "microsoft.sql.enterprise":
+			myMap[i] = append(myMap[i], val.MetadataSQL.MetricName)
+		case "windows.server.datacenter":
+			for _, v := range dataScope {
+				if v.MetricType == "windows.server.datacenter" {
+					myMap[i] = append(myMap[i], v.MetricName)
+				}
+			}
+		case "user.nominative.standard":
+			myMap[i] = append(myMap[i], val.MetadataUNS.Name)
+		case "user.concurrent.standard":
+			myMap[i] = append(myMap[i], val.MetadataUNS.Name)
+		case "equipment.attribute.standard":
+			for _, data := range val.MetadataEquipAttr {
+				myMap[i] = append(myMap[i], data.Name)
+			}
+		case "windows.server.standard":
+			myMap[i] = append(myMap[i], val.MetadataSQL.MetricName)
+		case "static.standard":
+			myMap[i] = append(myMap[i], val.MetadataSS.Name)
+		case "attribute.sum.standard":
+			myMap[i] = append(myMap[i], val.MetadataAttrSum.Name)
+		case "attribute.counter.standard":
+			myMap[i] = append(myMap[i], val.MetadataACS.Name)
+		}
+	}
 	for i := range met {
-		servMetrics[i] = repoMetricTypeToServiceMetricType(met[i])
+		servMetrics[i] = repoMetricTypeToServiceMetricType(met[i], myMap)
 	}
 	return servMetrics
 }
 
-func repoMetricTypeToServiceMetricType(met *repo.MetricTypeInfo) *v1.MetricType {
+func repoMetricTypeToServiceMetricType(met *repo.MetricTypeInfo, myMap map[string][]string) *v1.MetricType {
 	return &v1.MetricType{
-		Name:        string(met.Name),
-		Description: met.Description,
-		Href:        met.Href,
-		TypeId:      v1.MetricType_Type(met.MetricType),
+		Name:           string(met.Name),
+		Description:    met.Description,
+		Href:           met.Href,
+		TypeId:         v1.MetricType_Type(met.MetricType),
+		IsExist:        met.Exist,
+		DefaultMetrics: myMap[string(met.Name)],
 	}
 }
 
@@ -528,6 +647,7 @@ func (s *metricServiceServer) repoMetricToServiceMetric(ctx context.Context, met
 		Name:        met.Name,
 		Type:        met.Type.String(),
 		Description: desc,
+		Default:     met.Default,
 	}
 }
 
@@ -557,6 +677,14 @@ func (s *metricServiceServer) discriptionMetric(ctx context.Context, met *repo.M
 		return s.getDescriptionUNS(ctx, met.Name, scope)
 	case repo.MetricUserConcurentStandard:
 		return s.getDescriptionUCS(ctx, met.Name, scope)
+	case repo.MetricMicrosoftSQLEnterprise:
+		return s.getDescriptionSQLEnterprise(ctx, met.Name, scope)
+	case repo.MetricWindowsServerDataCenter:
+		return s.getDescriptionWinDCenter(ctx, met.Name, scope)
+	case repo.MetricMicrosoftSQLStandard:
+		return s.getDescriptionSQLStandard(ctx, met.Name, scope)
+	case repo.MetricWindowsServerStandard:
+		return s.getDescriptionWinStandard(ctx, met.Name, scope)
 	default:
 		return "", status.Error(codes.Internal, "description not found - "+met.Type.String())
 	}
@@ -580,3 +708,23 @@ func metricNameExistsAll(metrics []*repo.MetricInfo, name string) int {
 // 	}
 // 	return -1
 // }
+
+func (s *metricServiceServer) getDescriptionSQLStandard(ctx context.Context, name, scope string) (string, error) {
+	des := repo.MetricDescriptionMicrosoftSQLStandard.String()
+	return des, nil
+}
+
+func (s *metricServiceServer) getDescriptionSQLEnterprise(ctx context.Context, name, scope string) (string, error) {
+	des := repo.MetricDescriptionMicrosoftSQLEnterprise.String()
+	return des, nil
+}
+
+func (s *metricServiceServer) getDescriptionWinDCenter(ctx context.Context, name, scope string) (string, error) {
+	des := repo.MetricDescriptionWindowsServerDataCenter.String()
+	return des, nil
+}
+
+func (s *metricServiceServer) getDescriptionWinStandard(ctx context.Context, name, scope string) (string, error) {
+	des := repo.MetricDescriptionWindowsServerStandard.String()
+	return des, nil
+}

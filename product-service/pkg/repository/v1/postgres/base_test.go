@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"flag"
 	"log"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/product-service/pkg/config"
 	"os"
 	"strings"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/config"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

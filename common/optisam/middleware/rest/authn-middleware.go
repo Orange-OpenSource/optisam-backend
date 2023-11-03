@@ -5,8 +5,9 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"net/http"
-	"optisam-backend/common/optisam/token/claims"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )

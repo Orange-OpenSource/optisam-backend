@@ -128,8 +128,8 @@ objects:
                 timeoutSeconds: 2
               resources:
                 requests:
-                  cpu: "5m"
-                  memory: "20Mi"
+                  cpu: "1m"
+                  memory: "5Mi"
                 limits:
                   cpu: "80m"
                   memory: "150Mi"
@@ -139,13 +139,39 @@ objects:
                 - name: secret-volume
                   mountPath: /opt/secret
                   readOnly: true
+                - name: secret-volume-jwt
+                  mountPath: /opt/secret-jwt
+                  readOnly: true 
+                - name: secret-volume-ca
+                  readOnly: true
+                  mountPath: /opt/secret-ca
+                - name: secret-volume-client
+                  readOnly: true
+                  mountPath: /opt/secret-client
+                - name: secret-volume-key
+                  readOnly: true
+                  mountPath: /opt/secret-key
+
           volumes:
             - name: config-volume-${ENV}
               configMap:
                 name: config-auth-${ENV}
             - name: secret-volume
               secret:
+                secretName: secret-apipublickey-${ENV}
+            - name: secret-volume-jwt
+              secret:
                 secretName: secret-apiprivatekey-${ENV}
+            - name: secret-volume-ca
+              secret:
+                secretName: kafka-ca.crt-${ENV}
+            - name: secret-volume-client
+              secret:
+                secretName: kafka-client.crt-${ENV}
+            - name: secret-volume-key
+              secret:
+                secretName: kafka-client.key-${ENV}
+
 parameters:
   - name: MIG_DIR
     description: Postgres Database variable

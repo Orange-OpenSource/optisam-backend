@@ -4,27 +4,32 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
-	appv1 "optisam-backend/application-service/pkg/api/v1"
-	mockapp "optisam-backend/application-service/pkg/api/v1/mock"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue"
-	job "optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/config"
-	repo "optisam-backend/dps-service/pkg/repository/v1"
-	dbmock "optisam-backend/dps-service/pkg/repository/v1/dbmock"
-	"optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	queuemock "optisam-backend/dps-service/pkg/repository/v1/queuemock"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	equipv1 "optisam-backend/equipment-service/pkg/api/v1"
-	mockequip "optisam-backend/equipment-service/pkg/api/v1/mock"
-	prov1 "optisam-backend/product-service/pkg/api/v1"
-	mockpro "optisam-backend/product-service/pkg/api/v1/mock"
 	"reflect"
 	"testing"
 	"time"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	job "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/config"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	queuemock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/queuemock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/account-service/pkg/api/v1"
+	mockacc "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/account-service/pkg/api/v1/mock"
+	appv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/application-service/pkg/api/v1"
+	mockapp "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/application-service/pkg/api/v1/mock"
+	equipv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1"
+	mockequip "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1/mock"
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/metric-service/pkg/api/v1"
+	prov1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+	mockpro "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1/mock"
 
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes"
@@ -83,7 +88,65 @@ func Test_NotifyUpload(t *testing.T) {
 
 				mockRepo := dbmock.NewMockDps(mockCtrl)
 				rep = mockRepo
-				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(1), nil).Times(1)
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(1), nil).AnyTimes()
+			},
+			output:  &v1.NotifyUploadResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "Deletion is already running err",
+			ctx:  context.Background(),
+			input: &v1.NotifyUploadRequest{
+				Scope:      "Scope1",
+				Type:       "data",
+				UploadedBy: "admin@test.com",
+				Files:      []string{"Scope1_applications.csv"},
+			},
+			setup: func(*v1.NotifyUploadRequest) {
+
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(1), errors.New("err")).AnyTimes()
+			},
+			output:  &v1.NotifyUploadResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "active gid err",
+			ctx:  ctx,
+			input: &v1.NotifyUploadRequest{
+				Scope:      "Scope1",
+				Type:       "data",
+				UploadedBy: "nifi",
+				Files:      []string{"Scope1_applications.csv"},
+			},
+			setup: func(*v1.NotifyUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+
+				rep = mockRepo
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(0), nil).Times(1)
+				mockRepo.EXPECT().GetActiveGID(ctx, "Scope1").Return(int32(0), sql.ErrNoRows).Times(1)
+			},
+			output:  &v1.NotifyUploadResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "active gid err 2",
+			ctx:  ctx,
+			input: &v1.NotifyUploadRequest{
+				Scope:      "Scope1",
+				Type:       "data",
+				UploadedBy: "nifi",
+				Files:      []string{"Scope1_applications.csv"},
+			},
+			setup: func(*v1.NotifyUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+
+				rep = mockRepo
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(0), nil).Times(1)
+				mockRepo.EXPECT().GetActiveGID(ctx, "Scope1").Return(int32(0), nil).Times(1)
 			},
 			output:  &v1.NotifyUploadResponse{Success: false},
 			wantErr: true,
@@ -152,6 +215,93 @@ func Test_NotifyUpload(t *testing.T) {
 			},
 			output:  &v1.NotifyUploadResponse{Success: true},
 			wantErr: false,
+		},
+		{
+			name: "nifi delimeter",
+			ctx:  ctx,
+			input: &v1.NotifyUploadRequest{
+				Scope:      "Scope1",
+				Type:       "data",
+				UploadedBy: "nifi",
+				Files:      []string{"Scope1#appli#cations.csv"},
+			},
+			setup: func(*v1.NotifyUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+
+				rep = mockRepo
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(0), nil).Times(1)
+				mockRepo.EXPECT().GetActiveGID(ctx, "Scope1").Return(int32(1), nil).Times(1)
+
+				mockRepo.EXPECT().GetInjectionStatus(ctx, "Scope1").Return(int64(0), nil).AnyTimes()
+				mockRepo.EXPECT().InsertUploadedData(ctx, db.InsertUploadedDataParams{
+					FileName:   "Scope1_applications.csv",
+					DataType:   db.DataTypeDATA,
+					Scope:      "Scope1",
+					UploadedBy: "admin@test.com",
+					Gid:        int32(0),
+					Status:     db.UploadStatusPENDING,
+					ScopeType:  db.ScopeTypesGENERIC,
+					AnalysisID: sql.NullString{String: "", Valid: true},
+				}).Return(db.UploadedDataFile{
+					UploadID:       int32(1),
+					Scope:          "Scope1",
+					DataType:       db.DataTypeDATA,
+					FileName:       "Scope1_applications.csv",
+					Status:         db.UploadStatusPENDING,
+					UploadedBy:     "admin@test.com",
+					UploadedOn:     tm,
+					TotalRecords:   int32(0),
+					SuccessRecords: int32(0),
+					FailedRecords:  int32(0),
+					Gid:            int32(0),
+					ScopeType:      db.ScopeTypesGENERIC,
+					AnalysisID:     sql.NullString{String: "", Valid: true},
+				}, nil).AnyTimes()
+
+				dataForJob, _ := json.Marshal(db.UploadedDataFile{
+					UploadID:       int32(1),
+					Scope:          "Scope1",
+					DataType:       db.DataTypeDATA,
+					FileName:       "Scope1_applications.csv",
+					Status:         db.UploadStatusPENDING,
+					UploadedBy:     "admin@test.com",
+					UploadedOn:     tm,
+					TotalRecords:   int32(0),
+					SuccessRecords: int32(0),
+					FailedRecords:  int32(0),
+					Gid:            int32(0),
+					ScopeType:      db.ScopeTypesGENERIC,
+					AnalysisID:     sql.NullString{String: "", Valid: true},
+				})
+				qObj.EXPECT().PushJob(ctx, job.Job{
+					Type:   constants.FILETYPE,
+					Status: job.JobStatusPENDING,
+					Data:   dataForJob,
+				}, constants.FILEWORKER).Return(int32(0), nil).AnyTimes()
+			},
+			output:  &v1.NotifyUploadResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "SUCCESS injection running err",
+			ctx:  ctx,
+			input: &v1.NotifyUploadRequest{
+				Scope:      "Scope1",
+				Type:       "data",
+				UploadedBy: "admin@test.com",
+				Files:      []string{"Scope1_applications.csv"},
+			},
+			setup: func(*v1.NotifyUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+
+				rep = mockRepo
+				mockRepo.EXPECT().GetDeletionStatus(ctx, "Scope1").Return(int64(0), nil).Times(1)
+				mockRepo.EXPECT().GetInjectionStatus(ctx, "Scope1").Return(int64(0), sql.ErrNoRows).Times(1)
+			},
+			output:  &v1.NotifyUploadResponse{Success: true},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -257,6 +407,63 @@ func Test_dpsServiceServer_ListUploadGlobalData(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "SuccessCaseDBERR",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				PageNum:   int32(1),
+				PageSize:  int32(10),
+				SortBy:    v1.ListUploadRequest_SortBy(0),
+				SortOrder: v1.ListUploadRequest_SortOrder(0),
+				Scope:     "scope1",
+			},
+			setup: func(req *v1.ListUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				config.SetConfig(config.Config{RawdataLocation: "testErrFileLocation"})
+				mockRepository.EXPECT().ListUploadedGlobalDataFiles(ctx, db.ListUploadedGlobalDataFilesParams{
+					Scope:       []string{"scope1"},
+					PageNum:     int32(10) * (int32(1) - 1),
+					PageSize:    int32(10),
+					UploadIDAsc: true,
+				}).Times(1).Return([]db.ListUploadedGlobalDataFilesRow{}, errors.New("err"))
+
+			},
+			output: &v1.ListUploadResponse{
+				TotalRecords: int32(2),
+				Uploads:      []*v1.Upload{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "SuccessCaseDBNOROW",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				PageNum:   int32(1),
+				PageSize:  int32(10),
+				SortBy:    v1.ListUploadRequest_SortBy(0),
+				SortOrder: v1.ListUploadRequest_SortOrder(0),
+				Scope:     "scope1",
+			},
+			setup: func(req *v1.ListUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				config.SetConfig(config.Config{RawdataLocation: "testErrFileLocation"})
+				mockRepository.EXPECT().ListUploadedGlobalDataFiles(ctx, db.ListUploadedGlobalDataFilesParams{
+					Scope:       []string{"scope1"},
+					PageNum:     int32(10) * (int32(1) - 1),
+					PageSize:    int32(10),
+					UploadIDAsc: true,
+				}).Times(1).Return([]db.ListUploadedGlobalDataFilesRow{}, sql.ErrNoRows)
+			},
+			output: &v1.ListUploadResponse{
+				TotalRecords: int32(2),
+				Uploads:      []*v1.Upload{},
+			},
+			wantErr: true,
+		},
+		{
 			name: "Context not found ",
 			ctx:  context.Background(),
 			input: &v1.ListUploadRequest{
@@ -297,9 +504,9 @@ func Test_dpsServiceServer_GetGlobalFileInfo(t *testing.T) {
 		Role:   "SuperAdmin",
 		Socpes: []string{"scope1", "scope2", "scope3"},
 	})
-	ctx2 := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+	ctx3 := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
 		UserID: "admin@superuser.com",
-		Role:   "Admin",
+		Role:   "User",
 		Socpes: []string{"scope10"},
 	})
 	var mockCtrl *gomock.Controller
@@ -325,12 +532,31 @@ func Test_dpsServiceServer_GetGlobalFileInfo(t *testing.T) {
 				mockCtrl = gomock.NewController(t)
 				mockRepository := dbmock.NewMockDps(mockCtrl)
 				rep = mockRepository
-				mockRepository.EXPECT().GetGlobalFileInfo(ctx, db.GetGlobalFileInfoParams{UploadID: int32(10), Scope: "scope1"}).Return(db.GetGlobalFileInfoRow{AnalysisID: sql.NullString{String: "123", Valid: true}, FileName: "temp.xlsx", UploadID: int32(1), ScopeType: db.ScopeTypesGENERIC}, nil).Times(1)
+				mockRepository.EXPECT().GetGlobalFileInfo(gomock.Any(), gomock.Any()).Return(db.GetGlobalFileInfoRow{AnalysisID: sql.NullString{String: "123", Valid: true}, FileName: "temp.xlsx", UploadID: int32(1), ScopeType: db.ScopeTypesGENERIC}, nil).AnyTimes()
 			},
 			output: &v1.GetAnalysisFileInfoResponse{
 				FileName: "bad_123_temp.xlsx",
 			},
 			wantErr: false,
+		},
+		{
+			name: "SuccessDBError",
+			ctx:  ctx,
+			input: &v1.GetAnalysisFileInfoRequest{
+				Scope:    "scope1",
+				UploadId: int32(10),
+				FileType: "error",
+			},
+			setup: func(req *v1.GetAnalysisFileInfoRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetGlobalFileInfo(gomock.Any(), gomock.Any()).Return(db.GetGlobalFileInfoRow{AnalysisID: sql.NullString{String: "123", Valid: true}, FileName: "temp.xlsx", UploadID: int32(1), ScopeType: db.ScopeTypesGENERIC}, errors.New("err")).AnyTimes()
+			},
+			output: &v1.GetAnalysisFileInfoResponse{
+				FileName: "bad_123_temp.xlsx",
+			},
+			wantErr: true,
 		},
 		{
 			name: "Context not found ",
@@ -343,7 +569,7 @@ func Test_dpsServiceServer_GetGlobalFileInfo(t *testing.T) {
 		},
 		{
 			name: "scope out of context ",
-			ctx:  context.Background(),
+			ctx:  ctx,
 			input: &v1.GetAnalysisFileInfoRequest{
 				Scope: "scope5",
 			},
@@ -352,7 +578,7 @@ func Test_dpsServiceServer_GetGlobalFileInfo(t *testing.T) {
 		},
 		{
 			name: "Unauthorised Role",
-			ctx:  ctx2,
+			ctx:  ctx3,
 			input: &v1.GetAnalysisFileInfoRequest{
 				Scope: "scope10",
 			},
@@ -468,14 +694,14 @@ func Test_dpsServiceServer_DeleteInventory(t *testing.T) {
 				}).Return(int32(1), nil).Times(1)
 				mockAppClient.EXPECT().DropApplicationData(ctx, &appv1.DropApplicationDataRequest{
 					Scope: "Scope1",
-				}).Times(1).Return(&appv1.DropApplicationDataResponse{
+				}).AnyTimes().Return(&appv1.DropApplicationDataResponse{
 					Success: true,
 				}, nil)
 				ctx1, cancel := context.WithDeadline(ctx, time.Now().Add(time.Second*300))
 				defer cancel()
 				mockEquipClient.EXPECT().DropEquipmentData(&contextMatcher{q: ctx1, t: t}, &equipv1.DropEquipmentDataRequest{
 					Scope: "Scope1",
-				}).Times(1).Return(&equipv1.DropEquipmentDataResponse{
+				}).AnyTimes().Return(&equipv1.DropEquipmentDataResponse{
 					Success: true,
 				}, nil)
 				mockProdClient.EXPECT().DropProductData(ctx, &prov1.DropProductDataRequest{
@@ -653,6 +879,18 @@ func Test_DropUploadedFileData(t *testing.T) {
 			wantErr: false,
 			ctx:     ctx,
 		},
+		{
+			name:  "Success DB err",
+			input: &v1.DropUploadedFileDataRequest{Scope: "Scope1"},
+			setup: func() {
+				mockCtrl := gomock.NewController(t)
+				mockRepo := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepo
+				mockRepo.EXPECT().DropFileRecords(ctx, "Scope1").Return(errors.New("err")).Times(1)
+			},
+			wantErr: true,
+			ctx:     ctx,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -769,6 +1007,56 @@ func Test_dpsServiceServer_ListDeletionRecords(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "Success err",
+			ctx:  ctx,
+			input: &v1.ListDeletionRequest{
+				PageNum:   int32(1),
+				PageSize:  int32(10),
+				SortBy:    v1.ListDeletionRequest_SortBy(0),
+				SortOrder: v1.ListDeletionRequest_SortOrder(0),
+				Scope:     "scope1",
+			},
+			setup: func(req *v1.ListDeletionRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().ListDeletionRecrods(ctx, db.ListDeletionRecrodsParams{
+					Scope:           "scope1",
+					PageNum:         int32(10) * (int32(1) - 1),
+					PageSize:        int32(10),
+					DeletionTypeAsc: true,
+				}).Times(1).Return([]db.ListDeletionRecrodsRow{}, sql.ErrNoRows)
+
+			},
+			output:  &v1.ListDeletionResponse{},
+			wantErr: true,
+		},
+		{
+			name: "Successdb err",
+			ctx:  ctx,
+			input: &v1.ListDeletionRequest{
+				PageNum:   int32(1),
+				PageSize:  int32(10),
+				SortBy:    v1.ListDeletionRequest_SortBy(0),
+				SortOrder: v1.ListDeletionRequest_SortOrder(0),
+				Scope:     "scope1",
+			},
+			setup: func(req *v1.ListDeletionRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().ListDeletionRecrods(ctx, db.ListDeletionRecrodsParams{
+					Scope:           "scope1",
+					PageNum:         int32(10) * (int32(1) - 1),
+					PageSize:        int32(10),
+					DeletionTypeAsc: true,
+				}).Times(1).Return([]db.ListDeletionRecrodsRow{}, errors.New("err"))
+
+			},
+			output:  &v1.ListDeletionResponse{},
+			wantErr: true,
+		},
+		{
 			name: "Context not found ",
 			ctx:  context.Background(),
 			input: &v1.ListDeletionRequest{
@@ -799,6 +1087,415 @@ func Test_dpsServiceServer_ListDeletionRecords(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.output) {
 				t.Errorf("dpsServiceServer.ListDeletionRecords() = %v, want %v", got, tt.output)
 			}
+		})
+	}
+}
+func Test_dpsServiceServer_CancelUpload(t *testing.T) {
+	ctx := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "Admin",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	ctx2 := grpc_middleware.AddClaims(context.Background(), &claims.Claims{
+		UserID: "admin@superuser.com",
+		Role:   "User",
+		Socpes: []string{"scope1", "scope2", "scope3"},
+	})
+	var mockCtrl *gomock.Controller
+	var rep repo.Dps
+	var queue workerqueue.Queue
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.CancelUploadRequest
+		setup   func(*v1.CancelUploadRequest)
+		output  *v1.CancelUploadResponse
+		wantErr bool
+	}{
+		{
+			name: "SuccessCaseNoError",
+			ctx:  ctx,
+			input: &v1.CancelUploadRequest{
+				UploadId: int32(1),
+				FileName: "test",
+				Scope:    "scope1",
+			},
+			setup: func(req *v1.CancelUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().UpdateFileStatusCancelled(ctx, gomock.Any()).Times(1).Return(db.UploadStatus(db.UploadStatusCANCELLED), nil)
+			},
+			output: &v1.CancelUploadResponse{
+				Success: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "dberror",
+			ctx:  ctx,
+			input: &v1.CancelUploadRequest{
+				UploadId: int32(1),
+				FileName: "test",
+				Scope:    "scope1",
+			},
+			setup: func(req *v1.CancelUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().UpdateFileStatusCancelled(ctx, gomock.Any()).Times(1).Return(db.UploadStatus(db.UploadStatusCANCELLED), sql.ErrNoRows)
+			},
+			wantErr: true,
+		},
+		{
+			name: "claims not found ",
+			ctx:  context.Background(),
+			input: &v1.CancelUploadRequest{
+				UploadId: int32(1),
+				FileName: "test",
+
+				Scope: "scope1",
+			},
+			setup: func(req *v1.CancelUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+			},
+			wantErr: true,
+		},
+		{
+			name: "scope out of context ",
+			ctx:  ctx,
+			input: &v1.CancelUploadRequest{
+				UploadId: int32(1),
+				FileName: "test",
+				Scope:    "scope6",
+			},
+			setup: func(req *v1.CancelUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+			},
+			wantErr: true,
+		},
+		{
+			name: "scope out of context ",
+			ctx:  ctx2,
+			input: &v1.CancelUploadRequest{
+				UploadId: int32(1),
+				FileName: "test",
+				Scope:    "scope1",
+			},
+			setup: func(req *v1.CancelUploadRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			obj := NewDpsServiceServer(rep, &queue, nil)
+			_, err := obj.CancelUpload(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.CancelUpload() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func Test_ListFailedRecord(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Dps
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	var met metv1.MetricServiceClient
+	var equip equipv1.EquipmentServiceClient
+	var prod prov1.ProductServiceClient
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.ListFailedRequest
+		setup   func(*v1.ListFailedRequest)
+		output  *v1.ListFailedResponse
+		wantErr bool
+		s       *dpsServiceServer
+	}{
+		{
+			name: "correct sheet",
+			ctx:  ctx,
+			input: &v1.ListFailedRequest{
+				Scope:    "AAK",
+				UploadId: int32(10),
+			},
+			setup: func(*v1.ListFailedRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetFailedRecord(gomock.Any(), gomock.Any()).Return([]db.GetFailedRecordRow{{Totalrecords: int64(3),
+					Record: []byte(`{"scope": "OFR", "eq_data": {"flag": 1, "parent_id": 846901, "logical_cpu": 1, "partition_id": 851733, "logical_cores": 1, "partition_hostname": "inksbcft1n"}, "eq_type": "partition"}`),
+				},
+				}, nil)
+			},
+			output:  &v1.ListFailedResponse{},
+			wantErr: false,
+		},
+		{
+			name: "correct db err",
+			ctx:  ctx,
+			input: &v1.ListFailedRequest{
+				Scope:    "AAK",
+				UploadId: int32(10),
+			},
+			setup: func(*v1.ListFailedRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().GetFailedRecord(gomock.Any(), gomock.Any()).Return([]db.GetFailedRecordRow{}, errors.New("err"))
+			},
+			output:  &v1.ListFailedResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			tt.s = &dpsServiceServer{
+				dpsRepo:   rep,
+				queue:     qObj,
+				equipment: equip,
+				metric:    met,
+				product:   prod,
+			}
+			_, err := tt.s.ListFailedRecord(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.ListFailedRecord() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Println("Test passed ", tt.name)
+		})
+	}
+}
+
+func Test_ListUploadData(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Dps
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	var met metv1.MetricServiceClient
+	var equip equipv1.EquipmentServiceClient
+	var prod prov1.ProductServiceClient
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.ListUploadRequest
+		setup   func(*v1.ListUploadRequest)
+		output  *v1.ListUploadResponse
+		wantErr bool
+		s       *dpsServiceServer
+	}{
+		{
+			name: "claims Not found",
+			ctx:  context.Background(),
+			input: &v1.ListUploadRequest{
+				Scope: "Scope1",
+			},
+			setup:   func(*v1.ListUploadRequest) {},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+		{
+			name: "Scope Not found",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "Scope10",
+			},
+			setup:   func(*v1.ListUploadRequest) {},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+
+		{
+			name: "correct sheet",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().ListUploadedDataFiles(gomock.Any(), gomock.Any()).Return([]db.ListUploadedDataFilesRow{{
+					Totalrecords: int64(1),
+					UploadID:     int32(2),
+					TotalRecords: int32(1),
+				}}, nil)
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: false,
+		},
+		{
+			name: "correct db err",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				mockRepository.EXPECT().ListUploadedDataFiles(gomock.Any(), gomock.Any()).Return([]db.ListUploadedDataFilesRow{}, errors.New("err"))
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			tt.s = &dpsServiceServer{
+				dpsRepo:   rep,
+				queue:     qObj,
+				equipment: equip,
+				metric:    met,
+				product:   prod,
+			}
+			_, err := tt.s.ListUploadData(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.ListUploadData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Println("Test passed ", tt.name)
+		})
+	}
+}
+
+func Test_ListUploadMetaData(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	var rep repo.Dps
+	qObj := queuemock.NewMockWorkerqueue(mockCtrl)
+	var met metv1.MetricServiceClient
+	var equip equipv1.EquipmentServiceClient
+	var account accv1.AccountServiceClient
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		input   *v1.ListUploadRequest
+		setup   func(*v1.ListUploadRequest)
+		output  *v1.ListUploadResponse
+		wantErr bool
+		s       *dpsServiceServer
+	}{
+		{
+			name: "claims Not found",
+			ctx:  context.Background(),
+			input: &v1.ListUploadRequest{
+				Scope: "Scope1",
+			},
+			setup:   func(*v1.ListUploadRequest) {},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+		{
+			name: "Scope Not found",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "Scope10",
+			},
+			setup:   func(*v1.ListUploadRequest) {},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+
+		{
+			name: "correct sheet",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				mockacc := mockacc.NewMockAccountServiceClient(mockCtrl)
+				account = mockacc
+				rep = mockRepository
+				mockacc.EXPECT().GetScope(gomock.Any(), gomock.Any()).Return(&accv1.Scope{ScopeName: "GENERIC"}, nil)
+				mockRepository.EXPECT().ListUploadedMetaDataFiles(gomock.Any(), gomock.Any()).Return([]db.ListUploadedMetaDataFilesRow{{
+					Totalrecords: int64(1),
+					TotalRecords: int32(1),
+					UploadID:     int32(2),
+				}}, nil)
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: false,
+		},
+		{
+			name: "correct db err",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				mockacc := mockacc.NewMockAccountServiceClient(mockCtrl)
+				account = mockacc
+				rep = mockRepository
+				mockacc.EXPECT().GetScope(gomock.Any(), gomock.Any()).Return(&accv1.Scope{ScopeName: "GENERIC"}, nil)
+				mockRepository.EXPECT().ListUploadedMetaDataFiles(gomock.Any(), gomock.Any()).Return([]db.ListUploadedMetaDataFilesRow{}, errors.New("err"))
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+		{
+			name: "correct scope not generic",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				mockacc := mockacc.NewMockAccountServiceClient(mockCtrl)
+				account = mockacc
+				rep = mockRepository
+				mockacc.EXPECT().GetScope(gomock.Any(), gomock.Any()).Return(&accv1.Scope{ScopeName: "non"}, nil)
+				mockRepository.EXPECT().ListUploadedMetaDataFiles(gomock.Any(), gomock.Any()).Return([]db.ListUploadedMetaDataFilesRow{}, errors.New("err"))
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+		{
+			name: "correct rpc err",
+			ctx:  ctx,
+			input: &v1.ListUploadRequest{
+				Scope: "AAK",
+			},
+			setup: func(*v1.ListUploadRequest) {
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				mockacc := mockacc.NewMockAccountServiceClient(mockCtrl)
+				account = mockacc
+				rep = mockRepository
+				mockacc.EXPECT().GetScope(gomock.Any(), gomock.Any()).Return(&accv1.Scope{ScopeName: "GENERIC"}, errors.New("err"))
+			},
+			output:  &v1.ListUploadResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setup(tt.input)
+			tt.s = &dpsServiceServer{
+				dpsRepo:   rep,
+				queue:     qObj,
+				equipment: equip,
+				metric:    met,
+				account:   account,
+			}
+			_, err := tt.s.ListUploadMetaData(tt.ctx, tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dpsServiceServer.ListUploadMetaData() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			fmt.Println("Test passed ", tt.name)
 		})
 	}
 }

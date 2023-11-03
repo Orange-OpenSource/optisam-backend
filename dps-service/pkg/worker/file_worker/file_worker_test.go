@@ -2,10 +2,11 @@ package fileworker
 
 import (
 	"bufio"
-	"optisam-backend/dps-service/pkg/worker/models"
 	"reflect"
 	"strings"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
 )
 
 func Test_dpsServiceServer_getProducts(t *testing.T) {

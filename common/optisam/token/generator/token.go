@@ -3,9 +3,10 @@ package generator
 import (
 	"crypto/rsa"
 	"io/ioutil"
-	"optisam-backend/common/optisam/token"
-	"optisam-backend/common/optisam/token/claims"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )

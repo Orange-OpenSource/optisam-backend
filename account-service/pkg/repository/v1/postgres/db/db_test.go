@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"optisam-backend/account-service/pkg/repository/v1/postgres/db"
 	"strconv"
 	"testing"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/account-service/pkg/repository/v1/postgres/db"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,34 +1,32 @@
 {
 	"copyright": "Copyright © Orange 2023",
 	"release_notes": [
-		"New metrics saas.nominative.standard and saas.concurrent.standard creation, updation and deletion.",
-		"New Nominative user inventory and Concurrent user inventory introduced .",
-		"SaaS nominative and concurrent product users creation , updation and deletion for individual as well as aggregations from UI and segregation as SAAS/on premise Products.",
-		"Export/Import the list of nominative users as csv.",
-		"Export the list of concurrent users as csv.",
-		"Compliance for saas products using new metrics.",
-		"Sharing of licenses for the individual or aggregated rights through the UI.",
-		"Creation of Acquired rights without version  from UI and their Compliance computation.",
-		"Dashboard- User can see shared and received licenses .",
-		"Scope software expenditure updation inside scope management and also be visible on dashboard.",
-		"History evolution to be shown in graph for concurrent users.",
-		"Blank Rows Auto deletion at the time of analysis.",
-		"New Design of product catalog landing page for editors and products.",
-		"New filters are introduced on editor and product page.",
-		"New fields- group contract, Global account managers, the Sourcers and the headquarters country and address are added on Editors creation from product catalog management.",
-		"New dropdown recommendation is added on product creation in product catalog management.",
-		"Group compliance dashboard is introduced for super admin.",
-		"SuperAdmin can create groups for group compliance dashboard from  group management.",
-		"Software expenditure, compliance and underusage KPIs are introduced on  group compliance dashboard."
-	],
+		"New metrics microsoft.sql.standard, microsoft.sql.enterprise , windows.server.datacenter and  windows.server.datacenter creation.",
+		"Compliance calculation on \"microsoft.sql.standard\", \"microsoft.sql.enterprise\" , \"windows.server.datacenter\" and \" windows.server.datacenter\" metrics.",
+		"New equipment type desktops added from the UI.",
+		"New sheet \"desktops\" added to the global file.",
+		"Equipment type \"Softpartitions\" renamed to \" Virtual machines\".",
+		"Email notification when a product will be out of maintenance.",
+		"Maintenance date will be highlighted when maintenance is expired of any Acquired rights.",
+		"New Dashboard for Product catalog on landing page and from inside application.",
+		"Redesigning of scope dashboard with new KPIS.",
+		"Email Notification on new user creation to activate the account. ",
+		"Email notification to reset/forget password.",
+		"In analysis report of server sheet error is marked in row when a server contains cluster information without a vcenter.",
+		"In applications sheet, product name, editor and versions are not mandatory.",
+		"Admin can stop a current injection if the file is in status \"uploaded\".",
+		"Admin can enter multiple CSI numbers against each sku from UI as well as from file.",
+		"Editors, Product names, aggregation names can have spaces.",
+		"ASYNC functionality for import Nominative users."
+		],
 	"future": [
 		{
-			"version": "1.5.0 ",
+			"version": "1.6.0 ",
 			"date_month": "",
 			"date_year": "",
 			"bullets": [
-				"Microsoft Windows And SQL metrics",
-				"Metric changes auto creation while creating scope"			]
+				"ODA Category, CC3 family & sub family category support",
+				"Nominative & concurrent users can be added on on-premise product "]
 		}
 	]
 }

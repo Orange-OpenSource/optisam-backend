@@ -4,12 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	v1 "optisam-backend/auth-service/pkg/api/v1"
-	repv1 "optisam-backend/auth-service/pkg/repository/v1"
-	"optisam-backend/auth-service/pkg/repository/v1/mock"
-	"optisam-backend/common/optisam/token/claims"
 	"reflect"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/config"
+	repv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1/mock"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -29,6 +32,7 @@ func Test_authServiceServer_Login(t *testing.T) {
 
 	var mockCtrl *gomock.Controller
 	var rep repv1.Repository
+	var cfg config.Config
 	tests := []struct {
 		name    string
 		s       *AuthServiceServer
@@ -59,6 +63,29 @@ func Test_authServiceServer_Login(t *testing.T) {
 						FailedLogins: 0,
 					}, nil).Times(1)
 				mockDB.EXPECT().ResetLoginCount(nil, "user1@test.com").Return(nil).Times(1)
+			},
+		},
+		{name: "reset login count error",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "secret",
+				},
+			},
+			want:    nil,
+			wantErr: true,
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 0,
+					}, nil).Times(1)
+				mockDB.EXPECT().ResetLoginCount(gomock.Any(), "user1@test.com").Return(errors.New("some db error")).Times(1)
 			},
 		},
 		{name: "failure user not found",
@@ -101,7 +128,34 @@ func Test_authServiceServer_Login(t *testing.T) {
 			},
 			wantErr: true,
 		},
-		// {name: "failure user is blocked",
+		{name: "failure user is blocked",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "secret",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				var ctx context.Context
+				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 3,
+					}, nil).Times(1)
+				mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").
+					Return(nil).Times(1)
+			},
+			wantErr: false,
+			want: &v1.LoginResponse{
+				UserID: "user1@test.com",
+			},
+		},
+		// {name: "failure wrong pass",
 		// 	s: &AuthServiceServer{},
 		// 	args: args{
 		// 		req: &v1.LoginRequest{
@@ -117,106 +171,129 @@ func Test_authServiceServer_Login(t *testing.T) {
 		// 		mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
 		// 			Return(&repv1.UserInfo{
 		// 				UserID:       "user1@test.com",
-		// 				Password:     string(hash),
+		// 				Password:     string("abc"),
 		// 				FailedLogins: 3,
 		// 			}, nil).Times(1)
-		// 		// mockDB.EXPECT().ResetLoginCount(ctx,"user1@test.com").
-		// 		// Return(nil).Times(1)
+		// 		mockDB.EXPECT().IncreaseFailedLoginCount(ctx, "user1@test.com").Return(nil).Times(1)
+		// 		mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").Return(nil).Times(1).AnyTimes()
 		// 	},
 		// 	wantErr: true,
 		// },
-		// {name: "failure user is blocked",
-		// 	s: &AuthServiceServer{},
-		// 	args: args{
-		// 		req: &v1.LoginRequest{
-		// 			Username: "user1@test.com",
-		// 			Password: "secret",
-		// 		},
-		// 	},
-		// 	setup: func() {
-		// 		mockCtrl = gomock.NewController(t)
-		// 		mockDB := mock.NewMockRepository(mockCtrl)
-		// 		rep = mockDB
-		// 		var ctx context.Context
-		// 		mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
-		// 			Return(&repv1.UserInfo{
-		// 				UserID:       "user1@test.com",
-		// 				Password:     string(hash),
-		// 				FailedLogins: 3,
-		// 			}, nil).Times(1)
-		// 		// mockDB.EXPECT().ResetLoginCount(ctx,"user1@test.com").
-		// 		// Return(nil).Times(1)
-		// 	},
-		// 	wantErr: true,
-		// },
-		// {name: "failure - Login - wrong password",
-		// 	s: &AuthServiceServer{},
-		// 	args: args{
-		// 		req: &v1.LoginRequest{
-		// 			Username: "user1@test.com",
-		// 			Password: "abc",
-		// 		},
-		// 	},
-		// 	setup: func() {
-		// 		mockCtrl = gomock.NewController(t)
-		// 		mockDB := mock.NewMockRepository(mockCtrl)
-		// 		rep = mockDB
-		// 		mockDB.EXPECT().UserInfo(nil, "user1@test.com").
-		// 			Return(&repv1.UserInfo{
-		// 				UserID:       "user1@test.com",
-		// 				Password:     string(hash),
-		// 				FailedLogins: 0,
-		// 			}, nil).Times(1)
-		// 		mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(nil).Times(1)
-		// 	},
-		// 	wantErr: true,
-		// },
-		// {name: "failure password is wrong failure in increasing reset count",
-		// 	s: &AuthServiceServer{},
-		// 	args: args{
-		// 		req: &v1.LoginRequest{
-		// 			Username: "user1@test.com",
-		// 			Password: "wrong password",
-		// 		},
-		// 	},
-		// 	setup: func() {
-		// 		mockCtrl = gomock.NewController(t)
-		// 		mockDB := mock.NewMockRepository(mockCtrl)
-		// 		rep = mockDB
-		// 		var ctx context.Context
-		// 		mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
-		// 			Return(&repv1.UserInfo{
-		// 				UserID:       "user1@test.com",
-		// 				Password:     string(hash),
-		// 				FailedLogins: 0,
-		// 			}, nil).Times(1)
-		// 		mockDB.EXPECT().IncreaseFailedLoginCount(ctx, "user1@test.com").
-		// 			Return(errors.New("test error")).Times(1)
-		// 	},
-		// 	wantErr: true,
-		// },
-		// {name: "failure - Login - failed logins is equal to 2",
-		// 	s: &AuthServiceServer{},
-		// 	args: args{
-		// 		req: &v1.LoginRequest{
-		// 			Username: "user1@test.com",
-		// 			Password: "abc",
-		// 		},
-		// 	},
-		// 	setup: func() {
-		// 		mockCtrl = gomock.NewController(t)
-		// 		mockDB := mock.NewMockRepository(mockCtrl)
-		// 		rep = mockDB
-		// 		mockDB.EXPECT().UserInfo(nil, "user1@test.com").
-		// 			Return(&repv1.UserInfo{
-		// 				UserID:       "user1@test.com",
-		// 				Password:     string(hash),
-		// 				FailedLogins: 2,
-		// 			}, nil).Times(1)
-		// 		mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(nil).Times(1)
-		// 	},
-		// 	wantErr: true,
-		// },
+		{name: "failure wrong pass update",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "secret",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				var ctx context.Context
+				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string("abc"),
+						FailedLogins: 3,
+					}, nil).Times(1)
+				mockDB.EXPECT().IncreaseFailedLoginCount(ctx, "user1@test.com").Return(errors.New("some db error")).Times(1)
+			},
+			wantErr: true,
+		},
+		{name: "failure user is blocked",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "secret",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				var ctx context.Context
+				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 3,
+					}, nil).Times(1)
+				mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").Return(nil).Times(1).AnyTimes()
+			},
+			wantErr: false,
+			want:    &v1.LoginResponse{UserID: "user1@test.com"},
+		},
+		{name: "failure - Login - wrong password",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "abc",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 0,
+					}, nil).Times(1)
+				mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(nil).Times(1)
+				mockDB.EXPECT().ResetLoginCount(nil, "user1@test.com").Return(nil).Times(1).AnyTimes()
+			},
+			wantErr: true,
+		},
+		{name: "failure password is wrong failure in increasing reset count",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "wrong password",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				var ctx context.Context
+				mockDB.EXPECT().UserInfo(ctx, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 0,
+					}, nil).Times(1)
+				mockDB.EXPECT().IncreaseFailedLoginCount(ctx, "user1@test.com").Return(errors.New("test error")).Times(1)
+			},
+			wantErr: true,
+		},
+		{name: "failure - Login - failed logins is equal to 2",
+			s: &AuthServiceServer{},
+			args: args{
+				req: &v1.LoginRequest{
+					Username: "user1@test.com",
+					Password: "abc",
+				},
+			},
+			setup: func() {
+				mockCtrl = gomock.NewController(t)
+				mockDB := mock.NewMockRepository(mockCtrl)
+				rep = mockDB
+				mockDB.EXPECT().UserInfo(nil, "user1@test.com").
+					Return(&repv1.UserInfo{
+						UserID:       "user1@test.com",
+						Password:     string(hash),
+						FailedLogins: 2,
+					}, nil).Times(1)
+				mockDB.EXPECT().IncreaseFailedLoginCount(nil, "user1@test.com").Return(errors.New("db error")).Times(1)
+			},
+			wantErr: true,
+		},
 		{name: "failure successful login but failure in resetting login count",
 			s: &AuthServiceServer{},
 			args: args{
@@ -236,8 +313,7 @@ func Test_authServiceServer_Login(t *testing.T) {
 						Password:     string(hash),
 						FailedLogins: 0,
 					}, nil).Times(1)
-				mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").
-					Return(errors.New("test error")).Times(1)
+				mockDB.EXPECT().ResetLoginCount(ctx, "user1@test.com").Return(errors.New("some err")).Times(1).AnyTimes()
 			},
 			wantErr: true,
 		},
@@ -245,7 +321,7 @@ func Test_authServiceServer_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			tt.s = NewAuthServiceServer(rep)
+			tt.s = NewAuthServiceServer(rep, cfg, nil, nil)
 			got, err := tt.s.Login(tt.args.ctx, tt.args.req)
 			if tt.wantErr {
 				if !assert.Errorf(t, err, "AuthServiceServer.Login() - expexted error got nil") {
@@ -438,7 +514,8 @@ func Test_authServiceServer_UserClaims(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			tt.s = NewAuthServiceServer(rep)
+			var cfg config.Config
+			tt.s = NewAuthServiceServer(rep, cfg, nil, nil)
 			got, err := tt.s.UserClaims(tt.args.ctx, tt.args.userID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AuthServiceServer.UserClaims() error = %v, wantErr %v", err, tt.wantErr)

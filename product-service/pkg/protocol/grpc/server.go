@@ -5,12 +5,14 @@ import (
 	"crypto/rsa"
 	"log"
 	"net"
-	"optisam-backend/common/optisam/logger"
-	mw "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/product-service/pkg/api/v1"
-	"optisam-backend/product-service/pkg/errors"
 	"os"
 	"os/signal"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/errors"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	mw "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/open-policy-agent/opa/rego"
@@ -32,6 +34,7 @@ func RunServer(ctx context.Context, v1API v1.ProductServiceServer, port string, 
 	// add middleware
 	// opts = grpc_middleware.AddLogging(logger.Log, opts)
 	// register service
+	opts = append(opts, grpc.MaxSendMsgSize(8388608))
 	opts = append(opts, grpc.MaxRecvMsgSize(8388608))
 	server := grpc.NewServer(opts...)
 	v1.RegisterProductServiceServer(server, v1API)

@@ -1,16 +1,17 @@
 package config
 
 import (
-	"optisam-backend/common/optisam/grpc"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
-
 	"os"
 	"time"
 
-	"optisam-backend/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/kafka"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
 
 	"errors"
 	"fmt"
@@ -34,7 +35,7 @@ type Config struct {
 	Upload UploadConfig
 
 	// Database connection information
-	Database postgres.Config
+	Database postgres.DBConfig
 
 	// Log configuration
 	Log logger.Config
@@ -50,6 +51,11 @@ type Config struct {
 
 	// Maximum file size to be uploaded
 	MaxFileSize int64
+
+	//kafka
+	Kafka kafka.KafkaConfig
+
+	NoOfPartitions int32
 }
 
 type UploadConfig struct {
@@ -155,6 +161,16 @@ func Configure(v *viper.Viper, p *pflag.FlagSet) {
 	_ = v.BindEnv("dgraph.host")
 
 	// Database Password configuration
-	_ = v.BindEnv("database.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.admin.pass", "DB_PASSWORD")
+	_ = v.BindEnv("database.user.pass", "DBUSR_PASSWORD")
+	_ = v.BindEnv("database.migration.version", "MIG_VERSION")
+	_ = v.BindEnv("database.migration.direction", "MIG_DIR")
+
+	//env mapping for kafka
+	_ = v.BindEnv("kafka.bootstrapservers", "KAFKA_BOOTSTRAPSERVER")
+	_ = v.BindEnv("kafka.securityprotocol", "KAFKA_SECURITYPROTOCOL")
+	_ = v.BindEnv("kafka.sslkeylocation", "KAFKA_SSLKEYLOCATION")
+	_ = v.BindEnv("kafka.sslcertificatelocation", "KAFKA_SSLCERTIFICATELOCATION")
+	_ = v.BindEnv("kafka.sslcalocation", "KAFKA_SSLCALOCATION")
 
 }

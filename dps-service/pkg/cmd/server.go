@@ -6,34 +6,38 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"optisam-backend/common/optisam/buildinfo"
-	"optisam-backend/common/optisam/cron"
-	"optisam-backend/common/optisam/healthcheck"
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/prometheus"
-	"optisam-backend/dps-service/pkg/config"
-	cronJob "optisam-backend/dps-service/pkg/poller"
-	"optisam-backend/dps-service/pkg/protocol/grpc"
-	"optisam-backend/dps-service/pkg/protocol/rest"
-	repo "optisam-backend/dps-service/pkg/repository/v1/postgres"
 
-	gconn "optisam-backend/common/optisam/grpc"
-	v1 "optisam-backend/dps-service/pkg/service/v1"
-	apiworker "optisam-backend/dps-service/pkg/worker/api_worker"
-	constants "optisam-backend/dps-service/pkg/worker/constants"
-	deferworker "optisam-backend/dps-service/pkg/worker/defer_worker"
-	fileworker "optisam-backend/dps-service/pkg/worker/file_worker"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/config"
+	cronJob "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/poller"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/protocol/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/protocol/rest"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/buildinfo"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/cron"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/healthcheck"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
+
 	"os"
 	"time"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/service/v1"
+	apiworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/api_worker"
+	constants "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	deferworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/defer_worker"
+	fileworker "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/file_worker"
+
+	gconn "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
 
 	"github.com/InVisionApp/go-health"
 	"github.com/InVisionApp/go-health/checkers"
 	"go.uber.org/zap"
 
-	"optisam-backend/common/optisam/workerqueue"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -116,70 +120,6 @@ func RunServer() error {
 		logger.Log.Error(err.Error())
 		os.Exit(3)
 	}
-	ctx := context.Background()
-	config.SetConfig(*cfg)
-	if cfg.MaxAPIWorker == 0 {
-		cfg.MaxAPIWorker = 25 // Default api worker count
-		logger.Log.Info("max api worker set default : 25 ")
-	}
-	if cfg.MaxFileWorker == 0 {
-		cfg.MaxFileWorker = 5 // Default api worker count
-		logger.Log.Info("max MaxFileWorker set default :  5 ")
-	}
-	if cfg.MaxDeferWorker == 0 {
-		cfg.MaxDeferWorker = 10 // Default api worker count
-		logger.Log.Info("max MaxDeferWorker set default : 10 ")
-	}
-
-	db, err := postgres.ConnectDBExecMig(cfg.Database)
-	if err != nil {
-		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
-		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
-	}
-	// defer db.Close()
-	defer func() {
-		db.Close()
-		// Wait to 4 seconds so that the traces can be exported
-		waitTime := 2 * time.Second
-		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
-		<-time.After(waitTime)
-	}()
-	repo.SetDpsRepository(db)
-	dbObj := repo.GetDpsRepository()
-
-	// GRPC Connections
-	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
-	if err != nil {
-		logger.Log.Fatal("Failed to initialize GRPC client")
-	}
-	for _, conn := range grpcClientMap {
-		defer conn.Close()
-	}
-
-	// Worker Queue
-	Queue, err = workerqueue.NewQueue(ctx, constants.DPSQUEUE, db, cfg.WorkerQueue)
-	if err != nil {
-		return fmt.Errorf("failed to create worker queue: %v", err)
-	}
-
-	for i := 0; i < cfg.MaxFileWorker; i++ {
-		w := fileworker.NewWorker(constants.FILEWORKER, Queue, db, grpcClientMap)
-		Queue.RegisterWorker(ctx, w)
-	}
-
-	for i := 0; i < cfg.MaxAPIWorker; i++ {
-		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap, cfg.GrpcServers.Timeout, cfg.FilesLocation, cfg.ArchiveLocation)
-		Queue.RegisterWorker(ctx, w)
-	}
-
-	for i := 0; i < cfg.MaxDeferWorker; i++ {
-		w := deferworker.NewWorker(constants.DEFERWORKER, Queue, db, grpcClientMap)
-		Queue.RegisterWorker(ctx, w)
-	}
-
-	logger.Log.Error("total Worker started", zap.Any("fileWorker", cfg.MaxFileWorker), zap.Any("apiWorker", cfg.MaxAPIWorker), zap.Any("deferWorker", cfg.MaxDeferWorker))
-	// All worker will wait till all registration will completed , to avoid concurrent map read write errors
-	Queue.IsWorkerRegCompleted = true
 
 	// Register http health check
 	{
@@ -254,6 +194,71 @@ func RunServer() error {
 	go func() {
 		_ = instrumentationServer.ListenAndServe()
 	}()
+
+	ctx := context.Background()
+	config.SetConfig(*cfg)
+	if cfg.MaxAPIWorker == 0 {
+		cfg.MaxAPIWorker = 25 // Default api worker count
+		logger.Log.Info("max api worker set default : 25 ")
+	}
+	if cfg.MaxFileWorker == 0 {
+		cfg.MaxFileWorker = 5 // Default api worker count
+		logger.Log.Info("max MaxFileWorker set default :  5 ")
+	}
+	if cfg.MaxDeferWorker == 0 {
+		cfg.MaxDeferWorker = 10 // Default api worker count
+		logger.Log.Info("max MaxDeferWorker set default : 10 ")
+	}
+
+	db, err := postgres.ConnectDBExecMig(cfg.Database)
+	if err != nil {
+		logger.Log.Error("failed to ConnectDBExecMig error: %v", zap.Any("", err.Error()))
+		return fmt.Errorf("failed to ConnectDBExecMig error: %v", err.Error())
+	}
+	// defer db.Close()
+	defer func() {
+		db.Close()
+		// Wait to 4 seconds so that the traces can be exported
+		waitTime := 2 * time.Second
+		log.Printf("Waiting for %s seconds to ensure all traces are exported before exiting", waitTime)
+		<-time.After(waitTime)
+	}()
+	repo.SetDpsRepository(db)
+	dbObj := repo.GetDpsRepository()
+
+	// GRPC Connections
+	grpcClientMap, err := gconn.GetGRPCConnections(ctx, cfg.GrpcServers)
+	if err != nil {
+		logger.Log.Fatal("Failed to initialize GRPC client")
+	}
+	for _, conn := range grpcClientMap {
+		defer conn.Close()
+	}
+
+	// Worker Queue
+	Queue, err = workerqueue.NewQueue(ctx, constants.DPSQUEUE, db, cfg.WorkerQueue)
+	if err != nil {
+		return fmt.Errorf("failed to create worker queue: %v", err)
+	}
+
+	for i := 0; i < cfg.MaxFileWorker; i++ {
+		w := fileworker.NewWorker(constants.FILEWORKER, Queue, db, grpcClientMap)
+		Queue.RegisterWorker(ctx, w)
+	}
+
+	for i := 0; i < cfg.MaxAPIWorker; i++ {
+		w := apiworker.NewWorker(constants.APIWORKER, Queue, db, grpcClientMap, cfg.GrpcServers.Timeout, cfg.FilesLocation, cfg.ArchiveLocation)
+		Queue.RegisterWorker(ctx, w)
+	}
+
+	for i := 0; i < cfg.MaxDeferWorker; i++ {
+		w := deferworker.NewWorker(constants.DEFERWORKER, Queue, db, grpcClientMap)
+		Queue.RegisterWorker(ctx, w)
+	}
+
+	logger.Log.Error("total Worker started", zap.Any("fileWorker", cfg.MaxFileWorker), zap.Any("apiWorker", cfg.MaxAPIWorker), zap.Any("deferWorker", cfg.MaxDeferWorker))
+	// All worker will wait till all registration will completed , to avoid concurrent map read write errors
+	Queue.IsWorkerRegCompleted = true
 
 	v1API := v1.NewDpsServiceServer(dbObj, Queue, grpcClientMap)
 	// get the verify key to validate jwt

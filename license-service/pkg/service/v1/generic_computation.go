@@ -2,7 +2,10 @@ package v1
 
 import (
 	"context"
-	repo "optisam-backend/license-service/pkg/repository/v1"
+
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 )
 
 // MetricCalculation takes input and output as map[string]interface to handle different types of input and output
@@ -16,6 +19,7 @@ var (
 	MetricName       string = "METRIC_NAME"
 	ProdAggName      string = "PROD_AGG_NAME"
 	IsAgg            string = "IS_AGG"
+	IsSa             string = "IS_SA"
 	SCOPES           string = "SCOPES"
 	SWIDTAG          string = "SWIDTAG"
 )
@@ -37,6 +41,10 @@ func init() {
 	MetricCalculation[repo.MetricEquipAttrStandard] = equipAttrMetricCalulation
 	MetricCalculation[repo.MetricUserNomStandard] = unsMetricCalulation
 	MetricCalculation[repo.MetricUserConcurentStandard] = ucsMetricCalulation
+	MetricCalculation[repo.MetricMicrosoftSqlEnterprise] = mseMetricCalulation
+	MetricCalculation[repo.MetricWindowsServerDataCenter] = wsdMetricCalulation
+	MetricCalculation[repo.MetricMicrosoftSqlStandard] = mssMetricCalulation
+	MetricCalculation[repo.MetricWindowsServerStandard] = wssMetricCalulation
 
 }
 
@@ -168,5 +176,61 @@ func ucsMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes [
 	}
 	resp[ComputedLicenses] = computedLicences
 	resp[ComputedDetails] = computedDetails
+	return resp, nil
+}
+
+func mseMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) { //nolint:unparam
+	resp := make(map[string]interface{})
+	computedLicences, err := s.computedLicensesMSE(ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Sugar().Errorw("mseMetricCalulation - Error while computing licences for MSE Metric",
+			"error", err.Error(),
+			"data", input,
+		)
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
+	return resp, nil
+}
+
+func wsdMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
+	resp := make(map[string]interface{})
+	computedLicences, err := s.computedLicensesWSD(ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Sugar().Errorw("wsdMetricCalulation - Error while computing licences for WSD Metric",
+			"error", err.Error(),
+			"data", input,
+		)
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
+	return resp, nil
+}
+
+func mssMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
+	resp := make(map[string]interface{})
+	computedLicences, err := s.computedLicensesMSS(ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Sugar().Errorw("mssMetricCalulation - Error while computing licences for MSS Metric",
+			"error", err.Error(),
+			"data", input,
+		)
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
+	return resp, nil
+}
+
+func wssMetricCalulation(ctx context.Context, s *licenseServiceServer, eqTypes []*repo.EquipmentType, input map[string]interface{}) (map[string]interface{}, error) {
+	resp := make(map[string]interface{})
+	computedLicences, err := s.computedLicensesWSS(ctx, eqTypes, input)
+	if err != nil {
+		logger.Log.Sugar().Errorw("wssMetricCalulation - Error while computing licences for WSS Metric",
+			"error", err.Error(),
+			"data", input,
+		)
+		return resp, err
+	}
+	resp[ComputedLicenses] = computedLicences
 	return resp, nil
 }

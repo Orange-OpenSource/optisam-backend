@@ -3,10 +3,11 @@ package schema
 import (
 	"fmt"
 	"io/ioutil"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/config"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/loader"
 	"path/filepath"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/loader"
 
 	"github.com/spf13/cobra"
 )

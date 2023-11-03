@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/license-service/pkg/repository/v1"
 	"strings"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )
@@ -68,7 +70,7 @@ func filterMetricEquipments(prodMetricEquip []*v1.ProductAllocationEquipmentMetr
 	//logger.Log.Sugar().Infow("Data for metric alloted", "metricName", metricName, "ProductEquipment", prodMetricEquip[0].ProductEquipment, "AllocatedEquipMetric", prodMetricEquip[0].MetricAllocation)
 	allotedUIDs := ""
 	notAllotedUIDs := ""
-	notAllotedSoftpartionUIDs := ""
+	notAllotedVirtualMachineUIDs := ""
 	notAllocatedUserID := ""
 	if len(prodMetricEquip) > 0 {
 		for index := range prodMetricEquip {
@@ -88,11 +90,11 @@ func filterMetricEquipments(prodMetricEquip []*v1.ProductAllocationEquipmentMetr
 									}
 									notAllotedUIDs += " " + equip.EUID + " "
 								}
-								if equip.EquipmentType == "softpartition" {
-									if notAllotedSoftpartionUIDs != "" {
-										notAllotedSoftpartionUIDs += " , "
+								if equip.EquipmentType == "virtualMachine" {
+									if notAllotedVirtualMachineUIDs != "" {
+										notAllotedVirtualMachineUIDs += " , "
 									}
-									notAllotedSoftpartionUIDs += " " + equip.EUID + " "
+									notAllotedVirtualMachineUIDs += " " + equip.EUID + " "
 								}
 								if notAllocatedUserID != "" {
 									notAllocatedUserID += " , "
@@ -106,7 +108,7 @@ func filterMetricEquipments(prodMetricEquip []*v1.ProductAllocationEquipmentMetr
 			}
 		}
 	}
-	resp["notAllotedSoftpartition"] = notAllotedSoftpartionUIDs
+	resp["notAllotedVirtualMachine"] = notAllotedVirtualMachineUIDs
 	resp["alloted"] = allotedUIDs
 	resp["notAlloted"] = notAllotedUIDs
 	resp["notAllocatedUserID"] = notAllocatedUserID

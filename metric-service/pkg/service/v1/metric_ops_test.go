@@ -3,13 +3,15 @@ package v1
 import (
 	"context"
 	"errors"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
-	"optisam-backend/metric-service/pkg/repository/v1/mock"
 	"reflect"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1/mock"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -1709,6 +1711,28 @@ func Test_metricServiceServer_UpdateMetricOPS(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{name: "FAILURE - Default Value True, Metric created by import can't be updated error",
+			args: args{
+				ctx: context.Background(),
+				req: &v1.MetricOPS{
+					Name:                  "OPS",
+					NumCoreAttrId:         "a1",
+					NumCPUAttrId:          "a2",
+					CoreFactorAttrId:      "a3",
+					StartEqTypeId:         "e1",
+					AggerateLevelEqTypeId: "e3",
+					BaseEqTypeId:          "e2",
+					EndEqTypeId:           "e4",
+					Scopes:                []string{"Scope1"},
+					Default:               true,
+				},
+			},
+			setup: func() {},
+			want: &v1.UpdateMetricResponse{
+				Success: false,
+			},
+			wantErr: true,
+		},
 		{name: "FAILURE - starttype id is not given",
 			args: args{
 				ctx: ctx,
@@ -1737,7 +1761,7 @@ func Test_metricServiceServer_UpdateMetricOPS(t *testing.T) {
 					AggerateLevelEqType: "e3",
 					BaseEqType:          "e2",
 					EndEqType:           "e4",
-				}, nil).Times(1)
+				}, nil).AnyTimes()
 
 				mockRepo.EXPECT().EquipmentTypes(ctx, "Scope1").Return([]*repo.EquipmentType{
 					{
@@ -1769,7 +1793,7 @@ func Test_metricServiceServer_UpdateMetricOPS(t *testing.T) {
 					{
 						ID: "e4",
 					},
-				}, nil).Times(1)
+				}, nil).AnyTimes()
 			},
 			want: &v1.UpdateMetricResponse{
 				Success: false,

@@ -3,9 +3,10 @@ package docker
 import (
 	"context"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
 	"strings"
 	"time"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

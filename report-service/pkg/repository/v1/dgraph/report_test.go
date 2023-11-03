@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	repo "optisam-backend/report-service/pkg/repository/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/report-service/pkg/repository/v1"
 	"reflect"
 	"testing"
 

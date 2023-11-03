@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"strconv"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"go.uber.org/zap"
@@ -51,6 +53,11 @@ func (l *MetricRepository) CreateMetricInstanceNumberStandard(ctx context.Contex
 			Predicate:   "scopes",
 			ObjectValue: stringObjectValue(scope),
 		},
+		{
+			Subject:     blankID,
+			Predicate:   "metric.default",
+			ObjectValue: boolObjectValue(met.Default),
+		},
 	}
 
 	mu := &api.Mutation{
@@ -91,6 +98,7 @@ func (l *MetricRepository) GetMetricConfigINM(ctx context.Context, metName strin
 		Data(func: eq(metric.name,` + metName + `))@filter(eq(scopes,` + scope + `)){
 			Name: metric.name
 			Coefficient: metric.instancenumber.coefficient
+			Default: metric.Default
 		}
 	}`
 	resp, err := l.dg.NewTxn().Query(ctx, q)

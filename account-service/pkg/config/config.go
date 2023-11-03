@@ -1,18 +1,19 @@
 package config
 
 import (
-	"optisam-backend/common/optisam/iam"
-	"optisam-backend/common/optisam/jaeger"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/pki"
-	"optisam-backend/common/optisam/postgres"
-	"optisam-backend/common/optisam/redis"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/iam"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/jaeger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/pki"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/postgres"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/redis"
 
-	"optisam-backend/common/optisam/grpc"
 	"os"
 	"time"
 
-	"optisam-backend/common/optisam/prometheus"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/grpc"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/prometheus"
 
 	"errors"
 	"fmt"
@@ -38,7 +39,9 @@ type Config struct {
 
 	// HTTP/REST gateway start parameters section
 	// HTTPPort is TCP port to listen by HTTP/REST gateway
-	HTTPPort string
+	HTTPPort          string
+	Activationtimeout int
+	Forgotpasstimeout int
 
 	// Database connection information
 	Database postgres.DBConfig
@@ -57,6 +60,14 @@ type Config struct {
 
 	// IAM Configuration
 	IAM iam.Config
+
+	Emailtemplate Emailtemplate
+}
+
+type Emailtemplate struct {
+	Passwordresetpath string
+	Activationpath    string
+	Redirecbaseurl    string
 }
 
 // InstrumentationConfig represents the instrumentation related configuration.

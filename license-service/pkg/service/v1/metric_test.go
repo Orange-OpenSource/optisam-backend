@@ -2,8 +2,9 @@ package v1
 
 import (
 	"fmt"
-	v1 "optisam-backend/license-service/pkg/api/v1"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/api/v1"
 
 	"github.com/stretchr/testify/assert"
 )

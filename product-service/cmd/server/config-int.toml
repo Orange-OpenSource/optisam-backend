@@ -3,6 +3,8 @@ debug = false
 grpcport = "8090"
 httpport = "8080"
 maxapiworker = 25
+DgraphBatchSize = 15
+NoOfPartitions = 3
 
 [workerqueue]
 retries = 3
@@ -10,6 +12,7 @@ basedelay = 1
 
 [cron]
 time = "@every 12h"
+maintenanceTime = "@midnight"
 
 [log]
 customtimeformat = "2006-01-02T15:04:05.999999999Z07:00"
@@ -79,6 +82,7 @@ metric = "svc-optisam-metric-int.int-optisam.svc:8090"
 application = "svc-optisam-application-int.int-optisam.svc:8090"
 account = "svc-optisam-account-int.int-optisam.svc:8090"
 equipment = "svc-optisam-equipment-int.int-optisam.svc:8090"
+notification = "svc-optisam-notification-int.int-optisam.svc:8090"
 
 [httpservers.Address]
 auth = "svc-optisam-auth-int.int-optisam.svc:80"
@@ -90,3 +94,14 @@ auth = "svc-optisam-auth-int.int-optisam.svc:80"
 #passwordsuperadmin = ""
 #usernameuser = ""
 #passworduser = ""
+
+[emailtemplate]
+expiringSoonPath = "./templates/expiringSoonMaintenance.html"
+expiredPath = "./templates/expiredMaintenance.html"
+
+[kafka]
+bootstrapservers = "int-kafka-externel-bootstrap.int-optisam.svc:9094"
+sslkeylocation = "/opt/secret-key/ssh-privatekey"
+sslcertificatelocation = "/opt/secret-client/ssh-privatekey"
+sslcalocation = "/opt/secret-ca/ssh-privatekey"
+securityprotocol = "ssl"

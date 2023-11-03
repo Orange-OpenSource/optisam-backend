@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"optisam-backend/common/optisam/logger"
 	"os"
 	"strconv"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

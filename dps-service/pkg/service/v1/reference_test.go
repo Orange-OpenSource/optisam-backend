@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	repo "optisam-backend/dps-service/pkg/repository/v1"
-	dbmock "optisam-backend/dps-service/pkg/repository/v1/dbmock"
-	"optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	queuemock "optisam-backend/dps-service/pkg/repository/v1/queuemock"
 	"testing"
 	"time"
+
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1"
+	dbmock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/dbmock"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	queuemock "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/queuemock"
 
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes"
@@ -93,6 +94,45 @@ func Test_StoreCoreFactor(t *testing.T) {
 				temp := make(map[string]map[string]string)
 				json.Unmarshal(data.ReferenceData, &temp)
 				mockRepository.EXPECT().DeleteCoreFactorReference(ctx).Return(errors.New("DBError")).Times(1)
+			},
+			output:  &v1.StoreReferenceDataResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "Success db err 2",
+			ctx:  ctx,
+			input: &v1.StoreReferenceDataRequest{
+				ReferenceData: []byte(`{"a":{"b":"1"}}`),
+				Filename:      "temp.xlsx",
+			},
+			setup: func(data *v1.StoreReferenceDataRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				temp := make(map[string]map[string]string)
+				json.Unmarshal(data.ReferenceData, &temp)
+				mockRepository.EXPECT().DeleteCoreFactorReference(ctx).Return(errors.New("DBError")).Times(1)
+				mockRepository.EXPECT().StoreCoreFactorReferences(ctx, temp).Return(nil).AnyTimes()
+			},
+			output:  &v1.StoreReferenceDataResponse{Success: false},
+			wantErr: true,
+		},
+		{
+			name: "Success db err3",
+			ctx:  ctx,
+			input: &v1.StoreReferenceDataRequest{
+				ReferenceData: []byte(`{"a":{"b":"1"}}`),
+				Filename:      "temp.xlsx",
+			},
+			setup: func(data *v1.StoreReferenceDataRequest) {
+				mockCtrl = gomock.NewController(t)
+				mockRepository := dbmock.NewMockDps(mockCtrl)
+				rep = mockRepository
+				temp := make(map[string]map[string]string)
+				json.Unmarshal(data.ReferenceData, &temp)
+				mockRepository.EXPECT().DeleteCoreFactorReference(ctx).Return(nil).Times(1)
+				mockRepository.EXPECT().StoreCoreFactorReferences(ctx, temp).AnyTimes().Return(nil)
+				mockRepository.EXPECT().LogCoreFactor(ctx, data.Filename).Return(errors.New("DBError")).Times(1)
 			},
 			output:  &v1.StoreReferenceDataResponse{Success: false},
 			wantErr: true,

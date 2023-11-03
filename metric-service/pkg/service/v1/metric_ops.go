@@ -3,11 +3,13 @@ package v1
 import (
 	"context"
 	"errors"
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	v1 "optisam-backend/metric-service/pkg/api/v1"
-	repo "optisam-backend/metric-service/pkg/repository/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/api/v1"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -85,6 +87,9 @@ func (s *metricServiceServer) UpdateMetricOracleProcessorStandard(ctx context.Co
 	}
 	if !helper.Contains(userClaims.Socpes, req.GetScopes()...) {
 		return &v1.UpdateMetricResponse{}, status.Error(codes.PermissionDenied, "Do not have access to the scope")
+	}
+	if req.Default == true {
+		return &v1.UpdateMetricResponse{}, status.Error(codes.Internal, "Default Value True, Metric created by import can't be updated")
 	}
 	if req.StartEqTypeId == "" {
 		return &v1.UpdateMetricResponse{}, status.Error(codes.InvalidArgument, "start level is empty")
@@ -226,6 +231,7 @@ func serverToRepoMetricOPS(met *v1.MetricOPS) *repo.MetricOPS {
 		BaseEqTypeID:          met.BaseEqTypeId,
 		AggerateLevelEqTypeID: met.AggerateLevelEqTypeId,
 		EndEqTypeID:           met.EndEqTypeId,
+		Default:               met.Default,
 	}
 }
 
@@ -241,6 +247,7 @@ func repoToServerMetricOPS(met *repo.MetricOPS) *v1.MetricOPS {
 		BaseEqTypeId:          met.BaseEqTypeID,
 		AggerateLevelEqTypeId: met.AggerateLevelEqTypeID,
 		EndEqTypeId:           met.EndEqTypeID,
+		Default:               met.Default,
 	}
 }
 

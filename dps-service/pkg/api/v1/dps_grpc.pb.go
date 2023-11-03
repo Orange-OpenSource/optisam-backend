@@ -32,6 +32,7 @@ type DpsServiceClient interface {
 	DeleteInventory(ctx context.Context, in *DeleteInventoryRequest, opts ...grpc.CallOption) (*DeleteInventoryResponse, error)
 	DropUploadedFileData(ctx context.Context, in *DropUploadedFileDataRequest, opts ...grpc.CallOption) (*DropUploadedFileDataResponse, error)
 	ListDeletionRecords(ctx context.Context, in *ListDeletionRequest, opts ...grpc.CallOption) (*ListDeletionResponse, error)
+	CancelUpload(ctx context.Context, in *CancelUploadRequest, opts ...grpc.CallOption) (*CancelUploadResponse, error)
 }
 
 type dpsServiceClient struct {
@@ -177,6 +178,15 @@ func (c *dpsServiceClient) ListDeletionRecords(ctx context.Context, in *ListDele
 	return out, nil
 }
 
+func (c *dpsServiceClient) CancelUpload(ctx context.Context, in *CancelUploadRequest, opts ...grpc.CallOption) (*CancelUploadResponse, error) {
+	out := new(CancelUploadResponse)
+	err := c.cc.Invoke(ctx, "/optisam.dps.v1.DpsService/CancelUpload", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DpsServiceServer is the server API for DpsService service.
 // All implementations should embed UnimplementedDpsServiceServer
 // for forward compatibility
@@ -196,6 +206,7 @@ type DpsServiceServer interface {
 	DeleteInventory(context.Context, *DeleteInventoryRequest) (*DeleteInventoryResponse, error)
 	DropUploadedFileData(context.Context, *DropUploadedFileDataRequest) (*DropUploadedFileDataResponse, error)
 	ListDeletionRecords(context.Context, *ListDeletionRequest) (*ListDeletionResponse, error)
+	CancelUpload(context.Context, *CancelUploadRequest) (*CancelUploadResponse, error)
 }
 
 // UnimplementedDpsServiceServer should be embedded to have forward compatible implementations.
@@ -246,6 +257,9 @@ func (UnimplementedDpsServiceServer) DropUploadedFileData(context.Context, *Drop
 }
 func (UnimplementedDpsServiceServer) ListDeletionRecords(context.Context, *ListDeletionRequest) (*ListDeletionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListDeletionRecords not implemented")
+}
+func (UnimplementedDpsServiceServer) CancelUpload(context.Context, *CancelUploadRequest) (*CancelUploadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelUpload not implemented")
 }
 
 // UnsafeDpsServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -529,6 +543,24 @@ func _DpsService_ListDeletionRecords_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DpsService_CancelUpload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelUploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DpsServiceServer).CancelUpload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/optisam.dps.v1.DpsService/CancelUpload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DpsServiceServer).CancelUpload(ctx, req.(*CancelUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DpsService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "optisam.dps.v1.DpsService",
 	HandlerType: (*DpsServiceServer)(nil),
@@ -592,6 +624,10 @@ var _DpsService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListDeletionRecords",
 			Handler:    _DpsService_ListDeletionRecords_Handler,
+		},
+		{
+			MethodName: "CancelUpload",
+			Handler:    _DpsService_CancelUpload_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

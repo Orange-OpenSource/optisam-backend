@@ -1,9 +1,11 @@
 environment = "development"
-debug = false
+debug = true
 grpcport = "12090"
 httpport = "12091"
 maxapiworker = 25
 DashboardTimeZone = "CET"
+DgraphBatchSize = 70
+NoOfPartitions = 1
 
 [workerqueue]
 retries = 0
@@ -36,23 +38,24 @@ hosts = [
 
 [database]
 host = "localhost"
-port = 5432
+port = 5431
 # should be user of full rights
 [database.admin]
 user = "optisam"
-pass = ""
+pass = "samopti@19"
 name = "product" 
 
 # user of inser/update/delete/read access
 [database.user]
-user = "optisam"
-pass = ""
-name = "product" 
+user = "optisam_app_user"
+pass = "s@cr@t!23"
+name = "product"
 
 [database.migration]
 version = "1.4_schema.sql;1.4.3_schema.sql;1.4.2_schema.sql"
 direction = "up"
 migrationPath  = "./../../pkg/repository/v1/postgres/schema"
+deleteMigrations = true
 
 [redis]
 host = "localhost:6379"
@@ -73,7 +76,6 @@ regopath = "rbac.rego"
 
 [cron]
 time = "@midnight"
-monthTime="0 0 12 1 * *"
 
 [grpcservers]
 apikey = "12345678"
@@ -103,3 +105,9 @@ auth = "localhost:9097"
 expiringSoonPath = "./../../pkg/worker/templates/expiringSoonMaintenance.html"
 expiredPath = "./../../pkg/worker/templates/expiredMaintenance.html"
 	
+[kafka]
+bootstrapservers = "dev-kafka-externel-bootstrap-dev-optisam.apps.fr01.paas.tech.orange:443"
+securityprotocol = "ssl"
+sslkeylocation = "client.key.pem"
+sslcertificatelocation = "client.crt.pem"
+sslcalocation = "ca.crt.pem"

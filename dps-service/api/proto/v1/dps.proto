@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "optisam-backend/dps-service/pkg/api/v1";
+option go_package = "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1";
 
 package optisam.dps.v1;
 
@@ -109,8 +109,24 @@ service DpsService {
       get : "/api/v1/dps/deletions"
     };
   }
+
+  rpc CancelUpload(CancelUploadRequest) returns (CancelUploadResponse) {
+    option (google.api.http) = {
+      post : "/api/v1/dps/uploads/cancel"
+      body : "*"
+    };
+  }
 }
 
+message CancelUploadRequest{
+  int32  uploadId = 1;
+  string scope = 2;
+  string fileName = 3;
+}
+
+message CancelUploadResponse{
+  bool Success = 1;
+}
 
 message GetAnalysisFileInfoRequest{
   int32  upload_id = 1;

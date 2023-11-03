@@ -2,10 +2,12 @@ package staticdata
 
 import (
 	"fmt"
-	"optisam-backend/common/optisam/files"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/config"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/loader"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/config"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/loader"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/files"
 
 	"github.com/spf13/cobra"
 )

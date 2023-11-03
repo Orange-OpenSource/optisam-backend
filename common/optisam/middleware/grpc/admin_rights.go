@@ -2,8 +2,9 @@ package grpc
 
 import (
 	"context"
-	os_logger "optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/token/claims"
+
+	os_logger "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

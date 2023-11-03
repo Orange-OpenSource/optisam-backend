@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"log"
-	"optisam-backend/common/optisam/logger"
-	v1 "optisam-backend/product-service/pkg/api/v1"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/product-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.uber.org/zap"
 )

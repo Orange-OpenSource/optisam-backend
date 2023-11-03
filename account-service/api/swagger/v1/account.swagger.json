@@ -304,6 +304,41 @@
         ]
       }
     },
+    "/api/v1/account/adminuserscope": {
+      "get": {
+        "summary": "GetAdminUserScope returns admin details for a particular scope",
+        "operationId": "AccountService_GetAdminUserScope",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetAdminUserScopeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scopes",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
     "/api/v1/account/changepassword": {
       "put": {
         "operationId": "AccountService_ChangePassword",
@@ -354,6 +389,38 @@
             }
           }
         },
+        "tags": [
+          "AccountService"
+        ]
+      }
+    },
+    "/api/v1/account/resend_activation_token": {
+      "post": {
+        "operationId": "AccountService_ResendAccountActivationToken",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ResendAccountActivationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1ResendAccountActivationRequest"
+            }
+          }
+        ],
         "tags": [
           "AccountService"
         ]
@@ -844,6 +911,17 @@
         }
       }
     },
+    "v1AdminDetail": {
+      "type": "object",
+      "properties": {
+        "user_name": {
+          "type": "string"
+        },
+        "first_name": {
+          "type": "string"
+        }
+      }
+    },
     "v1ChangePasswordRequest": {
       "type": "object",
       "properties": {
@@ -974,6 +1052,17 @@
         }
       }
     },
+    "v1GetAdminUserScopeResponse": {
+      "type": "object",
+      "properties": {
+        "adminDetails": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AdminDetail"
+          }
+        }
+      }
+    },
     "v1Group": {
       "type": "object",
       "properties": {
@@ -1076,6 +1165,22 @@
         "SUPER_ADMIN"
       ],
       "default": "UNDEFINED"
+    },
+    "v1ResendAccountActivationRequest": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ResendAccountActivationResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        }
+      }
     },
     "v1Scope": {
       "type": "object",
@@ -1234,6 +1339,9 @@
         },
         "role": {
           "$ref": "#/definitions/v1ROLE"
+        },
+        "account_status": {
+          "type": "string"
         }
       }
     },

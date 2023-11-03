@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	v1 "optisam-backend/auth-service/pkg/repository/v1"
 	"strconv"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/auth-service/pkg/repository/v1"
 
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ type group struct {
 }
 
 func createGroup(g *group) error {
-	repo := NewRepository(db)
+	repo := NewRepository(db, r)
 	var id int64
 	createGroupQuery := `INSERT INTO 
 	groups(name, fully_qualified_name, scopes, parent_id, created_by)
@@ -92,7 +93,7 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "admin@test.com",
 			},
-			d: NewRepository(db),
+			d: NewRepository(db, r),
 			setup: func() ([]*v1.Group, cleanUpFunc, error) {
 				return []*v1.Group{
 						{
@@ -108,9 +109,9 @@ func TestDefault_UserOwnedGroupsDirect(t *testing.T) {
 				ctx:    context.Background(),
 				userID: "u1",
 			},
-			d: NewRepository(db),
+			d: NewRepository(db, r),
 			setup: func() (groups []*v1.Group, clenaup cleanUpFunc, retErr error) {
-				repo := NewRepository(db)
+				repo := NewRepository(db, r)
 				rootQuery := `INSERT INTO groups(name,fully_qualified_name) VALUES ('SUPERROOT','SUPERROOT') returning id`
 				if err := repo.db.QueryRowContext(context.Background(), rootQuery).Scan(&rootID); err != nil {
 					return nil, nil, err

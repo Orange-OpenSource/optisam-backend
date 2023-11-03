@@ -5,6 +5,7 @@ type MetricSS struct {
 	ID             string
 	Name           string
 	ReferenceValue int32
+	Default        bool
 }
 
 // MetricINMConfig is a representation of metric Instance.number.standard

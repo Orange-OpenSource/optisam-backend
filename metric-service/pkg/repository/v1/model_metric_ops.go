@@ -11,6 +11,7 @@ type MetricOPS struct {
 	BaseEqTypeID          string
 	AggerateLevelEqTypeID string
 	EndEqTypeID           string
+	Default               bool
 }
 
 // MetricOPSComputed has all the information required to be computed

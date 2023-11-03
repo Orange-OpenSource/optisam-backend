@@ -3,11 +3,12 @@ package v1
 import (
 	"context"
 	"database/sql"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
+
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
 )
 
-//go:generate mockgen -destination=dbmock/mock.go -package=mock optisam-backend/dps-service/pkg/repository/v1 Dps
-//go:generate mockgen -destination=queuemock/mock.go -package=mock optisam-backend/common/optisam/workerqueue  Workerqueue
+//go:generate mockgen -destination=dbmock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1 Dps
+//go:generate mockgen -destination=queuemock/mock.go -package=mock gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue  Workerqueue
 
 type DBTX interface {
 	ExecContext(context.Context, string, ...interface{}) (sql.Result, error)

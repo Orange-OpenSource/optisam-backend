@@ -5,12 +5,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"optisam-backend/license-service/pkg/repository/v1/dgraph/dataloader/config"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/license-service/pkg/repository/v1/dgraph/dataloader/config"
 
 	"github.com/spf13/cobra"
 )

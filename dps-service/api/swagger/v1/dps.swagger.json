@@ -404,6 +404,38 @@
         ]
       }
     },
+    "/api/v1/dps/uploads/cancel": {
+      "post": {
+        "operationId": "DpsService_CancelUpload",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CancelUploadResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CancelUploadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DpsService"
+        ]
+      }
+    },
     "/api/v1/dps/uploads/data": {
       "get": {
         "operationId": "DpsService_ListUploadData",
@@ -727,6 +759,29 @@
           "items": {
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "v1CancelUploadRequest": {
+      "type": "object",
+      "properties": {
+        "uploadId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        }
+      }
+    },
+    "v1CancelUploadResponse": {
+      "type": "object",
+      "properties": {
+        "Success": {
+          "type": "boolean"
         }
       }
     },

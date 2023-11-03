@@ -9,18 +9,23 @@ import (
 	"log"
 
 	// acq "optisam-backend/acqrights-service/pkg/api/v1"
-	application "optisam-backend/application-service/pkg/api/v1"
-	"optisam-backend/common/optisam/logger"
-	"optisam-backend/common/optisam/workerqueue/job"
-	"optisam-backend/dps-service/pkg/config"
-	gendb "optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/dps-service/pkg/worker/constants"
-	"optisam-backend/dps-service/pkg/worker/models"
-	equipment "optisam-backend/equipment-service/pkg/api/v1"
-	product "optisam-backend/product-service/pkg/api/v1"
 	"os"
 	"strconv"
 	"strings"
+
+	application "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/application-service/pkg/api/v1"
+
+	product "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	equipment "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/config"
+	gendb "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/models"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

@@ -8,9 +8,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	custom_logger "optisam-backend/common/optisam/logger"
 	"strings"
 	"time"
+
+	custom_logger "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
 
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"

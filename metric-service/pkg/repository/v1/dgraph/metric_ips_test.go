@@ -3,8 +3,9 @@ package dgraph
 import (
 	"context"
 	"errors"
-	v1 "optisam-backend/metric-service/pkg/repository/v1"
 	"testing"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/metric-service/pkg/repository/v1"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/stretchr/testify/assert"

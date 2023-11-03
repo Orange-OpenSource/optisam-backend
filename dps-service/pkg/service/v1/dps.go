@@ -5,27 +5,33 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	accv1 "optisam-backend/account-service/pkg/api/v1"
-	appV1 "optisam-backend/application-service/pkg/api/v1"
-	equipV1 "optisam-backend/equipment-service/pkg/api/v1"
-	metv1 "optisam-backend/metric-service/pkg/api/v1"
-	prodV1 "optisam-backend/product-service/pkg/api/v1"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"optisam-backend/common/optisam/helper"
-	"optisam-backend/common/optisam/logger"
-	grpc_middleware "optisam-backend/common/optisam/middleware/grpc"
-	"optisam-backend/common/optisam/token/claims"
-	"optisam-backend/common/optisam/workerqueue"
-	job "optisam-backend/common/optisam/workerqueue/job"
-	v1 "optisam-backend/dps-service/pkg/api/v1"
-	"optisam-backend/dps-service/pkg/config"
-	repo "optisam-backend/dps-service/pkg/repository/v1"
-	"optisam-backend/dps-service/pkg/repository/v1/postgres/db"
-	"optisam-backend/dps-service/pkg/worker/constants"
+	accv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/account-service/pkg/api/v1"
+
+	appV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/application-service/pkg/api/v1"
+
+	prodV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/product-service/pkg/api/v1"
+
+	equipV1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/equipment-service/pkg/api/v1"
+
+	metv1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/thirdparty/metric-service/pkg/api/v1"
+
+	v1 "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/api/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/config"
+	repo "gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/repository/v1/postgres/db"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/dps-service/pkg/worker/constants"
+
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/helper"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/logger"
+	grpc_middleware "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/middleware/grpc"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/token/claims"
+	"gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue"
+	job "gitlab.tech.orange/optisam/optisam-it/optisam-services/common/optisam/workerqueue/job"
 
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
@@ -46,9 +52,10 @@ type dpsServiceServer struct {
 }
 
 const (
-	ERROR    string = "error"
-	ANALYSED string = "analysed"
-	SOURCE   string = "source"
+	ERROR         string = "error"
+	ANALYSED      string = "analysed"
+	SOURCE        string = "source"
+	USERCANCELLED string = "User Cancelled the Job"
 )
 
 // NewDpsServiceServer creates Application service
@@ -109,6 +116,39 @@ func (d *dpsServiceServer) GetAnalysisFileInfo(ctx context.Context, req *v1.GetA
 	}
 
 	return &v1.GetAnalysisFileInfoResponse{IsOlderGeneric: isOlderGeneric, FileName: fileName, ScopeType: string(resp.ScopeType)}, nil
+}
+
+func (d *dpsServiceServer) CancelUpload(ctx context.Context, req *v1.CancelUploadRequest) (*v1.CancelUploadResponse, error) {
+	userClaims, ok := grpc_middleware.RetrieveClaims(ctx)
+	if !ok {
+		logger.Log.Sugar().Errorf("ClaimsNotFound")
+		return &v1.CancelUploadResponse{Success: false}, status.Error(codes.Internal, "ClaimsNotFound")
+	}
+	if !helper.Contains(userClaims.Socpes, req.Scope) {
+		logger.Log.Sugar().Errorf("ScopeValidationError")
+		return &v1.CancelUploadResponse{Success: false}, status.Error(codes.PermissionDenied, "ScopeValidationError")
+	}
+
+	if userClaims.Role == claims.RoleUser {
+		logger.Log.Sugar().Errorf("RoleValidationError")
+		return &v1.CancelUploadResponse{Success: false}, status.Error(codes.PermissionDenied, "RoleValidationError")
+	}
+
+	dbstatus, err := d.dpsRepo.UpdateFileStatusCancelled(ctx, db.UpdateFileStatusCancelledParams{
+		Status:   db.UploadStatusCANCELLED,
+		Comments: sql.NullString{String: USERCANCELLED, Valid: true},
+		UploadID: req.GetUploadId(),
+		FileName: req.GetFileName(),
+	})
+	if err != nil {
+		logger.Log.Sugar().Errorf("Failed to update globalFileInfo", "err", zap.Error(err))
+		return &v1.CancelUploadResponse{Success: false}, status.Error(codes.Internal, "DBError")
+	}
+	if dbstatus != db.UploadStatusCANCELLED {
+		logger.Log.Sugar().Errorf("Failed to update globalFileInfo", "err", "File update error ", "status", string(dbstatus))
+		return &v1.CancelUploadResponse{Success: false}, nil
+	}
+	return &v1.CancelUploadResponse{Success: true}, nil
 }
 
 // TODO This is aysnc , will be converted into sync
@@ -234,13 +274,15 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 	if req.GetUploadedBy() == "nifi" {
 		activeGID, err = d.dpsRepo.GetActiveGID(ctx, req.Scope)
 		if err != nil && err != sql.ErrNoRows {
-			logger.Log.Error("Failed to get active GID", zap.Error(err))
+			logger.Log.Sugar().Errorf("Failed to get active GID", err.Error())
 			return nil, status.Error(codes.Internal, "DBError")
 		} else if activeGID == int32(0) {
+			logger.Log.Sugar().Errorf("Failed to get active GID =0")
 			return nil, status.Error(codes.Internal, "UnLinkedTransformedDataFile")
 		}
 		logger.Log.Debug("Active ", zap.Any("GID", activeGID))
 	} else if d.isInjectionActive(ctx, req.Scope) {
+		logger.Log.Sugar().Errorf("Injection is already running")
 		return nil, status.Error(codes.FailedPrecondition, "Injection is already running")
 	}
 	fileStatus := db.UploadStatusPENDING
@@ -272,8 +314,9 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 			isNifi = true
 			val, _ := strconv.ParseInt(strings.Split(temp[1], "_")[0], 10, 32)
 			gid = int32(val)
-			logger.Log.Debug("This data file belongs to ", zap.Any("gid", gid), zap.Any("dataFile", file))
+			logger.Log.Sugar().Debug("This data file belongs to ", zap.Any("gid", gid), zap.Any("dataFile", file))
 			if gid != activeGID {
+				logger.Log.Sugar().Info("Injection is already running")
 				return nil, status.Error(codes.FailedPrecondition, "Injection is already running")
 			}
 		} else {
@@ -292,7 +335,7 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 			AnalysisID: sql.NullString{String: req.AnalysisId, Valid: true},
 		})
 		if err != nil {
-			logger.Log.Debug("Failed to insert file record in dps, err :", zap.Error(err), zap.Any("file", fileToSave))
+			logger.Log.Sugar().Errorf("Failed to insert file record in dps, err :", zap.Error(err), zap.Any("file", fileToSave))
 			return nil, status.Error(codes.Internal, "DBError")
 		}
 		if isNifi {
@@ -301,7 +344,7 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 		if datatype != db.DataTypeGLOBALDATA {
 			dataForJob, err := json.Marshal(dbresp)
 			if err != nil {
-				logger.Log.Debug("Failed to marshal notifyPayload data for file type job, err:", zap.Error(err))
+				logger.Log.Sugar().Debug("Failed to marshal notifyPayload data for file type job, err:", zap.Error(err))
 				continue
 			}
 			job := job.Job{
@@ -311,7 +354,7 @@ func (d *dpsServiceServer) NotifyUpload(ctx context.Context, req *v1.NotifyUploa
 			}
 			_, err = d.queue.PushJob(ctx, job, constants.FILEWORKER)
 			if err != nil {
-				logger.Log.Debug("Failed to push the job ", zap.String("file", file), zap.String("fileType", req.GetType()))
+				logger.Log.Sugar().Debug("Failed to push the job ", zap.String("file", file), zap.String("fileType", req.GetType()))
 			}
 		} else {
 			out.FileUploadId[fileToSave] = dbresp.UploadID
